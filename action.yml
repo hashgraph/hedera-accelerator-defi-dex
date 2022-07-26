@@ -1,0 +1,6 @@
+# action.yml
+name: 'Hardhat Docker Action'
+description: Hardhat Docker trigger action'
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
