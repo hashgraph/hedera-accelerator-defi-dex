@@ -1,4 +1,4 @@
-# Basic Sample Hardhat Project -
+# Project Setup -
 
 ## Run locally follow these instructions - Needs Node v16.15.1  and npm
 
