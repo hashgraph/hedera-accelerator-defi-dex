@@ -1,12 +1,13 @@
-//SPDX-License-Identifier: Unlicense
-pragma solidity ^0.8.0;
+// SPDX-License-Identifier: Apache-2.0
+pragma solidity >=0.5.0 <0.9.0;
+pragma experimental ABIEncoderV2;
 
 import "./HederaResponseCodes.sol";
 import "./IBaseHTS.sol";
 
-contract SwapWithMock is HederaResponseCodes {
+abstract contract AbstractSwap is HederaResponseCodes {
     IBaseHTS tokenService;
-    
+
     struct Pair {
         Token tokenA;
         Token tokenB;
@@ -21,52 +22,42 @@ contract SwapWithMock is HederaResponseCodes {
         Pair pair;
     }
 
-    address creator;
+    address internal creator;
 
     mapping (address => LiquidityContributor) liquidityContribution;
 
     Pair pair;
 
-    modifier onlyOwner {
-      require(msg.sender == creator, "Only owner can change the contract.");
-      _;
-   }
+    event LogEvent(int msg);
 
-    event SetMessage(address indexed from, int message);
+    function associateToken(address account,  address _token) internal virtual returns(int);
 
-    constructor(IBaseHTS _tokenService) {
-       creator = msg.sender;
-       tokenService = _tokenService;
-    }
+    function transferToken(address _token, address sender, address receiver, int64 amount) internal virtual returns(int);
 
     function initializeContract(address fromAccount, address _tokenA, address _tokenB, int64 _tokenAQty, int64 _tokenBQty) external {
         pair = Pair(Token(_tokenA, _tokenAQty), Token(_tokenB, _tokenBQty));
         liquidityContribution[fromAccount] = LiquidityContributor(pair);
-        //Not verifying assert response because if already associated it fails.
-        int response = tokenService.associateTokenPublic(address(this), _tokenA);
-        emit SetMessage(fromAccount, response);
-        //tokenService.associateTokenPublic(address(this), _tokenA);
-        //tokenService.associateTokenPublic(address(this), _tokenB);
-        
-        //int response = tokenService.transferTokenPublic(_tokenA, fromAccount, address(this), _tokenAQty);
-        //require(response == HederaResponseCodes.SUCCESS, "Creating contract: Transfering token A to contract failed with status code");
 
-        //response = tokenService.transferTokenPublic(_tokenB, fromAccount, address(this), _tokenBQty);
-        //require(response == HederaResponseCodes.SUCCESS, "Creating contract: Transfering token B to contract failed with status code");
+        associateToken(address(this),  _tokenA);
+        associateToken(address(this),  _tokenB);
+
+        int response = tokenService.transferTokenPublic(_tokenA, fromAccount, address(this), _tokenAQty);
+        require(response == HederaResponseCodes.SUCCESS, "Creating contract: Transfering token A to contract failed with status code");
+
+        response = tokenService.transferTokenPublic(_tokenB, fromAccount, address(this), _tokenBQty);
+        require(response == HederaResponseCodes.SUCCESS, "Creating contract: Transfering token B to contract failed with status code");
     }
 
     function addLiquidity(address fromAccount, address _tokenA, address _tokenB, int64 _tokenAQty, int64 _tokenBQty) external {
         pair.tokenA.tokenQty += _tokenAQty;
         pair.tokenB.tokenQty += _tokenBQty;
 
-        int response = tokenService.associateTokenPublic(address(this), _tokenA);
-        emit SetMessage(fromAccount, response);
-        tokenService.associateTokenPublic(address(this), _tokenB);
+        associateToken(address(this),  _tokenA);
+        associateToken(address(this),  _tokenB);
 
-        response = tokenService.transferTokenPublic(_tokenA, fromAccount, address(this), _tokenAQty);
-        emit SetMessage(fromAccount, response);
+        int response = tokenService.transferTokenPublic(_tokenA, fromAccount, address(this), _tokenAQty);
         require(response == HederaResponseCodes.SUCCESS, "Add liquidity: Transfering token A to contract failed with status code");
-
+    
         response = tokenService.transferTokenPublic(_tokenB, fromAccount, address(this), _tokenBQty);
         require(response == HederaResponseCodes.SUCCESS, "Add liquidity: Transfering token B to contract failed with status code");
 
@@ -79,10 +70,11 @@ contract SwapWithMock is HederaResponseCodes {
     function removeLiquidity(address toAccount, address _tokenA, address _tokenB, int64 _tokenAQty, int64 _tokenBQty) external {
         pair.tokenA.tokenQty -= _tokenAQty;
         pair.tokenB.tokenQty -= _tokenBQty;
+
         //Assumption - toAccount must be associated with tokenA and tokenB other transaction fails.
-        int response = tokenService.transferTokenPublic(_tokenA, address(this), toAccount, _tokenAQty);
+        int response = transferToken(_tokenA, address(this), toAccount, _tokenAQty);
         require(response == HederaResponseCodes.SUCCESS, "Remove liquidity: Transfering token A to contract failed with status code");
-        response = tokenService.transferTokenPublic(_tokenB, address(this),  toAccount, _tokenBQty);
+        response = transferToken(_tokenB, address(this), toAccount, _tokenBQty);
         require(response == HederaResponseCodes.SUCCESS, "Remove liquidity: Transfering token B to contract failed with status code");
         LiquidityContributor memory contributedPair = liquidityContribution[toAccount];
         contributedPair.pair.tokenA.tokenQty -= _tokenAQty;
@@ -104,12 +96,12 @@ contract SwapWithMock is HederaResponseCodes {
         require(_tokenA == pair.tokenA.tokenAddress && _tokenB != pair.tokenB.tokenAddress, "Token A should have correct address and token B address will be ignored.");
         int64 deltaBQty = (pair.tokenB.tokenQty * _deltaAQty) / (pair.tokenA.tokenQty + _deltaAQty);
         pair.tokenA.tokenQty += _deltaAQty;  
-        int response = tokenService.transferTokenPublic(pair.tokenA.tokenAddress, to, address(this), _deltaAQty);
+        int response = transferToken(pair.tokenA.tokenAddress, to, address(this), _deltaAQty);
         require(response == HederaResponseCodes.SUCCESS, "swapTokenA: Transfering token A to contract failed with status code");
 
         pair.tokenB.tokenQty -= deltaBQty;
-        tokenService.associateTokenPublic(to, _tokenB);
-        response = tokenService.transferTokenPublic(pair.tokenB.tokenAddress, address(this), to, deltaBQty);
+        associateToken(to,  _tokenB);
+        response = transferToken(pair.tokenB.tokenAddress, address(this), to, deltaBQty);
         require(response == HederaResponseCodes.SUCCESS, "swapTokenA: Transfering token B to contract failed with status code");
     }
 
@@ -117,12 +109,12 @@ contract SwapWithMock is HederaResponseCodes {
         require(_tokenA != pair.tokenA.tokenAddress && _tokenB == pair.tokenB.tokenAddress, "Token B should have correct address and token A address will be ignored.");
         int64 deltaAQty = (pair.tokenA.tokenQty * _deltaBQty) / (pair.tokenB.tokenQty + _deltaBQty);
         pair.tokenB.tokenQty += _deltaBQty;
-        int response = tokenService.transferTokenPublic(pair.tokenB.tokenAddress, to, address(this), _deltaBQty);
+        int response = transferToken(pair.tokenB.tokenAddress, to, address(this), _deltaBQty);
         require(response == HederaResponseCodes.SUCCESS, "swapTokenB: Transfering token B to contract failed with status code");
 
         pair.tokenA.tokenQty -= deltaAQty;
-        tokenService.associateTokenPublic(to, _tokenA);
-        response = tokenService.transferTokenPublic(pair.tokenA.tokenAddress, address(this), to, deltaAQty);
+        associateToken(to,  _tokenA);
+        response = transferToken(pair.tokenA.tokenAddress, address(this), to, deltaAQty);
         require(response == HederaResponseCodes.SUCCESS, "swapTokenB: Transfering token A to contract failed with status code");
     }
 

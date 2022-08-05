@@ -1,15 +1,13 @@
 // Commenting test as contract has dependency on HTS service which we need to mock somehow.
 import {  expect } from "chai";
 import { deployMockContract, MockProvider } from "ethereum-waffle";
-import { ethers } from "hardhat";
-import { IHederaTokenService } from "../typechain";
 import * as fs from "fs";
 import { ContractFactory } from "ethers/lib/ethers";
 
 
 describe("Swap", function () {
   const htsServiceSuccessResponseCode = 22;
-  let swapContract:any  = undefined;
+  let swapContract: any  = undefined;
   const tokenBAddress = "0x0000000000000000000000000000000000010001";
   const tokenAAddress = "0x0000000000000000000000000000000000020002";
   const zeroAddress = "0x1111111000000000000000000000000000000000";
@@ -22,7 +20,7 @@ describe("Swap", function () {
   const setup = async () => {
     const [sender, receiver] = new MockProvider().getWallets();
     const tokenServiceFilePath = "./artifacts/contracts/IBaseHTS.sol/IBaseHTS.json";
-    const swapFilePath = "./artifacts/contracts/SwapWithMock.sol/SwapWithMock.json";
+    const swapFilePath = "./artifacts/contracts/SwapTest.sol/SwapTest.json";
     const tokenServiceCompiledContract = getCompiledContract(tokenServiceFilePath);
     const swapContract = getCompiledContract(swapFilePath);
 
@@ -36,7 +34,7 @@ describe("Swap", function () {
   }
 
   beforeEach(async () => {
-    const {contract, tokenServiceContract } = await setup();
+    const {contract, tokenServiceContract} = await setup();
     await tokenServiceContract.mock.associateTokenPublic.returns(htsServiceSuccessResponseCode);
     await tokenServiceContract.mock.transferTokenPublic.returns(htsServiceSuccessResponseCode);
     await contract.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, 100, 100);
@@ -87,6 +85,7 @@ describe("Swap", function () {
     expect(tokenBeforeQty[1]).to.be.equals(100);
     const tx = await swapContract.removeLiquidity(zeroAddress, tokenAAddress, tokenBAddress, 50, 50);
     await tx.wait();
+
     const tokenQty =  await swapContract.getPairQty();
     expect(tokenQty[0]).to.be.equals(50);
     expect(tokenQty[1]).to.be.equals(50);

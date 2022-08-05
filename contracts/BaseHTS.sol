@@ -13,4 +13,9 @@ contract BaseHTS is HederaTokenService {
     function associateTokenPublic(address account, address token) external returns (int responseCode) {
         return HederaTokenService.associateToken(account, token);
     }
+    
+    function associateTokensPublic(address account, address[] memory tokens) 
+        external returns (int responseCode) {
+            return HederaTokenService.associateTokens(account, tokens);
+        }
 }
