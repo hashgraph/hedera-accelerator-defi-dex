@@ -2,9 +2,14 @@ import dotenv from "dotenv";
 import * as fs from "fs";
 import { PrivateKey } from "@hashgraph/sdk";
 import * as hethers from "@hashgraph/hethers";
+import { ContractService } from "./service/ContractService";
+
 dotenv.config();
 
 export class Deployment {
+
+  private contractService = new ContractService();
+
   private createProvider = (): any => {
     return new hethers.providers.HederaProvider(
       "0.0.5", // AccountLike
@@ -20,7 +25,7 @@ export class Deployment {
     };
   };
 
-  private getCompiledContract = (filePath: string) => {
+  private readFileContent = (filePath: string) => {
     const rawdata: any = fs.readFileSync(filePath);
     return JSON.parse(rawdata);
   };
@@ -61,7 +66,7 @@ export class Deployment {
     // STEP 2 - DEPLOY THE CONTRACT
     console.log(`\n- STEP 2 ===================================`);
 
-    const compiledContract = this.getCompiledContract(filePath);
+    const compiledContract = this.readFileContent(filePath);
 
     const factory = new hethers.ContractFactory(
       compiledContract.abi,
@@ -82,6 +87,8 @@ export class Deployment {
 
     const contractDeployWait = await contract.deployTransaction.wait();
     console.log(`\n- Contract deployment status: ${contractDeployWait.status!.toString()}`);
+
+    await this.contractService.recordDeployedContract(contract.address, compiledContract.contractName);
 
     // Get the address of the deployed contract
     const contractAddress = contract.address;

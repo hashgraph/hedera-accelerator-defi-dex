@@ -1,15 +1,20 @@
 import { BigNumber } from "bignumber.js";
+import {  expect } from "chai";
 import {
   TokenId,
   ContractExecuteTransaction,
   ContractFunctionParameters,
   AccountBalanceQuery,
 } from "@hashgraph/sdk";
+dotenv.config();
+import Web3 from "web3";
+import * as fs from "fs";
 
 import ClientManagement from "./utils/utils";
-
+import { ContractService } from "../deployment/service/ContractService"
 
 const clientManagement = new ClientManagement();
+const contractService = new ContractService();
 
 const htsServiceAddress = "0x0000000000000000000000000000000002e0b863"; // 13 sep 3:10
 const lpTokenContractAddress = "0x0000000000000000000000000000000002e0b868"; // 19 sep 4:45
@@ -18,8 +23,6 @@ const client = clientManagement.createClient();
 const tokenA = TokenId.fromString("0.0.47646195").toSolidityAddress();
 let tokenB = TokenId.fromString("0.0.47646196").toSolidityAddress();
 const {treasureId, treasureKey} = clientManagement.getTreasure();
-
-const contractId = "0.0.48281714"; // 19 sep 4:55
 
 const initialize = async () => {
   const initialize = await new ContractExecuteTransaction()
@@ -95,7 +98,9 @@ const addLiquidity = async () => {
   const transferTokenRx = await addLiquidityTxRes.getReceipt(client);
 
   console.log(`Liquidity added status: ${transferTokenRx.status}`);
-  await pairCurrentPosition();
+  const result = await pairCurrentPosition();
+  expect(Number(result[0])).to.be.equals(20);
+  expect(Number(result[1])).to.be.equals(20);
 };
 
 const removeLiquidity = async () => {
@@ -149,7 +154,7 @@ const swapTokenA = async () => {
   await pairCurrentPosition();
 };
 
-const pairCurrentPosition = async () => {
+const pairCurrentPosition = async (): Promise<[BigNumber, BigNumber]> => {
   const getPairQty = await new ContractExecuteTransaction()
     .setContractId(contractId)
     .setGas(1000000)
@@ -162,6 +167,7 @@ const pairCurrentPosition = async () => {
   console.log(
     `${tokenAQty} units of token A and ${tokenBQty} units of token B are present in the pool. \n`
   );
+  return [tokenAQty, tokenBQty];
 };
 
 const getContributorTokenShare = async () => {
