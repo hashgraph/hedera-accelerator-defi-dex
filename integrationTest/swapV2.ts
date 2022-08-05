@@ -1,4 +1,3 @@
-import dotenv from "dotenv";
 import { BigNumber } from "bignumber.js";
 import {
   AccountId,
@@ -7,12 +6,12 @@ import {
   ContractExecuteTransaction,
   ContractFunctionParameters,
   Client,
+  ContractId
 } from "@hashgraph/sdk";
-dotenv.config();
 
 const createClient = () => {
-  const myAccountId = process.env.MY_ACCOUNT_ID;
-  const myPrivateKey = process.env.MY_PRIVATE_KEY;
+  const myAccountId = AccountId.fromString("0.0.47710057");
+  const myPrivateKey = PrivateKey.fromString("3030020100300706052b8104000a04220420d38b0ed5f11f8985cd72c8e52c206b512541c6f301ddc9d18bd8b8b25a41a80f");
 
   if (myAccountId == null || myPrivateKey == null) {
     throw new Error(
@@ -29,11 +28,9 @@ const client = createClient();
 const tokenA = TokenId.fromString("0.0.47646195").toSolidityAddress();
 let tokenB = TokenId.fromString("0.0.47646196").toSolidityAddress();
 const treasure = AccountId.fromString("0.0.47645191").toSolidityAddress();
-const treasureKey = PrivateKey.fromString(
-  "308ed38983d9d20216d00371e174fe2d475dd32ac1450ffe2edfaab782b32fc5"
-);
+const treasureKey = PrivateKey.fromString("308ed38983d9d20216d00371e174fe2d475dd32ac1450ffe2edfaab782b32fc5");
 
-const contractId = "0.0.47712695";
+const contractId = "0.0.47842517";
 
 const createLiquidityPool = async () => {
   const tokenAQty = new BigNumber(10);
@@ -89,8 +86,8 @@ const addLiquidity = async () => {
 };
 
 const removeLiquidity = async () => {
-  const tokenAQty = new BigNumber(3);
-  const tokenBQty = new BigNumber(3);
+  const tokenAQty = new BigNumber(1);
+  const tokenBQty = new BigNumber(1);
   console.log(
     `Removing ${tokenAQty} units of token A and ${tokenBQty} units of token B from the pool.`
   );

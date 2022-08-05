@@ -10,4 +10,7 @@ interface IBaseHTS {
     
     function associateTokenPublic(address account, address token) 
         external returns (int responseCode);
+
+    function associateTokensPublic(address account, address[] memory tokens) 
+        external returns (int responseCode);
 }
