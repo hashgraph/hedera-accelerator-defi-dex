@@ -1,0 +1,20 @@
+name: Deploy a contract to testnet
+
+on:
+  workflow_dispatch:
+    inputs:
+      contractName:
+        description: 'Name that represent the contract to deploy.'
+        default: 'swapContract'
+        required: true
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build the Docker image
+      run: docker build . --file Dockerfile --tag my-image-name:latest
+    - name: Run the Docker image
+      run: docker run --env DEPLOY_ON_TESTNET=Y --env CONTRACT_TO_DEPLOY=${{ github.event.inputs.contractName }} my-image-name:latest
