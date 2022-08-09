@@ -19,7 +19,7 @@ describe("Swap", function () {
 
   const setup = async () => {
     const [sender, receiver] = new MockProvider().getWallets();
-    const tokenServiceFilePath = "./artifacts/contracts/IBaseHTS.sol/IBaseHTS.json";
+    const tokenServiceFilePath = "./artifacts/contracts/common/IBaseHTS.sol/IBaseHTS.json";
     const swapFilePath = "./artifacts/contracts/SwapTest.sol/SwapTest.json";
     const tokenServiceCompiledContract = getCompiledContract(tokenServiceFilePath);
     const swapContract = getCompiledContract(swapFilePath);

@@ -1,8 +1,8 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-import "./HederaTokenService.sol";
-import "./HederaResponseCodes.sol";
+import "./common/hedera/HederaTokenService.sol";
+import "./common/hedera/HederaResponseCodes.sol";
 
 contract Swap is HederaTokenService {
     
