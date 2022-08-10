@@ -2,9 +2,9 @@
 pragma solidity >=0.5.0 <0.9.0;
 pragma experimental ABIEncoderV2;
 
-import "./common/hedera/HederaResponseCodes.sol";
-import "./common/IBaseHTS.sol";
-import "./AbstractSwap.sol";
+import "../common/hedera/HederaResponseCodes.sol";
+import "../common/IBaseHTS.sol";
+import "../AbstractSwap.sol";
 
 contract SwapTest is AbstractSwap {
 

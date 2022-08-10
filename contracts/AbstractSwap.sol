@@ -28,8 +28,6 @@ abstract contract AbstractSwap is HederaResponseCodes {
 
     Pair pair;
 
-    event LogEvent(int msg);
-
     function associateToken(address account,  address _token) internal virtual returns(int);
 
     function transferToken(address _token, address sender, address receiver, int64 amount) internal virtual returns(int);
