@@ -3,7 +3,7 @@ import { Deployment } from "./deployContractOnTestnet";
 
 async function main() {
     const deployment = new Deployment();
-    const filePath = "./artifacts/contracts/BaseHTS.sol/BaseHTS.json";
+    const filePath = "./artifacts/contracts/common/BaseHTS.sol/BaseHTS.json";
     const deployedContract = await deployment.deployContract(filePath, []);
     console.log("baseContract deployed.");
 }

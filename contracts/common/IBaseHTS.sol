@@ -1,8 +1,8 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-import "./HederaTokenService.sol";
-import "./HederaResponseCodes.sol";
+import "./hedera/HederaTokenService.sol";
+import "./hedera/HederaResponseCodes.sol";
 
 interface IBaseHTS {
     function transferTokenPublic(address token, address sender, address receiver, int64 amount) 
