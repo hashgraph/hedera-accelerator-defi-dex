@@ -190,21 +190,12 @@ describe("Swap", function () {
     });
 
     //----------------------------------------------------------------------
-
-    //----------------------------------------------------------------------
     it("Swap Token B with Fail B transfer", async function () {
       const { swapV2 } = await loadFixture(deployFailureFixture);
       const tokenBeforeQty = await swapV2.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(100);
       await expect(swapV2.swapToken(zeroAddress, zeroAddress, tokenBAddress, 30, 0)).to.revertedWith("swapTokenB: Transfering token B to contract failed with status code");
     });
-
-    // it("Swap Token B with Fail passing Both Addresses", async function () {
-    //   const { swapV2 } = await loadFixture(deployFailureFixture);
-    //   const tokenBeforeQty = await swapV2.getPairQty();
-    //   expect(tokenBeforeQty[0]).to.be.equals(100);
-    //   await expect(swapV2.swapToken(zeroAddress, tokenBAddress, tokenAAddress, 30, 0)).to.revertedWith("Token B should have correct address and token A address will be ignored.");
-    // });
 
     //----------------------------------------------------------------------
     async function fixtureForSwapBFailATransfer() {
@@ -277,8 +268,6 @@ describe("Swap", function () {
       expect(tokenBeforeQty[0]).to.be.equals(100);
       await expect(swapV2.removeLiquidity(zeroAddress, tokenAAddress, tokenBAddress, 30, 30)).to.revertedWith("Remove liquidity: Transfering token B to contract failed with status code");
     });
-
   });
-
 });
 
