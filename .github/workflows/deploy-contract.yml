@@ -1,5 +1,4 @@
 name: Deploy a contract to testnet
-
 on:
   workflow_dispatch:
     inputs:

@@ -15,5 +15,5 @@ jobs:
     - name: Build the Docker image
       run: docker build . --file Dockerfile --tag my-image-name:latest
     - name: Run the Docker image
-      run: docker run my-image-name:latest
+      run: docker run --env DEPLOY_ON_TESTNET=Y --env CONTRACT_TO_DEPLOY=deployRemoteRelay my-image-name:latest
       
