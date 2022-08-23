@@ -30,7 +30,6 @@ contract MockBaseHTS is IBaseHTS {
     function setFailType(int _type) public {
         failType = FailTransactionFor(_type);
         trueTransaction = successForType();
-
     }
 
     function successForType() internal view returns (int) {

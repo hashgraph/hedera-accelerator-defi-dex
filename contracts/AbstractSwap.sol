@@ -51,7 +51,7 @@ abstract contract AbstractSwap is HederaResponseCodes {
         pair.tokenB.tokenQty += _tokenBQty;
 
         associateToken(address(this),  _tokenA);
-        associateToken(address(this),  _tokenB);        
+        associateToken(address(this),  _tokenB);
 
         int response = tokenService.transferTokenPublic(_tokenA, fromAccount, address(this), _tokenAQty);
         require(response == HederaResponseCodes.SUCCESS, "Add liquidity: Transfering token A to contract failed with status code");
