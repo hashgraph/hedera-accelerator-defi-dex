@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import "../common/IBaseHTS.sol";
 import "../common/hedera/HederaResponseCodes.sol";
+import "hardhat/console.sol";
 
 contract MockBaseHTS is IBaseHTS {
 
@@ -15,25 +16,36 @@ contract MockBaseHTS is IBaseHTS {
         removeLiquidityFailBTransfer,
         removeLiquidity,
         initialiseFailATransfer,
-        initialiseFailBTransfer
+        initialiseFailBTransfer,
+        swapBFailedSendingA
     }
 
     bool internal isSuccess;
-    int internal trueTransaction = 4;
+    int internal trueTransaction = 0;
     FailTransactionFor internal failType;
-    constructor(bool _isSucces, int _type) {
+    constructor(bool _isSucces) {
         isSuccess = _isSucces;
+    }
+
+    function setFailType(int _type) public {
+        trueTransaction = 0;
         failType = FailTransactionFor(_type);
     }
 
     function successForType() internal view returns (int) {
+        if (failType == FailTransactionFor.initialise) {
+            return 4;
+        }
         if (failType == FailTransactionFor.initialiseFailATransfer) {
-            return -4;
+            return 2;
         }
         if (failType == FailTransactionFor.initialiseFailBTransfer) {
-            return -1;
+            return 3;
         }
         if (failType == FailTransactionFor.swapAFailedSendingB) {
+            return 2;
+        }
+        if (failType == FailTransactionFor.swapBFailedSendingA) {
             return 2;
         }
         if (failType == FailTransactionFor.addLiquidityFailBTransfer) {
@@ -50,6 +62,7 @@ contract MockBaseHTS is IBaseHTS {
             trueTransaction-=1;
             return int(22);
         }
+        
         int result = isSuccess ? int(22) : int(23);
         return result;
     }

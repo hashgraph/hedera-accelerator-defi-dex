@@ -12,26 +12,27 @@ describe("Swap", function () {
 
   async function deployFixture() {
     const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-    const mockBaseHTS = await MockBaseHTS.deploy(true, 0);
-
+    const mockBaseHTS = await MockBaseHTS.deploy(true);
+    mockBaseHTS.setFailType(0);
     const SwapV2 = await ethers.getContractFactory("SwapTest");
     const swapV2 = await SwapV2.deploy(mockBaseHTS.address);
 
     await swapV2.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, 100, 100);
 
-    return { swapV2 };
+    return { swapV2 , mockBaseHTS };
   }
 
   async function deployFailureFixture() {
     const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-    const mockBaseHTS = await MockBaseHTS.deploy(false, 1);
+    const mockBaseHTS = await MockBaseHTS.deploy(false);
+    await mockBaseHTS.setFailType(0);
 
     const SwapV2 = await ethers.getContractFactory("SwapTest");
     const swapV2 = await SwapV2.deploy(mockBaseHTS.address);
-
+    
     await swapV2.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, 100, 100);
 
-    return { swapV2 };
+    return { swapV2, mockBaseHTS };
   }
 
   it("Create a token pair with 100 unit each ", async function () {
@@ -102,34 +103,16 @@ describe("Swap", function () {
   });
 
   describe("When HTS gives failure repsonse",  async () => {
-
-    async function deployFailureNoInitFixture() {
-      const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-      const mockBaseHTS = await MockBaseHTS.deploy(false, 7);
   
-      const SwapV2 = await ethers.getContractFactory("SwapTest");
-      const swapV2 = await SwapV2.deploy(mockBaseHTS.address);
-    
-      return { swapV2 };
-    }
-  
-    it("Create a token pair fails with revert exception ", async function () {
-      const { swapV2 } = await loadFixture(deployFailureNoInitFixture);
+    it("Create a token pair fails with revert exception Transfer A", async function () {
+      const { swapV2, mockBaseHTS } = await loadFixture(deployFailureFixture);
+      mockBaseHTS.setFailType(7);
       await expect(swapV2.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, 100, 100)).to.revertedWith("Creating contract: Transfering token A to contract failed with status code");
     });
-
-    async function deployFailureInitFailBTransferFixture() {
-      const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-      const mockBaseHTS = await MockBaseHTS.deploy(false, 8);
   
-      const SwapV2 = await ethers.getContractFactory("SwapTest");
-      const swapV2 = await SwapV2.deploy(mockBaseHTS.address);
-    
-      return { swapV2 };
-    }
-  
-    it("Create a token pair fails with revert exception ", async function () {
-      const { swapV2 } = await loadFixture(deployFailureInitFailBTransferFixture);
+    it("Create a token pair fails with revert exception Transfer B ", async function () {
+      const { swapV2 , mockBaseHTS} = await loadFixture(deployFailureFixture);
+      mockBaseHTS.setFailType(8);
       await expect(swapV2.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, 100, 100)).to.revertedWith("Creating contract: Transfering token B to contract failed with status code");
     });
   
@@ -170,20 +153,10 @@ describe("Swap", function () {
     });
 
     //----------------------------------------------------------------------
-    async function fixtureForSwapAFailBTransfer() {
-      const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-      const mockBaseHTS = await MockBaseHTS.deploy(false, 2);
-
-      const SwapV2 = await ethers.getContractFactory("SwapTest");
-      const swapV2 = await SwapV2.deploy(mockBaseHTS.address);
-
-      await swapV2.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, 100, 100);
-      return { swapV2 }
-    }
-
+  
     it("Swap Token A with Fail B transfer", async function () {
-      
-      const { swapV2 } = await loadFixture(fixtureForSwapAFailBTransfer);
+      const { swapV2, mockBaseHTS } = await loadFixture(deployFailureFixture);
+      mockBaseHTS.setFailType(2);
       const tokenBeforeQty = await swapV2.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(100);
       await expect(swapV2.swapToken(zeroAddress, tokenAAddress, zeroAddress, 30, 0)).to.revertedWith("swapTokenA: Transfering token B to contract failed with status code");
@@ -197,21 +170,10 @@ describe("Swap", function () {
       await expect(swapV2.swapToken(zeroAddress, zeroAddress, tokenBAddress, 30, 0)).to.revertedWith("swapTokenB: Transfering token B to contract failed with status code");
     });
 
-    //----------------------------------------------------------------------
-    async function fixtureForSwapBFailATransfer() {
-      const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-      const mockBaseHTS = await MockBaseHTS.deploy(false, 2);
-
-      const SwapV2 = await ethers.getContractFactory("SwapTest");
-      const swapV2 = await SwapV2.deploy(mockBaseHTS.address);
-
-      await swapV2.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, 100, 100);
-      return { swapV2 }
-    }
-
     it("Swap Token B with Fail A transfer", async function () {
       
-      const { swapV2 } = await loadFixture(fixtureForSwapBFailATransfer);
+      const { swapV2, mockBaseHTS } = await loadFixture(deployFailureFixture);
+      mockBaseHTS.setFailType(9);
       const tokenBeforeQty = await swapV2.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(100);
       await expect(swapV2.swapToken(zeroAddress, zeroAddress, tokenBAddress, 30, 0)).to.revertedWith("swapTokenB: Transfering token A to contract failed with status code");
@@ -225,19 +187,9 @@ describe("Swap", function () {
       await expect(swapV2.addLiquidity(zeroAddress, tokenAAddress, tokenBAddress, 30, 30)).to.revertedWith("Add liquidity: Transfering token A to contract failed with status code");
     });
 
-    async function fixtureForAddLiquidityFailBTransfer() {
-      const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-      const mockBaseHTS = await MockBaseHTS.deploy(false, 4);
-
-      const SwapV2 = await ethers.getContractFactory("SwapTest");
-      const swapV2 = await SwapV2.deploy(mockBaseHTS.address);
-
-      await swapV2.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, 100, 100);
-      return { swapV2 }
-    }
-
     it("Add liquidity Fail B Transfer", async function () {
-      const { swapV2 } = await loadFixture(fixtureForAddLiquidityFailBTransfer);
+      const { swapV2, mockBaseHTS } = await loadFixture(deployFailureFixture);
+      mockBaseHTS.setFailType(4);
       const tokenBeforeQty = await swapV2.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(100);
       await expect(swapV2.addLiquidity(zeroAddress, tokenAAddress, tokenBAddress, 30, 30)).to.revertedWith("Add liquidity: Transfering token B to contract failed with status code");
@@ -251,19 +203,9 @@ describe("Swap", function () {
       await expect(swapV2.removeLiquidity(zeroAddress, tokenAAddress, tokenBAddress, 30, 30)).to.revertedWith("Remove liquidity: Transfering token A to contract failed with status code");
     });
 
-    async function fixtureForRemoveLiquidityFailBTransfer() {
-      const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-      const mockBaseHTS = await MockBaseHTS.deploy(false, 5);
-
-      const SwapV2 = await ethers.getContractFactory("SwapTest");
-      const swapV2 = await SwapV2.deploy(mockBaseHTS.address);
-
-      await swapV2.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, 100, 100);
-      return { swapV2 }
-    }
-
     it("Add liquidity Fail B Transfer", async function () {
-      const { swapV2 } = await loadFixture(fixtureForRemoveLiquidityFailBTransfer);
+      const { swapV2, mockBaseHTS } = await loadFixture(deployFailureFixture);
+      mockBaseHTS.setFailType(5);
       const tokenBeforeQty = await swapV2.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(100);
       await expect(swapV2.removeLiquidity(zeroAddress, tokenAAddress, tokenBAddress, 30, 30)).to.revertedWith("Remove liquidity: Transfering token B to contract failed with status code");
