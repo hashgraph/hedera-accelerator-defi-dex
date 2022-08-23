@@ -13,11 +13,13 @@ contract SwapTest is AbstractSwap {
         creator = msg.sender;
     }
 
-    function associateToken(address,  address ) internal override  virtual returns(int) {
-        return HederaResponseCodes.SUCCESS;
+    function associateToken(address account,  address token) internal override  virtual returns(int) {
+        
+        return  tokenService.associateTokenPublic(account, token);
     }
 
-    function transferToken(address, address , address, int64) internal override virtual returns(int) {
-        return HederaResponseCodes.SUCCESS;
+    function transferToken(address token, address sender, address receiver, int64 amount) internal override virtual returns(int) {
+        
+        return tokenService.transferTokenPublic(token, sender, receiver, amount);
     }
 }

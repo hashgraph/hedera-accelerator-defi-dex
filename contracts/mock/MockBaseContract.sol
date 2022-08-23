@@ -3,19 +3,75 @@ pragma solidity ^0.8.0;
 
 import "../common/IBaseHTS.sol";
 import "../common/hedera/HederaResponseCodes.sol";
+import "hardhat/console.sol";
 
 contract MockBaseHTS is IBaseHTS {
-    bool isSuccess;
+
+    enum FailTransactionFor {
+        initialise,
+        swapAFailedSendingA,
+        swapAFailedSendingB,
+        addLiquidity,
+        addLiquidityFailBTransfer,
+        removeLiquidityFailBTransfer,
+        removeLiquidity,
+        initialiseFailATransfer,
+        initialiseFailBTransfer,
+        swapBFailedSendingA
+    }
+
+    bool internal isSuccess;
+    int internal trueTransaction = 0;
+    FailTransactionFor internal failType;
     constructor(bool _isSucces) {
         isSuccess = _isSucces;
     }
-    function transferTokenPublic(address, address, address, int64) 
-        external view override
-returns (int responseCode) {
-            return isSuccess ? int(22) : int(23);
+
+    function setFailType(int _type) public {
+        failType = FailTransactionFor(_type);
+        trueTransaction = successForType();
+    }
+
+    function successForType() internal view returns (int) {
+        if (failType == FailTransactionFor.initialise) {
+            return 4;
         }
+        if (failType == FailTransactionFor.initialiseFailATransfer) {
+            return 2;
+        }
+        if (failType == FailTransactionFor.initialiseFailBTransfer) {
+            return 3;
+        }
+        if (failType == FailTransactionFor.swapAFailedSendingB) {
+            return 2;
+        }
+        if (failType == FailTransactionFor.swapBFailedSendingA) {
+            return 2;
+        }
+        if (failType == FailTransactionFor.addLiquidityFailBTransfer) {
+            return 3;
+        }
+        if (failType == FailTransactionFor.removeLiquidityFailBTransfer) {
+            return 1;
+        }
+        return 0;
+    }
+
+    function transferTokenPublic(address, address, address, int64) external override returns (int responseCode) {
+        if (trueTransaction > 0) {
+            trueTransaction-=1;
+            return int(22);
+        }
+        
+        int result = isSuccess ? int(22) : int(23);
+        return result;
+    }
     
-    function associateTokenPublic(address, address) external override view returns (int responseCode) {
+    function associateTokenPublic(address, address) external override returns (int responseCode) {
+        if (trueTransaction > 0) {
+            trueTransaction-=1;
+            return int(22);
+        }
         return isSuccess ? int(22) : int(23);
     }
     
