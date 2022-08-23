@@ -73,11 +73,11 @@ contract MockBaseHTS is IBaseHTS {
             trueTransaction-=1;
             return int(22);
         }
-        return (isSuccess) ? int(22) : int(23);
+        return isSuccess ? int(22) : int(23);
     }
     
     function associateTokensPublic(address, address[] memory) 
         external override view  returns (int responseCode) {
-            return (isSuccess) ? int(22) : int(23);
+            return isSuccess ? int(22) : int(23);
         }
 }

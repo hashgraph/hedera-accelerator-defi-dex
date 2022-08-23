@@ -4,7 +4,6 @@ pragma experimental ABIEncoderV2;
 
 import "./common/hedera/HederaResponseCodes.sol";
 import "./common/IBaseHTS.sol";
-import "hardhat/console.sol";
 
 abstract contract AbstractSwap is HederaResponseCodes {
     IBaseHTS tokenService;
@@ -41,9 +40,7 @@ abstract contract AbstractSwap is HederaResponseCodes {
         associateToken(address(this),  _tokenB);
 
         int response = tokenService.transferTokenPublic(_tokenA, fromAccount, address(this), _tokenAQty);
-        console.log(uint(response));
         require(response == HederaResponseCodes.SUCCESS, "Creating contract: Transfering token A to contract failed with status code");
-        
 
         response = tokenService.transferTokenPublic(_tokenB, fromAccount, address(this), _tokenBQty);
         require(response == HederaResponseCodes.SUCCESS, "Creating contract: Transfering token B to contract failed with status code");
