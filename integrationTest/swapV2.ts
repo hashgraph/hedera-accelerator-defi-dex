@@ -30,7 +30,7 @@ let tokenB = TokenId.fromString("0.0.47646196").toSolidityAddress();
 const treasure = AccountId.fromString("0.0.47645191").toSolidityAddress();
 const treasureKey = PrivateKey.fromString("308ed38983d9d20216d00371e174fe2d475dd32ac1450ffe2edfaab782b32fc5");
 
-const contractId = "0.0.47842517";
+const contractId = "0.0.47966802";
 
 const createLiquidityPool = async () => {
   const tokenAQty = new BigNumber(10);
