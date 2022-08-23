@@ -28,8 +28,9 @@ contract MockBaseHTS is IBaseHTS {
     }
 
     function setFailType(int _type) public {
-        trueTransaction = 0;
         failType = FailTransactionFor(_type);
+        trueTransaction = successForType();
+
     }
 
     function successForType() internal view returns (int) {
@@ -58,7 +59,7 @@ contract MockBaseHTS is IBaseHTS {
     }
 
     function transferTokenPublic(address, address, address, int64) external override returns (int responseCode) {
-        if (trueTransaction + successForType() > 0 ) {
+        if (trueTransaction > 0) {
             trueTransaction-=1;
             return int(22);
         }
@@ -68,7 +69,7 @@ contract MockBaseHTS is IBaseHTS {
     }
     
     function associateTokenPublic(address, address) external override returns (int responseCode) {
-        if (trueTransaction + successForType() > 0 ) {
+        if (trueTransaction > 0) {
             trueTransaction-=1;
             return int(22);
         }
