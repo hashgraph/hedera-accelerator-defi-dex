@@ -7,14 +7,11 @@ import { ethers } from "hardhat";
 
 describe("BaseHTS", function () {
   async function deployFixture() {
-    const BaseHTS = await hre.ethers.getContractFactory("BaseHTS");
-    const baseHTS = await hre.upgrades.deployProxy(BaseHTS, {"kind": "uups", "unsafeAllow": ['delegatecall']});
-
-    return { baseHTS };
+  
   }
 
   it("Base test ", async function () {
-    const { baseHTS } = await loadFixture(deployFixture);
+    //const { baseHTS } = await loadFixture(deployFixture);
   });
 
 });
