@@ -4,10 +4,12 @@ pragma experimental ABIEncoderV2;
 
 import "./common/hedera/HederaResponseCodes.sol";
 import "./common/IBaseHTS.sol";
+import "./ILPToken.sol";
 
 abstract contract AbstractSwap is HederaResponseCodes {
-    
-    IBaseHTS tokenService;
+
+    IBaseHTS internal tokenService;
+    ILPToken internal lpTokenContract;
 
     struct Pair {
         Token tokenA;
@@ -38,7 +40,7 @@ abstract contract AbstractSwap is HederaResponseCodes {
         liquidityContribution[fromAccount] = LiquidityContributor(pair);
 
         associateToken(address(this),  _tokenA);
-        associateToken(address(this),  _tokenB);
+        associateToken(address(this),  _tokenB);    
 
         int response = tokenService.transferTokenPublic(_tokenA, fromAccount, address(this), _tokenAQty);
         require(response == HederaResponseCodes.SUCCESS, "Creating contract: Transfering token A to contract failed with status code");
