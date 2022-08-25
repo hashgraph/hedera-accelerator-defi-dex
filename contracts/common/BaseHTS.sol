@@ -19,8 +19,9 @@ contract BaseHTS is HederaTokenService {
             return HederaTokenService.associateTokens(account, tokens);
     }
     
-    function mintTokenPublic(address token, uint64 amount, bytes[] memory metadata) external
+    function mintTokenPublic(address token, uint64 amount) external
         returns (int responseCode, uint64 newTotalSupply, int64[] memory serialNumbers) {
+            bytes[] memory metadata;
             return HederaTokenService.mintToken(token, amount, metadata);
     }
 

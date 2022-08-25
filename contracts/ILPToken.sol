@@ -5,9 +5,8 @@ import "./common/hedera/HederaTokenService.sol";
 import "./common/hedera/HederaResponseCodes.sol";
 
 interface ILPToken { 
-    function mintToken(address token, uint64 amount, bytes[] memory metadata) external
-        returns (int responseCode, uint64 newTotalSupply, int64[] memory serialNumbers);
+    function allotLPTokenFor(uint64 amountA, uint64 amountB) external returns (int responseCode);
 
-    function burnToken(address token, uint64 amount, int64[] memory serialNumbers) external
+    function burnToken(uint64 amount, int64[] memory serialNumbers) external
         returns (int responseCode, uint64 newTotalSupply);
 }

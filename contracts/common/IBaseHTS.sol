@@ -14,7 +14,7 @@ interface IBaseHTS {
     function associateTokensPublic(address account, address[] memory tokens) 
         external returns (int responseCode);
 
-    function mintTokenPublic(address token, uint64 amount, bytes[] memory metadata) external
+    function mintTokenPublic(address token, uint64 amount) external
         returns (int responseCode, uint64 newTotalSupply, int64[] memory serialNumbers);
 
     function burnTokenPublic(address token, uint64 amount, int64[] memory serialNumbers) external

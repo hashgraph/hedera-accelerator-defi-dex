@@ -47,6 +47,8 @@ abstract contract AbstractSwap is HederaResponseCodes {
 
         response = tokenService.transferTokenPublic(_tokenB, fromAccount, address(this), _tokenBQty);
         require(response == HederaResponseCodes.SUCCESS, "Creating contract: Transfering token B to contract failed with status code");
+
+        lpTokenContract.allotLPTokenFor(uint64(_tokenAQty), uint64(_tokenBQty));
     }
 
     function addLiquidity(address fromAccount, address _tokenA, address _tokenB, int64 _tokenAQty, int64 _tokenBQty) external {

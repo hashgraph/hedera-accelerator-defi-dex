@@ -80,7 +80,7 @@ contract MockBaseHTS is IBaseHTS {
             return isSuccess ? int(22) : int(23);
         }
 
-    function mintTokenPublic(address token, uint64 amount, bytes[] memory metadata) external override
+    function mintTokenPublic(address token, uint64 amount) external override
         returns (int responseCode, uint64 newTotalSupply, int64[] memory serialNumbers) {
             int64[] memory blank;
             return ((isSuccess) ? int(22) : int(23), amount, blank);
