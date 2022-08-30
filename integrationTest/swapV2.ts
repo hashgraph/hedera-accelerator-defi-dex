@@ -1,36 +1,40 @@
 import { BigNumber } from "bignumber.js";
 import {
-  AccountId,
-  PrivateKey,
   TokenId,
   ContractExecuteTransaction,
   ContractFunctionParameters,
-  Client,
-  ContractId
 } from "@hashgraph/sdk";
 
-const createClient = () => {
-  const myAccountId = AccountId.fromString("0.0.47710057");
-  const myPrivateKey = PrivateKey.fromString("3030020100300706052b8104000a04220420d38b0ed5f11f8985cd72c8e52c206b512541c6f301ddc9d18bd8b8b25a41a80f");
+import ClientManagement from "./utils/utils";
 
-  if (myAccountId == null || myPrivateKey == null) {
-    throw new Error(
-      "Environment variables myAccountId and myPrivateKey must be present"
-    );
-  }
+const clientManagement = new ClientManagement();
 
-  const client = Client.forTestnet();
-  client.setOperator(myAccountId, myPrivateKey);
-  return client;
-};
+const htsServiceAddress = "0x0000000000000000000000000000000002d9a5fa";
 
-const client = createClient();
+const client = clientManagement.createClient();
+
 const tokenA = TokenId.fromString("0.0.47646195").toSolidityAddress();
 let tokenB = TokenId.fromString("0.0.47646196").toSolidityAddress();
-const treasure = AccountId.fromString("0.0.47645191").toSolidityAddress();
-const treasureKey = PrivateKey.fromString("308ed38983d9d20216d00371e174fe2d475dd32ac1450ffe2edfaab782b32fc5");
 
-const contractId = "0.0.47966802";
+const {treasureId, treasureKey} = clientManagement.getTreasure();
+
+const contractId = "0.0.48104688";
+
+const initialize = async () => {
+  const initialize = await new ContractExecuteTransaction()
+    .setContractId(contractId)
+    .setGas(2000000)
+    .setFunction(
+      "initialize",
+      new ContractFunctionParameters()
+        .addAddress(htsServiceAddress)
+    )
+    .freezeWith(client)
+    .sign(treasureKey);
+  const initializeTx = await initialize.execute(client);
+  const initializeTxRx = await initializeTx.getReceipt(client);
+  console.log(`Initialized status : ${initializeTxRx.status}`);
+};
 
 const createLiquidityPool = async () => {
   const tokenAQty = new BigNumber(10);
@@ -44,7 +48,7 @@ const createLiquidityPool = async () => {
     .setFunction(
       "initializeContract",
       new ContractFunctionParameters()
-        .addAddress(treasure)
+        .addAddress(treasureId.toSolidityAddress())
         .addAddress(tokenA)
         .addAddress(tokenB)
         .addInt64(tokenAQty)
@@ -70,7 +74,7 @@ const addLiquidity = async () => {
     .setFunction(
       "addLiquidity",
       new ContractFunctionParameters()
-        .addAddress(treasure)
+        .addAddress(treasureId.toSolidityAddress())
         .addAddress(tokenA)
         .addAddress(tokenB)
         .addInt64(tokenAQty)
@@ -97,7 +101,7 @@ const removeLiquidity = async () => {
     .setFunction(
       "removeLiquidity",
       new ContractFunctionParameters()
-        .addAddress(treasure)
+        .addAddress(treasureId.toSolidityAddress())
         .addAddress(tokenA)
         .addAddress(tokenB)
         .addInt64(tokenAQty)
@@ -124,7 +128,7 @@ const swapTokenA = async () => {
     .setFunction(
       "swapToken",
       new ContractFunctionParameters()
-        .addAddress(treasure)
+        .addAddress(treasureId.toSolidityAddress())
         .addAddress(tokenA)
         .addAddress(tokenB)
         .addInt64(tokenAQty)
@@ -160,7 +164,7 @@ const getContributorTokenShare = async () => {
     .setGas(1000000)
     .setFunction(
       "getContributorTokenShare",
-      new ContractFunctionParameters().addAddress(treasure)
+      new ContractFunctionParameters().addAddress(treasureId.toSolidityAddress())
     )
     .freezeWith(client);
   const getContributorTokenShareTx = await getContributorTokenShare.execute(
@@ -170,11 +174,12 @@ const getContributorTokenShare = async () => {
   const tokenAQty = response.contractFunctionResult!.getInt64(0);
   const tokenBQty = response.contractFunctionResult!.getInt64(1);
   console.log(
-    `${tokenAQty} units of token A and ${tokenBQty} units of token B contributed by ${treasure}.`
+    `${tokenAQty} units of token A and ${tokenBQty} units of token B contributed by ${treasureId}.`
   );
 };
 
 async function main() {
+  await initialize();
   await createLiquidityPool();
   await addLiquidity();
   await removeLiquidity();

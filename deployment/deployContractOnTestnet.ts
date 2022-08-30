@@ -102,5 +102,6 @@ export class Deployment {
     await this.printBalance(wallet, walletAddress);
 
     console.log(`\n- DONE ===================================`);
+    return contractAddress;
   };
 }
