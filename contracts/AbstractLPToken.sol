@@ -4,12 +4,20 @@ pragma experimental ABIEncoderV2;
 
 import "./common/hedera/HederaResponseCodes.sol";
 import "./common/IBaseHTS.sol";
+import "./common/hedera/IHederaTokenService.sol";
+import "./common/hedera/HederaTokenService.sol";
+import "./common/hedera/ExpiryHelper.sol";
 
-abstract contract AbstractLPToken is HederaResponseCodes {
+abstract contract HederaToken {
+    function name() public virtual view returns(string memory);
+}
+
+abstract contract AbstractLPToken is ExpiryHelper {
     IBaseHTS tokenService;
     mapping (address => uint256) tokenShare;   
     address internal creator;
     address internal lpToken;
+    bytes internal supplyKey;
 
     function lpTokenForUser(address _user) internal view returns(uint256) {
         return tokenShare[_user];
@@ -20,21 +28,33 @@ abstract contract AbstractLPToken is HederaResponseCodes {
 
     function burnToken(uint64 amount, int64[] memory serialNumbers) internal virtual returns (int responseCode, uint64 newTotalSupply);
     
-    function associateToken(address account,  address _token) internal virtual returns(int);
+    function associateTokenInternal(address account,  address _token) internal virtual returns(int);
 
-    function transferToken(address _token, address sender, address receiver, int64 amount) internal virtual returns(int);
+    function transferTokenInternal(address _token, address sender, address receiver, int64 amount) internal virtual returns(int);
 
 
-    function allotLPTokenFor(uint64 amountA, uint64 amountB) external returns (int responseCode) {
+    function initializeParams(address _lpToken, IBaseHTS _tokenService) external {
+         // instantiate the list of keys we'll use for token create
+         lpToken = _lpToken;
+         tokenService = _tokenService;
+    }
+
+    function getName() public view returns (string memory) {
+        HederaToken token = HederaToken(lpToken);
+        return token.name();
+    }
+     
+    function allotLPTokenFor(uint64 amountA, uint64 amountB, address _toUser) external returns (int responseCode) {
+        require(lpToken > address(0x0), "Liquidity Token not initialized");
         require((amountA > 0 && amountB > 0), "Please provide positive token counts" );
         // logic to decide quantity of LP
         uint64 mintingAmount = sqrt(amountA * amountB);
-        // Associate LP to user
-        associateToken(msg.sender, lpToken);
-        // mint new amount of LP
+        //Associate LP to user
+        associateTokenInternal(_toUser, lpToken);
+        ////mint new amount of LP
         mintToken(mintingAmount);
         // transfer Lp to users account
-
+        transferTokenInternal(lpToken, address(this) , _toUser, int64(mintingAmount));
         return 22;
     }
 

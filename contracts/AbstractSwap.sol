@@ -47,8 +47,8 @@ abstract contract AbstractSwap is HederaResponseCodes {
 
         response = tokenService.transferTokenPublic(_tokenB, fromAccount, address(this), _tokenBQty);
         require(response == HederaResponseCodes.SUCCESS, "Creating contract: Transfering token B to contract failed with status code");
-
-        lpTokenContract.allotLPTokenFor(uint64(_tokenAQty), uint64(_tokenBQty));
+        //lpTokenContract.initializeParams("TOKENA-TOKENB-TEST", "TA-TB-T");
+        lpTokenContract.allotLPTokenFor(uint64(_tokenAQty), uint64(_tokenBQty), msg.sender);
     }
 
     function addLiquidity(address fromAccount, address _tokenA, address _tokenB, int64 _tokenAQty, int64 _tokenBQty) external {
@@ -59,15 +59,15 @@ abstract contract AbstractSwap is HederaResponseCodes {
         associateToken(address(this),  _tokenB);
 
         int response = tokenService.transferTokenPublic(_tokenA, fromAccount, address(this), _tokenAQty);
-        require(response == HederaResponseCodes.SUCCESS, "Add liquidity: Transfering token A to contract failed with status code");
+        require(response == HederaResponseCodes.SUCCESS, "Add liquidity: Transfering token A to contract failed with status code"); 
     
         response = tokenService.transferTokenPublic(_tokenB, fromAccount, address(this), _tokenBQty);
-        require(response == HederaResponseCodes.SUCCESS, "Add liquidity: Transfering token B to contract failed with status code");
-
+        require(response == HederaResponseCodes.SUCCESS, "Add liquidity: Transfering token B to contract failed with status code"); 
         LiquidityContributor memory contributedPair = liquidityContribution[fromAccount];
         contributedPair.pair.tokenA.tokenQty += _tokenAQty;
         contributedPair.pair.tokenB.tokenQty += _tokenBQty;
         liquidityContribution[fromAccount] = contributedPair;
+        lpTokenContract.allotLPTokenFor(uint64(_tokenAQty), uint64(_tokenBQty), msg.sender);
     }
 
     function removeLiquidity(address toAccount, address _tokenA, address _tokenB, int64 _tokenAQty, int64 _tokenBQty) external {
