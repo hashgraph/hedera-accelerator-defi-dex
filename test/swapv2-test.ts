@@ -2,13 +2,21 @@
 import {  expect } from "chai";
 
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { ethers } from "hardhat";
+import { ethers, upgrades } from "hardhat";
 
 describe("Swap", function () {
   const tokenBAddress = "0x0000000000000000000000000000000000010001";
   const tokenAAddress = "0x0000000000000000000000000000000000020002";
   const tokenWrongAddress = "0x0000000000000000000000000000000000020003";
   const zeroAddress = "0x1111111000000000000000000000000000000000";
+
+  describe("Swap Upgradeable", function () {
+    it("Verify if the Swap contract is upgradeable safe ", async function () {
+      const Swap = await ethers.getContractFactory("Swap");
+      const instance = await upgrades.deployProxy(Swap, [zeroAddress], {unsafeAllow: ['delegatecall']});
+      await instance.deployed();
+    });
+  });
 
   async function deployFixture() {
     const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
