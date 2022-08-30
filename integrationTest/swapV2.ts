@@ -3,6 +3,9 @@ import {
   TokenId,
   ContractExecuteTransaction,
   ContractFunctionParameters,
+
+  AccountBalanceQuery,
+  ContractId
 } from "@hashgraph/sdk";
 
 import ClientManagement from "./utils/utils";
@@ -16,7 +19,6 @@ const client = clientManagement.createClient();
 
 const tokenA = TokenId.fromString("0.0.47646195").toSolidityAddress();
 let tokenB = TokenId.fromString("0.0.47646196").toSolidityAddress();
-
 const {treasureId, treasureKey} = clientManagement.getTreasure();
 
 const contractId = "0.0.48104688";
@@ -36,6 +38,13 @@ const initialize = async () => {
   const initializeTxRx = await initializeTx.getReceipt(client);
   console.log(`Initialized status : ${initializeTxRx.status}`);
 };
+// =======
+// const treasure = AccountId.fromString("0.0.47645191").toSolidityAddress();
+// const treasureAccountId = AccountId.fromString("0.0.47645191")
+// const treasureKey = PrivateKey.fromString("308ed38983d9d20216d00371e174fe2d475dd32ac1450ffe2edfaab782b32fc5");
+
+// const contractId = "0.0.48104527";
+// >>>>>>> 141b996 (calling from main contract not working)
 
 const createLiquidityPool = async () => {
   const tokenAQty = new BigNumber(10);
@@ -71,7 +80,7 @@ const addLiquidity = async () => {
   );
   const addLiquidityTx = await new ContractExecuteTransaction()
     .setContractId(contractId)
-    .setGas(2000000)
+    .setGas(3000000)
     .setFunction(
       "addLiquidity",
       new ContractFunctionParameters()
@@ -238,9 +247,17 @@ const getInGivenOut =async () => {
 };
 
 
+const getTreaserBalance = async () => {
+  const treasureBalance1 = await new AccountBalanceQuery()
+      .setAccountId(treasureId)
+      .execute(client);
+
+  console.log(treasureBalance1.tokens);
+}
 async function main() {
   await initialize();
   await createLiquidityPool();
+  await getTreaserBalance();
   await addLiquidity();
   await removeLiquidity();
   await swapTokenA();

@@ -31,26 +31,18 @@ let tokenB = TokenId.fromString("0.0.47646196").toSolidityAddress();
 const treasure = AccountId.fromString("0.0.47645191").toSolidityAddress();
 const treasureKey = PrivateKey.fromString("308ed38983d9d20216d00371e174fe2d475dd32ac1450ffe2edfaab782b32fc5");
 
-const contractId = ContractId.fromString("0.0.48099352");//0x0000000000000000000000000000000002ddf018
+const contractId = ContractId.fromString("0.0.48101341");//0x0000000000000000000000000000000002ddf018
 
 const itegrationTestLPToken = async () => {
-  console.log(`\n STEP 6 - call the contract to set the token id`);
-
+// Contract created 0.0.48101341 ,Contract Address 0000000000000000000000000000000002ddf7dd
+//STEP 3 - Create token
+//- Token created 0.0.48101342, Token Address 0000000000000000000000000000000002ddf7de
   let aliceAccount = AccountId.fromString("0.0.48099349");
-  let tokenId = TokenId.fromString("0.0.48099353");
-  const htsServiceAddress = "0x0000000000000000000000000000000002ddee72";
+  let tokenId = TokenId.fromString("0.0.48101342");
 
   if (tokenId != null && contractId != null && aliceAccount != null) {
   let contractFunctionParameters = new ContractFunctionParameters()
-      .addAddress(tokenId.toSolidityAddress())
-      .addAddress(htsServiceAddress);
-
-  const contractTokenTx = await new ContractExecuteTransaction()
-      .setContractId(contractId ?? "")
-      .setFunction("initializeParams", contractFunctionParameters)
-      .setGas(500000)
-      .execute(client);
-  await contractTokenTx.getReceipt(client);
+      
 
   console.log(`\n STEP 7 - query token name with a transaction`);
 
@@ -64,29 +56,11 @@ const itegrationTestLPToken = async () => {
 
   console.log(contractNameTxRecord?.contractFunctionResult?.getString(0));
   
-  console.log(`\n STEP 8 - minting 1 to Alice`);
+  console.log(`\n STEP 8 - minting 10 to Alice`);
   contractFunctionParameters = new ContractFunctionParameters()
       //.addInt64(new BigNumber(10));
       // .addInt64(new BigNumber(10))
        .addAddress(aliceAccount.toSolidityAddress());
-
-  // switch client to alice
-  //client.setOperator(aliceAccount, aliceKey);
-
-  // const contractMintTx = await new ContractExecuteTransaction()
-  //     .setContractId(contractId)
-  //     .setFunction("mintTo", contractFunctionParameters)
-  //     .setGas(500000)
-  //     .execute(client);
-  // await contractMintTx.getReceipt(client);
-
-  // console.log(`\n STEP 9 - Alice Balance`);
-
-  // const aliceBalance = await new AccountBalanceQuery()
-  //     .setAccountId(aliceAccount)
-  //     .execute(client);
-
-  // console.log(aliceBalance.tokens);
 
   console.log(`\n STEP 10 - using Service`);
   const tokenAQty = new BigNumber(10);

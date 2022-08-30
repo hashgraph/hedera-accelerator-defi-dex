@@ -47,8 +47,7 @@ abstract contract AbstractSwap is HederaResponseCodes {
 
         response = tokenService.transferTokenPublic(_tokenB, fromAccount, address(this), _tokenBQty);
         require(response == HederaResponseCodes.SUCCESS, "Creating contract: Transfering token B to contract failed with status code");
-        //lpTokenContract.initializeParams("TOKENA-TOKENB-TEST", "TA-TB-T");
-        lpTokenContract.allotLPTokenFor(uint64(_tokenAQty), uint64(_tokenBQty), msg.sender);
+        lpTokenContract.allotLPTokenFor(uint64(_tokenAQty), uint64(_tokenBQty), fromAccount);
     }
 
     function addLiquidity(address fromAccount, address _tokenA, address _tokenB, int64 _tokenAQty, int64 _tokenBQty) external {
@@ -67,7 +66,7 @@ abstract contract AbstractSwap is HederaResponseCodes {
         contributedPair.pair.tokenA.tokenQty += _tokenAQty;
         contributedPair.pair.tokenB.tokenQty += _tokenBQty;
         liquidityContribution[fromAccount] = contributedPair;
-        lpTokenContract.allotLPTokenFor(uint64(_tokenAQty), uint64(_tokenBQty), msg.sender);
+        lpTokenContract.allotLPTokenFor(uint64(_tokenAQty), uint64(_tokenBQty), fromAccount);
     }
 
     function removeLiquidity(address toAccount, address _tokenA, address _tokenB, int64 _tokenAQty, int64 _tokenBQty) external {

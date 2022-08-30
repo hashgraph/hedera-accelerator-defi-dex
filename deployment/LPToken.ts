@@ -29,7 +29,7 @@ async function main() {
 
 async function deployTokenContract() {
   let client = Client.forTestnet();
-    const htsServiceAddress = "0x0000000000000000000000000000000002ddee72";
+    const htsServiceAddress = "0x0000000000000000000000000000000002ddf7a2";
     const operatorKey = PrivateKey.fromString("302e020100300506032b657004220420b69079b0cdebea97ec13c78bf7277d3f4aef35189755b5d11c2dfae40c566aa8");
 
     client.setOperator(
@@ -96,22 +96,37 @@ async function deployTokenContract() {
     const contractId = contractCreateRx.contractId;
     console.log(`- Contract created ${contractId?.toString()} ,Contract Address ${contractId?.toSolidityAddress()} -`);
     if  (contractId != null) {
-    console.log(`\nSTEP 3 - Create token`);
-    const tokenCreateTx = await new TokenCreateTransaction()
-        .setTokenName("TOKENA-TOKENB")
-        .setTokenSymbol("A-B")
-        .setDecimals(0)
-        .setInitialSupply(0)
-        .setTokenType(TokenType.FungibleCommon)
-        .setSupplyType(TokenSupplyType.Infinite)
-        //create the token with the contract as supply and treasury
-        .setSupplyKey(contractId)
-        .setTreasuryAccountId(contractId?.toString() ?? "")
-        .execute(client);
+        console.log(`\nSTEP 3 - Create token`);
+        const tokenCreateTx = await new TokenCreateTransaction()
+            .setTokenName("TOKENA-TOKENB")
+            .setTokenSymbol("A-B")
+            .setDecimals(0)
+            .setInitialSupply(0)
+            .setTokenType(TokenType.FungibleCommon)
+            .setSupplyType(TokenSupplyType.Infinite)
+          //create the token with the contract as supply and treasury
+            .setSupplyKey(contractId)
+            .setTreasuryAccountId(contractId?.toString() ?? "")
+            .execute(client);
 
-    const tokenCreateRx = await tokenCreateTx.getReceipt(client);
-    const tokenId = tokenCreateRx.tokenId;
-    console.log(`- Token created ${tokenId}, Token Address ${tokenId?.toSolidityAddress()}`);
+      const tokenCreateRx = await tokenCreateTx.getReceipt(client);
+      const tokenId = tokenCreateRx.tokenId;
+      console.log(`- Token created ${tokenId}, Token Address ${tokenId?.toSolidityAddress()}`);
+      console.log(`\n STEP 6 - call the contract to set the token id`);
+
+
+      if (tokenId != null && contractId != null && aliceAccount != null) {
+      let contractFunctionParameters = new ContractFunctionParameters()
+        .addAddress(tokenId.toSolidityAddress())
+        .addAddress(htsServiceAddress);
+
+      const contractTokenTx = await new ContractExecuteTransaction()
+        .setContractId(contractId ?? "")
+        .setFunction("initializeParams", contractFunctionParameters)
+        .setGas(500000)
+        .execute(client);
+      await contractTokenTx.getReceipt(client);
+    }
   }
     client.close();
 }
