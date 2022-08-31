@@ -54,8 +54,7 @@ abstract contract AbstractLPToken is ExpiryHelper {
         ////mint new amount of LP
         mintToken(mintingAmount);
         // transfer Lp to users account
-        HederaTokenService.transferToken(lpToken, address(this) , _toUser, int64(mintingAmount));
-        //transferTokenInternal(lpToken, address(this) , _toUser, int64(mintingAmount));
+        transferTokenInternal(lpToken, address(this) , _toUser, int64(mintingAmount));
         return 22;
     }
 

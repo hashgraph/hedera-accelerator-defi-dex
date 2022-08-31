@@ -9,21 +9,21 @@ contract LPToken is AbstractLPToken {
     
     function mintToken(uint64 amount) override internal virtual 
      returns (int responseCode, uint64 newTotalSupply, int64[] memory serialNumbers) {
-            (int response, uint64 newTotalSupply, int64[] memory serialNumbers) = HederaTokenService.mintToken(lpToken, amount, new bytes[](0));
+            // (int response, uint64 newTotalSupply, int64[] memory serialNumbers) = HederaTokenService.mintToken(lpToken, amount, new bytes[](0));
 
-             if (response != HederaResponseCodes.SUCCESS) {
-                revert ("Mint Failed");
-             }
-             tokenShare[msg.sender] = tokenShare[msg.sender] + amount;
-            return (response, newTotalSupply, serialNumbers);
-            // (bool success, bytes memory result) = address(tokenService).delegatecall(
-            // abi.encodeWithSelector(IBaseHTS.mintTokenPublic.selector,
-            // lpToken, amount));
-            // int64[] memory blank;
-            // if (success) {
-            //     tokenShare[msg.sender] = tokenShare[msg.sender] + amount;
-            // }
-            // return success ? abi.decode(result, (int, uint64, int64[])) : (HederaResponseCodes.UNKNOWN, 0, blank);
+            //  if (response != HederaResponseCodes.SUCCESS) {
+            //     revert ("Mint Failed");
+            //  }
+            //  tokenShare[msg.sender] = tokenShare[msg.sender] + amount;
+            // return (response, newTotalSupply, serialNumbers);
+            (bool success, bytes memory result) = address(tokenService).delegatecall(
+            abi.encodeWithSelector(IBaseHTS.mintTokenPublic.selector,
+            lpToken, amount));
+            int64[] memory blank;
+            if (success) {
+                tokenShare[msg.sender] = tokenShare[msg.sender] + amount;
+            }
+            return success ? abi.decode(result, (int, uint64, int64[])) : (HederaResponseCodes.UNKNOWN, 0, blank);
     }
 
     function burnToken(uint64 amount, int64[] memory serialNumbers) internal override virtual

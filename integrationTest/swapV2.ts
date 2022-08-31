@@ -14,7 +14,6 @@ import ClientManagement from "./utils/utils";
 const clientManagement = new ClientManagement();
 
 const htsServiceAddress = "0x0000000000000000000000000000000002d9a5fa";
-
 const client = clientManagement.createClient();
 
 const tokenA = TokenId.fromString("0.0.47646195").toSolidityAddress();
