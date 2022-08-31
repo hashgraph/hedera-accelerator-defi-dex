@@ -58,7 +58,7 @@ async function deployTokenContract() {
 
     createAccountRx = await createAccountTx.getReceipt(client);
     const aliceAccount = createAccountRx.accountId;
-    console.log(`- Alice account is ${aliceAccount?.toString()}`);
+    console.log(`- Alice account is ${aliceAccount?.toString()} \n privatekey: ${aliceKey}`);
 
     // switch client to admin
     client.setOperator(adminAccount ?? "", adminKey);

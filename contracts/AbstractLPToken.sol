@@ -39,7 +39,7 @@ abstract contract AbstractLPToken is ExpiryHelper {
          tokenService = _tokenService;
     }
 
-    function getName() public view returns (string memory) {
+    function getName() external view returns (string memory) {
         HederaToken token = HederaToken(lpToken);
         return token.name();
     }
@@ -54,7 +54,8 @@ abstract contract AbstractLPToken is ExpiryHelper {
         ////mint new amount of LP
         mintToken(mintingAmount);
         // transfer Lp to users account
-        transferTokenInternal(lpToken, address(this) , _toUser, int64(mintingAmount));
+        HederaTokenService.transferToken(lpToken, address(this) , _toUser, int64(mintingAmount));
+        //transferTokenInternal(lpToken, address(this) , _toUser, int64(mintingAmount));
         return 22;
     }
 
