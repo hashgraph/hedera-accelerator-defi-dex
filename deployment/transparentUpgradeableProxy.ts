@@ -1,13 +1,8 @@
-import {
-  AccountId
-} from "@hashgraph/sdk";
 import { Deployment } from "./deployContractOnTestnet";
 import ClientManagement from "../integrationTest/utils/utils";
 
 const clientManagement =  new ClientManagement();
 const {adminId} = clientManagement.getAdmin();
-
-//const swapContractAddress = "0x0000000000000000000000000000000002dc77c3";
 
 const swapContractAddress = "0x0000000000000000000000000000000002de04e7";
 
