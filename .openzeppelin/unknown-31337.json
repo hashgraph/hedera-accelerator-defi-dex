@@ -1,0 +1,147 @@
+{
+  "manifestVersion": "3.2",
+  "admin": {
+    "address": "0x0165878A594ca255338adfa4d48449f69242Eb8F",
+    "txHash": "0xeca6dac4e01e8440fd82b0af1c63503c9f7c6104c35e0a74c569ce556e2ca6a6"
+  },
+  "proxies": [
+    {
+      "address": "0xa513E6E4b8f2a923D98304ec87F64353C4D5C853",
+      "txHash": "0xaa098f84ec36d34d0d53109d040f1169b6ab2cfaae177567bcd7f45d0f728277",
+      "kind": "transparent"
+    }
+  ],
+  "impls": {
+    "ac3a3b3b33a332c0fd06ab7044e0522152b5fc23f3d85df0206faeba02df3457": {
+      "address": "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707",
+      "txHash": "0x0a78f610b1df55f07757f43fc65e63b5b766e13ee25a52fb704e129bad3c4838",
+      "layout": {
+        "storage": [
+          {
+            "label": "tokenService",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_contract(IBaseHTS)1388",
+            "contract": "AbstractSwap",
+            "src": "contracts/AbstractSwap.sol:10"
+          },
+          {
+            "label": "creator",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address",
+            "contract": "AbstractSwap",
+            "src": "contracts/AbstractSwap.sol:26"
+          },
+          {
+            "label": "liquidityContribution",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_mapping(t_address,t_struct(LiquidityContributor)419_storage)",
+            "contract": "AbstractSwap",
+            "src": "contracts/AbstractSwap.sol:28"
+          },
+          {
+            "label": "pair",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_struct(Pair)410_storage",
+            "contract": "AbstractSwap",
+            "src": "contracts/AbstractSwap.sol:30"
+          },
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:62",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "5",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:67"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_contract(IBaseHTS)1388": {
+            "label": "contract IBaseHTS",
+            "numberOfBytes": "20"
+          },
+          "t_int64": {
+            "label": "int64",
+            "numberOfBytes": "8"
+          },
+          "t_mapping(t_address,t_struct(LiquidityContributor)419_storage)": {
+            "label": "mapping(address => struct AbstractSwap.LiquidityContributor)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(LiquidityContributor)419_storage": {
+            "label": "struct AbstractSwap.LiquidityContributor",
+            "members": [
+              {
+                "label": "pair",
+                "type": "t_struct(Pair)410_storage",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_struct(Pair)410_storage": {
+            "label": "struct AbstractSwap.Pair",
+            "members": [
+              {
+                "label": "tokenA",
+                "type": "t_struct(Token)415_storage",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "tokenB",
+                "type": "t_struct(Token)415_storage",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_struct(Token)415_storage": {
+            "label": "struct AbstractSwap.Token",
+            "members": [
+              {
+                "label": "tokenAddress",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "tokenQty",
+                "type": "t_int64",
+                "offset": 20,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        }
+      }
+    }
+  }
+}

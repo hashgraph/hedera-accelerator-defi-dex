@@ -255,14 +255,6 @@ describe("Swap", function () {
       expect(value).to.be.equals(5000000);
     });
 
-    it("spot price with weight for tokens", async function () {
-      const { swapV2 } = await loadFixture(deployFixture);
-      await swapV2.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, 100, 50);
-      const value = await swapV2.getSpotPriceWithWeight();
-
-      expect(value).to.be.equals(2);
-    });
-
     it("check get out given In price value", async function () {
       const { swapV2 } = await loadFixture(deployFixture);
       await swapV2.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, 24, 16);

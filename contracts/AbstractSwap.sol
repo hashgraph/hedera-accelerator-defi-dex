@@ -25,8 +25,6 @@ abstract contract AbstractSwap is HederaResponseCodes {
 
     address internal creator;
 
-    int64 private precision = 10000000;
-
     mapping (address => LiquidityContributor) liquidityContribution;
 
     Pair pair;
@@ -130,31 +128,14 @@ abstract contract AbstractSwap is HederaResponseCodes {
 
     function getSpotPrice() public view returns (int64) {
         require(pair.tokenB.tokenQty > 0, "spot price: No token B in the pool");
-
+        int64 precision = getPrecisionValue();
         int64 value = (pair.tokenA.tokenQty*precision)/pair.tokenB.tokenQty;
         return value;
     }
 
-    function getSpotPriceWithWeight() public view returns (int64) {
-        int64 tokenAWeight = 1;
-        int64 tokenBWeight = 1;
-        require(pair.tokenA.tokenQty > 0, "spot price with weight: No token A in the pool");
-        require(pair.tokenB.tokenQty > 0, "spot price with weight: No token B in the pool");
-
-        int64 ratioA = pair.tokenA.tokenQty/tokenAWeight;
-        int64 ratioB = pair.tokenB.tokenQty/tokenBWeight;
-
-        return ratioA/ratioB;
-    }
-
-    function getTokenWeight(Token memory token) public pure returns(int64) {
-        require(token.tokenQty > 0, "token weight: no token");
-        return 1;
-    }
-
     function getOutGivenIn(int64 amountTokenA) public view returns(int64) {
         int64 invariantValue = getVariantValue();
-
+        int64 precision = getPrecisionValue();
         int64 tokenAQ = pair.tokenA.tokenQty;
         int64 tokenBQ = pair.tokenB.tokenQty;
 
@@ -163,12 +144,18 @@ abstract contract AbstractSwap is HederaResponseCodes {
     }
 
     function getInGivenOut(int64 amountTokenB) public view returns(int64) {
+        int64 precision = getPrecisionValue();
         int64 invariantValue = getVariantValue();
         int64 amountTokenA = ((invariantValue) / (pair.tokenB.tokenQty - amountTokenB)) - (pair.tokenA.tokenQty * precision);
         return amountTokenA;
     }
 
     function getVariantValue() public view returns(int64) {
+        int64 precision = getPrecisionValue();
         return (pair.tokenA.tokenQty * pair.tokenB.tokenQty) * precision;
+    }
+
+    function getPrecisionValue() internal pure returns(int64) {
+        return 10000000;
     }
 }

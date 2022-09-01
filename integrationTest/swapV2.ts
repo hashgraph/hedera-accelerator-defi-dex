@@ -16,7 +16,6 @@ const client = clientManagement.createClient();
 const tokenA = TokenId.fromString("0.0.47646195").toSolidityAddress();
 let tokenB = TokenId.fromString("0.0.47646196").toSolidityAddress();
 
-<<<<<<< HEAD
 const {treasureId, treasureKey} = clientManagement.getTreasure();
 
 const contractId = "0.0.48104688";
@@ -36,8 +35,6 @@ const initialize = async () => {
   const initializeTxRx = await initializeTx.getReceipt(client);
   console.log(`Initialized status : ${initializeTxRx.status}`);
 };
-
-const contractId = "0.0.48135688";
 
 const createLiquidityPool = async () => {
   const tokenAQty = new BigNumber(10);
