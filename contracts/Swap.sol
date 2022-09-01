@@ -5,10 +5,11 @@ pragma experimental ABIEncoderV2;
 import "./common/hedera/HederaResponseCodes.sol";
 import "./common/IBaseHTS.sol";
 import "./AbstractSwap.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-contract SwapV2 is AbstractSwap {
+contract Swap is AbstractSwap, Initializable {
 
-    constructor(IBaseHTS _tokenService) {
+    function initialize(IBaseHTS _tokenService) public initializer {
         tokenService = _tokenService;
         creator = msg.sender;
     }

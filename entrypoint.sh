@@ -9,7 +9,6 @@ npm config set strict-ssl false --global;
 export NODE_TLS_REJECT_UNAUTHORIZED='0';
 npm --yes install --save-dev hardhat
 # Run hardhat
-npm run runtest;
 npm run codecoverage;
 
 if [ "$DEPLOY_ON_TESTNET" = "Y" ]; then
