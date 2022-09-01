@@ -5,9 +5,8 @@ pragma experimental ABIEncoderV2;
 import "./common/hedera/HederaResponseCodes.sol";
 import "./common/IBaseHTS.sol";
 
-import "hardhat/console.sol";
-
 abstract contract AbstractSwap is HederaResponseCodes {
+    
     IBaseHTS tokenService;
 
     struct Pair {
@@ -25,6 +24,8 @@ abstract contract AbstractSwap is HederaResponseCodes {
     }
 
     address internal creator;
+
+    int64 private precision = 10000000;
 
     mapping (address => LiquidityContributor) liquidityContribution;
 
@@ -127,13 +128,10 @@ abstract contract AbstractSwap is HederaResponseCodes {
         return (liquidityContributor.pair.tokenA.tokenQty, liquidityContributor.pair.tokenB.tokenQty);
     }
 
-    function getSpotPrice() public view returns (int256) {
+    function getSpotPrice() public view returns (int64) {
         require(pair.tokenB.tokenQty > 0, "spot price: No token B in the pool");
-        int64 tokenAQ = pair.tokenA.tokenQty * 100000;
-        int64 tokenBQ = pair.tokenB.tokenQty * 100000;
 
-        int256 value = tokenAQ/tokenBQ;
-        // int256 value = pair.tokenA.tokenQty/pair.tokenB.tokenQty;
+        int64 value = (pair.tokenA.tokenQty*precision)/pair.tokenB.tokenQty;
         return value;
     }
 
@@ -156,17 +154,21 @@ abstract contract AbstractSwap is HederaResponseCodes {
 
     function getOutGivenIn(int64 amountTokenA) public view returns(int64) {
         int64 invariantValue = getVariantValue();
-        int64 amountTokenB = pair.tokenB.tokenQty - (invariantValue / (pair.tokenA.tokenQty + amountTokenA));
+
+        int64 tokenAQ = pair.tokenA.tokenQty;
+        int64 tokenBQ = pair.tokenB.tokenQty;
+
+        int64 amountTokenB = (tokenBQ * precision) - (invariantValue / (tokenAQ + amountTokenA));
         return amountTokenB;
     }
 
     function getInGivenOut(int64 amountTokenB) public view returns(int64) {
         int64 invariantValue = getVariantValue();
-        int64 amountTokenA = (invariantValue / (pair.tokenB.tokenQty - amountTokenB)) - pair.tokenA.tokenQty;
+        int64 amountTokenA = ((invariantValue) / (pair.tokenB.tokenQty - amountTokenB)) - (pair.tokenA.tokenQty * precision);
         return amountTokenA;
     }
 
     function getVariantValue() public view returns(int64) {
-        return (pair.tokenA.tokenQty * pair.tokenB.tokenQty);
+        return (pair.tokenA.tokenQty * pair.tokenB.tokenQty) * precision;
     }
 }

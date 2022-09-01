@@ -37,7 +37,7 @@ const initialize = async () => {
   console.log(`Initialized status : ${initializeTxRx.status}`);
 };
 
-const contractId = "0.0.48132650";
+const contractId = "0.0.48135688";
 
 const createLiquidityPool = async () => {
   const tokenAQty = new BigNumber(10);
@@ -224,7 +224,7 @@ const getOutGivenIn =async () => {
 };
 
 const getInGivenOut =async () => {
-  const tokenBQty = new BigNumber(10);
+  const tokenBQty = new BigNumber(11);
   const getInGivenOut = await new ContractExecuteTransaction()
     .setContractId(contractId)
     .setGas(1000000)
