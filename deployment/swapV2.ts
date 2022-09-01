@@ -5,7 +5,7 @@ const contractId = "0.0.48101509";
 
 async function main() {
     const htsServiceAddress = "0x0000000000000000000000000000000002ddf7a2"; //contract id 0.0.47818234
-    const lpTokenContractAddress = "0x0000000000000000000000000000000002de1c6a";
+    const lpTokenContractAddress = "0x0000000000000000000000000000000002de6ee0";
      
     const deployment = new Deployment();
     const filePath = "./artifacts/contracts/SwapV2.sol/SwapV2.json";

@@ -41,14 +41,14 @@ const initialize = async () => {
 // const treasureAccountId = AccountId.fromString("0.0.47645191")
 // const treasureKey = PrivateKey.fromString("308ed38983d9d20216d00371e174fe2d475dd32ac1450ffe2edfaab782b32fc5");
 
-// const contractId = "0.0.48104527";
-// const treasure = AccountId.fromString("0.0.47645191").toSolidityAddress();
-// const treasureAccountId = AccountId.fromString("0.0.47645191")
-// const treasureKey = PrivateKey.fromString("308ed38983d9d20216d00371e174fe2d475dd32ac1450ffe2edfaab782b32fc5");
 
 // const treasure = AccountId.fromString("0.0.48110589").toSolidityAddress();
 // const treasureAccountId = AccountId.fromString("0.0.48110589")
 // const treasureKey = PrivateKey.fromString("302e020100300506032b65700422042097c7c380e15b4eb4b1629c8fbe2b5963e44d12d516de8e77999998cc1c94ec5d");
+
+// const treasure = AccountId.fromString("0.0.48132100").toSolidityAddress();
+// const treasureAccountId = AccountId.fromString("0.0.48132100")
+// const treasureKey = PrivateKey.fromString("302e020100300506032b657004220420ef6d9080138e1141214e83d49d7c60bf47d2cb7416a96357cbdd4ea5adab3e28");
 
 
 const createLiquidityPool = async () => {

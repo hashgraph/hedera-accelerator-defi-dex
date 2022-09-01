@@ -12,7 +12,7 @@ abstract contract HederaToken {
     function name() public virtual view returns(string memory);
 }
 
-abstract contract AbstractLPToken is ExpiryHelper {
+abstract contract AbstractLPToken is HederaTokenService {
     IBaseHTS tokenService;
     mapping (address => uint256) tokenShare;   
     address internal creator;
@@ -24,12 +24,8 @@ abstract contract AbstractLPToken is ExpiryHelper {
     }
 
     // Abstract Functions
-    function mintToken(uint64 amount) internal virtual returns (int responseCode, uint64 newTotalSupply, int64[] memory serialNumbers);
-
-    function burnToken(uint64 amount, int64[] memory serialNumbers) internal virtual returns (int responseCode, uint64 newTotalSupply);
-    
+    function mintToken(uint64 amount) internal virtual returns (int responseCode, uint64 newTotalSupply, int64[] memory serialNumbers);    
     function associateTokenInternal(address account,  address _token) internal virtual returns(int);
-
     function transferTokenInternal(address _token, address sender, address receiver, int64 amount) internal virtual returns(int);
 
 
@@ -37,11 +33,6 @@ abstract contract AbstractLPToken is ExpiryHelper {
          // instantiate the list of keys we'll use for token create
          lpToken = _lpToken;
          tokenService = _tokenService;
-    }
-
-    function getName() external view returns (string memory) {
-        HederaToken token = HederaToken(lpToken);
-        return token.name();
     }
      
     function allotLPTokenFor(uint64 amountA, uint64 amountB, address _toUser) external returns (int responseCode) {
