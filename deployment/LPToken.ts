@@ -43,7 +43,7 @@ async function deployTokenContract() {
 
     let createAccountTx = await new AccountCreateTransaction()
         .setKey(adminKey.publicKey)
-        .setInitialBalance(100)
+        .setInitialBalance(1)
         .execute(client);
 
     let createAccountRx = await createAccountTx.getReceipt(client);
@@ -53,7 +53,7 @@ async function deployTokenContract() {
     createAccountTx = await new AccountCreateTransaction()
         .setKey(aliceKey.publicKey)
         .setMaxAutomaticTokenAssociations(20)
-        .setInitialBalance(1000)
+        .setInitialBalance(1)
         .execute(client);
 
     createAccountRx = await createAccountTx.getReceipt(client);
