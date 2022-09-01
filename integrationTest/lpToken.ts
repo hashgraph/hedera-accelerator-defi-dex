@@ -32,14 +32,14 @@ const treasure = AccountId.fromString("0.0.47645191").toSolidityAddress();
 const treasureAccountId = AccountId.fromString("0.0.47645191");
 const treasureKey = PrivateKey.fromString("308ed38983d9d20216d00371e174fe2d475dd32ac1450ffe2edfaab782b32fc5");
 
-const contractId = ContractId.fromString("0.0.48131808");//0x0000000000000000000000000000000002ddf018
+const contractId = ContractId.fromString("0.0.48135362");//0x0000000000000000000000000000000002ddf018
 
 const itegrationTestLPToken = async () => {
 // Contract created 0.0.48101341 ,Contract Address 0000000000000000000000000000000002ddf7dd
 //STEP 3 - Create token
 //- Token created 0.0.48101342, Token Address 0000000000000000000000000000000002ddf7de
   //let aliceAccount = AccountId.fromString("0.0.48110474");
-  let aliceAccount2 = AccountId.fromString("0.0.48131798");
+  let aliceAccount2 = AccountId.fromString("0.0.48133780");
   //302e020100300506032b65700422042097c7c380e15b4eb4b1629c8fbe2b5963e44d12d516de8e77999998cc1c94ec5d
   
   //let tokenId = TokenId.fromString("0.0.48101342");

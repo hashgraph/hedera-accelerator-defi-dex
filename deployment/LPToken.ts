@@ -19,16 +19,25 @@ const contractId = "0.0.47814722";
 
 async function main() {
    await deployTokenContract();
-   //const htsServiceAddress = "0x0000000000000000000000000000000002dca55f"; //contract id 0.0.47818234
-    //  const lpTokenAddress = "0000000000000000000000000000000002dc31b7" // tokenID: 0.0.47985079
-    //  const deployment0 = new Deployment();
-    // const filePath0 = "./artifacts/contracts/LPToken.sol/LPToken.json";
-    // const deployedContract0 = await deployment0.deployContract(filePath0, [htsServiceAddress]);
-    // console.log("LPToken deployed.");
+}
+
+async function createAccount(client) {
+  // console.log(`\nSTEP 0 - Create accounts`);
+    const aliceKey = PrivateKey.generateED25519();
+
+    let createAccountTx = await new AccountCreateTransaction()
+        .setKey(aliceKey.publicKey)
+        .setMaxAutomaticTokenAssociations(20)
+        .setInitialBalance(1)
+        .execute(client);
+
+    let createAccountRx = await createAccountTx.getReceipt(client);
+    const aliceAccount = createAccountRx.accountId;
+    console.log(`- Alice account is ${aliceAccount?.toString()} \n privatekey: ${aliceKey}`);
 }
 
 async function deployTokenContract() {
-  let client = Client.forTestnet();
+    let client = Client.forTestnet();
     const htsServiceAddress = "0x0000000000000000000000000000000002ddf7a2";
     const operatorKey = PrivateKey.fromString("302e020100300506032b657004220420b69079b0cdebea97ec13c78bf7277d3f4aef35189755b5d11c2dfae40c566aa8");
 
@@ -36,32 +45,6 @@ async function deployTokenContract() {
         AccountId.fromString("0.0.47540202"),
         operatorKey
     );
-
-    console.log(`\nSTEP 0 - Create accounts`);
-    const adminKey = PrivateKey.generateED25519();
-    const aliceKey = PrivateKey.generateED25519();
-
-    let createAccountTx = await new AccountCreateTransaction()
-        .setKey(adminKey.publicKey)
-        .setInitialBalance(1)
-        .execute(client);
-
-    let createAccountRx = await createAccountTx.getReceipt(client);
-    const adminAccount = createAccountRx.accountId;
-    console.log(`- Admin account is ${adminAccount?.toString()}`);
-
-    createAccountTx = await new AccountCreateTransaction()
-        .setKey(aliceKey.publicKey)
-        .setMaxAutomaticTokenAssociations(20)
-        .setInitialBalance(1)
-        .execute(client);
-
-    createAccountRx = await createAccountTx.getReceipt(client);
-    const aliceAccount = createAccountRx.accountId;
-    console.log(`- Alice account is ${aliceAccount?.toString()} \n privatekey: ${aliceKey}`);
-
-    // switch client to admin
-    client.setOperator(adminAccount ?? "", adminKey);
     client.setDefaultMaxTransactionFee(new Hbar(50));
 
     console.log(`\nSTEP 1 - Create file`);
@@ -71,7 +54,7 @@ async function deployTokenContract() {
     const contractByteCode = momContract.bytecode;
 
     //Create a file on Hedera and store the hex-encoded bytecode
-    const fileCreateTx = await new FileCreateTransaction().setKeys([adminKey]).execute(client);
+    const fileCreateTx = await new FileCreateTransaction().setKeys([operatorKey]).execute(client);
     const fileCreateRx = await fileCreateTx.getReceipt(client);
     const bytecodeFileId = fileCreateRx.fileId;
     console.log(`- The smart contract bytecode file ID is: ${bytecodeFileId}`);
@@ -87,7 +70,7 @@ async function deployTokenContract() {
 
     console.log(`\nSTEP 2 - Create contract`);
     const contractCreateTx = await new ContractCreateTransaction()
-        .setAdminKey(adminKey)
+        .setAdminKey(operatorKey)
         .setBytecodeFileId(bytecodeFileId ?? "")
         .setGas(2000000)
         .execute(client);
@@ -112,20 +95,21 @@ async function deployTokenContract() {
       const tokenCreateRx = await tokenCreateTx.getReceipt(client);
       const tokenId = tokenCreateRx.tokenId;
       console.log(`- Token created ${tokenId}, Token Address ${tokenId?.toSolidityAddress()}`);
+
       console.log(`\n STEP 6 - call the contract to set the token id`);
 
 
-      if (tokenId != null && contractId != null && aliceAccount != null) {
-      let contractFunctionParameters = new ContractFunctionParameters()
-        .addAddress(tokenId.toSolidityAddress())
-        .addAddress(htsServiceAddress);
+      if (tokenId != null && contractId != null) {
+        let contractFunctionParameters = new ContractFunctionParameters()
+          .addAddress(tokenId.toSolidityAddress())
+          .addAddress(htsServiceAddress);
 
-      const contractTokenTx = await new ContractExecuteTransaction()
-        .setContractId(contractId ?? "")
-        .setFunction("initializeParams", contractFunctionParameters)
-        .setGas(500000)
-        .execute(client);
-      await contractTokenTx.getReceipt(client);
+        const contractTokenTx = await new ContractExecuteTransaction()
+          .setContractId(contractId ?? "")
+          .setFunction("initializeParams", contractFunctionParameters)
+          .setGas(500000)
+          .execute(client);
+        await contractTokenTx.getReceipt(client);
     }
   }
     client.close();
