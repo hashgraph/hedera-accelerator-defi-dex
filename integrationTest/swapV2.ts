@@ -37,19 +37,19 @@ const initialize = async () => {
   const initializeTxRx = await initializeTx.getReceipt(client);
   console.log(`Initialized status : ${initializeTxRx.status}`);
 };
-// const treasure = AccountId.fromString("0.0.47645191").toSolidityAddress();
-// const treasureAccountId = AccountId.fromString("0.0.47645191")
-// const treasureKey = PrivateKey.fromString("308ed38983d9d20216d00371e174fe2d475dd32ac1450ffe2edfaab782b32fc5");
+
+// const treasure = AccountId.fromString("0.0.48132580").toSolidityAddress();
+// const treasureAccountId = AccountId.fromString("0.0.48132580")
+// const treasureKey = PrivateKey.fromString("302e020100300506032b65700422042032d7b779e068ba58b5485748fa2e22dd45c52e9c2da9b1e5cb330bf3135666f2");
 
 
-// const treasure = AccountId.fromString("0.0.48110589").toSolidityAddress();
-// const treasureAccountId = AccountId.fromString("0.0.48110589")
-// const treasureKey = PrivateKey.fromString("302e020100300506032b65700422042097c7c380e15b4eb4b1629c8fbe2b5963e44d12d516de8e77999998cc1c94ec5d");
+const getTreaserBalance = async () => {
+  const treasureBalance1 = await new AccountBalanceQuery()
+      .setAccountId(treasureId)
+      .execute(client);
 
-// const treasure = AccountId.fromString("0.0.48132100").toSolidityAddress();
-// const treasureAccountId = AccountId.fromString("0.0.48132100")
-// const treasureKey = PrivateKey.fromString("302e020100300506032b657004220420ef6d9080138e1141214e83d49d7c60bf47d2cb7416a96357cbdd4ea5adab3e28");
-
+  console.log(`Treasure LP Token Balance: ${treasureBalance1.tokens?._map.get('0.0.48131810')}`);
+}
 
 const createLiquidityPool = async () => {
   const tokenAQty = new BigNumber(10);
@@ -251,16 +251,9 @@ const getInGivenOut =async () => {
   console.log(`For tokenBQty ${tokenBQty} the getInGivenOut tokenAQty is ${tokenAQty}. \n`);
 };
 
-
-const getTreaserBalance = async () => {
-  const treasureBalance1 = await new AccountBalanceQuery()
-      .setAccountId(treasureId)
-      .execute(client);
-
-  console.log(treasureBalance1.tokens);
-}
 async function main() {
   await initialize();
+  await getTreaserBalance();
   await createLiquidityPool();
   await getTreaserBalance();
   await addLiquidity();
@@ -270,6 +263,7 @@ async function main() {
   await getVariantValue();
   await getOutGivenIn();
   await getInGivenOut();
+  await getTreaserBalance();
 }
 
 main()
