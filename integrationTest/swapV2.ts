@@ -21,7 +21,7 @@ const tokenA = TokenId.fromString("0.0.47646195").toSolidityAddress();
 let tokenB = TokenId.fromString("0.0.47646196").toSolidityAddress();
 const {treasureId, treasureKey} = clientManagement.getTreasure();
 
-const contractId = "0.0.48104688";
+const contractId = "0.0.48143438";
 
 const initialize = async () => {
   const initialize = await new ContractExecuteTransaction()
