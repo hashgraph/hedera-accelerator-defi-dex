@@ -6,22 +6,16 @@ import {TokenCreateTransaction, FileCreateTransaction, FileAppendTransaction, Ac
   ContractUpdateTransaction, ContractInfoQuery, ContractExecuteTransaction,
   ContractFunctionParameters, TokenUpdateTransaction, TokenInfoQuery, TokenAssociateTransaction, AccountBalanceQuery
 } from "@hashgraph/sdk";
-import { BigNumber } from "bignumber.js";
 import * as fs from "fs";
 import dotenv from "dotenv";
-import * as hethers from "@hashgraph/hethers";
 
 dotenv.config({ path: '../../.env' });
-
-//const momContract = require("./artifacts/contracts/LPToken.sol/LPToken.json");
-
-const contractId = "0.0.47814722";
 
 async function main() {
    await deployTokenContract();
 }
 
-async function createAccount(client) {
+async function createAccount(client: Client) {
   // console.log(`\nSTEP 0 - Create accounts`);
     const aliceKey = PrivateKey.generateED25519();
 
@@ -38,7 +32,7 @@ async function createAccount(client) {
 
 async function deployTokenContract() {
     let client = Client.forTestnet();
-    const htsServiceAddress = "0x0000000000000000000000000000000002ddf7a2";
+    const htsServiceAddress = "0x0000000000000000000000000000000002de9bd6"; // 2sep 10:55
     const operatorKey = PrivateKey.fromString("302e020100300506032b657004220420b69079b0cdebea97ec13c78bf7277d3f4aef35189755b5d11c2dfae40c566aa8");
 
     client.setOperator(

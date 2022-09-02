@@ -13,7 +13,8 @@ import ClientManagement from "./utils/utils";
 
 const clientManagement = new ClientManagement();
 
-const htsServiceAddress = "0x0000000000000000000000000000000002d9a5fa";
+const htsServiceAddress = "0x0000000000000000000000000000000002de9bd6"; // 2sep 10:55
+const lpTokenContractAddress = "0x0000000000000000000000000000000002de9bf2"; // 2sep 11:04 // Token 0.0.48143347
 const client = clientManagement.createClient();
 
 const tokenA = TokenId.fromString("0.0.47646195").toSolidityAddress();
@@ -30,6 +31,7 @@ const initialize = async () => {
       "initialize",
       new ContractFunctionParameters()
         .addAddress(htsServiceAddress)
+        .addAddress(lpTokenContractAddress)
     )
     .freezeWith(client)
     .sign(treasureKey);

@@ -4,7 +4,7 @@ import ClientManagement from "../integrationTest/utils/utils";
 const clientManagement =  new ClientManagement();
 const {adminId} = clientManagement.getAdmin();
 
-const swapContractAddress = "0x0000000000000000000000000000000002de04e7";
+const swapContractAddress = "0x0000000000000000000000000000000002de9c02";
 
 async function main() {
     const deployment = new Deployment();
