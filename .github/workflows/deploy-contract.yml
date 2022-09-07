@@ -9,5 +9,5 @@ jobs:
     - uses: actions/checkout@v3
     - name: Build the Docker image
       run: docker build . --file Dockerfile --tag my-image-name:latest
-    - name: Run the Docker image
+    - name: Run the Docker image using commit message
       run: docker run --env COMMIT_MESSAGE="${{ github.event.head_commit.message }}" --env DEPLOY_ON_TESTNET=Y --env CONTRACT_TO_DEPLOY=swap my-image-name:latest
