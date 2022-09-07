@@ -2,9 +2,17 @@ import dotenv from "dotenv";
 import * as fs from "fs";
 import { PrivateKey } from "@hashgraph/sdk";
 import * as hethers from "@hashgraph/hethers";
+import { DeployedContract } from "./model/contract";
+import {
+  ContractId
+} from "@hashgraph/sdk";
+
 dotenv.config();
 
+export const contractRecordFile = "./contracts.json";
+
 export class Deployment {
+
   private createProvider = (): any => {
     return new hethers.providers.HederaProvider(
       "0.0.5", // AccountLike
@@ -20,7 +28,7 @@ export class Deployment {
     };
   };
 
-  private getCompiledContract = (filePath: string) => {
+  private readFileContent = (filePath: string) => {
     const rawdata: any = fs.readFileSync(filePath);
     return JSON.parse(rawdata);
   };
@@ -34,6 +42,29 @@ export class Deployment {
       )} hbar`
     );
   };
+
+  private recordDeployedContracts = (contract: any, contractName: string) => {
+    const contracts: [DeployedContract] = this.readFileContent(contractRecordFile);
+    
+    const newContract: DeployedContract = {
+      name: contractName.toLowerCase(),
+      id: "Need to figure out",
+      address: contract.address,
+      transparentProxyAddress: '',
+      timestamp: new Date().toISOString()
+    }
+
+    const newContents = [
+      ...contracts,
+      newContract
+    ]
+
+    const data = JSON.stringify(newContents, null, 4);
+
+    console.log(`Contract details ${data}`);
+
+    fs.writeFileSync(contractRecordFile, data);
+  }
 
   public deployContract = async (
     filePath: string,
@@ -61,7 +92,7 @@ export class Deployment {
     // STEP 2 - DEPLOY THE CONTRACT
     console.log(`\n- STEP 2 ===================================`);
 
-    const compiledContract = this.getCompiledContract(filePath);
+    const compiledContract = this.readFileContent(filePath);
 
     const factory = new hethers.ContractFactory(
       compiledContract.abi,
@@ -75,6 +106,8 @@ export class Deployment {
     const contract = await factory.deploy(...contractConstructorArgs, {gasLimit: 300000});
 
     console.log("Contract deployed.");
+
+    this.recordDeployedContracts(contract, compiledContract.contractName);
 
     // Transaction sent by the wallet (signer) for deployment - for info
     const contractDeployTx = contract.deployTransaction;

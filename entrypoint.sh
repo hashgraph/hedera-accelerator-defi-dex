@@ -11,17 +11,18 @@ npm --yes install --save-dev hardhat
 # Run hardhat
 npm run codecoverage;
 
-if [ "$DEPLOY_ON_TESTNET" = "Y" ]; then
-    echo "Running contract deployment ........ ";
+if [${COMMIT_MESSAGE:0:15} = "Deploy contract"]; then 
+    CONTRACT_TO_DEPLOY=${COMMIT_MESSAGE:16};
+    echo "Running contract deployment ........ " + CONTRACT_TO_DEPLOY;
     contract=$CONTRACT_TO_DEPLOY.ts;
     echo $contract;
     npx hardhat run ./deployment/$contract;
     echo "Deployment done.";
 fi
 
-
-if [ "$PROXY_DEPLOYMENT" = "Y" ]; then
-    echo "Running contract deployment ........ ";
+if [${COMMIT_MESSAGE:0:33} = "Deploy transparent proxy contract"]; then 
+    CONTRACT_TO_DEPLOY=${COMMIT_MESSAGE:34};
+    echo "Running proxy contract deployment ........ " + CONTRACT_TO_DEPLOY;
     echo OPERATOR_ID=$OPERATOR_ID >> .env;
     echo OPERATOR_KEY=$OPERATOR_KEY >> .env;
     echo ADMIN_ID=$ADMIN_ID >> .env;

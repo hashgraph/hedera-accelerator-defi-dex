@@ -1,13 +1,27 @@
 import dotenv from "dotenv";
-import { Deployment } from "./deployContractOnTestnet";
+import * as fs from "fs";
+import {
+  AccountId,
+} from "@hashgraph/sdk";
+import { Deployment, contractRecordFile } from "./deployContractOnTestnet";
+import { DeployedContract } from "./model/contract";
 dotenv.config();
 
+const readFileContent = (filePath: string) => {
+  const rawdata: any = fs.readFileSync(filePath);
+  return JSON.parse(rawdata);
+};
+
 async function main() {
-    const contractAddress = process.env.CONTRACT_ADDRESS!;
-    const adminAddress = process.env.ADMIN_ADDRESS!;
+    const contractName = process.env.CONTRACT_NAME?.toLowerCase();
+    const contracts: Array<DeployedContract> = readFileContent(contractRecordFile)
+    const matchingContracts = contracts.filter((contract: DeployedContract) => contract.name == contractName);
+    const contractBeingDeployed = matchingContracts[matchingContracts.length - 1];
+    const contractAddress = contractBeingDeployed.address;
+    const adminId = AccountId.fromString(process.env.ADMIN_ID!);
     const deployment = new Deployment();
     const filePath = "./artifacts/@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol/TransparentUpgradeableProxy.json";
-    const deployedContract = await deployment.deployContract(filePath, [contractAddress, adminAddress, []]);
+    const deployedContract = await deployment.deployContract(filePath, [contractAddress, adminId.toSolidityAddress(), []]);
     console.log(`TransparentUpgradeableProxy deployed - ${deployedContract}`);
 }
 
