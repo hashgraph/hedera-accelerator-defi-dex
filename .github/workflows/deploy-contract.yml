@@ -1,10 +1,43 @@
-name: Deploy a contract to testnet
+name: Deploy a transparent proxy
 on:
   workflow_dispatch:
     inputs:
-      contractName:
-        description: 'Name that represent the contract to deploy.'
-        default: 'swapContract'
+      OPERATOR_ID:
+        description: 'Operator Id'
+        default: '0.0.47710057'
+        required: true
+        type: string
+      OPERATOR_KEY:
+        description: 'Operator Key'
+        default: '3030020100300706052b8104000a04220420d38b0ed5f11f8985cd72c8e52c206b512541c6f301ddc9d18bd8b8b25a41a80f'
+        required: true
+        type: string
+      ADMIN_ID:
+        description: 'Admin Id'
+        default: '0.0.47710057'
+        required: true
+        type: string
+      ADMIN_KEY:
+        description: 'Admin Key'
+        default: '3030020100300706052b8104000a04220420d38b0ed5f11f8985cd72c8e52c206b512541c6f301ddc9d18bd8b8b25a41a80f'
+        required: true
+        type: string
+      TREASURE_ID:
+        description: 'Treasurer Id'
+        default: '0.0.47645191'
+        required: true
+        type: string
+      TREASURE_KEY:
+        description: 'Treasurer Key'
+        default: '308ed38983d9d20216d00371e174fe2d475dd32ac1450ffe2edfaab782b32fc5'
+        required: true
+        type: string
+      CONTRACT_ADDRESS:
+        description: 'Contract Address'
+        required: true
+        type: string
+      ADMIN_ADDRESS:
+        description: 'Admin Address'
         required: true
         type: string
 
@@ -13,3 +46,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+    - name: Build the Docker image
+      run: docker build . --file Dockerfile --tag my-image-name:latest
+    - name: Run the Docker image
+      run: docker run --env DEPLOY_ON_TESTNET=Y \
+                      --env OPERATOR_ID=${{ github.event.inputs.OPERATOR_ID }} \
+                      --env OPERATOR_KEY=${{ github.event.inputs.OPERATOR_KEY }} \
+                      --env ADMIN_ID=${{ github.event.inputs.ADMIN_ID }} \
+                      --env ADMIN_KEY=${{ github.event.inputs.ADMIN_KEY }}  \
+                      --env TREASURE_ID=${{ github.event.inputs.TREASURE_ID }} \
+                      --env TREASURE_KEY=${{ github.event.inputs.TREASURE_KEY }} \
+                      --env CONTRACT_ADDRESS=${{ github.event.inputs.CONTRACT_ADDRESS }} \
+                      --env ADMIN_ADDRESS=${{ github.event.inputs.ADMIN_ADDRESS }} \
+                      my-image-name:latest
