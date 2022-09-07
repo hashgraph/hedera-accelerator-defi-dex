@@ -16,6 +16,15 @@ echo "msg " + $msg;
 if [ "$msg" = "Deploy contract" ]; then 
     CONTRACT_TO_DEPLOY=${COMMIT_MESSAGE:16};
     echo "Running contract deployment ........ " + CONTRACT_TO_DEPLOY;
+    echo OPERATOR_ID=$OPERATOR_ID >> .env;
+    echo OPERATOR_KEY=$OPERATOR_KEY >> .env;
+    echo ADMIN_ID=$ADMIN_ID >> .env;
+    echo ADMIN_KEY=$ADMIN_KEY >> .env;
+    echo TREASURE_ID=$TREASURE_ID >> .env;
+    echo TREASURE_KEY=$TREASURE_KEY >> .env;
+    echo CONTRACT_ADDRESS=$CONTRACT_ADDRESS >> .env;
+    echo ADMIN_ADDRESS=$ADMIN_ADDRESS >> .env;
+    cat .env;
     contract=$CONTRACT_TO_DEPLOY.ts;
     echo $contract;
     npx hardhat run ./deployment/$contract;
