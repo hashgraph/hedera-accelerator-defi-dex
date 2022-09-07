@@ -1,5 +1,6 @@
 name: Deploy a new contract to testnet
 on:
+  push:
 
 jobs:
   build:
