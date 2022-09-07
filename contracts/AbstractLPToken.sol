@@ -45,7 +45,7 @@ abstract contract AbstractLPToken is HederaTokenService {
         ////mint new amount of LP
         mintToken(mintingAmount);
         // transfer Lp to users account
-        transferTokenInternal(lpToken, address(this) , _toUser, int64(mintingAmount));
+        transferTokenInternal(lpToken, address(tokenService), _toUser, int64(mintingAmount));
         return 22;
     }
 

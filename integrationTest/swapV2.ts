@@ -13,15 +13,15 @@ import ClientManagement from "./utils/utils";
 
 const clientManagement = new ClientManagement();
 
-const htsServiceAddress = "0x0000000000000000000000000000000002de9bd6"; // 2sep 10:55
-const lpTokenContractAddress = "0x0000000000000000000000000000000002de9bf2"; // 2sep 11:04 // Token 0.0.48143347
+const htsServiceAddress = "0x0000000000000000000000000000000002df4f79"; // 6 sep 3:10
+const lpTokenContractAddress = "0x0000000000000000000000000000000002df542d"; // 6 sep 4:45
 const client = clientManagement.createClient();
 
 const tokenA = TokenId.fromString("0.0.47646195").toSolidityAddress();
 let tokenB = TokenId.fromString("0.0.47646196").toSolidityAddress();
 const {treasureId, treasureKey} = clientManagement.getTreasure();
 
-const contractId = "0.0.48143438";
+const contractId = "0.0.48190684"; // 6 sep 4:55
 
 const initialize = async () => {
   const initialize = await new ContractExecuteTransaction()
@@ -40,17 +40,12 @@ const initialize = async () => {
   console.log(`Initialized status : ${initializeTxRx.status}`);
 };
 
-// const treasure = AccountId.fromString("0.0.48132580").toSolidityAddress();
-// const treasureAccountId = AccountId.fromString("0.0.48132580")
-// const treasureKey = PrivateKey.fromString("302e020100300506032b65700422042032d7b779e068ba58b5485748fa2e22dd45c52e9c2da9b1e5cb330bf3135666f2");
-
-
 const getTreaserBalance = async () => {
   const treasureBalance1 = await new AccountBalanceQuery()
       .setAccountId(treasureId)
       .execute(client);
 
-  console.log(`Treasure LP Token Balance: ${treasureBalance1.tokens?._map.get('0.0.48131810')}`);
+  console.log(`Treasure LP Token Balance: ${treasureBalance1.tokens?._map.get('0.0.48189306')}`); //2 Sep 01:02 pm
 }
 
 const createLiquidityPool = async () => {
@@ -254,7 +249,7 @@ const getInGivenOut =async () => {
 };
 
 async function main() {
-  await initialize();
+  //await initialize();
   await getTreaserBalance();
   await createLiquidityPool();
   await getTreaserBalance();

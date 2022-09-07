@@ -4,7 +4,14 @@ pragma solidity ^0.8.0;
 import "./hedera/HederaTokenService.sol";
 import "./hedera/HederaResponseCodes.sol";
 
+
 contract BaseHTS is HederaTokenService {
+    address internal lpToken;
+
+    function initialize(address _lpToken) public {
+         lpToken = _lpToken;
+    }
+
     function transferTokenPublic(address token, address sender, address receiver, int64 amount) 
         external returns (int responseCode) {
             return HederaTokenService.transferToken(token, sender, receiver, amount);

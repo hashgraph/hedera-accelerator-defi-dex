@@ -32,7 +32,7 @@ const treasure = AccountId.fromString("0.0.47645191").toSolidityAddress();
 const treasureAccountId = AccountId.fromString("0.0.47645191");
 const treasureKey = PrivateKey.fromString("308ed38983d9d20216d00371e174fe2d475dd32ac1450ffe2edfaab782b32fc5");
 
-const contractId = ContractId.fromString("0.0.48135362");//0x0000000000000000000000000000000002ddf018
+const contractId = ContractId.fromString("0.0.48190509"); //6 Sep 04:45
 
 const itegrationTestLPToken = async () => {
 

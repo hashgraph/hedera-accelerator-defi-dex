@@ -9,13 +9,13 @@ contract LPToken is AbstractLPToken {
     
     function mintToken(uint64 amount) override internal virtual 
      returns (int responseCode, uint64 newTotalSupply, int64[] memory serialNumbers) {
-            (int response, uint64 newTotalSupply, int64[] memory serialNumbers) = HederaTokenService.mintToken(lpToken, amount, new bytes[](0));
+            (int response, uint64 _newTotalSupply, int64[] memory _serialNumbers) = tokenService.mintTokenPublic(lpToken, amount);
 
              if (response != HederaResponseCodes.SUCCESS) {
                 revert ("Mint Failed");
              }
              tokenShare[msg.sender] = tokenShare[msg.sender] + amount;
-            return (response, newTotalSupply, serialNumbers);
+            return (response, _newTotalSupply, _serialNumbers);
             // (bool success, bytes memory result) = address(tokenService).delegatecall(
             // abi.encodeWithSelector(IBaseHTS.mintTokenPublic.selector,
             // lpToken, amount));
@@ -34,9 +34,6 @@ contract LPToken is AbstractLPToken {
     }
 
     function transferTokenInternal(address _token, address sender, address receiver, int64 amount) internal override virtual returns(int) {
-        (bool success, bytes memory result) = address(tokenService).delegatecall(
-            abi.encodeWithSelector(IBaseHTS.transferTokenPublic.selector,
-            _token, sender, receiver, amount));
-        return success ? abi.decode(result, (int32)) : HederaResponseCodes.UNKNOWN;
+        return tokenService.transferTokenPublic(_token, sender, receiver, amount);
     }
 }

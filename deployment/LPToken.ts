@@ -4,7 +4,7 @@ import { Deployment } from "./deployContractOnTestnet";
 import {TokenCreateTransaction, FileCreateTransaction, FileAppendTransaction, AccountId, PrivateKey,
   ContractCreateTransaction, TokenType, TokenSupplyType, Hbar, Client, ContractId, AccountCreateTransaction, KeyList,
   ContractUpdateTransaction, ContractInfoQuery, ContractExecuteTransaction,
-  ContractFunctionParameters, TokenUpdateTransaction, TokenInfoQuery, TokenAssociateTransaction, AccountBalanceQuery
+  ContractFunctionParameters, TokenUpdateTransaction, TokenInfoQuery, TokenAssociateTransaction, AccountBalanceQuery, TokenId
 } from "@hashgraph/sdk";
 import * as fs from "fs";
 import dotenv from "dotenv";
@@ -32,7 +32,7 @@ async function createAccount(client: Client) {
 
 async function deployTokenContract() {
     let client = Client.forTestnet();
-    const htsServiceAddress = "0x0000000000000000000000000000000002de9bd6"; // 2sep 10:55
+    const htsServiceAddress = "0x0000000000000000000000000000000002df4f79"; // 6 sep 2:41
     const operatorKey = PrivateKey.fromString("302e020100300506032b657004220420b69079b0cdebea97ec13c78bf7277d3f4aef35189755b5d11c2dfae40c566aa8");
 
     client.setOperator(
@@ -73,22 +73,22 @@ async function deployTokenContract() {
     const contractId = contractCreateRx.contractId;
     console.log(`- Contract created ${contractId?.toString()} ,Contract Address ${contractId?.toSolidityAddress()} -`);
     if  (contractId != null) {
-        console.log(`\nSTEP 3 - Create token`);
-        const tokenCreateTx = await new TokenCreateTransaction()
-            .setTokenName("TOKENA-TOKENB")
-            .setTokenSymbol("A-B")
-            .setDecimals(0)
-            .setInitialSupply(0)
-            .setTokenType(TokenType.FungibleCommon)
-            .setSupplyType(TokenSupplyType.Infinite)
-          //create the token with the contract as supply and treasury
-            .setSupplyKey(contractId)
-            .setTreasuryAccountId(contractId?.toString() ?? "")
-            .execute(client);
+    //     console.log(`\nSTEP 3 - Create token`);
+    //     const tokenCreateTx = await new TokenCreateTransaction()
+    //         .setTokenName("TOKENA-TOKENB")
+    //         .setTokenSymbol("A-B")
+    //         .setDecimals(0)
+    //         .setInitialSupply(0)
+    //         .setTokenType(TokenType.FungibleCommon)
+    //         .setSupplyType(TokenSupplyType.Infinite)
+    //       //create the token with the contract as supply and treasury
+    //         .setSupplyKey(contractId)
+    //         .setTreasuryAccountId(contractId?.toString() ?? "")
+    //         .execute(client);
 
-      const tokenCreateRx = await tokenCreateTx.getReceipt(client);
-      const tokenId = tokenCreateRx.tokenId;
-      console.log(`- Token created ${tokenId}, Token Address ${tokenId?.toSolidityAddress()}`);
+    //   const tokenCreateRx = await tokenCreateTx.getReceipt(client);
+       const tokenId = TokenId.fromString("0.0.48189306"); // 6 sep 2:45
+    //   console.log(`- Token created ${tokenId}, Token Address ${tokenId?.toSolidityAddress()}`);
 
       console.log(`\n STEP 6 - call the contract to set the token id`);
 
