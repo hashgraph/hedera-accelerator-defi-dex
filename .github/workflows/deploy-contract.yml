@@ -1,4 +1,4 @@
-name: Deploy a contract to testnet
+name: Deploy a new contract to testnet
 on:
 
 jobs:
