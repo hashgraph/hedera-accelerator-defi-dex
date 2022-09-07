@@ -10,8 +10,9 @@ export NODE_TLS_REJECT_UNAUTHORIZED='0';
 npm --yes install --save-dev hardhat
 # Run hardhat
 npm run codecoverage;
-
-if [${COMMIT_MESSAGE:0:15} = "Deploy contract"]; then 
+msg=${COMMIT_MESSAGE:0:15};
+echo "msg " + $msg;
+if ["$msg" = "Deploy contract"]; then 
     CONTRACT_TO_DEPLOY=${COMMIT_MESSAGE:16};
     echo "Running contract deployment ........ " + CONTRACT_TO_DEPLOY;
     contract=$CONTRACT_TO_DEPLOY.ts;
@@ -19,8 +20,9 @@ if [${COMMIT_MESSAGE:0:15} = "Deploy contract"]; then
     npx hardhat run ./deployment/$contract;
     echo "Deployment done.";
 fi
-
-if [${COMMIT_MESSAGE:0:33} = "Deploy transparent proxy contract"]; then 
+msg=${COMMIT_MESSAGE:0:33};
+echo "msg " + $msg;
+if ["$msg" = "Deploy transparent proxy contract"]; then 
     CONTRACT_TO_DEPLOY=${COMMIT_MESSAGE:34};
     echo "Running proxy contract deployment ........ " + CONTRACT_TO_DEPLOY;
     echo OPERATOR_ID=$OPERATOR_ID >> .env;
