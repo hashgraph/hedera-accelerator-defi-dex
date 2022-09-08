@@ -1,0 +1,28 @@
+name: Deploy contract using node
+
+on:
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [16.x]
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: npm ci
+      - run: entrypoint.sh
+        env:
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+          OPERATOR_ID: 0.0.47710057
+          OPERATOR_KEY: 3030020100300706052b8104000a04220420d38b0ed5f11f8985cd72c8e52c206b512541c6f301ddc9d18bd8b8b25a41a80f
+          ADMIN_ID: 0.0.47710057
+          ADMIN_KEY: 3030020100300706052b8104000a04220420d38b0ed5f11f8985cd72c8e52c206b512541c6f301ddc9d18bd8b8b25a41a80f
+
