@@ -4,13 +4,15 @@ pragma experimental ABIEncoderV2;
 
 import "../common/hedera/HederaResponseCodes.sol";
 import "../common/IBaseHTS.sol";
+import "../ILPToken.sol";
 import "../AbstractSwap.sol";
 
 contract SwapTest is AbstractSwap {
 
-    constructor(IBaseHTS _tokenService) {
+    constructor(IBaseHTS _tokenService, ILPToken _lpTokenContract) {
         tokenService = _tokenService;
         creator = msg.sender;
+        lpTokenContract = _lpTokenContract;
     }
 
     function associateToken(address account,  address token) internal override  virtual returns(int) {

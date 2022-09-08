@@ -8,7 +8,7 @@ import "hardhat/console.sol";
 contract MockBaseHTS is IBaseHTS {
 
     enum FailTransactionFor {
-        initialise,
+        initialise, 
         swapAFailedSendingA,
         swapAFailedSendingB,
         addLiquidity,
@@ -17,7 +17,9 @@ contract MockBaseHTS is IBaseHTS {
         removeLiquidity,
         initialiseFailATransfer,
         initialiseFailBTransfer,
-        swapBFailedSendingA
+        swapBFailedSendingA,
+        addLiquidityFailMinting,
+        addLiquidityLPTransferFail
     }
 
     bool internal isSuccess;
@@ -34,7 +36,7 @@ contract MockBaseHTS is IBaseHTS {
 
     function successForType() internal view returns (int) {
         if (failType == FailTransactionFor.initialise) {
-            return 4;
+            return 7;
         }
         if (failType == FailTransactionFor.initialiseFailATransfer) {
             return 2;
@@ -53,6 +55,12 @@ contract MockBaseHTS is IBaseHTS {
         }
         if (failType == FailTransactionFor.removeLiquidityFailBTransfer) {
             return 1;
+        }
+        if (failType == FailTransactionFor.addLiquidityFailMinting) {
+            return 5;
+        }
+        if (failType == FailTransactionFor.addLiquidityLPTransferFail) {
+            return 6;
         }
         return 0;
     }
@@ -83,6 +91,12 @@ contract MockBaseHTS is IBaseHTS {
     function mintTokenPublic(address token, uint64 amount) external override
         returns (int responseCode, uint64 newTotalSupply, int64[] memory serialNumbers) {
             int64[] memory blank;
+            console.logString("mintTokenPublic");
+            console.logInt(trueTransaction);
+            if (trueTransaction > 0) {
+                trueTransaction-=1;
+                return (int(22), amount, blank);
+            }
             return ((isSuccess) ? int(22) : int(23), amount, blank);
     }
 

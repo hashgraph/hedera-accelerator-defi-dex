@@ -130,7 +130,6 @@ abstract contract AbstractSwap is HederaResponseCodes {
     }
 
     function getSpotPrice() public view returns (int64) {
-        require(pair.tokenB.tokenQty > 0, "spot price: No token B in the pool");
         int64 precision = getPrecisionValue();
         int64 value = (pair.tokenA.tokenQty*precision)/pair.tokenB.tokenQty;
         return value;

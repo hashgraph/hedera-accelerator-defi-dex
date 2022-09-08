@@ -19,7 +19,7 @@ abstract contract AbstractLPToken is HederaTokenService {
     address internal lpToken;
     bytes internal supplyKey;
 
-    function lpTokenForUser(address _user) internal view returns(uint256) {
+    function lpTokenForUser(address _user) public view returns(uint256) {
         return tokenShare[_user];
     }
 
@@ -44,12 +44,13 @@ abstract contract AbstractLPToken is HederaTokenService {
         associateTokenInternal(_toUser, lpToken);
         ////mint new amount of LP
         mintToken(mintingAmount);
+        tokenShare[_toUser] = tokenShare[_toUser] + mintingAmount;
         // transfer Lp to users account
         transferTokenInternal(lpToken, address(tokenService), _toUser, int64(mintingAmount));
         return 22;
     }
 
-    function sqrt(uint64 x) internal pure returns (uint64 y) {
+    function sqrt(uint64 x) public pure returns (uint64 y) {
         uint64 z = (x + 1) / 2;
         y = x;
         while (z < y) {
