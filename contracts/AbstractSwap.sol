@@ -155,7 +155,7 @@ abstract contract AbstractSwap is HederaResponseCodes {
         return (pair.tokenA.tokenQty * pair.tokenB.tokenQty) * precision;
     }
 
-    function getPrecisionValue() internal pure returns(int64) {
+    function getPrecisionValue() public pure returns(int64) {
         return 10000000;
     }
 }

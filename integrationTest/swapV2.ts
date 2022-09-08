@@ -188,7 +188,7 @@ const spotPrice = async () => {
   const response = await getPairQtyTx.getRecord(client);
   const price = response.contractFunctionResult!.getInt256(0);
 
-  console.log(`spot price for token is ${price}. \n`);
+  console.log(`spot price for token A is ${price}. \n`);
 };
 
 const getVariantValue = async () => {

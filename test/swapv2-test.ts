@@ -4,8 +4,6 @@ import {  expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { ethers, upgrades } from "hardhat";
 
-import {BigNumber} from "bignumber.js";
-
 
 describe("Swap", function () {
   const tokenBAddress = "0x0000000000000000000000000000000000010001";
