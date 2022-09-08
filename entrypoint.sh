@@ -32,7 +32,7 @@ if [ "$msg" = "Deploy contract" ]; then
     cat .env;
     contract=$CONTRACT_TO_DEPLOY.ts;
     echo $contract;
-    # npx hardhat run ./deployment/$contract;
+    npx hardhat run ./deployment/$contract;
     echo "Deployment done.";
 fi
 
