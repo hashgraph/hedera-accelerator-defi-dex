@@ -43,16 +43,15 @@ msg=${COMMIT_MESSAGE:0:33};
 
 echo "msg " + $msg;
 if [ "$msg" = "Deploy transparent proxy contract" ]; then 
-    CONTRACT_TO_DEPLOY=${COMMIT_MESSAGE:34};
-    echo "Running proxy contract deployment ........ " + CONTRACT_TO_DEPLOY;
+    CONTRACT_NAME=${COMMIT_MESSAGE:34};
+    echo "Running proxy contract deployment ........ " + $CONTRACT_NAME;
     echo OPERATOR_ID=$OPERATOR_ID >> .env;
     echo OPERATOR_KEY=$OPERATOR_KEY >> .env;
     echo ADMIN_ID=$ADMIN_ID >> .env;
     echo ADMIN_KEY=$ADMIN_KEY >> .env;
     echo TREASURE_ID=$TREASURE_ID >> .env;
     echo TREASURE_KEY=$TREASURE_KEY >> .env;
-    echo CONTRACT_ADDRESS=$CONTRACT_ADDRESS >> .env;
-    echo ADMIN_ADDRESS=$ADMIN_ADDRESS >> .env;
+    echo CONTRACT_NAME=$CONTRACT_NAME >> .env;
     cat .env;
     npx hardhat run ./deployment/transparentUpgradeableProxy.ts;
     echo "Deployment done.";
