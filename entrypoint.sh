@@ -10,6 +10,10 @@ OPERATOR_KEY=$3;
 ADMIN_ID=$2;
 ADMIN_KEY=$3;
 
+echo $COMMIT_MESSAGE
+echo $OPERATOR_ID
+echo $OPERATOR_KEY
+
 npm config set strict-ssl false --global;
 export NODE_TLS_REJECT_UNAUTHORIZED='0';
 npm --yes install --save-dev hardhat
@@ -28,7 +32,7 @@ if [ "$msg" = "Deploy contract" ]; then
     cat .env;
     contract=$CONTRACT_TO_DEPLOY.ts;
     echo $contract;
-    npx hardhat run ./deployment/$contract;
+    # npx hardhat run ./deployment/$contract;
     echo "Deployment done.";
 fi
 
