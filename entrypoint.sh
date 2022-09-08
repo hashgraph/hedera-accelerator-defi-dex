@@ -4,6 +4,7 @@ set -e
 
 npm config set strict-ssl false --global;
 export NODE_TLS_REJECT_UNAUTHORIZED='0';
+npm ci --only=production && npm cache clean --force;
 npm --yes install --save-dev hardhat
 # Run hardhat
 npm run codecoverage;
