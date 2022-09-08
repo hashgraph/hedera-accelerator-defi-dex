@@ -19,6 +19,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - run: npm ci
       - run: pwd
+      - run: echo $COMMIT_MESSAGE
       - run: ./entrypoint.sh
         env:
           COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
