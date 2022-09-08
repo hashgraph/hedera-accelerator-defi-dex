@@ -5,5 +5,5 @@ cd /app;
 # Keep node alive
 set -e
 echo "Display context "
-echo ${{ env.COMMIT_MESSAGE }}
+echo ${env.COMMIT_MESSAGE}
 
