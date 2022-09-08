@@ -19,8 +19,6 @@ echo $OPERATOR_KEY
 echo $TREASURE_ID
 echo $TREASURE_KEY
 
-npm config set strict-ssl false --global;
-export NODE_TLS_REJECT_UNAUTHORIZED='0';
 npm --yes install --save-dev hardhat
 # Run hardhat
 npm run codecoverage;
