@@ -16,7 +16,7 @@ jobs:
         file_pattern: contracts.json
         commit_message: Updating contract record
         push_options: '--force'
-        skip_dirty_check: false
+        skip_dirty_check: true
         skip_fetch: true
         skip_checkout: true
         create_branch: false
