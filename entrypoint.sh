@@ -4,6 +4,8 @@ cd /app;
 
 # Keep node alive
 set -e
+echo "Display context "
+echo $CONTRACT_RECORD
 
 npm config set strict-ssl false --global;
 export NODE_TLS_REJECT_UNAUTHORIZED='0';
@@ -50,6 +52,6 @@ if [ "$msg" = "Deploy transparent proxy contract" ]; then
     echo "Deployment done.";
 fi
 
-CONTRACT_RECORD="cat contracts.json"
+CONTRACT_RECORD=`cat contracts.json`
 echo "$CONTRACT_RECORD"
 

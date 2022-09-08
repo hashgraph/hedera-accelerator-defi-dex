@@ -2,12 +2,11 @@ name: Deploy a new contract to testnet
 on:
   push:
 
-env:
-  CONTRACT_RECORD: testing
-
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      CONTRACT_RECORD: testing
     steps:
     - uses: actions/checkout@v3
     - name: Build the Docker image
