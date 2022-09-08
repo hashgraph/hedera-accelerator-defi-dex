@@ -12,5 +12,12 @@
         "address": "0x0000000000000000000000000000000002df6d52",
         "transparentProxyAddress": "",
         "timestamp": "2022-09-07T11:28:23.712Z"
+    },
+    {
+        "name": "swap",
+        "id": "Need to figure out",
+        "address": "0x0000000000000000000000000000000002df96bb",
+        "transparentProxyAddress": "",
+        "timestamp": "2022-09-08T13:37:45.275Z"
     }
 ]
