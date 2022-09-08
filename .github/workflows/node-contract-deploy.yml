@@ -25,10 +25,8 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - run: npm ci
-      - name: Chmod file
-        run: chmod +x ./entrypoint.sh
       - name: Running entry point
-        run:  ./entrypoint.sh "${{ env.COMMIT_MESSAGE }}" ${{ env.OPERATOR_ID }} ${{ env.OPERATOR_KEY }}
+        run:  bash ./entrypoint.sh "${{ env.COMMIT_MESSAGE }}" ${{ env.OPERATOR_ID }} ${{ env.OPERATOR_KEY }}
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
           file_pattern: contracts.json
