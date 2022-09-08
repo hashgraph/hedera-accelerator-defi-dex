@@ -12,17 +12,41 @@ const readFileContent = (filePath: string) => {
   return JSON.parse(rawdata);
 };
 
+const getAllContracts = (contractName: string):  Array<DeployedContract>  => {
+  const contracts: Array<DeployedContract> = readFileContent(contractRecordFile);
+  return contracts;
+}
+
+const updateContractRecord = (contracts: Array<DeployedContract>, contractBeingDeployed: DeployedContract, transparentProxyAddress: string) => {
+  const allOtherContracts = contracts.filter((contract: DeployedContract) => contract.address != contractBeingDeployed.address);
+  const updatedContract = {
+    ...contractBeingDeployed,
+    transparentProxyAddress: transparentProxyAddress
+  }
+  const updatedContracts = [
+    ...allOtherContracts,
+    updatedContract
+  ]
+
+  fs.writeFileSync(contractRecordFile, updatedContracts);
+
+  const data = JSON.stringify(updatedContracts, null, 4);
+
+  console.log(`Contract record updated ${data}`);
+}
+
 async function main() {
-    const contractName = process.env.CONTRACT_NAME?.toLowerCase();
-    const contracts: Array<DeployedContract> = readFileContent(contractRecordFile)
+    const contractName = process.env.CONTRACT_NAME!.toLowerCase();
+    const contracts: Array<DeployedContract> = getAllContracts(contractName);
     const matchingContracts = contracts.filter((contract: DeployedContract) => contract.name == contractName);
     const contractBeingDeployed = matchingContracts[matchingContracts.length - 1];
     const contractAddress = contractBeingDeployed.address;
     const adminId = AccountId.fromString(process.env.ADMIN_ID!);
     const deployment = new Deployment();
     const filePath = "./artifacts/@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol/TransparentUpgradeableProxy.json";
-    const deployedContract = await deployment.deployContract(filePath, [contractAddress, adminId.toSolidityAddress(), []]);
-    console.log(`TransparentUpgradeableProxy deployed - ${deployedContract}`);
+    const deployedContractAddress = await deployment.deployContract(filePath, [contractAddress, adminId.toSolidityAddress(), []]);
+    console.log(`TransparentUpgradeableProxy deployed - ${deployedContractAddress}`);  
+    updateContractRecord(contracts, contractBeingDeployed, deployedContractAddress);
 }
 
 main()

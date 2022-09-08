@@ -31,7 +31,6 @@ if [ "$msg" = "Deploy contract" ]; then
     echo "Deployment done.";
 fi
 
-
 msg=${COMMIT_MESSAGE:0:33};
 
 echo "msg " + $msg;
