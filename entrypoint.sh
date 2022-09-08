@@ -9,10 +9,15 @@ OPERATOR_ID=$2;
 OPERATOR_KEY=$3;
 ADMIN_ID=$2;
 ADMIN_KEY=$3;
+TREASURE_ID=$4;
+TREASURE_KEY=$5;
 
 echo $COMMIT_MESSAGE
 echo $OPERATOR_ID
 echo $OPERATOR_KEY
+
+echo $TREASURE_ID
+echo $TREASURE_KEY
 
 npm config set strict-ssl false --global;
 export NODE_TLS_REJECT_UNAUTHORIZED='0';
