@@ -3,6 +3,13 @@ name: Deploy contract using node
 on:
   push:
 
+env:
+  COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+  OPERATOR_ID: 0.0.47710057
+  OPERATOR_KEY: 3030020100300706052b8104000a04220420d38b0ed5f11f8985cd72c8e52c206b512541c6f301ddc9d18bd8b8b25a41a80f
+  ADMIN_ID: 0.0.47710057
+  ADMIN_KEY: 3030020100300706052b8104000a04220420d38b0ed5f11f8985cd72c8e52c206b512541c6f301ddc9d18bd8b8b25a41a80f
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -19,12 +26,5 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - run: npm ci
       - run: pwd
-      - run: echo $COMMIT_MESSAGE
-      - run: ./entrypoint.sh
-        env:
-          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
-          OPERATOR_ID: 0.0.47710057
-          OPERATOR_KEY: 3030020100300706052b8104000a04220420d38b0ed5f11f8985cd72c8e52c206b512541c6f301ddc9d18bd8b8b25a41a80f
-          ADMIN_ID: 0.0.47710057
-          ADMIN_KEY: 3030020100300706052b8104000a04220420d38b0ed5f11f8985cd72c8e52c206b512541c6f301ddc9d18bd8b8b25a41a80f
-
+      - run: echo ${{ env.COMMIT_MESSAGE }}
+        
