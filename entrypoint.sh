@@ -1,6 +1,5 @@
 #!/bin/sh
 # Change to the correct directory
-cd /app;
 
 # Keep node alive
 set -e
