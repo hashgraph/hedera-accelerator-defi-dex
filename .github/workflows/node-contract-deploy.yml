@@ -18,7 +18,8 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - run: npm ci
-      - run: entrypoint.sh
+      - run: pwd
+      - run: ./entrypoint.sh
         env:
           COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
           OPERATOR_ID: 0.0.47710057
