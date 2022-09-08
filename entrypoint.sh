@@ -24,8 +24,6 @@ export NODE_TLS_REJECT_UNAUTHORIZED='0';
 npm --yes install --save-dev hardhat
 # Run hardhat
 npm run codecoverage;
-msg=${COMMIT_MESSAGE:0:15};
-echo "msg " + $msg;
 
 if [ "$msg" = "Deploy contract" ]; then 
     CONTRACT_TO_DEPLOY=${COMMIT_MESSAGE:16};
