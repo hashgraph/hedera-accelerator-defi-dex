@@ -1,9 +1,13 @@
 #!/bin/sh
+# Change to the correct directory
+cd /app;
+
 # Keep node alive
 set -e
 
 npm config set strict-ssl false --global;
 export NODE_TLS_REJECT_UNAUTHORIZED='0';
+npm --yes install --save-dev hardhat
 # Run hardhat
 npm run codecoverage;
 msg=${COMMIT_MESSAGE:0:15};
