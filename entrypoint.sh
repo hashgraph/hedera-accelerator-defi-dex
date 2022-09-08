@@ -45,3 +45,7 @@ if [ "$msg" = "Deploy transparent proxy contract" ]; then
     npx hardhat run ./deployment/transparentUpgradeableProxy.ts;
     echo "Deployment done.";
 fi
+
+CONTRACT_RECORD="cat contracts.json"
+echo "$CONTRACT_RECORD"
+
