@@ -1,7 +1,6 @@
-const https = require('https');
+const https =  require("https");
 
-export default function httpRequest(contractEvmAddress, postData) {
-
+export const httpRequest = async (contractEvmAddress: string , postData: any): Promise<any> => {
   const options = {
     hostname: 'testnet.mirrornode.hedera.com',
     port: 443,
@@ -10,14 +9,14 @@ export default function httpRequest(contractEvmAddress, postData) {
   };
 
   return new Promise(function(resolve, reject) { 
-      var req = https.request(options, function(res) {
+      var req = https.request(options, function(res: any) {
           // reject on bad status
           if (res.statusCode < 200 || res.statusCode >= 300) {
               return reject(new Error('statusCode=' + res.statusCode));
           }
           // cumulate data
-          var body = [];
-          res.on('data', function(chunk) {
+          var body: Array<any> = [];
+          res.on('data', function(chunk: any) {
               body.push(chunk);
           });
           // resolve on end
@@ -31,7 +30,7 @@ export default function httpRequest(contractEvmAddress, postData) {
           });
       });
       // reject on request error
-      req.on('error', function(err) {
+      req.on('error', function(err: any) {
           // This is not a "Second reject", just a different sort of failure
           reject(err);
       });
@@ -44,7 +43,7 @@ export default function httpRequest(contractEvmAddress, postData) {
 }
 
 async function main() {
-  const response = await httpRequest("0x0000000000000000000000000000000002dfa2d5");  
+  const response: any  = await httpRequest("0x0000000000000000000000000000000002dfa2d5", undefined);  
   const id = response.contract_id;
   console.log(`id ${id}`)
 }

@@ -19,7 +19,7 @@ async function main() {
     const filePath = "./artifacts/@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol/TransparentUpgradeableProxy.json";
     const deployedContractAddress = await deployment.deployContract(filePath, [contractAddress, adminId.toSolidityAddress(), []]);
     console.log(`TransparentUpgradeableProxy deployed - ${deployedContractAddress}`); 
-    const id = contractService.getContractId(deployedContractAddress);
+    const id = await contractService.getContractId(deployedContractAddress);
     const updatedContract = {
       ...contractBeingDeployed,
       transparentProxyAddress: deployedContractAddress,
