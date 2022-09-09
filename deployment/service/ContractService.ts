@@ -3,7 +3,7 @@ import { DeployedContract } from "../model/contract";
 import { ContractId } from "@hashgraph/sdk";
 
 export class ContractService {
-    private contractRecordFile = ".deployment/state/contracts.json";
+    private contractRecordFile = "./deployment/state/contracts.json";
 
     private readFileContent = () => {
         const rawdata: any = fs.readFileSync(this.contractRecordFile);
