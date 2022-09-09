@@ -21,7 +21,7 @@ npm --yes install --save-dev hardhat
 npm run codecoverage;
 
 msg=${COMMIT_MESSAGE:0:15};
-echo "msg for contract deployment " $msg;
+echo "message for contract deployment " $msg;
 
 if [ "$msg" = "Deploy contract" ]; then 
     CONTRACT_TO_DEPLOY=${COMMIT_MESSAGE:16};
