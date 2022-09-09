@@ -3,7 +3,7 @@ import { DeployedContract } from "../model/contract";
 import { ContractId } from "@hashgraph/sdk";
 
 export class ContractService {
-    private contractRecordFile = "./contracts.json";
+    private contractRecordFile = ".deployment/state/contracts.json";
 
     private readFileContent = () => {
         const rawdata: any = fs.readFileSync(this.contractRecordFile);
@@ -11,6 +11,10 @@ export class ContractService {
     };
 
     public recordDeployedContract = (contractAddress: string, contractName: string) => {
+        if (contractName == "transparentupgradeableproxy") {
+            return;
+        }
+
         const contracts: [DeployedContract] = this.readFileContent();
 
         const contractId = ContractId.fromEvmAddress(0, 0, contractAddress);

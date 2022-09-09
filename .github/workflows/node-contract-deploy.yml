@@ -31,7 +31,7 @@ jobs:
         run:  bash ./entrypoint.sh "${{ env.COMMIT_MESSAGE }}" ${{ env.OPERATOR_ID }} ${{ env.OPERATOR_KEY }} ${{ env.TREASURE_ID }} ${{ env.TREASURE_KEY }} 
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          file_pattern: contracts.json
+          file_pattern: deployment/state/contracts.json
           commit_message: Updating contract record  
           push_options: '--force'
           skip_dirty_check: false
