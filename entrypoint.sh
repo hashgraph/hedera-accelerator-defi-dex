@@ -17,7 +17,7 @@ echo OPERATOR_ID $OPERATOR_ID
 echo TREASURE_ID $TREASURE_ID
 
 npm --yes install --save-dev hardhat
-# Run hardhat
+
 npm run codecoverage;
 
 msg=${COMMIT_MESSAGE:0:15};
