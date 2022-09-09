@@ -18,8 +18,15 @@ async function main() {
     const deployment = new Deployment();
     const filePath = "./artifacts/@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol/TransparentUpgradeableProxy.json";
     const deployedContractAddress = await deployment.deployContract(filePath, [contractAddress, adminId.toSolidityAddress(), []]);
-    console.log(`TransparentUpgradeableProxy deployed - ${deployedContractAddress}`);  
-    contractService.updateContractRecord(contractBeingDeployed, deployedContractAddress);
+    console.log(`TransparentUpgradeableProxy deployed - ${deployedContractAddress}`); 
+    const id = contractService.getContractId(deployedContractAddress);
+    const updatedContract = {
+      ...contractBeingDeployed,
+      transparentProxyAddress: deployedContractAddress,
+      transparentProxyId: id,
+      timestamp: new Date().toISOString()
+    }
+    contractService.updateContractRecord(updatedContract, contractBeingDeployed);
 }
 
 main()

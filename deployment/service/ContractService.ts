@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import { DeployedContract } from "../model/contract";
-import { ContractId } from "@hashgraph/sdk";
+import { httpRequest } from "../api/HttpsService"
 
 export class ContractService {
     private contractRecordFile = "./deployment/state/contracts.json";
@@ -10,20 +10,26 @@ export class ContractService {
         return JSON.parse(rawdata);
     };
 
-    public recordDeployedContract = (contractAddress: string, contractName: string) => {
-        if (contractName == "transparentupgradeableproxy") {
+    public getContractId = async (contractEvmAddress: string): string  => {
+        console.log(`Fetching contract id for evm address ${contractEvmAddress}`);
+        const contractId = await httpRequest(contractEvmAddress);
+        console.log(`Contract id for evm address ${contractId}`);
+        return contractId;
+    }
+
+    public recordDeployedContract = async (contractAddress: string, contractName: string) => {
+        if (contractName === "transparentupgradeableproxy") {
             return;
         }
 
         const contracts: [DeployedContract] = this.readFileContent();
 
-        const contractId = ContractId.fromEvmAddress(0, 0, contractAddress);
+        const contractId = await this.getContractId(contractAddress);
 
         const newContract: DeployedContract = {
             name: contractName.toLowerCase(),
-            id: contractId.toString(),
+            id: contractId,
             address: contractAddress,
-            transparentProxyAddress: null,
             timestamp: new Date().toISOString()
         }
 
@@ -41,16 +47,10 @@ export class ContractService {
 
     public getAllContracts = (): Array<DeployedContract> => this.readFileContent();
 
-    public updateContractRecord = (contractBeingDeployed: DeployedContract, transparentProxyAddress: string) => {
+    public updateContractRecord = (updatedContract: DeployedContract, contractBeingDeployed: DeployedContract) => {
 
         const contracts: Array<DeployedContract> = this.getAllContracts();
         const allOtherContracts = contracts.filter((contract: DeployedContract) => contract.address != contractBeingDeployed.address);
-
-        const updatedContract = {
-            ...contractBeingDeployed,
-            transparentProxyAddress: transparentProxyAddress,
-            timestamp: new Date().toISOString()
-        }
 
         const updatedContracts = [
             ...allOtherContracts,
@@ -70,6 +70,14 @@ export class ContractService {
         const matchingContracts = contracts.filter((contract: DeployedContract) => contract.name == contractName);
         const latestContract = matchingContracts[matchingContracts.length - 1];
         return latestContract;
+    }
+
+    public getContractWithProxy = (contractName: string): DeployedContract => {
+        const contracts: Array<DeployedContract> = this.getAllContracts();
+        const matchingProxyContracts = contracts.filter((contract: DeployedContract) => contract.name == contractName 
+            && (contract.transparentProxyAddress != null 
+            && contract.transparentProxyId != null));
+        return matchingProxyContracts[0];//Proxy is associated to only one contract
     }
 
 }

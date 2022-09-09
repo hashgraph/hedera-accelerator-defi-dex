@@ -2,6 +2,7 @@ export interface DeployedContract {
     name: string,
     id: string,
     address: string,
-    transparentProxyAddress,
+    transparentProxyAddress?: string,
+    transparentProxyId?: string,
     timestamp: string,
 }
