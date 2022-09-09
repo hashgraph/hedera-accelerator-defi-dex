@@ -55,3 +55,21 @@ if [ "$msg" = "Deploy transparent proxy contract" ]; then
     echo "Deployment done.";
 fi
 
+
+msg=${COMMIT_MESSAGE:0:34};
+
+echo "msg for upgrade proxy logic contract " + $msg;
+if [ "$msg" = "Upgrade transparent proxy contract" ]; then 
+    CONTRACT_NAME=${COMMIT_MESSAGE:35};
+    echo "Running upgrade logic contract ........ " + $CONTRACT_NAME;
+    echo OPERATOR_ID=$OPERATOR_ID >> .env;
+    echo OPERATOR_KEY=$OPERATOR_KEY >> .env;
+    echo ADMIN_ID=$ADMIN_ID >> .env;
+    echo ADMIN_KEY=$ADMIN_KEY >> .env;
+    echo TREASURE_ID=$TREASURE_ID >> .env;
+    echo TREASURE_KEY=$TREASURE_KEY >> .env;
+    echo CONTRACT_NAME=$CONTRACT_NAME >> .env;
+    cat .env;
+    npx hardhat run ./deployment/upgradeProxy.ts;
+    echo "Upgrade done.";
+fi
