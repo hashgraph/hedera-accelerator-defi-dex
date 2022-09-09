@@ -81,7 +81,7 @@ export class Deployment {
 
     console.log("Contract deployed.");
 
-    this.contractService.recordDeployedContract(contract.address, compiledContract.contractName);
+    await this.contractService.recordDeployedContract(contract.address, compiledContract.contractName);
 
     // Transaction sent by the wallet (signer) for deployment - for info
     const contractDeployTx = contract.deployTransaction;
