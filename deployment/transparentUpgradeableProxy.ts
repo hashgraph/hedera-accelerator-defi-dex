@@ -19,20 +19,23 @@ const getAllContracts = (contractName: string):  Array<DeployedContract>  => {
 
 const updateContractRecord = (contracts: Array<DeployedContract>, contractBeingDeployed: DeployedContract, transparentProxyAddress: string) => {
   const allOtherContracts = contracts.filter((contract: DeployedContract) => contract.address != contractBeingDeployed.address);
+
   const updatedContract = {
     ...contractBeingDeployed,
     transparentProxyAddress: transparentProxyAddress
   }
+
   const updatedContracts = [
     ...allOtherContracts,
     updatedContract
   ]
 
-  fs.writeFileSync(contractRecordFile, updatedContracts);
-
   const data = JSON.stringify(updatedContracts, null, 4);
 
   console.log(`Contract record updated ${data}`);
+
+  fs.writeFileSync(contractRecordFile, data);
+
 }
 
 async function main() {
