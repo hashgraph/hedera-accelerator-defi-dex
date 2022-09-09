@@ -17,7 +17,7 @@
         "name": "swap",
         "id": "Need to figure out",
         "address": "0x0000000000000000000000000000000002df96bb",
-        "transparentProxyAddress": "",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002dfa1e0",
         "timestamp": "2022-09-08T13:37:45.275Z"
     }
 ]
