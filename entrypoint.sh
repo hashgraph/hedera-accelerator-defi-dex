@@ -25,7 +25,7 @@ echo "message for contract deployment " $msg;
 
 if [ "$msg" = "Deploy contract" ]; then 
     CONTRACT_TO_DEPLOY=${COMMIT_MESSAGE:16};
-    echo "Running contract deployment ........ " + CONTRACT_TO_DEPLOY;
+    echo "Running contract deployment ........ " $CONTRACT_TO_DEPLOY;
     echo OPERATOR_ID=$OPERATOR_ID >> .env;
     echo OPERATOR_KEY=$OPERATOR_KEY >> .env;
     echo ADMIN_ID=$ADMIN_ID >> .env;

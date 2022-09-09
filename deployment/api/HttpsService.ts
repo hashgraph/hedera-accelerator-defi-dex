@@ -41,16 +41,3 @@ export const httpRequest = async (contractEvmAddress: string , postData: any): P
       req.end();
   });
 }
-
-async function main() {
-  const response: any  = await httpRequest("0x0000000000000000000000000000000002dfa2d5", undefined);  
-  const id = response.contract_id;
-  console.log(`id ${id}`)
-}
-
-main()
-  .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
