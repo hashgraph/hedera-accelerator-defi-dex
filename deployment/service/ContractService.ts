@@ -61,7 +61,7 @@ export class ContractService {
 
     }
 
-    public getContract = (contractName: string): DeployedContract {
+    public getContract = (contractName: string): DeployedContract => {
         const contracts: Array<DeployedContract> = this.getAllContracts();
         const matchingContracts = contracts.filter((contract: DeployedContract) => contract.name == contractName);
         const latestContract = matchingContracts[matchingContracts.length - 1];
