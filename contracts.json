@@ -14,10 +14,17 @@
         "timestamp": "2022-09-07T11:28:23.712Z"
     },
     {
+        "name": "transparentupgradeableproxy",
+        "id": "0.0.0000000000000000000000000000000002dfa28d",
+        "address": "0x0000000000000000000000000000000002dfa28d",
+        "transparentProxyAddress": null,
+        "timestamp": "2022-09-09T06:48:50.395Z"
+    },
+    {
         "name": "swap",
         "id": "Need to figure out",
         "address": "0x0000000000000000000000000000000002df96bb",
-        "transparentProxyAddress": "0x0000000000000000000000000000000002dfa1e0",
-        "timestamp": "2022-09-08T13:37:45.275Z"
+        "transparentProxyAddress": "0x0000000000000000000000000000000002dfa28d",
+        "timestamp": "2022-09-09T06:48:54.402Z"
     }
 ]
