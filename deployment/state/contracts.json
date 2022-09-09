@@ -1,9 +1,16 @@
 [
     {
+        "name": "transparentupgradeableproxy",
+        "id": "0.0.0000000000000000000000000000000002dfa321",
+        "address": "0x0000000000000000000000000000000002dfa321",
+        "transparentProxyAddress": null,
+        "timestamp": "2022-09-09T07:48:27.669Z"
+    },
+    {
         "name": "swap",
         "id": "0.0.0000000000000000000000000000000002dfa2d5",
         "address": "0x0000000000000000000000000000000002dfa2d5",
-        "transparentProxyAddress": null,
-        "timestamp": "2022-09-09T07:22:06.207Z"
+        "transparentProxyAddress": "0x0000000000000000000000000000000002dfa321",
+        "timestamp": "2022-09-09T07:48:32.132Z"
     }
 ]
