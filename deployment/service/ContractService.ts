@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import { DeployedContract } from "../model/contract";
-import { httpRequest } from "../api/HttpsService"
+import httpRequest from "../api/HttpsService"
 
 export class ContractService {
     private contractRecordFile = "./deployment/state/contracts.json";

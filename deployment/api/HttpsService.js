@@ -1,6 +1,6 @@
 const https = require('https');
 
-export function httpRequest(contractEvmAddress, postData) {
+export default function httpRequest(contractEvmAddress, postData) {
 
   const options = {
     hostname: 'testnet.mirrornode.hedera.com',
