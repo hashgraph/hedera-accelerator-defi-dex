@@ -178,12 +178,75 @@ const getContributorTokenShare = async () => {
   );
 };
 
+const spotPrice = async () => {
+  const getSpotPrice = await new ContractExecuteTransaction()
+    .setContractId(contractId)
+    .setGas(1000000)
+    .setFunction("getSpotPrice")
+    .freezeWith(client);
+  const getPairQtyTx = await getSpotPrice.execute(client);
+  const response = await getPairQtyTx.getRecord(client);
+  const price = response.contractFunctionResult!.getInt256(0);
+
+  console.log(`spot price for token A is ${price}. \n`);
+};
+
+const getVariantValue = async () => {
+  const getVariantValue = await new ContractExecuteTransaction()
+    .setContractId(contractId)
+    .setGas(1000000)
+    .setFunction("getVariantValue")
+    .freezeWith(client);
+  const getPairQtyTx = await getVariantValue.execute(client);
+  const response = await getPairQtyTx.getRecord(client);
+  const price = response.contractFunctionResult!.getInt256(0);
+
+  console.log(`k variant value is ${price}. \n`);
+};
+
+const getOutGivenIn =async () => {
+  const tokenAQty = new BigNumber(10);
+  const getOutGivenIn = await new ContractExecuteTransaction()
+    .setContractId(contractId)
+    .setGas(1000000)
+    .setFunction("getOutGivenIn",
+      new ContractFunctionParameters()
+          .addInt64(tokenAQty))
+    .freezeWith(client);
+  const getPairQtyTx = await getOutGivenIn.execute(client);
+  const response = await getPairQtyTx.getRecord(client);
+  const tokenBQty = response.contractFunctionResult!.getInt256(0);
+
+  console.log(`For tokenAQty ${tokenAQty} the getOutGivenIn tokenBQty is ${tokenBQty}. \n`);
+};
+
+const getInGivenOut =async () => {
+  const tokenBQty = new BigNumber(11);
+  const getInGivenOut = await new ContractExecuteTransaction()
+    .setContractId(contractId)
+    .setGas(1000000)
+    .setFunction("getInGivenOut",
+      new ContractFunctionParameters()
+            .addInt64(tokenBQty))
+    .freezeWith(client);
+  const getPairQtyTx = await getInGivenOut.execute(client);
+  const response = await getPairQtyTx.getRecord(client);
+  const tokenAQty = response.contractFunctionResult!.getInt256(0);
+
+  console.log(`For tokenBQty ${tokenBQty} the getInGivenOut tokenAQty is ${tokenAQty}. \n`);
+};
+
+
 async function main() {
   await initialize();
   await createLiquidityPool();
   await addLiquidity();
   await removeLiquidity();
   await swapTokenA();
+  await spotPrice();
+  await getVariantValue();
+  await getOutGivenIn();
+  await getInGivenOut();
 }
 
 main()

@@ -4,6 +4,7 @@ import {  expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { ethers, upgrades } from "hardhat";
 
+
 describe("Swap", function () {
   const tokenBAddress = "0x0000000000000000000000000000000000010001";
   const tokenAAddress = "0x0000000000000000000000000000000000020002";
@@ -219,5 +220,53 @@ describe("Swap", function () {
       await expect(swapV2.removeLiquidity(zeroAddress, tokenAAddress, tokenBAddress, 30, 30)).to.revertedWith("Remove liquidity: Transfering token B to contract failed with status code");
     });
   });
-});
 
+  describe("Swap Base Constant Product Algorithm Tests",  async () => {
+    it("check spot price for tokens A", async function () {
+      const { swapV2 } = await loadFixture(deployFixture);
+      await swapV2.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, 100, 50);
+      const value = await swapV2.getSpotPrice();
+
+      expect(value).to.be.equals(20000000);
+    });
+
+    it("check spot price for tokens B", async function () {
+      const { swapV2 } = await loadFixture(deployFixture);
+      await swapV2.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, 50, 100);
+      const value = await swapV2.getSpotPrice();
+
+      expect(value).to.be.equals(5000000);
+    });
+
+    it("check spot price for zero denominator", async function () {
+      const { swapV2 } = await loadFixture(deployFixture);
+      await swapV2.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, 50, 0);
+      
+      await expect(swapV2.getSpotPrice()).to.be.revertedWith("spot price: No token B in the pool");
+    });
+
+    it("check spot price for tokens with reverse", async function () {
+      const { swapV2 } = await loadFixture(deployFixture);
+      await swapV2.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, 100, 200);
+      const value = await swapV2.getSpotPrice();
+
+      expect(value).to.be.equals(5000000);
+    });
+
+    it("check get out given In price value", async function () {
+      const { swapV2 } = await loadFixture(deployFixture);
+      await swapV2.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, 24, 16);
+      const value = await swapV2.getOutGivenIn(10);
+
+      expect(value).to.be.equals(47058824);
+    });
+
+    it("check get in given out price value", async function () {
+      const { swapV2 } = await loadFixture(deployFixture);
+      await swapV2.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, 24, 16);
+      const value = await swapV2.getInGivenOut(11);
+
+      expect(value).to.be.equals(528000000);
+    });
+  });
+});
