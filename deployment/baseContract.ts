@@ -12,21 +12,8 @@ dotenv.config({ path: '../../.env' });
 
 async function main() {
     await deployBaseContract()
-    // const deployment = new Deployment();
-    // const filePath = "./artifacts/contracts/common/BaseHTS.sol/BaseHTS.json";
-    // const deployedContract = await deployment.deployContract(filePath, []);
-    // console.log("baseContract deployed.");
 }
 
-/**
- * 6 Sep 2:41
- * STEP 2 - Create contract BaseContract
-- Contract created 0.0.48189305 ,Contract Address 0000000000000000000000000000000002df4f79 -
-
-STEP 3 - Create token BaseContract
-- Token created 0.0.48189306, Token Address 0000000000000000000000000000000002df4f7a
- * 
- */ 
 async function deployBaseContract() {
   let client = Client.forTestnet();
   const operatorKey = PrivateKey.fromString("302e020100300506032b657004220420b69079b0cdebea97ec13c78bf7277d3f4aef35189755b5d11c2dfae40c566aa8");
@@ -39,7 +26,6 @@ async function deployBaseContract() {
 
   console.log(`\nSTEP 1 - Create file BaseContract`);
   const rawdata: any = fs.readFileSync("./artifacts/contracts/common/BaseHTS.sol/BaseHTS.json");
-  //console.log(`Raw data ${rawdata}`);
   const momContract = JSON.parse(rawdata);
   const contractByteCode = momContract.bytecode;
 

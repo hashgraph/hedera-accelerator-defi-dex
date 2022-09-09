@@ -49,9 +49,6 @@ const itegrationTestLPToken = async () => {
       .addUint64(tokenBQty)
       .addAddress(aliceAccount2.toSolidityAddress());
 
-  // switch client to alice
-  //client.setOperator(aliceAccount, aliceKey);
-
   const contractAllotTx = await new ContractExecuteTransaction()
       .setContractId(contractId)
       .setFunction("allotLPTokenFor", contractFunctionParameters)

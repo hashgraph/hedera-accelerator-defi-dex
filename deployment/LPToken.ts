@@ -16,7 +16,6 @@ async function main() {
 }
 
 async function createAccount(client: Client) {
-  // console.log(`\nSTEP 0 - Create accounts`);
     const aliceKey = PrivateKey.generateED25519();
 
     let createAccountTx = await new AccountCreateTransaction()
@@ -73,25 +72,9 @@ async function deployTokenContract() {
     const contractId = contractCreateRx.contractId;
     console.log(`- Contract created ${contractId?.toString()} ,Contract Address ${contractId?.toSolidityAddress()} -`);
     if  (contractId != null) {
-    //     console.log(`\nSTEP 3 - Create token`);
-    //     const tokenCreateTx = await new TokenCreateTransaction()
-    //         .setTokenName("TOKENA-TOKENB")
-    //         .setTokenSymbol("A-B")
-    //         .setDecimals(0)
-    //         .setInitialSupply(0)
-    //         .setTokenType(TokenType.FungibleCommon)
-    //         .setSupplyType(TokenSupplyType.Infinite)
-    //       //create the token with the contract as supply and treasury
-    //         .setSupplyKey(contractId)
-    //         .setTreasuryAccountId(contractId?.toString() ?? "")
-    //         .execute(client);
-
-    //   const tokenCreateRx = await tokenCreateTx.getReceipt(client);
-       const tokenId = TokenId.fromString("0.0.48189306"); // 6 sep 2:45
-    //   console.log(`- Token created ${tokenId}, Token Address ${tokenId?.toSolidityAddress()}`);
-
+   
+      const tokenId = TokenId.fromString("0.0.48189306"); // 6 sep 2:45
       console.log(`\n STEP 6 - call the contract to set the token id`);
-
 
       if (tokenId != null && contractId != null) {
         let contractFunctionParameters = new ContractFunctionParameters()
