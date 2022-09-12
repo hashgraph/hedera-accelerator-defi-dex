@@ -1,5 +1,5 @@
 
-import { Deployment } from "./deployContractOnTestnet";
+import { Deployment } from "../deployContractOnTestnet";
 
 async function main() {
     const deployment = new Deployment();
