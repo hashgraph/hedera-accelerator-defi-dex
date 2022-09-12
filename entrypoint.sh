@@ -15,14 +15,6 @@ echo COMMIT_MESSAGE $COMMIT_MESSAGE
 echo OPERATOR_ID $OPERATOR_ID
 echo TREASURE_ID $TREASURE_ID
 
-TAG_MESSAGE=$(git describe)
-TAG_MESSAGE_NEW=`git describe`
-echo "TAG_MESSAGE" $TAG_MESSAGE
-echo "TAG_MESSAGE_NEW" $TAG_MESSAGE_NEW
-
-
-COMMIT_MESSAGE=$TAG_MESSAGE
-
 npm --yes install --save-dev hardhat
 
 echo "********************  Running test and coverage *********************"
@@ -32,7 +24,7 @@ npm run codecoverage;
 echo "********************  Deployment *************************************"
 
 msg=${COMMIT_MESSAGE:0:15};
-echo "Message for contract deployment " $msg;
+echo "Checking for contract deployment " $msg;
 
 if [ "$msg" = "Deploy contract" ]; then 
     CONTRACT_TO_DEPLOY=${COMMIT_MESSAGE:16};
@@ -47,7 +39,7 @@ if [ "$msg" = "Deploy contract" ]; then
 fi
 
 msg=${COMMIT_MESSAGE:0:33};
-echo "Message for transparent proxy deployment " + $msg;
+echo "Checking for transparent proxy deployment " + $msg;
 
 if [ "$msg" = "Deploy transparent proxy contract" ]; then 
     CONTRACT_NAME=${COMMIT_MESSAGE:34};
@@ -65,7 +57,7 @@ fi
 
 
 msg=${COMMIT_MESSAGE:0:34};
-echo "Message for upgrade proxy logic contract " + $msg;
+echo "Checking for upgrade proxy logic contract " + $msg;
 
 if [ "$msg" = "Upgrade transparent proxy contract" ]; then 
     CONTRACT_NAME=${COMMIT_MESSAGE:35};
