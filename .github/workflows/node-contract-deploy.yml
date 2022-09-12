@@ -3,6 +3,7 @@ name: Deploy contract using node
 on:
   push:
     tags:
+      - v0.*
 
 env:
   COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
