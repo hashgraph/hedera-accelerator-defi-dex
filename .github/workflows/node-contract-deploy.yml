@@ -2,6 +2,8 @@ name: Deploy contract using node
 
 on:
   push:
+    tags:
+      - v0.**
 
 env:
   COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
@@ -16,18 +18,14 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [16.x]
-
     steps:
       - uses: actions/checkout@v3
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Use Node.js 16.x
         uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: '16.x'   
       - run: npm ci
-      - name: Running entry point
+      - name: Running build and deployment
         run:  bash ./entrypoint.sh "${{ env.COMMIT_MESSAGE }}" ${{ env.OPERATOR_ID }} ${{ env.OPERATOR_KEY }} ${{ env.TREASURE_ID }} ${{ env.TREASURE_KEY }} 
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
