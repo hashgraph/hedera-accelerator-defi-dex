@@ -16,7 +16,10 @@ echo OPERATOR_ID $OPERATOR_ID
 echo TREASURE_ID $TREASURE_ID
 
 TAG_MESSAGE=$(git tag -l --format='%(subject)' | head -n1)
+TAG_MESSAGE_NEW=`git tag -l --format='%(subject)' | head -n1`
 echo "TAG_MESSAGE" $TAG_MESSAGE
+echo "TAG_MESSAGE_NEW" $TAG_MESSAGE_NEW
+
 
 COMMIT_MESSAGE=$TAG_MESSAGE
 
@@ -48,7 +51,7 @@ echo "Message for transparent proxy deployment " + $msg;
 
 if [ "$msg" = "Deploy transparent proxy contract" ]; then 
     CONTRACT_NAME=${COMMIT_MESSAGE:34};
-    echo "Running proxy deployment ........ " + $CONTRACT_NAME;
+    echo "Running proxy deployment ........ " $CONTRACT_NAME;
     echo OPERATOR_ID=$OPERATOR_ID >> .env;
     echo OPERATOR_KEY=$OPERATOR_KEY >> .env;
     echo ADMIN_ID=$ADMIN_ID >> .env;
@@ -66,7 +69,7 @@ echo "Message for upgrade proxy logic contract " + $msg;
 
 if [ "$msg" = "Upgrade transparent proxy contract" ]; then 
     CONTRACT_NAME=${COMMIT_MESSAGE:35};
-    echo "Running upgrade logic contract ........ " + $CONTRACT_NAME;
+    echo "Running upgrade logic contract ........ " $CONTRACT_NAME;
     echo OPERATOR_ID=$OPERATOR_ID >> .env;
     echo OPERATOR_KEY=$OPERATOR_KEY >> .env;
     echo ADMIN_ID=$ADMIN_ID >> .env;
