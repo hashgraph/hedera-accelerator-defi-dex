@@ -22,7 +22,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '16.x'
-      - run: git tag -l --format='%(subject)' | head -n1
+      - run: git describe
       - run: npm ci
       - name: Running build and deployment
         run:  bash ./entrypoint.sh "${{ env.COMMIT_MESSAGE }}" ${{ env.OPERATOR_ID }} ${{ env.OPERATOR_KEY }} ${{ env.TREASURE_ID }} ${{ env.TREASURE_KEY }} 
