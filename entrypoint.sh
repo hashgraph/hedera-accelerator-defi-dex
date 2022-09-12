@@ -16,6 +16,7 @@ echo OPERATOR_ID $OPERATOR_ID
 echo TREASURE_ID $TREASURE_ID
 
 TAG_MESSAGE=$(git tag -l --format='%(subject)' | head -n1)
+echo "TAG_MESSAGE" $TAG_MESSAGE
 
 COMMIT_MESSAGE=$TAG_MESSAGE
 
