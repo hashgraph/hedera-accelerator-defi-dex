@@ -34,7 +34,7 @@ if [ "$msg" = "Deploy contract" ]; then
     echo ADMIN_ID=$ADMIN_ID >> .env;
     echo ADMIN_KEY=$ADMIN_KEY >> .env;
     contract=$CONTRACT_TO_DEPLOY.ts;
-    npx hardhat run ./deployment/$contract;
+    npx hardhat run ./deployment/contract/$contract;
     echo "Deployment done.";
 fi
 
@@ -51,7 +51,7 @@ if [ "$msg" = "Deploy transparent proxy contract" ]; then
     echo TREASURE_ID=$TREASURE_ID >> .env;
     echo TREASURE_KEY=$TREASURE_KEY >> .env;
     echo CONTRACT_NAME=$CONTRACT_NAME >> .env;
-    npx hardhat run ./deployment/transparentUpgradeableProxy.ts;
+    npx hardhat run ./deployment/contract/transparentUpgradeableProxy.ts;
     echo "Transparent proxy deployed.";
 fi
 
@@ -66,10 +66,8 @@ if [ "$msg" = "Upgrade transparent proxy contract" ]; then
     echo OPERATOR_KEY=$OPERATOR_KEY >> .env;
     echo ADMIN_ID=$ADMIN_ID >> .env;
     echo ADMIN_KEY=$ADMIN_KEY >> .env;
-    echo TREASURE_ID=$TREASURE_ID >> .env;
-    echo TREASURE_KEY=$TREASURE_KEY >> .env;
     echo CONTRACT_NAME=$CONTRACT_NAME >> .env;
-    npx hardhat run ./deployment/upgradeProxy.ts;
+    npx hardhat run ./deployment/contract/upgradeProxy.ts;
     echo "Upgrade done.";
 fi
 
