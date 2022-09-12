@@ -69,7 +69,9 @@ abstract contract AbstractSwap is HederaResponseCodes {
         lpTokenContract.allotLPTokenFor(uint64(_tokenAQty), uint64(_tokenBQty), fromAccount);
     }
 
-    function removeLiquidity(address toAccount, address _tokenA, address _tokenB, int64 _tokenAQty, int64 _tokenBQty) external {
+    function removeLiquidity(address toAccount, address _tokenA, address _tokenB, uint64 _lpToken) external {
+        int64 _tokenAQty = 1;
+        int64 _tokenBQty = 1;
         pair.tokenA.tokenQty -= _tokenAQty;
         pair.tokenB.tokenQty -= _tokenBQty;
 
@@ -82,6 +84,8 @@ abstract contract AbstractSwap is HederaResponseCodes {
         contributedPair.pair.tokenA.tokenQty -= _tokenAQty;
         contributedPair.pair.tokenB.tokenQty -= _tokenBQty;
         liquidityContribution[toAccount] = contributedPair;
+        lpTokenContract.removeLPTokenFor(_lpToken, toAccount);
+
     }
 
     function swapToken(address to, address _tokenA, address _tokenB, int64 _deltaAQty, int64 _deltaBQty) external {

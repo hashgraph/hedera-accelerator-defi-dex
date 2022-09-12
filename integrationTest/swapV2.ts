@@ -44,8 +44,7 @@ const getTreaserBalance = async () => {
   const treasureBalance1 = await new AccountBalanceQuery()
       .setAccountId(treasureId)
       .execute(client);
-
-  console.log(`Treasure LP Token Balance: ${treasureBalance1.tokens?._map.get('0.0.48229442')}`); //2 Sep 01:02 pm
+  console.log(`Treasure LP Token Balance: ${treasureBalance1.tokens}`); //2 Sep 01:02 pm
 }
 
 const createLiquidityPool = async () => {
@@ -102,10 +101,10 @@ const addLiquidity = async () => {
 };
 
 const removeLiquidity = async () => {
-  const tokenAQty = new BigNumber(1);
+  const lpToken = new BigNumber(5);
   const tokenBQty = new BigNumber(1);
   console.log(
-    `Removing ${tokenAQty} units of token A and ${tokenBQty} units of token B from the pool.`
+    `Removing ${lpToken} units of LPToken from the pool.`
   );
   const removeLiquidity = await new ContractExecuteTransaction()
     .setContractId(contractId)
@@ -116,8 +115,8 @@ const removeLiquidity = async () => {
         .addAddress(treasureId.toSolidityAddress())
         .addAddress(tokenA)
         .addAddress(tokenB)
-        .addInt64(tokenAQty)
-        .addInt64(tokenBQty)
+        .addUint64(lpToken)
+        //.addInt64(tokenBQty)
     )
     .freezeWith(client)
     .sign(treasureKey);
@@ -254,13 +253,15 @@ async function main() {
   await createLiquidityPool();
   await getTreaserBalance();
   await addLiquidity();
+  await getTreaserBalance();
   await removeLiquidity();
+  await getTreaserBalance();
   await swapTokenA();
+  await getTreaserBalance();
   await spotPrice();
   await getVariantValue();
   await getOutGivenIn();
   await getInGivenOut();
-  await getTreaserBalance();
 }
 
 main()
