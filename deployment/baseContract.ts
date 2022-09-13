@@ -1,9 +1,8 @@
 
 import { Deployment } from "./deployContractOnTestnet";
 import {TokenCreateTransaction, FileCreateTransaction, FileAppendTransaction, AccountId, PrivateKey,
-  ContractCreateTransaction, TokenType, TokenSupplyType, Hbar, Client, ContractId, AccountCreateTransaction, KeyList,
-  ContractUpdateTransaction, ContractInfoQuery, ContractExecuteTransaction,
-  ContractFunctionParameters, TokenUpdateTransaction, TokenInfoQuery, TokenAssociateTransaction, AccountBalanceQuery
+  ContractCreateTransaction, TokenType, TokenSupplyType, Hbar, Client, ContractExecuteTransaction,
+  ContractFunctionParameters,
 } from "@hashgraph/sdk";
 import * as fs from "fs";
 import dotenv from "dotenv";

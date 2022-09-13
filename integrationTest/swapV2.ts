@@ -13,15 +13,15 @@ import ClientManagement from "./utils/utils";
 
 const clientManagement = new ClientManagement();
 
-const htsServiceAddress = "0x0000000000000000000000000000000002df4f79"; // 6 sep 3:10
-const lpTokenContractAddress = "0x0000000000000000000000000000000002df542d"; // 6 sep 4:45
+const htsServiceAddress = "0x0000000000000000000000000000000002dfec41"; // 13 sep 3:10
+const lpTokenContractAddress = "0x0000000000000000000000000000000002dfec62"; // 13 sep 4:45
 const client = clientManagement.createClient();
 
 const tokenA = TokenId.fromString("0.0.47646195").toSolidityAddress();
 let tokenB = TokenId.fromString("0.0.47646196").toSolidityAddress();
 const {treasureId, treasureKey} = clientManagement.getTreasure();
 
-const contractId = "0.0.48190684"; // 6 sep 4:55
+const contractId = "0.0.48229478"; // 13 sep 4:55
 
 const initialize = async () => {
   const initialize = await new ContractExecuteTransaction()
@@ -45,7 +45,7 @@ const getTreaserBalance = async () => {
       .setAccountId(treasureId)
       .execute(client);
 
-  console.log(`Treasure LP Token Balance: ${treasureBalance1.tokens?._map.get('0.0.48189306')}`); //2 Sep 01:02 pm
+  console.log(`Treasure LP Token Balance: ${treasureBalance1.tokens?._map.get('0.0.48229442')}`); //2 Sep 01:02 pm
 }
 
 const createLiquidityPool = async () => {

@@ -1,10 +1,9 @@
 
 import { Deployment } from "./deployContractOnTestnet";
 
-import {TokenCreateTransaction, FileCreateTransaction, FileAppendTransaction, AccountId, PrivateKey,
-  ContractCreateTransaction, TokenType, TokenSupplyType, Hbar, Client, ContractId, AccountCreateTransaction, KeyList,
-  ContractUpdateTransaction, ContractInfoQuery, ContractExecuteTransaction,
-  ContractFunctionParameters, TokenUpdateTransaction, TokenInfoQuery, TokenAssociateTransaction, AccountBalanceQuery, TokenId
+import { FileCreateTransaction, FileAppendTransaction, AccountId, PrivateKey,
+  ContractCreateTransaction, Hbar, Client, AccountCreateTransaction, ContractExecuteTransaction,
+  ContractFunctionParameters, TokenId
 } from "@hashgraph/sdk";
 import * as fs from "fs";
 import dotenv from "dotenv";
@@ -31,7 +30,7 @@ async function createAccount(client: Client) {
 
 async function deployTokenContract() {
     let client = Client.forTestnet();
-    const htsServiceAddress = "0x0000000000000000000000000000000002df4f79"; // 6 sep 2:41
+    const htsServiceAddress = "0x0000000000000000000000000000000002dfec41"; // 13 sep 2:41
     const operatorKey = PrivateKey.fromString("302e020100300506032b657004220420b69079b0cdebea97ec13c78bf7277d3f4aef35189755b5d11c2dfae40c566aa8");
 
     client.setOperator(
@@ -73,7 +72,7 @@ async function deployTokenContract() {
     console.log(`- Contract created ${contractId?.toString()} ,Contract Address ${contractId?.toSolidityAddress()} -`);
     if  (contractId != null) {
    
-      const tokenId = TokenId.fromString("0.0.48189306"); // 6 sep 2:45
+      const tokenId = TokenId.fromString("0.0.48229442"); // 13 sep 2:45
       console.log(`\n STEP 6 - call the contract to set the token id`);
 
       if (tokenId != null && contractId != null) {
