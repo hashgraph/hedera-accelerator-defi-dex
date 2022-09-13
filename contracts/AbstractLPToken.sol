@@ -4,22 +4,19 @@ pragma experimental ABIEncoderV2;
 
 import "./common/hedera/HederaResponseCodes.sol";
 import "./common/IBaseHTS.sol";
-import "./common/hedera/IHederaTokenService.sol";
 import "./common/hedera/HederaTokenService.sol";
-import "./common/hedera/ExpiryHelper.sol";
 
 abstract contract AbstractLPToken is HederaTokenService {
     IBaseHTS tokenService;
     mapping (address => uint256) tokenShare;   
     address internal creator;
     address internal lpToken;
-    bytes internal supplyKey;
 
     function lpTokenForUser(address _user) public view returns(uint256) {
         return tokenShare[_user];
     }
 
-    function mintToken(uint64 amount) internal virtual returns (int responseCode, uint64 newTotalSupply, int64[] memory serialNumbers);    
+    function mintToken(uint64 amount) internal virtual returns (int responseCode, uint64 newTotalSupply);    
     function associateTokenInternal(address account,  address _token) internal virtual returns(int);
     function transferTokenInternal(address _token, address sender, address receiver, int64 amount) internal virtual returns(int);
 

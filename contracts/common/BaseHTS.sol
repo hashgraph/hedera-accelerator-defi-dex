@@ -6,11 +6,6 @@ import "./hedera/HederaResponseCodes.sol";
 
 
 contract BaseHTS is HederaTokenService {
-    address internal lpToken;
-
-    function initialize(address _lpToken) public {
-         lpToken = _lpToken;
-    }
 
     function transferTokenPublic(address token, address sender, address receiver, int64 amount) 
         external returns (int responseCode) {
@@ -27,13 +22,15 @@ contract BaseHTS is HederaTokenService {
     }
     
     function mintTokenPublic(address token, uint64 amount) external
-        returns (int responseCode, uint64 newTotalSupply, int64[] memory serialNumbers) {
+        returns (int responseCode, uint64 newTotalSupply) {
             bytes[] memory metadata;
-            return HederaTokenService.mintToken(token, amount, metadata);
+            (int responseCodeNew, uint64 newTotalSupplyNew, ) = HederaTokenService.mintToken(token, amount, metadata);
+            return (responseCodeNew, newTotalSupplyNew);
     }
 
-    function burnTokenPublic(address token, uint64 amount, int64[] memory serialNumbers) external
+    function burnTokenPublic(address token, uint64 amount) external
         returns (int responseCode, uint64 newTotalSupply) {
+            int64[] memory serialNumbers;
             return HederaTokenService.burnToken(token, amount, serialNumbers);
     }
 

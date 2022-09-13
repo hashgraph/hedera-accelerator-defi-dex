@@ -7,14 +7,13 @@ import "./AbstractLPToken.sol";
 
 contract LPToken is AbstractLPToken {
     
-    function mintToken(uint64 amount) override internal virtual 
-     returns (int responseCode, uint64 newTotalSupply, int64[] memory serialNumbers) {
-            (int response, uint64 _newTotalSupply, int64[] memory _serialNumbers) = tokenService.mintTokenPublic(lpToken, amount);
+    function mintToken(uint64 amount) override internal virtual returns (int responseCode, uint64 newTotalSupply) {
+            (int response, uint64 _newTotalSupply) = tokenService.mintTokenPublic(lpToken, amount);
 
              if (response != HederaResponseCodes.SUCCESS) {
                 revert ("Mint Failed");
              }
-            return (response, _newTotalSupply, _serialNumbers);
+            return (response, _newTotalSupply);
     }
 
     function associateTokenInternal(address account,  address _token) internal override  virtual returns(int) {

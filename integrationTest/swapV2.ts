@@ -249,7 +249,7 @@ const getInGivenOut =async () => {
 };
 
 async function main() {
-  //await initialize();
+  await initialize();
   await getTreaserBalance();
   await createLiquidityPool();
   await getTreaserBalance();

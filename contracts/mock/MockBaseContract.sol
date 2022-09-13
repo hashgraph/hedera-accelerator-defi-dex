@@ -89,18 +89,17 @@ contract MockBaseHTS is IBaseHTS {
         }
 
     function mintTokenPublic(address token, uint64 amount) external override
-        returns (int responseCode, uint64 newTotalSupply, int64[] memory serialNumbers) {
-            int64[] memory blank;
+        returns (int responseCode, uint64 newTotalSupply) {
             console.logString("mintTokenPublic");
             console.logInt(trueTransaction);
             if (trueTransaction > 0) {
                 trueTransaction-=1;
-                return (int(22), amount, blank);
+                return (int(22), amount);
             }
-            return ((isSuccess) ? int(22) : int(23), amount, blank);
+            return ((isSuccess) ? int(22) : int(23), amount);
     }
 
-    function burnTokenPublic(address token, uint64 amount, int64[] memory serialNumbers) external override
+    function burnTokenPublic(address token, uint64 amount) external override
         returns (int responseCode, uint64 newTotalSupply) {
             return ((isSuccess) ? int(22) : int(23), amount);
     }

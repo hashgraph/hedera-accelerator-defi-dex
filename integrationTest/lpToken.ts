@@ -34,7 +34,7 @@ const treasureKey = PrivateKey.fromString("308ed38983d9d20216d00371e174fe2d475dd
 
 const contractId = ContractId.fromString("0.0.48190509"); //6 Sep 04:45
 
-const itegrationTestLPToken = async () => {
+const integrationTestLPToken = async () => {
 
   let aliceAccount2 = AccountId.fromString("0.0.48133780");
 
@@ -70,7 +70,7 @@ const itegrationTestLPToken = async () => {
 };
 
 async function main() {
-  await itegrationTestLPToken();
+  await integrationTestLPToken();
 }
 
 main()

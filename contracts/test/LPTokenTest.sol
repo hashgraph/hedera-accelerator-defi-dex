@@ -8,19 +8,18 @@ import "../AbstractLPToken.sol";
 contract LPTokenTest is AbstractLPToken {
     
     constructor(address _lpToken, IBaseHTS _tokenService) {
-         // instantiate the list of keys we'll use for token create
          lpToken = _lpToken;
          tokenService = _tokenService;
     }
 
     function mintToken(uint64 amount) override internal virtual 
-     returns (int responseCode, uint64 newTotalSupply, int64[] memory serialNumbers) {
-            (int response, uint64 _newTotalSupply, int64[] memory _serialNumbers) = tokenService.mintTokenPublic(lpToken, amount);
+     returns (int responseCode, uint64 newTotalSupply) {
+            (int response, uint64 _newTotalSupply) = tokenService.mintTokenPublic(lpToken, amount);
 
              if (response != HederaResponseCodes.SUCCESS) {
                 revert ("Mint Failed");
              }
-            return (response, _newTotalSupply, _serialNumbers);
+            return (response, _newTotalSupply);
     }
 
     function associateTokenInternal(address account,  address _token) internal override  virtual returns(int) {
