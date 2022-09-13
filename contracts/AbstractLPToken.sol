@@ -8,10 +8,6 @@ import "./common/hedera/IHederaTokenService.sol";
 import "./common/hedera/HederaTokenService.sol";
 import "./common/hedera/ExpiryHelper.sol";
 
-abstract contract HederaToken {
-    function name() public virtual view returns(string memory);
-}
-
 abstract contract AbstractLPToken is HederaTokenService {
     IBaseHTS tokenService;
     mapping (address => uint256) tokenShare;   
@@ -23,14 +19,12 @@ abstract contract AbstractLPToken is HederaTokenService {
         return tokenShare[_user];
     }
 
-    // Abstract Functions
     function mintToken(uint64 amount) internal virtual returns (int responseCode, uint64 newTotalSupply, int64[] memory serialNumbers);    
     function associateTokenInternal(address account,  address _token) internal virtual returns(int);
     function transferTokenInternal(address _token, address sender, address receiver, int64 amount) internal virtual returns(int);
 
 
     function initializeParams(address _lpToken, IBaseHTS _tokenService) external {
-         // instantiate the list of keys we'll use for token create
          lpToken = _lpToken;
          tokenService = _tokenService;
     }
@@ -38,16 +32,12 @@ abstract contract AbstractLPToken is HederaTokenService {
     function allotLPTokenFor(uint64 amountA, uint64 amountB, address _toUser) external returns (int responseCode) {
         require(lpToken > address(0x0), "Liquidity Token not initialized");
         require((amountA > 0 && amountB > 0), "Please provide positive token counts" );
-        // logic to decide quantity of LP
         uint64 mintingAmount = sqrt(amountA * amountB);
-        //Associate LP to user
         associateTokenInternal(_toUser, lpToken);
-        ////mint new amount of LP
         mintToken(mintingAmount);
         tokenShare[_toUser] = tokenShare[_toUser] + mintingAmount;
-        // transfer Lp to users account
         transferTokenInternal(lpToken, address(tokenService), _toUser, int64(mintingAmount));
-        return 22;
+        return HederaResponseCodes.SUCCESS;
     }
 
     function sqrt(uint64 x) public pure returns (uint64 y) {
