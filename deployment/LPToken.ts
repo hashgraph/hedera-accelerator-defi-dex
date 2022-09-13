@@ -1,6 +1,4 @@
 
-import { Deployment } from "./deployContractOnTestnet";
-
 import { FileCreateTransaction, FileAppendTransaction, AccountId, PrivateKey,
   ContractCreateTransaction, Hbar, Client, AccountCreateTransaction, ContractExecuteTransaction,
   ContractFunctionParameters, TokenId
@@ -8,7 +6,7 @@ import { FileCreateTransaction, FileAppendTransaction, AccountId, PrivateKey,
 import * as fs from "fs";
 import dotenv from "dotenv";
 
-dotenv.config({ path: '../../.env' });
+dotenv.config();
 
 async function main() {
    await deployTokenContract();

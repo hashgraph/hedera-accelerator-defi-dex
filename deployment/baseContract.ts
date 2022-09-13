@@ -7,7 +7,7 @@ import {TokenCreateTransaction, FileCreateTransaction, FileAppendTransaction, Ac
 import * as fs from "fs";
 import dotenv from "dotenv";
 
-dotenv.config({ path: '../../.env' });
+dotenv.config();
 
 async function main() {
     await deployBaseContract()

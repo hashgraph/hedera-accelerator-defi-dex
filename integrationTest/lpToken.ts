@@ -9,6 +9,7 @@ import {
   ContractId,
   AccountBalanceQuery
 } from "@hashgraph/sdk";
+import ClientManagement from "./utils/utils";
 
 const createClient = () => {
   const myAccountId = AccountId.fromString("0.0.47540202");
@@ -25,7 +26,9 @@ const createClient = () => {
   return client;
 };
 
-const client = createClient();
+const clientManagement = new ClientManagement();
+const client = clientManagement.createClientAsAdmin();
+
 const tokenA = TokenId.fromString("0.0.47646195").toSolidityAddress();
 let tokenB = TokenId.fromString("0.0.47646196").toSolidityAddress();
 const treasure = AccountId.fromString("0.0.47645191").toSolidityAddress();
