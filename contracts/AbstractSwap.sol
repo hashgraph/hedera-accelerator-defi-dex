@@ -4,10 +4,12 @@ pragma experimental ABIEncoderV2;
 
 import "./common/hedera/HederaResponseCodes.sol";
 import "./common/IBaseHTS.sol";
+import "./ILPToken.sol";
 
 abstract contract AbstractSwap is HederaResponseCodes {
-    
-    IBaseHTS tokenService;
+
+    IBaseHTS internal tokenService;
+    ILPToken internal lpTokenContract;
 
     struct Pair {
         Token tokenA;
@@ -38,13 +40,14 @@ abstract contract AbstractSwap is HederaResponseCodes {
         liquidityContribution[fromAccount] = LiquidityContributor(pair);
 
         associateToken(address(this),  _tokenA);
-        associateToken(address(this),  _tokenB);
+        associateToken(address(this),  _tokenB);    
 
         int response = tokenService.transferTokenPublic(_tokenA, fromAccount, address(this), _tokenAQty);
         require(response == HederaResponseCodes.SUCCESS, "Creating contract: Transfering token A to contract failed with status code");
 
         response = tokenService.transferTokenPublic(_tokenB, fromAccount, address(this), _tokenBQty);
         require(response == HederaResponseCodes.SUCCESS, "Creating contract: Transfering token B to contract failed with status code");
+        lpTokenContract.allotLPTokenFor(uint64(_tokenAQty), uint64(_tokenBQty), fromAccount);
     }
 
     function addLiquidity(address fromAccount, address _tokenA, address _tokenB, int64 _tokenAQty, int64 _tokenBQty) external {
@@ -55,15 +58,15 @@ abstract contract AbstractSwap is HederaResponseCodes {
         associateToken(address(this),  _tokenB);
 
         int response = tokenService.transferTokenPublic(_tokenA, fromAccount, address(this), _tokenAQty);
-        require(response == HederaResponseCodes.SUCCESS, "Add liquidity: Transfering token A to contract failed with status code");
+        require(response == HederaResponseCodes.SUCCESS, "Add liquidity: Transfering token A to contract failed with status code"); 
     
         response = tokenService.transferTokenPublic(_tokenB, fromAccount, address(this), _tokenBQty);
-        require(response == HederaResponseCodes.SUCCESS, "Add liquidity: Transfering token B to contract failed with status code");
-
+        require(response == HederaResponseCodes.SUCCESS, "Add liquidity: Transfering token B to contract failed with status code"); 
         LiquidityContributor memory contributedPair = liquidityContribution[fromAccount];
         contributedPair.pair.tokenA.tokenQty += _tokenAQty;
         contributedPair.pair.tokenB.tokenQty += _tokenBQty;
         liquidityContribution[fromAccount] = contributedPair;
+        lpTokenContract.allotLPTokenFor(uint64(_tokenAQty), uint64(_tokenBQty), fromAccount);
     }
 
     function removeLiquidity(address toAccount, address _tokenA, address _tokenB, int64 _tokenAQty, int64 _tokenBQty) external {
@@ -127,7 +130,6 @@ abstract contract AbstractSwap is HederaResponseCodes {
     }
 
     function getSpotPrice() public view returns (int64) {
-        require(pair.tokenB.tokenQty > 0, "spot price: No token B in the pool");
         int64 precision = getPrecisionValue();
         int64 value = (pair.tokenA.tokenQty*precision)/pair.tokenB.tokenQty;
         return value;

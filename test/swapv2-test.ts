@@ -8,13 +8,16 @@ import { ethers, upgrades } from "hardhat";
 describe("Swap", function () {
   const tokenBAddress = "0x0000000000000000000000000000000000010001";
   const tokenAAddress = "0x0000000000000000000000000000000000020002";
+  const tokenLPABAddress = "0x0000000000000000000000000000000000020004";
   const tokenWrongAddress = "0x0000000000000000000000000000000000020003";
   const zeroAddress = "0x1111111000000000000000000000000000000000";
+  const newZeroAddress = "0x0000000000000000000000000000000000000000";
+  const userAddress = "0x0000000000000000000000000000000000020008";
 
   describe("Swap Upgradeable", function () {
     it("Verify if the Swap contract is upgradeable safe ", async function () {
       const Swap = await ethers.getContractFactory("Swap");
-      const instance = await upgrades.deployProxy(Swap, [zeroAddress], {unsafeAllow: ['delegatecall']});
+      const instance = await upgrades.deployProxy(Swap, [zeroAddress, zeroAddress], {unsafeAllow: ['delegatecall']});
       await instance.deployed();
     });
   });
@@ -23,12 +26,16 @@ describe("Swap", function () {
     const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
     const mockBaseHTS = await MockBaseHTS.deploy(true);
     mockBaseHTS.setFailType(0);
+
+    const LpTokenCont = await ethers.getContractFactory("LPTokenTest");
+    const lpTokenCont = await LpTokenCont.deploy(tokenLPABAddress, mockBaseHTS.address);
+
     const SwapV2 = await ethers.getContractFactory("SwapTest");
-    const swapV2 = await SwapV2.deploy(mockBaseHTS.address);
+    const swapV2 = await SwapV2.deploy(mockBaseHTS.address, lpTokenCont.address);
 
     await swapV2.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, 100, 100);
 
-    return { swapV2 , mockBaseHTS };
+    return { swapV2 , mockBaseHTS, lpTokenCont};
   }
 
   async function deployFailureFixture() {
@@ -36,12 +43,15 @@ describe("Swap", function () {
     const mockBaseHTS = await MockBaseHTS.deploy(false);
     await mockBaseHTS.setFailType(0);
 
+    const LpTokenCont = await ethers.getContractFactory("LPTokenTest");
+    const lpTokenCont = await LpTokenCont.deploy(tokenLPABAddress, mockBaseHTS.address);
+
     const SwapV2 = await ethers.getContractFactory("SwapTest");
-    const swapV2 = await SwapV2.deploy(mockBaseHTS.address);
+    const swapV2 = await SwapV2.deploy(mockBaseHTS.address, lpTokenCont.address);
     
     await swapV2.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, 100, 100);
 
-    return { swapV2, mockBaseHTS };
+    return { swapV2, mockBaseHTS, lpTokenCont};
   }
 
   it("Create a token pair with 100 unit each ", async function () {
@@ -219,6 +229,51 @@ describe("Swap", function () {
       expect(tokenBeforeQty[0]).to.be.equals(100);
       await expect(swapV2.removeLiquidity(zeroAddress, tokenAAddress, tokenBAddress, 30, 30)).to.revertedWith("Remove liquidity: Transfering token B to contract failed with status code");
     });
+    it("Add liquidity Fail Minting", async function () {
+      const { swapV2, mockBaseHTS } = await loadFixture(deployFailureFixture);
+      mockBaseHTS.setFailType(10);
+      const tokenBeforeQty = await swapV2.getPairQty();
+      expect(tokenBeforeQty[0]).to.be.equals(100);
+      await expect(swapV2.addLiquidity(zeroAddress, tokenAAddress, tokenBAddress, 30, 30)).to.revertedWith("Mint Failed");
+    });
+
+    it("Add liquidity Transfer LPToken Fail", async function () {
+      const { swapV2, mockBaseHTS } = await loadFixture(deployFailureFixture);
+      mockBaseHTS.setFailType(11);
+      const tokenBeforeQty = await swapV2.getPairQty();
+      expect(tokenBeforeQty[0]).to.be.equals(100);
+      await expect(swapV2.addLiquidity(zeroAddress, tokenAAddress, tokenBAddress, 30, 30)).to.revertedWith("LP Token Transfer Fail");
+    });
+
+    it("allotLPToken fail for zero token count", async function () {
+      const { swapV2, mockBaseHTS, lpTokenCont } = await loadFixture(deployFailureFixture);
+      mockBaseHTS.setFailType(11);
+      const tokenBeforeQty = await swapV2.getPairQty();
+      expect(tokenBeforeQty[0]).to.be.equals(100);
+      await lpTokenCont.initializeParams(zeroAddress, zeroAddress)
+      //await lpTokenCont.allotLPTokenFor(10, 10, zeroAddress)
+      await expect(lpTokenCont.allotLPTokenFor(0, 10, zeroAddress)).to.revertedWith("Please provide positive token counts");
+    });
+
+    it("allotLPToken fail for no lp token", async function () {
+      const { swapV2, mockBaseHTS, lpTokenCont } = await loadFixture(deployFailureFixture);
+      mockBaseHTS.setFailType(11);
+      const tokenBeforeQty = await swapV2.getPairQty();
+      expect(tokenBeforeQty[0]).to.be.equals(100);
+      await lpTokenCont.initializeParams(newZeroAddress, newZeroAddress)
+      await expect(lpTokenCont.allotLPTokenFor(0, 10, zeroAddress)).to.revertedWith("Liquidity Token not initialized");
+    });
+
+    it("allotLPToken check LP Tokens", async function () {
+      const { swapV2, mockBaseHTS, lpTokenCont } = await loadFixture(deployFixture);
+      mockBaseHTS.setFailType(11);
+      const tokenBeforeQty = await swapV2.getPairQty();
+      expect(tokenBeforeQty[0]).to.be.equals(100);
+      await lpTokenCont.allotLPTokenFor(10, 10, userAddress);
+      const result = await lpTokenCont.lpTokenForUser(userAddress);
+      await expect(result).to.equal(10);
+    });
+
   });
 
   describe("Swap Base Constant Product Algorithm Tests",  async () => {
@@ -236,13 +291,6 @@ describe("Swap", function () {
       const value = await swapV2.getSpotPrice();
 
       expect(value).to.be.equals(5000000);
-    });
-
-    it("check spot price for zero denominator", async function () {
-      const { swapV2 } = await loadFixture(deployFixture);
-      await swapV2.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, 50, 0);
-      
-      await expect(swapV2.getSpotPrice()).to.be.revertedWith("spot price: No token B in the pool");
     });
 
     it("check spot price for tokens with reverse", async function () {
@@ -270,3 +318,4 @@ describe("Swap", function () {
     });
   });
 });
+

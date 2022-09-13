@@ -1,17 +1,20 @@
-// SPDX-License-Identifier: Apache-2.0
-pragma solidity >=0.5.0 <0.9.0;
+//SPDX-License-Identifier: Unlicense
+pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import "./common/hedera/HederaResponseCodes.sol";
 import "./common/IBaseHTS.sol";
 import "./AbstractSwap.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "./ILPToken.sol";
+
 
 contract Swap is AbstractSwap, Initializable {
 
-    function initialize(IBaseHTS _tokenService) public initializer {
+    function initialize(IBaseHTS _tokenService, ILPToken _lpTokenContract) public initializer {
         tokenService = _tokenService;
         creator = msg.sender;
+        lpTokenContract = _lpTokenContract;
     }
 
     function associateToken(address account,  address _token) internal override  virtual returns(int) {

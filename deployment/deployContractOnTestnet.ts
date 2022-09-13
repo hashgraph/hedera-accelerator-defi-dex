@@ -85,7 +85,7 @@ export class Deployment {
 
     // Get the address of the deployed contract
     const contractAddress = contract.address;
-    console.log(`\n- Contract address: ${contractAddress}`);
+    console.log(`\n- Contract address: ${contractAddress}  Contract Address: ${contract.contractId}`);
 
     await this.printBalance(wallet, walletAddress);
 
