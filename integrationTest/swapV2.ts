@@ -60,8 +60,8 @@ const createLiquidityPool = async () => {
         .addAddress(treasureId.toSolidityAddress())
         .addAddress(tokenA)
         .addAddress(tokenB)
-        .addInt64(tokenAQty)
-        .addInt64(tokenBQty)
+        .addInt256(tokenAQty)
+        .addInt256(tokenBQty)
     )
     .freezeWith(client)
     .sign(treasureKey);
@@ -86,8 +86,8 @@ const addLiquidity = async () => {
         .addAddress(treasureId.toSolidityAddress())
         .addAddress(tokenA)
         .addAddress(tokenB)
-        .addInt64(tokenAQty)
-        .addInt64(tokenBQty)
+        .addInt256(tokenAQty)
+        .addInt256(tokenBQty)
     )
     .freezeWith(client)
     .sign(treasureKey);
@@ -137,8 +137,8 @@ const swapTokenA = async () => {
         .addAddress(treasureId.toSolidityAddress())
         .addAddress(tokenA)
         .addAddress(tokenB)
-        .addInt64(tokenAQty)
-        .addInt64(tokenBQty)
+        .addInt256(tokenAQty)
+        .addInt256(tokenBQty)
     )
     .freezeWith(client)
     .sign(treasureKey);
@@ -217,7 +217,7 @@ const getOutGivenIn =async () => {
     .setGas(1000000)
     .setFunction("getOutGivenIn",
       new ContractFunctionParameters()
-          .addInt64(tokenAQty))
+          .addInt256(tokenAQty))
     .freezeWith(client);
   const getPairQtyTx = await getOutGivenIn.execute(client);
   const response = await getPairQtyTx.getRecord(client);
@@ -233,7 +233,7 @@ const getInGivenOut =async () => {
     .setGas(1000000)
     .setFunction("getInGivenOut",
       new ContractFunctionParameters()
-            .addInt64(tokenBQty))
+            .addInt256(tokenBQty))
     .freezeWith(client);
   const getPairQtyTx = await getInGivenOut.execute(client);
   const response = await getPairQtyTx.getRecord(client);

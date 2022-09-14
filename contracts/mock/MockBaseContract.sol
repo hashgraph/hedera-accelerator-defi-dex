@@ -19,7 +19,8 @@ contract MockBaseHTS is IBaseHTS {
         initialiseFailBTransfer,
         swapBFailedSendingA,
         addLiquidityFailMinting,
-        addLiquidityLPTransferFail
+        addLiquidityLPTransferFail,
+        swapBFailedSendingB
     }
 
     bool internal isSuccess;
@@ -45,10 +46,10 @@ contract MockBaseHTS is IBaseHTS {
             return 3;
         }
         if (failType == FailTransactionFor.swapAFailedSendingB) {
-            return 2;
+            return 8;
         }
         if (failType == FailTransactionFor.swapBFailedSendingA) {
-            return 2;
+            return 9;
         }
         if (failType == FailTransactionFor.addLiquidityFailBTransfer) {
             return 3;
@@ -62,10 +63,13 @@ contract MockBaseHTS is IBaseHTS {
         if (failType == FailTransactionFor.addLiquidityLPTransferFail) {
             return 6;
         }
+        if (failType == FailTransactionFor.swapBFailedSendingB) {
+            return 7;
+        }
         return 0;
     }
 
-    function transferTokenPublic(address, address, address, int64) external override returns (int responseCode) {
+    function transferTokenPublic(address, address, address, int) external override returns (int responseCode) {
         if (trueTransaction > 0) {
             trueTransaction-=1;
             return int(22);
@@ -88,19 +92,20 @@ contract MockBaseHTS is IBaseHTS {
             return isSuccess ? int(22) : int(23);
         }
 
-    function mintTokenPublic(address token, uint64 amount) external override
-        returns (int responseCode, uint64 newTotalSupply) {
+    function mintTokenPublic(address, int amount) external override
+        returns (int responseCode, int newTotalSupply) {
             console.logString("mintTokenPublic");
             console.logInt(trueTransaction);
             if (trueTransaction > 0) {
                 trueTransaction-=1;
                 return (int(22), amount);
             }
-            return ((isSuccess) ? int(22) : int(23), amount);
+            return ((isSuccess) ? int(22) : int(23), int(amount));
     }
 
-    function burnTokenPublic(address token, uint64 amount) external override
-        returns (int responseCode, uint64 newTotalSupply) {
+    function burnTokenPublic(address, int amount) external                                                         view
+override
+        returns (int responseCode, int newTotalSupply) {
             return ((isSuccess) ? int(22) : int(23), amount);
     }
 

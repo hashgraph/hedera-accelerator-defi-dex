@@ -7,7 +7,7 @@ import "./common/IBaseHTS.sol";
 import "./common/IERC20.sol";
 import "./common/hedera/HederaTokenService.sol";
 
-abstract contract AbstractLPToken is HederaTokenService {
+abstract contract AbstractLPToken is HederaResponseCodes {
     IBaseHTS tokenService;
     address internal creator;
     IERC20 internal lpToken;
@@ -20,9 +20,9 @@ abstract contract AbstractLPToken is HederaTokenService {
         return int64(uint64(lpToken.totalSupply()));
     }
 
-    function mintToken(uint64 amount) internal virtual returns (int responseCode, uint64 newTotalSupply);    
+    function mintToken(int amount) internal virtual returns (int responseCode, int newTotalSupply);    
     function associateTokenInternal(address account,  address _token) internal virtual returns(int);
-    function transferTokenInternal(address _token, address sender, address receiver, int64 amount) internal virtual returns(int);
+    function transferTokenInternal(address _token, address sender, address receiver, int amount) internal virtual returns(int);
     function burnToken(uint64 amount) internal virtual returns (int); 
 
     function initializeParams(IERC20 _lpToken, IBaseHTS _tokenService) external {
@@ -30,7 +30,7 @@ abstract contract AbstractLPToken is HederaTokenService {
          tokenService = _tokenService;
     }
      
-    function allotLPTokenFor(uint64 amountA, uint64 amountB, address _toUser) external returns (int responseCode) {
+    function allotLPTokenFor(int amountA, int amountB, address _toUser) external returns (int responseCode) {
         require(address(lpToken) > address(0x0), "Liquidity Token not initialized");
         require((amountA > 0 && amountB > 0), "Please provide positive token counts" );
         uint mintingAmount = sqrt(uint(amountB) * uint(amountB));
