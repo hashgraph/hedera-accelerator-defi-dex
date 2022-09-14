@@ -23,8 +23,7 @@ contract LPTokenTest is AbstractLPToken {
     }
 
     function burnToken(uint64 amount) override internal virtual returns (int) {
-        int64[] memory serialNumbers;
-        (int responseCode, uint64 newTotalSupply) = tokenService.burnTokenPublic(lpToken, amount, serialNumbers);
+        (int responseCode, ) = tokenService.burnTokenPublic(lpToken, amount);
 
         if (responseCode != HederaResponseCodes.SUCCESS) {
             revert ("Burn Fail");

@@ -14,14 +14,14 @@ import ClientManagement from "./utils/utils";
 const clientManagement = new ClientManagement();
 
 const htsServiceAddress = "0x0000000000000000000000000000000002dfec41"; // 13 sep 3:10
-const lpTokenContractAddress = "0x0000000000000000000000000000000002dfec62"; // 13 sep 4:45
+const lpTokenContractAddress = "0x0000000000000000000000000000000002e00086"; // 14 sep 4:45
 const client = clientManagement.createClient();
 
 const tokenA = TokenId.fromString("0.0.47646195").toSolidityAddress();
 let tokenB = TokenId.fromString("0.0.47646196").toSolidityAddress();
 const {treasureId, treasureKey} = clientManagement.getTreasure();
 
-const contractId = "0.0.48229478"; // 13 sep 4:55
+const contractId = "0.0.48235445"; // 14 sep 4:55
 
 const initialize = async () => {
   const initialize = await new ContractExecuteTransaction()
@@ -113,10 +113,7 @@ const removeLiquidity = async () => {
       "removeLiquidity",
       new ContractFunctionParameters()
         .addAddress(treasureId.toSolidityAddress())
-        .addAddress(tokenA)
-        .addAddress(tokenB)
-        .addUint64(lpToken)
-        //.addInt64(tokenBQty)
+        .addInt64(lpToken)
     )
     .freezeWith(client)
     .sign(treasureKey);

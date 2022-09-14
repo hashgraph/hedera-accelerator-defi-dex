@@ -97,17 +97,26 @@ describe("Swap", function () {
     expect(tokenQty[1]).to.be.equals(150);
   });
 
-  it("Remove liquidity to the pool by removing 50 units of token and 50 units of token B  ", async function () {
-    const { swapV2 } = await loadFixture(deployFixture);
+  it("Remove liquidity to the pool by removing 5 units of lpToken  ", async function () {
+    const { swapV2, lpTokenCont } = await loadFixture(deployFixture);
     const tokenBeforeQty = await swapV2.getPairQty();
     expect(tokenBeforeQty[0]).to.be.equals(100);
     expect(tokenBeforeQty[1]).to.be.equals(100);
-    const tx = await swapV2.removeLiquidity(zeroAddress, tokenAAddress, tokenBAddress, 10);
+
+    const allLPToken = await lpTokenCont.getAllLPTokenCount();
+    expect(allLPToken).to.be.equals(100);
+
+    const tokensForLP = await swapV2.calculateTokenstoGetBack(15);
+    expect(tokensForLP[0]).to.be.equals(15);
+    const tx = await swapV2.removeLiquidity(zeroAddress, 50);
     await tx.wait();
 
+    const userlpToken =  await lpTokenCont.lpTokenForUser(zeroAddress);
+    expect(userlpToken).to.be.equals(50);
+
     const tokenQty =  await swapV2.getPairQty();
-    expect(tokenQty[0]).to.be.equals(99);
-    expect(tokenQty[1]).to.be.equals(99);
+    expect(tokenQty[0]).to.be.equals(50);
+    expect(tokenQty[1]).to.be.equals(50);
   });
 
   it("Verfiy liquidity contribution is correct ", async function () {
@@ -220,7 +229,7 @@ describe("Swap", function () {
       const { swapV2 } = await loadFixture(deployFailureFixture);
       const tokenBeforeQty = await swapV2.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(100);
-      await expect(swapV2.removeLiquidity(zeroAddress, tokenAAddress, tokenBAddress, 5)).to.revertedWith("Remove liquidity: Transfering token A to contract failed with status code");
+      await expect(swapV2.removeLiquidity(zeroAddress, 5)).to.revertedWith("Remove liquidity: Transfering token A to contract failed with status code");
     });
 
     it("Add liquidity Fail B Transfer", async function () {
@@ -228,7 +237,7 @@ describe("Swap", function () {
       mockBaseHTS.setFailType(5);
       const tokenBeforeQty = await swapV2.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(100);
-      await expect(swapV2.removeLiquidity(zeroAddress, tokenAAddress, tokenBAddress, 5)).to.revertedWith("Remove liquidity: Transfering token B to contract failed with status code");
+      await expect(swapV2.removeLiquidity(zeroAddress, 5)).to.revertedWith("Remove liquidity: Transfering token B to contract failed with status code");
     });
     it("Add liquidity Fail Minting", async function () {
       const { swapV2, mockBaseHTS } = await loadFixture(deployFailureFixture);

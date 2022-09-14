@@ -8,12 +8,17 @@ import "./common/hedera/HederaTokenService.sol";
 
 abstract contract AbstractLPToken is HederaTokenService {
     IBaseHTS tokenService;
-    mapping (address => uint256) tokenShare;   
+    mapping (address => int64) tokenShare;
+    int64 public allLPTokenCount;   
     address internal creator;
     address internal lpToken;
 
-    function lpTokenForUser(address _user) public view returns(uint256) {
+    function lpTokenForUser(address _user) external view returns(int64) {
         return tokenShare[_user];
+    }
+
+    function getAllLPTokenCount() external view returns(int64) {
+        return allLPTokenCount;
     }
 
     function mintToken(uint64 amount) internal virtual returns (int responseCode, uint64 newTotalSupply);    
@@ -37,19 +42,22 @@ abstract contract AbstractLPToken is HederaTokenService {
         uint64 convertedMintingAmount = convert(mintingAmount);
         associateTokenInternal(_toUser, lpToken);
         mintToken(convertedMintingAmount);
-        tokenShare[_toUser] = tokenShare[_toUser] + convertedMintingAmount;
+        tokenShare[_toUser] = tokenShare[_toUser] + int64(convertedMintingAmount);
+        allLPTokenCount+=int64(convertedMintingAmount);
         transferTokenInternal(lpToken, address(tokenService), _toUser, int64(convertedMintingAmount));
         return HederaResponseCodes.SUCCESS;
     }
 
-    function removeLPTokenFor(uint64 lpAmount, address _toUser) external returns (int responseCode) {
+    function removeLPTokenFor(int64 lpAmount, address _toUser) external returns (int responseCode) {
         require(lpToken > address(0x0), "Liquidity Token not initialized");
         require((lpAmount > 0), "Please provide token counts" );
+        require((tokenShare[_toUser] > int64(lpAmount)), "User Does not have lp mount" );
         // transfer Lp from users account to contract
         transferTokenInternal(lpToken, _toUser, address(tokenService), int64(lpAmount));
         // burn old amount of LP
-        burnToken(lpAmount);
-        tokenShare[_toUser] = tokenShare[_toUser] - lpAmount;
+        burnToken(uint64(lpAmount));
+        tokenShare[_toUser] = tokenShare[_toUser] - int64(lpAmount);
+        allLPTokenCount-=int64(lpAmount);
         return HederaResponseCodes.SUCCESS;
     }
 
