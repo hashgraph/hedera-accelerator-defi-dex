@@ -29,20 +29,30 @@ abstract contract AbstractLPToken is HederaTokenService {
     function allotLPTokenFor(uint64 amountA, uint64 amountB, address _toUser) external returns (int responseCode) {
         require(lpToken > address(0x0), "Liquidity Token not initialized");
         require((amountA > 0 && amountB > 0), "Please provide positive token counts" );
-        uint64 mintingAmount = sqrt(amountA * amountB);
+        // uint64 mintingAmount = sqrt(10);
+        uint aM = uint(amountA);
+        uint bM = uint(amountB);
+        uint A = aM * bM;
+        uint mintingAmount = sqrt(A);
+        uint64 convertedMintingAmount = convert(mintingAmount);
         associateTokenInternal(_toUser, lpToken);
-        mintToken(mintingAmount);
-        tokenShare[_toUser] = tokenShare[_toUser] + mintingAmount;
-        transferTokenInternal(lpToken, address(tokenService), _toUser, int64(mintingAmount));
+        mintToken(convertedMintingAmount);
+        tokenShare[_toUser] = tokenShare[_toUser] + convertedMintingAmount;
+        transferTokenInternal(lpToken, address(tokenService), _toUser, int64(convertedMintingAmount));
         return HederaResponseCodes.SUCCESS;
     }
 
-    function sqrt(uint64 x) public pure returns (uint64 y) {
-        uint64 z = (x + 1) / 2;
+    function sqrt(uint x) public pure returns (uint y) {
+        uint z = (x + 1) / 2;
         y = x;
         while (z < y) {
             y = z;
             z = (x / z + z) / 2;
         }
     }
+
+    function convert (uint256 _a) internal pure returns (uint64) {
+        return uint64(_a);
+    }
+
 }

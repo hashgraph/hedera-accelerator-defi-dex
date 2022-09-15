@@ -129,9 +129,11 @@ abstract contract AbstractSwap is HederaResponseCodes {
         return (liquidityContributor.pair.tokenA.tokenQty, liquidityContributor.pair.tokenB.tokenQty);
     }
 
-    function getSpotPrice() public view returns (int64) {
-        int64 precision = getPrecisionValue();
-        int64 value = (pair.tokenA.tokenQty*precision)/pair.tokenB.tokenQty;
+    function getSpotPrice() public view returns (uint) {
+        uint precision = uint(int(getPrecisionValue()));
+        uint tokenAQ = uint(int(pair.tokenA.tokenQty));
+        uint tokenBQ = uint(int(pair.tokenB.tokenQty));
+        uint value = (tokenAQ * precision)/tokenBQ;
         return value;
     }
 
