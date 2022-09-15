@@ -3,6 +3,7 @@ import {  expect } from "chai";
 
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { ethers, upgrades } from "hardhat";
+import { BigNumber } from "ethers";
 
 
 describe("Swap", function () {
@@ -316,6 +317,28 @@ describe("Swap", function () {
 
       expect(value).to.be.equals(528000000);
     });
+
+    it("check spot price by multiplying with precision value", async function () {
+      const { swapV2 } = await loadFixture(deployFixture);
+      const precisionValue = await swapV2.getPrecisionValue()
+      const tokenAQ = 134.0293628 * Number(precisionValue);
+      const tokenBQ = 187.5599813 * Number(precisionValue);
+
+      await swapV2.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, tokenAQ, tokenBQ);
+      const value = await swapV2.getSpotPrice();
+    
+      expect(Number(value)).to.be.equals(Number(7145946));
+    });
+
+    it("check spot price for big number", async function () {
+      const { swapV2 } = await loadFixture(deployFixture);
+      const tokenAQ = BigNumber.from("29362813400293628");
+      const tokenBQ = BigNumber.from("55998131875599813");
+      await swapV2.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, tokenAQ, tokenBQ);
+      const value = await swapV2.getSpotPrice();
+      expect(Number(value)).to.be.equals(Number(5243534));
+    });
+
   });
 });
 
