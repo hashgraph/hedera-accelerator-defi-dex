@@ -302,20 +302,20 @@ describe("Swap", function () {
       expect(value).to.be.equals(5000000);
     });
 
-    it("check get out given In price value", async function () {
+    it("check get out given In price value without precision", async function () {
       const { swapV2 } = await loadFixture(deployFixture);
       await swapV2.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, 24, 16);
       const value = await swapV2.getOutGivenIn(10);
 
-      expect(value).to.be.equals(47058824);
+      expect(value).to.be.equals(5);
     });
 
-    it("check get in given out price value", async function () {
+    it("check get in given out price value without precision", async function () {
       const { swapV2 } = await loadFixture(deployFixture);
       await swapV2.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, 24, 16);
       const value = await swapV2.getInGivenOut(11);
 
-      expect(value).to.be.equals(528000000);
+      expect(value).to.be.equals(52);
     });
 
     it("check spot price by multiplying with precision value", async function () {
@@ -326,7 +326,7 @@ describe("Swap", function () {
 
       await swapV2.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, tokenAQ, tokenBQ);
       const value = await swapV2.getSpotPrice();
-    
+
       expect(Number(value)).to.be.equals(Number(7145946));
     });
 
@@ -339,7 +339,7 @@ describe("Swap", function () {
       await swapV2.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, tokenAQ, tokenBQ);
       const value = await swapV2.getSpotPrice();
       const output = Number(value) / Number(precisionValue);
-      
+
       expect(output).to.be.equals(0.7145946);
     });
 
@@ -356,6 +356,26 @@ describe("Swap", function () {
       const { swapV2 } = await loadFixture(deployFixture);
       const value = await swapV2.getPrecisionValue();
       expect(Number(value)).to.be.equals(Number(10000000));
+    });
+
+    it("check getOutGivenIn for big number with precision", async function () {
+      const { swapV2 } = await loadFixture(deployFixture);
+      const tokenAQ = BigNumber.from("240000000000000");
+      const tokenBQ = BigNumber.from("160000000000000");
+      await swapV2.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, tokenAQ, tokenBQ);
+      const value = await swapV2.getOutGivenIn(100000000000000);
+      
+      expect(Number(value)).to.be.equals(Number(47058823529412));
+    });
+
+    it("check getInGivenOut for big number with precision", async function () {
+      const { swapV2 } = await loadFixture(deployFixture);
+      const tokenAQ = BigNumber.from("240000000000000");
+      const tokenBQ = BigNumber.from("160000000000000");
+      await swapV2.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, tokenAQ, tokenBQ);
+      const value = await swapV2.getInGivenOut(110000000000000);
+      
+      expect(Number(value)).to.be.equals(Number(528000000000000));
     });
 
   });

@@ -29,7 +29,6 @@ abstract contract AbstractLPToken is HederaTokenService {
     function allotLPTokenFor(uint64 amountA, uint64 amountB, address _toUser) external returns (int responseCode) {
         require(lpToken > address(0x0), "Liquidity Token not initialized");
         require((amountA > 0 && amountB > 0), "Please provide positive token counts" );
-        // uint64 mintingAmount = sqrt(10);
         uint aM = uint(amountA);
         uint bM = uint(amountB);
         uint A = aM * bM;

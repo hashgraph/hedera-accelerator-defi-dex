@@ -130,36 +130,38 @@ abstract contract AbstractSwap is HederaResponseCodes {
     }
 
     function getSpotPrice() public view returns (uint) {
-        uint precision = uint(int(getPrecisionValue()));
+        uint precision = getPrecisionValue();
         uint tokenAQ = uint(int(pair.tokenA.tokenQty));
         uint tokenBQ = uint(int(pair.tokenB.tokenQty));
         uint value = (tokenAQ * precision)/tokenBQ;
         return value;
     }
 
-    function getOutGivenIn(int64 amountTokenA) public view returns(int64) {
-        int64 invariantValue = getVariantValue();
-        int64 precision = getPrecisionValue();
-        int64 tokenAQ = pair.tokenA.tokenQty;
-        int64 tokenBQ = pair.tokenB.tokenQty;
-
-        int64 amountTokenB = (tokenBQ * precision) - (invariantValue / (tokenAQ + amountTokenA));
+    function getOutGivenIn(uint amountTokenA) public view returns(uint) {
+        uint invariantValue = getVariantValue();
+        uint tokenAQ = uint(int(pair.tokenA.tokenQty));
+        uint tokenBQ = uint(int(pair.tokenB.tokenQty));
+        uint value = (invariantValue) / (tokenAQ + amountTokenA);
+        uint amountTokenB = tokenBQ - value;
         return amountTokenB;
     }
 
-    function getInGivenOut(int64 amountTokenB) public view returns(int64) {
-        int64 precision = getPrecisionValue();
-        int64 invariantValue = getVariantValue();
-        int64 amountTokenA = ((invariantValue) / (pair.tokenB.tokenQty - amountTokenB)) - (pair.tokenA.tokenQty * precision);
+    function getInGivenOut(uint amountTokenB) public view returns(uint) {
+        uint invariantValue = getVariantValue();
+        uint tokenAQ = uint(int(pair.tokenA.tokenQty));
+        uint tokenBQ = uint(int(pair.tokenB.tokenQty));
+        uint value = invariantValue / (tokenBQ - amountTokenB);
+        uint amountTokenA = value - tokenAQ;
         return amountTokenA;
     }
 
-    function getVariantValue() public view returns(int64) {
-        int64 precision = getPrecisionValue();
-        return (pair.tokenA.tokenQty * pair.tokenB.tokenQty) * precision;
+    function getVariantValue() public view returns(uint) {
+        uint tokenAQ = uint(int(pair.tokenA.tokenQty));
+        uint tokenBQ = uint(int(pair.tokenB.tokenQty));
+        return tokenAQ * tokenBQ;
     }
 
-    function getPrecisionValue() public pure returns(int64) {
+    function getPrecisionValue() public pure returns(uint) {
         return 10000000;
     }
 }
