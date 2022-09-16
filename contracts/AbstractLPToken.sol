@@ -51,7 +51,7 @@ abstract contract AbstractLPToken is HederaTokenService {
     function removeLPTokenFor(int64 lpAmount, address _toUser) external returns (int responseCode) {
         require(lpToken > address(0x0), "Liquidity Token not initialized");
         require((lpAmount > 0), "Please provide token counts" );
-        require((tokenShare[_toUser] > int64(lpAmount)), "User Does not have lp mount" );
+        require((tokenShare[_toUser] > int64(lpAmount)), "User Does not have lp amount" );
         // transfer Lp from users account to contract
         transferTokenInternal(lpToken, _toUser, address(tokenService), int64(lpAmount));
         // burn old amount of LP

@@ -232,13 +232,22 @@ describe("Swap", function () {
       await expect(swapV2.removeLiquidity(zeroAddress, 5)).to.revertedWith("Remove liquidity: Transfering token A to contract failed with status code");
     });
 
-    it("Add liquidity Fail B Transfer", async function () {
+    it("Remove liquidity Fail B Transfer", async function () {
       const { swapV2, mockBaseHTS } = await loadFixture(deployFailureFixture);
       mockBaseHTS.setFailType(5);
       const tokenBeforeQty = await swapV2.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(100);
       await expect(swapV2.removeLiquidity(zeroAddress, 5)).to.revertedWith("Remove liquidity: Transfering token B to contract failed with status code");
     });
+
+    it("Remove liquidity Fail B Transfer", async function () {
+      const { swapV2, mockBaseHTS } = await loadFixture(deployFailureFixture);
+      mockBaseHTS.setFailType(5);
+      const tokenBeforeQty = await swapV2.getPairQty();
+      expect(tokenBeforeQty[0]).to.be.equals(100);
+      await expect(swapV2.removeLiquidity(zeroAddress, 110)).to.revertedWith("user does not have sufficient lpTokens");
+    });
+
     it("Add liquidity Fail Minting", async function () {
       const { swapV2, mockBaseHTS } = await loadFixture(deployFailureFixture);
       mockBaseHTS.setFailType(10);
@@ -274,6 +283,34 @@ describe("Swap", function () {
       await expect(lpTokenCont.allotLPTokenFor(0, 10, zeroAddress)).to.revertedWith("Liquidity Token not initialized");
     });
 
+    it("removeLPTokenFor fail for zero token count", async function () {
+      const { swapV2, mockBaseHTS, lpTokenCont } = await loadFixture(deployFailureFixture);
+      mockBaseHTS.setFailType(11);
+      const tokenBeforeQty = await swapV2.getPairQty();
+      expect(tokenBeforeQty[0]).to.be.equals(100);
+      await lpTokenCont.initializeParams(zeroAddress, zeroAddress)
+      //await lpTokenCont.allotLPTokenFor(10, 10, zeroAddress)
+      await expect(lpTokenCont.removeLPTokenFor(0, zeroAddress)).to.revertedWith("Please provide token counts");
+    });
+
+    it("removeLPTokenFor fail for no lp token", async function () {
+      const { swapV2, mockBaseHTS, lpTokenCont } = await loadFixture(deployFailureFixture);
+      mockBaseHTS.setFailType(11);
+      const tokenBeforeQty = await swapV2.getPairQty();
+      expect(tokenBeforeQty[0]).to.be.equals(100);
+      await lpTokenCont.initializeParams(newZeroAddress, newZeroAddress)
+      await expect(lpTokenCont.removeLPTokenFor(10, zeroAddress)).to.revertedWith("Liquidity Token not initialized");
+    });
+
+    it("removeLPTokenFor fail for less lp Token", async function () {
+      const { swapV2, mockBaseHTS, lpTokenCont } = await loadFixture(deployFailureFixture);
+      mockBaseHTS.setFailType(11);
+      const tokenBeforeQty = await swapV2.getPairQty();
+      expect(tokenBeforeQty[0]).to.be.equals(100);
+      await lpTokenCont.initializeParams(zeroAddress, zeroAddress)
+      await expect(lpTokenCont.removeLPTokenFor(130, zeroAddress)).to.revertedWith("User Does not have lp amount");
+    });
+
     it("allotLPToken check LP Tokens", async function () {
       const { swapV2, mockBaseHTS, lpTokenCont } = await loadFixture(deployFixture);
       mockBaseHTS.setFailType(11);
@@ -283,7 +320,6 @@ describe("Swap", function () {
       const result = await lpTokenCont.lpTokenForUser(userAddress);
       await expect(result).to.equal(10);
     });
-
   });
 
   describe("Swap Base Constant Product Algorithm Tests",  async () => {
