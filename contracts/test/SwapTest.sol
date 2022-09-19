@@ -20,7 +20,7 @@ contract SwapTest is AbstractSwap {
         return  tokenService.associateTokenPublic(account, token);
     }
 
-    function transferToken(address token, address sender, address receiver, int64 amount) internal override virtual returns(int) {
+    function transferToken(address token, address sender, address receiver, int amount) internal override virtual returns(int) {
         
         return tokenService.transferTokenPublic(token, sender, receiver, amount);
     }

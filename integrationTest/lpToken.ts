@@ -24,9 +24,9 @@ const integrationTestLPToken = async () => {
   const tokenBQty = new BigNumber(10);
   const lpTokenQty = new BigNumber(5);
   contractFunctionParameters = new ContractFunctionParameters()
-      .addUint64(tokenAQty)
-      .addUint64(tokenBQty)
-      .addAddress(treasureId.toSolidityAddress());
+      .addInt256(tokenAQty)
+      .addInt256(tokenBQty)
+      .addAddress(aliceAccount2.toSolidityAddress());
 
   const contractAllotTx = await new ContractExecuteTransaction()
       .setContractId(contractId)

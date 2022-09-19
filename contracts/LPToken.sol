@@ -7,8 +7,8 @@ import "./AbstractLPToken.sol";
 
 contract LPToken is AbstractLPToken {
     
-    function mintToken(uint64 amount) override internal virtual returns (int responseCode, uint64 newTotalSupply) {
-            (int response, uint64 _newTotalSupply) = tokenService.mintTokenPublic(address(lpToken), amount);
+    function mintToken(int amount) override internal virtual returns (int responseCode, int newTotalSupply) {
+            (int response, int _newTotalSupply) = tokenService.mintTokenPublic(address(lpToken), amount);
 
              if (response != HederaResponseCodes.SUCCESS) {
                 revert ("Mint Failed");
@@ -16,7 +16,7 @@ contract LPToken is AbstractLPToken {
             return (response, _newTotalSupply);
     }
 
-    function burnToken(uint64 amount) override internal virtual returns (int) {
+    function burnToken(int amount) override internal virtual returns (int) {
         (int responseCode, ) = tokenService.burnTokenPublic(address(lpToken), amount);
 
         if (responseCode != HederaResponseCodes.SUCCESS) {
@@ -32,7 +32,7 @@ contract LPToken is AbstractLPToken {
         return success ? abi.decode(result, (int32)) : HederaResponseCodes.UNKNOWN;
     }
 
-    function transferTokenInternal(address _token, address sender, address receiver, int64 amount) internal override virtual returns(int) {
+    function transferTokenInternal(address _token, address sender, address receiver, int amount) internal override virtual returns(int) {
         int responseCode = tokenService.transferTokenPublic(_token, sender, receiver, amount);
         if (responseCode != HederaResponseCodes.SUCCESS) {
                 revert ("LP Token Transfer Fail");
