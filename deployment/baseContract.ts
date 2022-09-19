@@ -56,8 +56,8 @@ async function deployBaseContract() {
   if  (contractId != null) {
       console.log(`\nSTEP 3 - Create token BaseContract`);
       const tokenCreateTx = await new TokenCreateTransaction()
-          .setTokenName("TOKENA-TOKENB")
-          .setTokenSymbol("A-B")
+          .setTokenName("hhLP-L49A-L49B")
+          .setTokenSymbol("LabA-LabB")
           .setDecimals(0)
           .setInitialSupply(0)
           .setTokenType(TokenType.FungibleCommon)
@@ -71,20 +71,6 @@ async function deployBaseContract() {
     const tokenId = tokenCreateRx.tokenId;
     console.log(`- Token created ${tokenId}, Token Address ${tokenId?.toSolidityAddress()}`);
 
-    console.log(`\n STEP 4 - call the contract to set the token id`);
-
-
-    if (tokenId != null && contractId != null) {
-      let contractFunctionParameters = new ContractFunctionParameters()
-        .addAddress(tokenId.toSolidityAddress())
-
-      const contractTokenTx = await new ContractExecuteTransaction()
-        .setContractId(contractId ?? "")
-        .setFunction("initialize", contractFunctionParameters)
-        .setGas(500000)
-        .execute(client);
-      await contractTokenTx.getReceipt(client);
-  }
 }
   client.close();
 }

@@ -69,19 +69,28 @@ abstract contract AbstractSwap is HederaResponseCodes {
         lpTokenContract.allotLPTokenFor(uint64(_tokenAQty), uint64(_tokenBQty), fromAccount);
     }
 
-    function removeLiquidity(address toAccount, address _tokenA, address _tokenB, int64 _tokenAQty, int64 _tokenBQty) external {
+    function removeLiquidity(address fromAccount, int64 _lpToken) external {
+        require(lpTokenContract.lpTokenForUser(fromAccount) > _lpToken, "user does not have sufficient lpTokens");
+        (int64 _tokenAQty, int64 _tokenBQty) = calculateTokenstoGetBack(_lpToken);
+        //Assumption - toAccount must be associated with tokenA and tokenB other transaction fails.
+        int response = transferToken(pair.tokenA.tokenAddress, address(this), fromAccount, _tokenAQty);
+        require(response == HederaResponseCodes.SUCCESS, "Remove liquidity: Transfering token A to contract failed with status code");
+        response = transferToken(pair.tokenB.tokenAddress, address(this), fromAccount, _tokenBQty);
+        require(response == HederaResponseCodes.SUCCESS, "Remove liquidity: Transfering token B to contract failed with status code");
         pair.tokenA.tokenQty -= _tokenAQty;
         pair.tokenB.tokenQty -= _tokenBQty;
+        
+        lpTokenContract.removeLPTokenFor(_lpToken, fromAccount);
 
-        //Assumption - toAccount must be associated with tokenA and tokenB other transaction fails.
-        int response = transferToken(_tokenA, address(this), toAccount, _tokenAQty);
-        require(response == HederaResponseCodes.SUCCESS, "Remove liquidity: Transfering token A to contract failed with status code");
-        response = transferToken(_tokenB, address(this), toAccount, _tokenBQty);
-        require(response == HederaResponseCodes.SUCCESS, "Remove liquidity: Transfering token B to contract failed with status code");
-        LiquidityContributor memory contributedPair = liquidityContribution[toAccount];
-        contributedPair.pair.tokenA.tokenQty -= _tokenAQty;
-        contributedPair.pair.tokenB.tokenQty -= _tokenBQty;
-        liquidityContribution[toAccount] = contributedPair;
+    }
+
+    function calculateTokenstoGetBack(int64 _lpToken) internal view returns (int64, int64) {
+        int64 allLPTokens = lpTokenContract.getAllLPTokenCount();
+
+        int64 tokenAQuantity = int64((_lpToken * pair.tokenA.tokenQty) / int64(allLPTokens));
+        int64 tokenBQuantity = int64((_lpToken * pair.tokenB.tokenQty) / int64(allLPTokens));
+
+        return (tokenAQuantity, tokenBQuantity);
     }
 
     function swapToken(address to, address _tokenA, address _tokenB, int64 _deltaAQty, int64 _deltaBQty) external {

@@ -8,12 +8,21 @@ import "./AbstractLPToken.sol";
 contract LPToken is AbstractLPToken {
     
     function mintToken(uint64 amount) override internal virtual returns (int responseCode, uint64 newTotalSupply) {
-            (int response, uint64 _newTotalSupply) = tokenService.mintTokenPublic(lpToken, amount);
+            (int response, uint64 _newTotalSupply) = tokenService.mintTokenPublic(address(lpToken), amount);
 
              if (response != HederaResponseCodes.SUCCESS) {
                 revert ("Mint Failed");
              }
             return (response, _newTotalSupply);
+    }
+
+    function burnToken(uint64 amount) override internal virtual returns (int) {
+        (int responseCode, ) = tokenService.burnTokenPublic(address(lpToken), amount);
+
+        if (responseCode != HederaResponseCodes.SUCCESS) {
+            revert ("Burn Fail");
+        }
+        return responseCode;
     }
 
     function associateTokenInternal(address account,  address _token) internal override  virtual returns(int) {

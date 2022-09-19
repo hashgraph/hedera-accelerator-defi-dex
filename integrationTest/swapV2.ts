@@ -3,9 +3,7 @@ import {
   TokenId,
   ContractExecuteTransaction,
   ContractFunctionParameters,
-
   AccountBalanceQuery,
-  ContractId
 } from "@hashgraph/sdk";
 
 import ClientManagement from "./utils/utils";
@@ -13,15 +11,15 @@ import ClientManagement from "./utils/utils";
 
 const clientManagement = new ClientManagement();
 
-const htsServiceAddress = "0x0000000000000000000000000000000002dfec41"; // 13 sep 3:10
-const lpTokenContractAddress = "0x0000000000000000000000000000000002dfec62"; // 13 sep 4:45
+const htsServiceAddress = "0x0000000000000000000000000000000002e0b863"; // 13 sep 3:10
+const lpTokenContractAddress = "0x0000000000000000000000000000000002e0b868"; // 19 sep 4:45
 const client = clientManagement.createClient();
 
 const tokenA = TokenId.fromString("0.0.47646195").toSolidityAddress();
 let tokenB = TokenId.fromString("0.0.47646196").toSolidityAddress();
 const {treasureId, treasureKey} = clientManagement.getTreasure();
 
-const contractId = "0.0.48229478"; // 13 sep 4:55
+const contractId = "0.0.48281714"; // 19 sep 4:55
 
 const initialize = async () => {
   const initialize = await new ContractExecuteTransaction()
@@ -44,8 +42,7 @@ const getTreaserBalance = async () => {
   const treasureBalance1 = await new AccountBalanceQuery()
       .setAccountId(treasureId)
       .execute(client);
-
-  console.log(`Treasure LP Token Balance: ${treasureBalance1.tokens?._map.get('0.0.48229442')}`); //2 Sep 01:02 pm
+  console.log(`Treasure LP Token Balance: ${treasureBalance1.tokens}`); //2 Sep 01:02 pm
 }
 
 const createLiquidityPool = async () => {
@@ -102,22 +99,19 @@ const addLiquidity = async () => {
 };
 
 const removeLiquidity = async () => {
-  const tokenAQty = new BigNumber(1);
+  const lpToken = new BigNumber(5);
   const tokenBQty = new BigNumber(1);
   console.log(
-    `Removing ${tokenAQty} units of token A and ${tokenBQty} units of token B from the pool.`
+    `Removing ${lpToken} units of LPToken from the pool.`
   );
   const removeLiquidity = await new ContractExecuteTransaction()
     .setContractId(contractId)
-    .setGas(2000000)
+    .setGas(9000000)
     .setFunction(
       "removeLiquidity",
       new ContractFunctionParameters()
         .addAddress(treasureId.toSolidityAddress())
-        .addAddress(tokenA)
-        .addAddress(tokenB)
-        .addInt64(tokenAQty)
-        .addInt64(tokenBQty)
+        .addInt64(lpToken)
     )
     .freezeWith(client)
     .sign(treasureKey);
@@ -254,13 +248,15 @@ async function main() {
   await createLiquidityPool();
   await getTreaserBalance();
   await addLiquidity();
+  await getTreaserBalance();
   await removeLiquidity();
+  await getTreaserBalance();
   await swapTokenA();
+  await getTreaserBalance();
   await spotPrice();
   await getVariantValue();
   await getOutGivenIn();
   await getInGivenOut();
-  await getTreaserBalance();
 }
 
 main()

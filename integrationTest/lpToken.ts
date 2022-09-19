@@ -1,56 +1,32 @@
 import { BigNumber } from "bignumber.js";
 import {
-  AccountId,
-  PrivateKey,
-  TokenId,
   ContractExecuteTransaction,
   ContractFunctionParameters,
-  Client,
   ContractId,
   AccountBalanceQuery
 } from "@hashgraph/sdk";
+
 import ClientManagement from "./utils/utils";
-
-const createClient = () => {
-  const myAccountId = AccountId.fromString("0.0.47540202");
-  const myPrivateKey = PrivateKey.fromString("302e020100300506032b657004220420b69079b0cdebea97ec13c78bf7277d3f4aef35189755b5d11c2dfae40c566aa8");
-
-  if (myAccountId == null || myPrivateKey == null) {
-    throw new Error(
-      "Environment variables myAccountId and myPrivateKey must be present"
-    );
-  }
-
-  const client = Client.forTestnet();
-  client.setOperator(myAccountId, myPrivateKey);
-  return client;
-};
 
 const clientManagement = new ClientManagement();
 const client = clientManagement.createClientAsAdmin();
 
-const tokenA = TokenId.fromString("0.0.47646195").toSolidityAddress();
-let tokenB = TokenId.fromString("0.0.47646196").toSolidityAddress();
-const treasure = AccountId.fromString("0.0.47645191").toSolidityAddress();
-const treasureAccountId = AccountId.fromString("0.0.47645191");
-const treasureKey = PrivateKey.fromString("308ed38983d9d20216d00371e174fe2d475dd32ac1450ffe2edfaab782b32fc5");
+const {treasureId, treasureKey} = clientManagement.getTreasure();
 
-const contractId = ContractId.fromString("0.0.48229474"); //13 Sep 04:45
+const contractId = ContractId.fromString("0.0.48283002"); //19 Sep 15:10
 
 const integrationTestLPToken = async () => {
-
-  let aliceAccount2 = AccountId.fromString("0.0.48133780");
-
-  if (contractId != null && aliceAccount2 != null) {
+  if (contractId != null && treasureId != null) {
   let contractFunctionParameters = new ContractFunctionParameters()
   
-  console.log(`\n STEP 10 - using Service`);
+  console.log(`\n STEP 1 - using Service`);
   const tokenAQty = new BigNumber(10);
   const tokenBQty = new BigNumber(10);
+  const lpTokenQty = new BigNumber(5);
   contractFunctionParameters = new ContractFunctionParameters()
       .addUint64(tokenAQty)
       .addUint64(tokenBQty)
-      .addAddress(aliceAccount2.toSolidityAddress());
+      .addAddress(treasureId.toSolidityAddress());
 
   const contractAllotTx = await new ContractExecuteTransaction()
       .setContractId(contractId)
@@ -62,10 +38,29 @@ const integrationTestLPToken = async () => {
   const status = contractAllotRx.status;
   console.log(`\n allotLPTokenFor Result ${status} code: ${response.contractFunctionResult!.getInt64()}`);
 
-  console.log(`\n STEP 11 - Alice Balance`);
+  contractFunctionParameters = new ContractFunctionParameters()
+      .addInt64(lpTokenQty)
+      .addAddress(treasureId.toSolidityAddress());
+
+  console.log(`\n STEP 2 Remove LP Token`);
+  const contractRemoveTx0 = await new ContractExecuteTransaction()
+      .setContractId(contractId)
+      .setFunction("removeLPTokenFor", contractFunctionParameters)
+      .setGas(2000000)
+      .freezeWith(client)
+      .sign(treasureKey);
+
+  const contractRemoveTx = await contractRemoveTx0.execute(client);
+  const contractRemoveRx = await contractRemoveTx.getReceipt(client);
+  const response1 = await contractRemoveTx.getRecord(client);
+  const status1 = contractRemoveRx.status;
+  console.log(`\n Remove LP Token ${status1} code: ${response1.contractFunctionResult!.getInt64()}`);
+
+
+  console.log(`\n STEP 3 - Treasure Balance`);
 
   const aliceBalance1 = await new AccountBalanceQuery()
-      .setAccountId(aliceAccount2)
+      .setAccountId(treasureId)
       .execute(client);
 
   console.log(aliceBalance1.tokens);
