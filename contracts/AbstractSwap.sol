@@ -72,28 +72,23 @@ abstract contract AbstractSwap is HederaResponseCodes {
     function removeLiquidity(address fromAccount, int64 _lpToken) external {
         require(lpTokenContract.lpTokenForUser(fromAccount) > _lpToken, "user does not have sufficient lpTokens");
         (int64 _tokenAQty, int64 _tokenBQty) = calculateTokenstoGetBack(_lpToken);
-        pair.tokenA.tokenQty -= _tokenAQty;
-        pair.tokenB.tokenQty -= _tokenBQty;
-
         //Assumption - toAccount must be associated with tokenA and tokenB other transaction fails.
         int response = transferToken(pair.tokenA.tokenAddress, address(this), fromAccount, _tokenAQty);
         require(response == HederaResponseCodes.SUCCESS, "Remove liquidity: Transfering token A to contract failed with status code");
         response = transferToken(pair.tokenB.tokenAddress, address(this), fromAccount, _tokenBQty);
         require(response == HederaResponseCodes.SUCCESS, "Remove liquidity: Transfering token B to contract failed with status code");
-        LiquidityContributor memory contributedPair = liquidityContribution[fromAccount];
-        contributedPair.pair.tokenA.tokenQty -= _tokenAQty;
-        contributedPair.pair.tokenB.tokenQty -= _tokenBQty;
-        liquidityContribution[fromAccount] = contributedPair;
+        pair.tokenA.tokenQty -= _tokenAQty;
+        pair.tokenB.tokenQty -= _tokenBQty;
         
         lpTokenContract.removeLPTokenFor(_lpToken, fromAccount);
 
     }
 
-    function calculateTokenstoGetBack(int64 _lpToken) public view returns (int64, int64) {
+    function calculateTokenstoGetBack(int64 _lpToken) internal view returns (int64, int64) {
         int64 allLPTokens = lpTokenContract.getAllLPTokenCount();
 
-        int64 tokenAQuantity = int64(_lpToken * pair.tokenA.tokenQty / int64(allLPTokens));
-        int64 tokenBQuantity = int64(_lpToken * pair.tokenB.tokenQty / int256(allLPTokens));
+        int64 tokenAQuantity = int64((_lpToken * pair.tokenA.tokenQty) / int64(allLPTokens));
+        int64 tokenBQuantity = int64((_lpToken * pair.tokenB.tokenQty) / int64(allLPTokens));
 
         return (tokenAQuantity, tokenBQuantity);
     }

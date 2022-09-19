@@ -33,11 +33,7 @@ abstract contract AbstractLPToken is HederaTokenService {
     function allotLPTokenFor(uint64 amountA, uint64 amountB, address _toUser) external returns (int responseCode) {
         require(address(lpToken) > address(0x0), "Liquidity Token not initialized");
         require((amountA > 0 && amountB > 0), "Please provide positive token counts" );
-        // uint64 mintingAmount = sqrt(10);
-        uint aM = uint(amountA);
-        uint bM = uint(amountB);
-        uint A = aM * bM;
-        uint mintingAmount = sqrt(A);
+        uint mintingAmount = sqrt(uint(amountB) * uint(amountB));
         uint64 convertedMintingAmount = convert(mintingAmount);
         associateTokenInternal(_toUser, address(lpToken));
         mintToken(convertedMintingAmount);
@@ -48,7 +44,7 @@ abstract contract AbstractLPToken is HederaTokenService {
     function removeLPTokenFor(int64 lpAmount, address _toUser) external returns (int responseCode) {
         require(address(lpToken) > address(0x0), "Liquidity Token not initialized");
         require((lpAmount > 0), "Please provide token counts" );
-        require((int64(uint64(lpToken.balanceOf(_toUser))) > lpAmount), "User Does not have lp amount" );
+        require(this.lpTokenForUser(_toUser) > lpAmount, "User Does not have lp amount" );
         // transfer Lp from users account to contract
         transferTokenInternal(address(lpToken), _toUser, address(tokenService), int64(lpAmount));
         // burn old amount of LP
@@ -56,17 +52,17 @@ abstract contract AbstractLPToken is HederaTokenService {
         return HederaResponseCodes.SUCCESS;
     }
 
-    function sqrt(uint x) public pure returns (uint y) {
-        uint z = (x + 1) / 2;
-        y = x;
-        while (z < y) {
-            y = z;
-            z = (x / z + z) / 2;
+    function sqrt(uint value) public pure returns (uint output) {
+        uint modifiedValue = (value + 1) / 2;
+        output = value;
+        while (modifiedValue < output) {
+            output = modifiedValue;
+            modifiedValue = (value / modifiedValue + modifiedValue) / 2;
         }
     }
 
-    function convert (uint256 _a) internal pure returns (uint64) {
-        return uint64(_a);
+    function convert (uint256 _value) internal pure returns (uint64) {
+        return uint64(_value);
     }
 
 }

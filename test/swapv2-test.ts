@@ -110,8 +110,6 @@ describe("Swap", function () {
     const allLPToken = await lpTokenCont.getAllLPTokenCount();
     expect(allLPToken).to.be.equals(100);
 
-    const tokensForLP = await swapV2.calculateTokenstoGetBack(5);
-    expect(tokensForLP[0]).to.be.equals(5);
     const tx = await swapV2.removeLiquidity(zeroAddress, 5);
     await tx.wait();
 

@@ -3,9 +3,7 @@ import {
   TokenId,
   ContractExecuteTransaction,
   ContractFunctionParameters,
-
   AccountBalanceQuery,
-  ContractId
 } from "@hashgraph/sdk";
 
 import ClientManagement from "./utils/utils";

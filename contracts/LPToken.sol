@@ -25,8 +25,6 @@ contract LPToken is AbstractLPToken {
         return responseCode;
     }
 
-
-
     function associateTokenInternal(address account,  address _token) internal override  virtual returns(int) {
         (bool success, bytes memory result) = address(tokenService).delegatecall(
             abi.encodeWithSelector(IBaseHTS.associateTokenPublic.selector,
