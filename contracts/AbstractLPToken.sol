@@ -4,21 +4,20 @@ pragma experimental ABIEncoderV2;
 
 import "./common/hedera/HederaResponseCodes.sol";
 import "./common/IBaseHTS.sol";
+import "./common/IERC20.sol";
 import "./common/hedera/HederaTokenService.sol";
 
 abstract contract AbstractLPToken is HederaTokenService {
     IBaseHTS tokenService;
-    mapping (address => int64) tokenShare;
-    int64 public allLPTokenCount;   
     address internal creator;
-    address internal lpToken;
+    IERC20 internal lpToken;
 
     function lpTokenForUser(address _user) external view returns(int64) {
-        return tokenShare[_user];
+        return int64(uint64(lpToken.balanceOf(_user)));
     }
 
     function getAllLPTokenCount() external view returns(int64) {
-        return allLPTokenCount;
+        return int64(uint64(lpToken.totalSupply()));
     }
 
     function mintToken(uint64 amount) internal virtual returns (int responseCode, uint64 newTotalSupply);    
@@ -26,13 +25,13 @@ abstract contract AbstractLPToken is HederaTokenService {
     function transferTokenInternal(address _token, address sender, address receiver, int64 amount) internal virtual returns(int);
     function burnToken(uint64 amount) internal virtual returns (int); 
 
-    function initializeParams(address _lpToken, IBaseHTS _tokenService) external {
+    function initializeParams(IERC20 _lpToken, IBaseHTS _tokenService) external {
          lpToken = _lpToken;
          tokenService = _tokenService;
     }
      
     function allotLPTokenFor(uint64 amountA, uint64 amountB, address _toUser) external returns (int responseCode) {
-        require(lpToken > address(0x0), "Liquidity Token not initialized");
+        require(address(lpToken) > address(0x0), "Liquidity Token not initialized");
         require((amountA > 0 && amountB > 0), "Please provide positive token counts" );
         // uint64 mintingAmount = sqrt(10);
         uint aM = uint(amountA);
@@ -40,24 +39,20 @@ abstract contract AbstractLPToken is HederaTokenService {
         uint A = aM * bM;
         uint mintingAmount = sqrt(A);
         uint64 convertedMintingAmount = convert(mintingAmount);
-        associateTokenInternal(_toUser, lpToken);
+        associateTokenInternal(_toUser, address(lpToken));
         mintToken(convertedMintingAmount);
-        tokenShare[_toUser] = tokenShare[_toUser] + int64(convertedMintingAmount);
-        allLPTokenCount+=int64(convertedMintingAmount);
-        transferTokenInternal(lpToken, address(tokenService), _toUser, int64(convertedMintingAmount));
+        transferTokenInternal(address(lpToken), address(tokenService), _toUser, int64(convertedMintingAmount));
         return HederaResponseCodes.SUCCESS;
     }
 
     function removeLPTokenFor(int64 lpAmount, address _toUser) external returns (int responseCode) {
-        require(lpToken > address(0x0), "Liquidity Token not initialized");
+        require(address(lpToken) > address(0x0), "Liquidity Token not initialized");
         require((lpAmount > 0), "Please provide token counts" );
-        require((tokenShare[_toUser] > int64(lpAmount)), "User Does not have lp amount" );
+        require((int64(uint64(lpToken.balanceOf(_toUser))) > lpAmount), "User Does not have lp amount" );
         // transfer Lp from users account to contract
-        transferTokenInternal(lpToken, _toUser, address(tokenService), int64(lpAmount));
+        transferTokenInternal(address(lpToken), _toUser, address(tokenService), int64(lpAmount));
         // burn old amount of LP
         burnToken(uint64(lpAmount));
-        tokenShare[_toUser] = tokenShare[_toUser] - int64(lpAmount);
-        allLPTokenCount-=int64(lpAmount);
         return HederaResponseCodes.SUCCESS;
     }
 

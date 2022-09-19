@@ -28,7 +28,8 @@ async function createAccount(client: Client) {
 
 async function deployTokenContract() {
     let client = Client.forTestnet();
-    const htsServiceAddress = "0x0000000000000000000000000000000002dfec41"; // 13 sep 2:41
+    const htsServiceAddress = "0x0000000000000000000000000000000002e0b863"; // 19 sep 2:41
+    const tokenId = TokenId.fromString("0.0.48281700"); // 19 sep 2:45
     const operatorKey = PrivateKey.fromString("302e020100300506032b657004220420b69079b0cdebea97ec13c78bf7277d3f4aef35189755b5d11c2dfae40c566aa8");
 
     client.setOperator(
@@ -69,8 +70,6 @@ async function deployTokenContract() {
     const contractId = contractCreateRx.contractId;
     console.log(`- Contract created ${contractId?.toString()} ,Contract Address ${contractId?.toSolidityAddress()} -`);
     if  (contractId != null) {
-   
-      const tokenId = TokenId.fromString("0.0.48229442"); // 13 sep 2:45
       console.log(`\n STEP 6 - call the contract to set the token id`);
 
       if (tokenId != null && contractId != null) {
