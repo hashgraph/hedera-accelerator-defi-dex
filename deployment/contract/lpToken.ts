@@ -1,12 +1,11 @@
 
 import { Deployment } from "../deployContractOnTestnet";
 
-async function main() {
+async function main() { 
     const deployment = new Deployment();
-    const filePath = "./artifacts/contracts/Swap.sol/Swap.json";
-    console.log(`Deploying swap contract...`);
+    const filePath = "./artifacts/contracts/LPToken.sol/LPToken.json";
     const deployedContract = await deployment.deployContract(filePath, []);
-    console.log(`Swap deployed address ${deployedContract}`);
+    console.log("LPToken deployed.");
 }
 
 main()

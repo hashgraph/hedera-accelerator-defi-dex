@@ -103,8 +103,7 @@ contract MockBaseHTS is IBaseHTS {
             return ((isSuccess) ? int(22) : int(23), int(amount));
     }
 
-    function burnTokenPublic(address, int amount) external                                                         view
-override
+    function burnTokenPublic(address, int amount) external view override
         returns (int responseCode, int newTotalSupply) {
             return ((isSuccess) ? int(22) : int(23), amount);
     }
