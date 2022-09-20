@@ -4,10 +4,12 @@ pragma experimental ABIEncoderV2;
 
 import "./common/hedera/HederaResponseCodes.sol";
 import "./common/IBaseHTS.sol";
+import "./ILPToken.sol";
 
 abstract contract AbstractSwap is HederaResponseCodes {
-    
-    IBaseHTS tokenService;
+
+    IBaseHTS internal tokenService;
+    ILPToken internal lpTokenContract;
 
     struct Pair {
         Token tokenA;
@@ -16,7 +18,7 @@ abstract contract AbstractSwap is HederaResponseCodes {
 
     struct Token {
         address tokenAddress;
-        int64 tokenQty;
+        int tokenQty;
     }
 
     struct LiquidityContributor {
@@ -29,25 +31,28 @@ abstract contract AbstractSwap is HederaResponseCodes {
 
     Pair pair;
 
+    int slippage;
+
     function associateToken(address account,  address _token) internal virtual returns(int);
 
-    function transferToken(address _token, address sender, address receiver, int64 amount) internal virtual returns(int);
+    function transferToken(address _token, address sender, address receiver, int amount) internal virtual returns(int);
 
-    function initializeContract(address fromAccount, address _tokenA, address _tokenB, int64 _tokenAQty, int64 _tokenBQty) external {
+    function initializeContract(address fromAccount, address _tokenA, address _tokenB, int _tokenAQty, int _tokenBQty) external {
         pair = Pair(Token(_tokenA, _tokenAQty), Token(_tokenB, _tokenBQty));
         liquidityContribution[fromAccount] = LiquidityContributor(pair);
 
         associateToken(address(this),  _tokenA);
-        associateToken(address(this),  _tokenB);
+        associateToken(address(this),  _tokenB);    
 
         int response = tokenService.transferTokenPublic(_tokenA, fromAccount, address(this), _tokenAQty);
         require(response == HederaResponseCodes.SUCCESS, "Creating contract: Transfering token A to contract failed with status code");
 
         response = tokenService.transferTokenPublic(_tokenB, fromAccount, address(this), _tokenBQty);
         require(response == HederaResponseCodes.SUCCESS, "Creating contract: Transfering token B to contract failed with status code");
+        lpTokenContract.allotLPTokenFor(_tokenAQty, _tokenBQty, fromAccount);
     }
 
-    function addLiquidity(address fromAccount, address _tokenA, address _tokenB, int64 _tokenAQty, int64 _tokenBQty) external {
+    function addLiquidity(address fromAccount, address _tokenA, address _tokenB, int _tokenAQty, int _tokenBQty) external {
         pair.tokenA.tokenQty += _tokenAQty;
         pair.tokenB.tokenQty += _tokenBQty;
 
@@ -55,30 +60,39 @@ abstract contract AbstractSwap is HederaResponseCodes {
         associateToken(address(this),  _tokenB);
 
         int response = tokenService.transferTokenPublic(_tokenA, fromAccount, address(this), _tokenAQty);
-        require(response == HederaResponseCodes.SUCCESS, "Add liquidity: Transfering token A to contract failed with status code");
+        require(response == HederaResponseCodes.SUCCESS, "Add liquidity: Transfering token A to contract failed with status code"); 
     
         response = tokenService.transferTokenPublic(_tokenB, fromAccount, address(this), _tokenBQty);
-        require(response == HederaResponseCodes.SUCCESS, "Add liquidity: Transfering token B to contract failed with status code");
-
+        require(response == HederaResponseCodes.SUCCESS, "Add liquidity: Transfering token B to contract failed with status code"); 
         LiquidityContributor memory contributedPair = liquidityContribution[fromAccount];
         contributedPair.pair.tokenA.tokenQty += _tokenAQty;
         contributedPair.pair.tokenB.tokenQty += _tokenBQty;
         liquidityContribution[fromAccount] = contributedPair;
+        lpTokenContract.allotLPTokenFor(_tokenAQty, _tokenBQty, fromAccount);
     }
 
-    function removeLiquidity(address toAccount, address _tokenA, address _tokenB, int64 _tokenAQty, int64 _tokenBQty) external {
+    function removeLiquidity(address fromAccount, int _lpToken) external {
+        require(lpTokenContract.lpTokenForUser(fromAccount) > _lpToken, "user does not have sufficient lpTokens");
+        (int _tokenAQty, int _tokenBQty) = calculateTokenstoGetBack(_lpToken);
+        //Assumption - toAccount must be associated with tokenA and tokenB other transaction fails.
+        int response = transferToken(pair.tokenA.tokenAddress, address(this), fromAccount, _tokenAQty);
+        require(response == HederaResponseCodes.SUCCESS, "Remove liquidity: Transferring token A to contract failed with status code");
+        response = transferToken(pair.tokenB.tokenAddress, address(this), fromAccount, _tokenBQty);
+        require(response == HederaResponseCodes.SUCCESS, "Remove liquidity: Transferring token B to contract failed with status code");
         pair.tokenA.tokenQty -= _tokenAQty;
         pair.tokenB.tokenQty -= _tokenBQty;
+        
+        lpTokenContract.removeLPTokenFor(_lpToken, fromAccount);
 
-        //Assumption - toAccount must be associated with tokenA and tokenB other transaction fails.
-        int response = transferToken(_tokenA, address(this), toAccount, _tokenAQty);
-        require(response == HederaResponseCodes.SUCCESS, "Remove liquidity: Transfering token A to contract failed with status code");
-        response = transferToken(_tokenB, address(this), toAccount, _tokenBQty);
-        require(response == HederaResponseCodes.SUCCESS, "Remove liquidity: Transfering token B to contract failed with status code");
-        LiquidityContributor memory contributedPair = liquidityContribution[toAccount];
-        contributedPair.pair.tokenA.tokenQty -= _tokenAQty;
-        contributedPair.pair.tokenB.tokenQty -= _tokenBQty;
-        liquidityContribution[toAccount] = contributedPair;
+    }
+
+    function calculateTokenstoGetBack(int _lpToken) internal view returns (int, int) {
+        int allLPTokens = lpTokenContract.getAllLPTokenCount();
+
+        int tokenAQuantity = (_lpToken * pair.tokenA.tokenQty)/allLPTokens;
+        int tokenBQuantity = (_lpToken * pair.tokenB.tokenQty)/allLPTokens;
+
+        return (tokenAQuantity, tokenBQuantity);
     }
 
     function swapToken(address to, address _tokenA, address _tokenB, int64 _deltaAQty, int64 _deltaBQty) external {
@@ -91,71 +105,114 @@ abstract contract AbstractSwap is HederaResponseCodes {
         }     
     }
 
-    function doTokenASwap(address to, address _tokenA, address _tokenB, int64 _deltaAQty) private  {
+    function doTokenASwap(address to, address _tokenA, address _tokenB, int _deltaAQty) private  {
         require(_tokenA == pair.tokenA.tokenAddress && _tokenB != pair.tokenB.tokenAddress, "Token A should have correct address and token B address will be ignored.");
-        int64 deltaBQty = (pair.tokenB.tokenQty * _deltaAQty) / (pair.tokenA.tokenQty + _deltaAQty);
+        int calculatedSlippage = slippageOutGivenIn(_deltaAQty);
+        int localSlippage = getSlippage();
+        require(calculatedSlippage <= (localSlippage),  "Slippage threshold breached.");
+        int deltaBQty = getOutGivenIn(_deltaAQty);
         pair.tokenA.tokenQty += _deltaAQty;  
         int response = transferToken(pair.tokenA.tokenAddress, to, address(this), _deltaAQty);
-        require(response == HederaResponseCodes.SUCCESS, "swapTokenA: Transfering token A to contract failed with status code");
+        require(response == HederaResponseCodes.SUCCESS, "swapTokenA: Transferring token A to contract failed with status code");
 
         pair.tokenB.tokenQty -= deltaBQty;
         associateToken(to,  _tokenB);
         response = transferToken(pair.tokenB.tokenAddress, address(this), to, deltaBQty);
-        require(response == HederaResponseCodes.SUCCESS, "swapTokenA: Transfering token B to contract failed with status code");
+        require(response == HederaResponseCodes.SUCCESS, "swapTokenA: Transferring token B to contract failed with status code");
     }
 
-    function doTokenBSwap(address to, address _tokenA, address _tokenB, int64 _deltaBQty) private  {
+    function doTokenBSwap(address to, address _tokenA, address _tokenB, int _deltaBQty) private  {
         require(_tokenA != pair.tokenA.tokenAddress && _tokenB == pair.tokenB.tokenAddress, "Token B should have correct address and token A address will be ignored.");
-        int64 deltaAQty = (pair.tokenA.tokenQty * _deltaBQty) / (pair.tokenB.tokenQty + _deltaBQty);
+        int calculatedSlippage = slippageInGivenOut(_deltaBQty);
+        int localSlippage = getSlippage();
+        require(calculatedSlippage <= localSlippage,  "Slippage threshold breached.");
+        int deltaAQty = getInGivenOut(_deltaBQty);
         pair.tokenB.tokenQty += _deltaBQty;
         int response = transferToken(pair.tokenB.tokenAddress, to, address(this), _deltaBQty);
-        require(response == HederaResponseCodes.SUCCESS, "swapTokenB: Transfering token B to contract failed with status code");
+        require(response == HederaResponseCodes.SUCCESS, "swapTokenB: Transferring token B to contract failed with status code");
 
         pair.tokenA.tokenQty -= deltaAQty;
         associateToken(to,  _tokenA);
         response = transferToken(pair.tokenA.tokenAddress, address(this), to, deltaAQty);
-        require(response == HederaResponseCodes.SUCCESS, "swapTokenB: Transfering token A to contract failed with status code");
+        require(response == HederaResponseCodes.SUCCESS, "swapTokenB: Transferring token A to contract failed with status code");
     }
 
-    function getPairQty() public view returns (int64, int64) {
+    function getPairQty() public view returns (int, int) {
         return (pair.tokenA.tokenQty, pair.tokenB.tokenQty);
     }
 
-    function getContributorTokenShare(address fromAccount) public view returns (int64, int64) {
+    function getContributorTokenShare(address fromAccount) public view returns (int, int) {
         LiquidityContributor memory liquidityContributor = liquidityContribution[fromAccount];
         return (liquidityContributor.pair.tokenA.tokenQty, liquidityContributor.pair.tokenB.tokenQty);
     }
 
-    function getSpotPrice() public view returns (int64) {
-        require(pair.tokenB.tokenQty > 0, "spot price: No token B in the pool");
-        int64 precision = getPrecisionValue();
-        int64 value = (pair.tokenA.tokenQty*precision)/pair.tokenB.tokenQty;
+    function getSpotPrice() public view returns (int) {
+        int precision = getPrecisionValue();
+        int tokenAQ = pair.tokenA.tokenQty;
+        int tokenBQ = pair.tokenB.tokenQty;
+        int value = (tokenAQ * precision)/tokenBQ;
         return value;
     }
 
-    function getOutGivenIn(int64 amountTokenA) public view returns(int64) {
-        int64 invariantValue = getVariantValue();
-        int64 precision = getPrecisionValue();
-        int64 tokenAQ = pair.tokenA.tokenQty;
-        int64 tokenBQ = pair.tokenB.tokenQty;
-
-        int64 amountTokenB = (tokenBQ * precision) - (invariantValue / (tokenAQ + amountTokenA));
-        return amountTokenB;
-    }
-
-    function getInGivenOut(int64 amountTokenB) public view returns(int64) {
-        int64 precision = getPrecisionValue();
-        int64 invariantValue = getVariantValue();
-        int64 amountTokenA = ((invariantValue) / (pair.tokenB.tokenQty - amountTokenB)) - (pair.tokenA.tokenQty * precision);
+    function getInGivenOut(int amountTokenB) public view returns(int) {
+        int invariantValue = getVariantValue();
+        int precision = getPrecisionValue();
+        int tokenAQ = pair.tokenA.tokenQty;
+        int tokenBQ = pair.tokenB.tokenQty;
+        int adjustedValue = (invariantValue * precision)/ (tokenBQ - amountTokenB);
+        int newValue = adjustedValue/precision;
+        int amountTokenA = newValue - tokenAQ;
         return amountTokenA;
     }
 
-    function getVariantValue() public view returns(int64) {
-        int64 precision = getPrecisionValue();
-        return (pair.tokenA.tokenQty * pair.tokenB.tokenQty) * precision;
+    function getVariantValue() public view returns(int) {
+        int tokenAQ = pair.tokenA.tokenQty;
+        int tokenBQ = pair.tokenB.tokenQty;
+        return tokenAQ * tokenBQ;
     }
 
-    function getPrecisionValue() public pure returns(int64) {
+    function getPrecisionValue() public pure returns(int) {
         return 10000000;
     }
-}
+
+    function getOutGivenIn(int amountTokenA) public view returns(int) {
+        int precision = getPrecisionValue();
+        int invariantValue = getVariantValue();
+        int tokenAQ = pair.tokenA.tokenQty;
+        int tokenBQ = pair.tokenB.tokenQty;
+        int adjustedValue = (invariantValue * precision) / (tokenAQ + amountTokenA);
+        int newValue = adjustedValue/precision;
+        int amountTokenB = tokenBQ - newValue;
+        return amountTokenB;
+    }
+
+    function getSlippage() public view returns(int) {
+        // 0.005 should be default as per requirement.
+        return (slippage <= 0) ? int(50000) : slippage;
+    }
+
+    function setSlippage(int _slippage) external returns(int) {
+        slippage = _slippage;
+        return slippage;
+    }
+
+    function slippageOutGivenIn(int _tokenAQty) public view returns (int) {
+        int precision = getPrecisionValue();
+        int tokenAQ = pair.tokenA.tokenQty;
+        int tokenBQ = pair.tokenB.tokenQty;
+        int unitPriceForA = (tokenBQ * precision)/tokenAQ;
+        int spotValueExpected = (_tokenAQty * unitPriceForA)/precision;
+        int deltaTokenBQty = getOutGivenIn(_tokenAQty);
+        return ((spotValueExpected -  deltaTokenBQty) * precision)/spotValueExpected;
+    }
+
+    function slippageInGivenOut(int _tokenBQty) public view returns (int) {
+        int precision = getPrecisionValue();
+        int tokenAQ = pair.tokenA.tokenQty;
+        int tokenBQ = pair.tokenB.tokenQty;
+        int unitPriceForB = (tokenAQ * precision) / tokenBQ;
+        int spotValueExpected = (_tokenBQty * unitPriceForB) / precision;
+        int deltaTokenAQty = getInGivenOut(_tokenBQty);
+        return ((deltaTokenAQty - spotValueExpected) * precision)/spotValueExpected;
+    }
+}   

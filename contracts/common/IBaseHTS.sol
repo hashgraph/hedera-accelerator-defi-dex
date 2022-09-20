@@ -5,7 +5,7 @@ import "./hedera/HederaTokenService.sol";
 import "./hedera/HederaResponseCodes.sol";
 
 interface IBaseHTS {
-    function transferTokenPublic(address token, address sender, address receiver, int64 amount) 
+    function transferTokenPublic(address token, address sender, address receiver, int amount) 
         external returns (int responseCode);
     
     function associateTokenPublic(address account, address token) 
@@ -13,4 +13,10 @@ interface IBaseHTS {
 
     function associateTokensPublic(address account, address[] memory tokens) 
         external returns (int responseCode);
+
+    function mintTokenPublic(address token, int amount) external
+        returns (int responseCode, int newTotalSupply);
+
+    function burnTokenPublic(address token, int amount) external
+        returns (int responseCode, int newTotalSupply);
 }

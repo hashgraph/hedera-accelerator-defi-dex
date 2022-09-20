@@ -6,9 +6,6 @@ import {
   ContractFunctionParameters,
   AccountBalanceQuery,
 } from "@hashgraph/sdk";
-dotenv.config();
-import Web3 from "web3";
-import * as fs from "fs";
 
 import ClientManagement from "./utils/utils";
 import { ContractService } from "../deployment/service/ContractService"
@@ -22,7 +19,10 @@ const client = clientManagement.createClient();
 
 const tokenA = TokenId.fromString("0.0.47646195").toSolidityAddress();
 let tokenB = TokenId.fromString("0.0.47646196").toSolidityAddress();
+
 const {treasureId, treasureKey} = clientManagement.getTreasure();
+
+const contractId = contractService.getContractWithProxy("swap").transparentProxyId!;
 
 const initialize = async () => {
   const initialize = await new ContractExecuteTransaction()
@@ -116,7 +116,7 @@ const removeLiquidity = async () => {
       "removeLiquidity",
       new ContractFunctionParameters()
         .addAddress(treasureId.toSolidityAddress())
-        .addInt64(lpToken)
+        .addInt256(lpToken)
     )
     .freezeWith(client)
     .sign(treasureKey);
@@ -162,8 +162,8 @@ const pairCurrentPosition = async (): Promise<[BigNumber, BigNumber]> => {
     .freezeWith(client);
   const getPairQtyTx = await getPairQty.execute(client);
   const response = await getPairQtyTx.getRecord(client);
-  const tokenAQty = response.contractFunctionResult!.getInt64(0);
-  const tokenBQty = response.contractFunctionResult!.getInt64(1);
+  const tokenAQty = response.contractFunctionResult!.getInt256(0);
+  const tokenBQty = response.contractFunctionResult!.getInt256(1);
   console.log(
     `${tokenAQty} units of token A and ${tokenBQty} units of token B are present in the pool. \n`
   );
@@ -183,8 +183,8 @@ const getContributorTokenShare = async () => {
     client
   );
   const response = await getContributorTokenShareTx.getRecord(client);
-  const tokenAQty = response.contractFunctionResult!.getInt64(0);
-  const tokenBQty = response.contractFunctionResult!.getInt64(1);
+  const tokenAQty = response.contractFunctionResult!.getInt256(0);
+  const tokenBQty = response.contractFunctionResult!.getInt256(1);
   console.log(
     `${tokenAQty} units of token A and ${tokenBQty} units of token B contributed by ${treasureId}.`
   );
