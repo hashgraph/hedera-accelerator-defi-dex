@@ -16,11 +16,6 @@ echo OPERATOR_ID $OPERATOR_ID
 echo TREASURE_ID $TREASURE_ID
 
 npm --yes install --save-dev hardhat
-<<<<<<< HEAD
-# Run hardhat
-npm run codecoverage;
-=======
->>>>>>> 051fb57 (Proxy contract deployment using GitHUB action)
 
 echo "********************  Running test and coverage *********************"
 
