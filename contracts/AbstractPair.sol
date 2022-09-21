@@ -6,7 +6,7 @@ import "./common/hedera/HederaResponseCodes.sol";
 import "./common/IBaseHTS.sol";
 import "./ILPToken.sol";
 
-abstract contract AbstractSwap is HederaResponseCodes {
+abstract contract AbstractPair is HederaResponseCodes {
 
     IBaseHTS internal tokenService;
     ILPToken internal lpTokenContract;

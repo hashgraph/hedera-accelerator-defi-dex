@@ -5,9 +5,9 @@ pragma experimental ABIEncoderV2;
 import "../common/hedera/HederaResponseCodes.sol";
 import "../common/IBaseHTS.sol";
 import "../ILPToken.sol";
-import "../AbstractSwap.sol";
+import "../AbstractPair.sol";
 
-contract SwapTest is AbstractSwap {
+contract PairTest is AbstractPair {
 
     constructor(IBaseHTS _tokenService, ILPToken _lpTokenContract) {
         tokenService = _tokenService;

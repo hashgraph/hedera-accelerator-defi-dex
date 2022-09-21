@@ -16,7 +16,7 @@ describe("Swap", function () {
 
   describe("Swap Upgradeable", function () {
     it("Verify if the Swap contract is upgradeable safe ", async function () {
-      const Swap = await ethers.getContractFactory("Swap");
+      const Swap = await ethers.getContractFactory("Pair");
       const instance = await upgrades.deployProxy(Swap, [zeroAddress, zeroAddress], {unsafeAllow: ['delegatecall']});
       await instance.deployed();
     });
@@ -33,7 +33,7 @@ describe("Swap", function () {
     const LpTokenCont = await ethers.getContractFactory("LPTokenTest");
     const lpTokenCont = await LpTokenCont.deploy(tokenCont.address, mockBaseHTS.address);
 
-    const SwapV2 = await ethers.getContractFactory("SwapTest");
+    const SwapV2 = await ethers.getContractFactory("PairTest");
     const swapV2 = await SwapV2.deploy(mockBaseHTS.address, lpTokenCont.address);
     precision = await swapV2.getPrecisionValue();
     
@@ -56,7 +56,7 @@ describe("Swap", function () {
     const LpTokenCont = await ethers.getContractFactory("LPTokenTest");
     const lpTokenCont = await LpTokenCont.deploy(tokenCont.address, mockBaseHTS.address);
 
-    const SwapV2 = await ethers.getContractFactory("SwapTest");
+    const SwapV2 = await ethers.getContractFactory("PairTest");
     const swapV2 = await SwapV2.deploy(mockBaseHTS.address, lpTokenCont.address);
     precision = await swapV2.getPrecisionValue();
 
