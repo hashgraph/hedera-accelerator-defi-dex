@@ -14,12 +14,19 @@ export default class ClientManagement {
     private treasure = AccountId.fromString(process.env.TREASURE_ID!);
     private treasureKey = PrivateKey.fromString(process.env.TREASURE_KEY!);
 
+    private tokenUserId = AccountId.fromString(process.env.TOKEN_USER_ID!);
+    private tokenUserKey = PrivateKey.fromString(process.env.TOKEN_USER_KEY!);
+
     public createClientAsAdmin = (): Client => { 
         return this.doCreateClient(this.accountId, this.accountKey);
     };
     
     public createClient = (): Client => {
         return this.doCreateClient(this.treasure, this.treasureKey);
+    };
+
+    public createClientForToken = (): Client => {
+        return this.doCreateClient(this.tokenUserId, this.tokenUserKey);
     };
     
     private doCreateClient = (accountId: AccountId, privateKey: PrivateKey): Client => {
@@ -39,6 +46,13 @@ export default class ClientManagement {
         return {
             treasureId: this.treasure,
             treasureKey: this.treasureKey
+        }
+    }
+
+    public getTokenUser = () =>  {
+        return {
+            tokenUserId: this.tokenUserId,
+            tokenUserKey: this.tokenUserKey
         }
     }
 }

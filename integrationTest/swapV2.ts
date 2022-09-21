@@ -8,13 +8,13 @@ import {
 } from "@hashgraph/sdk";
 
 import ClientManagement from "./utils/utils";
-import { ContractService } from "../deployment/service/ContractService"
+import { ContractService } from "../deployment/service/ContractService";
 
 const clientManagement = new ClientManagement();
 const contractService = new ContractService();
 
-const htsServiceAddress = "0x0000000000000000000000000000000002e0b863"; // 13 sep 3:10
-const lpTokenContractAddress = "0x0000000000000000000000000000000002e0b868"; // 19 sep 4:45
+const htsServiceAddress = contractService.getContract(contractService.baseContractName).address;
+const lpTokenContractAddress = contractService.getContract(contractService.lpTokenContractName).address
 const client = clientManagement.createClient();
 
 const tokenA = TokenId.fromString("0.0.47646195").toSolidityAddress();
@@ -41,7 +41,7 @@ const initialize = async () => {
   console.log(`Initialized status : ${initializeTxRx.status}`);
 };
 
-const getTreaserBalance = async () => {
+const getTreasureBalance = async () => {
   const treasureBalance1 = await new AccountBalanceQuery()
       .setAccountId(treasureId)
       .execute(client);
@@ -250,15 +250,15 @@ const getInGivenOut =async () => {
 
 async function main() {
   await initialize();
-  await getTreaserBalance();
+  await getTreasureBalance();
   await createLiquidityPool();
-  await getTreaserBalance();
+  await getTreasureBalance();
   await addLiquidity();
-  await getTreaserBalance();
+  await getTreasureBalance();
   await removeLiquidity();
-  await getTreaserBalance();
+  await getTreasureBalance();
   await swapTokenA();
-  await getTreaserBalance();
+  await getTreasureBalance();
   await spotPrice();
   await getVariantValue();
   await getOutGivenIn();

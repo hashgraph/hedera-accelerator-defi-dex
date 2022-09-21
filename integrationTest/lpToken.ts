@@ -3,43 +3,88 @@ import {
   ContractExecuteTransaction,
   ContractFunctionParameters,
   ContractId,
-  AccountBalanceQuery
+  AccountBalanceQuery,
+  TokenCreateTransaction,
+  TokenType,
+  TokenSupplyType,
+  TokenId,
+  AccountId,
+  PrivateKey
 } from "@hashgraph/sdk";
 
 import ClientManagement from "./utils/utils";
+import { ContractService } from "../deployment/service/ContractService";
 
 const clientManagement = new ClientManagement();
-const client = clientManagement.createClientAsAdmin();
+const contractService = new ContractService();
+const client = clientManagement.createClient();
 
+const htsServiceAddress = contractService.getContract(contractService.baseContractName).address;
 const {treasureId, treasureKey} = clientManagement.getTreasure();
+const {tokenUserId, tokenUserKey} = clientManagement.getTokenUser();
 
-const contractId = ContractId.fromString("0.0.48283002"); //19 Sep 15:10
+const baseContract = contractService.getContract(contractService.baseContractName);
+const contractId = contractService.getContract(contractService.lpTokenContractName).id;
 
-const integrationTestLPToken = async () => {
-  if (contractId != null && treasureId != null) {
-  let contractFunctionParameters = new ContractFunctionParameters()
-  
-  console.log(`\n STEP 1 - using Service`);
-  const tokenAQty = new BigNumber(10);
-  const tokenBQty = new BigNumber(10);
-  const lpTokenQty = new BigNumber(5);
-  contractFunctionParameters = new ContractFunctionParameters()
-      .addInt256(tokenAQty)
-      .addInt256(tokenBQty)
-      .addAddress(aliceAccount2.toSolidityAddress());
+const createToken =  async (): Promise<TokenId> => {
+  const createTokenTx = await new TokenCreateTransaction()
+    .setTokenName("hhLP-L49A-L49B")
+    .setTokenSymbol("LabA-LabB")
+    .setDecimals(8)
+    .setInitialSupply(0)
+    .setTokenType(TokenType.FungibleCommon)
+    .setSupplyType(TokenSupplyType.Infinite)
+    //create the token with the contract as supply and treasury
+    .setSupplyKey(ContractId.fromString(baseContract.id))
+    .setTreasuryAccountId(baseContract.id)
+    .execute(client);
 
-  const contractAllotTx = await new ContractExecuteTransaction()
-      .setContractId(contractId)
-      .setFunction("allotLPTokenFor", contractFunctionParameters)
-      .setGas(900000)
+    const tokenCreateTx = await createTokenTx.getReceipt(client);
+    const tokenId = tokenCreateTx.tokenId;
+    console.log(`- Token created ${tokenId}, Token Address ${tokenId?.toSolidityAddress()}`);
+    return tokenId!;
+}
+
+const initialize = async (tokenId: TokenId) => {
+    let contractFunctionParameters = new ContractFunctionParameters()
+      .addAddress(tokenId.toSolidityAddress())
+      .addAddress(htsServiceAddress);
+
+    const contractTokenTx = await new ContractExecuteTransaction()
+      .setContractId(contractId ?? "")
+      .setFunction("initializeParams", contractFunctionParameters)
+      .setGas(500000)
       .execute(client);
-  const contractAllotRx = await contractAllotTx.getReceipt(client);
-  const response = await contractAllotTx.getRecord(client);
-  const status = contractAllotRx.status;
-  console.log(`\n allotLPTokenFor Result ${status} code: ${response.contractFunctionResult!.getInt64()}`);
+      
+    await contractTokenTx.getReceipt(client);
+}
 
-  contractFunctionParameters = new ContractFunctionParameters()
-      .addInt64(lpTokenQty)
+const allotLPTokenFor = async () => {
+    const tokenAQty = new BigNumber(10);
+    const tokenBQty = new BigNumber(10);
+  
+    const contractFunctionParameters = new ContractFunctionParameters()
+        .addInt256(tokenAQty)
+        .addInt256(tokenBQty)
+        .addAddress(treasureId.toSolidityAddress());
+
+    const contractAllotTx = await new ContractExecuteTransaction()
+        .setContractId(contractId)
+        .setFunction("allotLPTokenFor", contractFunctionParameters)
+        .setGas(900000)
+        .execute(client);
+
+    const contractAllotRx = await contractAllotTx.getReceipt(client);
+    const response = await contractAllotTx.getRecord(client);
+    const status = contractAllotRx.status;
+    console.log(`\n allotLPTokenFor Result ${status} code: ${response.contractFunctionResult!.getInt64()}`);
+}
+
+const removeLPTokenFor = async () => {
+  const lpTokenQty = new BigNumber(5);
+
+  const contractFunctionParameters = new ContractFunctionParameters()
+      .addInt256(lpTokenQty)
       .addAddress(treasureId.toSolidityAddress());
 
   console.log(`\n STEP 2 Remove LP Token`);
@@ -52,23 +97,26 @@ const integrationTestLPToken = async () => {
 
   const contractRemoveTx = await contractRemoveTx0.execute(client);
   const contractRemoveRx = await contractRemoveTx.getReceipt(client);
-  const response1 = await contractRemoveTx.getRecord(client);
-  const status1 = contractRemoveRx.status;
-  console.log(`\n Remove LP Token ${status1} code: ${response1.contractFunctionResult!.getInt64()}`);
+  const response = await contractRemoveTx.getRecord(client);
+  const status = contractRemoveRx.status;
+  console.log(`\n Remove LP Token ${status} code: ${response.contractFunctionResult!.getInt64()}`);
+}
 
+const getBalance = async() => {
+  const balance = await new AccountBalanceQuery()
+  .setAccountId(treasureId)
+  .execute(client);
 
-  console.log(`\n STEP 3 - Treasure Balance`);
-
-  const aliceBalance1 = await new AccountBalanceQuery()
-      .setAccountId(treasureId)
-      .execute(client);
-
-  console.log(aliceBalance1.tokens);
-  }
-};
+  console.log(balance.tokens);
+}
 
 async function main() {
-  await integrationTestLPToken();
+  const tokenId = await createToken();
+  // const tokenId = TokenId.fromString("0.0.48291338");
+  // await initialize(tokenId);
+  // await allotLPTokenFor();
+  // await removeLPTokenFor();
+  // await getBalance();
 }
 
 main()

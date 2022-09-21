@@ -3,6 +3,10 @@ import { DeployedContract } from "../model/contract";
 import { httpRequest } from "../api/HttpsService";
 
 export class ContractService {
+    public swapContractName = "swap";
+    public baseContractName = "basehts";
+    public lpTokenContractName = "lptoken";
+    
     private contractRecordFile = "./deployment/state/contracts.json";
 
     private readFileContent = () => {
