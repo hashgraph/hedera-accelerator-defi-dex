@@ -112,11 +112,10 @@ const getBalance = async() => {
 
 async function main() {
   const tokenId = await createToken();
-  // const tokenId = TokenId.fromString("0.0.48291338");
-  // await initialize(tokenId);
-  // await allotLPTokenFor();
-  // await removeLPTokenFor();
-  // await getBalance();
+  await initialize(tokenId);
+  await allotLPTokenFor();
+  await removeLPTokenFor();
+  await getBalance();
 }
 
 main()

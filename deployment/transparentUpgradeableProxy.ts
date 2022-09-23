@@ -3,7 +3,7 @@ import * as fs from "fs";
 import {
   AccountId,
 } from "@hashgraph/sdk";
-import { Deployment } from "./deployContractOnTestnet";
+import { EtherDeployment } from "./deployContractOnTestnet";
 import { DeployedContract } from "./model/contract";
 import { ContractService } from "./service/ContractService";
 dotenv.config();
@@ -15,7 +15,7 @@ async function main() {
     const contractBeingDeployed: DeployedContract = contractService.getContract(contractName);
     const contractAddress = contractBeingDeployed.address;
     const adminId = AccountId.fromString(process.env.ADMIN_ID!);
-    const deployment = new Deployment();
+    const deployment = new EtherDeployment();
     const filePath = "./artifacts/@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol/TransparentUpgradeableProxy.json";
     const deployedContractAddress = await deployment.deployContract(filePath, [contractAddress, adminId.toSolidityAddress(), []]);
     console.log(`TransparentUpgradeableProxy deployed - ${deployedContractAddress}`); 
