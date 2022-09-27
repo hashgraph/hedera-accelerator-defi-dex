@@ -13,7 +13,7 @@ const clientManagement = new ClientManagement();
 const contractService = new ContractService();
 
 const htsServiceAddress = contractService.getContract(contractService.baseContractName).address;
-const lpTokenContractAddress = contractService.getContract(contractService.lpTokenContractName).address
+const lpTokenContract = contractService.getContract(contractService.lpTokenContractName);
 const client = clientManagement.createClient();
 
 const tokenA = TokenId.fromString("0.0.48289687").toSolidityAddress();
@@ -38,7 +38,7 @@ const initialize = async () => {
       "initialize",
       new ContractFunctionParameters()
         .addAddress(htsServiceAddress)
-        .addAddress(lpTokenContractAddress)
+        .addAddress(lpTokenContract.address)
     )
     .freezeWith(client)
     .sign(treasureKey);
@@ -300,7 +300,7 @@ const getPrecisionValue = async () => {
 };
 
 async function main() {
-  console.log(`Using contractId ${contractId}`);
+  console.log(`Using contractId ${contractId} and LP token contract id ${lpTokenContract.id}`);
   //await initialize();
   await getPrecisionValue();
   await getTreasureBalance();

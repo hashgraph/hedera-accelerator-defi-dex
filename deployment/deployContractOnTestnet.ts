@@ -121,20 +121,19 @@ export class Deployment {
   private clientManagement = new ClientManagement();
   
   public deployContract = async (
+    clientArg: Client =  this.clientManagement.createClientAsAdmin(),
+    operatorKey: PrivateKey = this.clientManagement.getAdmin().adminKey,
     filePath: string,
     contractConstructorArgs: Array<any>
-  ) => {
-    const client =  this.clientManagement.createClientAsAdmin();
-    const {adminKey: operatorKey} = this.clientManagement.getAdmin();
-    
+  ) => {  
     console.log(`\nSTEP 1 - Create file`);
     const rawdata: any = fs.readFileSync(filePath);
     const compiledContract = JSON.parse(rawdata);
     const contractByteCode = compiledContract.bytecode;
 
     //Create a file on Hedera and store the hex-encoded bytecode
-    const fileCreateTx = await new FileCreateTransaction().setKeys([operatorKey]).execute(client);
-    const fileCreateRx = await fileCreateTx.getReceipt(client);
+    const fileCreateTx = await new FileCreateTransaction().setKeys([operatorKey]).execute(clientArg);
+    const fileCreateRx = await fileCreateTx.getReceipt(clientArg);
     const bytecodeFileId = fileCreateRx.fileId;
     console.log(`- The smart contract bytecode file ID is: ${bytecodeFileId}`);
 
@@ -143,8 +142,8 @@ export class Deployment {
         .setFileId(bytecodeFileId ?? "")
         .setContents(contractByteCode)
         .setMaxChunks(50)
-        .execute(client);
-    await fileAppendTx.getReceipt(client);
+        .execute(clientArg);
+    await fileAppendTx.getReceipt(clientArg);
     console.log(`- Content added`);
 
     console.log(`\nSTEP 2 - Create contract`);
@@ -152,15 +151,15 @@ export class Deployment {
         .setAdminKey(operatorKey)
         .setBytecodeFileId(bytecodeFileId ?? "")
         .setGas(2000000)
-        .execute(client);
+        .execute(clientArg);
 
-    const contractCreateRx = await contractCreateTx.getReceipt(client);
+    const contractCreateRx = await contractCreateTx.getReceipt(clientArg);
     const contractId = contractCreateRx.contractId;
     console.log(`- Contract created ${contractId?.toString()}, Contract Address ${contractId?.toSolidityAddress()}`);
 
     await this.contractService.saveDeployedContract(contractId?.toString()!, contractId?.toSolidityAddress()!, compiledContract.contractName);
 
-    client.close();
+    clientArg.close();
     return contractId?.toString()!;
   }
 }
