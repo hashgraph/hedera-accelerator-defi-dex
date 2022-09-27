@@ -95,7 +95,7 @@ abstract contract AbstractSwap is HederaResponseCodes {
         return (tokenAQuantity, tokenBQuantity);
     }
 
-    function swapToken(address to, address _tokenA, address _tokenB, int64 _deltaAQty, int64 _deltaBQty) external {
+    function swapToken(address to, address _tokenA, address _tokenB, int _deltaAQty, int _deltaBQty) external {
         require(_tokenA == pair.tokenA.tokenAddress || _tokenB == pair.tokenB.tokenAddress, "Pls pass correct token to swap.");
 
         if (_tokenA == pair.tokenA.tokenAddress) {

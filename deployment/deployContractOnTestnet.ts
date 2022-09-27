@@ -1,10 +1,29 @@
 import dotenv from "dotenv";
 import * as fs from "fs";
-import { PrivateKey } from "@hashgraph/sdk";
+import {
+  TokenCreateTransaction, 
+  FileCreateTransaction, 
+  FileAppendTransaction, 
+  AccountId, 
+  PrivateKey,
+  ContractCreateTransaction, 
+  TokenType, 
+  TokenSupplyType, 
+  Hbar, 
+  Client, 
+  ContractExecuteTransaction,
+  ContractFunctionParameters,
+} from "@hashgraph/sdk";
 import * as hethers from "@hashgraph/hethers";
+import { ContractService } from "./service/ContractService";
+import ClientManagement from "../integrationTest/utils/utils";
+
 dotenv.config();
 
-export class Deployment {
+export class EtherDeployment {
+
+  private contractService = new ContractService();
+
   private createProvider = (): any => {
     return new hethers.providers.HederaProvider(
       "0.0.5", // AccountLike
@@ -20,7 +39,7 @@ export class Deployment {
     };
   };
 
-  private getCompiledContract = (filePath: string) => {
+  private readFileContent = (filePath: string) => {
     const rawdata: any = fs.readFileSync(filePath);
     return JSON.parse(rawdata);
   };
@@ -61,7 +80,7 @@ export class Deployment {
     // STEP 2 - DEPLOY THE CONTRACT
     console.log(`\n- STEP 2 ===================================`);
 
-    const compiledContract = this.getCompiledContract(filePath);
+    const compiledContract = this.readFileContent(filePath);
 
     const factory = new hethers.ContractFactory(
       compiledContract.abi,
@@ -83,6 +102,8 @@ export class Deployment {
     const contractDeployWait = await contract.deployTransaction.wait();
     console.log(`\n- Contract deployment status: ${contractDeployWait.status!.toString()}`);
 
+    await this.contractService.recordDeployedContract(contract.address, compiledContract.contractName);
+
     // Get the address of the deployed contract
     const contractAddress = contract.address;
     console.log(`\n- Contract address: ${contractAddress}  Contract Address: ${contract.contractId}`);
@@ -92,4 +113,53 @@ export class Deployment {
     console.log(`\n- DONE ===================================`);
     return contractAddress;
   };
+}
+
+
+export class Deployment {
+  private contractService = new ContractService();
+  private clientManagement = new ClientManagement();
+  
+  public deployContract = async (
+    clientArg: Client =  this.clientManagement.createClientAsAdmin(),
+    operatorKey: PrivateKey = this.clientManagement.getAdmin().adminKey,
+    filePath: string,
+    contractConstructorArgs: Array<any>
+  ) => {  
+    console.log(`\nSTEP 1 - Create file`);
+    const rawdata: any = fs.readFileSync(filePath);
+    const compiledContract = JSON.parse(rawdata);
+    const contractByteCode = compiledContract.bytecode;
+
+    //Create a file on Hedera and store the hex-encoded bytecode
+    const fileCreateTx = await new FileCreateTransaction().setKeys([operatorKey]).execute(clientArg);
+    const fileCreateRx = await fileCreateTx.getReceipt(clientArg);
+    const bytecodeFileId = fileCreateRx.fileId;
+    console.log(`- The smart contract bytecode file ID is: ${bytecodeFileId}`);
+
+    // Append contents to the file
+    const fileAppendTx = await new FileAppendTransaction()
+        .setFileId(bytecodeFileId ?? "")
+        .setContents(contractByteCode)
+        .setMaxChunks(50)
+        .execute(clientArg);
+    await fileAppendTx.getReceipt(clientArg);
+    console.log(`- Content added`);
+
+    console.log(`\nSTEP 2 - Create contract`);
+    const contractCreateTx = await new ContractCreateTransaction()
+        .setAdminKey(operatorKey)
+        .setBytecodeFileId(bytecodeFileId ?? "")
+        .setGas(2000000)
+        .execute(clientArg);
+
+    const contractCreateRx = await contractCreateTx.getReceipt(clientArg);
+    const contractId = contractCreateRx.contractId;
+    console.log(`- Contract created ${contractId?.toString()}, Contract Address ${contractId?.toSolidityAddress()}`);
+
+    await this.contractService.saveDeployedContract(contractId?.toString()!, contractId?.toSolidityAddress()!, compiledContract.contractName);
+
+    clientArg.close();
+    return contractId?.toString()!;
+  }
 }
