@@ -1,5 +1,4 @@
 import { BigNumber } from "bignumber.js";
-import {  expect } from "chai";
 import {
   TokenId,
   ContractExecuteTransaction,
@@ -17,12 +16,19 @@ const htsServiceAddress = contractService.getContract(contractService.baseContra
 const lpTokenContractAddress = contractService.getContract(contractService.lpTokenContractName).address
 const client = clientManagement.createClient();
 
-const tokenA = TokenId.fromString("0.0.47646195").toSolidityAddress();
-let tokenB = TokenId.fromString("0.0.47646196").toSolidityAddress();
+const tokenA = TokenId.fromString("0.0.48289687").toSolidityAddress();
+let tokenB = TokenId.fromString("0.0.48289686").toSolidityAddress();
 
 const {treasureId, treasureKey} = clientManagement.getTreasure();
 
-const contractId = contractService.getContractWithProxy("swap").transparentProxyId!;
+const contractId = contractService.getContractWithProxy("swap").id!;
+//const contractId = contractService.getContract("swap").id!;
+
+let precision = 0;
+
+const withPrecision = (value: number): BigNumber => {
+  return new BigNumber(value).multipliedBy(precision);
+}
 
 const initialize = async () => {
   const initialize = await new ContractExecuteTransaction()
@@ -49,8 +55,8 @@ const getTreasureBalance = async () => {
 }
 
 const createLiquidityPool = async () => {
-  const tokenAQty = new BigNumber(10);
-  const tokenBQty = new BigNumber(10);
+  const tokenAQty = withPrecision(200);
+  const tokenBQty = withPrecision(220);
   console.log(
     `Creating a pool of ${tokenAQty} units of token A and ${tokenBQty} units of token B.`
   );
@@ -75,8 +81,8 @@ const createLiquidityPool = async () => {
 };
 
 const addLiquidity = async () => {
-  const tokenAQty = new BigNumber(10);
-  const tokenBQty = new BigNumber(10);
+  const tokenAQty = withPrecision(10);
+  const tokenBQty = withPrecision(10);
   console.log(
     `Adding ${tokenAQty} units of token A and ${tokenBQty} units of token B to the pool.`
   );
@@ -99,13 +105,10 @@ const addLiquidity = async () => {
 
   console.log(`Liquidity added status: ${transferTokenRx.status}`);
   const result = await pairCurrentPosition();
-  expect(Number(result[0])).to.be.equals(20);
-  expect(Number(result[1])).to.be.equals(20);
 };
 
 const removeLiquidity = async () => {
-  const lpToken = new BigNumber(5);
-  const tokenBQty = new BigNumber(1);
+  const lpToken = withPrecision(5);
   console.log(
     `Removing ${lpToken} units of LPToken from the pool.`
   );
@@ -128,8 +131,8 @@ const removeLiquidity = async () => {
 };
 
 const swapTokenA = async () => {
-  const tokenAQty = new BigNumber(5);
-  const tokenBQty = new BigNumber(0);
+  const tokenAQty = withPrecision(1);
+  const tokenBQty = withPrecision(0);
   console.log(`Swapping a ${tokenAQty} units of token A from the pool.`);
   // Need to pass different token B address so that only swap of token A is considered.
   tokenB = TokenId.fromString("0.0.47646100").toSolidityAddress();
@@ -217,7 +220,7 @@ const getVariantValue = async () => {
 };
 
 const getOutGivenIn =async () => {
-  const tokenAQty = new BigNumber(10);
+  const tokenAQty = withPrecision(10);
   const getOutGivenIn = await new ContractExecuteTransaction()
     .setContractId(contractId)
     .setGas(1000000)
@@ -233,7 +236,7 @@ const getOutGivenIn =async () => {
 };
 
 const getInGivenOut =async () => {
-  const tokenBQty = new BigNumber(11);
+  const tokenBQty = withPrecision(11);
   const getInGivenOut = await new ContractExecuteTransaction()
     .setContractId(contractId)
     .setGas(1000000)
@@ -248,8 +251,58 @@ const getInGivenOut =async () => {
   console.log(`For tokenBQty ${tokenBQty} the getInGivenOut tokenAQty is ${tokenAQty}. \n`);
 };
 
+const slippageOutGivenIn = async () => {
+  const tokenAQty = withPrecision(10);
+  const slippageOutGivenInTx = await new ContractExecuteTransaction()
+    .setContractId(contractId)
+    .setGas(1000000)
+    .setFunction("slippageOutGivenIn",
+      new ContractFunctionParameters()
+            .addInt256(tokenAQty))
+    .freezeWith(client);
+  const slippageOutGivenInTxResult = await slippageOutGivenInTx.execute(client);
+  const response = await slippageOutGivenInTxResult.getRecord(client);
+  const tokenBQty = response.contractFunctionResult!.getInt256(0);
+
+  console.log(`For tokenAQty ${tokenAQty} the slippageOutGivenIn tokenBQty is ${tokenBQty}. \n`);
+};
+
+const slippageInGivenOut = async () => {
+  const tokenBQty = withPrecision(12);
+  const slippageInGivenOutTx = await new ContractExecuteTransaction()
+    .setContractId(contractId)
+    .setGas(1000000)
+    .setFunction("slippageInGivenOut",
+      new ContractFunctionParameters()
+            .addInt256(tokenBQty))
+    .freezeWith(client);
+  const slippageInGivenOuTxResult = await slippageInGivenOutTx.execute(client);
+  const response = await slippageInGivenOuTxResult.getRecord(client);
+  const tokenAQty = response.contractFunctionResult!.getInt256(0);
+
+  console.log(`For tokenbQty ${tokenBQty} the slippageOutGivenIn tokenAQty is ${tokenAQty}. \n`);
+};
+
+const getPrecisionValue = async () => {
+  const getPrecisionValueTx = await new ContractExecuteTransaction()
+    .setContractId(contractId)
+    .setGas(1000000)
+    .setFunction("getPrecisionValue",
+      new ContractFunctionParameters())
+    .freezeWith(client);
+  const getPrecisionValueTxRes = await getPrecisionValueTx.execute(client);
+  const response = await getPrecisionValueTxRes.getRecord(client);
+  const precisionLocal = response.contractFunctionResult!.getInt256(0);
+
+  precision = Number(precisionLocal);
+
+  console.log(` getPrecisionValue ${precision}`);
+};
+
 async function main() {
-  await initialize();
+  console.log(`Using contractId ${contractId}`);
+  //await initialize();
+  await getPrecisionValue();
   await getTreasureBalance();
   await createLiquidityPool();
   await getTreasureBalance();
@@ -258,11 +311,13 @@ async function main() {
   await removeLiquidity();
   await getTreasureBalance();
   await swapTokenA();
-  await getTreasureBalance();
   await spotPrice();
   await getVariantValue();
   await getOutGivenIn();
   await getInGivenOut();
+  await pairCurrentPosition();
+  await slippageOutGivenIn();
+  await slippageInGivenOut();
 }
 
 main()
