@@ -21,12 +21,15 @@ const client = clientManagement.createClient();
 
 const htsServiceAddress = contractService.getContract(contractService.baseContractName).address;
 const {treasureId, treasureKey} = clientManagement.getTreasure();
-const {tokenUserId, tokenUserKey} = clientManagement.getTokenUser();
+const {adminId, adminKey} = clientManagement.getAdmin();
+const adminClient = clientManagement.createClientAsAdmin();
 
 const baseContract = contractService.getContract(contractService.baseContractName);
 const contractId = contractService.getContract(contractService.lpTokenContractName).id;
 
 const createToken =  async (): Promise<TokenId> => {
+  console.log(`Using base contract id ${baseContract.id} `);
+
   const createTokenTx = await new TokenCreateTransaction()
     .setTokenName("hhLP-L49A-L49B")
     .setTokenSymbol("LabA-LabB")
@@ -37,15 +40,17 @@ const createToken =  async (): Promise<TokenId> => {
     //create the token with the contract as supply and treasury
     .setSupplyKey(ContractId.fromString(baseContract.id))
     .setTreasuryAccountId(baseContract.id)
-    .execute(client);
+    .execute(adminClient);
 
-    const tokenCreateTx = await createTokenTx.getReceipt(client);
+    const tokenCreateTx = await createTokenTx.getReceipt(adminClient);
     const tokenId = tokenCreateTx.tokenId;
-    console.log(`- Token created ${tokenId}, Token Address ${tokenId?.toSolidityAddress()}`);
+    console.log(`Token created ${tokenId}, Token Address ${tokenId?.toSolidityAddress()}`);
     return tokenId!;
 }
 
 const initialize = async (tokenId: TokenId) => {
+  console.log(`Initialize contract with token ${tokenId.toString()} `);
+
     let contractFunctionParameters = new ContractFunctionParameters()
       .addAddress(tokenId.toSolidityAddress())
       .addAddress(htsServiceAddress);
@@ -57,11 +62,15 @@ const initialize = async (tokenId: TokenId) => {
       .execute(client);
       
     await contractTokenTx.getReceipt(client);
+
+  console.log(`Initialize contract with token ${tokenId.toString()} done.`);
 }
 
 const allotLPTokenFor = async () => {
     const tokenAQty = new BigNumber(10);
     const tokenBQty = new BigNumber(10);
+
+    console.log(`allotLPTokenFor tokenAQty ${tokenAQty} tokenBQty ${tokenBQty}`);
   
     const contractFunctionParameters = new ContractFunctionParameters()
         .addInt256(tokenAQty)
@@ -77,17 +86,18 @@ const allotLPTokenFor = async () => {
     const contractAllotRx = await contractAllotTx.getReceipt(client);
     const response = await contractAllotTx.getRecord(client);
     const status = contractAllotRx.status;
-    console.log(`\n allotLPTokenFor Result ${status} code: ${response.contractFunctionResult!.getInt64()}`);
+    console.log(`allotLPTokenFor result ${status} code: ${response.contractFunctionResult!.getInt64()}`);
 }
 
 const removeLPTokenFor = async () => {
   const lpTokenQty = new BigNumber(5);
 
+  console.log(`removeLPTokenFor ${lpTokenQty}`);
+
   const contractFunctionParameters = new ContractFunctionParameters()
       .addInt256(lpTokenQty)
       .addAddress(treasureId.toSolidityAddress());
 
-  console.log(`\n STEP 2 Remove LP Token`);
   const contractRemoveTx0 = await new ContractExecuteTransaction()
       .setContractId(contractId)
       .setFunction("removeLPTokenFor", contractFunctionParameters)
@@ -99,15 +109,15 @@ const removeLPTokenFor = async () => {
   const contractRemoveRx = await contractRemoveTx.getReceipt(client);
   const response = await contractRemoveTx.getRecord(client);
   const status = contractRemoveRx.status;
-  console.log(`\n Remove LP Token ${status} code: ${response.contractFunctionResult!.getInt64()}`);
+  console.log(`Remove LP Token ${status} code: ${response.contractFunctionResult!.getInt64()}`);
 }
 
-const getBalance = async() => {
+const getBalance = async(tokenId: TokenId) => {
   const balance = await new AccountBalanceQuery()
   .setAccountId(treasureId)
   .execute(client);
 
-  console.log(balance.tokens);
+  console.log(balance.tokens?.get(tokenId.toString()));
 }
 
 async function main() {
@@ -115,7 +125,7 @@ async function main() {
   await initialize(tokenId);
   await allotLPTokenFor();
   await removeLPTokenFor();
-  await getBalance();
+  await getBalance(tokenId);
 }
 
 main()

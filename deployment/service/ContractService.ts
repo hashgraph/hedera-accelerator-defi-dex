@@ -20,6 +20,37 @@ export class ContractService {
         return contractId.contract_id;
     }
    
+    public saveDeployedContract = async (contractId: string, contractAddress: string, contractName: string) => {
+        const contractNameLowerCase = contractName.toLowerCase();
+
+        if (contractNameLowerCase === "transparentupgradeableproxy") {
+            return;
+        }
+
+        const contracts: [DeployedContract] = this.readFileContent();
+
+        console.log(`Contract id ${contractId}`);
+
+        const newContract: DeployedContract = {
+            name: contractNameLowerCase,
+            id: contractId,
+            address: "0x" + contractAddress,
+            timestamp: new Date().toISOString()
+        }
+
+        const contractsWithNewContract = [
+            ...contracts,
+            newContract
+        ]
+
+        const data = JSON.stringify(contractsWithNewContract, null, 4);
+
+        console.log(`Contract details ${data}`);
+
+        fs.writeFileSync(this.contractRecordFile, data);
+    }
+
+   
     public recordDeployedContract = async (contractAddress: string, contractName: string) => {
         const contractNameLowerCase = contractName.toLowerCase();
 
