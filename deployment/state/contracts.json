@@ -59,6 +59,8 @@
         "name": "swap",
         "id": "0.0.48451441",
         "address": "0x0000000000000000000000000000000002e34f71",
-        "timestamp": "2022-09-27T10:19:49.343Z"
+        "timestamp": "2022-09-27T10:33:21.564Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e34fab",
+        "transparentProxyId": "0.0.48451499"
     }
 ]
