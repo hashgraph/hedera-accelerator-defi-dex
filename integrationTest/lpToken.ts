@@ -2,14 +2,7 @@ import { BigNumber } from "bignumber.js";
 import {
   ContractExecuteTransaction,
   ContractFunctionParameters,
-  ContractId,
-  AccountBalanceQuery,
-  TokenCreateTransaction,
-  TokenType,
-  TokenSupplyType,
-  TokenId,
-  AccountId,
-  PrivateKey
+  Hbar,
 } from "@hashgraph/sdk";
 
 import ClientManagement from "./utils/utils";
@@ -17,58 +10,41 @@ import { ContractService } from "../deployment/service/ContractService";
 
 const clientManagement = new ClientManagement();
 const contractService = new ContractService();
-const client = clientManagement.createClient();
+let client = clientManagement.createOperatorClient();
+const {key} = clientManagement.getOperator();
+client = client.setDefaultMaxTransactionFee(new Hbar(100));
 
 const htsServiceAddress = contractService.getContract(contractService.baseContractName).address;
 const {treasureId, treasureKey} = clientManagement.getTreasure();
-const {adminId, adminKey} = clientManagement.getAdmin();
-const adminClient = clientManagement.createClientAsAdmin();
 
-const baseContract = contractService.getContract(contractService.baseContractName);
 const lpContracts = contractService.getLast3Contracts(contractService.lpTokenContractName); //"0.0.48461951"
 
-const createToken =  async (tokenName: string, symbol: string): Promise<TokenId> => {
-  console.log(`Using base contract id ${baseContract.id} `);
+const contractId = contractService.getContractWithProxy(contractService.lpTokenContractName).transparentProxyId!;
 
-  const createTokenTx = await new TokenCreateTransaction()
-    .setTokenName(tokenName)
-    .setTokenSymbol(symbol)
-    .setDecimals(8)
-    .setInitialSupply(0)
-    .setTokenType(TokenType.FungibleCommon)
-    .setSupplyType(TokenSupplyType.Infinite)
-    //create the token with the contract as supply and treasury
-    .setSupplyKey(ContractId.fromString(baseContract.id))
-    .setTreasuryAccountId(baseContract.id)
-    .execute(adminClient);
+const precision = 10000000;
 
-    const tokenCreateTx = await createTokenTx.getReceipt(adminClient);
-    const tokenId = tokenCreateTx.tokenId;
-    console.log(`Token created ${tokenId}, Token Address ${tokenId?.toSolidityAddress()}`);
-    return tokenId!;
-}
-
-const initialize = async (tokenId: TokenId, contractId: string) => {
-  console.log(`Initialize contract with token ${tokenId.toString()} `);
+const initialize = async (contId: string) => {
+  console.log(`Initialize contract with token  `);
 
     let contractFunctionParameters = new ContractFunctionParameters()
-      .addAddress(tokenId.toSolidityAddress())
       .addAddress(htsServiceAddress);
 
     const contractTokenTx = await new ContractExecuteTransaction()
-      .setContractId(contractId ?? "")
+      .setContractId(contId)
       .setFunction("initializeParams", contractFunctionParameters)
       .setGas(500000)
+      .setMaxTransactionFee(new Hbar(50))
+      .setPayableAmount(new Hbar(60))
       .execute(client);
       
     await contractTokenTx.getReceipt(client);
 
-  console.log(`Initialize contract with token ${tokenId.toString()} done.`);
+  console.log(`Initialize contract with token done.`);
 }
 
-const allotLPTokenFor = async (contractId: string) => {
-    const tokenAQty = new BigNumber(10);
-    const tokenBQty = new BigNumber(10);
+const allotLPTokenFor = async (contId: string) => {
+    const tokenAQty = new BigNumber(10).multipliedBy(precision);
+    const tokenBQty = new BigNumber(10).multipliedBy(precision);
 
     console.log(`allotLPTokenFor tokenAQty ${tokenAQty} tokenBQty ${tokenBQty}`);
   
@@ -78,61 +54,119 @@ const allotLPTokenFor = async (contractId: string) => {
         .addAddress(treasureId.toSolidityAddress());
 
     const contractAllotTx = await new ContractExecuteTransaction()
-        .setContractId(contractId)
+        .setContractId(contId)
         .setFunction("allotLPTokenFor", contractFunctionParameters)
         .setGas(900000)
-        .execute(client);
+        .setMaxTransactionFee(new Hbar(50))
+        .setPayableAmount(new Hbar(60))
+        .freezeWith(client);
+    
+    const signTx = await contractAllotTx.sign(treasureKey);//For associating a token to treasurer
 
-    const contractAllotRx = await contractAllotTx.getReceipt(client);
-    const response = await contractAllotTx.getRecord(client);
+    const executedTx = await contractAllotTx.execute(client);
+
+    const response = await executedTx.getRecord(client);
+    const contractAllotRx = await executedTx.getReceipt(client);
+  
     const status = contractAllotRx.status;
     console.log(`allotLPTokenFor result ${status} code: ${response.contractFunctionResult!.getInt64()}`);
 }
 
-const removeLPTokenFor = async (contractId: string) => {
-  const lpTokenQty = new BigNumber(5);
+const removeLPTokenFor = async (contId: string) => {
+  const lpTokenQty = new BigNumber(5).multipliedBy(precision);
 
   console.log(`removeLPTokenFor ${lpTokenQty}`);
 
   const contractFunctionParameters = new ContractFunctionParameters()
       .addInt256(lpTokenQty)
       .addAddress(treasureId.toSolidityAddress());
-
+      
   const contractRemoveTx0 = await new ContractExecuteTransaction()
-      .setContractId(contractId)
+      .setContractId(contId)
       .setFunction("removeLPTokenFor", contractFunctionParameters)
       .setGas(3000000)
       .freezeWith(client)
-      .sign(treasureKey);
+      .sign(key);
 
-  const contractRemoveTx = await contractRemoveTx0.execute(client);
+  const signTx = await contractRemoveTx0.sign(treasureKey);//For associating a token to treasurer
+
+  const contractRemoveTx = await signTx.execute(client);
   const contractRemoveRx = await contractRemoveTx.getReceipt(client);
   const response = await contractRemoveTx.getRecord(client);
   const status = contractRemoveRx.status;
   console.log(`Remove LP Token ${status} code: ${response.contractFunctionResult!.getInt64()}`);
 }
 
-const getBalance = async(tokenId: TokenId) => {
-  const balance = await new AccountBalanceQuery()
-  .setAccountId(treasureId)
-  .execute(client);
+const getAllLPTokenCount = async(contId: string) => {
 
-  console.log(balance.tokens?.get(tokenId.toString()));
+  console.log(`getAllLPTokenCount`);
+
+  const contractFunctionParameters = new ContractFunctionParameters();
+    
+  const contractRemoveTx0 = await new ContractExecuteTransaction()
+      .setContractId(contId)
+      .setFunction("getAllLPTokenCount", contractFunctionParameters)
+      .setGas(2000000)
+      .freezeWith(client)
+      .sign(key);
+
+  const signTx = await contractRemoveTx0.sign(treasureKey);//For associating a token to treasurer
+
+  const contractRemoveTx = await signTx.execute(client);
+  const contractRemoveRx = await contractRemoveTx.getReceipt(client);
+  const response = await contractRemoveTx.getRecord(client);
+  const status = contractRemoveRx.status;
+  console.log(`getAllLPTokenCount code: ${response.contractFunctionResult!.getInt256()}`);
 }
+
+const lpTokenForUser = async(contId: string) => {
+
+  console.log(`lpTokenForUser`);
+
+  const contractFunctionParameters = new ContractFunctionParameters()
+    .addAddress(treasureId.toSolidityAddress());
+    
+  const contractRemoveTx0 = await new ContractExecuteTransaction()
+      .setContractId(contId)
+      .setFunction("lpTokenForUser", contractFunctionParameters)
+      .setGas(2000000)
+      .freezeWith(client)
+      .sign(key);
+
+  const contractRemoveTx = await contractRemoveTx0.execute(client);
+  const contractRemoveRx = await contractRemoveTx.getReceipt(client);
+  const response = await contractRemoveTx.getRecord(client);
+  const status = contractRemoveRx.status;
+  console.log(`lpTokenForUser code: ${response.contractFunctionResult!.getInt256()}`);
+}
+
+const getLpTokenAddress = async (contId: string) => {
+  const getPrecisionValueTx = await new ContractExecuteTransaction()
+    .setContractId(contId)
+    .setGas(1000000)
+    .setFunction("getLpTokenAddress",
+      new ContractFunctionParameters())
+    .freezeWith(client);
+  const getPrecisionValueTxRes = await getPrecisionValueTx.execute(client);
+  const response = await getPrecisionValueTxRes.getRecord(client);
+  const address = response.contractFunctionResult!.getAddress(0);
+
+  console.log(`Lp token address ${address}`);
+};
 
 async function main() {
-  
-    await forSingleContract(lpContracts[0].id, "hhLP-L49A-L49B", "LabA-LabB")
-    await forSingleContract(lpContracts[1].id, "hhLP-L49C-L49D", "LabC-LabD")
-    await forSingleContract(lpContracts[2].id, "hhLP-L49E-L49F", "LabE-LabF")
+  await forSingleContract(lpContracts[0].id)
+  await forSingleContract(lpContracts[1].id)
+  await forSingleContract(lpContracts[2].id)
 }
 
-async function forSingleContract(contractId: string, tokenName:string, tokenSymbol: string) {
-  const tokenId = await createToken(tokenName, tokenSymbol);
-  await initialize(tokenId, contractId);
+async function forSingleContract(contractId: string) {
+  await initialize(contractId);
+  await getLpTokenAddress(contractId);
   await allotLPTokenFor(contractId);
   await removeLPTokenFor(contractId);
-  await getBalance(tokenId);
+  await getAllLPTokenCount(contractId);
+  await lpTokenForUser(contractId); 
 }
 
 main()

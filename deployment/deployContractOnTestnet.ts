@@ -1,17 +1,11 @@
 import dotenv from "dotenv";
 import * as fs from "fs";
 import {
-  TokenCreateTransaction, 
   FileCreateTransaction, 
   FileAppendTransaction, 
-  AccountId, 
   PrivateKey,
   ContractCreateTransaction, 
-  TokenType, 
-  TokenSupplyType, 
-  Hbar, 
   Client, 
-  ContractExecuteTransaction,
   ContractFunctionParameters,
 } from "@hashgraph/sdk";
 import * as hethers from "@hashgraph/hethers";
@@ -119,13 +113,37 @@ export class EtherDeployment {
 export class Deployment {
   private contractService = new ContractService();
   private clientManagement = new ClientManagement();
+
+  public deployContractAsAdmin = async (
+      filePath: string,
+      contractConstructorArgs: ContractFunctionParameters = new ContractFunctionParameters()
+    ) => {
+        return this.deployContract(
+            this.clientManagement.createClientAsAdmin(),
+            this.clientManagement.getAdmin().adminKey,
+            filePath,
+            contractConstructorArgs
+        );
+    }
+
+    public deployContractAsClient = async (
+      filePath: string,
+      contractConstructorArgs: ContractFunctionParameters = new ContractFunctionParameters()
+    ) => {
+        return this.deployContract(
+            this.clientManagement.createOperatorClient(),
+            this.clientManagement.getOperator().key,
+            filePath,
+            contractConstructorArgs
+        );
+    }
   
-  public deployContract = async (
+  private deployContract = async (
+    clientArg: Client,
+    operatorKey: PrivateKey,
     filePath: string,
-    contractConstructorArgs: Array<any>
+    contractConstructorArgs: ContractFunctionParameters = new ContractFunctionParameters()
   ) => {  
-    const clientArg: Client =  this.clientManagement.createClientAsAdmin();
-    const operatorKey: PrivateKey = this.clientManagement.getAdmin().adminKey;
     console.log(`\nSTEP 1 - Create file`);
     const rawdata: any = fs.readFileSync(filePath);
     const compiledContract = JSON.parse(rawdata);
@@ -150,6 +168,7 @@ export class Deployment {
     const contractCreateTx = await new ContractCreateTransaction()
         .setAdminKey(operatorKey)
         .setBytecodeFileId(bytecodeFileId ?? "")
+        .setConstructorParameters(contractConstructorArgs)
         .setGas(2000000)
         .execute(clientArg);
 
@@ -160,6 +179,6 @@ export class Deployment {
     await this.contractService.saveDeployedContract(contractId?.toString()!, contractId?.toSolidityAddress()!, compiledContract.contractName);
 
     clientArg.close();
-    return contractId?.toString()!;
+    return { id: contractId?.toString()!,  address: "0x" + contractId?.toSolidityAddress()! };
   }
 }

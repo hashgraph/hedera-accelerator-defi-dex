@@ -22,13 +22,22 @@ contract PairTest is AbstractPair {
         lpTokenContract = _lpTokenContract;
     }
 
-    function associateToken(address account,  address token) internal override  virtual returns(int) {
-        
-        return  tokenService.associateTokenPublic(account, token);
+    function associateToken(address account, address token)
+        internal
+        virtual
+        override
+        returns (int256)
+    {
+        return tokenService.associateTokenPublic(account, token);
     }
 
-    function transferToken(address token, address sender, address receiver, int amount) internal override virtual returns(int) {
-        
-        return tokenService.transferTokenPublic(token, sender, receiver, amount);
+    function transferToken(
+        address token,
+        address sender,
+        address receiver,
+        int256 amount
+    ) internal virtual override returns (int256) {
+        return
+            tokenService.transferTokenPublic(token, sender, receiver, amount);
     }
 }

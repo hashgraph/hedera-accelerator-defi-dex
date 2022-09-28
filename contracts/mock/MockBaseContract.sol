@@ -106,4 +106,12 @@ contract MockBaseHTS is IBaseHTS {
             return ((isSuccess) ? int(22) : int(23), amount);
     }
 
+    function createFungibleTokenPublic(IHederaTokenService.HederaToken memory , 
+        uint , 
+        uint) external payable       override
+returns (int responseCode, address tokenAddress){
+            return isSuccess ? (int(22), address(0x1))
+             : (int(23),  address(0x0));
+        }
+
 }

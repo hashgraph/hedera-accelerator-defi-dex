@@ -386,7 +386,7 @@ describe("All Tests", function () {
       mockBaseHTS.setFailType(11);
       const tokenBeforeQty = await swapV2.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(100));
-      await lpTokenCont.initializeParams(zeroAddress, zeroAddress);
+      //await lpTokenCont.initializeParams(zeroAddress);
       await expect(lpTokenCont.allotLPTokenFor(0, 10, zeroAddress)).to.revertedWith("Please provide positive token counts");
     });
 
@@ -395,7 +395,7 @@ describe("All Tests", function () {
       mockBaseHTS.setFailType(11);
       const tokenBeforeQty = await swapV2.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(100));
-      await lpTokenCont.initializeParams(newZeroAddress, newZeroAddress)
+      //await lpTokenCont.initializeParams(newZeroAddress, newZeroAddress)
       await expect(lpTokenCont.removeLPTokenFor(10, zeroAddress)).to.revertedWith("Liquidity Token not initialized");
     });
 
@@ -408,8 +408,7 @@ describe("All Tests", function () {
     });
 
     it("allotLPToken check LP Tokens", async function () {
-      const { swapV2, mockBaseHTS, lpTokenCont } = await loadFixture(deployFixture);
-      mockBaseHTS.setFailType(11);
+      const { swapV2, lpTokenCont } = await loadFixture(deployFixture);
       const tokenBeforeQty = await swapV2.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(100));
       await lpTokenCont.allotLPTokenFor(10, 10, userAddress);

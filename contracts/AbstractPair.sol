@@ -39,10 +39,10 @@ abstract contract AbstractPair is IPair, HederaResponseCodes {
         associateToken(address(this),  _tokenA);
         associateToken(address(this),  _tokenB);    
 
-        int response = tokenService.transferTokenPublic(_tokenA, fromAccount, address(this), _tokenAQty);
+        int response = transferToken(_tokenA, fromAccount, address(this), _tokenAQty);
         require(response == HederaResponseCodes.SUCCESS, "Creating contract: Transfering token A to contract failed with status code");
 
-        response = tokenService.transferTokenPublic(_tokenB, fromAccount, address(this), _tokenBQty);
+        response = transferToken(_tokenB, fromAccount, address(this), _tokenBQty);
         require(response == HederaResponseCodes.SUCCESS, "Creating contract: Transfering token B to contract failed with status code");
         lpTokenContract.allotLPTokenFor(_tokenAQty, _tokenBQty, fromAccount);
     }
@@ -81,7 +81,7 @@ abstract contract AbstractPair is IPair, HederaResponseCodes {
 
     }
 
-    function calculateTokenstoGetBack(int _lpToken) internal view returns (int, int) {
+    function calculateTokenstoGetBack(int _lpToken) internal returns (int, int) {
         int allLPTokens = lpTokenContract.getAllLPTokenCount();
 
         int tokenAQuantity = (_lpToken * pair.tokenA.tokenQty)/allLPTokens;
