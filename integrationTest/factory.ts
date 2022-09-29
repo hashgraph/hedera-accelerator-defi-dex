@@ -156,8 +156,8 @@ const swapTokenA = async (contractId: string, token0: string, token1: string) =>
         .addAddress(treasureId.toSolidityAddress())
         .addAddress(token0)
         .addAddress(token1)
-        .addInt64(tokenAQty)
-        .addInt64(tokenBQty)
+        .addInt256(tokenAQty)
+        .addInt256(tokenBQty)
     )
     .freezeWith(client)
     .sign(treasureKey);
