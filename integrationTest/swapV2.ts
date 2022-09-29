@@ -53,7 +53,7 @@ const initialize = async () => {
     .sign(treasureKey);
   const initializeTx = await initialize.execute(client);
   const initializeTxRx = await initializeTx.getReceipt(client);
-  console.log(`Initialized status : ${initializeTxRx.status}`);
+  console.log(`\n Initialized status : ${initializeTxRx.status}`);
 };
 
 const getTreasureBalance = async () => {
@@ -305,7 +305,7 @@ const getPrecisionValue = async () => {
 
   precision = Number(precisionLocal);
 
-  console.log(` getPrecisionValue ${precision}`);
+  console.log(`getPrecisionValue ${precision} \n `);
 };
 
 async function main() {
