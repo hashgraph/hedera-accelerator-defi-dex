@@ -86,7 +86,7 @@ abstract contract AbstractPair is IPair, HederaResponseCodes {
         return (tokenAQuantity, tokenBQuantity);
     }
 
-    function swapToken(address to, address _tokenA, address _tokenB, int _deltaAQty, int _deltaBQty) external {
+    function swapToken(address to, address _tokenA, address _tokenB, int _deltaAQty, int _deltaBQty) external override virtual {
         require(_tokenA == pair.tokenA.tokenAddress || _tokenB == pair.tokenB.tokenAddress, "Pls pass correct token to swap.");
 
         if (_tokenA == pair.tokenA.tokenAddress) {
