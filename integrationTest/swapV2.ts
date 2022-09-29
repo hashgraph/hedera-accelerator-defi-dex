@@ -335,13 +335,9 @@ async function main() {
 async function testForSinglePair() {
   await initialize();
   await getPrecisionValue();
-  await getTreasureBalance();
   await createLiquidityPool();
-  await getTreasureBalance();
   await addLiquidity();
-  await getTreasureBalance();
   await removeLiquidity();
-  await getTreasureBalance();
   await swapTokenA();
   await spotPrice();
   await getVariantValue();
