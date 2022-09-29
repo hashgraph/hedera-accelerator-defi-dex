@@ -14,8 +14,8 @@ export default class ClientManagement {
     private treasure = AccountId.fromString(process.env.TREASURE_ID!);
     private treasureKey = PrivateKey.fromString(process.env.TREASURE_KEY!);
 
-    private tokenUserId = AccountId.fromString(process.env.TOKEN_USER_ID!);
-    private tokenUserKey = PrivateKey.fromString(process.env.TOKEN_USER_KEY!);
+    private tokenUserId = AccountId.fromString(process.env.TREASURE_ID!);
+    private tokenUserKey = PrivateKey.fromString(process.env.TREASURE_KEY!);
 
     public createClientAsAdmin = (): Client => { 
         return this.doCreateClient(this.accountId, this.accountKey);
