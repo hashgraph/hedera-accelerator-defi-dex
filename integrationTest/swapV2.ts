@@ -18,6 +18,15 @@ const client = clientManagement.createClient();
 
 const tokenA = TokenId.fromString("0.0.48289687").toSolidityAddress();
 let tokenB = TokenId.fromString("0.0.48289686").toSolidityAddress();
+const tokenC = TokenId.fromString("0.0.48301281").toSolidityAddress();
+let tokenD = TokenId.fromString("0.0.48301282").toSolidityAddress();
+const tokenE = TokenId.fromString("0.0.48301300").toSolidityAddress();
+let tokenF = TokenId.fromString("0.0.48301322").toSolidityAddress();
+
+// 28 Sep sep 3:10
+const contractIdAB = "0.0.48461739"
+const contractIdCD = "0.0.48461742"
+const contractIdEF = "0.0.48461745"
 
 const {treasureId, treasureKey} = clientManagement.getTreasure();
 
@@ -93,8 +102,8 @@ const addLiquidity = async () => {
       "addLiquidity",
       new ContractFunctionParameters()
         .addAddress(treasureId.toSolidityAddress())
-        .addAddress(tokenA)
-        .addAddress(tokenB)
+        .addAddress(token0)
+        .addAddress(token1)
         .addInt256(tokenAQty)
         .addInt256(tokenBQty)
     )
@@ -127,7 +136,7 @@ const removeLiquidity = async () => {
   const transferTokenRx = await removeLiquidityTx.getReceipt(client);
 
   console.log(`Liquidity remove status: ${transferTokenRx.status}`);
-  await pairCurrentPosition();
+  await pairCurrentPosition(contractId);
 };
 
 const swapTokenA = async () => {
@@ -145,8 +154,8 @@ const swapTokenA = async () => {
         .addAddress(treasureId.toSolidityAddress())
         .addAddress(tokenA)
         .addAddress(tokenB)
-        .addInt256(tokenAQty)
-        .addInt256(tokenBQty)
+        .addInt64(tokenAQty)
+        .addInt64(tokenBQty)
     )
     .freezeWith(client)
     .sign(treasureKey);
@@ -154,7 +163,7 @@ const swapTokenA = async () => {
   const transferTokenRx = await swapTokenTx.getReceipt(client);
 
   console.log(`Swap status: ${transferTokenRx.status}`);
-  await pairCurrentPosition();
+  await pairCurrentPosition(contractId);
 };
 
 const pairCurrentPosition = async (): Promise<[BigNumber, BigNumber]> => {
@@ -173,7 +182,7 @@ const pairCurrentPosition = async (): Promise<[BigNumber, BigNumber]> => {
   return [tokenAQty, tokenBQty];
 };
 
-const getContributorTokenShare = async () => {
+const getContributorTokenShare = async (contractId: string) => {
   const getContributorTokenShare = await new ContractExecuteTransaction()
     .setContractId(contractId)
     .setGas(1000000)
@@ -193,7 +202,7 @@ const getContributorTokenShare = async () => {
   );
 };
 
-const spotPrice = async () => {
+const spotPrice = async (contractId: string) => {
   const getSpotPrice = await new ContractExecuteTransaction()
     .setContractId(contractId)
     .setGas(1000000)
@@ -206,7 +215,7 @@ const spotPrice = async () => {
   console.log(`spot price for token A is ${price}. \n`);
 };
 
-const getVariantValue = async () => {
+const getVariantValue = async (contractId: string) => {
   const getVariantValue = await new ContractExecuteTransaction()
     .setContractId(contractId)
     .setGas(1000000)
@@ -301,7 +310,13 @@ const getPrecisionValue = async () => {
 
 async function main() {
   console.log(`Using contractId ${contractId} and LP token contract id ${lpTokenContract.id}`);
-  //await initialize();
+
+  await testForSinglePair(contractIdAB, tokenA, tokenB);
+  await testForSinglePair(contractIdCD, tokenC, tokenD);
+  await testForSinglePair(contractIdEF, tokenE, tokenF);
+}
+
+async function testForSinglePair(contractId: string, token0: string, token1: string) {
   await getPrecisionValue();
   await getTreasureBalance();
   await createLiquidityPool();

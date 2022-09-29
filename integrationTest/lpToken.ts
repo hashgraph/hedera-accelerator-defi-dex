@@ -25,7 +25,7 @@ const {adminId, adminKey} = clientManagement.getAdmin();
 const adminClient = clientManagement.createClientAsAdmin();
 
 const baseContract = contractService.getContract(contractService.baseContractName);
-const contractId = contractService.getContract(contractService.lpTokenContractName).id;
+const contractId = contractService.getContract(contractService.lpTokenContractName).id; //"0.0.48461951"
 
 const createToken =  async (): Promise<TokenId> => {
   console.log(`Using base contract id ${baseContract.id} `);
@@ -101,7 +101,7 @@ const removeLPTokenFor = async () => {
   const contractRemoveTx0 = await new ContractExecuteTransaction()
       .setContractId(contractId)
       .setFunction("removeLPTokenFor", contractFunctionParameters)
-      .setGas(2000000)
+      .setGas(3000000)
       .freezeWith(client)
       .sign(treasureKey);
 

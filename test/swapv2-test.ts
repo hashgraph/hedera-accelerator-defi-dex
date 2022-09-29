@@ -22,6 +22,17 @@ describe("Swap", function () {
     });
   });
 
+  describe("Factory", function () {
+    it.only("Testing Factory Contract",async function() {
+      const Factory = await ethers.getContractFactory("Factory");
+      const factory = await Factory.deploy();
+      await factory.deployNew("first User");
+      const result = await factory.getAllUser();
+      console.log(result[0]);
+      expect(result[0]).to.be.equals(22);
+    })
+  });
+
   async function deployFixture() {
     const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
     const mockBaseHTS = await MockBaseHTS.deploy(true);

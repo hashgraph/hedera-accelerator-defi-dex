@@ -4,13 +4,19 @@ import { Deployment } from "./deployContractOnTestnet";
 const contractId = "0.0.48101509";
 
 async function main() {
-    const htsServiceAddress = "0x0000000000000000000000000000000002dfec41"; // 13 sep 2:41
-    const lpTokenContractAddress = "0x0000000000000000000000000000000002df5019"; // 6 sep 03:05 // Token 0.0.48143347
-     
+  //28 sep
+  await deployPair("0x0000000000000000000000000000000002e377a0")
+  await deployPair("0x0000000000000000000000000000000002e377a2")
+  await deployPair("0x0000000000000000000000000000000002e377a4")
+}
+
+async function deployPair(lpTokenContractAddress: string) {
+    const htsServiceAddress =  "0x0000000000000000000000000000000002e15051";// 23 Sep
     const deployment = new Deployment();
     const filePath = "./artifacts/contracts/Pair.sol/Pair.json";
-    const deployedContract = await deployment.deployContract(filePath, [htsServiceAddress, lpTokenContractAddress]);
+    const deployedContract = await deployment.deployContract(filePath, []);
     console.log("Pair deployed.");
+  
 }
 
 main()
