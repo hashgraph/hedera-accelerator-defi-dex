@@ -21,8 +21,8 @@ let tokenB = TokenId.fromString("0.0.48289686").toSolidityAddress();
 
 const {treasureId, treasureKey} = clientManagement.getTreasure();
 
-const contractId = contractService.getContractWithProxy("swap").id!;
-//const contractId = contractService.getContract("swap").id!;
+//const contractId = contractService.getContractWithProxy("swap").id!;
+const contractId = contractService.getContract("swap").id!;
 
 let precision = 0;
 
@@ -303,13 +303,9 @@ async function main() {
   console.log(`Using contractId ${contractId} and LP token contract id ${lpTokenContract.id}`);
   await initialize();
   await getPrecisionValue();
-  await getTreasureBalance();
   await createLiquidityPool();
-  await getTreasureBalance();
   await addLiquidity();
-  await getTreasureBalance();
   await removeLiquidity();
-  await getTreasureBalance();
   await swapTokenA();
   await spotPrice();
   await getVariantValue();
