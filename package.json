@@ -38,6 +38,7 @@
     "hardhat-hethers": "^1.0.2",
     "prettier": "^2.7.1",
     "prettier-plugin-solidity": "^1.0.0-beta.13",
+    "sinon": "^14.0.0",
     "solhint": "^3.3.7",
     "solidity-coverage": "0.7.21",
     "ts-node": "^10.9.1",
