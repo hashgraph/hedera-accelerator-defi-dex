@@ -53,7 +53,7 @@ Tests run before deploying the contract on testnet.
 
 #### Upgrade implementation contract
 
-1. Create new  version of contract 
+1. Create new version of contract 
 2. Deploy the contract using above steps `Normal contract` 
 3. Commit your changes with commit message `Upgrade transparent proxy contract <contract name> `. e.g. `git commit -m "Upgrade transparent proxy contract swap"`.
 2. Push the changes
