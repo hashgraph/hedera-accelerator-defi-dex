@@ -1,7 +1,16 @@
 
 import * as fs from "fs";
 import Web3 from "web3";
-
+/**
+ * In Smart Contract
+ *      Define event - event SenderDetail(address indexed _from, string msg);
+ *      Emit event in smart contract - emit SenderDetail(address, "Message");
+ * 
+ * In consumer code SDK
+ *      const response = await contractAllotTx.getRecord(client);
+ *      const allRecords = await getEventsFromRecord(record.contractFunctionResult.logs, "SenderDetail");
+ *  
+ */
 export class EventConsumer {
 
     private abi: any;
@@ -9,7 +18,7 @@ export class EventConsumer {
     private web3 = new Web3;
 
     public constructor (abiPath: string) {
-        this.abi = JSON.parse(fs.readFileSync(abiPath, 'utf8'));
+        this.abi = JSON.parse(fs.readFileSync(abiPath, 'utf8')).abi;
     }
 
     private logRecords: Array<any> = new Array<any>;
@@ -31,7 +40,7 @@ export class EventConsumer {
         // the events from the function call are in record.contractFunctionResult.logs.data
         // let's parse the logs using web3.js
         // there may be several log entries
-        record.logs.forEach((log: any) => {
+        record.forEach((log: any) => {
             // convert the log.data (uint8Array) to a string
             let logStringHex = '0x'.concat(Buffer.from(log.data).toString('hex'));
 
