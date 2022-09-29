@@ -301,7 +301,7 @@ const getPrecisionValue = async () => {
 
 async function main() {
   console.log(`Using contractId ${contractId} and LP token contract id ${lpTokenContract.id}`);
-  //await initialize();
+  await initialize();
   await getPrecisionValue();
   await getTreasureBalance();
   await createLiquidityPool();
