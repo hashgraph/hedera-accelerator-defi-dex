@@ -121,11 +121,11 @@ export class Deployment {
   private clientManagement = new ClientManagement();
   
   public deployContract = async (
-    clientArg: Client =  this.clientManagement.createClientAsAdmin(),
-    operatorKey: PrivateKey = this.clientManagement.getAdmin().adminKey,
     filePath: string,
     contractConstructorArgs: Array<any>
   ) => {  
+    const clientArg: Client =  this.clientManagement.createClientAsAdmin();
+    const operatorKey: PrivateKey = this.clientManagement.getAdmin().adminKey;
     console.log(`\nSTEP 1 - Create file`);
     const rawdata: any = fs.readFileSync(filePath);
     const compiledContract = JSON.parse(rawdata);

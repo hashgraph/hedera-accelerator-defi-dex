@@ -1,4 +1,4 @@
-import { Deployment } from "./deployContractOnTestnet";
+import { Deployment } from "../deployContractOnTestnet";
 
 const contractId = "0.0.48313084";
 

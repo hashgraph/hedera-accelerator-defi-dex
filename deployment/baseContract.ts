@@ -53,63 +53,7 @@ async function deployBaseContract() {
   const contractCreateRx = await contractCreateTx.getReceipt(client);
   const contractId = contractCreateRx.contractId;
   console.log(`- Contract created ${contractId?.toString()} ,Contract Address ${contractId?.toSolidityAddress()} -`);
-  if  (contractId != null) {
-      console.log(`\nSTEP 3 - Create token AB`);
-      const tokenCreateTx = await new TokenCreateTransaction()
-          .setTokenName("hhLP-L49A-L49B")
-          .setTokenSymbol("LabA-LabB")
-          .setDecimals(0)
-          .setInitialSupply(0)
-          .setTokenType(TokenType.FungibleCommon)
-          .setSupplyType(TokenSupplyType.Infinite)
-        //create the token with the contract as supply and treasury
-          .setSupplyKey(contractId)
-          .setTreasuryAccountId(contractId?.toString() ?? "")
-          .execute(client);
-
-    const tokenCreateRx = await tokenCreateTx.getReceipt(client);
-    const tokenId = tokenCreateRx.tokenId;
-    console.log(`- Token created hhLP-L49A-L49B ${tokenId}, Token Address ${tokenId?.toSolidityAddress()}`);
-
-    // create LP for TokenC and TokenD
-
-    console.log(`\nSTEP 4 - Create token CD`);
-      const tokenCreateCDTx = await new TokenCreateTransaction()
-          .setTokenName("hhLP-L49C-L49D")
-          .setTokenSymbol("LabC-LabD")
-          .setDecimals(0)
-          .setInitialSupply(0)
-          .setTokenType(TokenType.FungibleCommon)
-          .setSupplyType(TokenSupplyType.Infinite)
-        //create the token with the contract as supply and treasury
-          .setSupplyKey(contractId)
-          .setTreasuryAccountId(contractId?.toString() ?? "")
-          .execute(client);
-
-    const tokenCreateCDRx = await tokenCreateCDTx.getReceipt(client);
-    const tokenCDId = tokenCreateCDRx.tokenId;
-    console.log(`- Token created hhLP-L49C-L49D ${tokenCDId}, Token Address ${tokenCDId?.toSolidityAddress()}`);
-
-    // create LP for TokenC and TokenD
-
-    console.log(`\nSTEP 5 - Create token EF`);
-      const tokenCreateEFTx = await new TokenCreateTransaction()
-          .setTokenName("hhLP-L49E-L49F")
-          .setTokenSymbol("LabE-LabF")
-          .setDecimals(0)
-          .setInitialSupply(0)
-          .setTokenType(TokenType.FungibleCommon)
-          .setSupplyType(TokenSupplyType.Infinite)
-        //create the token with the contract as supply and treasury
-          .setSupplyKey(contractId)
-          .setTreasuryAccountId(contractId?.toString() ?? "")
-          .execute(client);
-
-    const tokenCreateEFRx = await tokenCreateEFTx.getReceipt(client);
-    const tokenEFId = tokenCreateEFRx.tokenId;
-    console.log(`- Token created hhLP-L49E-L49F ${tokenEFId}, Token Address ${tokenEFId?.toSolidityAddress()}`);
-
-}
+  
   client.close();
 }
 
