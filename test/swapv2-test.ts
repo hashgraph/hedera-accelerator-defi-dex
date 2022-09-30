@@ -491,5 +491,31 @@ describe("Swap", function () {
       expect(slippageWithoutPrecision).to.be.equals(0.0045661);
     });
   });
+
+  describe("Mirror Node API requirement test cases",  async () => {
+    it("Get Contract address", async function () {
+      const { swapV2 } = await loadFixture(deployFixture);
+      await swapV2.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, 50, 100);
+      const value = await swapV2.getContractAddress();
+
+      expect(value).to.be.equals("0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9");
+    });
+
+    it("Get Token B address", async function () {
+      const { swapV2 } = await loadFixture(deployFixture);
+      await swapV2.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, 50, 100);
+      const value = await swapV2.getTokenBAddress();
+
+      expect(value).to.be.equals(tokenBAddress);
+    });
+
+    it("Get Token A address", async function () {
+      const { swapV2 } = await loadFixture(deployFixture);
+      await swapV2.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, 50, 100);
+      const value = await swapV2.getTokenAAddress();
+
+      expect(value).to.be.equals(tokenAAddress);
+    });
+  });
 })
 

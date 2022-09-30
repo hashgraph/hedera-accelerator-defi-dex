@@ -215,4 +215,17 @@ abstract contract AbstractSwap is HederaResponseCodes {
         int deltaTokenAQty = getInGivenOut(_tokenBQty);
         return ((deltaTokenAQty - spotValueExpected) * precision)/spotValueExpected;
     }
+
+    function getContractAddress() public view returns(address) {
+        return address(this);
+    }
+
+    function getTokenAAddress() public view returns(address) {
+        return pair.tokenA.tokenAddress;
+    }
+
+    function getTokenBAddress() public view returns(address) {
+        return pair.tokenB.tokenAddress;
+    }
+
 }   
