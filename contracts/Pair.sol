@@ -18,10 +18,6 @@ contract Pair is AbstractPair, Initializable {
         lpTokenContract = _lpTokenContract;
     }
 
-    function testFunction() public override virtual returns (int64) {
-        return 108;
-    }
-
     function associateToken(address account,  address _token) internal override  virtual returns(int) {
         (bool success, bytes memory result) = address(tokenService).delegatecall(
             abi.encodeWithSelector(IBaseHTS.associateTokenPublic.selector,

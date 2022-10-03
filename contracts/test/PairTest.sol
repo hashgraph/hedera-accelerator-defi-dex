@@ -16,10 +16,6 @@ contract PairTest is AbstractPair {
         lpTokenContract = _lpTokenContract;
     }
     
-    function testFunction() public override virtual returns (int64) {
-        return 108;
-    }
-    
     constructor(IBaseHTS _tokenService, ILPToken _lpTokenContract) {
         tokenService = _tokenService;
         creator = msg.sender;

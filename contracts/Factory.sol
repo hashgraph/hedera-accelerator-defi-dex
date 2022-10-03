@@ -71,7 +71,6 @@ contract Factory {
             new Pair{salt: deploymentSalt}()
         );
         IPair newPair = IPair(deployedContract);
-        int64 result = newPair.testFunction();
         return deployedContract;
     }
 

@@ -17,7 +17,6 @@ abstract contract IPair {
     }
 
     function getPair() external virtual returns (Pair memory);
-    function testFunction() public virtual returns (int64);
     function initialize(IBaseHTS _tokenService, ILPToken _lpTokenContract) public virtual;
     function associateToken(address account,  address _token) internal virtual returns(int);
     function transferToken(address _token, address sender, address receiver, int amount) internal virtual returns(int);
