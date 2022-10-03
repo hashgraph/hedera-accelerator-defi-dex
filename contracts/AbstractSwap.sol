@@ -220,12 +220,8 @@ abstract contract AbstractSwap is HederaResponseCodes {
         return address(this);
     }
 
-    function getTokenAAddress() public view returns(address) {
-        return pair.tokenA.tokenAddress;
-    }
-
-    function getTokenBAddress() public view returns(address) {
-        return pair.tokenB.tokenAddress;
+    function getTokenPairAddress() public view returns(address, address) {
+        return (pair.tokenA.tokenAddress, pair.tokenB.tokenAddress);
     }
 
 }   

@@ -493,28 +493,13 @@ describe("Swap", function () {
   });
 
   describe("Mirror Node API requirement test cases",  async () => {
-    it("Get Contract address", async function () {
+  
+    it("Get Token Pair address", async function () {
       const { swapV2 } = await loadFixture(deployFixture);
       await swapV2.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, 50, 100);
-      const value = await swapV2.getContractAddress();
-
-      expect(value).to.be.equals("0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9");
-    });
-
-    it("Get Token B address", async function () {
-      const { swapV2 } = await loadFixture(deployFixture);
-      await swapV2.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, 50, 100);
-      const value = await swapV2.getTokenBAddress();
-
-      expect(value).to.be.equals(tokenBAddress);
-    });
-
-    it("Get Token A address", async function () {
-      const { swapV2 } = await loadFixture(deployFixture);
-      await swapV2.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, 50, 100);
-      const value = await swapV2.getTokenAAddress();
-
-      expect(value).to.be.equals(tokenAAddress);
+      const value = await swapV2.getTokenPairAddress();
+      expect(value[0]).to.be.equals(tokenAAddress);
+      expect(value[1]).to.be.equals(tokenBAddress);
     });
   });
 })
