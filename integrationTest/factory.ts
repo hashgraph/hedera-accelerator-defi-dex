@@ -21,7 +21,6 @@ let tokenD = TokenId.fromString("0.0.48301282").toSolidityAddress();
 const tokenE = TokenId.fromString("0.0.48301300").toSolidityAddress();
 let tokenF = TokenId.fromString("0.0.48301322").toSolidityAddress();
 
-// 28 Sep sep 3:10
 const pairContractIds = contractService.getLast3Contracts(contractService.pairContractName);
 const lpContractIds = contractService.getLast3Contracts(contractService.lpTokenContractName);
 const baseContract = contractService.getContract(contractService.baseContractName);
@@ -92,7 +91,7 @@ const createLiquidityPool = async (contractId: string, token0: string, token1: s
   };
 
 const setupFactory = async () => {
-  if (contractId != null) {
+ 
     console.log(`\n STEP 1 - Set Static Pairs for now in Contract`);
     let contractFunctionParameters = new ContractFunctionParameters()
                                           .addAddressArray([pairContractIds[0].address, 
@@ -107,7 +106,6 @@ const setupFactory = async () => {
     const response = await contractAllotTx.getRecord(client);
     const status = contractAllotRx.status;
     console.log(`\n setPair Result ${status} code: ${response.contractFunctionResult!.getAddress()}`);
-  }
 };
 
 const addLiquidity = async (contractId: string, token0: string, token1: string) => {

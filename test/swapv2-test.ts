@@ -80,7 +80,7 @@ describe("All Tests", function () {
       expect(pairs[0]).to.be.equals(swapV2.address);
     });
 
-    it("Check Set pair method", async function () {
+    it("Check add pair method", async function () {
       const { swapV2, factory } = await loadFixture(deployFixture);
       await factory.addPair(swapV2.address);
       const pairs = await factory.getPairs()
