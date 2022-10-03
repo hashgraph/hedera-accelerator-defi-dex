@@ -94,8 +94,6 @@ contract MockBaseHTS is IBaseHTS {
 
     function mintTokenPublic(address, int amount) external override
         returns (int responseCode, int newTotalSupply) {
-            console.logString("mintTokenPublic");
-            console.logInt(trueTransaction);
             if (trueTransaction > 0) {
                 trueTransaction-=1;
                 return (int(22), amount);

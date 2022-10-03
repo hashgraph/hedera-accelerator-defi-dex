@@ -4,14 +4,15 @@ pragma experimental ABIEncoderV2;
 
 import "./common/hedera/HederaResponseCodes.sol";
 import "./common/IBaseHTS.sol";
-import "./AbstractSwap.sol";
+import "./AbstractPair.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./ILPToken.sol";
+import "./IPair.sol";
 
 
-contract Swap is AbstractSwap, Initializable {
+contract Pair is AbstractPair, Initializable {
 
-    function initialize(IBaseHTS _tokenService, ILPToken _lpTokenContract) public initializer {
+    function initialize(IBaseHTS _tokenService, ILPToken _lpTokenContract) public override initializer {
         tokenService = _tokenService;
         creator = msg.sender;
         lpTokenContract = _lpTokenContract;

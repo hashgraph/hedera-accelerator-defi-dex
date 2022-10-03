@@ -5,21 +5,12 @@ pragma experimental ABIEncoderV2;
 import "./common/hedera/HederaResponseCodes.sol";
 import "./common/IBaseHTS.sol";
 import "./ILPToken.sol";
+import "./IPair.sol";
 
-abstract contract AbstractSwap is HederaResponseCodes {
+abstract contract AbstractPair is IPair, HederaResponseCodes {
 
     IBaseHTS internal tokenService;
     ILPToken internal lpTokenContract;
-
-    struct Pair {
-        Token tokenA;
-        Token tokenB;
-    }
-
-    struct Token {
-        address tokenAddress;
-        int tokenQty;
-    }
 
     struct LiquidityContributor {
         Pair pair;
@@ -33,11 +24,11 @@ abstract contract AbstractSwap is HederaResponseCodes {
 
     int slippage;
 
-    function associateToken(address account,  address _token) internal virtual returns(int);
+    function getPair() external override view returns (Pair memory) {
+        return pair;
+    }
 
-    function transferToken(address _token, address sender, address receiver, int amount) internal virtual returns(int);
-
-    function initializeContract(address fromAccount, address _tokenA, address _tokenB, int _tokenAQty, int _tokenBQty) external {
+    function initializeContract(address fromAccount, address _tokenA, address _tokenB, int _tokenAQty, int _tokenBQty) external override virtual  {
         pair = Pair(Token(_tokenA, _tokenAQty), Token(_tokenB, _tokenBQty));
         liquidityContribution[fromAccount] = LiquidityContributor(pair);
 
@@ -52,7 +43,7 @@ abstract contract AbstractSwap is HederaResponseCodes {
         lpTokenContract.allotLPTokenFor(_tokenAQty, _tokenBQty, fromAccount);
     }
 
-    function addLiquidity(address fromAccount, address _tokenA, address _tokenB, int _tokenAQty, int _tokenBQty) external {
+    function addLiquidity(address fromAccount, address _tokenA, address _tokenB, int _tokenAQty, int _tokenBQty) external override virtual {
         pair.tokenA.tokenQty += _tokenAQty;
         pair.tokenB.tokenQty += _tokenBQty;
 
@@ -71,7 +62,7 @@ abstract contract AbstractSwap is HederaResponseCodes {
         lpTokenContract.allotLPTokenFor(_tokenAQty, _tokenBQty, fromAccount);
     }
 
-    function removeLiquidity(address fromAccount, int _lpToken) external {
+    function removeLiquidity(address fromAccount, int _lpToken) external override virtual {
         require(lpTokenContract.lpTokenForUser(fromAccount) > _lpToken, "user does not have sufficient lpTokens");
         (int _tokenAQty, int _tokenBQty) = calculateTokenstoGetBack(_lpToken);
         //Assumption - toAccount must be associated with tokenA and tokenB other transaction fails.
@@ -95,7 +86,7 @@ abstract contract AbstractSwap is HederaResponseCodes {
         return (tokenAQuantity, tokenBQuantity);
     }
 
-    function swapToken(address to, address _tokenA, address _tokenB, int _deltaAQty, int _deltaBQty) external {
+    function swapToken(address to, address _tokenA, address _tokenB, int _deltaAQty, int _deltaBQty) external override virtual {
         require(_tokenA == pair.tokenA.tokenAddress || _tokenB == pair.tokenB.tokenAddress, "Pls pass correct token to swap.");
 
         if (_tokenA == pair.tokenA.tokenAddress) {

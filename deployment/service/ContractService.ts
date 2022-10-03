@@ -3,7 +3,8 @@ import { DeployedContract } from "../model/contract";
 import { httpRequest } from "../api/HttpsService";
 
 export class ContractService {
-    public swapContractName = "swap";
+    public factoryContractName = "factory";
+    public pairContractName = "pair";
     public baseContractName = "basehts";
     public lpTokenContractName = "lptoken";
     
@@ -107,6 +108,15 @@ export class ContractService {
         const matchingContracts = contracts.filter((contract: DeployedContract) => contract.name == contractName);
         const latestContract = matchingContracts[matchingContracts.length - 1];
         return latestContract;
+    }
+
+    public getLast3Contracts = (contractName: string): Array<DeployedContract> => {
+        const contracts: Array<DeployedContract> = this.getAllContracts();
+        const matchingContracts = contracts.filter((contract: DeployedContract) => contract.name == contractName);
+        const latestContract3 = matchingContracts[matchingContracts.length - 1];
+        const latestContract2 = matchingContracts[matchingContracts.length - 2];
+        const latestContract1 = matchingContracts[matchingContracts.length - 3];
+        return [latestContract1, latestContract2, latestContract3];
     }
 
     public getContractWithProxy = (contractName: string): DeployedContract => {

@@ -5,10 +5,17 @@ pragma experimental ABIEncoderV2;
 import "../common/hedera/HederaResponseCodes.sol";
 import "../common/IBaseHTS.sol";
 import "../ILPToken.sol";
-import "../AbstractSwap.sol";
+import "../AbstractPair.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-contract SwapTest is AbstractSwap {
+contract PairTest is AbstractPair {
 
+    function initialize(IBaseHTS _tokenService, ILPToken _lpTokenContract) public virtual override {
+        tokenService = _tokenService;
+        creator = msg.sender;
+        lpTokenContract = _lpTokenContract;
+    }
+    
     constructor(IBaseHTS _tokenService, ILPToken _lpTokenContract) {
         tokenService = _tokenService;
         creator = msg.sender;
