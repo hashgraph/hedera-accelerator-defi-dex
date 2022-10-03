@@ -91,21 +91,21 @@ const createLiquidityPool = async (contractId: string, token0: string, token1: s
   };
 
 const setupFactory = async () => {
- 
+
     console.log(`\n STEP 1 - Set Static Pairs for now in Contract`);
     let contractFunctionParameters = new ContractFunctionParameters()
                                           .addAddressArray([pairContractIds[0].address, 
                                             pairContractIds[1].address,
                                             pairContractIds[2].address])
-    const contractAllotTx = await new ContractExecuteTransaction()
+    const contractSetPairsTx = await new ContractExecuteTransaction()
       .setContractId(contractId)
       .setFunction("setPairs", contractFunctionParameters)
       .setGas(900000)
       .execute(client);
-    const contractAllotRx = await contractAllotTx.getReceipt(client);
-    const response = await contractAllotTx.getRecord(client);
-    const status = contractAllotRx.status;
-    console.log(`\n setPair Result ${status} code: ${response.contractFunctionResult!.getAddress()}`);
+    const contractSetPairRx = await contractSetPairsTx.getReceipt(client);
+    const response = await contractSetPairsTx.getRecord(client);
+    const status = contractSetPairRx.status;
+    console.log(`\n setPairs Result ${status} code: ${response.contractFunctionResult!.getAddress()}`);
 };
 
 const addLiquidity = async (contractId: string, token0: string, token1: string) => {
