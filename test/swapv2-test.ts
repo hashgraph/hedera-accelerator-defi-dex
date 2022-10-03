@@ -526,7 +526,6 @@ describe("All Tests", function () {
       const fee = BigNumber.from("1").mul(precision);
       await swapV2.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, 30, 10, fee);
       const value = await swapV2.getFee();
-      console.log(value);
       const valueWithoutPrecision = Number(value)/Number(precision);
 
       expect(Number(valueWithoutPrecision)).to.be.equals(Number(1));
