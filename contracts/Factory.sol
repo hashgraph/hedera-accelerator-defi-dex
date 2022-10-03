@@ -5,7 +5,6 @@ import "./Pair.sol";
 contract Factory {
     IPair [] public allPairs;
     mapping (address => mapping(address => IPair)) pairs;
-    address [] userList;
 
     // returns sorted token addresses, used to handle return values from pairs sorted in this order
     function sortTokens(address tokenA, address tokenB) internal pure returns (address token0, address token1) {
