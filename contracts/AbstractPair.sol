@@ -24,14 +24,18 @@ abstract contract AbstractPair is IPair, HederaResponseCodes {
 
     int slippage;
 
+    int private fee;
+
     function getPair() external override view returns (Pair memory) {
         return pair;
     }
 
-    function initializeContract(address fromAccount, address _tokenA, address _tokenB, int _tokenAQty, int _tokenBQty) external override virtual  {
+    function initializeContract(address fromAccount, address _tokenA, address _tokenB, int _tokenAQty, int _tokenBQty, int _fee) external override virtual  {
         pair = Pair(Token(_tokenA, _tokenAQty), Token(_tokenB, _tokenBQty));
         liquidityContribution[fromAccount] = LiquidityContributor(pair);
-
+        
+        fee = _fee;
+        
         associateToken(address(this),  _tokenA);
         associateToken(address(this),  _tokenB);    
 
@@ -213,6 +217,10 @@ abstract contract AbstractPair is IPair, HederaResponseCodes {
 
     function getTokenPairAddress() public view returns(address, address) {
         return (pair.tokenA.tokenAddress, pair.tokenB.tokenAddress);
+    }
+
+    function getFee() public view returns(int) {
+        return fee;
     }
 
 }   

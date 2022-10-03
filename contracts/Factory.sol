@@ -33,10 +33,10 @@ contract Factory {
         return allPairs;
     }
 
-    function initializeContract(address fromAccount, address _tokenA, address _tokenB, int _tokenAQty, int _tokenBQty) external {
+    function initializeContract(address fromAccount, address _tokenA, address _tokenB, int _tokenAQty, int _tokenBQty, int fee) external {
         (address token0, address token1) = sortTokens(_tokenA, _tokenB);
         IPair pair = pairs[token0][token1];
-        pair.initializeContract(fromAccount, _tokenA, _tokenB, _tokenAQty, _tokenBQty);
+        pair.initializeContract(fromAccount, _tokenA, _tokenB, _tokenAQty, _tokenBQty, fee);
     }
 
     function addLiquidity(address fromAccount, address _tokenA, address _tokenB, int _tokenAQty, int _tokenBQty) external {
