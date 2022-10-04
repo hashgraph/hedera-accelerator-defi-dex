@@ -126,6 +126,7 @@ export class Deployment {
   ) => {  
     const clientArg: Client =  this.clientManagement.createClientAsAdmin();
     const operatorKey: PrivateKey = this.clientManagement.getAdmin().adminKey;
+    
     console.log(`\nSTEP 1 - Create file`);
     const rawdata: any = fs.readFileSync(filePath);
     const compiledContract = JSON.parse(rawdata);
