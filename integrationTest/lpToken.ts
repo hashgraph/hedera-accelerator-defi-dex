@@ -7,6 +7,8 @@ import {
 
 import ClientManagement from "./utils/utils";
 import { ContractService } from "../deployment/service/ContractService";
+import { DeployedContract } from "../deployment/model/contract";
+import { deployContract } from "ethereum-waffle";
 
 const clientManagement = new ClientManagement();
 const contractService = new ContractService();
@@ -17,27 +19,25 @@ client = client.setDefaultMaxTransactionFee(new Hbar(100));
 const htsServiceAddress = contractService.getContract(contractService.baseContractName).address;
 const {treasureId, treasureKey} = clientManagement.getTreasure();
 
-const lpContracts = contractService.getLast3Contracts(contractService.lpTokenContractName); //"0.0.48461951"
-
-const contractId = contractService.getContractWithProxy(contractService.lpTokenContractName).transparentProxyId!;
+const contracts = contractService.getLast3ContractsWithProxy(contractService.lpTokenContractName);
 
 const precision = 10000000;
 
 const initialize = async (contId: string) => {
   console.log(`Initialize contract with token  `);
 
-    let contractFunctionParameters = new ContractFunctionParameters()
-      .addAddress(htsServiceAddress);
+  let contractFunctionParameters = new ContractFunctionParameters()
+    .addAddress(htsServiceAddress);
 
-    const contractTokenTx = await new ContractExecuteTransaction()
-      .setContractId(contId)
-      .setFunction("initializeParams", contractFunctionParameters)
-      .setGas(500000)
-      .setMaxTransactionFee(new Hbar(50))
-      .setPayableAmount(new Hbar(60))
-      .execute(client);
-      
-    await contractTokenTx.getReceipt(client);
+  const contractTokenTx = await new ContractExecuteTransaction()
+    .setContractId(contId)
+    .setFunction("initializeParams", contractFunctionParameters)
+    .setGas(500000)
+    .setMaxTransactionFee(new Hbar(50))
+    .setPayableAmount(new Hbar(60))
+    .execute(client);
+    
+  await contractTokenTx.getReceipt(client);
 
   console.log(`Initialize contract with token done.`);
 }
@@ -58,7 +58,6 @@ const allotLPTokenFor = async (contId: string) => {
         .setFunction("allotLPTokenFor", contractFunctionParameters)
         .setGas(900000)
         .setMaxTransactionFee(new Hbar(50))
-        .setPayableAmount(new Hbar(60))
         .freezeWith(client);
     
     const signTx = await contractAllotTx.sign(treasureKey);//For associating a token to treasurer
@@ -155,9 +154,10 @@ const getLpTokenAddress = async (contId: string) => {
 };
 
 async function main() {
-  await forSingleContract(lpContracts[0].id)
-  await forSingleContract(lpContracts[1].id)
-  await forSingleContract(lpContracts[2].id)
+  for(const contract of contracts) {
+    console.log(`Testing contract .............\n`);
+    await forSingleContract(contract.transparentProxyId!);
+  }
 }
 
 async function forSingleContract(contractId: string) {

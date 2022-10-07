@@ -127,4 +127,16 @@ export class ContractService {
         return matchingProxyContracts[matchingProxyContracts.length - 1];
     }
 
+    public getLast3ContractsWithProxy = (contractName: string): Array<DeployedContract> => {
+        const contracts: Array<DeployedContract> = this.getAllContracts();
+        const matchingProxyContracts = contracts.filter((contract: DeployedContract) => contract.name == contractName 
+            && (contract.transparentProxyAddress != null 
+            && contract.transparentProxyId != null));
+        return [
+            matchingProxyContracts[matchingProxyContracts.length - 1],
+            matchingProxyContracts[matchingProxyContracts.length - 2],
+            matchingProxyContracts[matchingProxyContracts.length - 3]
+        ];
+    }
+
 }
