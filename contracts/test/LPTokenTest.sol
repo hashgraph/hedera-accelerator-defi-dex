@@ -47,7 +47,7 @@ contract LPTokenTest is AbstractLPToken {
     function createFungibleTokenInternal(IHederaTokenService.HederaToken memory hederaToken,
         uint256 initialTotalSupply,
         uint256 decimals) internal override returns (int responseCode, address tokenAddress) {
-        return tokenService.createFungibleTokenPublic(hederaToken, 0, 8);
+        return tokenService.createFungibleTokenPublic(hederaToken, initialTotalSupply, decimals);
     }
 
 }

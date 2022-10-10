@@ -13,11 +13,11 @@ abstract contract AbstractLPToken is HederaResponseCodes, ILPToken {
     address internal creator;
     IERC20 lpToken;
 
-     using Bits for uint;
+    using Bits for uint;
 
     event SenderDetail(address indexed _from, string msg);
 
-    function lpTokenForUser(address _user) external override returns(int) {
+    function lpTokenForUser(address _user) external view override returns(int) {
         return int(lpToken.balanceOf(_user));
     }
 
@@ -25,7 +25,7 @@ abstract contract AbstractLPToken is HederaResponseCodes, ILPToken {
         return address(lpToken);
     }
 
-    function getAllLPTokenCount() external override returns(int) {
+    function getAllLPTokenCount() external view override returns(int) {
         return int(lpToken.totalSupply());
     }
 
