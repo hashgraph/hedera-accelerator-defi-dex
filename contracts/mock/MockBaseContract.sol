@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import "../common/IBaseHTS.sol";
 import "../common/hedera/HederaResponseCodes.sol";
+import "./ERC20Mock.sol";
 import "hardhat/console.sol";
 
 contract MockBaseHTS is IBaseHTS {
@@ -105,5 +106,14 @@ contract MockBaseHTS is IBaseHTS {
         returns (int responseCode, int newTotalSupply) {
             return ((isSuccess) ? int(22) : int(23), amount);
     }
+
+    function createFungibleTokenPublic(IHederaTokenService.HederaToken memory , 
+        uint , 
+        uint) external payable       override
+returns (int responseCode, address tokenAddress){
+            ERC20Mock mock =  new ERC20Mock();
+            return isSuccess ? (int(22),  address(mock))
+             : (int(22),  address(0x0));
+        }
 
 }

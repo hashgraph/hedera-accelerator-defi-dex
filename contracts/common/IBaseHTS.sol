@@ -19,4 +19,9 @@ interface IBaseHTS {
 
     function burnTokenPublic(address token, int amount) external
         returns (int responseCode, int newTotalSupply);
+    
+    function createFungibleTokenPublic(IHederaTokenService.HederaToken memory token, 
+        uint initialTotalSupply, 
+        uint decimals) external payable returns (int responseCode, address tokenAddress);
+
 }

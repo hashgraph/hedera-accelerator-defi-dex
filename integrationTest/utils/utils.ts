@@ -25,7 +25,7 @@ export default class ClientManagement {
         return this.doCreateClient(this.treasure, this.treasureKey);
     };
 
-    public createClientForToken = (): Client => {
+    public createOperatorClient = (): Client => {
         return this.doCreateClient(this.tokenUserId, this.tokenUserKey);
     };
     
@@ -53,6 +53,13 @@ export default class ClientManagement {
         return {
             tokenUserId: this.tokenUserId,
             tokenUserKey: this.tokenUserKey
+        }
+    }
+
+    public getOperator = () =>  {
+        return {
+            id: this.tokenUserId,
+            key: this.tokenUserKey
         }
     }
 }

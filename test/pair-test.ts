@@ -3,7 +3,7 @@ import {  expect } from "chai";
 
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { ethers, upgrades } from "hardhat";
-import { BigNumber } from "ethers";
+import { BigNumber, Overrides, PayableOverrides } from "ethers";
 
 
 describe("All Tests", function () {
@@ -386,30 +386,24 @@ describe("All Tests", function () {
       mockBaseHTS.setFailType(11);
       const tokenBeforeQty = await swapV2.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(100));
-      await lpTokenCont.initializeParams(zeroAddress, zeroAddress);
       await expect(lpTokenCont.allotLPTokenFor(0, 10, zeroAddress)).to.revertedWith("Please provide positive token counts");
     });
 
     it("removeLPTokenFor fail for no lp token", async function () {
-      const { swapV2, mockBaseHTS, lpTokenCont } = await loadFixture(deployFailureFixture);
-      mockBaseHTS.setFailType(11);
-      const tokenBeforeQty = await swapV2.getPairQty();
-      expect(tokenBeforeQty[0]).to.be.equals(precision.mul(100));
-      await lpTokenCont.initializeParams(newZeroAddress, newZeroAddress)
-      await expect(lpTokenCont.removeLPTokenFor(10, zeroAddress)).to.revertedWith("Liquidity Token not initialized");
+      const { lpTokenCont, mockBaseHTS } = await loadFixture(deployFailureFixture);
+      await lpTokenCont.initializeParams(mockBaseHTS.address);
+      await expect(lpTokenCont.removeLPTokenFor(10, userAddress)).to.revertedWith("Liquidity Token not initialized");
     });
 
     it("removeLPTokenFor fail for less lp Token", async function () {
-      const { swapV2, mockBaseHTS, lpTokenCont } = await loadFixture(deployFailureFixture);
-      mockBaseHTS.setFailType(11);
+      const { swapV2, lpTokenCont } = await loadFixture(deployFixture);
       const tokenBeforeQty = await swapV2.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(100));
       await expect(lpTokenCont.removeLPTokenFor(130, zeroAddress)).to.revertedWith("User Does not have lp amount");
     });
 
     it("allotLPToken check LP Tokens", async function () {
-      const { swapV2, mockBaseHTS, lpTokenCont } = await loadFixture(deployFixture);
-      mockBaseHTS.setFailType(11);
+      const { swapV2, lpTokenCont } = await loadFixture(deployFixture);
       const tokenBeforeQty = await swapV2.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(100));
       await lpTokenCont.allotLPTokenFor(10, 10, userAddress);

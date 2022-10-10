@@ -13,9 +13,9 @@ contract LPTokenTest is AbstractLPToken {
          tokenService = _tokenService;
     }
 
-    function mintToken(int amount) override internal virtual 
+    function mintToken(int amount, address token) override internal virtual 
      returns (int responseCode, int newTotalSupply) {
-            (int response, int _newTotalSupply) = tokenService.mintTokenPublic(address(lpToken), amount);
+            (int response, int _newTotalSupply) = tokenService.mintTokenPublic(token, amount);
 
              if (response != HederaResponseCodes.SUCCESS) {
                 revert ("Mint Failed");
@@ -23,8 +23,8 @@ contract LPTokenTest is AbstractLPToken {
             return (response, _newTotalSupply);
     }
 
-    function burnToken(int amount) override internal virtual returns (int) {
-        (int responseCode, ) = tokenService.burnTokenPublic(address(lpToken), amount);
+    function burnToken(int amount, address token) override internal virtual returns (int) {
+        (int responseCode, ) = tokenService.burnTokenPublic(token, amount);
 
         if (responseCode != HederaResponseCodes.SUCCESS) {
             revert ("Burn Fail");
@@ -43,4 +43,11 @@ contract LPTokenTest is AbstractLPToken {
         }
         return responseCode;
     }
+
+    function createFungibleTokenInternal(IHederaTokenService.HederaToken memory hederaToken,
+        uint256 initialTotalSupply,
+        uint256 decimals) internal override returns (int responseCode, address tokenAddress) {
+        return tokenService.createFungibleTokenPublic(hederaToken, initialTotalSupply, decimals);
+    }
+
 }

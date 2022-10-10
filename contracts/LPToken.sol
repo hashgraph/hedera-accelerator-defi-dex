@@ -6,37 +6,30 @@ import "./common/IBaseHTS.sol";
 import "./AbstractLPToken.sol";
 
 contract LPToken is AbstractLPToken {
-    
-    function mintToken(int amount) override internal virtual returns (int responseCode, int newTotalSupply) {
-            (int response, int _newTotalSupply) = tokenService.mintTokenPublic(address(lpToken), amount);
 
-             if (response != HederaResponseCodes.SUCCESS) {
-                revert ("Mint Failed");
-             }
-            return (response, _newTotalSupply);
+    function mintToken(int amount, address token) override internal virtual returns (int responseCode, int newTotalSupply) {
+        (responseCode, newTotalSupply) = tokenService.mintTokenPublic(token, amount);
     }
 
-    function burnToken(int amount) override internal virtual returns (int) {
-        (int responseCode, ) = tokenService.burnTokenPublic(address(lpToken), amount);
-
-        if (responseCode != HederaResponseCodes.SUCCESS) {
-            revert ("Burn Fail");
-        }
+    function burnToken(int amount, address token) override internal virtual returns (int) {
+        (int responseCode,) = tokenService.burnTokenPublic(token, amount);
         return responseCode;
     }
 
     function associateTokenInternal(address account,  address _token) internal override  virtual returns(int) {
-        (bool success, bytes memory result) = address(tokenService).delegatecall(
-            abi.encodeWithSelector(IBaseHTS.associateTokenPublic.selector,
-            account, _token));
-        return success ? abi.decode(result, (int32)) : HederaResponseCodes.UNKNOWN;
+        return tokenService.associateTokenPublic(account, _token);
     }
 
     function transferTokenInternal(address _token, address sender, address receiver, int amount) internal override virtual returns(int) {
-        int responseCode = tokenService.transferTokenPublic(_token, sender, receiver, amount);
-        if (responseCode != HederaResponseCodes.SUCCESS) {
-                revert ("LP Token Transfer Fail");
-        }
-        return responseCode;
+        return tokenService.transferTokenPublic(_token, sender, receiver, amount);
+    }
+    
+    function createFungibleTokenInternal(IHederaTokenService.HederaToken memory hederaToken,
+        uint256 initialTotalSupply,
+        uint256 decimals) internal       override
+returns (int responseCode, address tokenAddress) {
+        (bool success, bytes memory result) = address(tokenService).delegatecall(
+            abi.encodeWithSelector(IBaseHTS.createFungibleTokenPublic.selector,  hederaToken, initialTotalSupply, decimals));
+        return success ? abi.decode(result, (int, address)) : (int(HederaResponseCodes.UNKNOWN), address(0x0));
     }
 }
