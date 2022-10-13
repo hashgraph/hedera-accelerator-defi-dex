@@ -37,7 +37,7 @@ abstract contract AbstractLPToken is HederaResponseCodes, ILPToken {
         uint256 initialTotalSupply,
         uint256 decimals) internal virtual returns (int responseCode, address tokenAddress);
 
-    function initializeParams(IBaseHTS _tokenService) external payable {
+    function initializeParams(IBaseHTS _tokenService) external  override payable {
          tokenService = _tokenService;
         (, address newToken) = createFungibleTokenPublic(0);
         lpToken = IERC20(newToken);
