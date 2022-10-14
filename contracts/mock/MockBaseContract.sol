@@ -111,7 +111,7 @@ contract MockBaseHTS is IBaseHTS {
         uint , 
         uint) external payable       override
 returns (int responseCode, address tokenAddress){
-            ERC20Mock mock =  new ERC20Mock();
+            ERC20Mock mock =  new ERC20Mock(10, 10);
             return isSuccess ? (int(22),  address(mock))
              : (int(22),  address(0x0));
         }

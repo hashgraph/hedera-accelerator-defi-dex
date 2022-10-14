@@ -29,7 +29,7 @@ describe("All Tests", function () {
     mockBaseHTS.setFailType(0);
 
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
-    const tokenCont = await TokenCont.deploy();
+    const tokenCont = await TokenCont.deploy(10, 10);
 
     const LpTokenCont = await ethers.getContractFactory("LPTokenTest");
     const lpTokenCont = await LpTokenCont.deploy(tokenCont.address, mockBaseHTS.address);
@@ -55,7 +55,7 @@ describe("All Tests", function () {
     await mockBaseHTS.setFailType(0);
 
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
-    const tokenCont = await TokenCont.deploy();
+    const tokenCont = await TokenCont.deploy(10, 10);
 
     const LpTokenCont = await ethers.getContractFactory("LPTokenTest");
     const lpTokenCont = await LpTokenCont.deploy(tokenCont.address, mockBaseHTS.address);
