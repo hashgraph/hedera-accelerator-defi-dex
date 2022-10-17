@@ -19,8 +19,13 @@ describe("Governor Tests", function () {
 
   describe("GovernorCountingSimpleInternal Upgradeable", function () {
     it("Verify if the Governor contract is upgradeable safe ", async function () {
+      const votingDelay = 0;
+      const votingPeriod = 12;
       const Governor = await ethers.getContractFactory("GovernorCountingSimpleInternal");
-      const instance = await upgrades.deployProxy(Governor, [zeroAddress], {unsafeAllow: ['delegatecall']});
+      const treaKey = ethers.utils.toUtf8Bytes("treasurer public key");
+      const adminKey = ethers.utils.toUtf8Bytes("Admin public key");
+      const args = [zeroAddress, zeroAddress, treaKey, zeroAddress, adminKey, "Token", "Symbol", votingDelay, votingPeriod];
+      const instance = await upgrades.deployProxy(Governor, args, {unsafeAllow: ['delegatecall']});
       await instance.deployed();
     });
   });
@@ -28,15 +33,21 @@ describe("Governor Tests", function () {
   async function deployFixture() {
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
     const tokenCont = await TokenCont.deploy(10, 10);
+    const votingDelay = 0;
+    const votingPeriod = 12;
 
     const Governor = await ethers.getContractFactory("GovernorCountingSimpleInternal");
-    const instance = await upgrades.deployProxy(Governor, [tokenCont.address], {unsafeAllow: ['delegatecall']});
+    const treaKey = ethers.utils.toUtf8Bytes("treasurer public key");
+    const adminKey = ethers.utils.toUtf8Bytes("Admin public key");
+    const args = [tokenCont.address, zeroAddress, treaKey, zeroAddress, adminKey, "Token", "Symbol", votingDelay, votingPeriod];
+    const instance = await upgrades.deployProxy(Governor, args, {unsafeAllow: ['delegatecall']});
+
     await instance.deployed();
     
     return { instance, tokenCont};
   }
 
-  describe.only("Governor functionality",  async () => {
+  describe("Governor functionality",  async () => {
 
     const readFileContent = (filePath: string) => {
         const rawdata: any = fs.readFileSync(filePath);
@@ -51,15 +62,16 @@ describe("Governor Tests", function () {
     }
 
     it("getVotes for 100% shares", async function () {
-      const { instance } = await loadFixture(deployFixture);
-      const votes = await instance.getVotes(zeroAddress, 1);
+      const { instance, tokenCont} = await loadFixture(deployFixture);
+      const votes = await instance.getVotes(tokenCont.address, 1);
       expect(votes).to.be.equals(100);
     });
 
     it("getVotes for 50% shares", async function () {
         const { instance, tokenCont } = await loadFixture(deployFixture);
         await tokenCont.setTotal(20);
-        const votes = await instance.getVotes(zeroAddress, 1);
+        await tokenCont.setUserBalance(10);
+        const votes = await instance.getVotes(tokenCont.address, 1);
         expect(votes).to.be.equals(50);
     });
 
