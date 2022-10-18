@@ -105,8 +105,12 @@ abstract contract AbstractPair is IPair, HederaResponseCodes {
         int calculatedSlippage = slippageOutGivenIn(_deltaAQty);
         int localSlippage = getSlippage();
         require(calculatedSlippage <= (localSlippage),  "Slippage threshold breached.");
+        // deduct fee from the token A
+        _deltaAQty -= feeForToken(_deltaAQty);
         int deltaBQty = getOutGivenIn(_deltaAQty);
         pair.tokenA.tokenQty += _deltaAQty;  
+        // deduct fee from the token B
+        deltaBQty -= feeForToken(deltaBQty);
         int response = transferToken(pair.tokenA.tokenAddress, to, address(this), _deltaAQty);
         require(response == HederaResponseCodes.SUCCESS, "swapTokenA: Transferring token A to contract failed with status code");
 
@@ -121,8 +125,12 @@ abstract contract AbstractPair is IPair, HederaResponseCodes {
         int calculatedSlippage = slippageInGivenOut(_deltaBQty);
         int localSlippage = getSlippage();
         require(calculatedSlippage <= localSlippage,  "Slippage threshold breached.");
+        // deduct fee from the token B
+        _deltaBQty -= feeForToken(_deltaBQty);
         int deltaAQty = getInGivenOut(_deltaBQty);
         pair.tokenB.tokenQty += _deltaBQty;
+        // deduct fee from the token A
+        deltaAQty -= feeForToken(deltaAQty);
         int response = transferToken(pair.tokenB.tokenAddress, to, address(this), _deltaBQty);
         require(response == HederaResponseCodes.SUCCESS, "swapTokenB: Transferring token B to contract failed with status code");
 
@@ -221,6 +229,15 @@ abstract contract AbstractPair is IPair, HederaResponseCodes {
 
     function getFee() public view returns(int) {
         return fee;
+    }
+
+    function getFeePrecision() public view returns (int) {
+        return 100;
+    }
+
+    function feeForToken(int _tokenQ) public view returns(int) {
+        int tokenQ = ((_tokenQ * fee)/2)/getFeePrecision();
+        return tokenQ;
     }
 
 }   
