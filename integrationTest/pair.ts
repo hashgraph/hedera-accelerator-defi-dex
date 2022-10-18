@@ -378,7 +378,7 @@ async function testForSinglePair(contract: DeployedContract, lpContract: Deploye
   const contractProxyId = contract.transparentProxyId!;
   await initializeLPTokenContract(lpTokenProxyId);
   await getLpTokenAddress(lpTokenProxyId);
-  console.log(`\nUsing pair proxy contractId ${contract.transparentProxyId} and LP token contract proxy id ${lpTokenProxyId}`);
+  console.log(`\nUsing pair proxy contractId ${contract.transparentProxyId} and LP token contract proxy id ${lpTokenProxyId} \n`);
   await initialize(contractProxyId, lpContract.transparentProxyAddress!);
   await getPrecisionValue(contractProxyId);
   //await getTreasureBalance();

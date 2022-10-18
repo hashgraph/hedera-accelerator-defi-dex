@@ -28,5 +28,36 @@
         "timestamp": "2022-10-07T12:44:47.696Z",
         "transparentProxyAddress": "0x0000000000000000000000000000000002e474fd",
         "transparentProxyId": "0.0.48526589"
+    },
+    {
+        "name": "basehts",
+        "id": "0.0.48585457",
+        "address": "0x0000000000000000000000000000000002e55af1",
+        "timestamp": "2022-10-11T05:50:49.507Z"
+    },
+    {
+        "name": "lptoken",
+        "id": "0.0.48585459",
+        "address": "0x0000000000000000000000000000000002e55af3",
+        "timestamp": "2022-10-11T05:51:41.783Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e55af9",
+        "transparentProxyId": "0.0.48585465"
+    },
+    {
+        "name": "pair",
+        "id": "0.0.48585470",
+        "address": "0x0000000000000000000000000000000002e55afe",
+        "timestamp": "2022-10-11T05:53:29.478Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e55b00",
+        "transparentProxyId": "0.0.48585472"
+    },
+    
+    {
+        "name": "governorcountingsimpleinternal",
+        "id": "0.0.48634262",
+        "address": "0x0000000000000000000000000000000002e61996",
+        "timestamp": "2022-10-17T10:53:22.558Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e6199b",
+        "transparentProxyId": "0.0.48634267"
     }
 ]

@@ -29,7 +29,7 @@ describe("All Tests", function () {
     mockBaseHTS.setFailType(0);
 
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
-    const tokenCont = await TokenCont.deploy();
+    const tokenCont = await TokenCont.deploy(10, 10);
 
     const LpTokenCont = await ethers.getContractFactory("LPTokenTest");
     const lpTokenCont = await LpTokenCont.deploy(tokenCont.address, mockBaseHTS.address);
@@ -55,7 +55,7 @@ describe("All Tests", function () {
     await mockBaseHTS.setFailType(0);
 
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
-    const tokenCont = await TokenCont.deploy();
+    const tokenCont = await TokenCont.deploy(10, 10);
 
     const LpTokenCont = await ethers.getContractFactory("LPTokenTest");
     const lpTokenCont = await LpTokenCont.deploy(tokenCont.address, mockBaseHTS.address);
@@ -131,7 +131,7 @@ describe("All Tests", function () {
       expect(tokenBeforeQty[1]).to.be.equals(precision.mul(100));
   
       const allLPToken = await lpTokenCont.getAllLPTokenCount();
-      expect(allLPToken).to.be.equals(100);
+      expect(allLPToken).to.be.equals(10);
   
       const tx = await factory.removeLiquidity(zeroAddress, tokenAAddress, tokenBAddress, 5);
       await tx.wait();
@@ -140,8 +140,8 @@ describe("All Tests", function () {
       expect(userlpToken).to.be.equals(10);
   
       const tokenQty =  await swapV2.getPairQty();
-      expect(tokenQty[0]).to.be.equals(precision.mul(95));
-      expect(tokenQty[1]).to.be.equals(precision.mul(95));
+      expect(tokenQty[0]).to.be.equals(precision.mul(50));
+      expect(tokenQty[1]).to.be.equals(precision.mul(50));
     });
   });
 
@@ -210,12 +210,13 @@ describe("All Tests", function () {
 
   it("Remove liquidity to the pool by removing 5 units of lpToken  ", async function () {
     const { swapV2, lpTokenCont } = await loadFixture(deployFixture);
+    
     const tokenBeforeQty = await swapV2.getPairQty();
     expect(tokenBeforeQty[0]).to.be.equals(precision.mul(100));
     expect(tokenBeforeQty[1]).to.be.equals(precision.mul(100));
 
     const allLPToken = await lpTokenCont.getAllLPTokenCount();
-    expect(allLPToken).to.be.equals(100);
+    expect(allLPToken).to.be.equals(10);
 
     const tx = await swapV2.removeLiquidity(zeroAddress, 5);
     await tx.wait();
@@ -224,8 +225,8 @@ describe("All Tests", function () {
     expect(userlpToken).to.be.equals(10);
 
     const tokenQty =  await swapV2.getPairQty();
-    expect(tokenQty[0]).to.be.equals(precision.mul(95));
-    expect(tokenQty[1]).to.be.equals(precision.mul(95));
+    expect(tokenQty[0]).to.be.equals(precision.mul(50));
+    expect(tokenQty[1]).to.be.equals(precision.mul(50));
   });
 
   it("Add liquidity to the pool by adding 50 units of token and 50 units of token B  ", async function () {
