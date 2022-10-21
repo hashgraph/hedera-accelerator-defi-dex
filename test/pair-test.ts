@@ -73,73 +73,45 @@ describe("All Tests", function () {
   }
 
   describe("Factory Contract positive Tests",  async () => {
-    it("Check add pair method", async function () {
+
+    it("Check createPair method", async function () {
+      const { factory, mockBaseHTS } = await loadFixture(deployFixture);
+      await factory.setUpFactory(mockBaseHTS.address);
+      await factory.createPair(tokenAAddress, tokenBAddress);
+      const pair1 = await factory.getPair(tokenAAddress, tokenBAddress);
+      await factory.createPair(tokenAAddress, tokenBAddress);
+      const pair2 = await factory.getPair(tokenAAddress, tokenBAddress);
+      expect(pair1).to.be.equals(pair1);
+      const pairs = await factory.getPairs()
+      expect(pairs.length).to.be.equals(1);
+    });
+
+    it("Check getPairs method", async function () {
       const { factory, mockBaseHTS } = await loadFixture(deployFixture);
       await factory.setUpFactory(mockBaseHTS.address);
       await factory.createPair(tokenAAddress, tokenBAddress);
       const pairs = await factory.getPairs()
-
       expect(pairs.length).to.be.equals(1);
     });
 
-    it("factory Swap 1 units of token A from ", async function () {
-      const { mockBaseHTS, factory } = await loadFixture(deployFixture);
-      const SwapV2 = await ethers.getContractFactory("PairTest");
-
+    it("Check For identical Tokens", async function () {
+      const { factory, mockBaseHTS } = await loadFixture(deployFixture);
       await factory.setUpFactory(mockBaseHTS.address);
-      await factory.createPair(tokenAAddress, tokenBAddress);
-
-      const tokenAPoolQty = BigNumber.from(200).mul(precision);
-      const tokenBPoolQty = BigNumber.from(220).mul(precision);
-      await factory.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, tokenAPoolQty, tokenBPoolQty, fee);
-      const swapV2 = factory.getPair(tokenAAddress, tokenBAddress);
-      
-      const tokenBeforeQty = await swapV2.getPairQty(); 
-      expect(Number(tokenBeforeQty[0])).to.be.equals(tokenAPoolQty);
-      const addTokenAQty = BigNumber.from(1).mul(precision);
-      const feeForTokenA = await swapV2.feeForToken(addTokenAQty);
-      const addTokenAQtyAfterFee =  Number(addTokenAQty) - Number(feeForTokenA);
-      const tx = await factory.swapToken(zeroAddress, tokenAAddress, tokenBAddress, addTokenAQty, 0);
-      await tx.wait();
-      
-      const tokenQty = await swapV2.getPairQty();
-      expect(tokenQty[0]).to.be.equals(tokenAPoolQty.add(addTokenAQtyAfterFee));
-      const feeForTokenB = await swapV2.feeForToken(tokenQty[1]);
-      const tokenBResultantQtyAfterFee = Number(tokenQty[1]) - Number(feeForTokenB);
-      const tokenBResultantQty = Number(tokenBResultantQtyAfterFee)/Number(precision);
-      expect(tokenBResultantQty).to.be.equals(217.8217817);
+      await expect(factory.createPair(tokenAAddress, tokenAAddress)).to.revertedWith("IDENTICAL_ADDRESSES");
     });
 
-    it("Factory Add liquidity to the pool by adding 50 units of token and 50 units of token B  ", async function () {
-      const { swapV2, mockBaseHTS,  factory } = await loadFixture(deployFixture);
+    it("Check For zero Token address", async function () {
+      const { factory, mockBaseHTS } = await loadFixture(deployFixture);
       await factory.setUpFactory(mockBaseHTS.address);
-      await factory.createPair(tokenAAddress, tokenBAddress);
-
-      const tokenBeforeQty = await swapV2.getPairQty();
-      expect(tokenBeforeQty[0]).to.be.equals(precision.mul(100));
-      expect(tokenBeforeQty[1]).to.be.equals(precision.mul(100));
-      const tx = await factory.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, precision.mul(50), precision.mul(50),  precision.mul(1));
-      await tx.wait();
-      const tokenQty =  await swapV2.getPairQty();
-      expect(tokenQty[0]).to.be.equals(precision.mul(150));
-      expect(tokenQty[1]).to.be.equals(precision.mul(150));
+      await expect(factory.createPair(newZeroAddress, tokenAAddress)).to.revertedWith("ZERO_ADDRESS");
     });
-  
-    it("Factory Remove liquidity to the pool by removing 5 units of lpToken  ", async function () {
-      const { swapV2, mockBaseHTS, lpTokenCont, factory } = await loadFixture(deployFixture);
+
+    it("Check getPair method", async function () {
+      const { factory, mockBaseHTS } = await loadFixture(deployFixture);
       await factory.setUpFactory(mockBaseHTS.address);
       await factory.createPair(tokenAAddress, tokenBAddress);
-      const tx1 = await factory.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, precision.mul(50), precision.mul(50),  precision.mul(1));
-
-      const tx = await factory.removeLiquidity(zeroAddress, tokenAAddress, tokenBAddress, 5);
-      await tx.wait();
-  
-      const userlpToken =  await lpTokenCont.lpTokenForUser(zeroAddress);
-      expect(userlpToken).to.be.equals(10);
-  
-      const tokenQty =  await swapV2.getPairQty();
-      expect(tokenQty[0]).to.be.equals(precision.mul(95));
-      expect(tokenQty[1]).to.be.equals(precision.mul(95));
+      const pair = await factory.getPair(tokenAAddress, tokenBAddress);
+      expect(pair).to.be.not.equal(zeroAddress);
     });
   });
 
