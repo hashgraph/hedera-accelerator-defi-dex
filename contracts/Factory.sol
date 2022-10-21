@@ -35,7 +35,7 @@ contract Factory {
         return allPairs;
     }
 
-    function initializePairContract(address fromAccount, address _tokenA, address _tokenB, int _tokenAQty, int _tokenBQty, int fee) external {
+    function initializeContract(address fromAccount, address _tokenA, address _tokenB, int _tokenAQty, int _tokenBQty, int fee) external {
         (address token0, address token1) = sortTokens(_tokenA, _tokenB);
         IPair pair = pairs[token0][token1];
         emit Initializing(address(pair), "Pair found for initializing");

@@ -106,5 +106,13 @@
         "timestamp": "2022-10-21T07:32:04.481Z",
         "transparentProxyAddress": "0x0000000000000000000000000000000002e6b5d0",
         "transparentProxyId": "0.0.48674256"
+    },
+    {
+        "name": "factory",
+        "id": "0.0.48674348",
+        "address": "0x0000000000000000000000000000000002e6b62c",
+        "timestamp": "2022-10-21T07:55:00.695Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e6b633",
+        "transparentProxyId": "0.0.48674355"
     }
 ]
