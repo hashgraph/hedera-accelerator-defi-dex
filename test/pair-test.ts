@@ -73,17 +73,9 @@ describe("All Tests", function () {
   }
 
   describe("Factory Contract positive Tests",  async () => {
-    it("Check Set pairs method", async function () {
-      const { swapV2, factory } = await loadFixture(deployFixture);
-      await factory.setPairs([swapV2.address]);
-      const pairs = await factory.getPairs()
-
-      expect(pairs[0]).to.be.equals(swapV2.address);
-    });
-
     it("Check add pair method", async function () {
       const { swapV2, factory } = await loadFixture(deployFixture);
-      await factory.addPair(swapV2.address);
+      await factory.createPair(tokenAAddress, tokenBAddress);
       const pairs = await factory.getPairs()
 
       expect(pairs[0]).to.be.equals(swapV2.address);
