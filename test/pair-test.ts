@@ -494,16 +494,6 @@ it("Swap 1 units of token B  ", async function () {
       const valueWithoutPrecision = Number(value)/Number(precision);
       expect(valueWithoutPrecision).to.be.equals(0.5205479);
     });
-
-    it("get fee value", async function () {
-      const { swapV2 } = await loadFixture(deployFixture);
-      const fee = BigNumber.from("1").mul(precision);
-      await swapV2.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, 30, 10, fee);
-      const value = await swapV2.getFee();
-      const valueWithoutPrecision = Number(value)/Number(precision);
-
-      expect(Number(valueWithoutPrecision)).to.be.equals(Number(1));
-    });
   });
 
   describe("Slippage test cases",  async () => {
@@ -554,6 +544,29 @@ it("Swap 1 units of token B  ", async function () {
       const value = await swapV2.getTokenPairAddress();
       expect(value[0]).to.be.equals(tokenAAddress);
       expect(value[1]).to.be.equals(tokenBAddress);
+    });
+  });
+
+  describe("fee test cases",  async () => {
+    it("get fee value", async function () {
+      const { swapV2 } = await loadFixture(deployFixture);
+      const fee = BigNumber.from("1").mul(precision);
+
+      await swapV2.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, 30, 10, fee);
+      const value = await swapV2.getFee();
+      const valueWithoutPrecision = Number(value)/Number(precision);
+      expect(Number(valueWithoutPrecision)).to.be.equals(Number(1));
+
+    });
+
+    it("get token quantity from fee", async function () {
+      const { swapV2 } = await loadFixture(deployFixture);
+      const fee = BigNumber.from(1).mul(100);
+      const tokenAPoolQty = BigNumber.from(10).mul(precision);
+      await swapV2.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, tokenAPoolQty, 10, fee);
+      const value = await swapV2.feeForToken(tokenAPoolQty);
+      expect(value).to.be.equals(Number(50000000));
+
     });
   });
 })
