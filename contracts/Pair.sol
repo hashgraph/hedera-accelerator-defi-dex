@@ -19,16 +19,10 @@ contract Pair is AbstractPair, Initializable {
     }
 
     function associateToken(address account,  address _token) internal override  virtual returns(int) {
-        (bool success, bytes memory result) = address(tokenService).delegatecall(
-            abi.encodeWithSelector(IBaseHTS.associateTokenPublic.selector,
-            account, _token));
-        return success ? abi.decode(result, (int32)) : HederaResponseCodes.UNKNOWN;
+        return tokenService.associateTokenPublic(account, _token);
     }
 
     function transferToken(address _token, address sender, address receiver, int amount) internal override virtual returns(int) {
-        (bool success, bytes memory result) = address(tokenService).delegatecall(
-            abi.encodeWithSelector(IBaseHTS.transferTokenPublic.selector,
-            _token, sender, receiver, amount));
-        return success ? abi.decode(result, (int32)) : HederaResponseCodes.UNKNOWN;
+        return tokenService.transferTokenPublic(_token, sender, receiver, amount);
     }
 }

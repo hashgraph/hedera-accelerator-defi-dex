@@ -51,7 +51,6 @@
         "transparentProxyAddress": "0x0000000000000000000000000000000002e55b00",
         "transparentProxyId": "0.0.48585472"
     },
-    
     {
         "name": "governorcountingsimpleinternal",
         "id": "0.0.48634262",
@@ -59,5 +58,53 @@
         "timestamp": "2022-10-17T10:53:22.558Z",
         "transparentProxyAddress": "0x0000000000000000000000000000000002e6199b",
         "transparentProxyId": "0.0.48634267"
+    },
+    {
+        "name": "lptoken",
+        "id": "0.0.48674083",
+        "address": "0x0000000000000000000000000000000002e6b523",
+        "timestamp": "2022-10-21T06:47:04.737Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e6b525",
+        "transparentProxyId": "0.0.48674085"
+    },
+    {
+        "name": "pair",
+        "id": "0.0.48674092",
+        "address": "0x0000000000000000000000000000000002e6b52c",
+        "timestamp": "2022-10-21T06:50:07.816Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e6b52f",
+        "transparentProxyId": "0.0.48674095"
+    },
+    {
+        "name": "factory",
+        "id": "0.0.48674116",
+        "address": "0x0000000000000000000000000000000002e6b544",
+        "timestamp": "2022-10-21T06:53:10.455Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e6b546",
+        "transparentProxyId": "0.0.48674118"
+    },
+    {
+        "name": "factory",
+        "id": "0.0.48674164",
+        "address": "0x0000000000000000000000000000000002e6b574",
+        "timestamp": "2022-10-21T06:58:18.441Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e6b577",
+        "transparentProxyId": "0.0.48674167"
+    },
+    {
+        "name": "factory",
+        "id": "0.0.48674211",
+        "address": "0x0000000000000000000000000000000002e6b5a3",
+        "timestamp": "2022-10-21T07:19:16.395Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e6b5af",
+        "transparentProxyId": "0.0.48674223"
+    },
+    {
+        "name": "factory",
+        "id": "0.0.48674253",
+        "address": "0x0000000000000000000000000000000002e6b5cd",
+        "timestamp": "2022-10-21T07:32:04.481Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e6b5d0",
+        "transparentProxyId": "0.0.48674256"
     }
 ]

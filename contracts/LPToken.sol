@@ -28,7 +28,7 @@ contract LPToken is AbstractLPToken {
         uint256 initialTotalSupply,
         uint256 decimals) internal       override
 returns (int responseCode, address tokenAddress) {
-        (bool success, bytes memory result) = address(tokenService).delegatecall(
+        (bool success, bytes memory result) = address(tokenService).call{value: msg.value} (
             abi.encodeWithSelector(IBaseHTS.createFungibleTokenPublic.selector,  hederaToken, initialTotalSupply, decimals));
         return success ? abi.decode(result, (int, address)) : (int(HederaResponseCodes.UNKNOWN), address(0x0));
     }

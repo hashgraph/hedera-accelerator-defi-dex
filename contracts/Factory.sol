@@ -1,15 +1,16 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 import "./Pair.sol";
+import "./IPair.sol";
 import "./LPToken.sol";
 import "./ILPToken.sol";
-import "./common/IBaseHTS.sol";
-import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 contract Factory {
     IPair [] public allPairs;
     mapping (address => mapping(address => IPair)) pairs;
     IBaseHTS internal tokenService;
+    ILPToken lpToken;
+    IPair tempPair;
     event PairCreated(address indexed _pairAddress, string msg);
     event Initializing(address indexed _pairAddress, string msg);
 
@@ -20,15 +21,8 @@ contract Factory {
         require(token0 != address(0), "ZERO_ADDRESS");
     }
 
-    function addPair(IPair _pair) public {
-         IPair pair = IPair(_pair);
-        (address token0, address token1) = sortTokens(pair.getPair().tokenA.tokenAddress, pair.getPair().tokenB.tokenAddress);
-        pairs[token0][token1] = pair;
-        allPairs.push(_pair);
-    }
-
     function setUpFactory(IBaseHTS _tokenService) public {
-        tokenService = _tokenService;
+        tokenService = _tokenService;      
     }
 
     function getPair(address _tokenA, address _tokenB) public view returns(address) {
@@ -46,14 +40,10 @@ contract Factory {
         IPair pair = pairs[token0][token1];
         emit Initializing(address(pair), "Pair found for initializing");
         require(address(pair) != address(0), "Pair  not found for initializing");
-        (bool success, ) = address(pair).delegatecall(
-            abi.encodeWithSelector(IPair.initializeContract.selector,
-            fromAccount, _tokenA, _tokenB, _tokenAQty, _tokenBQty, fee));
-        require(success, "Pair Initialization fail!");
-        //pair.initializeContract(fromAccount, _tokenA, _tokenB, _tokenAQty, _tokenBQty, fee);
+        pair.initializeContract(fromAccount, _tokenA, _tokenB, _tokenAQty, _tokenBQty, fee);
     }
 
-    function createPair(address _tokenA, address _tokenB) external payable {
+    function createPair(address _tokenA, address _tokenB) external payable returns(address) {
         (address token0, address token1) = sortTokens(_tokenA, _tokenB);
         IPair pair = pairs[token0][token1];
         if (address(pair) == address(0)) {
@@ -61,29 +51,11 @@ contract Factory {
             IPair newPair = IPair(deployedPair);
             pairs[token0][token1] = newPair;
             allPairs.push(newPair);
+            tempPair = newPair;
             emit PairCreated(deployedPair, "New Pair Created");
+            return deployedPair;
         }  
-    }
-
-    function addLiquidity(address fromAccount, address _tokenA, address _tokenB, int _tokenAQty, int _tokenBQty) external {
-        (address token0, address token1) = sortTokens(_tokenA, _tokenB);
-        IPair pair = pairs[token0][token1];
-        if (address(pair) != address(0)) {
-            pair.addLiquidity(fromAccount, _tokenA, _tokenB, _tokenAQty, _tokenBQty);
-        }  
-    }
-
-    function removeLiquidity(address fromAccount, address _tokenA, address _tokenB, int _lpToken) external {
-        (address token0, address token1) = sortTokens(_tokenA, _tokenB);
-        IPair pair = pairs[token0][token1];
-        require(token0 != address(0), " PAIR_ZERO_ADDRESS");
-        pair.removeLiquidity(fromAccount, _lpToken);
-    }
-
-    function swapToken(address to, address _tokenA, address _tokenB, int _deltaAQty, int _deltaBQty) external {
-        (address token0, address token1) = sortTokens(_tokenA, _tokenB);
-        IPair pair = pairs[token0][token1];
-        pair.swapToken(to, _tokenA, address(0), _deltaAQty, _deltaBQty);   
+        return address(pair);
     }
 
     function createPairNew() internal returns (address) {
@@ -93,8 +65,8 @@ contract Factory {
         );
         IPair newPair = IPair(deployedContract);
         address lpTokenDeployed = createLPContract();
-        ILPToken lpToken = ILPToken(lpTokenDeployed);
-        newPair.initialize(tokenService, lpToken);
+        ILPToken lp = ILPToken(lpTokenDeployed);
+        newPair.initialize(tokenService, lp);
         return deployedContract;
     }
 
@@ -103,10 +75,10 @@ contract Factory {
         address deployedContract = address(
             new LPToken{salt: deploymentSalt}()
         );
-        (bool success, ) = deployedContract.delegatecall(
-            abi.encodeWithSelector(ILPToken.initializeParams.selector,
-            (tokenService)));
+        (bool success, ) = deployedContract.call{value: msg.value}(
+            abi.encodeWithSelector(ILPToken.initializeParams.selector, tokenService));
         require(success, "LPToken Initialization fail!");
+        lpToken = ILPToken(deployedContract);
         return deployedContract;
     }
 
@@ -132,5 +104,27 @@ contract Factory {
                     )
                 )
             );
+    }
+
+
+     function addLiquidity(address fromAccount, address _tokenA, address _tokenB, int _tokenAQty, int _tokenBQty) external {
+        (address token0, address token1) = sortTokens(_tokenA, _tokenB);
+        IPair pair = pairs[token0][token1];
+        if (address(pair) != address(0)) {
+            pair.addLiquidity(fromAccount, _tokenA, _tokenB, _tokenAQty, _tokenBQty);
+        }  
+    }
+
+    function removeLiquidity(address fromAccount, address _tokenA, address _tokenB, int _lpToken) external {
+        (address token0, address token1) = sortTokens(_tokenA, _tokenB);
+        IPair pair = pairs[token0][token1];
+        require(token0 != address(0), " PAIR_ZERO_ADDRESS");
+        pair.removeLiquidity(fromAccount, _lpToken);
+    }
+
+    function swapToken(address to, address _tokenA, address _tokenB, int _deltaAQty, int _deltaBQty) external {
+        (address token0, address token1) = sortTokens(_tokenA, _tokenB);
+        IPair pair = pairs[token0][token1];
+        pair.swapToken(to, _tokenA, address(0), _deltaAQty, _deltaBQty);   
     }
 }
