@@ -81,7 +81,7 @@ abstract contract AbstractPair is IPair, HederaResponseCodes {
 
     }
 
-    function calculateTokenstoGetBack(int _lpToken) internal returns (int, int) {
+    function calculateTokenstoGetBack(int _lpToken) internal view returns (int, int) {
         int allLPTokens = lpTokenContract.getAllLPTokenCount();
 
         int tokenAQuantity = (_lpToken * pair.tokenA.tokenQty)/allLPTokens;
@@ -231,7 +231,7 @@ abstract contract AbstractPair is IPair, HederaResponseCodes {
         return fee;
     }
 
-    function getFeePrecision() public view returns (int) {
+    function getFeePrecision() public pure returns (int) {
         return 100;
     }
 
