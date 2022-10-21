@@ -29,7 +29,7 @@ describe("All Tests", function () {
     mockBaseHTS.setFailType(0);
 
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
-    const tokenCont = await TokenCont.deploy();
+    const tokenCont = await TokenCont.deploy(10, 10);
 
     const LpTokenCont = await ethers.getContractFactory("LPTokenTest");
     const lpTokenCont = await LpTokenCont.deploy(tokenCont.address, mockBaseHTS.address);
@@ -55,7 +55,7 @@ describe("All Tests", function () {
     await mockBaseHTS.setFailType(0);
 
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
-    const tokenCont = await TokenCont.deploy();
+    const tokenCont = await TokenCont.deploy(10, 10);
 
     const LpTokenCont = await ethers.getContractFactory("LPTokenTest");
     const lpTokenCont = await LpTokenCont.deploy(tokenCont.address, mockBaseHTS.address);
@@ -74,40 +74,51 @@ describe("All Tests", function () {
 
   describe("Factory Contract positive Tests",  async () => {
     it("Check add pair method", async function () {
-      const { swapV2, factory } = await loadFixture(deployFixture);
+      const { factory, mockBaseHTS } = await loadFixture(deployFixture);
+      await factory.setUpFactory(mockBaseHTS.address);
       await factory.createPair(tokenAAddress, tokenBAddress);
       const pairs = await factory.getPairs()
 
-      expect(pairs[0]).to.be.equals(swapV2.address);
+      expect(pairs.length).to.be.equals(1);
     });
 
     it("factory Swap 1 units of token A from ", async function () {
-      const { swapV2, factory } = await loadFixture(deployFixture);
-      await factory.setPairs([swapV2.address]);
+      const { mockBaseHTS, factory } = await loadFixture(deployFixture);
+      const SwapV2 = await ethers.getContractFactory("PairTest");
+
+      await factory.setUpFactory(mockBaseHTS.address);
+      await factory.createPair(tokenAAddress, tokenBAddress);
 
       const tokenAPoolQty = BigNumber.from(200).mul(precision);
       const tokenBPoolQty = BigNumber.from(220).mul(precision);
-      await factory.initializePairContract(zeroAddress, tokenAAddress, tokenBAddress, tokenAPoolQty, tokenBPoolQty, fee);
+      await factory.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, tokenAPoolQty, tokenBPoolQty, fee);
+      const swapV2 = factory.getPair(tokenAAddress, tokenBAddress);
+      
       const tokenBeforeQty = await swapV2.getPairQty(); 
       expect(Number(tokenBeforeQty[0])).to.be.equals(tokenAPoolQty);
       const addTokenAQty = BigNumber.from(1).mul(precision);
+      const feeForTokenA = await swapV2.feeForToken(addTokenAQty);
+      const addTokenAQtyAfterFee =  Number(addTokenAQty) - Number(feeForTokenA);
       const tx = await factory.swapToken(zeroAddress, tokenAAddress, tokenBAddress, addTokenAQty, 0);
       await tx.wait();
       
       const tokenQty = await swapV2.getPairQty();
-      expect(tokenQty[0]).to.be.equals(tokenAPoolQty.add(addTokenAQty));
-      const tokenBResultantQty = Number(tokenQty[1])/Number(precision);
-      expect(tokenBResultantQty).to.be.equals(218.9054726);
+      expect(tokenQty[0]).to.be.equals(tokenAPoolQty.add(addTokenAQtyAfterFee));
+      const feeForTokenB = await swapV2.feeForToken(tokenQty[1]);
+      const tokenBResultantQtyAfterFee = Number(tokenQty[1]) - Number(feeForTokenB);
+      const tokenBResultantQty = Number(tokenBResultantQtyAfterFee)/Number(precision);
+      expect(tokenBResultantQty).to.be.equals(217.8217817);
     });
 
     it("Factory Add liquidity to the pool by adding 50 units of token and 50 units of token B  ", async function () {
-      const { swapV2, factory } = await loadFixture(deployFixture);
-      await factory.setPairs([swapV2.address]);
+      const { swapV2, mockBaseHTS,  factory } = await loadFixture(deployFixture);
+      await factory.setUpFactory(mockBaseHTS.address);
+      await factory.createPair(tokenAAddress, tokenBAddress);
 
       const tokenBeforeQty = await swapV2.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(100));
       expect(tokenBeforeQty[1]).to.be.equals(precision.mul(100));
-      const tx = await factory.addLiquidity(zeroAddress, tokenAAddress, tokenBAddress, precision.mul(50), precision.mul(50));
+      const tx = await factory.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, precision.mul(50), precision.mul(50),  precision.mul(1));
       await tx.wait();
       const tokenQty =  await swapV2.getPairQty();
       expect(tokenQty[0]).to.be.equals(precision.mul(150));
@@ -115,17 +126,11 @@ describe("All Tests", function () {
     });
   
     it("Factory Remove liquidity to the pool by removing 5 units of lpToken  ", async function () {
-      const { swapV2, lpTokenCont, factory } = await loadFixture(deployFixture);
-      await factory.setPairs([swapV2.address]);
+      const { swapV2, mockBaseHTS, lpTokenCont, factory } = await loadFixture(deployFixture);
+      await factory.setUpFactory(mockBaseHTS.address);
+      await factory.createPair(tokenAAddress, tokenBAddress);
+      const tx1 = await factory.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, precision.mul(50), precision.mul(50),  precision.mul(1));
 
-      const tokenBeforeQty = await swapV2.getPairQty();
-      expect(tokenBeforeQty[0]).to.be.equals(precision.mul(100));
-      expect(tokenBeforeQty[1]).to.be.equals(precision.mul(100));
-  
-      const allLPToken = await lpTokenCont.getAllLPTokenCount();
-      console.log(allLPToken);
-      expect(allLPToken).to.be.equals(100);
-  
       const tx = await factory.removeLiquidity(zeroAddress, tokenAAddress, tokenBAddress, 5);
       await tx.wait();
   
@@ -152,14 +157,41 @@ describe("All Tests", function () {
     await swapV2.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, tokenAPoolQty, tokenBPoolQty, fee);
     const tokenBeforeQty = await swapV2.getPairQty(); 
     expect(Number(tokenBeforeQty[0])).to.be.equals(tokenAPoolQty);
-    const addTokenAQty = BigNumber.from(1).mul(precision);
+    var addTokenAQty = BigNumber.from(1).mul(precision);
+    const feeForTokenA = await swapV2.feeForToken(addTokenAQty);
+    const addTokenAQtyAfterFee =  Number(addTokenAQty) - Number(feeForTokenA);
     const tx = await swapV2.swapToken(zeroAddress, tokenAAddress, zeroAddress, addTokenAQty, 0);
     await tx.wait();
     
     const tokenQty = await swapV2.getPairQty();
-    expect(tokenQty[0]).to.be.equals(tokenAPoolQty.add(addTokenAQty));
-    const tokenBResultantQty = Number(tokenQty[1])/Number(precision);
-    expect(tokenBResultantQty).to.be.equals(218.9054726);
+    expect(tokenQty[0]).to.be.equals(tokenAPoolQty.add(addTokenAQtyAfterFee));
+    const feeForTokenB = await swapV2.feeForToken(tokenQty[1]);
+    const tokenBResultantQtyAfterFee = Number(tokenQty[1]) - Number(feeForTokenB);
+    const tokenBResultantQty = Number(tokenBResultantQtyAfterFee)/Number(precision);
+    expect(tokenBResultantQty).to.be.equals(217.8217817);
+  });
+
+
+it("Swap 1 units of token B  ", async function () {
+    const { swapV2 } = await loadFixture(deployFixture);
+    const tokenAPoolQty = BigNumber.from(114).mul(precision);
+    const tokenBPoolQty = BigNumber.from(220).mul(precision);
+    await swapV2.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, tokenAPoolQty, tokenBPoolQty, fee);
+    const tokenBeforeQty = await swapV2.getPairQty(); 
+    expect(Number(tokenBeforeQty[1])).to.be.equals(tokenBPoolQty);
+    const addTokenBQty = BigNumber.from(1).mul(precision);
+    const feeForTokenB = await swapV2.feeForToken(addTokenBQty);
+    const addTokenBQtyAfterFee =  Number(addTokenBQty) - Number(feeForTokenB);
+    const tx = await swapV2.swapToken(zeroAddress, zeroAddress, tokenBAddress, 0, addTokenBQty);
+    await tx.wait();
+    
+    const tokenQty = await swapV2.getPairQty();
+    expect(tokenQty[1]).to.be.equals(tokenBPoolQty.add(addTokenBQtyAfterFee));
+    // const tokenAResultantQty = Number(tokenQty[0])/Number(precision);
+    const feeForTokenA = await swapV2.feeForToken(tokenQty[0]);
+    const tokenAResultantQtyAfterFee = Number(tokenQty[0]) - Number(feeForTokenA);
+    const tokenAResultantQty = Number(tokenAResultantQtyAfterFee)/Number(precision);
+    expect(tokenAResultantQty).to.be.equals(112.9172331);
   });
 
   it("Swap 100 units of token A - breaching slippage  ", async function () {
@@ -171,23 +203,6 @@ describe("All Tests", function () {
     expect(Number(tokenBeforeQty[0])).to.be.equals(tokenAPoolQty);
     const addTokenAQty = BigNumber.from(100).mul(precision);
     await expect(swapV2.swapToken(zeroAddress, tokenAAddress, zeroAddress, addTokenAQty, 0)).to.revertedWith("Slippage threshold breached.");
-  });
-
-  it("Swap 1 units of token B  ", async function () {
-    const { swapV2 } = await loadFixture(deployFixture);
-    const tokenAPoolQty = BigNumber.from(114).mul(precision);
-    const tokenBPoolQty = BigNumber.from(220).mul(precision);
-    await swapV2.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, tokenAPoolQty, tokenBPoolQty, fee);
-    const tokenBeforeQty = await swapV2.getPairQty(); 
-    expect(Number(tokenBeforeQty[1])).to.be.equals(tokenBPoolQty);
-    const addTokenBQty = BigNumber.from(1).mul(precision);
-    const tx = await swapV2.swapToken(zeroAddress, zeroAddress, tokenBAddress, 0, addTokenBQty);
-    await tx.wait();
-    
-    const tokenQty = await swapV2.getPairQty();
-    expect(tokenQty[1]).to.be.equals(tokenBPoolQty.add(addTokenBQty));
-    const tokenAResultantQty = Number(tokenQty[0])/Number(precision);
-    expect(tokenAResultantQty).to.be.equals(113.4794521);
   });
 
   it("Swap 100 units of token B - breaching slippage  ", async function () {
@@ -208,7 +223,7 @@ describe("All Tests", function () {
     expect(tokenBeforeQty[1]).to.be.equals(precision.mul(100));
 
     const allLPToken = await lpTokenCont.getAllLPTokenCount();
-    expect(allLPToken).to.be.equals(100);
+    expect(allLPToken).to.be.equals(10);
 
     const tx = await swapV2.removeLiquidity(zeroAddress, 5);
     await tx.wait();
@@ -217,8 +232,8 @@ describe("All Tests", function () {
     expect(userlpToken).to.be.equals(10);
 
     const tokenQty =  await swapV2.getPairQty();
-    expect(tokenQty[0]).to.be.equals(precision.mul(95));
-    expect(tokenQty[1]).to.be.equals(precision.mul(95));
+    expect(tokenQty[0]).to.be.equals(precision.mul(50));
+    expect(tokenQty[1]).to.be.equals(precision.mul(50));
   });
 
   it("Add liquidity to the pool by adding 50 units of token and 50 units of token B  ", async function () {

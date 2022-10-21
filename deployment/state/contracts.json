@@ -122,5 +122,29 @@
         "timestamp": "2022-10-21T08:20:04.899Z",
         "transparentProxyAddress": "0x0000000000000000000000000000000002e6b683",
         "transparentProxyId": "0.0.48674435"
+    },
+    {
+        "name": "factory",
+        "id": "0.0.48678021",
+        "address": "0x0000000000000000000000000000000002e6c485",
+        "timestamp": "2022-10-21T11:01:17.583Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e6c494",
+        "transparentProxyId": "0.0.48678036"
+    },
+    {
+        "name": "factory",
+        "id": "0.0.48678353",
+        "address": "0x0000000000000000000000000000000002e6c5d1",
+        "timestamp": "2022-10-21T11:13:30.894Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e6c5de",
+        "transparentProxyId": "0.0.48678366"
+    },
+    {
+        "name": "factory",
+        "id": "0.0.48678598",
+        "address": "0x0000000000000000000000000000000002e6c6c6",
+        "timestamp": "2022-10-21T11:22:49.586Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e6c6d4",
+        "transparentProxyId": "0.0.48678612"
     }
 ]

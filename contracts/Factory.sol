@@ -36,14 +36,6 @@ contract Factory is Initializable {
         return allPairs;
     }
 
-    function initializeContract(address fromAccount, address _tokenA, address _tokenB, int _tokenAQty, int _tokenBQty, int fee) external {
-        (address token0, address token1) = sortTokens(_tokenA, _tokenB);
-        IPair pair = pairs[token0][token1];
-        emit Initializing(address(pair), "Pair found for initializing");
-        require(address(pair) != address(0), "Pair  not found for initializing");
-        pair.initializeContract(fromAccount, _tokenA, _tokenB, _tokenAQty, _tokenBQty, fee);
-    }
-
     function createPair(address _tokenA, address _tokenB) external payable returns(address) {
         (address token0, address token1) = sortTokens(_tokenA, _tokenB);
         IPair pair = pairs[token0][token1];
@@ -77,26 +69,5 @@ contract Factory is Initializable {
             abi.encodeWithSelector(ILPToken.initializeParams.selector, tokenService));
         require(success, "LPToken Initialization fail!");
         return deployedContract;
-    }
-
-    function addLiquidity(address fromAccount, address _tokenA, address _tokenB, int _tokenAQty, int _tokenBQty) external {
-        (address token0, address token1) = sortTokens(_tokenA, _tokenB);
-        IPair pair = pairs[token0][token1];
-        require(address(pair) != address(0), " PAIR_ZERO_ADDRESS");
-        pair.addLiquidity(fromAccount, _tokenA, _tokenB, _tokenAQty, _tokenBQty);
-    }
-
-    function removeLiquidity(address fromAccount, address _tokenA, address _tokenB, int _lpToken) external {
-        (address token0, address token1) = sortTokens(_tokenA, _tokenB);
-        IPair pair = pairs[token0][token1];
-        require(address(pair) != address(0), " PAIR_ZERO_ADDRESS");
-        pair.removeLiquidity(fromAccount, _lpToken);
-    }
-
-    function swapToken(address to, address _tokenA, address _tokenB, int _deltaAQty, int _deltaBQty) external {
-        (address token0, address token1) = sortTokens(_tokenA, _tokenB);
-        IPair pair = pairs[token0][token1];
-        require(address(pair) != address(0), " PAIR_ZERO_ADDRESS");
-        pair.swapToken(to, _tokenA, address(0), _deltaAQty, _deltaBQty);   
     }
 }

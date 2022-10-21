@@ -11,6 +11,7 @@ import {
 
 import ClientManagement from "./utils/utils";
 import { ContractService } from "../deployment/service/ContractService";
+import { httpRequest } from "../deployment/api/HttpsService";
 
 const clientManagement = new ClientManagement();
 const client = clientManagement.createOperatorClient();
@@ -112,6 +113,7 @@ const getPair = async (contractId: string) => {
    console.log(`getPair: ${response.contractFunctionResult!.getAddress(0)}`);
   const transferTokenRx = await liquidityPoolTx.getReceipt(client);
   console.log(`getPair: ${transferTokenRx.status}`);
+  return `0x${response.contractFunctionResult!.getAddress(0)}`;
 };
 
 const getAllPairs = async (contractId: string) => {
@@ -197,8 +199,6 @@ const removeLiquidity = async (contId: string) => {
       "removeLiquidity",
       new ContractFunctionParameters()
         .addAddress(treasureId.toSolidityAddress())
-        .addAddress(tokenA)
-        .addAddress(tokenB)
         .addInt256(lpToken)
     )
     .freezeWith(client)
@@ -214,6 +214,7 @@ const swapTokenA = async (contId: string) => {
   const tokenBQty = withPrecision(0);
   console.log(`Swapping a ${tokenAQty} units of token A from the pool.`);
   // Need to pass different token B address so that only swap of token A is considered.
+  tokenB = TokenId.fromString("0.0.47646100").toSolidityAddress();
   const swapToken = await new ContractExecuteTransaction()
     .setContractId(contId)
     .setGas(2000000)
@@ -242,17 +243,22 @@ const getTreaserBalance = async () => {
 }
 
 async function main() {
-    //await setupFactory();
+    await setupFactory();
     await testForSinglePair(contractId, tokenA, tokenB);
 }
 
 async function testForSinglePair(contractId: string, token0: string, token1: string) {
     await createPair(contractId, token0, token1);
-    await initializeContract(contractId);
-    await addLiquidity(contractId);
-    await removeLiquidity(contractId);
-    await swapTokenA(contractId);
-    await getPair(contractId);
+    const pairAddress =  await getPair(contractId);
+    
+    const response = await httpRequest(pairAddress, undefined);
+    const pairContractId = response.contract_id;
+    console.log(`contractId: ${pairContractId}`)
+
+    await initializeContract(pairContractId);
+    await addLiquidity(pairContractId);
+    await removeLiquidity(pairContractId);
+    await swapTokenA(pairContractId);
     await getAllPairs(contractId);
 }
 
