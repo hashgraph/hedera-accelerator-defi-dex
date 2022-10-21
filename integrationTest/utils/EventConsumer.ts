@@ -11,7 +11,7 @@ import { ContractId } from "@hashgraph/sdk";
  * 
  * In consumer code SDK
  *      const response = await contractAllotTx.getRecord(client);
- *      const allRecords = await getEventsFromRecord(record.contractFunctionResult.logs, "SenderDetail");
+ *      const allRecords = await getEventsFromRecord(response.contractFunctionResult.logs, "SenderDetail");
  *  
  */
 export class EventConsumer {

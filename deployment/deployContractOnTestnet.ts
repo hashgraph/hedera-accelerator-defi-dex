@@ -159,7 +159,7 @@ export class Deployment {
     const fileAppendTx = await new FileAppendTransaction()
         .setFileId(bytecodeFileId ?? "")
         .setContents(contractByteCode)
-        .setMaxChunks(50)
+        .setMaxChunks(100)
         .execute(clientArg);
     await fileAppendTx.getReceipt(clientArg);
     console.log(`- Content added`);
