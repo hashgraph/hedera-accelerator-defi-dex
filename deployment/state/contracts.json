@@ -146,5 +146,21 @@
         "timestamp": "2022-10-21T11:22:49.586Z",
         "transparentProxyAddress": "0x0000000000000000000000000000000002e6c6d4",
         "transparentProxyId": "0.0.48678612"
+    },
+    {
+        "name": "pair",
+        "id": "0.0.48772763",
+        "address": "0x0000000000000000000000000000000002e8369b",
+        "timestamp": "2022-10-31T12:24:30.381Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e836a5",
+        "transparentProxyId": "0.0.48772773"
+    },
+    {
+        "name": "factory",
+        "id": "0.0.48772789",
+        "address": "0x0000000000000000000000000000000002e836b5",
+        "timestamp": "2022-10-31T12:26:00.545Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e836bc",
+        "transparentProxyId": "0.0.48772796"
     }
 ]
