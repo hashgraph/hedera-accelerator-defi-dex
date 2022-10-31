@@ -94,18 +94,17 @@ abstract contract AbstractPair is IPair, HederaResponseCodes {
         return (tokenAQuantity, tokenBQuantity);
     }
 
-    function swapToken(address to, address _tokenA, address _tokenB, int _deltaAQty, int _deltaBQty) external override virtual {
-        require(_tokenA == pair.tokenA.tokenAddress || _tokenB == pair.tokenB.tokenAddress, "Pls pass correct token to swap.");
+    function swapToken(address to, address _token, int _deltaQty) external override virtual {
+        require(_token == pair.tokenA.tokenAddress || _token == pair.tokenB.tokenAddress, "Pls pass correct token to swap.");
 
-        if (_tokenA == pair.tokenA.tokenAddress) {
-            doTokenASwap(to, _tokenA, _tokenB, _deltaAQty);
+        if (_token == pair.tokenA.tokenAddress) {
+            doTokenASwap(to, _deltaQty);
         } else {
-            doTokenBSwap(to, _tokenA, _tokenB, _deltaBQty);
+            doTokenBSwap(to, _deltaQty);
         }     
     }
 
-    function doTokenASwap(address to, address _tokenA, address _tokenB, int _deltaAQty) private  {
-        require(_tokenA == pair.tokenA.tokenAddress && _tokenB != pair.tokenB.tokenAddress, "Token A should have correct address and token B address will be ignored.");
+    function doTokenASwap(address to, int _deltaAQty) private  {
         int calculatedSlippage = slippageOutGivenIn(_deltaAQty);
         int localSlippage = getSlippage();
         require(calculatedSlippage <= (localSlippage),  "Slippage threshold breached.");
@@ -122,15 +121,14 @@ abstract contract AbstractPair is IPair, HederaResponseCodes {
         require(response == HederaResponseCodes.SUCCESS, "swapTokenA: Transferring token A to contract failed with status code");
 
         pair.tokenB.tokenQty -= deltaBQty;
-        associateToken(to,  _tokenB);
+        associateToken(to,  pair.tokenB.tokenAddress);
         response = transferToken(pair.tokenB.tokenAddress, address(this), to, deltaBQty);
         require(response == HederaResponseCodes.SUCCESS, "swapTokenA: Transferring token B to contract failed with status code");
 
         transferFeeToTreasury(feeTokenA/2, feeTokenB/2);
     }
 
-    function doTokenBSwap(address to, address _tokenA, address _tokenB, int _deltaBQty) private  {
-        require(_tokenA != pair.tokenA.tokenAddress && _tokenB == pair.tokenB.tokenAddress, "Token B should have correct address and token A address will be ignored.");
+    function doTokenBSwap(address to, int _deltaBQty) private  {
         int calculatedSlippage = slippageInGivenOut(_deltaBQty);
         int localSlippage = getSlippage();
         require(calculatedSlippage <= localSlippage,  "Slippage threshold breached.");
@@ -146,7 +144,7 @@ abstract contract AbstractPair is IPair, HederaResponseCodes {
         require(response == HederaResponseCodes.SUCCESS, "swapTokenB: Transferring token B to contract failed with status code");
 
         pair.tokenA.tokenQty -= deltaAQty;
-        associateToken(to,  _tokenA);
+        associateToken(to,  pair.tokenA.tokenAddress);
         response = transferToken(pair.tokenA.tokenAddress, address(this), to, deltaAQty);
         require(response == HederaResponseCodes.SUCCESS, "swapTokenB: Transferring token A to contract failed with status code");
 

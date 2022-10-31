@@ -23,5 +23,5 @@ abstract contract IPair {
     function initializeContract(address fromAccount, address _tokenA, address _tokenB, int _tokenAQty, int _tokenBQty, int fee, address _treasury) external virtual;
     function addLiquidity(address fromAccount, address _tokenA, address _tokenB, int _tokenAQty, int _tokenBQty) external virtual;
     function removeLiquidity(address fromAccount, int _lpToken) external virtual;
-    function swapToken(address to, address _tokenA, address _tokenB, int _deltaAQty, int _deltaBQty) external virtual;
+    function swapToken(address to, address _token, int _deltaQty) external virtual;
 }
