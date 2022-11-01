@@ -99,11 +99,8 @@ const getTreasureBalance = async (tokens: Array<TokenId>) => {
       .setAccountId(treasureId)
       .execute(client);
   
-  if (treasureBalance1.tokens != null) {
-    for (var token of tokens) {
-        console.log(` Treasure Token Balance for ${token.toString()}: ${treasureBalance1.tokens.get(token)}`);
-    }
-  }
+      const responseTokens = treasureBalance1.tokens ?? new Map<TokenId, Long>();
+      tokens.forEach(token =>   console.log(` Treasure Token Balance for ${token.toString()}: ${responseTokens.get(token)}`));
 }
 
 const createLiquidityPool = async (contId: string) => {

@@ -4,15 +4,12 @@ import {
   ContractFunctionParameters,
   TokenId,
   AccountBalanceQuery,
-  Hbar,
-  AccountId,
-  ContractId
+  Hbar
 } from "@hashgraph/sdk";
 
 import ClientManagement from "./utils/utils";
 import { ContractService } from "../deployment/service/ContractService";
 import { httpRequest } from "../deployment/api/HttpsService";
-import TokenBalanceMap from "@hashgraph/sdk/lib/account/TokenBalanceMap";
 
 const clientManagement = new ClientManagement();
 const client = clientManagement.createOperatorClient();
@@ -237,7 +234,7 @@ const getTreasureBalance = async (tokens: Array<TokenId>) => {
   const treasureBalance1 = await new AccountBalanceQuery()
       .setAccountId(treasureId)
       .execute(client);
-  const responseTokens = treasureBalance1.tokens ?? new TokenBalanceMap();
+  const responseTokens = treasureBalance1.tokens ?? new Map<TokenId, Long>();
   tokens.forEach(token =>   console.log(` Treasure Token Balance for ${token.toString()}: ${responseTokens.get(token)}`));
 }
 
@@ -247,7 +244,7 @@ async function main() {
 }
 
 async function testForSinglePair(contractId: string, token0: string, token1: string) {
-    //await createPair(contractId, token0, token1);
+    await createPair(contractId, token0, token1);
     const pairAddress =  await getPair(contractId);
     
     const response = await httpRequest(pairAddress, undefined);
