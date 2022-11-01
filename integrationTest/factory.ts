@@ -4,9 +4,7 @@ import {
   ContractFunctionParameters,
   TokenId,
   AccountBalanceQuery,
-  Hbar,
-  AccountId,
-  ContractId
+  Hbar
 } from "@hashgraph/sdk";
 
 import ClientManagement from "./utils/utils";
@@ -18,8 +16,8 @@ const client = clientManagement.createOperatorClient();
 const {treasureId, treasureKey} = clientManagement.getTreasure();
 const contractService = new ContractService();
 
-const tokenA = TokenId.fromString("0.0.48289687").toSolidityAddress();
-let tokenB = TokenId.fromString("0.0.48289686").toSolidityAddress();
+const tokenA = TokenId.fromString("0.0.48289687")
+let tokenB = TokenId.fromString("0.0.48289686")
 const tokenC = TokenId.fromString("0.0.48301281").toSolidityAddress();
 let tokenD = TokenId.fromString("0.0.48301282").toSolidityAddress();
 const tokenE = TokenId.fromString("0.0.48301300").toSolidityAddress();
@@ -76,8 +74,8 @@ const createPair = async (contractId: string, token0: string, token1: string) =>
     .setFunction(
       "createPair",
       new ContractFunctionParameters()
-        .addAddress(tokenA)
-        .addAddress(tokenB)
+        .addAddress(tokenA.toSolidityAddress())
+        .addAddress(tokenB.toSolidityAddress())
     )
     .setMaxTransactionFee(new Hbar(100))
     .setPayableAmount(new Hbar(100))
@@ -104,8 +102,8 @@ const getPair = async (contractId: string) => {
     .setFunction(
       "getPair",
       new ContractFunctionParameters()
-      .addAddress(tokenA)
-      .addAddress(tokenB)
+      .addAddress(tokenA.toSolidityAddress())
+      .addAddress(tokenB.toSolidityAddress())
     )
     .freezeWith(client)
   const liquidityPoolTx = await liquidityPool.execute(client);
@@ -148,8 +146,8 @@ const initializeContract = async (contId: string) => {
       "initializeContract",
       new ContractFunctionParameters()
         .addAddress(treasureId.toSolidityAddress())
-        .addAddress(tokenA)
-        .addAddress(tokenB)
+        .addAddress(tokenA.toSolidityAddress())
+        .addAddress(tokenB.toSolidityAddress())
         .addInt256(tokenAQty)
         .addInt256(tokenBQty)
         .addInt256(new BigNumber(10))//fee
@@ -175,8 +173,8 @@ const addLiquidity = async (contId: string) => {
       "addLiquidity",
       new ContractFunctionParameters()
         .addAddress(treasureId.toSolidityAddress())
-        .addAddress(tokenA)
-        .addAddress(tokenB)
+        .addAddress(tokenA.toSolidityAddress())
+        .addAddress(tokenB.toSolidityAddress())
         .addInt256(tokenAQty)
         .addInt256(tokenBQty)
     )
@@ -210,12 +208,10 @@ const removeLiquidity = async (contId: string) => {
   console.log(`Liquidity remove status: ${transferTokenRx.status}`);
 };
 
-const swapTokenA = async (contId: string) => {
-  const tokenAQty = withPrecision(1);
-  const tokenBQty = withPrecision(0);
-  console.log(`Swapping a ${tokenAQty} units of token A from the pool.`);
+const swapToken = async (contId: string, token: TokenId) => {
+  const tokenQty = withPrecision(1);
+  console.log(`Swapping a ${tokenQty} units of token A from the pool.`);
   // Need to pass different token B address so that only swap of token A is considered.
-  tokenB = TokenId.fromString("0.0.47646100").toSolidityAddress();
   const swapToken = await new ContractExecuteTransaction()
     .setContractId(contId)
     .setGas(2000000)
@@ -223,10 +219,8 @@ const swapTokenA = async (contId: string) => {
       "swapToken",
       new ContractFunctionParameters()
         .addAddress(treasureId.toSolidityAddress())
-        .addAddress(tokenA)
-        .addAddress(tokenB)
-        .addInt256(tokenAQty)
-        .addInt256(tokenBQty)
+        .addAddress(token.toSolidityAddress())
+        .addInt256(tokenQty)
     )
     .freezeWith(client)
     .sign(treasureKey);
@@ -236,16 +230,17 @@ const swapTokenA = async (contId: string) => {
   console.log(`Swap status: ${transferTokenRx.status}`);
 };
 
-const getTreaserBalance = async () => {
+const getTreasureBalance = async (tokens: Array<TokenId>) => {
   const treasureBalance1 = await new AccountBalanceQuery()
       .setAccountId(treasureId)
       .execute(client);
-  console.log(`Treasure LP Token Balance: ${treasureBalance1.tokens}`); //2 Sep 01:02 pm
+  const responseTokens = treasureBalance1.tokens ?? new Map<TokenId, Long>();
+  tokens.forEach(token =>   console.log(` Treasure Token Balance for ${token.toString()}: ${responseTokens.get(token)}`));
 }
 
 async function main() {
     await setupFactory();
-    await testForSinglePair(contractId, tokenA, tokenB);
+    await testForSinglePair(contractId, tokenA.toSolidityAddress(), tokenB.toSolidityAddress());
 }
 
 async function testForSinglePair(contractId: string, token0: string, token1: string) {
@@ -255,11 +250,16 @@ async function testForSinglePair(contractId: string, token0: string, token1: str
     const response = await httpRequest(pairAddress, undefined);
     const pairContractId = response.contract_id;
     console.log(`contractId: ${pairContractId}`)
-
+    await getTreasureBalance([tokenA, tokenB]);
     await initializeContract(pairContractId);
+    await getTreasureBalance([tokenA, tokenB]);
     await addLiquidity(pairContractId);
+    await getTreasureBalance([tokenA, tokenB]);
     await removeLiquidity(pairContractId);
-    await swapTokenA(pairContractId);
+    await swapToken(pairContractId, tokenA);
+    await getTreasureBalance([tokenA, tokenB]);
+    await swapToken(pairContractId, tokenB);
+    await getTreasureBalance([tokenA, tokenB]);
     await getAllPairs(contractId);
 }
 

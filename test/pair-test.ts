@@ -133,7 +133,7 @@ describe("All Tests", function () {
     var addTokenAQty = BigNumber.from(1).mul(precision);
     const feeForTokenA = await swapV2.feeForToken(addTokenAQty);
     const addTokenAQtyAfterFee =  Number(addTokenAQty) - (Number(feeForTokenA)/2);
-    const tx = await swapV2.swapToken(zeroAddress, tokenAAddress, zeroAddress, addTokenAQty, 0);
+    const tx = await swapV2.swapToken(zeroAddress, tokenAAddress, addTokenAQty);
     await tx.wait();
     
     const tokenQty = await swapV2.getPairQty();
@@ -155,7 +155,7 @@ it("Swap 1 units of token B  ", async function () {
     const addTokenBQty = BigNumber.from(1).mul(precision);
     const feeForTokenB = await swapV2.feeForToken(addTokenBQty);
     const addTokenBQtyAfterFee =  Number(addTokenBQty) - (Number(feeForTokenB)/2);
-    const tx = await swapV2.swapToken(zeroAddress, zeroAddress, tokenBAddress, 0, addTokenBQty);
+    const tx = await swapV2.swapToken(zeroAddress, tokenBAddress, addTokenBQty);
     await tx.wait();
     
     const tokenQty = await swapV2.getPairQty();
@@ -175,7 +175,7 @@ it("Swap 1 units of token B  ", async function () {
     const tokenBeforeQty = await swapV2.getPairQty(); 
     expect(Number(tokenBeforeQty[0])).to.be.equals(tokenAPoolQty);
     const addTokenAQty = BigNumber.from(100).mul(precision);
-    await expect(swapV2.swapToken(zeroAddress, tokenAAddress, zeroAddress, addTokenAQty, 0)).to.revertedWith("Slippage threshold breached.");
+    await expect(swapV2.swapToken(zeroAddress, tokenAAddress, addTokenAQty)).to.revertedWith("Slippage threshold breached.");
   });
 
   it("Swap 100 units of token B - breaching slippage  ", async function () {
@@ -186,7 +186,7 @@ it("Swap 1 units of token B  ", async function () {
     const tokenBeforeQty = await swapV2.getPairQty(); 
     expect(Number(tokenBeforeQty[1])).to.be.equals(tokenBPoolQty);
     const addTokenBQty = BigNumber.from(100).mul(precision);
-    await expect(swapV2.swapToken(zeroAddress, zeroAddress, tokenBAddress, 0, addTokenBQty)).to.revertedWith("Slippage threshold breached.");
+    await expect(swapV2.swapToken(zeroAddress, tokenBAddress, addTokenBQty)).to.revertedWith("Slippage threshold breached.");
   });
 
   it("Remove liquidity to the pool by removing 5 units of lpToken  ", async function () {
@@ -246,14 +246,14 @@ it("Swap 1 units of token B  ", async function () {
       const { swapV2 } = await loadFixture(deployFailureFixture);
       const tokenBeforeQty = await swapV2.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(100));
-      await expect(swapV2.swapToken(zeroAddress, zeroAddress, zeroAddress, 30, 0)).to.revertedWith("Pls pass correct token to swap.");
+      await expect(swapV2.swapToken(zeroAddress, zeroAddress, 30)).to.revertedWith("Pls pass correct token to swap.");
     });
 
     it("Passing unknown B token to swap", async function () {
       const { swapV2 } = await loadFixture(deployFailureFixture);
       const tokenBeforeQty = await swapV2.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(100));
-      await expect(swapV2.swapToken(zeroAddress, zeroAddress, zeroAddress, 30, 0)).to.revertedWith("Pls pass correct token to swap.");
+      await expect(swapV2.swapToken(zeroAddress, zeroAddress, 30)).to.revertedWith("Pls pass correct token to swap.");
     });
 
     //----------------------------------------------------------------------
@@ -261,14 +261,7 @@ it("Swap 1 units of token B  ", async function () {
       const { swapV2 } = await loadFixture(deployFailureFixture);
       const tokenBeforeQty = await swapV2.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(100));
-      await expect(swapV2.swapToken(zeroAddress, tokenAAddress, zeroAddress, 30, 0)).to.revertedWith("swapTokenA: Transferring token A to contract failed with status code");
-    });
-
-    it("Swap Token A with Fail passing Both Addresses", async function () {
-      const { swapV2 } = await loadFixture(deployFailureFixture);
-      const tokenBeforeQty = await swapV2.getPairQty();
-      expect(tokenBeforeQty[0]).to.be.equals(precision.mul(100));
-      await expect(swapV2.swapToken(zeroAddress, tokenAAddress, tokenBAddress, 30, 0)).to.revertedWith("Token A should have correct address and token B address will be ignored.");
+      await expect(swapV2.swapToken(zeroAddress, tokenAAddress, 30)).to.revertedWith("swapTokenA: Transferring token A to contract failed with status code");
     });
 
     //----------------------------------------------------------------------
@@ -281,7 +274,7 @@ it("Swap 1 units of token B  ", async function () {
       const tokenBeforeQty = await swapV2.getPairQty();
 
       expect(tokenBeforeQty[0]).to.be.equals(totalQtyA);
-      await expect(swapV2.swapToken(zeroAddress, tokenAAddress, zeroAddress, precision.mul(1), 0)).to.revertedWith("swapTokenA: Transferring token B to contract failed with status code");
+      await expect(swapV2.swapToken(zeroAddress, tokenAAddress, precision.mul(1))).to.revertedWith("swapTokenA: Transferring token B to contract failed with status code");
     });
 
     //----------------------------------------------------------------------
@@ -293,7 +286,7 @@ it("Swap 1 units of token B  ", async function () {
       const tokenBeforeQty = await swapV2.getPairQty(); 
       expect(Number(tokenBeforeQty[0])).to.be.equals(precision.mul(1000));
 
-      await expect(swapV2.swapToken(zeroAddress, zeroAddress, tokenBAddress, 0, precision.mul(1))).to.revertedWith("swapTokenB: Transferring token B to contract failed with status code");
+      await expect(swapV2.swapToken(zeroAddress, tokenBAddress, precision.mul(1))).to.revertedWith("swapTokenB: Transferring token B to contract failed with status code");
     });
 
     it("Swap Token B with Fail A transfer", async function () {
@@ -303,7 +296,7 @@ it("Swap 1 units of token B  ", async function () {
       await swapV2.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, totalQtyA, precision.mul(1000), fee, treasury);
       const tokenBeforeQty = await swapV2.getPairQty(); 
       expect(Number(tokenBeforeQty[0])).to.be.equals(precision.mul(1000));
-      await expect(swapV2.swapToken(zeroAddress, zeroAddress, tokenBAddress, 0, precision.mul(1))).to.revertedWith("swapTokenB: Transferring token A to contract failed with status code");
+      await expect(swapV2.swapToken(zeroAddress, tokenBAddress, precision.mul(1))).to.revertedWith("swapTokenB: Transferring token A to contract failed with status code");
     });
 
     //----------------------------------------------------------------------

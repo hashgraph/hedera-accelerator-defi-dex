@@ -149,18 +149,34 @@
     },
     {
         "name": "pair",
-        "id": "0.0.48772763",
-        "address": "0x0000000000000000000000000000000002e8369b",
-        "timestamp": "2022-10-31T12:24:30.381Z",
-        "transparentProxyAddress": "0x0000000000000000000000000000000002e836a5",
-        "transparentProxyId": "0.0.48772773"
+        "id": "0.0.48770182",
+        "address": "0x0000000000000000000000000000000002e82c86",
+        "timestamp": "2022-10-31T08:00:18.666Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e82c89",
+        "transparentProxyId": "0.0.48770185"
     },
     {
         "name": "factory",
-        "id": "0.0.48772789",
-        "address": "0x0000000000000000000000000000000002e836b5",
-        "timestamp": "2022-10-31T12:26:00.545Z",
-        "transparentProxyAddress": "0x0000000000000000000000000000000002e836bc",
-        "transparentProxyId": "0.0.48772796"
+        "id": "0.0.48770507",
+        "address": "0x0000000000000000000000000000000002e82dcb",
+        "timestamp": "2022-10-31T09:40:44.593Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e82dcd",
+        "transparentProxyId": "0.0.48770509"
+    },
+    {
+        "name": "factory",
+        "id": "0.0.48772902",
+        "address": "0x0000000000000000000000000000000002e83726",
+        "timestamp": "2022-10-31T12:32:11.135Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e83737",
+        "transparentProxyId": "0.0.48772919"
+    },
+    {
+        "name": "factory",
+        "id": "0.0.48778468",
+        "address": "0x0000000000000000000000000000000002e84ce4",
+        "timestamp": "2022-11-01T08:34:14.101Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e84ce8",
+        "transparentProxyId": "0.0.48778472"
     }
 ]

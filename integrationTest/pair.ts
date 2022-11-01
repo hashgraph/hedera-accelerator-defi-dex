@@ -94,11 +94,13 @@ const initialize = async (contId: string, lpTokenProxyAdd: string) => {
   console.log(` Initialized status : ${initializeTxRx.status}`);
 };
 
-const getTreasureBalance = async () => {
+const getTreasureBalance = async (tokens: Array<TokenId>) => {
   const treasureBalance1 = await new AccountBalanceQuery()
       .setAccountId(treasureId)
       .execute(client);
-  console.log(` Treasure LP Token Balance: ${treasureBalance1.tokens}`); //2 Sep 01:02 pm
+  
+      const responseTokens = treasureBalance1.tokens ?? new Map<TokenId, Long>();
+      tokens.forEach(token =>   console.log(` Treasure Token Balance for ${token.toString()}: ${responseTokens.get(token)}`));
 }
 
 const createLiquidityPool = async (contId: string) => {
@@ -193,9 +195,7 @@ const swapTokenA = async (contId: string) => {
       new ContractFunctionParameters()
         .addAddress(treasureId.toSolidityAddress())
         .addAddress(tokenA.toSolidityAddress())
-        .addAddress(tokenB.toSolidityAddress())
         .addInt256(tokenAQty)
-        .addInt256(tokenBQty)
     )
     .freezeWith(client)
     .sign(treasureKey);
@@ -399,12 +399,15 @@ async function testForSinglePair(contract: DeployedContract, lpContract: Deploye
   console.log(`\nUsing pair proxy contractId ${contract.transparentProxyId} and LP token contract proxy id ${lpTokenProxyId} \n`);
   await initialize(contractProxyId, lpContract.transparentProxyAddress!);
   await getPrecisionValue(contractProxyId);
-  await getTreasureBalance();
-  await createLiquidityPool(contractProxyId); 
+  await getTreasureBalance([tokenA, tokenB]);
+  await createLiquidityPool(contractProxyId);
+  await getTreasureBalance([tokenA, tokenB]);
   await addLiquidity(contractProxyId);
+  await getTreasureBalance([tokenA, tokenB]);
   await removeLiquidity(contractProxyId);
   await getTokenPairAddress(contractProxyId);
   await pairCurrentPosition(contractProxyId);
+  await getTreasureBalance([tokenA, tokenB]);
   await swapTokenA(contractProxyId);
   await spotPrice(contractProxyId);
   await getVariantValue(contractProxyId);
