@@ -27,8 +27,8 @@ const {treasureId, treasureKey} = clientManagement.getTreasure();
 const treasurerClient  =  clientManagement.createClient();
 const { key } = clientManagement.getOperator();
 
-const lpTokenContracts = contractService.getLast3ContractsWithProxy(contractService.lpTokenContractName);
-const contracts = contractService.getLast3ContractsWithProxy(contractService.pairContractName);
+const lpTokenContracts = [contractService.getContractWithProxy(contractService.lpTokenContractName)];
+const contracts = [contractService.getContractWithProxy(contractService.pairContractName)];
 
 let precision = 0;
 
@@ -119,6 +119,7 @@ const createLiquidityPool = async (contId: string) => {
         .addInt256(tokenAQty)
         .addInt256(tokenBQty)
         .addInt256(new BigNumber(10))//fee
+        .addAddress(treasureId.toSolidityAddress())
     )
     .freezeWith(client)
     .sign(treasureKey);
@@ -183,7 +184,7 @@ const swapTokenA = async (contId: string) => {
   const tokenBQty = withPrecision(0);
   console.log(` Swapping a ${tokenAQty} units of token A from the pool.`);
   // Need to pass different token B address so that only swap of token A is considered.
-  tokenB = TokenId.fromString("0.0.47646100");
+  tokenB = TokenId.fromString("0.0.48660640");
   const swapToken = await new ContractExecuteTransaction()
     .setContractId(contId)
     .setGas(2000000)
@@ -210,6 +211,22 @@ const pairCurrentPosition = async (contId: string): Promise<[BigNumber, BigNumbe
     .setContractId(contId)
     .setGas(1000000)
     .setFunction("getPairQty")
+    .freezeWith(client);
+  const getPairQtyTx = await getPairQty.execute(client);
+  const response = await getPairQtyTx.getRecord(client);
+  const tokenAQty = response.contractFunctionResult!.getInt256(0);
+  const tokenBQty = response.contractFunctionResult!.getInt256(1);
+  console.log(
+    ` ${tokenAQty} units of token A and ${tokenBQty} units of token B are present in the pool. \n`
+  );
+  return [tokenAQty, tokenBQty];
+};
+
+const getTokenPairAddress = async (contId: string): Promise<[BigNumber, BigNumber]> => {
+  const getPairQty = await new ContractExecuteTransaction()
+    .setContractId(contId)
+    .setGas(1000000)
+    .setFunction("getTokenPairAddress")
     .freezeWith(client);
   const getPairQtyTx = await getPairQty.execute(client);
   const response = await getPairQtyTx.getRecord(client);
@@ -378,16 +395,16 @@ async function testForSinglePair(contract: DeployedContract, lpContract: Deploye
   const contractProxyId = contract.transparentProxyId!;
   await initializeLPTokenContract(lpTokenProxyId);
   await getLpTokenAddress(lpTokenProxyId);
+  tokenA = TokenId.fromString("0.0.48769837");
   console.log(`\nUsing pair proxy contractId ${contract.transparentProxyId} and LP token contract proxy id ${lpTokenProxyId} \n`);
   await initialize(contractProxyId, lpContract.transparentProxyAddress!);
   await getPrecisionValue(contractProxyId);
-  //await getTreasureBalance();
-  await createLiquidityPool(contractProxyId);
-  //await getTreasureBalance();
+  await getTreasureBalance();
+  await createLiquidityPool(contractProxyId); 
   await addLiquidity(contractProxyId);
-  //await getTreasureBalance();
   await removeLiquidity(contractProxyId);
-  //await getTreasureBalance();
+  await getTokenPairAddress(contractProxyId);
+  await pairCurrentPosition(contractProxyId);
   await swapTokenA(contractProxyId);
   await spotPrice(contractProxyId);
   await getVariantValue(contractProxyId);

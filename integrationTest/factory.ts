@@ -153,6 +153,7 @@ const initializeContract = async (contId: string) => {
         .addInt256(tokenAQty)
         .addInt256(tokenBQty)
         .addInt256(new BigNumber(10))//fee
+        .addAddress(treasureId.toSolidityAddress())
     )
     .freezeWith(client)
     .sign(treasureKey);
