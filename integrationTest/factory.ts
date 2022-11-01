@@ -210,9 +210,9 @@ const removeLiquidity = async (contId: string) => {
   console.log(`Liquidity remove status: ${transferTokenRx.status}`);
 };
 
-const swapTokenA = async (contId: string) => {
-  const tokenAQty = withPrecision(1);
-  console.log(`Swapping a ${tokenAQty} units of token A from the pool.`);
+const swapToken = async (contId: string, token: TokenId) => {
+  const tokenQty = withPrecision(1);
+  console.log(`Swapping a ${tokenQty} units of token A from the pool.`);
   // Need to pass different token B address so that only swap of token A is considered.
   const swapToken = await new ContractExecuteTransaction()
     .setContractId(contId)
@@ -221,8 +221,8 @@ const swapTokenA = async (contId: string) => {
       "swapToken",
       new ContractFunctionParameters()
         .addAddress(treasureId.toSolidityAddress())
-        .addAddress(tokenA.toSolidityAddress())
-        .addInt256(tokenAQty)
+        .addAddress(token.toSolidityAddress())
+        .addInt256(tokenQty)
     )
     .freezeWith(client)
     .sign(treasureKey);
@@ -262,7 +262,9 @@ async function testForSinglePair(contractId: string, token0: string, token1: str
     await addLiquidity(pairContractId);
     await getTreasureBalance([tokenA, tokenB]);
     await removeLiquidity(pairContractId);
-    await swapTokenA(pairContractId);
+    await swapToken(pairContractId, tokenA);
+    await getTreasureBalance([tokenA, tokenB]);
+    await swapToken(pairContractId, tokenB);
     await getTreasureBalance([tokenA, tokenB]);
     await getAllPairs(contractId);
 }
