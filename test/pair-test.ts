@@ -19,7 +19,7 @@ describe("All Tests", function () {
   describe("Swap Upgradeable", function () {
     it("Verify if the Swap contract is upgradeable safe ", async function () {
       const Swap = await ethers.getContractFactory("Pair");
-      const instance = await upgrades.deployProxy(Swap, [zeroAddress, zeroAddress], {unsafeAllow: ['delegatecall']});
+      const instance = await upgrades.deployProxy(Swap, [zeroAddress, zeroAddress]);
       await instance.deployed();
     });
   });
@@ -32,11 +32,14 @@ describe("All Tests", function () {
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
     const tokenCont = await TokenCont.deploy(10, 10);
 
-    const LpTokenCont = await ethers.getContractFactory("LPTokenTest");
-    const lpTokenCont = await LpTokenCont.deploy(tokenCont.address, mockBaseHTS.address);
+    const LpTokenCont = await ethers.getContractFactory("LPToken");
+    const lpTokenCont = await upgrades.deployProxy(LpTokenCont, [mockBaseHTS.address]);
+    await lpTokenCont.deployed();
 
-    const SwapV2 = await ethers.getContractFactory("PairTest");
-    const swapV2 = await SwapV2.deploy(mockBaseHTS.address, lpTokenCont.address);
+    const SwapV2 = await ethers.getContractFactory("Pair");
+    const swapV2 = await upgrades.deployProxy(SwapV2, [mockBaseHTS.address, lpTokenCont.address]);
+    await swapV2.deployed();
+
     precision = await swapV2.getPrecisionValue();
     
     const tokenAPoolQty = BigNumber.from(100).mul(precision);
@@ -58,11 +61,14 @@ describe("All Tests", function () {
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
     const tokenCont = await TokenCont.deploy(10, 10);
 
-    const LpTokenCont = await ethers.getContractFactory("LPTokenTest");
-    const lpTokenCont = await LpTokenCont.deploy(tokenCont.address, mockBaseHTS.address);
+    const LpTokenCont = await ethers.getContractFactory("LPToken");
+    const lpTokenCont = await upgrades.deployProxy(LpTokenCont, [mockBaseHTS.address]);
+    await lpTokenCont.deployed();
 
-    const SwapV2 = await ethers.getContractFactory("PairTest");
-    const swapV2 = await SwapV2.deploy(mockBaseHTS.address, lpTokenCont.address);
+    const SwapV2 = await ethers.getContractFactory("Pair");
+    const swapV2 = await upgrades.deployProxy(SwapV2, [mockBaseHTS.address, lpTokenCont.address]);
+    await swapV2.deployed();
+
     precision = await swapV2.getPrecisionValue();
 
     const tokenAPoolQty = BigNumber.from(100).mul(precision);
@@ -352,7 +358,7 @@ it("Swap 1 units of token B  ", async function () {
       mockBaseHTS.setFailType(11);
       const tokenBeforeQty = await swapV2.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(100));
-      await expect(swapV2.addLiquidity(zeroAddress, tokenAAddress, tokenBAddress, 30, 30)).to.revertedWith("LP Token Transfer Fail");
+      await expect(swapV2.addLiquidity(zeroAddress, tokenAAddress, tokenBAddress, 30, 30)).to.revertedWith("LP token transfer failed.");
     });
 
     it("allotLPToken fail for zero token count", async function () {
@@ -363,10 +369,13 @@ it("Swap 1 units of token B  ", async function () {
       await expect(lpTokenCont.allotLPTokenFor(0, 10, zeroAddress)).to.revertedWith("Please provide positive token counts");
     });
 
-    it("removeLPTokenFor fail for no lp token", async function () {
-      const { lpTokenCont, mockBaseHTS } = await loadFixture(deployFailureFixture);
-      await lpTokenCont.initializeParams(mockBaseHTS.address);
-      await expect(lpTokenCont.removeLPTokenFor(10, userAddress)).to.revertedWith("Liquidity Token not initialized");
+    it("LPToken creation failed while initialize LP contract.", async function () {
+      const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
+      const mockBaseHTS = await MockBaseHTS.deploy(false);
+      await mockBaseHTS.setFailType(13);
+  
+      const LpTokenCont = await ethers.getContractFactory("LPToken");
+      await expect(upgrades.deployProxy(LpTokenCont, [mockBaseHTS.address])).to.revertedWith("Token creation failed.");
     });
 
     it("removeLPTokenFor fail for less lp Token", async function () {

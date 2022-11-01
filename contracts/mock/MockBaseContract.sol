@@ -21,7 +21,8 @@ contract MockBaseHTS is IBaseHTS {
         swapBFailedSendingA,
         addLiquidityFailMinting,
         addLiquidityLPTransferFail,
-        swapBFailedSendingB
+        swapBFailedSendingB,
+        lpTokenCreationFailed
     }
 
     bool internal isSuccess;
@@ -67,6 +68,9 @@ contract MockBaseHTS is IBaseHTS {
         if (failType == FailTransactionFor.swapBFailedSendingB) {
             return 7;
         }
+        if (failType == FailTransactionFor.lpTokenCreationFailed) {
+            return 1;
+        }
         return 0;
     }
 
@@ -75,7 +79,7 @@ contract MockBaseHTS is IBaseHTS {
             trueTransaction-=1;
             return int(22);
         }
-        
+    
         int result = isSuccess ? int(22) : int(23);
         return result;
     }
@@ -99,7 +103,11 @@ contract MockBaseHTS is IBaseHTS {
                 trueTransaction-=1;
                 return (int(22), amount);
             }
-            return ((isSuccess) ? int(22) : int(23), int(amount));
+
+            if(isSuccess){
+                return (int(22), int(amount));
+            }
+            revert("Mint Failed");
     }
 
     function burnTokenPublic(address, int amount) external view override
@@ -112,8 +120,11 @@ contract MockBaseHTS is IBaseHTS {
         uint) external payable       override
 returns (int responseCode, address tokenAddress){
             ERC20Mock mock =  new ERC20Mock(10, 10);
-            return isSuccess ? (int(22),  address(mock))
-             : (int(22),  address(0x0));
-        }
+            if (failType == FailTransactionFor.lpTokenCreationFailed) {
+                return (int(32),  address(0x0));
+            }
+
+            return (int(22),  address(mock));
+    }
 
 }

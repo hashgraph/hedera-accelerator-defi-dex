@@ -7,8 +7,6 @@ import {
 
 import ClientManagement from "./utils/utils";
 import { ContractService } from "../deployment/service/ContractService";
-import { DeployedContract } from "../deployment/model/contract";
-import { deployContract } from "ethereum-waffle";
 
 const clientManagement = new ClientManagement();
 const contractService = new ContractService();
@@ -19,7 +17,7 @@ client = client.setDefaultMaxTransactionFee(new Hbar(100));
 const htsServiceAddress = contractService.getContract(contractService.baseContractName).address;
 const {treasureId, treasureKey} = clientManagement.getTreasure();
 
-const contracts = contractService.getLast3ContractsWithProxy(contractService.lpTokenContractName);
+const contracts = [contractService.getContractWithProxy(contractService.lpTokenContractName)];
 
 const precision = 10000000;
 
@@ -31,7 +29,7 @@ const initialize = async (contId: string) => {
 
   const contractTokenTx = await new ContractExecuteTransaction()
     .setContractId(contId)
-    .setFunction("initializeParams", contractFunctionParameters)
+    .setFunction("initialize", contractFunctionParameters)
     .setGas(500000)
     .setMaxTransactionFee(new Hbar(50))
     .setPayableAmount(new Hbar(60))

@@ -64,7 +64,7 @@ const initialize = async (tokenId: TokenId) => {
   const votingPeriod = 12;
 
   let contractFunctionParameters = new ContractFunctionParameters()
-    .addAddress(tokenId.toSolidityAddress())
+    .addAddress(tokenId.toSolidityAddress())// token that define the voting weight, to vote user should have % of this token.
     .addAddress(treasureId.toSolidityAddress())
     .addBytes(treasureKey.publicKey.toBytes())
     .addAddress(id.toSolidityAddress())
