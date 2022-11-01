@@ -126,7 +126,7 @@ abstract contract AbstractPair is IPair, HederaResponseCodes {
         response = transferToken(pair.tokenB.tokenAddress, address(this), to, deltaBQty);
         require(response == HederaResponseCodes.SUCCESS, "swapTokenA: Transferring token B to contract failed with status code");
 
-        transferFeeToTreasuary(feeTokenA/2, feeTokenB/2, treasury);
+        transferFeeToTreasury(feeTokenA/2, feeTokenB/2);
     }
 
     function doTokenBSwap(address to, address _tokenA, address _tokenB, int _deltaBQty) private  {
@@ -150,7 +150,7 @@ abstract contract AbstractPair is IPair, HederaResponseCodes {
         response = transferToken(pair.tokenA.tokenAddress, address(this), to, deltaAQty);
         require(response == HederaResponseCodes.SUCCESS, "swapTokenB: Transferring token A to contract failed with status code");
 
-        transferFeeToTreasuary(feeTokenA/2, feeTokenB/2, treasury);
+        transferFeeToTreasury(feeTokenA/2, feeTokenB/2);
     }
 
     function getPairQty() public view returns (int, int) {
@@ -253,11 +253,11 @@ abstract contract AbstractPair is IPair, HederaResponseCodes {
         return tokenQ;
     }
 
-    function transferFeeToTreasuary(int feeTokenA, int feeTokenB, address _treasure) private {
-        int response = transferToken(pair.tokenB.tokenAddress, address(this), _treasure, feeTokenA);
-        require(response == HederaResponseCodes.SUCCESS, "swapFeeTokenA: Transferring token A to treasuary failed with status code");
+    function transferFeeToTreasury(int feeTokenA, int feeTokenB) private {
+        int response = transferToken(pair.tokenA.tokenAddress, address(this), treasury, feeTokenA);
+        require(response == HederaResponseCodes.SUCCESS, "swapFeeTokenA: Transferring fee as token A to treasuary failed with status code");
 
-        response = transferToken(pair.tokenB.tokenAddress, address(this), _treasure, feeTokenB);
-        require(response == HederaResponseCodes.SUCCESS, "swapFeeTokenB: Transferring token B to treasuary failed with status code");
+        response = transferToken(pair.tokenB.tokenAddress, address(this), treasury, feeTokenB);
+        require(response == HederaResponseCodes.SUCCESS, "swapFeeTokenB: Transferring fee as token B to treasuary failed with status code");
     }
 }   
