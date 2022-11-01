@@ -12,6 +12,7 @@ import {
 import ClientManagement from "./utils/utils";
 import { ContractService } from "../deployment/service/ContractService";
 import { httpRequest } from "../deployment/api/HttpsService";
+import TokenBalanceMap from "@hashgraph/sdk/lib/account/TokenBalanceMap";
 
 const clientManagement = new ClientManagement();
 const client = clientManagement.createOperatorClient();
@@ -236,12 +237,8 @@ const getTreasureBalance = async (tokens: Array<TokenId>) => {
   const treasureBalance1 = await new AccountBalanceQuery()
       .setAccountId(treasureId)
       .execute(client);
-  
-  if (treasureBalance1.tokens != null) {
-    for (var token of tokens) {
-        console.log(` Treasure Token Balance for ${token.toString()}: ${treasureBalance1.tokens.get(token)}`);
-    }
-  }
+  const responseTokens = treasureBalance1.tokens ?? new TokenBalanceMap();
+  tokens.forEach(token =>   console.log(` Treasure Token Balance for ${token.toString()}: ${responseTokens.get(token)}`));
 }
 
 async function main() {
@@ -250,7 +247,7 @@ async function main() {
 }
 
 async function testForSinglePair(contractId: string, token0: string, token1: string) {
-    await createPair(contractId, token0, token1);
+    //await createPair(contractId, token0, token1);
     const pairAddress =  await getPair(contractId);
     
     const response = await httpRequest(pairAddress, undefined);
