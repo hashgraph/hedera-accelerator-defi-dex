@@ -178,6 +178,8 @@
         "timestamp": "2022-11-01T08:34:14.101Z",
         "transparentProxyAddress": "0x0000000000000000000000000000000002e84ce8",
         "transparentProxyId": "0.0.48778472"
+    },
+    {
         "name": "lptoken",
         "id": "0.0.48772214",
         "address": "0x0000000000000000000000000000000002e83476",
@@ -256,5 +258,29 @@
         "timestamp": "2022-11-01T07:38:00.467Z",
         "transparentProxyAddress": "0x0000000000000000000000000000000002e84bee",
         "transparentProxyId": "0.0.48778222"
+    },
+    {
+        "name": "lptoken",
+        "id": "0.0.48781063",
+        "address": "0x0000000000000000000000000000000002e85707",
+        "timestamp": "2022-11-01T13:16:59.553Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e85713",
+        "transparentProxyId": "0.0.48781075"
+    },
+    {
+        "name": "pair",
+        "id": "0.0.48781097",
+        "address": "0x0000000000000000000000000000000002e85729",
+        "timestamp": "2022-11-01T13:18:19.783Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e8572b",
+        "transparentProxyId": "0.0.48781099"
+    },
+    {
+        "name": "factory",
+        "id": "0.0.48781170",
+        "address": "0x0000000000000000000000000000000002e85772",
+        "timestamp": "2022-11-01T13:22:12.052Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e85784",
+        "transparentProxyId": "0.0.48781188"
     }
 ]
