@@ -13,8 +13,8 @@ const contractService = new ContractService();
 
 async function main() {
   const deployment = new Deployment();
-  const filePath = "./artifacts/contracts/common/GovernorCountingSimpleInternal.sol/GovernorCountingSimpleInternal.json";
-  console.log(`Deploying GovernorCountingSimpleInternal contract...`);
+  const filePath = "./artifacts/contracts/common/GovernorTokenCreate.sol/GovernorTokenCreate.json";
+  console.log(`Deploying GovernorTokenCreate contract...`);
   const deployedContract = await deployment.deployContractAsClient(filePath, new ContractFunctionParameters());
   console.log(`BaseHTS deployed ${JSON.stringify(deployedContract)}`);
 }

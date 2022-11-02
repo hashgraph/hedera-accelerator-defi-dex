@@ -178,5 +178,21 @@
         "timestamp": "2022-11-01T08:34:14.101Z",
         "transparentProxyAddress": "0x0000000000000000000000000000000002e84ce8",
         "transparentProxyId": "0.0.48778472"
+    },
+    {
+        "name": "governortokencreate",
+        "id": "0.0.48785314",
+        "address": "0x0000000000000000000000000000000002e867a2",
+        "timestamp": "2022-11-02T08:29:24.662Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e867a4",
+        "transparentProxyId": "0.0.48785316"
+    },
+    {
+        "name": "governortokencreate",
+        "id": "0.0.48786069",
+        "address": "0x0000000000000000000000000000000002e86a95",
+        "timestamp": "2022-11-02T09:45:53.374Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e86a9c",
+        "transparentProxyId": "0.0.48786076"
     }
 ]
