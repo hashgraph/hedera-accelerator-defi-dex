@@ -11,32 +11,45 @@ contract Factory is Initializable {
     event PairCreated(address indexed _pairAddress, string msg);
     event Initializing(address indexed _pairAddress, string msg);
 
-    IPair [] public allPairs;
-    mapping (address => mapping(address => IPair)) pairs;
+    IPair[] public allPairs;
+    mapping(address => mapping(address => IPair)) pairs;
     IBaseHTS internal tokenService;
-    
 
     function setUpFactory(IBaseHTS _tokenService) public initializer {
-        tokenService = _tokenService;      
+        tokenService = _tokenService;
     }
 
-    function sortTokens(address tokenA, address tokenB) private pure returns (address token0, address token1) {
+    function sortTokens(address tokenA, address tokenB)
+        private
+        pure
+        returns (address token0, address token1)
+    {
         require(tokenA != tokenB, "IDENTICAL_ADDRESSES");
-        (token0, token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
+        (token0, token1) = tokenA < tokenB
+            ? (tokenA, tokenB)
+            : (tokenB, tokenA);
         require(token0 != address(0), "ZERO_ADDRESS");
     }
 
-    function getPair(address _tokenA, address _tokenB) public view returns(address) {
-         (address token0, address token1) = sortTokens(_tokenA, _tokenB);
+    function getPair(address _tokenA, address _tokenB)
+        public
+        view
+        returns (address)
+    {
+        (address token0, address token1) = sortTokens(_tokenA, _tokenB);
         IPair pair = pairs[token0][token1];
         return address(pair);
     }
 
-    function getPairs() public view returns(IPair [] memory) {
+    function getPairs() public view returns (IPair[] memory) {
         return allPairs;
     }
 
-    function createPair(address _tokenA, address _tokenB) external payable returns(address) {
+    function createPair(address _tokenA, address _tokenB)
+        external
+        payable
+        returns (address)
+    {
         (address token0, address token1) = sortTokens(_tokenA, _tokenB);
         IPair pair = pairs[token0][token1];
         if (address(pair) == address(0)) {
@@ -46,14 +59,12 @@ contract Factory is Initializable {
             allPairs.push(newPair);
             emit PairCreated(deployedPair, "New Pair Created");
             return deployedPair;
-        }  
+        }
         return address(pair);
     }
 
     function deployContract() internal returns (address) {
-        address deployedContract = address(
-            new Pair{salt: deploymentSalt}()
-        );
+        address deployedContract = address(new Pair{salt: deploymentSalt}());
         IPair newPair = IPair(deployedContract);
         address lpTokenDeployed = deployLPContract();
         ILPToken lp = ILPToken(lpTokenDeployed);
@@ -62,11 +73,10 @@ contract Factory is Initializable {
     }
 
     function deployLPContract() internal returns (address) {
-        address deployedContract = address(
-            new LPToken{salt: deploymentSalt}()
-        );
+        address deployedContract = address(new LPToken{salt: deploymentSalt}());
         (bool success, ) = deployedContract.call{value: msg.value}(
-            abi.encodeWithSelector(ILPToken.initialize.selector, tokenService));
+            abi.encodeWithSelector(ILPToken.initialize.selector, tokenService)
+        );
         require(success, "LPToken Initialization fail!");
         return deployedContract;
     }

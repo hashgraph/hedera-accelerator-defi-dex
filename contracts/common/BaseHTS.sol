@@ -5,51 +5,75 @@ import "./hedera/HederaTokenService.sol";
 import "./hedera/HederaResponseCodes.sol";
 import "./IBaseHTS.sol";
 
-
 contract BaseHTS is HederaTokenService, IBaseHTS {
     event SenderDetail(address indexed _from, string msg);
 
-    function transferTokenPublic(address token, address sender, address receiver, int amount) 
-        external       override
-returns (int responseCode) {
-            responseCode =  HederaTokenService.transferToken(token, sender, receiver, int64(amount));
-            if (responseCode != HederaResponseCodes.SUCCESS) {
-                revert ("Transfer token failed.");
-            }
+    function transferTokenPublic(
+        address token,
+        address sender,
+        address receiver,
+        int256 amount
+    ) external override returns (int256 responseCode) {
+        responseCode = HederaTokenService.transferToken(
+            token,
+            sender,
+            receiver,
+            int64(amount)
+        );
+        if (responseCode != HederaResponseCodes.SUCCESS) {
+            revert("Transfer token failed.");
         }
-    
-    function associateTokenPublic(address account, address token) external override returns (int responseCode) {
+    }
+
+    function associateTokenPublic(address account, address token)
+        external
+        override
+        returns (int256 responseCode)
+    {
         return HederaTokenService.associateToken(account, token);
     }
-    
-    function associateTokensPublic(address account, address[] memory tokens) 
-        external       override
-returns (int responseCode) {
-            return HederaTokenService.associateTokens(account, tokens);
+
+    function associateTokensPublic(address account, address[] memory tokens)
+        external
+        override
+        returns (int256 responseCode)
+    {
+        return HederaTokenService.associateTokens(account, tokens);
     }
 
-    function mintTokenPublic(address token, int amount) external override
-        returns (int responseCode, int newTotalSupply) {
-            emit SenderDetail(msg.sender, "mintTokenPublic");
-            bytes[] memory metadata;
-        
-            (int responseCodeNew, uint64 newTotalSupplyNew, ) = mintToken(token, uint64(uint(amount)), metadata);
+    function mintTokenPublic(address token, int256 amount)
+        external
+        override
+        returns (int256 responseCode, int256 newTotalSupply)
+    {
+        emit SenderDetail(msg.sender, "mintTokenPublic");
+        bytes[] memory metadata;
 
-            if (responseCodeNew != HederaResponseCodes.SUCCESS) {
-                revert ("Mint Failed");
-            }
+        (int256 responseCodeNew, uint64 newTotalSupplyNew, ) = mintToken(
+            token,
+            uint64(uint256(amount)),
+            metadata
+        );
 
-            return (responseCodeNew, int(uint(newTotalSupplyNew)));
+        if (responseCodeNew != HederaResponseCodes.SUCCESS) {
+            revert("Mint Failed");
+        }
+
+        return (responseCodeNew, int256(uint256(newTotalSupplyNew)));
     }
 
-    function burnTokenPublic(address token, int amount) external override
-        returns (int responseCode, int newTotalSupply) {
-            int64[] memory serialNumbers; 
-            (int responseCodeNew, uint64 newTotalSupplyNew) = HederaTokenService.burnToken(token, uint64(uint(amount)), serialNumbers);
-            if (responseCodeNew != HederaResponseCodes.SUCCESS) {
-                revert ("Burn Failed");
-            }
-            return (responseCodeNew, int(uint(newTotalSupplyNew)));
+    function burnTokenPublic(address token, int256 amount)
+        external
+        override
+        returns (int256 responseCode, int256 newTotalSupply)
+    {
+        int64[] memory serialNumbers;
+        (int256 responseCodeNew, uint64 newTotalSupplyNew) = HederaTokenService
+            .burnToken(token, uint64(uint256(amount)), serialNumbers);
+        if (responseCodeNew != HederaResponseCodes.SUCCESS) {
+            revert("Burn Failed");
+        }
+        return (responseCodeNew, int256(uint256(newTotalSupplyNew)));
     }
 
     function createFungibleTokenPublic(
@@ -60,7 +84,8 @@ returns (int responseCode) {
         external
         payable
         override
-        returns (int256 responseCode, address tokenAddress) {
+        returns (int256 responseCode, address tokenAddress)
+    {
         emit SenderDetail(msg.sender, "createFungibleTokenPublic");
         (responseCode, tokenAddress) = createFungibleToken(
             token,
@@ -69,7 +94,7 @@ returns (int responseCode) {
         );
 
         if (responseCode != HederaResponseCodes.SUCCESS) {
-                revert ("createFungibleToken Failed");
-            }
+            revert("createFungibleToken Failed");
+        }
     }
 }

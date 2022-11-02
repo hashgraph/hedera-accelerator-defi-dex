@@ -63,3 +63,17 @@ Tests run before deploying the contract on testnet.
 -----
 ## [Contract Upgrade Strategy](./UPGRADE.md)
 -----
+
+
+## `Linter` -
+* All *.sol files should be formatted with - NomicFoundation.hardhat-solidity
+* Pls verify the default formatter is below under `/Users/<USER>/Library/Application\ Support/Code/User/settings.json`
+* Please enable format on save settings in VS code - Code -> Preferences -> Settings -> Text Editor -> Formatting -> Format On Save
+
+
+
+```
+"[solidity]": {
+        "editor.defaultFormatter": "NomicFoundation.hardhat-solidity"
+    }
+```

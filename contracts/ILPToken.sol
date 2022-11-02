@@ -3,10 +3,20 @@ pragma solidity ^0.8.0;
 
 import "./common/IBaseHTS.sol";
 
-interface ILPToken { 
+interface ILPToken {
     function initialize(IBaseHTS _tokenService) external payable;
-    function allotLPTokenFor(int amountA, int amountB, address _toUser) external returns (int responseCode);
-    function removeLPTokenFor(int lpAmount, address fromUser) external returns (int responseCode);
-    function lpTokenForUser(address _user) external view returns(int);
-    function getAllLPTokenCount() external view returns(int);
+
+    function allotLPTokenFor(
+        int256 amountA,
+        int256 amountB,
+        address _toUser
+    ) external returns (int256 responseCode);
+
+    function removeLPTokenFor(int256 lpAmount, address fromUser)
+        external
+        returns (int256 responseCode);
+
+    function lpTokenForUser(address _user) external view returns (int256);
+
+    function getAllLPTokenCount() external view returns (int256);
 }

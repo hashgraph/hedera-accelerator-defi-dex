@@ -10,13 +10,14 @@ import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesQ
 import "./IERC20.sol";
 import "./IBaseHTS.sol";
 
-contract GovernorCountingSimpleInternal is 
-                    Initializable, 
-                    GovernorUpgradeable, 
-                    GovernorSettingsUpgradeable, 
-                    GovernorCountingSimpleUpgradeable, 
-                    HederaTokenService {
-    using Bits for uint;
+contract GovernorCountingSimpleInternal is
+    Initializable,
+    GovernorUpgradeable,
+    GovernorSettingsUpgradeable,
+    GovernorCountingSimpleUpgradeable,
+    HederaTokenService
+{
+    using Bits for uint256;
     uint256 precision;
 
     IERC20 token;
@@ -26,25 +27,23 @@ contract GovernorCountingSimpleInternal is
     bytes adminKeyBytes;
     string tokenName;
     string tokenSymbol;
-  
+
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
     }
 
     function initialize(
-                    IERC20 _token, 
-                    address _treasurer,
-                    bytes memory _treasurerKeyBytes,
-                    address _admin, 
-                    bytes memory _adminKeyBytes,
-                    string memory _tokenName, 
-                    string memory _tokenSymbol,
-                    uint _votingDelayValue,
-                    uint _votingPeriodValue
-                  )
-        initializer public
-    {
+        IERC20 _token,
+        address _treasurer,
+        bytes memory _treasurerKeyBytes,
+        address _admin,
+        bytes memory _adminKeyBytes,
+        string memory _tokenName,
+        string memory _tokenSymbol,
+        uint256 _votingDelayValue,
+        uint256 _votingPeriodValue
+    ) public initializer {
         token = _token;
         precision = 10000000;
         treasurer = _treasurer;
@@ -54,7 +53,11 @@ contract GovernorCountingSimpleInternal is
         tokenName = _tokenName;
         tokenSymbol = _tokenSymbol;
         __Governor_init("HederaGovernor");
-        __GovernorSettings_init(_votingDelayValue /* 1 block */, _votingPeriodValue /* 1 week */, 0);
+        __GovernorSettings_init(
+            _votingDelayValue, /* 1 block */
+            _votingPeriodValue, /* 1 week */
+            0
+        );
         __GovernorCountingSimple_init();
     }
 
@@ -63,7 +66,8 @@ contract GovernorCountingSimpleInternal is
         uint256,
         bytes memory /*params*/
     ) internal view virtual override returns (uint256) {
-        uint256 share = (token.balanceOf(account) * precision)/token.totalSupply();
+        uint256 share = (token.balanceOf(account) * precision) /
+            token.totalSupply();
         uint256 percentageShare = share / (precision / 100);
         return percentageShare;
     }
@@ -104,7 +108,7 @@ contract GovernorCountingSimpleInternal is
         return 1;
     }
 
- /**
+    /**
      * @dev See {IGovernor-execute}.
      */
     function execute(
@@ -114,7 +118,7 @@ contract GovernorCountingSimpleInternal is
         string memory description
     ) public payable virtual returns (uint256) {
         bytes32 descriptionHash = keccak256(bytes(description));
-        return execute(targets, values,calldatas, descriptionHash);
+        return execute(targets, values, calldatas, descriptionHash);
     }
 
     /**
@@ -131,7 +135,7 @@ contract GovernorCountingSimpleInternal is
         return super._voteSucceeded(proposalId);
     }
 
-     /**
+    /**
      * @dev Internal execution mechanism. Can be overridden to implement different execution mechanism
      */
     function _execute(
@@ -149,7 +153,10 @@ contract GovernorCountingSimpleInternal is
         createToken();
     }
 
-    function createToken() internal returns (int responseCode, address tokenAddress) {
+    function createToken()
+        internal
+        returns (int256 responseCode, address tokenAddress)
+    {
         uint256 supplyKeyType;
         uint256 adminKeyType;
 
@@ -178,19 +185,25 @@ contract GovernorCountingSimpleInternal is
         newToken.expiry = expiry;
         newToken.tokenKeys = keys;
 
-        (responseCode,  tokenAddress) = createFungibleToken(newToken, uint(0), 8);
+        (responseCode, tokenAddress) = createFungibleToken(
+            newToken,
+            uint256(0),
+            8
+        );
 
-        require(responseCode == HederaResponseCodes.SUCCESS, "Token creation failed");
+        require(
+            responseCode == HederaResponseCodes.SUCCESS,
+            "Token creation failed"
+        );
     }
 }
 
 library Bits {
-
-    uint constant internal ONE = uint(1);
+    uint256 internal constant ONE = uint256(1);
 
     // Sets the bit at the given 'index' in 'self' to '1'.
     // Returns the modified value.
-    function setBit(uint self, uint8 index) internal pure returns (uint) {
-        return self | ONE << index;
+    function setBit(uint256 self, uint8 index) internal pure returns (uint256) {
+        return self | (ONE << index);
     }
 }

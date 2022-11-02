@@ -5,23 +5,32 @@ import "./hedera/HederaTokenService.sol";
 import "./hedera/HederaResponseCodes.sol";
 
 interface IBaseHTS {
-    function transferTokenPublic(address token, address sender, address receiver, int amount) 
-        external returns (int responseCode);
-    
-    function associateTokenPublic(address account, address token) 
-        external returns (int responseCode);
+    function transferTokenPublic(
+        address token,
+        address sender,
+        address receiver,
+        int256 amount
+    ) external returns (int256 responseCode);
 
-    function associateTokensPublic(address account, address[] memory tokens) 
-        external returns (int responseCode);
+    function associateTokenPublic(address account, address token)
+        external
+        returns (int256 responseCode);
 
-    function mintTokenPublic(address token, int amount) external
-        returns (int responseCode, int newTotalSupply);
+    function associateTokensPublic(address account, address[] memory tokens)
+        external
+        returns (int256 responseCode);
 
-    function burnTokenPublic(address token, int amount) external
-        returns (int responseCode, int newTotalSupply);
-    
-    function createFungibleTokenPublic(IHederaTokenService.HederaToken memory token, 
-        uint initialTotalSupply, 
-        uint decimals) external payable returns (int responseCode, address tokenAddress);
+    function mintTokenPublic(address token, int256 amount)
+        external
+        returns (int256 responseCode, int256 newTotalSupply);
 
+    function burnTokenPublic(address token, int256 amount)
+        external
+        returns (int256 responseCode, int256 newTotalSupply);
+
+    function createFungibleTokenPublic(
+        IHederaTokenService.HederaToken memory token,
+        uint256 initialTotalSupply,
+        uint256 decimals
+    ) external payable returns (int256 responseCode, address tokenAddress);
 }
