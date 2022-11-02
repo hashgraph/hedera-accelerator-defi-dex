@@ -14,7 +14,6 @@ import ClientManagement from "./utils/utils";
 import { ContractService } from "../deployment/service/ContractService";
 import { ethers } from "ethers";
 
-
 const clientManagement = new ClientManagement();
 const contractService = new ContractService();
 
