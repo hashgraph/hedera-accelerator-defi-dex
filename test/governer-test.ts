@@ -19,7 +19,7 @@ describe("Governor Tests", function () {
     it("Verify if the Governor contract is upgradeable safe ", async function () {
       const votingDelay = 0;
       const votingPeriod = 12;
-      const Governor = await ethers.getContractFactory("GovernorCountingSimpleInternal");
+      const Governor = await ethers.getContractFactory("GovernorTokenCreate");
       const treaKey = ethers.utils.toUtf8Bytes("treasurer public key");
       const adminKey = ethers.utils.toUtf8Bytes("Admin public key");
       const args = [zeroAddress, zeroAddress, treaKey, zeroAddress, adminKey, "Token", "Symbol", votingDelay, votingPeriod];
@@ -34,7 +34,7 @@ describe("Governor Tests", function () {
     const votingDelay = 0;
     const votingPeriod = 12;
 
-    const Governor = await ethers.getContractFactory("GovernorCountingSimpleInternal");
+    const Governor = await ethers.getContractFactory("GovernorTokenCreate");
     const treaKey = ethers.utils.toUtf8Bytes("treasurer public key");
     const adminKey = ethers.utils.toUtf8Bytes("Admin public key");
     const args = [tokenCont.address, zeroAddress, treaKey, zeroAddress, adminKey, "Token", "Symbol", votingDelay, votingPeriod];

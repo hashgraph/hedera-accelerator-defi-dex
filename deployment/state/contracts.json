@@ -202,5 +202,13 @@
         "timestamp": "2022-11-02T11:18:34.168Z",
         "transparentProxyAddress": "0x0000000000000000000000000000000002e86f9d",
         "transparentProxyId": "0.0.48787357"
+    },
+    {
+        "name": "governortokencreate",
+        "id": "0.0.48787577",
+        "address": "0x0000000000000000000000000000000002e87079",
+        "timestamp": "2022-11-02T11:39:17.227Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e8707b",
+        "transparentProxyId": "0.0.48787579"
     }
 ]
