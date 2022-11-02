@@ -7,9 +7,8 @@ import "./ERC20Mock.sol";
 import "hardhat/console.sol";
 
 contract MockBaseHTS is IBaseHTS {
-
     enum FailTransactionFor {
-        initialise, 
+        initialise,
         swapAFailedSendingA,
         swapAFailedSendingB,
         addLiquidity,
@@ -26,18 +25,19 @@ contract MockBaseHTS is IBaseHTS {
     }
 
     bool internal isSuccess;
-    int internal trueTransaction = 0;
+    int256 internal trueTransaction = 0;
     FailTransactionFor internal failType;
+
     constructor(bool _isSucces) {
         isSuccess = _isSucces;
     }
 
-    function setFailType(int _type) public {
+    function setFailType(int256 _type) public {
         failType = FailTransactionFor(_type);
         trueTransaction = successForType();
     }
 
-    function successForType() internal view returns (int) {
+    function successForType() internal view returns (int256) {
         if (failType == FailTransactionFor.initialise) {
             return 7;
         }
@@ -74,57 +74,82 @@ contract MockBaseHTS is IBaseHTS {
         return 0;
     }
 
-    function transferTokenPublic(address, address, address, int) external override returns (int responseCode) {
+    function transferTokenPublic(
+        address,
+        address,
+        address,
+        int256
+    ) external override returns (int256 responseCode) {
         if (trueTransaction > 0) {
-            trueTransaction-=1;
-            return int(22);
+            trueTransaction -= 1;
+            return int256(22);
         }
-    
-        int result = isSuccess ? int(22) : int(23);
+
+        int256 result = isSuccess ? int256(22) : int256(23);
         return result;
     }
-    
-    function associateTokenPublic(address, address) external override returns (int responseCode) {
+
+    function associateTokenPublic(address, address)
+        external
+        override
+        returns (int256 responseCode)
+    {
         if (trueTransaction > 0) {
-            trueTransaction-=1;
-            return int(22);
+            trueTransaction -= 1;
+            return int256(22);
         }
-        return isSuccess ? int(22) : int(23);
+        return isSuccess ? int256(22) : int256(23);
     }
-    
-    function associateTokensPublic(address, address[] memory) 
-        external override view  returns (int responseCode) {
-            return isSuccess ? int(22) : int(23);
+
+    function associateTokensPublic(address, address[] memory)
+        external
+        view
+        override
+        returns (int256 responseCode)
+    {
+        return isSuccess ? int256(22) : int256(23);
+    }
+
+    function mintTokenPublic(address, int256 amount)
+        external
+        override
+        returns (int256 responseCode, int256 newTotalSupply)
+    {
+        if (trueTransaction > 0) {
+            trueTransaction -= 1;
+            return (int256(22), amount);
         }
 
-    function mintTokenPublic(address, int amount) external override
-        returns (int responseCode, int newTotalSupply) {
-            if (trueTransaction > 0) {
-                trueTransaction-=1;
-                return (int(22), amount);
-            }
-
-            if(isSuccess){
-                return (int(22), int(amount));
-            }
-            revert("Mint Failed");
+        if (isSuccess) {
+            return (int256(22), int256(amount));
+        }
+        revert("Mint Failed");
     }
 
-    function burnTokenPublic(address, int amount) external view override
-        returns (int responseCode, int newTotalSupply) {
-            return ((isSuccess) ? int(22) : int(23), amount);
+    function burnTokenPublic(address, int256 amount)
+        external
+        view
+        override
+        returns (int256 responseCode, int256 newTotalSupply)
+    {
+        return ((isSuccess) ? int256(22) : int256(23), amount);
     }
 
-    function createFungibleTokenPublic(IHederaTokenService.HederaToken memory , 
-        uint , 
-        uint) external payable       override
-returns (int responseCode, address tokenAddress){
-            ERC20Mock mock =  new ERC20Mock(10, 10);
-            if (failType == FailTransactionFor.lpTokenCreationFailed) {
-                return (int(32),  address(0x0));
-            }
+    function createFungibleTokenPublic(
+        IHederaTokenService.HederaToken memory,
+        uint256,
+        uint256
+    )
+        external
+        payable
+        override
+        returns (int256 responseCode, address tokenAddress)
+    {
+        ERC20Mock mock = new ERC20Mock(10, 10);
+        if (failType == FailTransactionFor.lpTokenCreationFailed) {
+            return (int256(32), address(0x0));
+        }
 
-            return (int(22),  address(mock));
+        return (int256(22), address(mock));
     }
-
 }

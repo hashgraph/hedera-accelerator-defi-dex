@@ -180,61 +180,107 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
         return (tokenAQuantity, tokenBQuantity);
     }
 
-    function swapToken(address to, address _token, int _deltaQty) external override virtual {
-        require(_token == pair.tokenA.tokenAddress || _token == pair.tokenB.tokenAddress, "Pls pass correct token to swap.");
+    function swapToken(
+        address to,
+        address _token,
+        int256 _deltaQty
+    ) external virtual override {
+        require(
+            _token == pair.tokenA.tokenAddress ||
+                _token == pair.tokenB.tokenAddress,
+            "Pls pass correct token to swap."
+        );
 
         if (_token == pair.tokenA.tokenAddress) {
             doTokenASwap(to, _deltaQty);
         } else {
             doTokenBSwap(to, _deltaQty);
-        }     
+        }
     }
 
-    function doTokenASwap(address to, int _deltaAQty) private  {
-        int calculatedSlippage = slippageOutGivenIn(_deltaAQty);
-        int localSlippage = getSlippage();
-        require(calculatedSlippage <= (localSlippage),  "Slippage threshold breached.");
+    function doTokenASwap(address to, int256 _deltaAQty) private {
+        int256 calculatedSlippage = slippageOutGivenIn(_deltaAQty);
+        int256 localSlippage = getSlippage();
+        require(
+            calculatedSlippage <= (localSlippage),
+            "Slippage threshold breached."
+        );
         // deduct fee from the token A
-        int feeTokenA = feeForToken(_deltaAQty);
-        _deltaAQty = _deltaAQty - (feeTokenA/2);
-        
-        int deltaBQty = getOutGivenIn(_deltaAQty);
-        pair.tokenA.tokenQty += _deltaAQty;  
-        int feeTokenB = feeForToken(deltaBQty);
+        int256 feeTokenA = feeForToken(_deltaAQty);
+        _deltaAQty = _deltaAQty - (feeTokenA / 2);
+
+        int256 deltaBQty = getOutGivenIn(_deltaAQty);
+        pair.tokenA.tokenQty += _deltaAQty;
+        int256 feeTokenB = feeForToken(deltaBQty);
         // deduct fee from the token B
-        deltaBQty = deltaBQty - (feeTokenB/2);
-        int response = tokenService.transferTokenPublic(pair.tokenA.tokenAddress, to, address(this), _deltaAQty);
-        require(response == HederaResponseCodes.SUCCESS, "swapTokenA: Transferring token A to contract failed with status code");
+        deltaBQty = deltaBQty - (feeTokenB / 2);
+        int256 response = tokenService.transferTokenPublic(
+            pair.tokenA.tokenAddress,
+            to,
+            address(this),
+            _deltaAQty
+        );
+        require(
+            response == HederaResponseCodes.SUCCESS,
+            "swapTokenA: Transferring token A to contract failed with status code"
+        );
 
         pair.tokenB.tokenQty -= deltaBQty;
-        tokenService.associateTokenPublic(to,  pair.tokenB.tokenAddress);
-        response = tokenService.transferTokenPublic(pair.tokenB.tokenAddress, address(this), to, deltaBQty);
-        require(response == HederaResponseCodes.SUCCESS, "swapTokenA: Transferring token B to contract failed with status code");
+        tokenService.associateTokenPublic(to, pair.tokenB.tokenAddress);
+        response = tokenService.transferTokenPublic(
+            pair.tokenB.tokenAddress,
+            address(this),
+            to,
+            deltaBQty
+        );
+        require(
+            response == HederaResponseCodes.SUCCESS,
+            "swapTokenA: Transferring token B to contract failed with status code"
+        );
 
-        transferFeeToTreasury(feeTokenA/2, feeTokenB/2);
+        transferFeeToTreasury(feeTokenA / 2, feeTokenB / 2);
     }
 
-    function doTokenBSwap(address to, int _deltaBQty) private  {
-        int calculatedSlippage = slippageInGivenOut(_deltaBQty);
-        int localSlippage = getSlippage();
-        require(calculatedSlippage <= localSlippage,  "Slippage threshold breached.");
+    function doTokenBSwap(address to, int256 _deltaBQty) private {
+        int256 calculatedSlippage = slippageInGivenOut(_deltaBQty);
+        int256 localSlippage = getSlippage();
+        require(
+            calculatedSlippage <= localSlippage,
+            "Slippage threshold breached."
+        );
         // deduct fee from the token B
-        int feeTokenB = feeForToken(_deltaBQty);
-        _deltaBQty -= (feeTokenB/2);
-        int deltaAQty = getInGivenOut(_deltaBQty);
+        int256 feeTokenB = feeForToken(_deltaBQty);
+        _deltaBQty -= (feeTokenB / 2);
+        int256 deltaAQty = getInGivenOut(_deltaBQty);
         pair.tokenB.tokenQty += _deltaBQty;
-        int feeTokenA = feeForToken(deltaAQty);
+        int256 feeTokenA = feeForToken(deltaAQty);
         // deduct fee from the token A
-        deltaAQty -= (feeTokenA/2);
-        int response = tokenService.transferTokenPublic(pair.tokenB.tokenAddress, to, address(this), _deltaBQty);
-        require(response == HederaResponseCodes.SUCCESS, "swapTokenB: Transferring token B to contract failed with status code");
+        deltaAQty -= (feeTokenA / 2);
+        int256 response = tokenService.transferTokenPublic(
+            pair.tokenB.tokenAddress,
+            to,
+            address(this),
+            _deltaBQty
+        );
+        require(
+            response == HederaResponseCodes.SUCCESS,
+            "swapTokenB: Transferring token B to contract failed with status code"
+        );
 
         pair.tokenA.tokenQty -= deltaAQty;
-        tokenService.associateTokenPublic(to,  pair.tokenA.tokenAddress);
-        response = tokenService.transferTokenPublic(pair.tokenA.tokenAddress, address(this), to, deltaAQty);
-        require(response == HederaResponseCodes.SUCCESS, "swapTokenB: Transferring token A to contract failed with status code");
+        tokenService.associateTokenPublic(to, pair.tokenA.tokenAddress);
+        response = tokenService.transferTokenPublic(
+            pair.tokenA.tokenAddress,
+            address(this),
+            to,
+            deltaAQty
+        );
+        require(
+            response == HederaResponseCodes.SUCCESS,
+            "swapTokenB: Transferring token A to contract failed with status code"
+        );
 
-        transferFeeToTreasury(feeTokenA/2, feeTokenB/2);
+        transferFeeToTreasury(feeTokenA / 2, feeTokenB / 2);
     }
 
     function getPairQty() public view returns (int256, int256) {
@@ -359,11 +405,27 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
         return tokenQ;
     }
 
-    function transferFeeToTreasury(int feeTokenA, int feeTokenB) private {
-        int response = tokenService.transferTokenPublic(pair.tokenA.tokenAddress, address(this), treasury, feeTokenA);
-        require(response == HederaResponseCodes.SUCCESS, "swapFeeTokenA: Transferring fee as token A to treasuary failed with status code");
+    function transferFeeToTreasury(int256 feeTokenA, int256 feeTokenB) private {
+        int256 response = tokenService.transferTokenPublic(
+            pair.tokenA.tokenAddress,
+            address(this),
+            treasury,
+            feeTokenA
+        );
+        require(
+            response == HederaResponseCodes.SUCCESS,
+            "swapFeeTokenA: Transferring fee as token A to treasuary failed with status code"
+        );
 
-        response = tokenService.transferTokenPublic(pair.tokenB.tokenAddress, address(this), treasury, feeTokenB);
-        require(response == HederaResponseCodes.SUCCESS, "swapFeeTokenB: Transferring fee as token B to treasuary failed with status code");
+        response = tokenService.transferTokenPublic(
+            pair.tokenB.tokenAddress,
+            address(this),
+            treasury,
+            feeTokenB
+        );
+        require(
+            response == HederaResponseCodes.SUCCESS,
+            "swapFeeTokenB: Transferring fee as token B to treasuary failed with status code"
+        );
     }
-}   
+}

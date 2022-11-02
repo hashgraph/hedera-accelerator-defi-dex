@@ -7,7 +7,6 @@
 For now, we have decided to use transparent proxy because it has proven the test of time. It is relatively less complex.
 
 1. Added `import "@openzeppelin/hardhat-upgrades"` to `hardhat.config.ts`
-<br />
 2. Run `npx hardhat compile`
 3. Run `npx hardhat run deployment/upgradeableSwap.ts`
 4. Copy deployed contract address
