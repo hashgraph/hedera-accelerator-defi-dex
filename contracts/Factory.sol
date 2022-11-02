@@ -66,7 +66,7 @@ contract Factory is Initializable {
             new LPToken{salt: deploymentSalt}()
         );
         (bool success, ) = deployedContract.call{value: msg.value}(
-            abi.encodeWithSelector(ILPToken.initializeParams.selector, tokenService));
+            abi.encodeWithSelector(ILPToken.initialize.selector, tokenService));
         require(success, "LPToken Initialization fail!");
         return deployedContract;
     }

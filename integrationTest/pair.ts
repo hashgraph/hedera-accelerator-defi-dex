@@ -17,7 +17,6 @@ import { DeployedContract } from "../deployment/model/contract";
 
 const clientManagement = new ClientManagement();
 const contractService = new ContractService();
-const eventConsumer = new EventConsumer("./artifacts/contracts/LPToken.sol/LPToken.json");
 
 const htsServiceAddress = contractService.getContract(contractService.baseContractName).address;
 
@@ -66,7 +65,7 @@ const initializeLPTokenContract = async (lpTokenContractId: string) => {
 
   const contractTokenTx = await new ContractExecuteTransaction()
     .setContractId(lpTokenContractId)
-    .setFunction("initializeParams", contractFunctionParameters)
+    .setFunction("initialize", contractFunctionParameters)
     .setGas(500000)
     .setMaxTransactionFee(new Hbar(50))
     .setPayableAmount(new Hbar(60))
