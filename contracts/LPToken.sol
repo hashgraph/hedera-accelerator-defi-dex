@@ -39,7 +39,7 @@ contract LPToken is HederaResponseCodes, ILPToken, Initializable {
     function allotLPTokenFor(int amountA, int amountB, address _toUser) external override returns (int responseCode) {
         emit SenderDetail(msg.sender,  "allotLPTokenFor");
         require((amountA > 0 && amountB > 0), "Please provide positive token counts" );
-        int mintingAmount = sqrt(amountB * amountB);
+        int mintingAmount = sqrt(amountA * amountB);
         require(address(lpToken) > address(0x0), "Liquidity Token not initialized");
         tokenService.associateTokenPublic(_toUser, address(lpToken));
         (int response,) = tokenService.mintTokenPublic(address(lpToken), mintingAmount);
