@@ -16,7 +16,7 @@ async function main() {
   const filePath = "./artifacts/contracts/common/GovernorTokenCreate.sol/GovernorTokenCreate.json";
   console.log(`Deploying GovernorTokenCreate contract...`);
   const deployedContract = await deployment.deployContractAsClient(filePath, new ContractFunctionParameters());
-  console.log(`BaseHTS deployed ${JSON.stringify(deployedContract)}`);
+  console.log(`GovernorTokenCreate deployed ${JSON.stringify(deployedContract)}`);
 }
 
 main()

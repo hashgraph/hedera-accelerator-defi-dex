@@ -8,15 +8,12 @@ import {
   TokenType,
   TokenSupplyType,
   TokenId,
-  AccountId
 } from "@hashgraph/sdk";
 
 import ClientManagement from "./utils/utils";
-import { EventConsumer } from "./utils/EventConsumer";
 import { ContractService } from "../deployment/service/ContractService";
 import { ethers } from "ethers";
 
-const eventConsumer = new EventConsumer("./artifacts/contracts/common/GovernorTokenCreate.sol/GovernorTokenCreate.json");
 
 const clientManagement = new ClientManagement();
 const contractService = new ContractService();
@@ -36,25 +33,6 @@ const readFileContent = (filePath: string) => {
   const rawdata: any = fs.readFileSync(filePath);
   return JSON.parse(rawdata);
 };
-
-const createToken = async (): Promise<TokenId> => {
-  const createTokenTx = await new TokenCreateTransaction()
-    .setTokenName("Governance Hedera Open DEX")
-    .setTokenSymbol("GOD")
-    .setDecimals(8)
-    .setInitialSupply(20000000000)
-    .setTokenType(TokenType.FungibleCommon)
-    .setSupplyType(TokenSupplyType.Infinite)
-    .setSupplyKey(treasureKey)
-    .setAdminKey(treasureKey)
-    .setTreasuryAccountId(treasureId)
-    .execute(treasurerClient);
-
-  const tokenCreateTx = await createTokenTx.getReceipt(treasurerClient);
-  const tokenId = tokenCreateTx.tokenId;
-  console.log(`Token created ${tokenId}, Token Address ${tokenId?.toSolidityAddress()}`);
-  return tokenId!;
-}
 
 const initialize = async (tokenId: TokenId) => {
   console.log(`\nInitialize contract with token  `);
@@ -266,7 +244,6 @@ const state = async (proposalId: BigNumber) => {
 
 async function main() {
   console.log(`\nUsing governor proxy contract id ${contractId}`);
-  //const tokenId = await createToken();
   const tokenId = TokenId.fromString("0.0.48602743");
   await initialize(tokenId);
 
