@@ -180,107 +180,35 @@
         "transparentProxyId": "0.0.48778472"
     },
     {
-        "name": "lptoken",
-        "id": "0.0.48772214",
-        "address": "0x0000000000000000000000000000000002e83476",
-        "timestamp": "2022-10-31T12:01:48.188Z",
-        "transparentProxyAddress": "0x0000000000000000000000000000000002e83484",
-        "transparentProxyId": "0.0.48772228"
+        "name": "governortokencreate",
+        "id": "0.0.48785314",
+        "address": "0x0000000000000000000000000000000002e867a2",
+        "timestamp": "2022-11-02T08:29:24.662Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e867a4",
+        "transparentProxyId": "0.0.48785316"
     },
     {
-        "name": "pair",
-        "id": "0.0.48773609",
-        "address": "0x0000000000000000000000000000000002e839e9",
-        "timestamp": "2022-10-31T13:01:24.550Z",
-        "transparentProxyAddress": "0x0000000000000000000000000000000002e839fb",
-        "transparentProxyId": "0.0.48773627"
+        "name": "governortokencreate",
+        "id": "0.0.48786069",
+        "address": "0x0000000000000000000000000000000002e86a95",
+        "timestamp": "2022-11-02T09:45:53.374Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e86a9c",
+        "transparentProxyId": "0.0.48786076"
     },
     {
-        "name": "lptoken",
-        "id": "0.0.48773995",
-        "address": "0x0000000000000000000000000000000002e83b6b",
-        "timestamp": "2022-10-31T13:14:30.903Z",
-        "transparentProxyAddress": "0x0000000000000000000000000000000002e83b76",
-        "transparentProxyId": "0.0.48774006"
+        "name": "governortokencreate",
+        "id": "0.0.48787352",
+        "address": "0x0000000000000000000000000000000002e86f98",
+        "timestamp": "2022-11-02T11:18:34.168Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e86f9d",
+        "transparentProxyId": "0.0.48787357"
     },
     {
-        "name": "lptoken",
-        "id": "0.0.48778096",
-        "address": "0x0000000000000000000000000000000002e84b70",
-        "timestamp": "2022-11-01T07:08:11.942Z",
-        "transparentProxyAddress": "0x0000000000000000000000000000000002e84b75",
-        "transparentProxyId": "0.0.48778101"
-    },
-    {
-        "name": "pair",
-        "id": "0.0.48778108",
-        "address": "0x0000000000000000000000000000000002e84b7c",
-        "timestamp": "2022-11-01T07:10:47.642Z",
-        "transparentProxyAddress": "0x0000000000000000000000000000000002e84b7e",
-        "transparentProxyId": "0.0.48778110"
-    },
-    {
-        "name": "lptoken",
-        "id": "0.0.48778122",
-        "address": "0x0000000000000000000000000000000002e84b8a",
-        "timestamp": "2022-11-01T07:12:59.228Z",
-        "transparentProxyAddress": "0x0000000000000000000000000000000002e84b8e",
-        "transparentProxyId": "0.0.48778126"
-    },
-    {
-        "name": "lptoken",
-        "id": "0.0.48778150",
-        "address": "0x0000000000000000000000000000000002e84ba6",
-        "timestamp": "2022-11-01T07:19:11.746Z",
-        "transparentProxyAddress": "0x0000000000000000000000000000000002e84ba9",
-        "transparentProxyId": "0.0.48778153"
-    },
-    {
-        "name": "pair",
-        "id": "0.0.48778157",
-        "address": "0x0000000000000000000000000000000002e84bad",
-        "timestamp": "2022-11-01T07:20:25.903Z",
-        "transparentProxyAddress": "0x0000000000000000000000000000000002e84bb0",
-        "transparentProxyId": "0.0.48778160"
-    },
-    {
-        "name": "factory",
-        "id": "0.0.48778192",
-        "address": "0x0000000000000000000000000000000002e84bd0",
-        "timestamp": "2022-11-01T07:30:40.637Z",
-        "transparentProxyAddress": "0x0000000000000000000000000000000002e84bd2",
-        "transparentProxyId": "0.0.48778194"
-    },
-    {
-        "name": "factory",
-        "id": "0.0.48778213",
-        "address": "0x0000000000000000000000000000000002e84be5",
-        "timestamp": "2022-11-01T07:38:00.467Z",
-        "transparentProxyAddress": "0x0000000000000000000000000000000002e84bee",
-        "transparentProxyId": "0.0.48778222"
-    },
-    {
-        "name": "lptoken",
-        "id": "0.0.48781063",
-        "address": "0x0000000000000000000000000000000002e85707",
-        "timestamp": "2022-11-01T13:16:59.553Z",
-        "transparentProxyAddress": "0x0000000000000000000000000000000002e85713",
-        "transparentProxyId": "0.0.48781075"
-    },
-    {
-        "name": "pair",
-        "id": "0.0.48781097",
-        "address": "0x0000000000000000000000000000000002e85729",
-        "timestamp": "2022-11-01T13:18:19.783Z",
-        "transparentProxyAddress": "0x0000000000000000000000000000000002e8572b",
-        "transparentProxyId": "0.0.48781099"
-    },
-    {
-        "name": "factory",
-        "id": "0.0.48781170",
-        "address": "0x0000000000000000000000000000000002e85772",
-        "timestamp": "2022-11-01T13:22:12.052Z",
-        "transparentProxyAddress": "0x0000000000000000000000000000000002e85784",
-        "transparentProxyId": "0.0.48781188"
+        "name": "governortokencreate",
+        "id": "0.0.48787577",
+        "address": "0x0000000000000000000000000000000002e87079",
+        "timestamp": "2022-11-02T11:39:17.227Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e8707b",
+        "transparentProxyId": "0.0.48787579"
     }
 ]
