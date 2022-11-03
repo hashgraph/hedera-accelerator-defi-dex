@@ -45,7 +45,5 @@ contract GovernorTextProposal is GovernorCountingSimpleInternal {
         uint256[] memory,
         bytes[] memory,
         bytes32 /*descriptionHash*/
-    ) internal virtual override {
-        
-    }
+    ) internal virtual override {}
 }

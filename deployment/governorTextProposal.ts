@@ -1,17 +1,21 @@
 import dotenv from "dotenv";
-import {
-  ContractFunctionParameters
-} from "@hashgraph/sdk";
+import { ContractFunctionParameters } from "@hashgraph/sdk";
 import { Deployment } from "./deployContractOnTestnet";
 
 dotenv.config();
 
 async function main() {
   const deployment = new Deployment();
-  const filePath = "./artifacts/contracts/common/GovernorTextProposal.sol/GovernorTextProposal.json";
+  const filePath =
+    "./artifacts/contracts/common/GovernorTextProposal.sol/GovernorTextProposal.json";
   console.log(`Deploying Governor Text Proposal contract...`);
-  const deployedContract = await deployment.deployContractAsClient(filePath, new ContractFunctionParameters());
-  console.log(`BaseHTS deployed ${JSON.stringify(deployedContract)}`);
+  const deployedContract = await deployment.deployContractAsClient(
+    filePath,
+    new ContractFunctionParameters()
+  );
+  console.log(
+    `GovernorTextProposal deployed ${JSON.stringify(deployedContract)}`
+  );
 }
 
 main()

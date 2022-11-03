@@ -4,7 +4,7 @@ import {
   ContractExecuteTransaction,
   ContractFunctionParameters,
   Hbar,
-  TokenId
+  TokenId,
 } from "@hashgraph/sdk";
 
 import ClientManagement from "./utils/utils";
@@ -24,9 +24,13 @@ const { adminId } = clientManagement.getAdmin();
 
 const treasurerClient = clientManagement.createClient();
 
-const htsServiceAddress = contractService.getContract(contractService.baseContractName).address;
+const htsServiceAddress = contractService.getContract(
+  contractService.baseContractName
+).address;
 
-const contractId = contractService.getContractWithProxy(contractService.governorTextContractName).transparentProxyId!;
+const contractId = contractService.getContractWithProxy(
+  contractService.governorTextContractName
+).transparentProxyId!;
 
 const readFileContent = (filePath: string) => {
   const rawdata: any = fs.readFileSync(filePath);
@@ -52,9 +56,14 @@ const initialize = async (tokenId: TokenId) => {
   const receipt = await tx.getReceipt(client);
 
   console.log(`Initialize contract with token done with status - ${receipt}`);
-}
+};
 
-const execute = async (targets: Array<string>, ethFees: Array<number>, calls: Array<Uint8Array>, description: string) => {
+const execute = async (
+  targets: Array<string>,
+  ethFees: Array<number>,
+  calls: Array<Uint8Array>,
+  description: string
+) => {
   console.log(`\nExecuting  proposal - `);
 
   const contractFunctionParameters = new ContractFunctionParameters()
@@ -69,8 +78,8 @@ const execute = async (targets: Array<string>, ethFees: Array<number>, calls: Ar
     .setPayableAmount(new Hbar(70))
     .setMaxTransactionFee(new Hbar(70))
     .setGas(900000)
-    .freezeWith(treasurerClient)// treasurer of token
-    .sign(key);//Admin of token
+    .freezeWith(treasurerClient) // treasurer of token
+    .sign(key); //Admin of token
 
   const executedTx = await contractAllotTx.execute(treasurerClient);
 
@@ -79,14 +88,19 @@ const execute = async (targets: Array<string>, ethFees: Array<number>, calls: Ar
 
   const status = contractAllotRx.status;
 
-  console.log(`Execute tx status ${status} for proposal id ${record.contractFunctionResult?.getUint256(0)}`);
-}
+  console.log(
+    `Execute tx status ${status} for proposal id ${record.contractFunctionResult?.getUint256(
+      0
+    )}`
+  );
+};
 
 const quorumReached = async (proposalId: BigNumber) => {
   console.log(`\nGetting quorumReached `);
 
-  let contractFunctionParameters = new ContractFunctionParameters()
-    .addUint256(proposalId);
+  let contractFunctionParameters = new ContractFunctionParameters().addUint256(
+    proposalId
+  );
 
   const contractTokenTx = await new ContractExecuteTransaction()
     .setContractId(contractId)
@@ -98,39 +112,54 @@ const quorumReached = async (proposalId: BigNumber) => {
   const record = await contractTokenTx.getRecord(client);
   const status = record.contractFunctionResult!.getBool(0);
 
-  console.log(`quorumReached tx status ${receipt.status} with quorumReached ${status}`);
-}
+  console.log(
+    `quorumReached tx status ${receipt.status} with quorumReached ${status}`
+  );
+};
 
-const associateTokenPublicCallData = async (tokenId: TokenId): Promise<Uint8Array> => {
-  const contractJson = readFileContent("./artifacts/contracts/common/BaseHTS.sol/BaseHTS.json");
+const associateTokenPublicCallData = async (
+  tokenId: TokenId
+): Promise<Uint8Array> => {
+  const contractJson = readFileContent(
+    "./artifacts/contracts/common/BaseHTS.sol/BaseHTS.json"
+  );
   const contractInterface = new ethers.utils.Interface(contractJson.abi);
 
   const receiver = adminId.toSolidityAddress();
-  const callData = contractInterface.encodeFunctionData("associateTokenPublic", [receiver, tokenId.toSolidityAddress()]);
-  return ethers.utils.toUtf8Bytes(callData);;
-}
+  const callData = contractInterface.encodeFunctionData(
+    "associateTokenPublic",
+    [receiver, tokenId.toSolidityAddress()]
+  );
+  return ethers.utils.toUtf8Bytes(callData);
+};
 
 async function main() {
   console.log(`\nUsing governor proxy contract id ${contractId}`);
   //const tokenId = await createToken();
   const tokenId = TokenId.fromString("0.0.48602743");
   // await initialize(tokenId);
- 
+
   const targets = [htsServiceAddress];
   const ethFees = [0];
   const associateToken = await associateTokenPublicCallData(tokenId);
   const calls = [associateToken];
   const description = "Create text proposal 1";
 
-  const proposalId = await governor.propose(targets, ethFees, calls, description, contractId);
-  await governor.vote(proposalId, 1, contractId);//1 is for vote. 
+  const proposalId = await governor.propose(
+    targets,
+    ethFees,
+    calls,
+    description,
+    contractId
+  );
+  await governor.vote(proposalId, 1, contractId); //1 is for vote.
   await quorumReached(proposalId);
   await governor.voteSucceeded(proposalId, contractId);
   await governor.proposalVotes(proposalId, contractId);
   await governor.state(proposalId, contractId);
   console.log(`\nWaiting for voting period to get over.`);
-  await new Promise(f => setTimeout(f, 15 * 1000));//Wait till waiting period is over. It's current deadline as per Governance. 
-  await governor.state(proposalId, contractId);//4 means succeeded
+  await new Promise((f) => setTimeout(f, 15 * 1000)); //Wait till waiting period is over. It's current deadline as per Governance.
+  await governor.state(proposalId, contractId); //4 means succeeded
   await execute(targets, ethFees, calls, description);
   console.log(`\nDone`);
 }
