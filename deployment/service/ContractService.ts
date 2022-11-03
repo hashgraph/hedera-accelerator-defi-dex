@@ -8,6 +8,7 @@ export class ContractService {
     public baseContractName = "basehts";
     public lpTokenContractName = "lptoken";
     public governorContractName = "governortokencreate";
+    public governorTextContractName = "governortextproposal";
     
     private contractRecordFile = "./deployment/state/contracts.json";
 

@@ -4,11 +4,7 @@ import {
   ContractExecuteTransaction,
   ContractFunctionParameters,
   Hbar,
-  TokenCreateTransaction,
-  TokenType,
-  TokenSupplyType,
-  TokenId,
-  AccountId
+  TokenId
 } from "@hashgraph/sdk";
 
 import ClientManagement from "./utils/utils";
@@ -17,63 +13,33 @@ import { ContractService } from "../deployment/service/ContractService";
 import { ethers } from "ethers";
 import GovernorMethods from "./GovernorMethods";
 
-const eventConsumer = new EventConsumer("./artifacts/contracts/common/GovernorTokenCreate.sol/GovernorTokenCreate.json");
-
 const clientManagement = new ClientManagement();
 const contractService = new ContractService();
 
 const governor = new GovernorMethods();
 
 let client = clientManagement.createOperatorClient();
-const { id, key } = clientManagement.getOperator();
+const { key } = clientManagement.getOperator();
 const { adminId } = clientManagement.getAdmin();
 
 const treasurerClient = clientManagement.createClient();
-const { treasureId, treasureKey } = clientManagement.getTreasure();
 
 const htsServiceAddress = contractService.getContract(contractService.baseContractName).address;
 
-const contractId = contractService.getContractWithProxy(contractService.governorContractName).transparentProxyId!;
+const contractId = contractService.getContractWithProxy(contractService.governorTextContractName).transparentProxyId!;
 
 const readFileContent = (filePath: string) => {
   const rawdata: any = fs.readFileSync(filePath);
   return JSON.parse(rawdata);
 };
 
-const createToken = async (): Promise<TokenId> => {
-  const createTokenTx = await new TokenCreateTransaction()
-    .setTokenName("Governance Hedera Open DEX")
-    .setTokenSymbol("GOD")
-    .setDecimals(8)
-    .setInitialSupply(20000000000)
-    .setTokenType(TokenType.FungibleCommon)
-    .setSupplyType(TokenSupplyType.Infinite)
-    .setSupplyKey(treasureKey)
-    .setAdminKey(treasureKey)
-    .setTreasuryAccountId(treasureId)
-    .execute(treasurerClient);
-
-  const tokenCreateTx = await createTokenTx.getReceipt(treasurerClient);
-  const tokenId = tokenCreateTx.tokenId;
-  console.log(`Token created ${tokenId}, Token Address ${tokenId?.toSolidityAddress()}`);
-  return tokenId!;
-}
-
 const initialize = async (tokenId: TokenId) => {
-  console.log(`\nInitialize contract with token  `);
-  const tokenName = "Governance Hedera Open DEX";
-  const tokenSymbol = "GOD";
+  console.log(`\nInitialize contract for text proposal `);
   const votingDelay = 0;
   const votingPeriod = 12;
 
   let contractFunctionParameters = new ContractFunctionParameters()
     .addAddress(tokenId.toSolidityAddress())
-    .addAddress(treasureId.toSolidityAddress())
-    .addBytes(treasureKey.publicKey.toBytes())
-    .addAddress(id.toSolidityAddress())
-    .addBytes(key.publicKey.toBytes())
-    .addString(tokenName)
-    .addString(tokenSymbol)
     .addUint256(votingDelay)
     .addUint256(votingPeriod);
 
@@ -116,24 +82,6 @@ const execute = async (targets: Array<string>, ethFees: Array<number>, calls: Ar
   console.log(`Execute tx status ${status} for proposal id ${record.contractFunctionResult?.getUint256(0)}`);
 }
 
-const transferTokenPublicCallData = async (tokenId: TokenId): Promise<Uint8Array> => {
-  const contractJson = readFileContent("./artifacts/contracts/common/BaseHTS.sol/BaseHTS.json");
-  const contractInterface = new ethers.utils.Interface(contractJson.abi);
-  const sender = treasureId.toSolidityAddress();
-  const receiver = adminId.toSolidityAddress();
-  const callData = contractInterface.encodeFunctionData("transferTokenPublic", [tokenId.toSolidityAddress(), sender, receiver, 50]);
-  return Buffer.from(callData, "hex");
-}
-
-const associateTokenPublicCallData = async (tokenId: TokenId): Promise<Uint8Array> => {
-  const contractJson = readFileContent("./artifacts/contracts/common/BaseHTS.sol/BaseHTS.json");
-  const contractInterface = new ethers.utils.Interface(contractJson.abi);
-
-  const receiver = adminId.toSolidityAddress();
-  const callData = contractInterface.encodeFunctionData("associateTokenPublic", [receiver, tokenId.toSolidityAddress()]);
-  return ethers.utils.toUtf8Bytes(callData);;
-}
-
 const quorumReached = async (proposalId: BigNumber) => {
   console.log(`\nGetting quorumReached `);
 
@@ -153,17 +101,26 @@ const quorumReached = async (proposalId: BigNumber) => {
   console.log(`quorumReached tx status ${receipt.status} with quorumReached ${status}`);
 }
 
+const associateTokenPublicCallData = async (tokenId: TokenId): Promise<Uint8Array> => {
+  const contractJson = readFileContent("./artifacts/contracts/common/BaseHTS.sol/BaseHTS.json");
+  const contractInterface = new ethers.utils.Interface(contractJson.abi);
+
+  const receiver = adminId.toSolidityAddress();
+  const callData = contractInterface.encodeFunctionData("associateTokenPublic", [receiver, tokenId.toSolidityAddress()]);
+  return ethers.utils.toUtf8Bytes(callData);;
+}
+
 async function main() {
   console.log(`\nUsing governor proxy contract id ${contractId}`);
   //const tokenId = await createToken();
   const tokenId = TokenId.fromString("0.0.48602743");
-  await initialize(tokenId);
-
+  // await initialize(tokenId);
+ 
   const targets = [htsServiceAddress];
   const ethFees = [0];
   const associateToken = await associateTokenPublicCallData(tokenId);
   const calls = [associateToken];
-  const description = "Create token proposal 1";
+  const description = "Create text proposal 1";
 
   const proposalId = await governor.propose(targets, ethFees, calls, description, contractId);
   await governor.vote(proposalId, 1, contractId);//1 is for vote. 
