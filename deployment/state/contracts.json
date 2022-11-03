@@ -52,14 +52,6 @@
         "transparentProxyId": "0.0.48585472"
     },
     {
-        "name": "governorcountingsimpleinternal",
-        "id": "0.0.48634262",
-        "address": "0x0000000000000000000000000000000002e61996",
-        "timestamp": "2022-10-17T10:53:22.558Z",
-        "transparentProxyAddress": "0x0000000000000000000000000000000002e6199b",
-        "transparentProxyId": "0.0.48634267"
-    },
-    {
         "name": "lptoken",
         "id": "0.0.48674083",
         "address": "0x0000000000000000000000000000000002e6b523",
@@ -197,18 +189,72 @@
     },
     {
         "name": "governortokencreate",
-        "id": "0.0.48787352",
-        "address": "0x0000000000000000000000000000000002e86f98",
-        "timestamp": "2022-11-02T11:18:34.168Z",
-        "transparentProxyAddress": "0x0000000000000000000000000000000002e86f9d",
-        "transparentProxyId": "0.0.48787357"
+        "id": "0.0.48787212",
+        "address": "0x0000000000000000000000000000000002e86f0c",
+        "timestamp": "2022-11-02T11:08:30.136Z"
+    },
+    {
+        "name": "governorcountingsimpleinternal",
+        "id": "0.0.48634262",
+        "address": "0x0000000000000000000000000000000002e61996",
+        "timestamp": "2022-11-02T11:08:54.301Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e86f16",
+        "transparentProxyId": "0.0.48787222"
     },
     {
         "name": "governortokencreate",
-        "id": "0.0.48787577",
-        "address": "0x0000000000000000000000000000000002e87079",
-        "timestamp": "2022-11-02T11:39:17.227Z",
-        "transparentProxyAddress": "0x0000000000000000000000000000000002e8707b",
-        "transparentProxyId": "0.0.48787579"
+        "id": "0.0.48787242",
+        "address": "0x0000000000000000000000000000000002e86f2a",
+        "timestamp": "2022-11-02T11:10:32.713Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e86f31",
+        "transparentProxyId": "0.0.48787249"
+    },
+    {
+        "name": "governortokencreate",
+        "id": "0.0.48787817",
+        "address": "0x0000000000000000000000000000000002e87169",
+        "timestamp": "2022-11-02T11:57:30.208Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e87173",
+        "transparentProxyId": "0.0.48787827"
+    },
+    {
+        "name": "governortextproposal",
+        "id": "0.0.48794362",
+        "address": "0x0000000000000000000000000000000002e88afa",
+        "timestamp": "2022-11-03T06:50:32.549Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e88afc",
+        "transparentProxyId": "0.0.48794364"
+    },
+    {
+        "name": "governortextproposal",
+        "id": "0.0.48794386",
+        "address": "0x0000000000000000000000000000000002e88b12",
+        "timestamp": "2022-11-03T06:57:09.906Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e88b1d",
+        "transparentProxyId": "0.0.48794397"
+    },
+    {
+        "name": "governortokencreate",
+        "id": "0.0.48794415",
+        "address": "0x0000000000000000000000000000000002e88b2f",
+        "timestamp": "2022-11-03T07:07:43.823Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e88b31",
+        "transparentProxyId": "0.0.48794417"
+    },
+    {
+        "name": "governortextproposal",
+        "id": "0.0.48795016",
+        "address": "0x0000000000000000000000000000000002e88d88",
+        "timestamp": "2022-11-03T08:57:57.346Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e88d8a",
+        "transparentProxyId": "0.0.48795018"
+    },
+    {
+        "name": "governortextproposal",
+        "id": "0.0.48795258",
+        "address": "0x0000000000000000000000000000000002e88e7a",
+        "timestamp": "2022-11-03T10:25:20.528Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e88e7d",
+        "transparentProxyId": "0.0.48795261"
     }
 ]
