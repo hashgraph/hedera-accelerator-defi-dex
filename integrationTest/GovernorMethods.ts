@@ -1,39 +1,20 @@
 import { BigNumber } from "bignumber.js";
-import * as fs from "fs";
 import {
   ContractExecuteTransaction,
   ContractFunctionParameters,
-  Hbar,
-  TokenCreateTransaction,
-  TokenType,
-  TokenSupplyType,
-  TokenId,
-  AccountId,
 } from "@hashgraph/sdk";
 
 import ClientManagement from "./utils/utils";
-import { ContractService } from "../deployment/service/ContractService";
 
 import dotenv from "dotenv";
 
 dotenv.config();
 
 const clientManagement = new ClientManagement();
-const contractService = new ContractService();
 
 let client = clientManagement.createOperatorClient();
 
 const treasurerClient = clientManagement.createClient();
-const { treasureId, treasureKey } = clientManagement.getTreasure();
-
-const htsServiceAddress = contractService.getContract(
-  contractService.baseContractName
-).address;
-
-const readFileContent = (filePath: string) => {
-  const rawdata: any = fs.readFileSync(filePath);
-  return JSON.parse(rawdata);
-};
 
 export default class GovernorMethods {
   public vote = async (

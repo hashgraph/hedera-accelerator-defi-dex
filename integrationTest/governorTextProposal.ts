@@ -8,7 +8,6 @@ import {
 } from "@hashgraph/sdk";
 
 import ClientManagement from "./utils/utils";
-import { EventConsumer } from "./utils/EventConsumer";
 import { ContractService } from "../deployment/service/ContractService";
 import { ethers } from "ethers";
 import GovernorMethods from "./GovernorMethods";
@@ -143,7 +142,7 @@ async function main() {
   const ethFees = [0];
   const associateToken = await associateTokenPublicCallData(tokenId);
   const calls = [associateToken];
-  const description = "Create text proposal 1";
+  const description = "Create text proposal 3";
 
   const proposalId = await governor.propose(
     targets,
