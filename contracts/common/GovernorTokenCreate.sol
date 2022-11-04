@@ -86,7 +86,7 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
             memory keys = new IHederaTokenService.TokenKey[](2);
 
         keys[0] = IHederaTokenService.TokenKey(supplyKeyType, supplyKeyValue);
-        keys[1] = IHederaTokenService.TokenKey(adminKeyType, supplyKeyValue);
+        keys[1] = IHederaTokenService.TokenKey(adminKeyType, adminKeyValue);
 
         IHederaTokenService.Expiry memory expiry;
         expiry.autoRenewAccount = treasurer;
