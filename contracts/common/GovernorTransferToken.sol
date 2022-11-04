@@ -4,7 +4,6 @@ import "./GovernorCountingSimpleInternal.sol";
 import "./hedera/HederaTokenService.sol";
 
 contract GovernorTransferToken is GovernorCountingSimpleInternal {
-    using Bits for uint256;
     address transferFromAccount;
     address transferToAccount;
     address tokenToTransfer;
