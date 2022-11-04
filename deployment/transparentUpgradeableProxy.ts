@@ -13,7 +13,9 @@ const contractService = new ContractService();
 
 async function main() {
     const contractName = process.env.CONTRACT_NAME!.toLowerCase();
+    console.log(`contractName: ${contractName}`);
     const contractBeingDeployed: DeployedContract = contractService.getContract(contractName);
+    console.log(`contractName: ${contractBeingDeployed.id}`);
     const contractAddress = contractBeingDeployed.address;
     const adminId = AccountId.fromString(process.env.ADMIN_ID!);
     const deployment = new Deployment();
