@@ -256,5 +256,21 @@
         "timestamp": "2022-11-03T10:25:20.528Z",
         "transparentProxyAddress": "0x0000000000000000000000000000000002e88e7d",
         "transparentProxyId": "0.0.48795261"
+    },
+    {
+        "name": "governortransfertoken",
+        "id": "0.0.48799900",
+        "address": "0x0000000000000000000000000000000002e8a09c",
+        "timestamp": "2022-11-04T06:09:22.665Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e8a09e",
+        "transparentProxyId": "0.0.48799902"
+    },
+    {
+        "name": "governortransfertoken",
+        "id": "0.0.48799928",
+        "address": "0x0000000000000000000000000000000002e8a0b8",
+        "timestamp": "2022-11-04T06:35:55.913Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e8a0ba",
+        "transparentProxyId": "0.0.48799930"
     }
 ]
