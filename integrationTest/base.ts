@@ -46,8 +46,32 @@ const associateToken = async () => {
   } 
 }
 
+const quorumReached = async () => {
+  console.log(`\nGetting quorumReached `);
+  const contractId = ContractId.fromString(contractIdString);
+
+  let contractFunctionParameters = new ContractFunctionParameters()
+  .addAddress(AccountId.fromString("0.0.47710057").toSolidityAddress())
+  .addAddress(TokenId.fromString("0.0.48602743").toSolidityAddress())
+  ;
+
+  const contractTokenTx = await new ContractExecuteTransaction()
+    .setContractId(contractId)
+    .setFunction("associateTokenPublic", contractFunctionParameters)
+    .setGas(900000)
+    .execute(client);
+
+  const receipt = await contractTokenTx.getReceipt(client);
+
+
+  console.log(
+    `quorumReached tx status ${receipt.status}`
+  );
+};
+
 async function main() {
-  await associateToken();
+  // await associateToken();
+  await quorumReached();
 }
 
 main()

@@ -14,7 +14,7 @@ const clientManagement = new ClientManagement();
 
 let client = clientManagement.createOperatorClient();
 
-const treasurerClient = clientManagement.createClient();
+const treasurerClient = clientManagement.createClientAsAdmin();
 
 export default class GovernorMethods {
   public vote = async (

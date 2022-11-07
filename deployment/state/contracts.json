@@ -272,5 +272,57 @@
         "timestamp": "2022-11-04T06:35:55.913Z",
         "transparentProxyAddress": "0x0000000000000000000000000000000002e8a0ba",
         "transparentProxyId": "0.0.48799930"
+    },
+    {
+        "name": "factory",
+        "id": "0.0.48822282",
+        "address": "0x0000000000000000000000000000000002e8f80a",
+        "timestamp": "2022-11-07T05:56:17.011Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e8f80c",
+        "transparentProxyId": "0.0.48822284"
+    },
+    {
+        "name": "governorupgrade",
+        "id": "0.0.48822290",
+        "address": "0x0000000000000000000000000000000002e8f812",
+        "timestamp": "2022-11-07T05:57:57.550Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e8f814",
+        "transparentProxyId": "0.0.48822292"
+    },
+    {
+        "name": "factory",
+        "id": "0.0.48822298",
+        "address": "0x0000000000000000000000000000000002e8f81a",
+        "timestamp": "2022-11-07T06:04:54.549Z"
+    },
+    {
+        "name": "governorupgrade",
+        "id": "0.0.48822372",
+        "address": "0x0000000000000000000000000000000002e8f864",
+        "timestamp": "2022-11-07T06:42:20.767Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e8f868",
+        "transparentProxyId": "0.0.48822376"
+    },
+    {
+        "name": "governorupgrade",
+        "id": "0.0.48822409",
+        "address": "0x0000000000000000000000000000000002e8f889",
+        "timestamp": "2022-11-07T07:18:07.260Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e8f88b",
+        "transparentProxyId": "0.0.48822411"
+    },
+    {
+        "name": "governorupgrade",
+        "id": "0.0.48822420",
+        "address": "0x0000000000000000000000000000000002e8f894",
+        "timestamp": "2022-11-07T07:32:02.186Z"
+    },
+    {
+        "name": "governorupgrade",
+        "id": "0.0.48822440",
+        "address": "0x0000000000000000000000000000000002e8f8a8",
+        "timestamp": "2022-11-07T07:37:04.939Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e8f8aa",
+        "transparentProxyId": "0.0.48822442"
     }
 ]
