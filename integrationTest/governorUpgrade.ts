@@ -190,17 +190,49 @@ const upgradeTo = async (newImplementation: string) => {
     console.log(`upgradedTo: ${transferTokenRx.status}`);
 };
 
+// TODO: It is only to check factory contract's method, remove if not required.
+// const checkFactory = async () => {
+//   const liquidityPool = await new ContractExecuteTransaction()
+//       .setContractId(contractId)
+//       .setGas(9000000)
+//       .setFunction(
+//         "getCount",
+//         new ContractFunctionParameters()
+//       )
+
+//     const liquidityPoolTx = await liquidityPool.execute(client);
+//     const transferTokenRx = await liquidityPoolTx.getReceipt(client);
+//     console.log(`checkFactory: ${transferTokenRx.status}`);
+// };
+
+const setupFactory = async () => {
+  console.log(`\nSetupFactory`);
+  const baseContract = contractService.getContract(contractService.baseContractName);
+  let contractFunctionParameters = new ContractFunctionParameters()
+                                        .addAddress(baseContract.address)
+  const contractSetPairsTx = await new ContractExecuteTransaction()
+    .setContractId(contractId)
+    .setFunction("setUpFactory", contractFunctionParameters)
+    .setGas(9000000)
+    .execute(client);
+  const contractSetPairRx = await contractSetPairsTx.getReceipt(client);
+  const response = await contractSetPairsTx.getRecord(client);
+  const status = contractSetPairRx.status;
+  console.log(`\nSetupFactory Result ${status} code: ${response.contractFunctionResult!.getAddress()}`);
+};
+
+
 async function main() {
   console.log(`\nUsing governor proxy contract id ${contractId}`);
   //const tokenId = await createToken();
   const tokenId = TokenId.fromString("0.0.48602743");
-  //await initialize(tokenId);
+  await initialize(tokenId);
 
   const targets = [htsServiceAddress];
   const ethFees = [0];
   const associateToken = await associateTokenPublicCallData(tokenId);
   const calls = [associateToken];
-  const description = "Create Upgrade proposal 2 OSR";
+  const description = "Create Upgrade proposal 9 OSR";
 
   const proposalId = await governor.propose(
     targets,
@@ -222,6 +254,8 @@ async function main() {
   console.log(contracts);
   contractId = ContractId.fromSolidityAddress(contracts.proxy);
   await upgradeTo(contracts.contractToUgrade);
+  // await setupFactory();
+  // await checkFactory();
   console.log(`\nDone`);
 }
 
