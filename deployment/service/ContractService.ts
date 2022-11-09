@@ -10,6 +10,7 @@ export class ContractService {
     public governorContractName = "governortokencreate";
     public governorTextContractName = "governortextproposal";
     public governorTTContractName = "governortransfertoken";
+    public governorUpgradeContract = "governorupgrade";
     
     private contractRecordFile = "./deployment/state/contracts.json";
 
