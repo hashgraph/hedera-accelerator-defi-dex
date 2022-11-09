@@ -20,15 +20,15 @@ const governor = new GovernorMethods();
 
 let client = clientManagement.createOperatorClient();
 const { key } = clientManagement.getOperator();
-const { adminId } = clientManagement.getAdmin();
+const { adminId, adminKey } = clientManagement.getAdmin();
 
-const treasurerClient = clientManagement.createClient();
+const adminClient = clientManagement.createClientAsAdmin();
 
 const htsServiceAddress = contractService.getContract(
   contractService.baseContractName
 ).address;
 
-const contractId = contractService.getContractWithProxy(
+let contractId: string | ContractId = contractService.getContractWithProxy(
     contractService.governorUpgradeContract
   ).transparentProxyId!;
 
@@ -83,7 +83,6 @@ const execute = async (
   description: string
 ) => {
   console.log(`\nExecuting  proposal - `);
-  let adminClient = clientManagement.createClientAsAdmin();
   const contractFunctionParameters = new ContractFunctionParameters()
     .addAddressArray(targets)
     .addUint256Array(ethFees)
@@ -96,13 +95,13 @@ const execute = async (
     .setPayableAmount(new Hbar(70))
     .setMaxTransactionFee(new Hbar(70))
     .setGas(900000)
-    .freezeWith(adminClient) // admin client
+    .freezeWith(client) // admin client
     .sign(key); //Admin of token
 
-  const executedTx = await contractAllotTx.execute(adminClient);
+  const executedTx = await contractAllotTx.execute(client);
 
-  const record = await executedTx.getRecord(adminClient);
-  const contractAllotRx = await executedTx.getReceipt(adminClient);
+  const record = await executedTx.getRecord(client);
+  const contractAllotRx = await executedTx.getReceipt(client);
 
   const status = contractAllotRx.status;
 
@@ -135,6 +134,30 @@ const quorumReached = async (proposalId: BigNumber) => {
   );
 };
 
+const fetchUpgradeContractAddresses = async (proposalId: BigNumber) => {
+  console.log(`\nGetting ContractAddresses `);
+
+  let contractFunctionParameters = new ContractFunctionParameters().addUint256(
+    proposalId
+  );
+
+  const contractTokenTx = await new ContractExecuteTransaction()
+    .setContractId(contractId)
+    .setFunction("getContractAddresses", contractFunctionParameters)
+    .setGas(500000)
+    .execute(client);
+
+  const receipt = await contractTokenTx.getReceipt(client);
+  const record = await contractTokenTx.getRecord(client);
+  const proxy = record.contractFunctionResult!.getAddress(0);
+  const contractToUgrade = record.contractFunctionResult!.getAddress(1);
+  
+  console.log(
+    `quorumReached tx status ${receipt.status}}`
+  );
+  return {proxy, contractToUgrade};
+};
+
 const associateTokenPublicCallData = async (
   tokenId: TokenId
 ): Promise<Uint8Array> => {
@@ -151,17 +174,33 @@ const associateTokenPublicCallData = async (
   return ethers.utils.toUtf8Bytes(callData);
 };
 
+const upgradeTo = async (newImplementation: string) => {
+  const liquidityPool = await new ContractExecuteTransaction()
+      .setContractId(contractId)
+      .setGas(2000000)
+      .setFunction(
+        "upgradeTo",
+        new ContractFunctionParameters()
+          .addAddress(newImplementation)
+      )
+      .freezeWith(adminClient)
+      .sign(adminKey);
+    const liquidityPoolTx = await liquidityPool.execute(adminClient);
+    const transferTokenRx = await liquidityPoolTx.getReceipt(adminClient);
+    console.log(`upgradedTo: ${transferTokenRx.status}`);
+};
+
 async function main() {
   console.log(`\nUsing governor proxy contract id ${contractId}`);
   //const tokenId = await createToken();
   const tokenId = TokenId.fromString("0.0.48602743");
-  await initialize(tokenId);
+  //await initialize(tokenId);
 
   const targets = [htsServiceAddress];
   const ethFees = [0];
   const associateToken = await associateTokenPublicCallData(tokenId);
   const calls = [associateToken];
-  const description = "Create text proposal 10";
+  const description = "Create Upgrade proposal 2 OSR";
 
   const proposalId = await governor.propose(
     targets,
@@ -179,6 +218,10 @@ async function main() {
   await new Promise((f) => setTimeout(f, 15 * 1000)); //Wait till waiting period is over. It's current deadline as per Governance.
   await governor.state(proposalId, contractId); //4 means succeeded
   await execute(targets, ethFees, calls, description);
+  const contracts = await fetchUpgradeContractAddresses(proposalId);
+  console.log(contracts);
+  contractId = ContractId.fromSolidityAddress(contracts.proxy);
+  await upgradeTo(contracts.contractToUgrade);
   console.log(`\nDone`);
 }
 

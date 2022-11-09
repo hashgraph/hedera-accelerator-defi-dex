@@ -57,14 +57,10 @@ contract GovernorUpgrade is GovernorCountingSimpleInternal {
         uint256[] memory,
         bytes[] memory,
         bytes32 /*descriptionHash*/
-    ) internal virtual override {
-        // (bool success, ) = proxyContract.call{value: msg.value}(
-        //     abi.encodeWithSelector(TransparentUpgradeableProxy.upgradeTo.selector, contractToUpgrade)
-        // );
-        // require(success, "Contract upgrade fail!");
-        TransparentUpgradeableProxy tUP = TransparentUpgradeableProxy(proxyContract);
-        tUP.upgradeTo(contractToUpgrade);
-    }
+    ) internal virtual override {}
 
-    
+    function getContractAddresses(uint256 proposalId) public view returns(address, address) {
+        require(state(proposalId) == ProposalState.Executed, "Contract not executed yet!");
+        return (proxyContract, contractToUpgrade);
+    }
 }

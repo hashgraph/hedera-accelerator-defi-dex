@@ -324,5 +324,19 @@
         "timestamp": "2022-11-07T07:37:04.939Z",
         "transparentProxyAddress": "0x0000000000000000000000000000000002e8f8aa",
         "transparentProxyId": "0.0.48822442"
+    },
+    {
+        "name": "governorupgrade",
+        "id": "0.0.48846137",
+        "address": "0x0000000000000000000000000000000002e95539",
+        "timestamp": "2022-11-09T07:38:57.760Z"
+    },
+    {
+        "name": "governorupgrade",
+        "id": "0.0.48846165",
+        "address": "0x0000000000000000000000000000000002e95555",
+        "timestamp": "2022-11-09T07:42:17.763Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002e95557",
+        "transparentProxyId": "0.0.48846167"
     }
 ]

@@ -17,7 +17,7 @@ async function main() {
     const contractBeingDeployed: DeployedContract = contractService.getContract(contractName);
     console.log(`contractName: ${contractBeingDeployed.id}`);
     const contractAddress = contractBeingDeployed.address;
-    const adminId = AccountId.fromString(process.env.TREASURE_ID!);
+    const adminId = AccountId.fromString(process.env.ADMIN_ID!);
     const deployment = new Deployment();
     const filePath = "./artifacts/@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol/TransparentUpgradeableProxy.json";
     const args = new ContractFunctionParameters();
