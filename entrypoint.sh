@@ -20,7 +20,7 @@ echo OPERATOR_ID $OPERATOR_ID
 echo TREASURE_ID $TREASURE_ID
 echo TOKEN_USER_ID $TOKEN_USER_ID
 
-npm --yes install --save-dev hardhat
+# npm --yes install --save-dev hardhat
 
 echo "********************  Running test and coverage *********************"
 
