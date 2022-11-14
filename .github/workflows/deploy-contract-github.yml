@@ -29,10 +29,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: Use Node.js 16.x
+      - name: Use Node.js 18.x
         uses: actions/setup-node@v3
         with:
-          node-version: '16.x'
+          node-version: '18.x'
       - run: npm ci
       - name: Running build and deployment
         run:  bash ./entrypoint.sh ${{ github.event.inputs.contractName }} ${{ github.event.inputs.type }} ${{ env.OPERATOR_ID }} ${{ env.OPERATOR_KEY }} ${{ env.TREASURE_ID }} ${{ env.TREASURE_KEY }} ${{ env.TOKEN_USER_ID }} ${{ env.TOKEN_USER_KEY }}
