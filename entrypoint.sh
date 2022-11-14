@@ -20,11 +20,14 @@ echo OPERATOR_ID $OPERATOR_ID
 echo TREASURE_ID $TREASURE_ID
 echo TOKEN_USER_ID $TOKEN_USER_ID
 
-# npm --yes install --save-dev hardhat
-
 echo "********************  Running test and coverage *********************"
 
 npm run codecoverage;
+
+if [ "$CONTRACT_NAME" = "" ]; then
+    echo "****************** Done ******************"; 
+    exit 0;
+fi
 
 echo "********************  Deployment *************************************"
 
@@ -60,4 +63,4 @@ if [ "$CONTRACT_TYPE" = "Upgrade" ]; then
     echo "Upgrade done.";
 fi
 
-echo "********************  Done *************************************"
+echo "********************  Done *************************************";
