@@ -16,7 +16,7 @@ contract GovernorTextProposal is GovernorCountingSimpleInternal {
         uint256 _votingPeriodValue
     ) public initializer {
         token = _token;
-        precision = 10000000;
+        precision = 100000000;
 
         __Governor_init("HederaGovernor");
         __GovernorSettings_init(
