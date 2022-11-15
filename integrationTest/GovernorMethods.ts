@@ -14,6 +14,7 @@ dotenv.config();
 const clientManagement = new ClientManagement();
 
 let client = clientManagement.createOperatorClient();
+const { treasureId, treasureKey } = clientManagement.getTreasure();
 
 const treasurerClient = clientManagement.createClient();
 
@@ -135,7 +136,8 @@ export default class GovernorMethods {
       .setContractId(contractId)
       .setFunction("propose", contractFunctionParameters)
       .setGas(900000)
-      .freezeWith(client);
+      .freezeWith(client)
+      .sign(treasureKey);
 
     const executedTx = await tx.execute(client);
 

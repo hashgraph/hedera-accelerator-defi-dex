@@ -19,6 +19,7 @@ abstract contract GovernorCountingSimpleInternal is
 {
     uint256 precision;
     IERC20 token;
+    mapping(uint256 => address) proposalCreators;
 
     function _getVotes(
         address account,
@@ -29,6 +30,43 @@ abstract contract GovernorCountingSimpleInternal is
             token.totalSupply();
         uint256 percentageShare = share / (precision / 100);
         return percentageShare;
+    }
+
+    function propose(
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
+        string memory description
+    ) public virtual override returns (uint256) { 
+        getGODToken();
+        uint256 proposalId = super.propose(targets, values, calldatas, description);
+        proposalCreators[proposalId] = msg.sender;
+        return proposalId;
+    }
+
+    function getGODToken() internal {
+        HederaTokenService.associateToken(address(this), address(token));
+        int responseCode = HederaTokenService.transferToken(
+            address(token),
+            address(msg.sender),
+            address(this),
+            int64(uint64(precision))
+        );
+        if (responseCode != HederaResponseCodes.SUCCESS) {
+            revert("Transfer token failed.");
+        }
+    }
+
+    function returnGODToken(uint256 proposalId) internal {
+        int responseCode = HederaTokenService.transferToken(
+            address(token),
+            address(this),
+            address(proposalCreators[proposalId]),
+            int64(uint64(precision))
+        );
+        if (responseCode != HederaResponseCodes.SUCCESS) {
+            revert("Transfer token failed.");
+        }
     }
 
     function votingDelay()
