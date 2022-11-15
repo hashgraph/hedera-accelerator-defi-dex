@@ -24,7 +24,7 @@ contract GovernorTransferToken is GovernorCountingSimpleInternal {
         uint256 _votingPeriodValue
     ) public initializer {
         token = _token;
-        precision = 10000000;
+        precision = 100000000;
         transferFromAccount = _transferFromAccount;
         transferToAccount = _transferToAccount;
         tokenToTransfer = _tokenToTransfer;
