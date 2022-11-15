@@ -40,10 +40,12 @@ contract GovernorTextProposal is GovernorCountingSimpleInternal {
      * @dev Internal execution mechanism. Can be overridden to implement different execution mechanism
      */
     function _execute(
-        uint256, /* proposalId */
+        uint256 proposalId, /* proposalId */
         address[] memory,
         uint256[] memory,
         bytes[] memory,
         bytes32 /*descriptionHash*/
-    ) internal virtual override {}
+    ) internal virtual override {
+        returnGODToken(proposalId);
+    }
 }

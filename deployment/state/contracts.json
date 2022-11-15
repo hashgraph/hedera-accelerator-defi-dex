@@ -482,5 +482,13 @@
         "timestamp": "2022-11-21T08:34:54.463Z",
         "transparentProxyAddress": "0x0000000000000000000000000000000002eaac32",
         "transparentProxyId": "0.0.48933938"
+    },
+    {
+        "name": "governortextproposal",
+        "id": "0.0.48890908",
+        "address": "0x0000000000000000000000000000000002ea041c",
+        "timestamp": "2022-11-15T08:47:03.916Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002ea041f",
+        "transparentProxyId": "0.0.48890911"
     }
 ]

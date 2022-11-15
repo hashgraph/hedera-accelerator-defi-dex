@@ -136,7 +136,7 @@ async function main() {
   console.log(`\nUsing governor proxy contract id ${contractId}`);
   //const tokenId = await createToken();
   const tokenId = TokenId.fromString("0.0.48602743");
-  // await initialize(tokenId);
+  await initialize(tokenId);
 
   const targets = [htsServiceAddress];
   const ethFees = [0];
