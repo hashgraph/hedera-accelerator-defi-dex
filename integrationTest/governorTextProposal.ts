@@ -96,21 +96,17 @@ const execute = async (
 
 const quorumReached = async (proposalId: BigNumber) => {
   console.log(`\nGetting quorumReached `);
-
   let contractFunctionParameters = new ContractFunctionParameters().addUint256(
     proposalId
   );
-
   const contractTokenTx = await new ContractExecuteTransaction()
     .setContractId(contractId)
     .setFunction("quorumReached", contractFunctionParameters)
     .setGas(500000)
     .execute(client);
-
   const receipt = await contractTokenTx.getReceipt(client);
   const record = await contractTokenTx.getRecord(client);
   const status = record.contractFunctionResult!.getBool(0);
-
   console.log(
     `quorumReached tx status ${receipt.status} with quorumReached ${status}`
   );
@@ -159,6 +155,7 @@ async function main() {
   console.log(`\nWaiting for voting period to get over.`);
   await new Promise((f) => setTimeout(f, 15 * 1000)); //Wait till waiting period is over. It's current deadline as per Governance.
   await governor.state(proposalId, contractId); //4 means succeeded
+  //await governor.cancelProposal(targets, ethFees, calls, description, contractId);
   await execute(targets, ethFees, calls, description);
   console.log(`\nDone`);
 }

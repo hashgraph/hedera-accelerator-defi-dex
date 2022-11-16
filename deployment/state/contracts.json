@@ -498,5 +498,29 @@
         "timestamp": "2022-11-15T10:45:59.182Z",
         "transparentProxyAddress": "0x0000000000000000000000000000000002ea065f",
         "transparentProxyId": "0.0.48891487"
+    },
+    {
+        "name": "governortextproposal",
+        "id": "0.0.48898873",
+        "address": "0x0000000000000000000000000000000002ea2339",
+        "timestamp": "2022-11-16T08:35:31.102Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002ea233d",
+        "transparentProxyId": "0.0.48898877"
+    },
+    {
+        "name": "governortextproposal",
+        "id": "0.0.48899145",
+        "address": "0x0000000000000000000000000000000002ea2449",
+        "timestamp": "2022-11-16T09:03:58.421Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002ea244b",
+        "transparentProxyId": "0.0.48899147"
+    },
+    {
+        "name": "governortextproposal",
+        "id": "0.0.48899151",
+        "address": "0x0000000000000000000000000000000002ea244f",
+        "timestamp": "2022-11-16T09:08:12.872Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002ea2451",
+        "transparentProxyId": "0.0.48899153"
     }
 ]
