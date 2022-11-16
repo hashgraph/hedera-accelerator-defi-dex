@@ -51,6 +51,8 @@ abstract contract GovernorCountingSimpleInternal is
         string memory description
     ) public returns (uint256 proposalId) {
         bytes32 descriptionHash = keccak256(bytes(description));
+        proposalId = hashProposal(targets, values, calldatas, keccak256(bytes(description)));
+        require(msg.sender == proposalCreators[proposalId], "UnAuthorised access");
         proposalId = super._cancel(targets, values, calldatas, descriptionHash);
         returnGODToken(proposalId);
     }
