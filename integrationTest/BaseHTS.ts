@@ -1,7 +1,3 @@
-/* eslint-disable no-process-exit */
-/* eslint-disable node/no-unpublished-import */
-/* eslint-disable node/no-missing-import */
-
 import {
   ContractFunctionParameters,
   ContractId,
@@ -15,7 +11,7 @@ import {
   TokenSupplyType,
 } from "@hashgraph/sdk";
 
-import { BigNumber } from "../node_modules/bignumber.js";
+import { BigNumber } from "bignumber.js";
 
 import ClientManagement from "./utils/utils";
 import { ContractService } from "../deployment/service/ContractService";
