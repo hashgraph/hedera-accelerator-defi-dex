@@ -44,6 +44,17 @@ abstract contract GovernorCountingSimpleInternal is
         return proposalId;
     }
 
+    function cancelProposal(
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
+        string memory description
+    ) public returns (uint256 proposalId) {
+        bytes32 descriptionHash = keccak256(bytes(description));
+        proposalId = super._cancel(targets, values, calldatas, descriptionHash);
+        returnGODToken(proposalId);
+    }
+
     function getGODToken() internal {
         HederaTokenService.associateToken(address(this), address(token));
         int responseCode = HederaTokenService.transferToken(
