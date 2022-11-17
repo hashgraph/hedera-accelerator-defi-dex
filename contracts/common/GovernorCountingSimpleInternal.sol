@@ -51,8 +51,9 @@ abstract contract GovernorCountingSimpleInternal is
         string memory description
     ) public returns (uint256 proposalId) {
         bytes32 descriptionHash = keccak256(bytes(description));
-        proposalId = hashProposal(targets, values, calldatas, keccak256(bytes(description)));
+        proposalId = hashProposal(targets, values, calldatas, descriptionHash);
         require(msg.sender == proposalCreators[proposalId], "UnAuthorised access");
+        // If msg sender is proposal creator he can cancel the proposal and receive GOD token
         proposalId = super._cancel(targets, values, calldatas, descriptionHash);
         returnGODToken(proposalId);
     }
@@ -134,6 +135,19 @@ abstract contract GovernorCountingSimpleInternal is
      */
     function voteSucceeded(uint256 proposalId) external view returns (bool) {
         return super._voteSucceeded(proposalId);
+    }
+
+    /**
+     * @dev Internal execution mechanism. Can be overridden to implement different execution mechanism
+     */
+    function _execute(
+        uint256 proposalId, /* proposalId */
+        address[] memory,
+        uint256[] memory,
+        bytes[] memory,
+        bytes32 /*descriptionHash*/
+    ) internal virtual override {
+        returnGODToken(proposalId);
     }
 }
 

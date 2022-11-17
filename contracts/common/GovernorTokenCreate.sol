@@ -60,13 +60,13 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
      */
     function _execute(
         uint256 proposalId,
-        address[] memory,
-        uint256[] memory,
-        bytes[] memory,
-        bytes32 /*descriptionHash*/
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
+        bytes32 description
     ) internal virtual override {
         createToken();
-        returnGODToken(proposalId);
+        super._execute(proposalId,targets, values, calldatas, description);
     }
 
     function createToken()
