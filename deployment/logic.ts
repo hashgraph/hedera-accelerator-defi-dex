@@ -1,4 +1,5 @@
-import { main } from "./transparentUpgradeableProxyCode"
+import { main } from "./logicCode"
+
 main()
   .then(() => process.exit(0))
   .catch((error) => {

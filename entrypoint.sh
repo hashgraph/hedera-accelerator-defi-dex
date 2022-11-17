@@ -47,7 +47,7 @@ echo CONTRACT_NAME=$CONTRACT_NAME >> .env;
 if [ "$CONTRACT_TYPE" = "Logic" ]; then 
     echo "Running contract deployment ........ " $CONTRACT_NAME;
     contract=$CONTRACT_NAME.ts;
-    npx hardhat run ./deployment/contract/$contract;
+    npx hardhat run ./deployment/logic.ts;
     echo "Deployment done.";
 fi
 
