@@ -52,13 +52,13 @@ contract GovernorUpgrade is GovernorCountingSimpleInternal {
      * @dev Internal execution mechanism. Can be overridden to implement different execution mechanism
      */
     function _execute(
-        uint256 proposalId, /* proposalId */
-        address[] memory,
-        uint256[] memory,
-        bytes[] memory,
-        bytes32 /*descriptionHash*/
+        uint256 proposalId,
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
+        bytes32 description
     ) internal virtual override {
-        returnGODToken(proposalId);
+        super._execute(proposalId,targets, values, calldatas, description);
     }
 
     function getContractAddresses(uint256 proposalId) public view returns(address, address) {
