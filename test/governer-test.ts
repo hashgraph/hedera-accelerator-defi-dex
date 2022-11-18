@@ -90,12 +90,13 @@ describe("Governor Tests", function () {
       const { instance, tokenCont } = await loadFixture(deployFixture);
       const targets = [tokenCont.address];
       const ethValues = [0];
-      //const callData = await getCallData();
       const callData = await getCallDataNew();
       const calls = [callData];
       const desc = "Test";
-      const proposalIdOLD = await instance.propose(targets, ethValues, calls, web3.utils.soliditySha3(desc));
-      const proposalId = await instance.hashProposal(targets, ethValues, calls, web3.utils.soliditySha3(desc));
+      const proposalIdRsponse = await instance.propose(targets, ethValues, calls, web3.utils.soliditySha3(desc));
+      const record = await proposalIdRsponse.wait();
+      console.log(`ProposalId: ${record.events[0].args.proposalId.toString()}`);
+       const proposalId = record.events[0].args.proposalId.toString();
       const delay = await instance.votingDelay();
       expect(delay).to.be.equals(0);
       const period = await instance.votingPeriod();
@@ -104,6 +105,9 @@ describe("Governor Tests", function () {
       expect(thrashhold).to.be.equals(0);
       const quorumReached = await instance.quorumReached(proposalId);
       expect(quorumReached).to.be.equals(false);
+      const result = await instance.castVote(proposalId, 1);
+      const quorumReached1 = await instance.quorumReached(proposalId);
+      expect(quorumReached1).to.be.equals(true);
   });
   });
 })
