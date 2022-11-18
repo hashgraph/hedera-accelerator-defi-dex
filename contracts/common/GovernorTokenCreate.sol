@@ -26,8 +26,10 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
         string memory _tokenName,
         string memory _tokenSymbol,
         uint256 _votingDelayValue,
-        uint256 _votingPeriodValue
+        uint256 _votingPeriodValue,
+        IBaseHTS _tokenService
     ) public initializer {
+        tokenService = _tokenService;
         token = _token;
         precision = 100000000;
         treasurer = _treasurer;
@@ -101,7 +103,7 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
         newToken.expiry = expiry;
         newToken.tokenKeys = keys;
 
-        (responseCode, tokenAddress) = createFungibleToken(
+        (responseCode, tokenAddress) = tokenService.createFungibleTokenPublic(
             newToken,
             uint256(0),
             8

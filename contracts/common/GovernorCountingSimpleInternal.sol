@@ -9,17 +9,20 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesQuorumFractionUpgradeable.sol";
 import "./IERC20.sol";
 import "./IBaseHTS.sol";
+import "./hedera/HederaResponseCodes.sol";
+ 
 
 abstract contract GovernorCountingSimpleInternal is
     Initializable,
     GovernorUpgradeable,
     GovernorSettingsUpgradeable,
     GovernorCountingSimpleUpgradeable,
-    HederaTokenService
+    HederaResponseCodes
 {
     uint256 precision;
     IERC20 token;
     mapping(uint256 => address) proposalCreators;
+    IBaseHTS internal tokenService;
 
     function _getVotes(
         address account,
@@ -59,8 +62,8 @@ abstract contract GovernorCountingSimpleInternal is
     }
 
     function getGODToken() internal {
-        HederaTokenService.associateToken(address(this), address(token));
-        int responseCode = HederaTokenService.transferToken(
+        tokenService.associateTokenPublic(address(this), address(token));
+        int responseCode = tokenService.transferTokenPublic(
             address(token),
             address(msg.sender),
             address(this),
@@ -72,7 +75,7 @@ abstract contract GovernorCountingSimpleInternal is
     }
 
     function returnGODToken(uint256 proposalId) internal {
-        int responseCode = HederaTokenService.transferToken(
+        int responseCode = tokenService.transferTokenPublic(
             address(token),
             address(this),
             address(proposalCreators[proposalId]),

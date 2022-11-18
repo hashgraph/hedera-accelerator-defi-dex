@@ -23,8 +23,10 @@ contract GovernorUpgrade is GovernorCountingSimpleInternal {
         address payable _proxyContract,
         address _contractToUpgrade,
         uint256 _votingDelayValue,
-        uint256 _votingPeriodValue
+        uint256 _votingPeriodValue,
+        IBaseHTS _tokenService
     ) public initializer {
+        tokenService = _tokenService;
         token = _token;
         precision = 100000000;
         proxyContract = _proxyContract;

@@ -13,11 +13,12 @@ contract GovernorTextProposal is GovernorCountingSimpleInternal {
     function initialize(
         IERC20 _token,
         uint256 _votingDelayValue,
-        uint256 _votingPeriodValue
+        uint256 _votingPeriodValue,
+        IBaseHTS _tokenService
     ) public initializer {
+        tokenService = _tokenService;
         token = _token;
         precision = 100000000;
-
         __Governor_init("HederaGovernor");
         __GovernorSettings_init(
             _votingDelayValue, /* 1 block */
