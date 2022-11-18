@@ -8,7 +8,7 @@ import { ethers, upgrades } from "hardhat";
 import { BigNumber, Overrides, PayableOverrides } from "ethers";
 
 describe("Governor Tests", function () {
-  const tokenBAddress = "0x0000000000000000000000000000000000010001";
+  const tokenOwnerAddress = "0x0000000000000000000000000000000000010001";
   const tokenAAddress = "0x0000000000000000000000000000000000020002";
   const zeroAddress = "0x1111111000000000000000000000000000000000";
   let precision: BigNumber;
@@ -61,12 +61,6 @@ describe("Governor Tests", function () {
   }
 
   describe("Governor functionality",  async () => {
-
-    const getCallData = async (): Promise<Uint8Array> => {
-        const callData = contractInterface.encodeFunctionData("totalSupply", []);
-        return ethers.utils.toUtf8Bytes(callData);
-    }
-
     const getCallDataNew = async (): Promise<string> => {
       const callData = contractInterface.encodeFunctionData("totalSupply", []);
       return callData;
@@ -86,7 +80,7 @@ describe("Governor Tests", function () {
         expect(votes).to.be.equals(50);
     });
 
-    it.only("Execute ", async function () {
+    it("Execute ", async function () {
       const { instance, tokenCont } = await loadFixture(deployFixture);
       const targets = [tokenCont.address];
       const ethValues = [0];
@@ -105,7 +99,11 @@ describe("Governor Tests", function () {
       expect(thrashhold).to.be.equals(0);
       const quorumReached = await instance.quorumReached(proposalId);
       expect(quorumReached).to.be.equals(false);
-      const result = await instance.castVote(proposalId, 1);
+      const voteSucceeded = await instance.voteSucceeded(proposalId);
+      expect(voteSucceeded).to.be.equals(false);
+      await instance.castVote(proposalId, 1);
+      const voteSucceeded1 = await instance.voteSucceeded(proposalId);
+      expect(voteSucceeded1).to.be.equals(true);
       const quorumReached1 = await instance.quorumReached(proposalId);
       expect(quorumReached1).to.be.equals(true);
   });
