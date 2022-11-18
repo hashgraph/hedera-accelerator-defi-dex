@@ -5,9 +5,6 @@ import {
   ContractFunctionParameters,
   Hbar,
   ContractId,
-  TokenCreateTransaction,
-  TokenType,
-  TokenSupplyType,
   TokenId,
 } from "@hashgraph/sdk";
 import { httpRequest } from "../deployment/api/HttpsService";
@@ -63,7 +60,8 @@ const initialize = async (tokenId: TokenId) => {
     .addString(tokenName)
     .addString(tokenSymbol)
     .addUint256(votingDelay)
-    .addUint256(votingPeriod);
+    .addUint256(votingPeriod)
+    .addAddress(htsServiceAddress);
 
   const tx = await new ContractExecuteTransaction()
     .setContractId(contractId)
@@ -93,11 +91,11 @@ const execute = async (
   const contractAllotTx = await new ContractExecuteTransaction()
     .setContractId(contractId)
     .setFunction("execute", contractFunctionParameters)
-    .setPayableAmount(new Hbar(70))
-    .setMaxTransactionFee(new Hbar(70))
-    .setGas(900000)
-    .freezeWith(treasurerClient) // treasurer of token
-    .sign(key); //Admin of token
+    .setPayableAmount(new Hbar(100))
+    .setMaxTransactionFee(new Hbar(100))
+    .setGas(9000000)
+    .freezeWith(treasurerClient)// treasurer of token
+    .sign(key);//Admin of token
 
   const executedTx = await contractAllotTx.execute(treasurerClient);
 
@@ -233,7 +231,7 @@ const createPair = async (
   const receipt = await createPairTxRes.getReceipt(client);
   const record = await createPairTxRes.getRecord(client);
   const contractAddress =
-  record.contractFunctionResult!.getAddress(0);
+    record.contractFunctionResult!.getAddress(0);
   console.log(`CreatePair address: ${contractAddress}`);
   console.log(`CreatePair status: ${receipt.status}`);
   return contractAddress;
@@ -331,7 +329,7 @@ async function createPairFromFactory(tokenAddress: string) {
 async function main() {
   console.log(`\nUsing governor proxy contract id ${contractId}`);
   const tokenId = TokenId.fromString("0.0.48602743");
-  // await initialize(tokenId);
+  await initialize(tokenId);
 
   const targets = [htsServiceAddress];
   const ethFees = [0];

@@ -63,7 +63,8 @@ const initialize = async (tokenId: TokenId) => {
     .addAddress(transparentContractId.toSolidityAddress())
     .addAddress(upgradeContractId.toSolidityAddress())
     .addUint256(votingDelay)
-    .addUint256(votingPeriod);
+    .addUint256(votingPeriod)
+    .addAddress(htsServiceAddress);
 
   const tx = await new ContractExecuteTransaction()
     .setContractId(contractId)

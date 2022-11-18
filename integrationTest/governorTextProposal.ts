@@ -44,7 +44,8 @@ const initialize = async (tokenId: TokenId) => {
   let contractFunctionParameters = new ContractFunctionParameters()
     .addAddress(tokenId.toSolidityAddress())
     .addUint256(votingDelay)
-    .addUint256(votingPeriod);
+    .addUint256(votingPeriod)
+    .addAddress(htsServiceAddress);
 
   const tx = await new ContractExecuteTransaction()
     .setContractId(contractId)
