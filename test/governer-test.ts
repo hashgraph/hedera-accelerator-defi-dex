@@ -33,13 +33,17 @@ describe("Governor Tests", function () {
       const Governor = await ethers.getContractFactory("GovernorTokenCreate");
       const treaKey = ethers.utils.toUtf8Bytes("treasurer public key");
       const adminKey = ethers.utils.toUtf8Bytes("Admin public key");
-      const args = [zeroAddress, zeroAddress, treaKey, zeroAddress, adminKey, "Token", "Symbol", votingDelay, votingPeriod];
+      const args = [zeroAddress, zeroAddress, treaKey, zeroAddress, adminKey, "Token", "Symbol", votingDelay, votingPeriod, zeroAddress];
       const instance = await upgrades.deployProxy(Governor, args, {unsafeAllow: ['delegatecall']});
       await instance.deployed();
     });
   });
 
   async function deployFixture() {
+    const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
+    const mockBaseHTS = await MockBaseHTS.deploy(true);
+    mockBaseHTS.setFailType(0);
+
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
     const tokenCont = await TokenCont.deploy(10, 10);
     const votingDelay = 0;
@@ -48,12 +52,12 @@ describe("Governor Tests", function () {
     const Governor = await ethers.getContractFactory("GovernorTokenCreate");
     const treaKey = ethers.utils.toUtf8Bytes("treasurer public key");
     const adminKey = ethers.utils.toUtf8Bytes("Admin public key");
-    const args = [tokenCont.address, zeroAddress, treaKey, zeroAddress, adminKey, "Token", "Symbol", votingDelay, votingPeriod];
+    const args = [tokenCont.address, zeroAddress, treaKey, zeroAddress, adminKey, "Token", "Symbol", votingDelay, votingPeriod, mockBaseHTS.address];
     const instance = await upgrades.deployProxy(Governor, args, {unsafeAllow: ['delegatecall']});
 
     await instance.deployed();
    
-    return { instance, tokenCont};
+    return { instance, tokenCont, mockBaseHTS};
   }
 
   describe("Governor functionality",  async () => {
@@ -88,17 +92,18 @@ describe("Governor Tests", function () {
       const ethValues = [0];
       //const callData = await getCallData();
       const callData = await getCallDataNew();
-      console.log(`callData ${callData}`);
       const calls = [callData];
       const desc = "Test";
       const proposalIdOLD = await instance.propose(targets, ethValues, calls, web3.utils.soliditySha3(desc));
       const proposalId = await instance.hashProposal(targets, ethValues, calls, web3.utils.soliditySha3(desc));
-      const votes = await instance.getVotes(tokenCont.address, 1);
-      console.log(votes);
-      console.log(proposalId);
+      const delay = await instance.votingDelay();
+      expect(delay).to.be.equals(0);
+      const period = await instance.votingPeriod();
+      expect(period).to.be.equals(12);
+      const thrashhold = await instance.proposalThreshold();
+      expect(thrashhold).to.be.equals(0);
       const quorumReached = await instance.quorumReached(proposalId);
       expect(quorumReached).to.be.equals(false);
-      //const votes = await instance.executeNew(tokenCont.address, calls);
   });
   });
 })
