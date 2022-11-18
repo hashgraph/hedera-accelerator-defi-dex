@@ -103,15 +103,24 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
         newToken.expiry = expiry;
         newToken.tokenKeys = keys;
 
-        (responseCode, tokenAddress) = tokenService.createFungibleTokenPublic(
-            newToken,
-            uint256(0),
-            8
+        (bool success, bytes memory result) = address(tokenService).call{
+            value: msg.value
+        }(
+            abi.encodeWithSelector(
+                IBaseHTS.createFungibleTokenPublic.selector,
+                newToken,
+                uint256(0),
+                8
+            )
         );
+
+        (responseCode, tokenAddress) = success
+            ? abi.decode(result, (int256, address))
+            : (int256(HederaResponseCodes.UNKNOWN), address(0x0));
 
         require(
             responseCode == HederaResponseCodes.SUCCESS,
-            "Token creation failed"
+            "Token creation failed."
         );
         newTokenAddress = tokenAddress;
     }
