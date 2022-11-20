@@ -1,8 +1,12 @@
 import { getAllFilesSync } from "get-all-files";
 
 export class Helper {
-  static getFileNameFromPath(path: string): string {
-    return path.split("/").at(-1)?.split(".")[0] || "";
+  static extractFileName(path: string): string {
+    const output = path.split("/").at(-1)?.split(".");
+    if (output && output?.length > 1) {
+      return output[0];
+    }
+    return "";
   }
 
   static getContractPathList(path:string) {
