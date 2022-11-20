@@ -1,7 +1,7 @@
 import inquirer from "inquirer";
-import { main as deployContract } from "../logicCode"
-import { main as createContractProxy } from "../transparentUpgradeableProxyCode"
-import { main as updateContractProxy } from "../upgradeProxyCode"
+import { main as deployContract } from "../logicCode";
+import { main as createContractProxy } from "../transparentUpgradeableProxyCode";
+import { main as updateContractProxy } from "../upgradeProxyCode";
 
 const SUPPORTED_CONTRACTS_FOR_DEPLOYMENT = [
   "Factory",
@@ -15,38 +15,40 @@ const SUPPORTED_CONTRACTS_FOR_DEPLOYMENT = [
   "TransparentUpgradeableProxy",
 ];
 
+const SUPPORTED_PROXY_OPTIONS = ["create", "update"];
+
 async function main() {
-  const contractName = (
-    await inquirer.prompt([
-      {
-        type: "rawlist",
-        name: "contractName",
-        message: "Please select which contract you want to deploy ? ",
-        choices: [...SUPPORTED_CONTRACTS_FOR_DEPLOYMENT, "exit"],
-      },
-    ])
-  ).contractName;
+  const contractName = await prompt(
+    SUPPORTED_CONTRACTS_FOR_DEPLOYMENT,
+    "Please select which contract you want to deploy ?"
+  );
   if (contractName === "exit") {
     return "nothing to execute";
   }
   await deployContract(contractName);
-  const option = (
-    await inquirer.prompt([
-      {
-        type: "rawlist",
-        name: "option",
-        message: "Please select any option for proxy operation from menu ... ",
-        choices: ["create", "update", "exit"],
-      },
-    ])
-  ).option;
-  if (option === "create") {
-     await createContractProxy(contractName);
-  } else if (option === "update") {
+  const proxyOption = await prompt(
+    SUPPORTED_PROXY_OPTIONS,
+    "Please select any option for proxy operation from menu !"
+  );
+  if (proxyOption === "create") {
+    await createContractProxy(contractName);
+  } else if (proxyOption === "update") {
     await updateContractProxy(contractName);
   }
   return "all done successfully";
 }
+
+async function prompt(inputs: string[], userMessage: string): Promise<string> {
+  return await inquirer.prompt([
+    {
+      type: "rawlist",
+      name: "option",
+      message: userMessage,
+      choices: [...inputs, "exit"],
+    },
+  ]).option;
+}
+
 main()
   .then((res) => console.log(res))
   .catch((error) => console.error(error))
