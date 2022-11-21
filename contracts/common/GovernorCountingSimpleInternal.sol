@@ -47,19 +47,6 @@ abstract contract GovernorCountingSimpleInternal is
         return proposalId;
     }
 
-    function cancelProposal(
-        address[] memory targets,
-        uint256[] memory values,
-        bytes[] memory calldatas,
-        string memory description
-    ) public returns (uint256 proposalId) {
-        bytes32 descriptionHash = keccak256(bytes(description));
-        proposalId = hashProposal(targets, values, calldatas, descriptionHash);
-        require(msg.sender == proposalCreators[proposalId], "Only proposer can cancel the proposal");
-        proposalId = super._cancel(targets, values, calldatas, descriptionHash);
-        returnGODToken(proposalId);
-    }
-
     function getGODToken() internal {
         tokenService.associateTokenPublic(address(this), address(token));
         int responseCode = tokenService.transferTokenPublic(
@@ -110,6 +97,20 @@ abstract contract GovernorCountingSimpleInternal is
         returns (uint256)
     {
         return super.proposalThreshold();
+    }
+
+    function cancelProposal(
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
+        string memory description
+    ) public returns (uint256 proposalId) {
+        bytes32 descriptionHash = keccak256(bytes(description));
+        proposalId = hashProposal(targets, values, calldatas, descriptionHash);
+        require(proposalCreators[proposalId] != address(0), "Proposal not found");
+        require(msg.sender == proposalCreators[proposalId], "Only proposer can cancel the proposal");
+        proposalId = super._cancel(targets, values, calldatas, descriptionHash);
+        returnGODToken(proposalId);
     }
 
     /**
