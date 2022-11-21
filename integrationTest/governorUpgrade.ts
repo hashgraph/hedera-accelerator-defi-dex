@@ -226,13 +226,13 @@ async function main() {
   console.log(`\nUsing governor proxy contract id ${contractId}`);
   //const tokenId = await createToken();
   const tokenId = TokenId.fromString("0.0.48602743");
-  // await initialize(tokenId);
+  await initialize(tokenId);
 
   const targets = [htsServiceAddress];
   const ethFees = [0];
   const associateToken = await associateTokenPublicCallData(tokenId);
   const calls = [associateToken];
-  const description = "Create Upgrade proposal 10 OSR";
+  const description = "Create Upgrade proposal 9 OSR";
 
   const proposalId = await governor.propose(
     targets,
@@ -254,7 +254,7 @@ async function main() {
   console.log(contracts);
   contractId = ContractId.fromSolidityAddress(contracts.proxy);
   await upgradeTo(contracts.contractToUgrade);
-  await setupFactory();
+  // await setupFactory();
   // await checkFactory();
   console.log(`\nDone`);
 }

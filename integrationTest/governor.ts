@@ -203,7 +203,6 @@ const createPair = async (contractId: string | ContractId, token0: string, token
   console.log(`CreatePair address: ${contractAddress}`);
   console.log(`CreatePair status: ${transferTokenRx.status}`);
   return contractAddress;
-  //return `0x${contractAddress}`;
 };
 
 const getAllPairs = async (): Promise<string> => {
@@ -260,7 +259,6 @@ const getTokenPairAddress = async (contId: string) => {
   console.log(
     ` ${tokenAQty} units of token A and ${tokenBQty} units of token B are present in the pool. \n`
   );
-  // return [tokenAAddress, tokenBAddress];
 };
 
 const getPair = async (contractId: string | ContractId, token0: string, token1: string) => {
