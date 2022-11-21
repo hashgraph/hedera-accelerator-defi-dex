@@ -30,7 +30,7 @@ export async function main(_contractName: string | null = null) {
 const getFilePath = (contractName: string) => {
   const compiledPaths = Helper.getContractPathList("./artifacts").compiledPaths;
   const filePath = compiledPaths.find(
-    (path) => Helper.getFileNameFromPath(path).toLowerCase() === contractName
+    (path) => Helper.extractFileName(path).toLowerCase() === contractName
   );
   if (filePath === undefined) {
     throw Error(`Failed to locate (${contractName}) contract json`);
