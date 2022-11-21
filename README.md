@@ -35,6 +35,18 @@ Tests run before deploying the contract on testnet.
 5. Run this workflow `Deploy a contract to testnet using dispatch` with input parameters contract name and type e.g. contract name = `factory` and contract type = `Upgrade`. Both name and type are case sensitive.
 6. Monitor the job `Deploy a contract to testnet using dispatch`
 
+----
+
+## `Deploy contracts on testnet using command line`
+### New contract (one time setup needed)
+1. Go to [here](./deployment/contract/deploy.ts)
+2. Add new contract name in SUPPORTED_CONTRACTS_FOR_DEPLOYMENT
+3. `run command` npx hardhat run deployment/contract/deploy.ts 
+
+### Existing contract
+`run command` npx hardhat run deployment/contract/deploy.ts 
+
+once above command executed, it will show options to execute required flow.
 -----
 ## [Contract Upgrade Strategy](./UPGRADE.md)
 -----
