@@ -55,8 +55,7 @@ abstract contract GovernorCountingSimpleInternal is
     ) public returns (uint256 proposalId) {
         bytes32 descriptionHash = keccak256(bytes(description));
         proposalId = hashProposal(targets, values, calldatas, descriptionHash);
-        require(msg.sender == proposalCreators[proposalId], "UnAuthorised access");
-        // If msg sender is proposal creator he can cancel the proposal and receive GOD token
+        require(msg.sender == proposalCreators[proposalId], "Only proposer can cancel the proposal");
         proposalId = super._cancel(targets, values, calldatas, descriptionHash);
         returnGODToken(proposalId);
     }
