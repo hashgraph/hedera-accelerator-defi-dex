@@ -10,7 +10,7 @@ dotenv.config();
 
 const contractService = new ContractService();
 
-export async function main(_contractName: string | null = null) {
+export async function main(_contractName: string? = null) {
   const contractName = (
     _contractName ?? process.env.CONTRACT_NAME!
   ).toLowerCase();
