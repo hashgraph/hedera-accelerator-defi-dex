@@ -102,7 +102,7 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
 
         (responseCode, tokenAddress) = createFungibleToken(
             newToken,
-            uint256(10000000000000000),
+            uint256(0),
             8
         );
 
