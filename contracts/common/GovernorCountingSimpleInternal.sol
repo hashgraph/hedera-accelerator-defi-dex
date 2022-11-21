@@ -10,6 +10,7 @@ import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesQ
 import "./IERC20.sol";
 import "./IBaseHTS.sol";
 import "./hedera/HederaResponseCodes.sol";
+import "hardhat/console.sol";
  
 
 abstract contract GovernorCountingSimpleInternal is
@@ -116,7 +117,7 @@ abstract contract GovernorCountingSimpleInternal is
     /**
      * @dev See {IGovernor-execute}.
      */
-    function execute(
+    function executePublic(
         address[] memory targets,
         uint256[] memory values,
         bytes[] memory calldatas,
@@ -152,6 +153,12 @@ abstract contract GovernorCountingSimpleInternal is
     ) internal virtual override {
         returnGODToken(proposalId);
     }
+
+    function state(uint256 proposalId) public view virtual override returns (ProposalState) {
+        console.log("Block Number", block.number);
+        return super.state(proposalId);
+    }
+
 }
 
 library Bits {

@@ -71,7 +71,7 @@ const execute = async (targets: Array<string>, ethFees: Array<number>, calls: Ar
 
   const contractAllotTx = await new ContractExecuteTransaction()
     .setContractId(contractId)
-    .setFunction("execute", contractFunctionParameters)
+    .setFunction("executePublic", contractFunctionParameters)
     .setPayableAmount(new Hbar(70))
     .setMaxTransactionFee(new Hbar(70))
     .setGas(900000)
