@@ -479,6 +479,8 @@
         "name": "factory",
         "id": "0.0.48933946",
         "address": "0x0000000000000000000000000000000002eaac3a",
-        "timestamp": "2022-11-21T08:32:18.662Z"
+        "timestamp": "2022-11-21T08:34:54.463Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002eaac32",
+        "transparentProxyId": "0.0.48933938"
     }
 ]
