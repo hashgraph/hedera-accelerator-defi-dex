@@ -38,15 +38,17 @@ async function main() {
   return "all done successfully";
 }
 
-async function prompt(inputs: string[], userMessage: string): Promise<string> {
-  return await inquirer.prompt([
-    {
-      type: "rawlist",
-      name: "option",
-      message: userMessage,
-      choices: [...inputs, "exit"],
-    },
-  ]).option;
+async function prompt(inputs: string[], userMessage: string) {
+  return (
+    await inquirer.prompt([
+      {
+        type: "rawlist",
+        name: "option",
+        message: userMessage,
+        choices: [...inputs, "exit"],
+      },
+    ])
+  ).option;
 }
 
 main()
