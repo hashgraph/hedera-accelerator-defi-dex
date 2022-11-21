@@ -41,23 +41,25 @@ describe("Governor Tests", function () {
 
   async function deployFixture() {
     const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-    const mockBaseHTS = await MockBaseHTS.deploy(true);
+    const mockBaseHTS = await MockBaseHTS.deploy(true, true);
+    const signers = await ethers.getSigners();
     mockBaseHTS.setFailType(0);
 
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
-    const tokenCont = await TokenCont.deploy(10, 10);
+    const tokenCont = await TokenCont.deploy(1000000000, 1000000000);
     const votingDelay = 0;
     const votingPeriod = 12;
 
     const Governor = await ethers.getContractFactory("GovernorTokenCreate");
     const treaKey = ethers.utils.toUtf8Bytes("treasurer public key");
     const adminKey = ethers.utils.toUtf8Bytes("Admin public key");
+    console.log(`token Service address ${mockBaseHTS.address}`);
     const args = [tokenCont.address, zeroAddress, treaKey, zeroAddress, adminKey, "Token", "Symbol", votingDelay, votingPeriod, mockBaseHTS.address];
     const instance = await upgrades.deployProxy(Governor, args, {unsafeAllow: ['delegatecall']});
 
     await instance.deployed();
    
-    return { instance, tokenCont, mockBaseHTS};
+    return { instance, tokenCont, mockBaseHTS, signers};
   }
 
   describe("Governor functionality",  async () => {
@@ -73,24 +75,29 @@ describe("Governor Tests", function () {
     });
 
     it("getVotes for 50% shares", async function () {
-        const { instance, tokenCont } = await loadFixture(deployFixture);
+        const { instance, tokenCont, signers } = await loadFixture(deployFixture);
         await tokenCont.setTotal(20);
-        await tokenCont.setUserBalance(10);
+        await tokenCont.setUserBalance(signers[0].address, 10);
         const votes = await instance.getVotes(tokenCont.address, 1);
         expect(votes).to.be.equals(50);
     });
 
     it("Execute ", async function () {
-      const { instance, tokenCont } = await loadFixture(deployFixture);
+      const { instance, tokenCont, signers } = await loadFixture(deployFixture);
       const targets = [tokenCont.address];
       const ethValues = [0];
       const callData = await getCallDataNew();
       const calls = [callData];
       const desc = "Test";
-      const proposalIdRsponse = await instance.propose(targets, ethValues, calls, web3.utils.soliditySha3(desc));
-      const record = await proposalIdRsponse.wait();
-      console.log(`ProposalId: ${record.events[0].args.proposalId.toString()}`);
+      const userBalance = await tokenCont.balanceOf(signers[0].address);
+      expect(userBalance).to.be.equals(1000000000);
+      const proposalIdResponse = await instance.connect(signers[0]).propose(targets, ethValues, calls, web3.utils.soliditySha3(desc));
+      const userBalanceAfterProposalCreation = await tokenCont.balanceOf(signers[0].address);
+      expect(userBalanceAfterProposalCreation).to.be.equals(900000000);
+
+      const record = await proposalIdResponse.wait();
        const proposalId = record.events[0].args.proposalId.toString();
+
       const delay = await instance.votingDelay();
       expect(delay).to.be.equals(0);
       const period = await instance.votingPeriod();
@@ -101,11 +108,16 @@ describe("Governor Tests", function () {
       expect(quorumReached).to.be.equals(false);
       const voteSucceeded = await instance.voteSucceeded(proposalId);
       expect(voteSucceeded).to.be.equals(false);
+
       await instance.castVote(proposalId, 1);
       const voteSucceeded1 = await instance.voteSucceeded(proposalId);
       expect(voteSucceeded1).to.be.equals(true);
       const quorumReached1 = await instance.quorumReached(proposalId);
       expect(quorumReached1).to.be.equals(true);
+
+      await instance.cancelProposal(targets, ethValues, calls, web3.utils.soliditySha3(desc));
+      const userBalanceAfterCancelProposal = await tokenCont.balanceOf(signers[0].address);
+      expect(userBalanceAfterCancelProposal).to.be.equals(1000000000);
   });
   });
 })

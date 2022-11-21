@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import "../common/IBaseHTS.sol";
 import "../common/hedera/HederaResponseCodes.sol";
+import "./IERC20Mock.sol";
 import "./ERC20Mock.sol";
 import "hardhat/console.sol";
 
@@ -25,11 +26,13 @@ contract MockBaseHTS is IBaseHTS {
     }
 
     bool internal isSuccess;
+    bool internal tokenTest;
     int256 internal trueTransaction = 0;
     FailTransactionFor internal failType;
 
-    constructor(bool _isSucces) {
+    constructor(bool _isSucces, bool _tokenTest) {
         isSuccess = _isSucces;
+        tokenTest = _tokenTest;
     }
 
     function setFailType(int256 _type) public {
@@ -75,11 +78,17 @@ contract MockBaseHTS is IBaseHTS {
     }
 
     function transferTokenPublic(
-        address,
-        address,
-        address,
-        int256
+        address token,
+        address from,
+        address to,
+        int256 amount
     ) external override returns (int256 responseCode) {
+        if (tokenTest) {
+            uint256 newAmount = (IERC20Mock(token).balanceOf(from)) - uint256(amount);
+            IERC20Mock(token).setUserBalance(from, newAmount);
+            uint256 newAmountRec = (IERC20Mock(token).balanceOf(to)) + uint256(amount);
+            IERC20Mock(token).setUserBalance(to, newAmountRec);      
+        }
         if (trueTransaction > 0) {
             trueTransaction -= 1;
             return int256(22);
