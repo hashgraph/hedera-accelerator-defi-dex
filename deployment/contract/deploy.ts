@@ -1,7 +1,7 @@
 import inquirer from "inquirer";
-import { main as deployContract } from "../logicCode";
-import { main as createContractProxy } from "../transparentUpgradeableProxyCode";
-import { main as updateContractProxy } from "../upgradeProxyCode";
+import { main as deployContract } from "../logic";
+import { main as createContractProxy } from "../transparentUpgradeableProxy";
+import { main as updateContractProxy } from "../upgradeProxy";
 
 const SUPPORTED_CONTRACTS_FOR_DEPLOYMENT = [
   "Factory",
@@ -30,11 +30,8 @@ async function main() {
     SUPPORTED_PROXY_OPTIONS,
     "Please select any option for proxy operation from menu !"
   );
-  if (proxyOption === "create") {
-    await createContractProxy(contractName);
-  } else if (proxyOption === "update") {
-    await updateContractProxy(contractName);
-  }
+  proxyOption === "create" && (await createContractProxy(contractName));
+  proxyOption === "update" && (await updateContractProxy(contractName));
   return "all done successfully";
 }
 
