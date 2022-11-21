@@ -77,7 +77,7 @@ describe("Governor Tests", function () {
         expect(votes).to.be.equals(50);
     });
 
-    it("Execute ", async function () {
+    it.only("Test all states of proposal for cancel", async function () {
       const { instance, tokenCont, signers } = await loadFixture(deployFixture);
       const targets = [tokenCont.address];
       const ethValues = [0];
@@ -86,7 +86,7 @@ describe("Governor Tests", function () {
       const desc = "Test";
       const userBalance = await tokenCont.balanceOf(signers[0].address);
       expect(userBalance).to.be.equals(1000000000);
-      const proposalIdResponse = await instance.connect(signers[0]).propose(targets, ethValues, calls, web3.utils.soliditySha3(desc));
+      const proposalIdResponse = await instance.connect(signers[0]).propose(targets, ethValues, calls, desc);
       const userBalanceAfterProposalCreation = await tokenCont.balanceOf(signers[0].address);
       expect(userBalanceAfterProposalCreation).to.be.equals(900000000);
 
@@ -110,7 +110,7 @@ describe("Governor Tests", function () {
       const quorumReached1 = await instance.quorumReached(proposalId);
       expect(quorumReached1).to.be.equals(true);
 
-      await instance.cancelProposal(targets, ethValues, calls, web3.utils.soliditySha3(desc));
+      await instance.cancelProposal(targets, ethValues, calls, desc);
       const userBalanceAfterCancelProposal = await tokenCont.balanceOf(signers[0].address);
       expect(userBalanceAfterCancelProposal).to.be.equals(1000000000);
   });
