@@ -90,7 +90,7 @@ const execute = async (
 
   const contractAllotTx = await new ContractExecuteTransaction()
     .setContractId(contractId)
-    .setFunction("execute", contractFunctionParameters)
+    .setFunction("executePublic", contractFunctionParameters)
     .setPayableAmount(new Hbar(100))
     .setMaxTransactionFee(new Hbar(100))
     .setGas(9000000)
