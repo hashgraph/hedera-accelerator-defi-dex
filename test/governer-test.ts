@@ -8,8 +8,6 @@ import { ethers, upgrades } from "hardhat";
 import { BigNumber, Overrides, PayableOverrides } from "ethers";
 
 describe("Governor Tests", function () {
-  const tokenOwnerAddress = "0x0000000000000000000000000000000000010001";
-  const tokenAAddress = "0x0000000000000000000000000000000000020002";
   const zeroAddress = "0x1111111000000000000000000000000000000000";
   let precision: BigNumber;
   const fee = 1;
@@ -22,9 +20,6 @@ describe("Governor Tests", function () {
 
   const contractJson = readFileContent("./artifacts/contracts/mock/ERC20Mock.sol/ERC20Mock.json");
   const contractInterface = new ethers.utils.Interface(contractJson.abi);
-
-  // const governorGenericJson = readFileContent("./artifacts/contracts/common/GovernorGeneric.sol/GovernorGeneric.json");
-  // const governorGenericInterface = new ethers.utils.Interface(governorGenericJson.abi);
 
   describe("GovernorCountingSimpleInternal Upgradeable", function () {
     it("Verify if the Governor contract is upgradeable safe ", async function () {
