@@ -10,6 +10,7 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
     bytes adminKeyBytes;
     string tokenName;
     string tokenSymbol;
+    address newTokenAddress;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -101,7 +102,7 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
 
         (responseCode, tokenAddress) = createFungibleToken(
             newToken,
-            uint256(0),
+            uint256(10000000000000000),
             8
         );
 
@@ -109,5 +110,11 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
             responseCode == HederaResponseCodes.SUCCESS,
             "Token creation failed"
         );
+        newTokenAddress = tokenAddress;
+    }
+
+    function getTokenAddress(uint256 proposalId) public view returns(address) {
+        require(state(proposalId) == ProposalState.Executed, "Contract not executed yet!");
+        return newTokenAddress;
     }
 }
