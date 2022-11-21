@@ -360,10 +360,6 @@ async function main() {
 
   await createPairFromFactory(tokenAddress);
 
-  // Uncomment in case of upgradeToProxy and deploy without proxy
-  // const upgradeToContractId = contractService.getContract(contractService.governorContractName).id!;
-  // await upgradeTo(upgradeToContractId);
-
   console.log(`\nDone`);
 }
 
