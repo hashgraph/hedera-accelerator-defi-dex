@@ -77,7 +77,7 @@ describe("Governor Tests", function () {
         expect(votes).to.be.equals(50);
     });
 
-    it.only("Test all states of proposal for cancel", async function () {
+    it("Test all states of proposal for cancel", async function () {
       const { instance, tokenCont, signers } = await loadFixture(deployFixture);
       const targets = [tokenCont.address];
       const ethValues = [0];
