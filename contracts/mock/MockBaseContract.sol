@@ -45,7 +45,7 @@ contract MockBaseHTS is IBaseHTS {
             return 7;
         }
         if (failType == FailTransactionFor.initialiseFailATransfer) {
-            return 2;
+            return 1;
         }
         if (failType == FailTransactionFor.initialiseFailBTransfer) {
             return 3;

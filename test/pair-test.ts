@@ -280,7 +280,7 @@ it("Swap 1 units of token B  ", async function () {
       const tokenBeforeQty = await swapV2.getPairQty();
 
       expect(tokenBeforeQty[0]).to.be.equals(totalQtyA);
-      await expect(swapV2.swapToken(zeroAddress, tokenAAddress, precision.mul(1))).to.revertedWith("swapTokenA: Transferring token B to contract failed with status code");
+      await expect(swapV2.swapToken(zeroAddress, tokenAAddress, precision.mul(1))).to.revertedWith("swapTokenA: Transferring token B to user failed with status code");
     });
 
     //----------------------------------------------------------------------
@@ -302,7 +302,7 @@ it("Swap 1 units of token B  ", async function () {
       await swapV2.initializeContract(zeroAddress, tokenAAddress, tokenBAddress, totalQtyA, precision.mul(1000), fee, treasury);
       const tokenBeforeQty = await swapV2.getPairQty(); 
       expect(Number(tokenBeforeQty[0])).to.be.equals(precision.mul(1000));
-      await expect(swapV2.swapToken(zeroAddress, tokenBAddress, precision.mul(1))).to.revertedWith("swapTokenB: Transferring token A to contract failed with status code");
+      await expect(swapV2.swapToken(zeroAddress, tokenBAddress, precision.mul(1))).to.revertedWith("swapTokenB: Transferring token A to user failed with status code");
     });
 
     //----------------------------------------------------------------------
