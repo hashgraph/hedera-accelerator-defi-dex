@@ -103,8 +103,8 @@ describe("Governor Tests", function () {
       expect(delay).to.be.equals(0);
       const period = await instance.votingPeriod();
       expect(period).to.be.equals(1);
-      const thrashhold = await instance.proposalThreshold();
-      expect(thrashhold).to.be.equals(0);
+      const threshold = await instance.proposalThreshold();
+      expect(threshold).to.be.equals(0);
       const quorumReached = await instance.quorumReached(proposalId);
       expect(quorumReached).to.be.equals(false);
       const voteSucceeded = await instance.voteSucceeded(proposalId);
@@ -145,8 +145,8 @@ describe("Governor Tests", function () {
       expect(delay).to.be.equals(0);
       const period = await instance.votingPeriod();
       expect(period).to.be.equals(1);
-      const thrashhold = await instance.proposalThreshold();
-      expect(thrashhold).to.be.equals(0);
+      const threshold = await instance.proposalThreshold();
+      expect(threshold).to.be.equals(0);
       const quorumReached = await instance.quorumReached(proposalId);
       expect(quorumReached).to.be.equals(false);
       const voteSucceeded = await instance.voteSucceeded(proposalId);

@@ -153,12 +153,6 @@ abstract contract GovernorCountingSimpleInternal is
     ) internal virtual override {
         returnGODToken(proposalId);
     }
-
-    function state(uint256 proposalId) public view virtual override returns (ProposalState) {
-        console.log("Block Number", block.number);
-        return super.state(proposalId);
-    }
-
 }
 
 library Bits {
