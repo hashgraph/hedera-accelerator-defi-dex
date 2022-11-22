@@ -14,6 +14,7 @@ dotenv.config();
 const clientManagement = new ClientManagement();
 
 let client = clientManagement.createOperatorClient();
+const { treasureId, treasureKey } = clientManagement.getTreasure();
 
 const treasurerClient = clientManagement.createClient();
 
@@ -135,7 +136,8 @@ export default class GovernorMethods {
       .setContractId(contractId)
       .setFunction("propose", contractFunctionParameters)
       .setGas(900000)
-      .freezeWith(client);
+      .freezeWith(client)
+      .sign(treasureKey);
 
     const executedTx = await tx.execute(client);
 
@@ -145,6 +147,40 @@ export default class GovernorMethods {
     const status = receipt.status;
     const proposalId = record.contractFunctionResult?.getUint256(0)!;
     console.log(`Proposal tx status ${status} with proposal id ${proposalId}`);
+
+    return proposalId;
+  };
+
+  public cancelProposal = async (
+    targets: Array<string>,
+    ethFees: Array<number>,
+    calls: Array<Uint8Array>,
+    description: string,
+    contractId: string | ContractId
+  ) => {
+    console.log(`\nCancel proposal `);
+
+    const contractFunctionParameters = new ContractFunctionParameters()
+      .addAddressArray(targets)
+      .addUint256Array(ethFees)
+      .addBytesArray(calls)
+      .addString(description);
+
+    const tx = await new ContractExecuteTransaction()
+      .setContractId(contractId)
+      .setFunction("cancelProposal", contractFunctionParameters)
+      .setGas(900000)
+      .freezeWith(client)
+      .sign(treasureKey);
+
+    const executedTx = await tx.execute(client);
+
+    const record = await executedTx.getRecord(client);
+    const receipt = await executedTx.getReceipt(client);
+
+    const status = receipt.status;
+    const proposalId = record.contractFunctionResult?.getUint256(0)!;
+    console.log(`Cancel Proposal tx status ${status} with proposal id ${proposalId}`);
 
     return proposalId;
   };

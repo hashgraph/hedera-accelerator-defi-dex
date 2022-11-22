@@ -44,7 +44,8 @@ const initialize = async (tokenId: TokenId) => {
   let contractFunctionParameters = new ContractFunctionParameters()
     .addAddress(tokenId.toSolidityAddress())
     .addUint256(votingDelay)
-    .addUint256(votingPeriod);
+    .addUint256(votingPeriod)
+    .addAddress(htsServiceAddress);
 
   const tx = await new ContractExecuteTransaction()
     .setContractId(contractId)
@@ -73,7 +74,7 @@ const execute = async (
 
   const contractAllotTx = await new ContractExecuteTransaction()
     .setContractId(contractId)
-    .setFunction("execute", contractFunctionParameters)
+    .setFunction("executePublic", contractFunctionParameters)
     .setPayableAmount(new Hbar(70))
     .setMaxTransactionFee(new Hbar(70))
     .setGas(900000)
@@ -96,21 +97,17 @@ const execute = async (
 
 const quorumReached = async (proposalId: BigNumber) => {
   console.log(`\nGetting quorumReached `);
-
   let contractFunctionParameters = new ContractFunctionParameters().addUint256(
     proposalId
   );
-
   const contractTokenTx = await new ContractExecuteTransaction()
     .setContractId(contractId)
     .setFunction("quorumReached", contractFunctionParameters)
     .setGas(500000)
     .execute(client);
-
   const receipt = await contractTokenTx.getReceipt(client);
   const record = await contractTokenTx.getRecord(client);
   const status = record.contractFunctionResult!.getBool(0);
-
   console.log(
     `quorumReached tx status ${receipt.status} with quorumReached ${status}`
   );
@@ -136,7 +133,7 @@ async function main() {
   console.log(`\nUsing governor proxy contract id ${contractId}`);
   //const tokenId = await createToken();
   const tokenId = TokenId.fromString("0.0.48602743");
-  // await initialize(tokenId);
+  await initialize(tokenId);
 
   const targets = [htsServiceAddress];
   const ethFees = [0];
@@ -159,6 +156,7 @@ async function main() {
   console.log(`\nWaiting for voting period to get over.`);
   await new Promise((f) => setTimeout(f, 15 * 1000)); //Wait till waiting period is over. It's current deadline as per Governance.
   await governor.state(proposalId, contractId); //4 means succeeded
+  //await governor.cancelProposal(targets, ethFees, calls, description, contractId);
   await execute(targets, ethFees, calls, description);
   console.log(`\nDone`);
 }

@@ -10,6 +10,7 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
     bytes adminKeyBytes;
     string tokenName;
     string tokenSymbol;
+    address newTokenAddress;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -25,10 +26,12 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
         string memory _tokenName,
         string memory _tokenSymbol,
         uint256 _votingDelayValue,
-        uint256 _votingPeriodValue
+        uint256 _votingPeriodValue,
+        IBaseHTS _tokenService
     ) public initializer {
+        tokenService = _tokenService;
         token = _token;
-        precision = 10000000;
+        precision = 100000000;
         treasurer = _treasurer;
         treasurerKeyBytes = _treasurerKeyBytes;
         admin = _admin;
@@ -58,13 +61,14 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
      * @dev Internal execution mechanism. Can be overridden to implement different execution mechanism
      */
     function _execute(
-        uint256, /* proposalId */
-        address[] memory,
-        uint256[] memory,
-        bytes[] memory,
-        bytes32 /*descriptionHash*/
+        uint256 proposalId,
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
+        bytes32 description
     ) internal virtual override {
         createToken();
+        super._execute(proposalId,targets, values, calldatas, description);
     }
 
     function createToken()
@@ -99,15 +103,30 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
         newToken.expiry = expiry;
         newToken.tokenKeys = keys;
 
-        (responseCode, tokenAddress) = createFungibleToken(
-            newToken,
-            uint256(0),
-            8
+        (bool success, bytes memory result) = address(tokenService).call{
+            value: msg.value
+        }(
+            abi.encodeWithSelector(
+                IBaseHTS.createFungibleTokenPublic.selector,
+                newToken,
+                uint256(0),
+                8
+            )
         );
+
+        (responseCode, tokenAddress) = success
+            ? abi.decode(result, (int256, address))
+            : (int256(HederaResponseCodes.UNKNOWN), address(0x0));
 
         require(
             responseCode == HederaResponseCodes.SUCCESS,
-            "Token creation failed"
+            "Token creation failed."
         );
+        newTokenAddress = tokenAddress;
+    }
+
+    function getTokenAddress(uint256 proposalId) public view returns(address) {
+        require(state(proposalId) == ProposalState.Executed, "Contract not executed yet!");
+        return newTokenAddress;
     }
 }

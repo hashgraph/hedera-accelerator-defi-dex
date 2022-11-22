@@ -9,16 +9,21 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesQuorumFractionUpgradeable.sol";
 import "./IERC20.sol";
 import "./IBaseHTS.sol";
+import "./hedera/HederaResponseCodes.sol";
+import "hardhat/console.sol";
+ 
 
 abstract contract GovernorCountingSimpleInternal is
     Initializable,
     GovernorUpgradeable,
     GovernorSettingsUpgradeable,
     GovernorCountingSimpleUpgradeable,
-    HederaTokenService
+    HederaResponseCodes
 {
     uint256 precision;
     IERC20 token;
+    mapping(uint256 => address) proposalCreators;
+    IBaseHTS internal tokenService;
 
     function _getVotes(
         address account,
@@ -29,6 +34,43 @@ abstract contract GovernorCountingSimpleInternal is
             token.totalSupply();
         uint256 percentageShare = share / (precision / 100);
         return percentageShare;
+    }
+
+    function propose(
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
+        string memory description
+    ) public virtual override returns (uint256) { 
+        getGODToken();
+        uint256 proposalId = super.propose(targets, values, calldatas, description);
+        proposalCreators[proposalId] = msg.sender;
+        return proposalId;
+    }
+
+    function getGODToken() internal {
+        tokenService.associateTokenPublic(address(this), address(token));
+        int responseCode = tokenService.transferTokenPublic(
+            address(token),
+            address(msg.sender),
+            address(this),
+            int64(uint64(precision))
+        );
+        if (responseCode != HederaResponseCodes.SUCCESS) {
+            revert("Transfer token failed.");
+        }
+    }
+
+    function returnGODToken(uint256 proposalId) internal {
+        int responseCode = tokenService.transferTokenPublic(
+            address(token),
+            address(this),
+            address(proposalCreators[proposalId]),
+            int64(uint64(precision))
+        );
+        if (responseCode != HederaResponseCodes.SUCCESS) {
+            revert("Transfer token failed.");
+        }
     }
 
     function votingDelay()
@@ -58,10 +100,24 @@ abstract contract GovernorCountingSimpleInternal is
         return super.proposalThreshold();
     }
 
+    function cancelProposal(
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
+        string memory description
+    ) public returns (uint256 proposalId) {
+        bytes32 descriptionHash = keccak256(bytes(description));
+        proposalId = hashProposal(targets, values, calldatas, descriptionHash);
+        require(proposalCreators[proposalId] != address(0), "Proposal not found");
+        require(msg.sender == proposalCreators[proposalId], "Only proposer can cancel the proposal");
+        proposalId = super._cancel(targets, values, calldatas, descriptionHash);
+        returnGODToken(proposalId);
+    }
+
     /**
      * @dev See {IGovernor-execute}.
      */
-    function execute(
+    function executePublic(
         address[] memory targets,
         uint256[] memory values,
         bytes[] memory calldatas,
@@ -83,6 +139,19 @@ abstract contract GovernorCountingSimpleInternal is
      */
     function voteSucceeded(uint256 proposalId) external view returns (bool) {
         return super._voteSucceeded(proposalId);
+    }
+
+    /**
+     * @dev Internal execution mechanism. Can be overridden to implement different execution mechanism
+     */
+    function _execute(
+        uint256 proposalId, /* proposalId */
+        address[] memory,
+        uint256[] memory,
+        bytes[] memory,
+        bytes32 /*descriptionHash*/
+    ) internal virtual override {
+        returnGODToken(proposalId);
     }
 }
 

@@ -13,11 +13,12 @@ contract GovernorTextProposal is GovernorCountingSimpleInternal {
     function initialize(
         IERC20 _token,
         uint256 _votingDelayValue,
-        uint256 _votingPeriodValue
+        uint256 _votingPeriodValue,
+        IBaseHTS _tokenService
     ) public initializer {
+        tokenService = _tokenService;
         token = _token;
-        precision = 10000000;
-
+        precision = 100000000;
         __Governor_init("HederaGovernor");
         __GovernorSettings_init(
             _votingDelayValue, /* 1 block */
@@ -40,10 +41,12 @@ contract GovernorTextProposal is GovernorCountingSimpleInternal {
      * @dev Internal execution mechanism. Can be overridden to implement different execution mechanism
      */
     function _execute(
-        uint256, /* proposalId */
-        address[] memory,
-        uint256[] memory,
-        bytes[] memory,
-        bytes32 /*descriptionHash*/
-    ) internal virtual override {}
+        uint256 proposalId,
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
+        bytes32 description
+    ) internal virtual override {
+        super._execute(proposalId,targets, values, calldatas, description);
+    }
 }

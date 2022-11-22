@@ -63,7 +63,8 @@ const initialize = async (tokenId: TokenId) => {
     .addAddress(transparentContractId.toSolidityAddress())
     .addAddress(upgradeContractId.toSolidityAddress())
     .addUint256(votingDelay)
-    .addUint256(votingPeriod);
+    .addUint256(votingPeriod)
+    .addAddress(htsServiceAddress);
 
   const tx = await new ContractExecuteTransaction()
     .setContractId(contractId)
@@ -91,7 +92,7 @@ const execute = async (
 
   const contractAllotTx = await new ContractExecuteTransaction()
     .setContractId(contractId)
-    .setFunction("execute", contractFunctionParameters)
+    .setFunction("executePublic", contractFunctionParameters)
     .setPayableAmount(new Hbar(70))
     .setMaxTransactionFee(new Hbar(70))
     .setGas(900000)

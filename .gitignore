@@ -3,6 +3,7 @@ node_modules
 coverage
 coverage.json
 typechain
+typechain-types
 .openzeppelin/*
 
 
@@ -11,3 +12,4 @@ cache
 artifacts
 dist
 unknown-31337.json
+typechain-types

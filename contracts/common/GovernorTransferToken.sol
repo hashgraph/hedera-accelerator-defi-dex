@@ -21,10 +21,12 @@ contract GovernorTransferToken is GovernorCountingSimpleInternal {
         address _tokenToTransfer,
         int256 _transferTokenAmount,
         uint256 _votingDelayValue,
-        uint256 _votingPeriodValue
+        uint256 _votingPeriodValue,
+        IBaseHTS _tokenService
     ) public initializer {
+        tokenService = _tokenService;
         token = _token;
-        precision = 10000000;
+        precision = 100000000;
         transferFromAccount = _transferFromAccount;
         transferToAccount = _transferToAccount;
         tokenToTransfer = _tokenToTransfer;
@@ -52,18 +54,19 @@ contract GovernorTransferToken is GovernorCountingSimpleInternal {
      * @dev Internal execution mechanism. Can be overridden to implement different execution mechanism
      */
     function _execute(
-        uint256, /* proposalId */
-        address[] memory,
-        uint256[] memory,
-        bytes[] memory,
-        bytes32 /*descriptionHash*/
+        uint256 proposalId,
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
+        bytes32 description
     ) internal virtual override {
         transferToken();
+        super._execute(proposalId,targets, values, calldatas, description);
     }
 
     function transferToken() internal {
-        HederaTokenService.associateToken(transferToAccount, tokenToTransfer);
-        int responseCode = HederaTokenService.transferToken(
+        tokenService.associateTokenPublic(transferToAccount, tokenToTransfer);
+        int responseCode = tokenService.transferTokenPublic(
             tokenToTransfer,
             transferFromAccount,
             transferToAccount,

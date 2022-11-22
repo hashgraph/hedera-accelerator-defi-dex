@@ -26,7 +26,7 @@ describe("All Tests", function () {
 
   async function deployFixture() {
     const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-    const mockBaseHTS = await MockBaseHTS.deploy(true);
+    const mockBaseHTS = await MockBaseHTS.deploy(true, false);
     mockBaseHTS.setFailType(0);
 
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
@@ -55,7 +55,7 @@ describe("All Tests", function () {
 
   async function deployFailureFixture() {
     const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-    const mockBaseHTS = await MockBaseHTS.deploy(false);
+    const mockBaseHTS = await MockBaseHTS.deploy(false, false);
     await mockBaseHTS.setFailType(0);
 
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
@@ -371,7 +371,7 @@ it("Swap 1 units of token B  ", async function () {
 
     it("LPToken creation failed while initialize LP contract.", async function () {
       const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-      const mockBaseHTS = await MockBaseHTS.deploy(false);
+      const mockBaseHTS = await MockBaseHTS.deploy(false, false);
       await mockBaseHTS.setFailType(13);
   
       const LpTokenCont = await ethers.getContractFactory("LPToken");
