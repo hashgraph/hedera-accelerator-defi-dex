@@ -52,7 +52,7 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
         pair = Pair(Token(_tokenA, _tokenAQty), Token(_tokenB, _tokenBQty));
         fee = _fee;
         treasury = _treasury;
-        transferTokensInternal(
+        transferTokensInternally(
             fromAccount,
             address(this),
             _tokenA,
@@ -73,7 +73,7 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
         int256 _tokenAQty,
         int256 _tokenBQty
     ) external virtual override {
-        transferTokensInternal(
+        transferTokensInternally(
             fromAccount,
             address(this),
             _tokenA,
@@ -102,7 +102,7 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
             _lpToken
         );
         //Assumption - toAccount must be associated with tokenA and tokenB other transaction fails.
-        transferTokensInternal(
+        transferTokensInternally(
             address(this),
             toAccount,
             pair.tokenA.tokenAddress,
@@ -165,7 +165,7 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
         int256 feeTokenB = feeForToken(deltaBQty);
         // deduct fee from the token B
         deltaBQty = deltaBQty - (feeTokenB / 2);
-        transferTokenInternal(
+        transferTokenInternally(
             to,
             address(this),
             pair.tokenA.tokenAddress,
@@ -175,7 +175,7 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
         );
 
         pair.tokenB.tokenQty -= deltaBQty;
-        transferTokenInternal(
+        transferTokenInternally(
             address(this),
             to,
             pair.tokenB.tokenAddress,
@@ -184,7 +184,7 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
             true
         );
         // fee transfer
-        transferTokensInternal(
+        transferTokensInternally(
             address(this),
             treasury,
             pair.tokenA.tokenAddress,
@@ -212,7 +212,7 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
         int256 feeTokenA = feeForToken(deltaAQty);
         // deduct fee from the token A
         deltaAQty -= (feeTokenA / 2);
-        transferTokenInternal(
+        transferTokenInternally(
             to,
             address(this),
             pair.tokenB.tokenAddress,
@@ -222,7 +222,7 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
         );
 
         pair.tokenA.tokenQty -= deltaAQty;
-        transferTokenInternal(
+        transferTokenInternally(
             address(this),
             to,
             pair.tokenA.tokenAddress,
@@ -232,7 +232,7 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
         );
 
         // fee transfer
-        transferTokensInternal(
+        transferTokensInternally(
             address(this),
             treasury,
             pair.tokenA.tokenAddress,
@@ -245,7 +245,7 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
         );
 
         // fee transfer
-        transferTokensInternal(
+        transferTokensInternally(
             address(this),
             treasury,
             pair.tokenA.tokenAddress,
@@ -367,7 +367,7 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
         return tokenQ;
     }
 
-    function transferTokensInternal(
+    function transferTokensInternally(
         address sender,
         address reciever,
         address tokenA,
@@ -378,7 +378,7 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
         string memory errorMessageB,
         bool associationRequired
     ) private {
-        transferTokenInternal(
+        transferTokenInternally(
             sender,
             reciever,
             tokenA,
@@ -386,7 +386,7 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
             errorMessageA,
             associationRequired
         );
-        transferTokenInternal(
+        transferTokenInternally(
             sender,
             reciever,
             tokenB,
@@ -396,7 +396,7 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
         );
     }
 
-    function transferTokenInternal(
+    function transferTokenInternally(
         address sender,
         address reciever,
         address token,
