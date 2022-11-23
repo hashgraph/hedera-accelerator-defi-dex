@@ -64,10 +64,7 @@ const setupFactory = async () => {
 };
 
 const createPair = async (contractId: string, token0: string, token1: string) => {
-  
-  console.log(
-    `createPair TokenA TokenB`
-  );
+  console.log(`createPair TokenA TokenB`);
   const addLiquidityTx = await new ContractExecuteTransaction()
     .setContractId(contractId)
     .setGas(9000000)
@@ -76,6 +73,8 @@ const createPair = async (contractId: string, token0: string, token1: string) =>
       new ContractFunctionParameters()
         .addAddress(tokenA.toSolidityAddress())
         .addAddress(tokenB.toSolidityAddress())
+        .addAddress(treasureId.toSolidityAddress())
+        .addInt256(new BigNumber(10))
     )
     .setMaxTransactionFee(new Hbar(100))
     .setPayableAmount(new Hbar(100))
@@ -133,36 +132,9 @@ const getAllPairs = async (contractId: string) => {
   console.log(`getPairs: ${transferTokenRx.status}`);
 };
 
-const initializeContract = async (contId: string) => {
-  const tokenAQty = withPrecision(200);
-  const tokenBQty = withPrecision(220);
-  console.log(
-    `Creating a pool of ${tokenAQty} units of token A and ${tokenBQty} units of token B.`
-  );
-  const tx = await new ContractExecuteTransaction()
-    .setContractId(contId)
-    .setGas(9000000)
-    .setFunction(
-      "initializeContract",
-      new ContractFunctionParameters()
-        .addAddress(treasureId.toSolidityAddress())
-        .addAddress(tokenA.toSolidityAddress())
-        .addAddress(tokenB.toSolidityAddress())
-        .addInt256(tokenAQty)
-        .addInt256(tokenBQty)
-        .addInt256(new BigNumber(10))//fee
-        .addAddress(treasureId.toSolidityAddress())
-    )
-    .freezeWith(client)
-    .sign(treasureKey);
-  const liquidityPoolTx = await tx.execute(client);
-  const transferTokenRx = await liquidityPoolTx.getReceipt(client);
-  console.log(`Liquidity pool created: ${transferTokenRx.status}`);
-};
-
 const addLiquidity = async (contId: string) => {
-  const tokenAQty = withPrecision(10);
-  const tokenBQty = withPrecision(10);
+  const tokenAQty = withPrecision(210);
+  const tokenBQty = withPrecision(230);
   console.log(
     `Adding ${tokenAQty} units of token A and ${tokenBQty} units of token B to the pool.`
   );
@@ -251,7 +223,6 @@ async function testForSinglePair(contractId: string, token0: string, token1: str
     const pairContractId = response.contract_id;
     console.log(`contractId: ${pairContractId}`)
     await getTreasureBalance([tokenA, tokenB]);
-    await initializeContract(pairContractId);
     await getTreasureBalance([tokenA, tokenB]);
     await addLiquidity(pairContractId);
     await getTreasureBalance([tokenA, tokenB]);

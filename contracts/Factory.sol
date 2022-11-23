@@ -45,15 +45,21 @@ contract Factory is Initializable {
         return allPairs;
     }
 
-    function createPair(address _tokenA, address _tokenB)
-        external
-        payable
-        returns (address)
-    {
+    function createPair(
+        address _tokenA,
+        address _tokenB,
+        address _treasury,
+        int256 _fee
+    ) external payable returns (address) {
         (address token0, address token1) = sortTokens(_tokenA, _tokenB);
         IPair pair = pairs[token0][token1];
         if (address(pair) == address(0)) {
-            address deployedPair = deployContract();
+            address deployedPair = deployContract(
+                token0,
+                token1,
+                _treasury,
+                _fee
+            );
             IPair newPair = IPair(deployedPair);
             pairs[token0][token1] = newPair;
             allPairs.push(newPair);
@@ -63,12 +69,17 @@ contract Factory is Initializable {
         return address(pair);
     }
 
-    function deployContract() internal returns (address) {
+    function deployContract(
+        address _tokenA,
+        address _tokenB,
+        address _treasury,
+        int256 _fee
+    ) internal returns (address) {
         address deployedContract = address(new Pair{salt: deploymentSalt}());
         IPair newPair = IPair(deployedContract);
         address lpTokenDeployed = deployLPContract();
         ILPToken lp = ILPToken(lpTokenDeployed);
-        newPair.initialize(tokenService, lp);
+        newPair.initialize(tokenService, lp, _tokenA, _tokenB, _treasury, _fee);
         return deployedContract;
     }
 

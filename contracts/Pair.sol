@@ -16,8 +16,6 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
         Pair pair;
     }
 
-    address internal creator;
-
     Pair pair;
 
     int256 slippage;
@@ -26,44 +24,23 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
 
     address private treasury;
 
-    function initialize(IBaseHTS _tokenService, ILPToken _lpTokenContract)
-        public
-        override
-        initializer
-    {
+    function initialize(
+        IBaseHTS _tokenService,
+        ILPToken _lpTokenContract,
+        address _tokenA,
+        address _tokenB,
+        address _treasury,
+        int256 _fee
+    ) public override initializer {
         tokenService = _tokenService;
-        creator = msg.sender;
         lpTokenContract = _lpTokenContract;
+        fee = _fee;
+        treasury = _treasury;
+        pair = Pair(Token(_tokenA, int256(0)), Token(_tokenB, int256(0)));
     }
 
     function getPair() external view override returns (Pair memory) {
         return pair;
-    }
-
-    function initializeContract(
-        address fromAccount,
-        address _tokenA,
-        address _tokenB,
-        int256 _tokenAQty,
-        int256 _tokenBQty,
-        int256 _fee,
-        address _treasury
-    ) external virtual override {
-        pair = Pair(Token(_tokenA, _tokenAQty), Token(_tokenB, _tokenBQty));
-        fee = _fee;
-        treasury = _treasury;
-        transferTokensInternally(
-            fromAccount,
-            address(this),
-            _tokenA,
-            _tokenB,
-            _tokenAQty,
-            _tokenBQty,
-            "Creating contract: Transfering token A to contract failed with status code",
-            "Creating contract: Transfering token B to contract failed with status code",
-            true
-        );
-        lpTokenContract.allotLPTokenFor(_tokenAQty, _tokenBQty, fromAccount);
     }
 
     function addLiquidity(
@@ -180,7 +157,7 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
             to,
             pair.tokenB.tokenAddress,
             deltaBQty,
-           "swapTokenA: Transferring token B to user failed with status code",
+            "swapTokenA: Transferring token B to user failed with status code",
             true
         );
         // fee transfer
@@ -227,7 +204,7 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
             to,
             pair.tokenA.tokenAddress,
             deltaAQty,
-           "swapTokenB: Transferring token A to user failed with status code",
+            "swapTokenB: Transferring token A to user failed with status code",
             true
         );
 
