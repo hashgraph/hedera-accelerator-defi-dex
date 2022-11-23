@@ -72,7 +72,7 @@ const execute = async (
     .addBytesArray(calls)
     .addString(description);
 
-  const contractAllotTx = await new ContractExecuteTransaction()
+  const contractTx = await new ContractExecuteTransaction()
     .setContractId(contractId)
     .setFunction("executePublic", contractFunctionParameters)
     .setPayableAmount(new Hbar(70))
@@ -81,12 +81,12 @@ const execute = async (
     .freezeWith(treasurerClient) // treasurer of token
     .sign(key); //Admin of token
 
-  const executedTx = await contractAllotTx.execute(treasurerClient);
+  const executedTx = await contractTx.execute(treasurerClient);
 
   const record = await executedTx.getRecord(treasurerClient);
-  const contractAllotRx = await executedTx.getReceipt(treasurerClient);
+  const contractRx = await executedTx.getReceipt(treasurerClient);
 
-  const status = contractAllotRx.status;
+  const status = contractRx.status;
 
   console.log(
     `Execute tx status ${status} for proposal id ${record.contractFunctionResult?.getUint256(
