@@ -213,7 +213,6 @@ const removeLiquidity = async (contId: string) => {
 const swapToken = async (contId: string, token: TokenId) => {
   const tokenQty = withPrecision(1);
   console.log(`Swapping a ${tokenQty} units of token A from the pool.`);
-  // Need to pass different token B address so that only swap of token A is considered.
   const swapToken = await new ContractExecuteTransaction()
     .setContractId(contId)
     .setGas(2000000)
@@ -263,7 +262,7 @@ const getTreasureBalance = async (tokens: Array<TokenId>) => {
 }
 
 async function main() {
-    //await setupFactory();
+    await setupFactory();
     await testForSinglePair(contractId, tokenC, tokenB);
     await testForSinglePair(contractId, tokenC, tokenD);
 }

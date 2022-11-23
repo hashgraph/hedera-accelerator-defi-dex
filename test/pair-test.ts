@@ -108,6 +108,7 @@ describe("All Tests", function () {
       const pairs2 = await factory.getPairs(0);
       const pair2 = record2.events[2].args._pairAddress.toString();
       expect(pairs2[1]).to.be.equals(pair2);
+      expect(pairs2.length).to.be.equals(100);
     });
 
     it("Check For identical Tokens", async function () {

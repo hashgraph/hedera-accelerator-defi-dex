@@ -40,6 +40,9 @@ contract Factory is Initializable {
         return address(pair);
     }
 
+    /// Call this function to fetch pairs in chunks
+    /// from: start index of items to return
+    /// call this function multiple time until you start getting 0x0 addresses
     function getPairs(uint from) public view returns (address[100] memory) {
         address[100] memory tempArray;
         for (uint256 index = from; index < (from + 100); index++) {
