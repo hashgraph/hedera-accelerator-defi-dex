@@ -7,11 +7,10 @@ import "./ILPToken.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 contract Factory is Initializable {
-    bytes32 constant deploymentSalt = 0x00;
     event PairCreated(address indexed _pairAddress, string msg);
     event Initializing(address indexed _pairAddress, string msg);
 
-    IPair[] public allPairs;
+    address[] public allPairs;
     mapping(address => mapping(address => IPair)) pairs;
     IBaseHTS internal tokenService;
 
@@ -41,8 +40,18 @@ contract Factory is Initializable {
         return address(pair);
     }
 
-    function getPairs() public view returns (IPair[] memory) {
-        return allPairs;
+    /// Call this function to fetch pairs in chunks
+    /// from: start index of items to return
+    /// call this function multiple time until you start getting 0x0 addresses
+    function getPairs(uint from) public view returns (uint, address[100] memory) {
+        address[100] memory tempArray;
+        for (uint256 index = from; index < (from + 100); index++) {
+            if (index > allPairs.length - 1) {
+                return (index - from, tempArray);
+            }
+            tempArray[index - from] = allPairs[index];
+        }
+        return (tempArray.length, tempArray);
     }
 
     function createPair(
@@ -62,7 +71,7 @@ contract Factory is Initializable {
             );
             IPair newPair = IPair(deployedPair);
             pairs[token0][token1] = newPair;
-            allPairs.push(newPair);
+            allPairs.push(address(newPair));
             emit PairCreated(deployedPair, "New Pair Created");
             return deployedPair;
         }
@@ -75,15 +84,16 @@ contract Factory is Initializable {
         address _treasury,
         int256 _fee
     ) internal returns (address) {
+        bytes32 deploymentSalt = keccak256(abi.encodePacked(_tokenA, _tokenB));
         address deployedContract = address(new Pair{salt: deploymentSalt}());
         IPair newPair = IPair(deployedContract);
-        address lpTokenDeployed = deployLPContract();
+        address lpTokenDeployed = deployLPContract(deploymentSalt);
         ILPToken lp = ILPToken(lpTokenDeployed);
         newPair.initialize(tokenService, lp, _tokenA, _tokenB, _treasury, _fee);
         return deployedContract;
     }
 
-    function deployLPContract() internal returns (address) {
+    function deployLPContract(bytes32 deploymentSalt) internal returns (address) {
         address deployedContract = address(new LPToken{salt: deploymentSalt}());
         (bool success, ) = deployedContract.call{value: msg.value}(
             abi.encodeWithSelector(ILPToken.initialize.selector, tokenService)
