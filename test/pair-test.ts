@@ -98,12 +98,12 @@ describe("All Tests", function () {
     it("Check getPairs method", async function () {
       const { factory, mockBaseHTS } = await loadFixture(deployFixture);
       await factory.setUpFactory(mockBaseHTS.address);
-      const pairCreateTransaction1 = await factory.createPair(tokenAAddress, tokenBAddress,treasury, fee);
+      const pairCreateTransaction1 = await factory.createPair(tokenAAddress, tokenBAddress, treasury,fee);
       const record = await pairCreateTransaction1.wait();
       const pair1 = record.events[2].args._pairAddress.toString();
       const pairs = await factory.getPairs(0)
       expect(pairs[1][0].toString()).to.be.equals(pair1);
-      const pairCreateTransaction2 = await factory.createPair(tokenAAddress, tokenBAddress,treasury, fee);
+      const pairCreateTransaction2 = await factory.createPair(tokenAAddress, tokenCAddress ,treasury,fee);
       const record2 = await pairCreateTransaction2.wait();
       const pair2 = record2.events[2].args._pairAddress.toString();
       const pairs2 = await factory.getPairs(0);
