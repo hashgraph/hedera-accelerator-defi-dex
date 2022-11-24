@@ -226,18 +226,6 @@ it("Swap 1 units of token B  ", async function () {
   });
 
   describe("When HTS gives failure response",  async () => {
-  
-    it("Create a token pair fails with revert exception Transfer A", async function () {
-      const { swapV2, mockBaseHTS } = await loadFixture(deployFailureFixture);
-      mockBaseHTS.setFailType(7);
-      await expect(swapV2.addLiquidity(zeroAddress, tokenAAddress, tokenBAddress, 100, 100)).to.revertedWith("Creating contract: Transfering token A to contract failed with status code");
-    });
-
-    it("Create a token pair fails with revert exception Transfer B ", async function () {
-      const { swapV2 , mockBaseHTS} = await loadFixture(deployFailureFixture);
-      mockBaseHTS.setFailType(8);
-      await expect(swapV2.addLiquidity(zeroAddress, tokenAAddress, tokenBAddress, 100, 100)).to.revertedWith("Creating contract: Transfering token B to contract failed with status code");
-    });
 
     it("Contract gives 100 as qty for tokens ", async function () {
       const { swapV2 } = await loadFixture(deployFailureFixture);
@@ -306,7 +294,8 @@ it("Swap 1 units of token B  ", async function () {
 
     //----------------------------------------------------------------------
     it("Add liquidity Fail A Transfer", async function () {
-      const { swapV2 } = await loadFixture(deployFailureFixture);
+      const { swapV2, mockBaseHTS } = await loadFixture(deployFailureFixture);
+      mockBaseHTS.setFailType(7);
       const tokenBeforeQty = await swapV2.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
       await expect(swapV2.addLiquidity(zeroAddress, tokenAAddress, tokenBAddress, 30, 30)).to.revertedWith("Add liquidity: Transfering token A to contract failed with status code");
@@ -322,7 +311,8 @@ it("Swap 1 units of token B  ", async function () {
 
     //----------------------------------------------------------------------
     it("Remove liquidity Fail A Transfer", async function () {
-      const { swapV2, lpTokenCont } = await loadFixture(deployFailureFixture);
+      const { swapV2, mockBaseHTS } = await loadFixture(deployFailureFixture);
+      mockBaseHTS.setFailType(8);
       const tokenBeforeQty = await swapV2.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
       await expect(swapV2.removeLiquidity(zeroAddress, 5)).to.revertedWith("Remove liquidity: Transferring token A to contract failed with status code");
