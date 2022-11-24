@@ -44,6 +44,9 @@ describe("Governor Tests", function () {
     const signers = await ethers.getSigners();
     mockBaseHTS.setFailType(0);
 
+    console.log(`\nsigners[0].address ${signers[0].address}`);
+    console.log(`signers[1].address ${signers[1].address}`);
+    console.log(`signers[2].address ${signers[2].address} \n`);
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
     const tokenCont = await TokenCont.deploy(total, 0);
     await tokenCont.setUserBalance(signers[0].address, twentyPercent);
