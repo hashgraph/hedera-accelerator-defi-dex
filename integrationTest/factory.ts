@@ -17,11 +17,11 @@ const {treasureId, treasureKey} = clientManagement.getTreasure();
 const contractService = new ContractService();
 
 const tokenA = TokenId.fromString("0.0.48289687")
-let tokenB = TokenId.fromString("0.0.48289686")
+const tokenB = TokenId.fromString("0.0.48289686");
 const tokenC = TokenId.fromString("0.0.48301281")
-let tokenD = TokenId.fromString("0.0.48301282")
+const tokenD = TokenId.fromString("0.0.48301282");
 const tokenE = TokenId.fromString("0.0.48301300")
-let tokenF = TokenId.fromString("0.0.48301322")
+const tokenF = TokenId.fromString("0.0.48301322");
 
 const baseContract = contractService.getContract(contractService.baseContractName);
 const contractId = contractService.getContractWithProxy(contractService.factoryContractName).transparentProxyId!; 
@@ -233,7 +233,7 @@ const getTreasureBalance = async (tokens: Array<TokenId>) => {
 }
 
 async function main() {
-    await setupFactory();
+    //await setupFactory();
     await testForSinglePair(contractId, tokenC, tokenB);
     await testForSinglePair(contractId, tokenC, tokenD);
 }
