@@ -344,12 +344,12 @@ async function main() {
 }
 
 async function testForSinglePair(contract: DeployedContract, lpContract: DeployedContract) {
-  const lpTokenProxyId = lpContract.id!;
-  const contractProxyId = contract.id!;
+  const lpTokenProxyId = lpContract.transparentProxyId!;
+  const contractProxyId = contract.transparentProxyId!;
   await initializeLPTokenContract(lpTokenProxyId);
   await getLpTokenAddress(lpTokenProxyId);
   console.log(`\nUsing pair proxy contractId ${contract.id} and LP token contract proxy id ${lpTokenProxyId} \n`);
-  await initialize(contractProxyId, lpContract.address!);
+  await initialize(contractProxyId, lpContract.transparentProxyAddress!);
   await getPrecisionValue(contractProxyId);
   await getTreasureBalance([tokenA, tokenB]);
   await addLiquidity(contractProxyId);
