@@ -49,7 +49,7 @@ describe("Governor Tests", function () {
     const treaKey = ethers.utils.toUtf8Bytes("treasurer public key");
     const adminKey = ethers.utils.toUtf8Bytes("Admin public key");
     console.log(`token Service address ${mockBaseHTS.address}`);
-    const args = [tokenCont.address, zeroAddress, treaKey, zeroAddress, adminKey, "Token", "Symbol", votingDelay, votingPeriod, mockBaseHTS.address];
+    const args = [tokenCont.address, votingDelay, votingPeriod, mockBaseHTS.address];
     const instance = await upgrades.deployProxy(Governor, args, { unsafeAllow: ['delegatecall'] });
 
     await instance.deployed();
@@ -83,8 +83,10 @@ describe("Governor Tests", function () {
       expect(votes).to.be.equals(50);
     });
 
-    it("Test all states of proposal for cancel", async function () {
+    it.only("Test all states of proposal for cancel", async function () {
       const { instance, tokenCont, signers } = await loadFixture(deployFixture);
+      const treaKey = ethers.utils.toUtf8Bytes("treasurer public key");
+      const adminKey = ethers.utils.toUtf8Bytes("Admin public key");
       const targets = [tokenCont.address];
       const ethValues = [0];
       const callData = await getCallDataNew();
@@ -92,6 +94,8 @@ describe("Governor Tests", function () {
       const desc = "Test";
       const userBalance = await tokenCont.balanceOf(signers[0].address);
       expect(userBalance).to.be.equals(1000000000);
+      const proposalPublic = await instance.connect(signers[0]).proposePublic(targets, ethValues, calls, desc, zeroAddress, treaKey, zeroAddress, adminKey, "Token", "Symbol");
+      return
       const proposalIdResponse = await instance.connect(signers[0]).propose(targets, ethValues, calls, desc);
       const userBalanceAfterProposalCreation = await tokenCont.balanceOf(signers[0].address);
       expect(userBalanceAfterProposalCreation).to.be.equals(900000000);
