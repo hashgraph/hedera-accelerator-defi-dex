@@ -303,7 +303,7 @@ const getPair = async (
 
 async function createPairFromFactory(tokenAddress: string) {
   const GODToken = tokenAddress;
-  // await setupFactory();
+  await setupFactory();
   const tokenA = TokenId.fromString("0.0.48289687");
   await createPair(factoryContractId, GODToken, tokenA.toSolidityAddress());
 
