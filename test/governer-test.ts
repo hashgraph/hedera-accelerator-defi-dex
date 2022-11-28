@@ -28,7 +28,7 @@ describe("Governor Tests", function () {
       const Governor = await ethers.getContractFactory("GovernorTokenCreate");
       const treaKey = ethers.utils.toUtf8Bytes("treasurer public key");
       const adminKey = ethers.utils.toUtf8Bytes("Admin public key");
-      const args = [zeroAddress, zeroAddress, treaKey, zeroAddress, adminKey, "Token", "Symbol", votingDelay, votingPeriod, zeroAddress];
+      const args = [zeroAddress, votingDelay, votingPeriod, zeroAddress];
       const instance = await upgrades.deployProxy(Governor, args, { unsafeAllow: ['delegatecall'] });
       await instance.deployed();
     });
@@ -46,8 +46,6 @@ describe("Governor Tests", function () {
     const votingPeriod = 1;
 
     const Governor = await ethers.getContractFactory("GovernorTokenCreate");
-    const treaKey = ethers.utils.toUtf8Bytes("treasurer public key");
-    const adminKey = ethers.utils.toUtf8Bytes("Admin public key");
     console.log(`token Service address ${mockBaseHTS.address}`);
     const args = [tokenCont.address, votingDelay, votingPeriod, mockBaseHTS.address];
     const instance = await upgrades.deployProxy(Governor, args, { unsafeAllow: ['delegatecall'] });
@@ -83,7 +81,7 @@ describe("Governor Tests", function () {
       expect(votes).to.be.equals(50);
     });
 
-    it.only("Test all states of proposal for cancel", async function () {
+    it("Test all states of proposal for cancel", async function () {
       const { instance, tokenCont, signers } = await loadFixture(deployFixture);
       const treaKey = ethers.utils.toUtf8Bytes("treasurer public key");
       const adminKey = ethers.utils.toUtf8Bytes("Admin public key");
@@ -95,12 +93,10 @@ describe("Governor Tests", function () {
       const userBalance = await tokenCont.balanceOf(signers[0].address);
       expect(userBalance).to.be.equals(1000000000);
       const proposalPublic = await instance.connect(signers[0]).proposePublic(targets, ethValues, calls, desc, zeroAddress, treaKey, zeroAddress, adminKey, "Token", "Symbol");
-      return
-      const proposalIdResponse = await instance.connect(signers[0]).propose(targets, ethValues, calls, desc);
       const userBalanceAfterProposalCreation = await tokenCont.balanceOf(signers[0].address);
       expect(userBalanceAfterProposalCreation).to.be.equals(900000000);
 
-      const record = await proposalIdResponse.wait();
+      const record = await proposalPublic.wait();
       const proposalId = record.events[0].args.proposalId.toString();
 
       const delay = await instance.votingDelay();
