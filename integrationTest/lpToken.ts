@@ -78,18 +78,18 @@ const removeLPTokenFor = async (contId: string) => {
       .addInt256(lpTokenQty)
       .addAddress(treasureId.toSolidityAddress());
       
-  const contractRemoveTx0 = await new ContractExecuteTransaction()
+  const contractRemoveTx = await new ContractExecuteTransaction()
       .setContractId(contId)
       .setFunction("removeLPTokenFor", contractFunctionParameters)
       .setGas(3000000)
       .freezeWith(client)
       .sign(key);
 
-  const signTx = await contractRemoveTx0.sign(treasureKey);//For associating a token to treasurer
+  const signTx = await contractRemoveTx.sign(treasureKey);//For associating a token to treasurer
 
-  const contractRemoveTx = await signTx.execute(client);
-  const contractRemoveRx = await contractRemoveTx.getReceipt(client);
-  const response = await contractRemoveTx.getRecord(client);
+  const executeTx = await signTx.execute(client);
+  const contractRemoveRx = await executeTx.getReceipt(client);
+  const response = await executeTx.getRecord(client);
   const status = contractRemoveRx.status;
   console.log(`Remove LP Token ${status} code: ${response.contractFunctionResult!.getInt64()}`);
 }
@@ -100,19 +100,19 @@ const getAllLPTokenCount = async(contId: string) => {
 
   const contractFunctionParameters = new ContractFunctionParameters();
     
-  const contractRemoveTx0 = await new ContractExecuteTransaction()
+  const getAllLPTokenCountTx = await new ContractExecuteTransaction()
       .setContractId(contId)
       .setFunction("getAllLPTokenCount", contractFunctionParameters)
       .setGas(2000000)
       .freezeWith(client)
       .sign(key);
 
-  const signTx = await contractRemoveTx0.sign(treasureKey);//For associating a token to treasurer
+  const signTx = await getAllLPTokenCountTx.sign(treasureKey);//For associating a token to treasurer
 
-  const contractRemoveTx = await signTx.execute(client);
-  const contractRemoveRx = await contractRemoveTx.getReceipt(client);
-  const response = await contractRemoveTx.getRecord(client);
-  const status = contractRemoveRx.status;
+  const executedTx = await signTx.execute(client);
+  const executedRx = await executedTx.getReceipt(client);
+  const response = await executedTx.getRecord(client);
+  const status = executedRx.status;
   console.log(`getAllLPTokenCount code: ${response.contractFunctionResult!.getInt256()}`);
 }
 
@@ -123,29 +123,29 @@ const lpTokenForUser = async(contId: string) => {
   const contractFunctionParameters = new ContractFunctionParameters()
     .addAddress(treasureId.toSolidityAddress());
     
-  const contractRemoveTx0 = await new ContractExecuteTransaction()
+  const lpTokenForUserTx = await new ContractExecuteTransaction()
       .setContractId(contId)
       .setFunction("lpTokenForUser", contractFunctionParameters)
       .setGas(2000000)
       .freezeWith(client)
       .sign(key);
 
-  const contractRemoveTx = await contractRemoveTx0.execute(client);
-  const contractRemoveRx = await contractRemoveTx.getReceipt(client);
-  const response = await contractRemoveTx.getRecord(client);
-  const status = contractRemoveRx.status;
+  const executedTx = await lpTokenForUserTx.execute(client);
+  const executedRx = await executedTx.getReceipt(client);
+  const response = await executedTx.getRecord(client);
+  const status = executedRx.status;
   console.log(`lpTokenForUser code: ${response.contractFunctionResult!.getInt256()}`);
 }
 
 const getLpTokenAddress = async (contId: string) => {
-  const getPrecisionValueTx = await new ContractExecuteTransaction()
+  const getLpTokenAddressTx = await new ContractExecuteTransaction()
     .setContractId(contId)
     .setGas(1000000)
     .setFunction("getLpTokenAddress",
       new ContractFunctionParameters())
     .freezeWith(client);
-  const getPrecisionValueTxRes = await getPrecisionValueTx.execute(client);
-  const response = await getPrecisionValueTxRes.getRecord(client);
+  const executedTx = await getLpTokenAddressTx.execute(client);
+  const response = await executedTx.getRecord(client);
   const address = response.contractFunctionResult!.getAddress(0);
 
   console.log(`Lp token address ${address}`);

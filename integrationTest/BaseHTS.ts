@@ -102,9 +102,9 @@ async function mintTokenPublic(
     .setGas(3000000)
     .setFunction("mintTokenPublic", args);
   const txnResponse = await txn.execute(client);
-  const createTokenRx = await txnResponse.getRecord(client);
-  const responseCode = createTokenRx.contractFunctionResult!.getInt256(0).c![0];
-  const totalSupply = createTokenRx.contractFunctionResult!.getInt256(1).c![0];
+  const record = await txnResponse.getRecord(client);
+  const responseCode = record.contractFunctionResult!.getInt256(0).c![0];
+  const totalSupply = record.contractFunctionResult!.getInt256(1).c![0];
   console.log(
     `- Token (${amount}) minted: ${JSON.stringify({
       responseCode,
@@ -188,13 +188,13 @@ async function transferTokenPublic(
   contractId: string,
   tokenAddress: string,
   senderAddress: string,
-  receicerAddress: string,
+  receiverAddress: string,
   amount: number
 ) {
   const args = new ContractFunctionParameters()
     .addAddress(tokenAddress)
     .addAddress(senderAddress)
-    .addAddress(receicerAddress)
+    .addAddress(receiverAddress)
     .addInt256(new BigNumber(amount));
   const txn = new ContractExecuteTransaction()
     .setContractId(contractId)

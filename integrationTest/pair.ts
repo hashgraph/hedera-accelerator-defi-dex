@@ -63,7 +63,7 @@ const initializeLPTokenContract = async (lpTokenContractId: string) => {
   let contractFunctionParameters = new ContractFunctionParameters()
     .addAddress(htsServiceAddress);
 
-  const contractTokenTx = await new ContractExecuteTransaction()
+  const initializeContractTx = await new ContractExecuteTransaction()
     .setContractId(lpTokenContractId)
     .setFunction("initialize", contractFunctionParameters)
     .setGas(500000)
@@ -71,7 +71,7 @@ const initializeLPTokenContract = async (lpTokenContractId: string) => {
     .setPayableAmount(new Hbar(60))
     .execute(client);
     
-  await contractTokenTx.getReceipt(client);
+  await initializeContractTx.getReceipt(client);
 
   console.log(`Initialize LP contract with token done.`);
 }
@@ -128,9 +128,9 @@ const addLiquidity = async (contId: string) => {
     .freezeWith(client)
     .sign(treasureKey);
   const addLiquidityTxRes = await addLiquidityTx.execute(client);
-  const transferTokenRx = await addLiquidityTxRes.getReceipt(client);
+  const addLiquidityRx = await addLiquidityTxRes.getReceipt(client);
 
-  console.log(` Liquidity added status: ${transferTokenRx.status}`);
+  console.log(` Liquidity added status: ${addLiquidityRx.status}`);
   const result = await pairCurrentPosition(contId);
 };
 
@@ -151,9 +151,9 @@ const removeLiquidity = async (contId: string) => {
     .freezeWith(client)
     .sign(treasureKey);
   const removeLiquidityTx = await removeLiquidity.execute(client);
-  const transferTokenRx = await removeLiquidityTx.getReceipt(client);
+  const removeLiquidityRx = await removeLiquidityTx.getReceipt(client);
 
-  console.log(` Liquidity remove status: ${transferTokenRx.status}`);
+  console.log(` Liquidity remove status: ${removeLiquidityRx.status}`);
   await pairCurrentPosition(contId);
 };
 
@@ -173,9 +173,9 @@ const swapTokenA = async (contId: string) => {
     .freezeWith(client)
     .sign(treasureKey);
   const swapTokenTx = await swapToken.execute(client);
-  const transferTokenRx = await swapTokenTx.getReceipt(client);
+  const swapTokenRx = await swapTokenTx.getReceipt(client);
 
-  console.log(` Swap status: ${transferTokenRx.status}`);
+  console.log(` Swap status: ${swapTokenRx.status}`);
   await pairCurrentPosition(contId);
 };
 
@@ -217,8 +217,8 @@ const spotPrice = async (contId: string) => {
     .setGas(1000000)
     .setFunction("getSpotPrice")
     .freezeWith(client);
-  const getPairQtyTx = await getSpotPrice.execute(client);
-  const response = await getPairQtyTx.getRecord(client);
+  const spotPriceTx = await getSpotPrice.execute(client);
+  const response = await spotPriceTx.getRecord(client);
   const price = response.contractFunctionResult!.getInt256(0);
 
   console.log(` Spot price for token A is ${price}. \n`);
@@ -230,8 +230,8 @@ const getVariantValue = async (contId: string) => {
     .setGas(1000000)
     .setFunction("getVariantValue")
     .freezeWith(client);
-  const getPairQtyTx = await getVariantValue.execute(client);
-  const response = await getPairQtyTx.getRecord(client);
+  const variantValueTx = await getVariantValue.execute(client);
+  const response = await variantValueTx.getRecord(client);
   const price = response.contractFunctionResult!.getInt256(0);
 
   console.log(` k variant value is ${price}. \n`);
@@ -246,8 +246,8 @@ const getOutGivenIn =async (contId: string) => {
       new ContractFunctionParameters()
           .addInt256(tokenAQty))
     .freezeWith(client);
-  const getPairQtyTx = await getOutGivenIn.execute(client);
-  const response = await getPairQtyTx.getRecord(client);
+  const getOutGivenInTx = await getOutGivenIn.execute(client);
+  const response = await getOutGivenInTx.getRecord(client);
   const tokenBQty = response.contractFunctionResult!.getInt256(0);
 
   console.log(` For tokenAQty ${tokenAQty} the getOutGivenIn tokenBQty is ${tokenBQty}. \n`);
@@ -262,8 +262,8 @@ const getInGivenOut =async (contId: string) => {
       new ContractFunctionParameters()
             .addInt256(tokenBQty))
     .freezeWith(client);
-  const getPairQtyTx = await getInGivenOut.execute(client);
-  const response = await getPairQtyTx.getRecord(client);
+  const getInGivenOutTx = await getInGivenOut.execute(client);
+  const response = await getInGivenOutTx.getRecord(client);
   const tokenAQty = response.contractFunctionResult!.getInt256(0);
 
   console.log(` For tokenBQty ${tokenBQty} the getInGivenOut tokenAQty is ${tokenAQty}. \n`);
@@ -318,14 +318,14 @@ const getPrecisionValue = async (contId: string) => {
 };
 
 const getLpTokenAddress = async (lpTokenProxyId: string) => {
-  const getPrecisionValueTx = await new ContractExecuteTransaction()
+  const getLpTokenAddressTx = await new ContractExecuteTransaction()
     .setContractId(lpTokenProxyId)
     .setGas(1000000)
     .setFunction("getLpTokenAddress",
       new ContractFunctionParameters())
     .freezeWith(client);
-  const getPrecisionValueTxRes = await getPrecisionValueTx.execute(client);
-  const response = await getPrecisionValueTxRes.getRecord(client);
+  const getLpTokenAddressTxRes = await getLpTokenAddressTx.execute(client);
+  const response = await getLpTokenAddressTxRes.getRecord(client);
   const address = response.contractFunctionResult!.getAddress(0);
 
   console.log(` Lp token address ${address}`);
