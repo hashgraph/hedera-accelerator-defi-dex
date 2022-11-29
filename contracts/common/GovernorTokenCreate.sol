@@ -41,9 +41,6 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
     }
 
     function proposePublic (
-        address[] memory targets,
-        uint256[] memory values,
-        bytes[] memory calldatas,
         string memory description,
         address _treasurer,
         bytes memory _treasurerKeyBytes,
@@ -52,6 +49,7 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
         string memory _tokenName,
         string memory _tokenSymbol
     ) public returns (uint256) { 
+        (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = functionsInfo();
         uint256 proposalId = propose(targets, values, calldatas, description);
         TokenCreateData memory tokenCreateData = TokenCreateData( _treasurer, _treasurerKeyBytes, _admin,
                                                         _adminKeyBytes,
@@ -60,6 +58,26 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
                                                         );
         _proposalData[proposalId] = tokenCreateData;
         return proposalId;
+    }
+
+    function cancelProposal(
+        string memory description
+    ) public returns (uint256 proposalId) {
+        (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = functionsInfo();
+        bytes32 descriptionHash = keccak256(bytes(description));
+        proposalId = hashProposal(targets, values, calldatas, descriptionHash);
+        require(proposalCreators[proposalId] != address(0), "Proposal not found");
+        require(msg.sender == proposalCreators[proposalId], "Only proposer can cancel the proposal");
+        proposalId = super._cancel(targets, values, calldatas, descriptionHash);
+        returnGODToken(proposalId);
+    }
+
+    function executePublic(
+        string memory description
+    ) public payable virtual returns (uint256) {
+        (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = functionsInfo();
+        bytes32 descriptionHash = keccak256(bytes(description));
+        return execute(targets, values, calldatas, descriptionHash);
     }
     
     function quorum(uint256)
