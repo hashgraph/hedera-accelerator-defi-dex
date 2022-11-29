@@ -42,7 +42,14 @@ abstract contract GovernorCountingSimpleInternal is
     }
 
     mapping(address => VotingWeight) votingWeights;
+
+    /**
+     * Using below array for delegation tracking and checking if already delegated.
+     * Its not efficient but saving another state variable. Also, not expecting delegaters 
+     * would be too many.
+     */
     address[] delegaters;
+    address[] voters;
 
     mapping(address => Delegation) delegation;
 
@@ -56,8 +63,27 @@ abstract contract GovernorCountingSimpleInternal is
         address delegator;
     }
 
+    function getDelegatorIndex(address delegator)
+        private
+        view
+        returns (int256)
+    {
+        for (uint256 i = 0; i < delegaters.length; i++) {
+            if (delegaters[i] == delegator) {
+                return int256(i);
+            }
+        }
+        return -1;
+    }
+
     function delegateTo(address delegatee) external {
         address delegator = _msgSender();
+        require(
+            delegation[delegator].delegatee == address(0x0),
+            "Delegatee cannot delegate further."
+        );
+        int256 index = getDelegatorIndex(delegator);
+        require(index == -1, "Delegator already delegated.");
         delegation[delegatee] = Delegation(delegatee, delegator);
         delegaters.push(delegator);
     }
@@ -180,6 +206,14 @@ abstract contract GovernorCountingSimpleInternal is
         string memory description
     ) public payable virtual returns (uint256) {
         bytes32 descriptionHash = keccak256(bytes(description));
+        uint256 proposalId = hashProposal(
+            targets,
+            values,
+            calldatas,
+            descriptionHash
+        );
+        adjustIfVoterTokenBalanceChanged(proposalId, voters);
+        adjustIfVoterTokenBalanceChanged(proposalId, delegaters);
         return execute(targets, values, calldatas, descriptionHash);
     }
 
@@ -220,18 +254,55 @@ abstract contract GovernorCountingSimpleInternal is
         returns (uint256)
     {
         address voter = _msgSender();
+        int256 index = getDelegatorIndex(voter);
+
+        require(index == -1, "Delegator already delegated.");
+
+        require(index == -1 && _getVotes(voter, 0, "") > 0, "No voting power");
 
         uint256 weight = _castVote(proposalId, voter, support, "");
 
-        adjustVotingWeightIfAlreadyVoted(proposalId);
+        removeExistingVotingWeight(proposalId);
+
+        adjustIfVoterTokenBalanceChanged(proposalId, voters);
 
         VotingWeight memory userWeight = VotingWeight(weight, support);
         votingWeights[voter] = userWeight;
 
+        voters.push(voter);
+
+        if (index >= 0) {
+            votingWeights[delegaters[uint256(index)]].support = 0;
+            votingWeights[delegaters[uint256(index)]].weight = 0;
+        }
+
         return weight;
     }
 
-    function adjustVotingWeightIfAlreadyVoted(uint256 proposalId) private {
+    function adjustIfVoterTokenBalanceChanged(
+        uint256 proposalId,
+        address[] memory localVoters
+    ) private {
+        for (uint256 i = 0; i < localVoters.length; i++) {
+            address voter = localVoters[i];
+            VotingWeight memory existingVotedWeight = votingWeights[voter];
+            int256 adjustedWeight = getTokenBalanceChanged(
+                voter,
+                existingVotedWeight.weight
+            );
+            if (hasVoted(proposalId, voter)) {
+                adjustVote(
+                    proposalId,
+                    voter,
+                    existingVotedWeight.support,
+                    adjustedWeight,
+                    ""
+                );
+            }
+        }
+    }
+
+    function removeExistingVotingWeight(uint256 proposalId) private {
         for (uint256 i = 0; i < delegaters.length; i++) {
             address delegator = delegaters[i];
             VotingWeight memory existingVotedWeight = votingWeights[delegator];
@@ -240,11 +311,20 @@ abstract contract GovernorCountingSimpleInternal is
                     proposalId,
                     delegator,
                     existingVotedWeight.support,
-                    existingVotedWeight.weight,
+                    -1 * int256(existingVotedWeight.weight),
                     ""
                 );
             }
         }
+    }
+
+    function getTokenBalanceChanged(address voter, uint256 existingWeight)
+        private
+        view
+        returns (int256)
+    {
+        uint256 currentWeight = _getVotes(voter, 0, "");
+        return int256(currentWeight) - int256(existingWeight);
     }
 }
 

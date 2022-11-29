@@ -138,15 +138,7 @@ abstract contract GovernorCountingSimpleUpgradeable is
         );
         proposalVote.hasVoted[account] = true;
 
-        if (support == uint8(VoteType.Against)) {
-            proposalVote.againstVotes += weight;
-        } else if (support == uint8(VoteType.For)) {
-            proposalVote.forVotes += weight;
-        } else if (support == uint8(VoteType.Abstain)) {
-            proposalVote.abstainVotes += weight;
-        } else {
-            revert("GovernorVotingSimple: invalid value for enum VoteType");
-        }
+        updateVotesWeight(proposalVote, support, int256(weight));
     }
 
     /**
@@ -156,7 +148,7 @@ abstract contract GovernorCountingSimpleUpgradeable is
         uint256 proposalId,
         address account,
         uint8 support,
-        uint256 weight,
+        int256 weight,
         bytes memory // params
     ) internal virtual {
         ProposalVote storage proposalVote = _proposalVotes[proposalId];
@@ -166,15 +158,49 @@ abstract contract GovernorCountingSimpleUpgradeable is
             "GovernorVotingSimple: vote did not cast"
         );
 
+        updateVotesWeight(proposalVote, support, weight);
+    }
+
+    function updateVotesWeight(
+        ProposalVote storage proposalVote,
+        uint8 support,
+        int256 weight
+    ) private {
         if (support == uint8(VoteType.Against)) {
-            proposalVote.againstVotes -= weight;
+            proposalVote.againstVotes = calculateAdjustedWeight(
+                weight,
+                proposalVote.againstVotes
+            );
         } else if (support == uint8(VoteType.For)) {
-            proposalVote.forVotes -= weight;
+            proposalVote.forVotes = calculateAdjustedWeight(
+                weight,
+                proposalVote.forVotes
+            );
         } else if (support == uint8(VoteType.Abstain)) {
-            proposalVote.abstainVotes -= weight;
+            proposalVote.abstainVotes = calculateAdjustedWeight(
+                weight,
+                proposalVote.abstainVotes
+            );
         } else {
             revert("GovernorVotingSimple: invalid value for enum VoteType");
         }
+    }
+
+    function calculateAdjustedWeight(int256 newWeight, uint256 existingWeight)
+        private
+        pure
+        returns (uint256)
+    {
+        uint256 finalWeight;
+        if (newWeight < 0) {
+            uint256 absoluteWeight = uint256(-1 * newWeight);
+            finalWeight = (existingWeight > absoluteWeight)
+                ? (existingWeight - absoluteWeight)
+                : 0;
+        } else {
+            finalWeight = existingWeight + uint256(newWeight);
+        }
+        return finalWeight;
     }
 
     /**
