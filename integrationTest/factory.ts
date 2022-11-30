@@ -6,7 +6,8 @@ import {
   AccountBalanceQuery,
   Hbar,
   AccountCreateTransaction,
-  Client, PrivateKey
+  Client,
+  PrivateKey,
 } from "@hashgraph/sdk";
 
 import ClientManagement from "./utils/utils";
@@ -18,18 +19,22 @@ import * as fs from "fs";
 const clientManagement = new ClientManagement();
 const arrayUtils = new ArrayUtils();
 const client = clientManagement.createOperatorClient();
-const {treasureId, treasureKey} = clientManagement.getTreasure();
+const { treasureId, treasureKey } = clientManagement.getTreasure();
 const contractService = new ContractService();
 
-const tokenA = TokenId.fromString("0.0.48289687")
+const tokenA = TokenId.fromString("0.0.48289687");
 const tokenB = TokenId.fromString("0.0.48289686");
-const tokenC = TokenId.fromString("0.0.48301281")
+const tokenC = TokenId.fromString("0.0.48301281");
 const tokenD = TokenId.fromString("0.0.48301282");
-const tokenE = TokenId.fromString("0.0.48301300")
+const tokenE = TokenId.fromString("0.0.48301300");
 const tokenF = TokenId.fromString("0.0.48301322");
 
-const baseContract = contractService.getContract(contractService.baseContractName);
-const contractId = contractService.getContractWithProxy(contractService.factoryContractName).transparentProxyId!; 
+const baseContract = contractService.getContract(
+  contractService.baseContractName
+);
+const contractId = contractService.getContractWithProxy(
+  contractService.factoryContractName
+).transparentProxyId!;
 
 let precision = 10000000;
 
@@ -39,14 +44,13 @@ const readFileContent = (filePath: string) => {
 };
 const withPrecision = (value: number): BigNumber => {
   return new BigNumber(value).multipliedBy(precision);
-}
+};
 
 const getPrecisionValue = async (contractId: string) => {
   const getPrecisionValueTx = await new ContractExecuteTransaction()
     .setContractId(contractId)
     .setGas(1000000)
-    .setFunction("getPrecisionValue",
-      new ContractFunctionParameters())
+    .setFunction("getPrecisionValue", new ContractFunctionParameters())
     .freezeWith(client);
   const getPrecisionValueTxRes = await getPrecisionValueTx.execute(client);
   const response = await getPrecisionValueTxRes.getRecord(client);
@@ -58,25 +62,29 @@ const getPrecisionValue = async (contractId: string) => {
 };
 
 const setupFactory = async () => {
-    console.log(`\nSetupFactory`);
-    let contractFunctionParameters = new ContractFunctionParameters()
-                                          .addAddress(baseContract.address)
-    const contractTx = await new ContractExecuteTransaction()
-      .setContractId(contractId)
-      .setFunction("setUpFactory", contractFunctionParameters)
-      .setGas(9000000)
-      .execute(client);
-    const receipt = await contractTx.getReceipt(client);
-    const response = await contractTx.getRecord(client);
-    const status = receipt.status;
-    console.log(`\nSetupFactory Result ${status} code: ${response.contractFunctionResult!.getAddress()}`);
+  console.log(`\nSetupFactory`);
+  let contractFunctionParameters = new ContractFunctionParameters().addAddress(
+    baseContract.address
+  );
+  const contractTx = await new ContractExecuteTransaction()
+    .setContractId(contractId)
+    .setFunction("setUpFactory", contractFunctionParameters)
+    .setGas(9000000)
+    .execute(client);
+  const receipt = await contractTx.getReceipt(client);
+  const response = await contractTx.getRecord(client);
+  const status = receipt.status;
+  console.log(
+    `\nSetupFactory Result ${status} code: ${response.contractFunctionResult!.getAddress()}`
+  );
 };
 
-const createPair = async (contractId: string, token0: TokenId, token1: TokenId) => {
-  
-  console.log(
-    `createPair TokenA TokenB`
-  );
+const createPair = async (
+  contractId: string,
+  token0: TokenId,
+  token1: TokenId
+) => {
+  console.log(`createPair TokenA TokenB`);
   const createPairTx = await new ContractExecuteTransaction()
     .setContractId(contractId)
     .setGas(9000000)
@@ -102,53 +110,58 @@ const createPair = async (contractId: string, token0: TokenId, token1: TokenId) 
   return contractAddress;
 };
 
-const getPair = async (contractId: string, token0: TokenId, token1: TokenId) => {
-  console.log(
-    `get Pair`
-  );
+const getPair = async (
+  contractId: string,
+  token0: TokenId,
+  token1: TokenId
+) => {
+  console.log(`get Pair`);
   const getPairTx = await new ContractExecuteTransaction()
     .setContractId(contractId)
     .setGas(9999999)
     .setFunction(
       "getPair",
       new ContractFunctionParameters()
-      .addAddress(token0.toSolidityAddress())
-      .addAddress(token1.toSolidityAddress())
+        .addAddress(token0.toSolidityAddress())
+        .addAddress(token1.toSolidityAddress())
     )
-    .freezeWith(client)
+    .freezeWith(client);
   const executedTx = await getPairTx.execute(client);
   const response = await executedTx.getRecord(client);
-   console.log(`getPair: ${response.contractFunctionResult!.getAddress(0)}`);
+  console.log(`getPair: ${response.contractFunctionResult!.getAddress(0)}`);
   const receiptRx = await executedTx.getReceipt(client);
   console.log(`getPair: ${receiptRx.status}`);
   return `0x${response.contractFunctionResult!.getAddress(0)}`;
 };
 
 const getAllPairs = async (contractId: string) => {
-  console.log(
-    `getAllPairs`
-  );
+  console.log(`getAllPairs`);
   const getAllPairsTx = await new ContractExecuteTransaction()
     .setContractId(contractId)
     .setGas(9999999)
-    .setFunction(
-      "getPairs"
-    )
-    .freezeWith(client)
+    .setFunction("getPairs")
+    .freezeWith(client);
 
   const executedTx = await getAllPairsTx.execute(client);
   const response = await executedTx.getRecord(client);
-  
-  console.log(`getPairs Count: ${response.contractFunctionResult!.getUint256(1)}`);
-  const modifiedArray = arrayUtils.getAddressArray(response.contractFunctionResult!);
+
+  console.log(
+    `getPairs Count: ${response.contractFunctionResult!.getUint256(1)}`
+  );
+  const modifiedArray = arrayUtils.getAddressArray(
+    response.contractFunctionResult!
+  );
   console.log(`get all pair Address: ${modifiedArray}`);
-  
+
   const receipt = await executedTx.getReceipt(client);
   console.log(`getPairs: ${receipt.status}`);
 };
 
-
-const addLiquidity = async (contId: string, token0: TokenId, token1: TokenId) => {
+const addLiquidity = async (
+  contId: string,
+  token0: TokenId,
+  token1: TokenId
+) => {
   const tokenAQty = withPrecision(210);
   const tokenBQty = withPrecision(230);
   console.log(
@@ -176,9 +189,7 @@ const addLiquidity = async (contId: string, token0: TokenId, token1: TokenId) =>
 
 const removeLiquidity = async (contId: string) => {
   const lpToken = withPrecision(5);
-  console.log(
-    `Removing ${lpToken} units of LPToken from the pool.`
-  );
+  console.log(`Removing ${lpToken} units of LPToken from the pool.`);
   const removeLiquidity = await new ContractExecuteTransaction()
     .setContractId(contId)
     .setGas(9000000)
@@ -233,36 +244,45 @@ const getTokenPairAddress = async (contId: string) => {
 
 const getTreasureBalance = async (tokens: Array<TokenId>) => {
   const treasureBalanceTx = await new AccountBalanceQuery()
-      .setAccountId(treasureId)
-      .execute(client);
+    .setAccountId(treasureId)
+    .execute(client);
   const responseTokens = treasureBalanceTx.tokens ?? new Map<TokenId, Long>();
-  tokens.forEach(token =>   console.log(` Treasure Token Balance for ${token.toString()}: ${responseTokens.get(token)}`));
-}
+  tokens.forEach((token) =>
+    console.log(
+      ` Treasure Token Balance for ${token.toString()}: ${responseTokens.get(
+        token
+      )}`
+    )
+  );
+};
 
 async function main() {
-    // await setupFactory();
-    await testForSinglePair(contractId, tokenC, tokenB);
-    await testForSinglePair(contractId, tokenC, tokenD);
+  await setupFactory();
+  await testForSinglePair(contractId, tokenC, tokenB);
+  await testForSinglePair(contractId, tokenC, tokenD);
 }
 
-async function testForSinglePair(contractId: string, token0: TokenId, token1: TokenId) {
-    await createPair(contractId, token0, token1);
-    await getAllPairs(contractId);
-    const pairAddress =  await getPair(contractId, token0, token1);
-    
-    const response = await httpRequest(pairAddress, undefined);
-    const pairContractId = response.contract_id;
-    console.log(`contractId: ${pairContractId}`)
-    await getTreasureBalance([token0, token1]);
-    await getTokenPairAddress(pairContractId);
-    await addLiquidity(pairContractId ,token0, token1);
-    await getTreasureBalance([token0, token1]);
-    await removeLiquidity(pairContractId);
-    await swapToken(pairContractId, token0);
-    await getTreasureBalance([token0, token1]);
-    await swapToken(pairContractId, token1);
-    await getTreasureBalance([token0, token1]);
-    
+async function testForSinglePair(
+  contractId: string,
+  token0: TokenId,
+  token1: TokenId
+) {
+  await createPair(contractId, token0, token1);
+  await getAllPairs(contractId);
+  const pairAddress = await getPair(contractId, token0, token1);
+
+  const response = await httpRequest(pairAddress, undefined);
+  const pairContractId = response.contract_id;
+  console.log(`contractId: ${pairContractId}`);
+  await getTreasureBalance([token0, token1]);
+  await getTokenPairAddress(pairContractId);
+  await addLiquidity(pairContractId, token0, token1);
+  await getTreasureBalance([token0, token1]);
+  await removeLiquidity(pairContractId);
+  await swapToken(pairContractId, token0);
+  await getTreasureBalance([token0, token1]);
+  await swapToken(pairContractId, token1);
+  await getTreasureBalance([token0, token1]);
 }
 
 main()
