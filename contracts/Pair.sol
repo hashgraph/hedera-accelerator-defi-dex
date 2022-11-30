@@ -50,6 +50,8 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
         int256 _tokenAQty,
         int256 _tokenBQty
     ) external virtual override {
+        tokenService.associateTokenPublic(address(this), _tokenA);
+        tokenService.associateTokenPublic(address(this), _tokenB);
         transferTokensInternally(
             fromAccount,
             address(this),
@@ -58,8 +60,7 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
             _tokenAQty,
             _tokenBQty,
             "Add liquidity: Transfering token A to contract failed with status code",
-            "Add liquidity: Transfering token B to contract failed with status code",
-            true
+            "Add liquidity: Transfering token B to contract failed with status code"
         );
         pair.tokenA.tokenQty += _tokenAQty;
         pair.tokenB.tokenQty += _tokenBQty;
@@ -87,8 +88,7 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
             _tokenAQty,
             _tokenBQty,
             "Remove liquidity: Transferring token A to contract failed with status code",
-            "Remove liquidity: Transferring token B to contract failed with status code",
-            false
+            "Remove liquidity: Transferring token B to contract failed with status code"
         );
         pair.tokenA.tokenQty -= _tokenAQty;
         pair.tokenB.tokenQty -= _tokenBQty;
@@ -147,18 +147,17 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
             address(this),
             pair.tokenA.tokenAddress,
             _deltaAQty,
-            "swapTokenA: Transferring token A to contract failed with status code",
-            false
+            "swapTokenA: Transferring token A to contract failed with status code"
         );
 
         pair.tokenB.tokenQty -= deltaBQty;
+        tokenService.associateTokenPublic(to, pair.tokenB.tokenAddress);
         transferTokenInternally(
             address(this),
             to,
             pair.tokenB.tokenAddress,
             deltaBQty,
-            "swapTokenA: Transferring token B to user failed with status code",
-            true
+            "swapTokenA: Transferring token B to user failed with status code"
         );
         // fee transfer
         transferTokensInternally(
@@ -169,8 +168,7 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
             feeTokenA / 2,
             feeTokenB / 2,
             "swapFeeTokenA: Transferring fee as token A to treasuary failed with status code",
-            "swapFeeTokenB: Transferring fee as token B to treasuary failed with status code",
-            false
+            "swapFeeTokenB: Transferring fee as token B to treasuary failed with status code"
         );
     }
 
@@ -194,31 +192,17 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
             address(this),
             pair.tokenB.tokenAddress,
             _deltaBQty,
-            "swapTokenB: Transferring token B to contract failed with status code",
-            false
+            "swapTokenB: Transferring token B to contract failed with status code"
         );
 
         pair.tokenA.tokenQty -= deltaAQty;
+        tokenService.associateTokenPublic(to, pair.tokenA.tokenAddress);
         transferTokenInternally(
             address(this),
             to,
             pair.tokenA.tokenAddress,
             deltaAQty,
-            "swapTokenB: Transferring token A to user failed with status code",
-            true
-        );
-
-        // fee transfer
-        transferTokensInternally(
-            address(this),
-            treasury,
-            pair.tokenA.tokenAddress,
-            pair.tokenB.tokenAddress,
-            feeTokenA / 2,
-            feeTokenB / 2,
-            "swapTokenB: Transferring token B to contract failed with status code",
-            "swapTokenB: Transferring token A to contract failed with status code",
-            false
+            "swapTokenB: Transferring token A to user failed with status code"
         );
 
         // fee transfer
@@ -230,8 +214,7 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
             feeTokenA / 2,
             feeTokenB / 2,
             "swapFeeTokenA: Transferring fee as token A to treasuary failed with status code",
-            "swapFeeTokenB: Transferring fee as token B to treasuary failed with status code",
-            false
+            "swapFeeTokenB: Transferring fee as token B to treasuary failed with status code"
         );
     }
 
@@ -352,24 +335,21 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
         int256 tokenAQty,
         int256 tokenBQty,
         string memory errorMessageA,
-        string memory errorMessageB,
-        bool associationRequired
+        string memory errorMessageB
     ) private {
         transferTokenInternally(
             sender,
             reciever,
             tokenA,
             tokenAQty,
-            errorMessageA,
-            associationRequired
+            errorMessageA
         );
         transferTokenInternally(
             sender,
             reciever,
             tokenB,
             tokenBQty,
-            errorMessageB,
-            associationRequired
+            errorMessageB
         );
     }
 
@@ -378,12 +358,8 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
         address reciever,
         address token,
         int256 tokenQty,
-        string memory errorMessage,
-        bool associationRequired
+        string memory errorMessage
     ) private {
-        if (associationRequired) {
-            tokenService.associateTokenPublic(reciever, token);
-        }
         int256 response = tokenService.transferTokenPublic(
             token,
             sender,
