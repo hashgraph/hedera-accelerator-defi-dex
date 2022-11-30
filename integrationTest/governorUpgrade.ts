@@ -29,19 +29,16 @@ const htsServiceAddress = contractService.getContract(
 ).address;
 
 let contractId: string | ContractId = contractService.getContractWithProxy(
-    contractService.governorUpgradeContract
-  ).transparentProxyId!;
+  contractService.governorUpgradeContract
+).transparentProxyId!;
 
-const upgradeContractId = ContractId.fromString( 
-    contractService.getContract(
-        contractService.factoryContractName
-    ).id!
+const upgradeContractId = ContractId.fromString(
+  contractService.getContract(contractService.factoryContractName).id!
 );
 
 const transparentContractId = ContractId.fromString(
-    contractService.getContractWithProxy(
-        contractService.factoryContractName
-    ).transparentProxyId!
+  contractService.getContractWithProxy(contractService.factoryContractName)
+    .transparentProxyId!
 );
 
 const readFileContent = (filePath: string) => {
@@ -152,11 +149,9 @@ const fetchUpgradeContractAddresses = async (proposalId: BigNumber) => {
   const record = await contractTokenTx.getRecord(client);
   const proxy = record.contractFunctionResult!.getAddress(0);
   const contractToUgrade = record.contractFunctionResult!.getAddress(1);
-  
-  console.log(
-    `quorumReached tx status ${receipt.status}}`
-  );
-  return {proxy, contractToUgrade};
+
+  console.log(`quorumReached tx status ${receipt.status}}`);
+  return { proxy, contractToUgrade };
 };
 
 const associateTokenPublicCallData = async (
@@ -177,18 +172,17 @@ const associateTokenPublicCallData = async (
 
 const upgradeTo = async (newImplementation: string) => {
   const liquidityPool = await new ContractExecuteTransaction()
-      .setContractId(contractId)
-      .setGas(2000000)
-      .setFunction(
-        "upgradeTo",
-        new ContractFunctionParameters()
-          .addAddress(newImplementation)
-      )
-      .freezeWith(adminClient)
-      .sign(adminKey);
-    const liquidityPoolTx = await liquidityPool.execute(adminClient);
-    const transferTokenRx = await liquidityPoolTx.getReceipt(adminClient);
-    console.log(`upgradedTo: ${transferTokenRx.status}`);
+    .setContractId(contractId)
+    .setGas(2000000)
+    .setFunction(
+      "upgradeTo",
+      new ContractFunctionParameters().addAddress(newImplementation)
+    )
+    .freezeWith(adminClient)
+    .sign(adminKey);
+  const liquidityPoolTx = await liquidityPool.execute(adminClient);
+  const transferTokenRx = await liquidityPoolTx.getReceipt(adminClient);
+  console.log(`upgradedTo: ${transferTokenRx.status}`);
 };
 
 // TODO: It is only to check factory contract's method, remove if not required.
@@ -208,9 +202,12 @@ const upgradeTo = async (newImplementation: string) => {
 
 const setupFactory = async () => {
   console.log(`\nSetupFactory`);
-  const baseContract = contractService.getContract(contractService.baseContractName);
-  let contractFunctionParameters = new ContractFunctionParameters()
-                                        .addAddress(baseContract.address)
+  const baseContract = contractService.getContract(
+    contractService.baseContractName
+  );
+  let contractFunctionParameters = new ContractFunctionParameters().addAddress(
+    baseContract.address
+  );
   const contractSetPairsTx = await new ContractExecuteTransaction()
     .setContractId(contractId)
     .setFunction("setUpFactory", contractFunctionParameters)
@@ -219,9 +216,10 @@ const setupFactory = async () => {
   const contractSetPairRx = await contractSetPairsTx.getReceipt(client);
   const response = await contractSetPairsTx.getRecord(client);
   const status = contractSetPairRx.status;
-  console.log(`\nSetupFactory Result ${status} code: ${response.contractFunctionResult!.getAddress()}`);
+  console.log(
+    `\nSetupFactory Result ${status} code: ${response.contractFunctionResult!.getAddress()}`
+  );
 };
-
 
 async function main() {
   console.log(`\nUsing governor proxy contract id ${contractId}`);

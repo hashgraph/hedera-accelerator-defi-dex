@@ -3,144 +3,159 @@ import { DeployedContract } from "../model/contract";
 import { httpRequest } from "../api/HttpsService";
 
 export class ContractService {
-    public factoryContractName = "factory";
-    public pairContractName = "pair";
-    public baseContractName = "basehts";
-    public lpTokenContractName = "lptoken";
-    public governorContractName = "governortokencreate";
-    public governorTextContractName = "governortextproposal";
-    public governorTTContractName = "governortransfertoken";
-    public governorUpgradeContract = "governorupgrade";
-    
-    private contractRecordFile = "./deployment/state/contracts.json";
+  public factoryContractName = "factory";
+  public pairContractName = "pair";
+  public baseContractName = "basehts";
+  public lpTokenContractName = "lptoken";
+  public governorContractName = "governortokencreate";
+  public governorTextContractName = "governortextproposal";
+  public governorTTContractName = "governortransfertoken";
+  public governorUpgradeContract = "governorupgrade";
 
-    private readFileContent = () => {
-        const rawdata: any = fs.readFileSync(this.contractRecordFile);
-        return JSON.parse(rawdata);
+  private contractRecordFile = "./deployment/state/contracts.json";
+
+  private readFileContent = () => {
+    const rawdata: any = fs.readFileSync(this.contractRecordFile);
+    return JSON.parse(rawdata);
+  };
+
+  public getContractId = async (contractEvmAddress: string): Promise<any> => {
+    console.log(`Fetching contract id for evm address ${contractEvmAddress}`);
+    const contractId: any = await httpRequest(contractEvmAddress, undefined);
+    return contractId.contract_id;
+  };
+
+  public saveDeployedContract = async (
+    contractId: string,
+    contractAddress: string,
+    contractName: string
+  ) => {
+    const contractNameLowerCase = contractName.toLowerCase();
+
+    if (contractNameLowerCase === "transparentupgradeableproxy") {
+      return;
+    }
+
+    const contracts: [DeployedContract] = this.readFileContent();
+
+    console.log(`Contract id ${contractId}`);
+
+    const newContract: DeployedContract = {
+      name: contractNameLowerCase,
+      id: contractId,
+      address: "0x" + contractAddress,
+      timestamp: new Date().toISOString(),
     };
 
-    public getContractId = async (contractEvmAddress: string): Promise<any>  => {
-        console.log(`Fetching contract id for evm address ${contractEvmAddress}`);
-        const contractId: any = await httpRequest(contractEvmAddress, undefined);
-        return contractId.contract_id;
-    }
-   
-    public saveDeployedContract = async (contractId: string, contractAddress: string, contractName: string) => {
-        const contractNameLowerCase = contractName.toLowerCase();
+    const contractsWithNewContract = [...contracts, newContract];
 
-        if (contractNameLowerCase === "transparentupgradeableproxy") {
-            return;
-        }
+    const data = JSON.stringify(contractsWithNewContract, null, 4);
 
-        const contracts: [DeployedContract] = this.readFileContent();
+    console.log(`Contract details ${data}`);
 
-        console.log(`Contract id ${contractId}`);
+    fs.writeFileSync(this.contractRecordFile, data);
+  };
 
-        const newContract: DeployedContract = {
-            name: contractNameLowerCase,
-            id: contractId,
-            address: "0x" + contractAddress,
-            timestamp: new Date().toISOString()
-        }
+  public recordDeployedContract = async (
+    contractAddress: string,
+    contractName: string
+  ) => {
+    const contractNameLowerCase = contractName.toLowerCase();
 
-        const contractsWithNewContract = [
-            ...contracts,
-            newContract
-        ]
-
-        const data = JSON.stringify(contractsWithNewContract, null, 4);
-
-        console.log(`Contract details ${data}`);
-
-        fs.writeFileSync(this.contractRecordFile, data);
+    if (contractNameLowerCase === "transparentupgradeableproxy") {
+      return;
     }
 
-   
-    public recordDeployedContract = async (contractAddress: string, contractName: string) => {
-        const contractNameLowerCase = contractName.toLowerCase();
+    const contracts: [DeployedContract] = this.readFileContent();
 
-        if (contractNameLowerCase === "transparentupgradeableproxy") {
-            return;
-        }
+    const contractId = await this.getContractId(contractAddress);
+    console.log(`Contract id from api ${contractId}`);
 
-        const contracts: [DeployedContract] = this.readFileContent();
+    const newContract: DeployedContract = {
+      name: contractNameLowerCase,
+      id: contractId,
+      address: contractAddress,
+      timestamp: new Date().toISOString(),
+    };
 
-        const contractId = await this.getContractId(contractAddress);
-        console.log(`Contract id from api ${contractId}`);
+    const contractsWithNewContract = [...contracts, newContract];
 
-        const newContract: DeployedContract = {
-            name: contractNameLowerCase,
-            id: contractId,
-            address: contractAddress,
-            timestamp: new Date().toISOString()
-        }
+    const data = JSON.stringify(contractsWithNewContract, null, 4);
 
-        const contractsWithNewContract = [
-            ...contracts,
-            newContract
-        ]
+    console.log(`Contract details ${data}`);
 
-        const data = JSON.stringify(contractsWithNewContract, null, 4);
+    fs.writeFileSync(this.contractRecordFile, data);
+  };
 
-        console.log(`Contract details ${data}`);
+  public getAllContracts = (): Array<DeployedContract> =>
+    this.readFileContent();
 
-        fs.writeFileSync(this.contractRecordFile, data);
-    }
+  public updateContractRecord = (
+    updatedContract: DeployedContract,
+    contractBeingDeployed: DeployedContract
+  ) => {
+    const contracts: Array<DeployedContract> = this.getAllContracts();
+    const allOtherContracts = contracts.filter(
+      (contract: DeployedContract) =>
+        contract.address != contractBeingDeployed.address
+    );
 
-    public getAllContracts = (): Array<DeployedContract> => this.readFileContent();
+    const updatedContracts = [...allOtherContracts, updatedContract];
 
-    public updateContractRecord = (updatedContract: DeployedContract, contractBeingDeployed: DeployedContract) => {
+    const data = JSON.stringify(updatedContracts, null, 4);
 
-        const contracts: Array<DeployedContract> = this.getAllContracts();
-        const allOtherContracts = contracts.filter((contract: DeployedContract) => contract.address != contractBeingDeployed.address);
+    console.log(`Contract record updated ${data}`);
 
-        const updatedContracts = [
-            ...allOtherContracts,
-            updatedContract
-        ]
+    fs.writeFileSync(this.contractRecordFile, data);
+  };
 
-        const data = JSON.stringify(updatedContracts, null, 4);
+  public getContract = (contractName: string): DeployedContract => {
+    const contracts: Array<DeployedContract> = this.getAllContracts();
+    const matchingContracts = contracts.filter(
+      (contract: DeployedContract) => contract.name == contractName
+    );
+    const latestContract = matchingContracts[matchingContracts.length - 1];
+    return latestContract;
+  };
 
-        console.log(`Contract record updated ${data}`);
+  public getLast3Contracts = (
+    contractName: string
+  ): Array<DeployedContract> => {
+    const contracts: Array<DeployedContract> = this.getAllContracts();
+    const matchingContracts = contracts.filter(
+      (contract: DeployedContract) => contract.name == contractName
+    );
+    const latestContract3 = matchingContracts[matchingContracts.length - 1];
+    const latestContract2 = matchingContracts[matchingContracts.length - 2];
+    const latestContract1 = matchingContracts[matchingContracts.length - 3];
+    return [latestContract1, latestContract2, latestContract3];
+  };
 
-        fs.writeFileSync(this.contractRecordFile, data);
+  public getContractWithProxy = (contractName: string): DeployedContract => {
+    const contracts: Array<DeployedContract> = this.getAllContracts();
+    const matchingProxyContracts = contracts.filter(
+      (contract: DeployedContract) =>
+        contract.name == contractName &&
+        contract.transparentProxyAddress != null &&
+        contract.transparentProxyId != null
+    );
+    return matchingProxyContracts[matchingProxyContracts.length - 1];
+  };
 
-    }
-
-    public getContract = (contractName: string): DeployedContract => {
-        const contracts: Array<DeployedContract> = this.getAllContracts();
-        const matchingContracts = contracts.filter((contract: DeployedContract) => contract.name == contractName);
-        const latestContract = matchingContracts[matchingContracts.length - 1];
-        return latestContract;
-    }
-
-    public getLast3Contracts = (contractName: string): Array<DeployedContract> => {
-        const contracts: Array<DeployedContract> = this.getAllContracts();
-        const matchingContracts = contracts.filter((contract: DeployedContract) => contract.name == contractName);
-        const latestContract3 = matchingContracts[matchingContracts.length - 1];
-        const latestContract2 = matchingContracts[matchingContracts.length - 2];
-        const latestContract1 = matchingContracts[matchingContracts.length - 3];
-        return [latestContract1, latestContract2, latestContract3];
-    }
-
-    public getContractWithProxy = (contractName: string): DeployedContract => {
-        const contracts: Array<DeployedContract> = this.getAllContracts();
-        const matchingProxyContracts = contracts.filter((contract: DeployedContract) => contract.name == contractName 
-            && (contract.transparentProxyAddress != null 
-            && contract.transparentProxyId != null));
-        return matchingProxyContracts[matchingProxyContracts.length - 1];
-    }
-
-    public getLast3ContractsWithProxy = (contractName: string): Array<DeployedContract> => {
-        const contracts: Array<DeployedContract> = this.getAllContracts();
-        const matchingProxyContracts = contracts.filter((contract: DeployedContract) => contract.name == contractName 
-            && (contract.transparentProxyAddress != null 
-            && contract.transparentProxyId != null));
-        return [
-            matchingProxyContracts[matchingProxyContracts.length - 1],
-            matchingProxyContracts[matchingProxyContracts.length - 2],
-            matchingProxyContracts[matchingProxyContracts.length - 3]
-        ];
-    }
-
+  public getLast3ContractsWithProxy = (
+    contractName: string
+  ): Array<DeployedContract> => {
+    const contracts: Array<DeployedContract> = this.getAllContracts();
+    const matchingProxyContracts = contracts.filter(
+      (contract: DeployedContract) =>
+        contract.name == contractName &&
+        contract.transparentProxyAddress != null &&
+        contract.transparentProxyId != null
+    );
+    return [
+      matchingProxyContracts[matchingProxyContracts.length - 1],
+      matchingProxyContracts[matchingProxyContracts.length - 2],
+      matchingProxyContracts[matchingProxyContracts.length - 3],
+    ];
+  };
 }

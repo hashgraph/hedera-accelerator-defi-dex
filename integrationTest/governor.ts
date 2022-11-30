@@ -66,13 +66,12 @@ const initialize = async (tokenId: TokenId) => {
   console.log(`Initialize contract with token done with status - ${receipt}`);
 };
 
-const execute = async (
-  description: string
-) => {
+const execute = async (description: string) => {
   console.log(`\nExecuting  proposal - `);
 
-  const contractFunctionParameters = new ContractFunctionParameters()
-    .addString(description);
+  const contractFunctionParameters = new ContractFunctionParameters().addString(
+    description
+  );
 
   const contractAllotTx = await new ContractExecuteTransaction()
     .setContractId(contractId)
@@ -80,8 +79,8 @@ const execute = async (
     .setPayableAmount(new Hbar(100))
     .setMaxTransactionFee(new Hbar(100))
     .setGas(9000000)
-    .freezeWith(treasurerClient)// treasurer of token
-    .sign(key);//Admin of token
+    .freezeWith(treasurerClient) // treasurer of token
+    .sign(key); //Admin of token
 
   const executedTx = await contractAllotTx.execute(treasurerClient);
 
@@ -216,8 +215,7 @@ const createPair = async (
   const createPairTxRes = await createPairTx.execute(client);
   const receipt = await createPairTxRes.getReceipt(client);
   const record = await createPairTxRes.getRecord(client);
-  const contractAddress =
-    record.contractFunctionResult!.getAddress(0);
+  const contractAddress = record.contractFunctionResult!.getAddress(0);
   console.log(`CreatePair address: ${contractAddress}`);
   console.log(`CreatePair status: ${receipt.status}`);
   return contractAddress;
@@ -312,10 +310,7 @@ async function createPairFromFactory(tokenAddress: string) {
   console.log(`contractId: ${pairContractId}`);
 }
 
-async function propose(
-  description: string,
-  contractId: string | ContractId
-) {
+async function propose(description: string, contractId: string | ContractId) {
   console.log(`\nCreating proposal `);
   const tokenName = "Governance Hedera Open DEX";
   const tokenSymbol = "GOD";
@@ -345,7 +340,7 @@ async function propose(
   console.log(`Proposal tx status ${status} with proposal id ${proposalId}`);
 
   return proposalId;
-};
+}
 
 async function main() {
   console.log(`\nUsing governor proxy contract id ${contractId}`);
@@ -353,10 +348,7 @@ async function main() {
   await initialize(tokenId);
   const description = "Create token proposal 1";
 
-  const proposalId = await propose(
-    description,
-    contractId
-  );
+  const proposalId = await propose(description, contractId);
   await governor.vote(proposalId, 1, contractId); //1 is for vote.
   await quorumReached(proposalId);
   await governor.voteSucceeded(proposalId, contractId);

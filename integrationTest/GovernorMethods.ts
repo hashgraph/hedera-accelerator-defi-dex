@@ -54,7 +54,10 @@ export default class GovernorMethods {
     );
   };
 
-  public voteSucceeded = async (proposalId: BigNumber, contractId: string | ContractId) => {
+  public voteSucceeded = async (
+    proposalId: BigNumber,
+    contractId: string | ContractId
+  ) => {
     console.log(`\nvoteSucceeded `);
 
     let contractFunctionParameters =
@@ -75,7 +78,10 @@ export default class GovernorMethods {
     );
   };
 
-  public proposalVotes = async (proposalId: BigNumber, contractId: string | ContractId) => {
+  public proposalVotes = async (
+    proposalId: BigNumber,
+    contractId: string | ContractId
+  ) => {
     console.log(`\nGetting proposalVotes - `);
 
     let contractFunctionParameters =
@@ -98,7 +104,10 @@ export default class GovernorMethods {
     );
   };
 
-  public state = async (proposalId: BigNumber, contractId: string | ContractId) => {
+  public state = async (
+    proposalId: BigNumber,
+    contractId: string | ContractId
+  ) => {
     console.log(`\nGet state `);
 
     let contractFunctionParameters =
@@ -180,7 +189,9 @@ export default class GovernorMethods {
 
     const status = receipt.status;
     const proposalId = record.contractFunctionResult?.getUint256(0)!;
-    console.log(`Cancel Proposal tx status ${status} with proposal id ${proposalId}`);
+    console.log(
+      `Cancel Proposal tx status ${status} with proposal id ${proposalId}`
+    );
 
     return proposalId;
   };
