@@ -85,14 +85,10 @@ describe("Governor Tests", function () {
       const { instance, tokenCont, signers } = await loadFixture(deployFixture);
       const treaKey = ethers.utils.toUtf8Bytes("treasurer public key");
       const adminKey = ethers.utils.toUtf8Bytes("Admin public key");
-      const targets = [tokenCont.address];
-      const ethValues = [0];
-      const callData = await getCallDataNew();
-      const calls = [callData];
       const desc = "Test";
       const userBalance = await tokenCont.balanceOf(signers[0].address);
       expect(userBalance).to.be.equals(1000000000);
-      const proposalPublic = await instance.connect(signers[0]).proposePublic(targets, ethValues, calls, desc, zeroAddress, treaKey, zeroAddress, adminKey, "Token", "Symbol");
+      const proposalPublic = await instance.connect(signers[0]).proposePublic(desc, zeroAddress, treaKey, zeroAddress, adminKey, "Token", "Symbol");
       const userBalanceAfterProposalCreation = await tokenCont.balanceOf(signers[0].address);
       expect(userBalanceAfterProposalCreation).to.be.equals(900000000);
 
@@ -120,21 +116,19 @@ describe("Governor Tests", function () {
       const state = await instance.state(proposalId);
       expect(state).to.be.equals(4);
 
-      await instance.cancelProposal(targets, ethValues, calls, desc);
+      await instance.cancelProposalSub(desc);
       const userBalanceAfterCancelProposal = await tokenCont.balanceOf(signers[0].address);
       expect(userBalanceAfterCancelProposal).to.be.equals(1000000000);
     });
 
     it("Test all states of proposal for execute", async function () {
       const { instance, tokenCont, signers } = await loadFixture(deployFixture);
-      const targets = [tokenCont.address];
-      const ethValues = [0];
-      const callData = await getCallDataNew();
-      const calls = [callData];
+      const treaKey = ethers.utils.toUtf8Bytes("treasurer public key");
+      const adminKey = ethers.utils.toUtf8Bytes("Admin public key");
       const desc = "Test";
       const userBalance = await tokenCont.balanceOf(signers[0].address);
       expect(userBalance).to.be.equals(1000000000);
-      const proposalIdResponse = await instance.connect(signers[0]).propose(targets, ethValues, calls, desc);
+      const proposalIdResponse = await instance.connect(signers[0]).proposePublic(desc, zeroAddress, treaKey, zeroAddress, adminKey, "Token", "Symbol");;
       const userBalanceAfterProposalCreation = await tokenCont.balanceOf(signers[0].address);
       expect(userBalanceAfterProposalCreation).to.be.equals(900000000);
 
@@ -162,7 +156,7 @@ describe("Governor Tests", function () {
       const state = await instance.state(proposalId);
       expect(state).to.be.equals(4);
 
-      await instance.executePublic(targets, ethValues, calls, desc);
+      await instance.executeSubPublic(desc);
       const userBalanceAfterCancelProposal = await tokenCont.balanceOf(signers[0].address);
       expect(userBalanceAfterCancelProposal).to.be.equals(1000000000);
     });

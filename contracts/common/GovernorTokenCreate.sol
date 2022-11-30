@@ -11,6 +11,7 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
         bytes adminKeyBytes;
         string tokenName;
         string tokenSymbol;
+        address newTokenAddress;
     }
 
     using Bits for uint256;
@@ -54,13 +55,14 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
         TokenCreateData memory tokenCreateData = TokenCreateData( _treasurer, _treasurerKeyBytes, _admin,
                                                         _adminKeyBytes,
                                                         _tokenName,
-                                                        _tokenSymbol
+                                                        _tokenSymbol,
+                                                        address(0)
                                                         );
         _proposalData[proposalId] = tokenCreateData;
         return proposalId;
     }
 
-    function cancelProposal(
+    function cancelProposalSub(
         string memory description
     ) public returns (uint256 proposalId) {
         (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = functionsInfo();
@@ -72,9 +74,9 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
         returnGODToken(proposalId);
     }
 
-    function executePublic(
+    function executeSubPublic(
         string memory description
-    ) public payable virtual returns (uint256) {
+    ) public payable returns (uint256) {
         (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = functionsInfo();
         bytes32 descriptionHash = keccak256(bytes(description));
         return execute(targets, values, calldatas, descriptionHash);
@@ -107,7 +109,7 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
         internal
         returns (int256 responseCode, address tokenAddress)
     {
-        TokenCreateData memory tokenCreateData = _proposalData[proposalId];
+        TokenCreateData storage tokenCreateData = _proposalData[proposalId];
         uint256 supplyKeyType;
         uint256 adminKeyType;
 
@@ -155,11 +157,12 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
             responseCode == HederaResponseCodes.SUCCESS,
             "Token creation failed."
         );
-        newTokenAddress = tokenAddress;
+        tokenCreateData.newTokenAddress = tokenAddress;
     }
 
     function getTokenAddress(uint256 proposalId) public view returns(address) {
         require(state(proposalId) == ProposalState.Executed, "Contract not executed yet!");
-        return newTokenAddress;
+        TokenCreateData memory tokenCreateData = _proposalData[proposalId];
+        return tokenCreateData.newTokenAddress;
     }
 }
