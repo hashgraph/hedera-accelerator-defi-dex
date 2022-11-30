@@ -24,9 +24,13 @@ const { id, key } = clientManagement.getOperator();
 
 const { treasureId, treasureKey } = clientManagement.getTreasure();
 
-const htsServiceAddress = contractService.getContract(contractService.baseContractName).address;
+const htsServiceAddress = contractService.getContract(
+  contractService.baseContractName
+).address;
 
-const contractId = contractService.getContractWithProxy(contractService.governorTTContractName).transparentProxyId!;
+const contractId = contractService.getContractWithProxy(
+  contractService.governorTTContractName
+).transparentProxyId!;
 const transferTokenId = TokenId.fromString("0.0.48504379");
 
 const readFileContent = (filePath: string) => {
@@ -40,9 +44,9 @@ const initialize = async (tokenId: TokenId) => {
   const votingPeriod = 12;
 
   let contractFunctionParameters = new ContractFunctionParameters()
-    .addAddress(tokenId.toSolidityAddress())// token that define the voting weight, to vote user should have % of this token.
-    .addAddress(id.toSolidityAddress())// from
-    .addAddress(treasureId.toSolidityAddress())// to
+    .addAddress(tokenId.toSolidityAddress()) // token that define the voting weight, to vote user should have % of this token.
+    .addAddress(id.toSolidityAddress()) // from
+    .addAddress(treasureId.toSolidityAddress()) // to
     .addAddress(transferTokenId.toSolidityAddress()) // tokenToTransfer
     .addInt256(new BigNumber(100000000)) // amountToTransfer
     .addUint256(votingDelay)
@@ -58,9 +62,14 @@ const initialize = async (tokenId: TokenId) => {
   const receipt = await tx.getReceipt(client);
 
   console.log(`Initialize contract with token done with status - ${receipt}`);
-}
+};
 
-const execute = async (targets: Array<string>, ethFees: Array<number>, calls: Array<Uint8Array>, description: string) => {
+const execute = async (
+  targets: Array<string>,
+  ethFees: Array<number>,
+  calls: Array<Uint8Array>,
+  description: string
+) => {
   console.log(`\nExecuting  proposal - `);
 
   const contractFunctionParameters = new ContractFunctionParameters()
@@ -76,30 +85,42 @@ const execute = async (targets: Array<string>, ethFees: Array<number>, calls: Ar
     .setMaxTransactionFee(new Hbar(70))
     .setGas(900000)
     .freezeWith(client)
-    .sign(treasureKey);//Admin of token
+    .sign(treasureKey); //Admin of token
 
   const executedTx = await contractAllotTx.execute(client);
   const record = await executedTx.getRecord(client);
   const contractAllotRx = await executedTx.getReceipt(client);
   const status = contractAllotRx.status;
 
-  console.log(`Execute tx status ${status} for proposal id ${record.contractFunctionResult?.getUint256(0)}`);
-}
+  console.log(
+    `Execute tx status ${status} for proposal id ${record.contractFunctionResult?.getUint256(
+      0
+    )}`
+  );
+};
 
-const associateTokenPublicCallData = async (tokenId: TokenId): Promise<Uint8Array> => {
-  const contractJson = readFileContent("./artifacts/contracts/common/BaseHTS.sol/BaseHTS.json");
+const associateTokenPublicCallData = async (
+  tokenId: TokenId
+): Promise<Uint8Array> => {
+  const contractJson = readFileContent(
+    "./artifacts/contracts/common/BaseHTS.sol/BaseHTS.json"
+  );
   const contractInterface = new ethers.utils.Interface(contractJson.abi);
 
   const receiver = adminId.toSolidityAddress();
-  const callData = contractInterface.encodeFunctionData("associateTokenPublic", [receiver, tokenId.toSolidityAddress()]);
-  return ethers.utils.toUtf8Bytes(callData);;
-}
+  const callData = contractInterface.encodeFunctionData(
+    "associateTokenPublic",
+    [receiver, tokenId.toSolidityAddress()]
+  );
+  return ethers.utils.toUtf8Bytes(callData);
+};
 
 const quorumReached = async (proposalId: BigNumber) => {
   console.log(`\nGetting quorumReached `);
 
-  let contractFunctionParameters = new ContractFunctionParameters()
-    .addUint256(proposalId);
+  let contractFunctionParameters = new ContractFunctionParameters().addUint256(
+    proposalId
+  );
 
   const contractTokenTx = await new ContractExecuteTransaction()
     .setContractId(contractId)
@@ -111,8 +132,10 @@ const quorumReached = async (proposalId: BigNumber) => {
   const record = await contractTokenTx.getRecord(client);
   const status = record.contractFunctionResult!.getBool(0);
 
-  console.log(`quorumReached tx status ${receipt.status} with quorumReached ${status}`);
-}
+  console.log(
+    `quorumReached tx status ${receipt.status} with quorumReached ${status}`
+  );
+};
 
 async function main() {
   console.log(`\nUsing governor proxy contract id ${contractId}`);

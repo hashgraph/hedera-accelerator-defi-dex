@@ -18,7 +18,9 @@ describe("Governor Tests", function () {
     return JSON.parse(rawdata);
   };
 
-  const contractJson = readFileContent("./artifacts/contracts/mock/ERC20Mock.sol/ERC20Mock.json");
+  const contractJson = readFileContent(
+    "./artifacts/contracts/mock/ERC20Mock.sol/ERC20Mock.json"
+  );
   const contractInterface = new ethers.utils.Interface(contractJson.abi);
 
   describe("GovernorCountingSimpleInternal Upgradeable", function () {
@@ -29,7 +31,9 @@ describe("Governor Tests", function () {
       const treaKey = ethers.utils.toUtf8Bytes("treasurer public key");
       const adminKey = ethers.utils.toUtf8Bytes("Admin public key");
       const args = [zeroAddress, votingDelay, votingPeriod, zeroAddress];
-      const instance = await upgrades.deployProxy(Governor, args, { unsafeAllow: ['delegatecall'] });
+      const instance = await upgrades.deployProxy(Governor, args, {
+        unsafeAllow: ["delegatecall"],
+      });
       await instance.deployed();
     });
   });
@@ -47,8 +51,15 @@ describe("Governor Tests", function () {
 
     const Governor = await ethers.getContractFactory("GovernorTokenCreate");
     console.log(`token Service address ${mockBaseHTS.address}`);
-    const args = [tokenCont.address, votingDelay, votingPeriod, mockBaseHTS.address];
-    const instance = await upgrades.deployProxy(Governor, args, { unsafeAllow: ['delegatecall'] });
+    const args = [
+      tokenCont.address,
+      votingDelay,
+      votingPeriod,
+      mockBaseHTS.address,
+    ];
+    const instance = await upgrades.deployProxy(Governor, args, {
+      unsafeAllow: ["delegatecall"],
+    });
 
     await instance.deployed();
 
@@ -57,7 +68,7 @@ describe("Governor Tests", function () {
 
   async function mineNBlocks(n: number) {
     for (let index = 0; index < n; index++) {
-      await ethers.provider.send('evm_mine', []);
+      await ethers.provider.send("evm_mine", []);
     }
   }
 
@@ -65,7 +76,7 @@ describe("Governor Tests", function () {
     const getCallDataNew = async (): Promise<string> => {
       const callData = contractInterface.encodeFunctionData("totalSupply", []);
       return callData;
-    }
+    };
 
     it("getVotes for 100% shares", async function () {
       const { instance, tokenCont } = await loadFixture(deployFixture);
@@ -88,8 +99,20 @@ describe("Governor Tests", function () {
       const desc = "Test";
       const userBalance = await tokenCont.balanceOf(signers[0].address);
       expect(userBalance).to.be.equals(1000000000);
-      const proposalPublic = await instance.connect(signers[0]).createProposal(desc, zeroAddress, treaKey, zeroAddress, adminKey, "Token", "Symbol");
-      const userBalanceAfterProposalCreation = await tokenCont.balanceOf(signers[0].address);
+      const proposalPublic = await instance
+        .connect(signers[0])
+        .createProposal(
+          desc,
+          zeroAddress,
+          treaKey,
+          zeroAddress,
+          adminKey,
+          "Token",
+          "Symbol"
+        );
+      const userBalanceAfterProposalCreation = await tokenCont.balanceOf(
+        signers[0].address
+      );
       expect(userBalanceAfterProposalCreation).to.be.equals(900000000);
 
       const record = await proposalPublic.wait();
@@ -117,7 +140,9 @@ describe("Governor Tests", function () {
       expect(state).to.be.equals(4);
 
       await instance.cancel(desc);
-      const userBalanceAfterCancelProposal = await tokenCont.balanceOf(signers[0].address);
+      const userBalanceAfterCancelProposal = await tokenCont.balanceOf(
+        signers[0].address
+      );
       expect(userBalanceAfterCancelProposal).to.be.equals(1000000000);
     });
 
@@ -128,8 +153,20 @@ describe("Governor Tests", function () {
       const desc = "Test";
       const userBalance = await tokenCont.balanceOf(signers[0].address);
       expect(userBalance).to.be.equals(1000000000);
-      const proposalIdResponse = await instance.connect(signers[0]).createProposal(desc, zeroAddress, treaKey, zeroAddress, adminKey, "Token", "Symbol");;
-      const userBalanceAfterProposalCreation = await tokenCont.balanceOf(signers[0].address);
+      const proposalIdResponse = await instance
+        .connect(signers[0])
+        .createProposal(
+          desc,
+          zeroAddress,
+          treaKey,
+          zeroAddress,
+          adminKey,
+          "Token",
+          "Symbol"
+        );
+      const userBalanceAfterProposalCreation = await tokenCont.balanceOf(
+        signers[0].address
+      );
       expect(userBalanceAfterProposalCreation).to.be.equals(900000000);
 
       const record = await proposalIdResponse.wait();
@@ -157,8 +194,10 @@ describe("Governor Tests", function () {
       expect(state).to.be.equals(4);
 
       await instance.executeProposal(desc);
-      const userBalanceAfterCancelProposal = await tokenCont.balanceOf(signers[0].address);
+      const userBalanceAfterCancelProposal = await tokenCont.balanceOf(
+        signers[0].address
+      );
       expect(userBalanceAfterCancelProposal).to.be.equals(1000000000);
     });
   });
-})
+});
