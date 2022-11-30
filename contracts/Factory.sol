@@ -5,7 +5,7 @@ import "./IPair.sol";
 import "./LPToken.sol";
 import "./ILPToken.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "hardhat/console.sol";
+
 contract Factory is Initializable {
     event PairCreated(address indexed _pairAddress, string msg);
     event Initializing(address indexed _pairAddress, string msg);
@@ -13,7 +13,7 @@ contract Factory is Initializable {
     address[] public allPairs;
     mapping(address => mapping(address => IPair)) pairs;
     IBaseHTS internal tokenService;
-    string[] stringPairs;
+
     function setUpFactory(IBaseHTS _tokenService) public initializer {
         tokenService = _tokenService;
     }
