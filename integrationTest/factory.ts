@@ -13,9 +13,6 @@ import ClientManagement from "./utils/utils";
 import ArrayUtils from "./utils/arrayUtils";
 import { ContractService } from "../deployment/service/ContractService";
 import { httpRequest } from "../deployment/api/HttpsService";
-import { sign } from "crypto";
-import { env } from "process";
-const { hethers } = require("@hashgraph/hethers");
 import * as fs from "fs";
 
 const clientManagement = new ClientManagement();
@@ -243,7 +240,7 @@ const getTreasureBalance = async (tokens: Array<TokenId>) => {
 }
 
 async function main() {
-    await setupFactory();
+    // await setupFactory();
     await testForSinglePair(contractId, tokenC, tokenB);
     await testForSinglePair(contractId, tokenC, tokenD);
 }
