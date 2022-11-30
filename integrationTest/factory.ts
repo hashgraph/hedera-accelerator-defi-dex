@@ -4,14 +4,22 @@ import {
   ContractFunctionParameters,
   TokenId,
   AccountBalanceQuery,
-  Hbar
+  Hbar,
+  AccountCreateTransaction,
+  Client, PrivateKey
 } from "@hashgraph/sdk";
 
 import ClientManagement from "./utils/utils";
+import ArrayUtils from "./utils/arrayUtils";
 import { ContractService } from "../deployment/service/ContractService";
 import { httpRequest } from "../deployment/api/HttpsService";
+import { sign } from "crypto";
+import { env } from "process";
+const { hethers } = require("@hashgraph/hethers");
+import * as fs from "fs";
 
 const clientManagement = new ClientManagement();
+const arrayUtils = new ArrayUtils();
 const client = clientManagement.createOperatorClient();
 const {treasureId, treasureKey} = clientManagement.getTreasure();
 const contractService = new ContractService();
@@ -28,6 +36,10 @@ const contractId = contractService.getContractWithProxy(contractService.factoryC
 
 let precision = 10000000;
 
+const readFileContent = (filePath: string) => {
+  const rawdata: any = fs.readFileSync(filePath);
+  return JSON.parse(rawdata);
+};
 const withPrecision = (value: number): BigNumber => {
   return new BigNumber(value).multipliedBy(precision);
 }
@@ -123,19 +135,17 @@ const getAllPairs = async (contractId: string) => {
     .setContractId(contractId)
     .setGas(9999999)
     .setFunction(
-      "getPairs",
-      new ContractFunctionParameters()
-      .addUint256(0)
+      "getPairs"
     )
     .freezeWith(client)
 
   const executedTx = await getAllPairsTx.execute(client);
   const response = await executedTx.getRecord(client);
   
-  const tokenCount = response.contractFunctionResult!.getUint256(0);
-  const newToken1 = response.contractFunctionResult!.getAddress(1);
-  console.log(`getPairs Count: ${response.contractFunctionResult!.getUint256(0)}`);
-  console.log(`getPairs First pair Address: ${response.contractFunctionResult!.getAddress(1)}`);
+  console.log(`getPairs Count: ${response.contractFunctionResult!.getUint256(1)}`);
+  const modifiedArray = arrayUtils.getAddressArray(response.contractFunctionResult!);
+  console.log(`get all pair Address: ${modifiedArray}`);
+  
   const receipt = await executedTx.getReceipt(client);
   console.log(`getPairs: ${receipt.status}`);
 };
@@ -264,4 +274,3 @@ main()
     console.error(error);
     process.exit(1);
   });
-

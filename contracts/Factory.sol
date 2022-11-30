@@ -5,7 +5,7 @@ import "./IPair.sol";
 import "./LPToken.sol";
 import "./ILPToken.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-
+import "hardhat/console.sol";
 contract Factory is Initializable {
     event PairCreated(address indexed _pairAddress, string msg);
     event Initializing(address indexed _pairAddress, string msg);
@@ -13,7 +13,7 @@ contract Factory is Initializable {
     address[] public allPairs;
     mapping(address => mapping(address => IPair)) pairs;
     IBaseHTS internal tokenService;
-
+    string[] stringPairs;
     function setUpFactory(IBaseHTS _tokenService) public initializer {
         tokenService = _tokenService;
     }
@@ -40,18 +40,8 @@ contract Factory is Initializable {
         return address(pair);
     }
 
-    /// Call this function to fetch pairs in chunks
-    /// from: start index of items to return
-    /// call this function multiple time until you start getting 0x0 addresses
-    function getPairs(uint from) public view returns (uint, address[100] memory) {
-        address[100] memory tempArray;
-        for (uint256 index = from; index < (from + 100); index++) {
-            if (index > allPairs.length - 1) {
-                return (index - from, tempArray);
-            }
-            tempArray[index - from] = allPairs[index];
-        }
-        return (tempArray.length, tempArray);
+    function getPairs() public view returns (address[] memory) {
+        return allPairs;
     }
 
     function createPair(
