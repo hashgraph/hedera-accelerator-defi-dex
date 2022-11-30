@@ -17,11 +17,11 @@ const {treasureId, treasureKey} = clientManagement.getTreasure();
 const contractService = new ContractService();
 
 const tokenA = TokenId.fromString("0.0.48289687")
-let tokenB = TokenId.fromString("0.0.48289686")
+const tokenB = TokenId.fromString("0.0.48289686");
 const tokenC = TokenId.fromString("0.0.48301281")
-let tokenD = TokenId.fromString("0.0.48301282")
+const tokenD = TokenId.fromString("0.0.48301282");
 const tokenE = TokenId.fromString("0.0.48301300")
-let tokenF = TokenId.fromString("0.0.48301322")
+const tokenF = TokenId.fromString("0.0.48301322");
 
 const baseContract = contractService.getContract(contractService.baseContractName);
 const contractId = contractService.getContractWithProxy(contractService.factoryContractName).transparentProxyId!; 
@@ -76,6 +76,8 @@ const createPair = async (contractId: string, token0: TokenId, token1: TokenId) 
       new ContractFunctionParameters()
         .addAddress(token0.toSolidityAddress())
         .addAddress(token1.toSolidityAddress())
+        .addAddress(treasureId.toSolidityAddress())
+        .addInt256(new BigNumber(10))
     )
     .setMaxTransactionFee(new Hbar(100))
     .setPayableAmount(new Hbar(100))
@@ -138,36 +140,10 @@ const getAllPairs = async (contractId: string) => {
   console.log(`getPairs: ${receipt.status}`);
 };
 
-const initializeContract = async (contId: string, token0: TokenId, token1: TokenId ) => {
-  const tokenAQty = withPrecision(200);
-  const tokenBQty = withPrecision(220);
-  console.log(
-    `Creating a pool of ${tokenAQty} units of token A and ${tokenBQty} units of token B.`
-  );
-  const tx = await new ContractExecuteTransaction()
-    .setContractId(contId)
-    .setGas(9000000)
-    .setFunction(
-      "initializeContract",
-      new ContractFunctionParameters()
-        .addAddress(treasureId.toSolidityAddress())
-        .addAddress(token0.toSolidityAddress())
-        .addAddress(token1.toSolidityAddress())
-        .addInt256(tokenAQty)
-        .addInt256(tokenBQty)
-        .addInt256(new BigNumber(10))//fee
-        .addAddress(treasureId.toSolidityAddress())
-    )
-    .freezeWith(client)
-    .sign(treasureKey);
-  const executedTx = await tx.execute(client);
-  const receipt = await executedTx.getReceipt(client);
-  console.log(`Liquidity pool created: ${receipt.status}`);
-};
 
 const addLiquidity = async (contId: string, token0: TokenId, token1: TokenId) => {
-  const tokenAQty = withPrecision(10);
-  const tokenBQty = withPrecision(10);
+  const tokenAQty = withPrecision(210);
+  const tokenBQty = withPrecision(230);
   console.log(
     `Adding ${tokenAQty} units of token A and ${tokenBQty} units of token B to the pool.`
   );
@@ -235,25 +211,17 @@ const swapToken = async (contId: string, token: TokenId) => {
 };
 
 const getTokenPairAddress = async (contId: string) => {
-  const tokenQty = withPrecision(1);
-  console.log(`Swapping a ${tokenQty} units of token A from the pool.`);
-  // Need to pass different token B address so that only swap of token A is considered.
   const getTokensTxReq = await new ContractExecuteTransaction()
     .setContractId(contId)
     .setGas(2000000)
-    .setFunction(
-      "getTokenPairAddress",
-      new ContractFunctionParameters()
-    )
+    .setFunction("getTokenPairAddress")
     .freezeWith(client)
     .sign(treasureKey);
   const getTokensTx = await getTokensTxReq.execute(client);
-  const getTokensRx = await getTokensTx.getReceipt(client);
   const record = await getTokensTx.getRecord(client);
   const newToken0 = record.contractFunctionResult!.getAddress(0);
   const newToken1 = record.contractFunctionResult!.getAddress(1);
-  console.log(`Token0 : ${newToken0}\nToken1: ${newToken1}`);
-  console.log(`Swap status: ${getTokensRx.status}`);
+  console.log(`- Addresses for Token0 : ${newToken0} & Token1 : ${newToken1}`);
 };
 
 const getTreasureBalance = async (tokens: Array<TokenId>) => {
@@ -279,10 +247,8 @@ async function testForSinglePair(contractId: string, token0: TokenId, token1: To
     const pairContractId = response.contract_id;
     console.log(`contractId: ${pairContractId}`)
     await getTreasureBalance([token0, token1]);
-    await initializeContract(pairContractId, token0, token1);
     await getTokenPairAddress(pairContractId);
-    await getTreasureBalance([token0, token1]);
-    await addLiquidity(pairContractId, token0, token1);
+    await addLiquidity(pairContractId ,token0, token1);
     await getTreasureBalance([token0, token1]);
     await removeLiquidity(pairContractId);
     await swapToken(pairContractId, token0);

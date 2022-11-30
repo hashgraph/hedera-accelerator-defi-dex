@@ -17,19 +17,14 @@ abstract contract IPair {
 
     function getPair() external virtual returns (Pair memory);
 
-    function initialize(IBaseHTS _tokenService, ILPToken _lpTokenContract)
-        public
-        virtual;
-
-    function initializeContract(
-        address fromAccount,
+    function initialize(
+        IBaseHTS _tokenService,
+        ILPToken _lpTokenContract,
         address _tokenA,
         address _tokenB,
-        int256 _tokenAQty,
-        int256 _tokenBQty,
-        int256 fee,
-        address _treasury
-    ) external virtual;
+        address _treasury,
+        int256 _fee
+    ) public virtual;
 
     function addLiquidity(
         address fromAccount,
