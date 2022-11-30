@@ -16,10 +16,6 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
         Pair pair;
     }
 
-    address internal creator;
-
-    mapping(address => LiquidityContributor) liquidityContribution;
-
     Pair pair;
 
     int256 slippage;
@@ -28,61 +24,23 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
 
     address private treasury;
 
-    function initialize(IBaseHTS _tokenService, ILPToken _lpTokenContract)
-        public
-        override
-        initializer
-    {
+    function initialize(
+        IBaseHTS _tokenService,
+        ILPToken _lpTokenContract,
+        address _tokenA,
+        address _tokenB,
+        address _treasury,
+        int256 _fee
+    ) public override initializer {
         tokenService = _tokenService;
-        creator = msg.sender;
         lpTokenContract = _lpTokenContract;
+        fee = _fee;
+        treasury = _treasury;
+        pair = Pair(Token(_tokenA, int256(0)), Token(_tokenB, int256(0)));
     }
 
     function getPair() external view override returns (Pair memory) {
         return pair;
-    }
-
-    function initializeContract(
-        address fromAccount,
-        address _tokenA,
-        address _tokenB,
-        int256 _tokenAQty,
-        int256 _tokenBQty,
-        int256 _fee,
-        address _treasury
-    ) external virtual override {
-        pair = Pair(Token(_tokenA, _tokenAQty), Token(_tokenB, _tokenBQty));
-        liquidityContribution[fromAccount] = LiquidityContributor(pair);
-
-        fee = _fee;
-        treasury = _treasury;
-
-        tokenService.associateTokenPublic(address(this), _tokenA);
-        tokenService.associateTokenPublic(address(this), _tokenB);
-
-        int256 response = tokenService.transferTokenPublic(
-            _tokenA,
-            fromAccount,
-            address(this),
-            _tokenAQty
-        );
-
-        require(
-            response == HederaResponseCodes.SUCCESS,
-            "Creating contract: Transfering token A to contract failed with status code"
-        );
-
-        response = tokenService.transferTokenPublic(
-            _tokenB,
-            fromAccount,
-            address(this),
-            _tokenBQty
-        );
-        require(
-            response == HederaResponseCodes.SUCCESS,
-            "Creating contract: Transfering token B to contract failed with status code"
-        );
-        lpTokenContract.allotLPTokenFor(_tokenAQty, _tokenBQty, fromAccount);
     }
 
     function addLiquidity(
@@ -92,79 +50,49 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
         int256 _tokenAQty,
         int256 _tokenBQty
     ) external virtual override {
-        pair.tokenA.tokenQty += _tokenAQty;
-        pair.tokenB.tokenQty += _tokenBQty;
-
         tokenService.associateTokenPublic(address(this), _tokenA);
         tokenService.associateTokenPublic(address(this), _tokenB);
-
-        int256 response = tokenService.transferTokenPublic(
+        transferTokensInternally(
+            fromAccount,
+            address(this),
             _tokenA,
-            fromAccount,
-            address(this),
-            _tokenAQty
-        );
-        require(
-            response == HederaResponseCodes.SUCCESS,
-            "Add liquidity: Transfering token A to contract failed with status code"
-        );
-
-        response = tokenService.transferTokenPublic(
             _tokenB,
-            fromAccount,
-            address(this),
-            _tokenBQty
-        );
-        require(
-            response == HederaResponseCodes.SUCCESS,
+            _tokenAQty,
+            _tokenBQty,
+            "Add liquidity: Transfering token A to contract failed with status code",
             "Add liquidity: Transfering token B to contract failed with status code"
         );
-        LiquidityContributor memory contributedPair = liquidityContribution[
-            fromAccount
-        ];
-        contributedPair.pair.tokenA.tokenQty += _tokenAQty;
-        contributedPair.pair.tokenB.tokenQty += _tokenBQty;
-        liquidityContribution[fromAccount] = contributedPair;
+        pair.tokenA.tokenQty += _tokenAQty;
+        pair.tokenB.tokenQty += _tokenBQty;
         lpTokenContract.allotLPTokenFor(_tokenAQty, _tokenBQty, fromAccount);
     }
 
-    function removeLiquidity(address fromAccount, int256 _lpToken)
+    function removeLiquidity(address toAccount, int256 _lpToken)
         external
         virtual
         override
     {
         require(
-            lpTokenContract.lpTokenForUser(fromAccount) > _lpToken,
+            lpTokenContract.lpTokenForUser(toAccount) > _lpToken,
             "user does not have sufficient lpTokens"
         );
         (int256 _tokenAQty, int256 _tokenBQty) = calculateTokenstoGetBack(
             _lpToken
         );
         //Assumption - toAccount must be associated with tokenA and tokenB other transaction fails.
-        int256 response = tokenService.transferTokenPublic(
+        transferTokensInternally(
+            address(this),
+            toAccount,
             pair.tokenA.tokenAddress,
-            address(this),
-            fromAccount,
-            _tokenAQty
-        );
-        require(
-            response == HederaResponseCodes.SUCCESS,
-            "Remove liquidity: Transferring token A to contract failed with status code"
-        );
-        response = tokenService.transferTokenPublic(
             pair.tokenB.tokenAddress,
-            address(this),
-            fromAccount,
-            _tokenBQty
-        );
-        require(
-            response == HederaResponseCodes.SUCCESS,
+            _tokenAQty,
+            _tokenBQty,
+            "Remove liquidity: Transferring token A to contract failed with status code",
             "Remove liquidity: Transferring token B to contract failed with status code"
         );
         pair.tokenA.tokenQty -= _tokenAQty;
         pair.tokenB.tokenQty -= _tokenBQty;
-
-        lpTokenContract.removeLPTokenFor(_lpToken, fromAccount);
+        lpTokenContract.removeLPTokenFor(_lpToken, toAccount);
     }
 
     function calculateTokenstoGetBack(int256 _lpToken)
@@ -214,31 +142,34 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
         int256 feeTokenB = feeForToken(deltaBQty);
         // deduct fee from the token B
         deltaBQty = deltaBQty - (feeTokenB / 2);
-        int256 response = tokenService.transferTokenPublic(
-            pair.tokenA.tokenAddress,
+        transferTokenInternally(
             to,
             address(this),
-            _deltaAQty
-        );
-        require(
-            response == HederaResponseCodes.SUCCESS,
+            pair.tokenA.tokenAddress,
+            _deltaAQty,
             "swapTokenA: Transferring token A to contract failed with status code"
         );
 
         pair.tokenB.tokenQty -= deltaBQty;
         tokenService.associateTokenPublic(to, pair.tokenB.tokenAddress);
-        response = tokenService.transferTokenPublic(
-            pair.tokenB.tokenAddress,
+        transferTokenInternally(
             address(this),
             to,
-            deltaBQty
+            pair.tokenB.tokenAddress,
+            deltaBQty,
+            "swapTokenA: Transferring token B to user failed with status code"
         );
-        require(
-            response == HederaResponseCodes.SUCCESS,
-            "swapTokenA: Transferring token B to contract failed with status code"
+        // fee transfer
+        transferTokensInternally(
+            address(this),
+            treasury,
+            pair.tokenA.tokenAddress,
+            pair.tokenB.tokenAddress,
+            feeTokenA / 2,
+            feeTokenB / 2,
+            "swapFeeTokenA: Transferring fee as token A to treasuary failed with status code",
+            "swapFeeTokenB: Transferring fee as token B to treasuary failed with status code"
         );
-
-        transferFeeToTreasury(feeTokenA / 2, feeTokenB / 2);
     }
 
     function doTokenBSwap(address to, int256 _deltaBQty) private {
@@ -256,48 +187,39 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
         int256 feeTokenA = feeForToken(deltaAQty);
         // deduct fee from the token A
         deltaAQty -= (feeTokenA / 2);
-        int256 response = tokenService.transferTokenPublic(
-            pair.tokenB.tokenAddress,
+        transferTokenInternally(
             to,
             address(this),
-            _deltaBQty
-        );
-        require(
-            response == HederaResponseCodes.SUCCESS,
+            pair.tokenB.tokenAddress,
+            _deltaBQty,
             "swapTokenB: Transferring token B to contract failed with status code"
         );
 
         pair.tokenA.tokenQty -= deltaAQty;
         tokenService.associateTokenPublic(to, pair.tokenA.tokenAddress);
-        response = tokenService.transferTokenPublic(
-            pair.tokenA.tokenAddress,
+        transferTokenInternally(
             address(this),
             to,
-            deltaAQty
-        );
-        require(
-            response == HederaResponseCodes.SUCCESS,
-            "swapTokenB: Transferring token A to contract failed with status code"
+            pair.tokenA.tokenAddress,
+            deltaAQty,
+            "swapTokenB: Transferring token A to user failed with status code"
         );
 
-        transferFeeToTreasury(feeTokenA / 2, feeTokenB / 2);
+        // fee transfer
+        transferTokensInternally(
+            address(this),
+            treasury,
+            pair.tokenA.tokenAddress,
+            pair.tokenB.tokenAddress,
+            feeTokenA / 2,
+            feeTokenB / 2,
+            "swapFeeTokenA: Transferring fee as token A to treasuary failed with status code",
+            "swapFeeTokenB: Transferring fee as token B to treasuary failed with status code"
+        );
     }
 
     function getPairQty() public view returns (int256, int256) {
         return (pair.tokenA.tokenQty, pair.tokenB.tokenQty);
-    }
-
-    function getContributorTokenShare(address fromAccount)
-        public
-        view
-        returns (int256, int256)
-    {
-        LiquidityContributor
-            memory liquidityContributor = liquidityContribution[fromAccount];
-        return (
-            liquidityContributor.pair.tokenA.tokenQty,
-            liquidityContributor.pair.tokenB.tokenQty
-        );
     }
 
     function getSpotPrice() public view returns (int256) {
@@ -405,27 +327,45 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
         return tokenQ;
     }
 
-    function transferFeeToTreasury(int256 feeTokenA, int256 feeTokenB) private {
-        int256 response = tokenService.transferTokenPublic(
-            pair.tokenA.tokenAddress,
-            address(this),
-            treasury,
-            feeTokenA
+    function transferTokensInternally(
+        address sender,
+        address reciever,
+        address tokenA,
+        address tokenB,
+        int256 tokenAQty,
+        int256 tokenBQty,
+        string memory errorMessageA,
+        string memory errorMessageB
+    ) private {
+        transferTokenInternally(
+            sender,
+            reciever,
+            tokenA,
+            tokenAQty,
+            errorMessageA
         );
-        require(
-            response == HederaResponseCodes.SUCCESS,
-            "swapFeeTokenA: Transferring fee as token A to treasuary failed with status code"
+        transferTokenInternally(
+            sender,
+            reciever,
+            tokenB,
+            tokenBQty,
+            errorMessageB
         );
+    }
 
-        response = tokenService.transferTokenPublic(
-            pair.tokenB.tokenAddress,
-            address(this),
-            treasury,
-            feeTokenB
+    function transferTokenInternally(
+        address sender,
+        address reciever,
+        address token,
+        int256 tokenQty,
+        string memory errorMessage
+    ) private {
+        int256 response = tokenService.transferTokenPublic(
+            token,
+            sender,
+            reciever,
+            tokenQty
         );
-        require(
-            response == HederaResponseCodes.SUCCESS,
-            "swapFeeTokenB: Transferring fee as token B to treasuary failed with status code"
-        );
+        require(response == HederaResponseCodes.SUCCESS, errorMessage);
     }
 }

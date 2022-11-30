@@ -63,7 +63,7 @@ const initializeLPTokenContract = async (lpTokenContractId: string) => {
   let contractFunctionParameters = new ContractFunctionParameters()
     .addAddress(htsServiceAddress);
 
-  const contractTokenTx = await new ContractExecuteTransaction()
+  const initializeContractTx = await new ContractExecuteTransaction()
     .setContractId(lpTokenContractId)
     .setFunction("initialize", contractFunctionParameters)
     .setGas(500000)
@@ -71,7 +71,7 @@ const initializeLPTokenContract = async (lpTokenContractId: string) => {
     .setPayableAmount(new Hbar(60))
     .execute(client);
     
-  await contractTokenTx.getReceipt(client);
+  await initializeContractTx.getReceipt(client);
 
   console.log(`Initialize LP contract with token done.`);
 }
@@ -79,18 +79,23 @@ const initializeLPTokenContract = async (lpTokenContractId: string) => {
 const initialize = async (contId: string, lpTokenProxyAdd: string) => {
   const initialize = await new ContractExecuteTransaction()
     .setContractId(contId)
-    .setGas(2000000)
+    .setGas(9000000)
     .setFunction(
       "initialize",
       new ContractFunctionParameters()
         .addAddress(htsServiceAddress)
         .addAddress(lpTokenProxyAdd)
+        .addAddress(tokenA.toSolidityAddress())
+        .addAddress(tokenB.toSolidityAddress())
+        .addAddress(treasureId.toSolidityAddress())
+        .addInt256(new BigNumber(10))
     )
     .freezeWith(client)
     .sign(key);
   const initializeTx = await initialize.execute(client);
   const initializeTxRx = await initializeTx.getReceipt(client);
   console.log(` Initialized status : ${initializeTxRx.status}`);
+  await pairCurrentPosition(contId);
 };
 
 const getTreasureBalance = async (tokens: Array<TokenId>) => {
@@ -102,37 +107,9 @@ const getTreasureBalance = async (tokens: Array<TokenId>) => {
       tokens.forEach(token =>   console.log(` Treasure Token Balance for ${token.toString()}: ${responseTokens.get(token)}`));
 }
 
-const createLiquidityPool = async (contId: string) => {
-  const tokenAQty = withPrecision(200);
-  const tokenBQty = withPrecision(220);
-  console.log(
-    ` Creating a pool of ${tokenAQty} units of token A and ${tokenBQty} units of token B.`
-  );
-  const tx = await new ContractExecuteTransaction()
-    .setContractId(contId)
-    .setGas(9000000)
-    .setFunction(
-      "initializeContract",
-      new ContractFunctionParameters()
-        .addAddress(treasureId.toSolidityAddress())
-        .addAddress(tokenA.toSolidityAddress())
-        .addAddress(tokenB.toSolidityAddress())
-        .addInt256(tokenAQty)
-        .addInt256(tokenBQty)
-        .addInt256(new BigNumber(10))//fee
-        .addAddress(treasureId.toSolidityAddress())
-    )
-    .freezeWith(client)
-    .sign(treasureKey);
-  const liquidityPoolTx = await tx.execute(client);
-  const transferTokenRx = await liquidityPoolTx.getReceipt(client);
-  console.log(` Liquidity pool created: ${transferTokenRx.status}`);
-  await pairCurrentPosition(contId);
-};
-
 const addLiquidity = async (contId: string) => {
-  const tokenAQty = withPrecision(10);
-  const tokenBQty = withPrecision(10);
+  const tokenAQty = withPrecision(210);
+  const tokenBQty = withPrecision(230);
   console.log(
     ` Adding ${tokenAQty} units of token A and ${tokenBQty} units of token B to the pool.`
   );
@@ -151,9 +128,9 @@ const addLiquidity = async (contId: string) => {
     .freezeWith(client)
     .sign(treasureKey);
   const addLiquidityTxRes = await addLiquidityTx.execute(client);
-  const transferTokenRx = await addLiquidityTxRes.getReceipt(client);
+  const addLiquidityRx = await addLiquidityTxRes.getReceipt(client);
 
-  console.log(` Liquidity added status: ${transferTokenRx.status}`);
+  console.log(` Liquidity added status: ${addLiquidityRx.status}`);
   const result = await pairCurrentPosition(contId);
 };
 
@@ -174,18 +151,15 @@ const removeLiquidity = async (contId: string) => {
     .freezeWith(client)
     .sign(treasureKey);
   const removeLiquidityTx = await removeLiquidity.execute(client);
-  const transferTokenRx = await removeLiquidityTx.getReceipt(client);
+  const removeLiquidityRx = await removeLiquidityTx.getReceipt(client);
 
-  console.log(` Liquidity remove status: ${transferTokenRx.status}`);
+  console.log(` Liquidity remove status: ${removeLiquidityRx.status}`);
   await pairCurrentPosition(contId);
 };
 
 const swapTokenA = async (contId: string) => {
   const tokenAQty = withPrecision(1);
-  const tokenBQty = withPrecision(0);
   console.log(` Swapping a ${tokenAQty} units of token A from the pool.`);
-  // Need to pass different token B address so that only swap of token A is considered.
-  tokenB = TokenId.fromString("0.0.48660640");
   const swapToken = await new ContractExecuteTransaction()
     .setContractId(contId)
     .setGas(2000000)
@@ -199,9 +173,9 @@ const swapTokenA = async (contId: string) => {
     .freezeWith(client)
     .sign(treasureKey);
   const swapTokenTx = await swapToken.execute(client);
-  const transferTokenRx = await swapTokenTx.getReceipt(client);
+  const swapTokenRx = await swapTokenTx.getReceipt(client);
 
-  console.log(` Swap status: ${transferTokenRx.status}`);
+  console.log(` Swap status: ${swapTokenRx.status}`);
   await pairCurrentPosition(contId);
 };
 
@@ -237,34 +211,14 @@ const getTokenPairAddress = async (contId: string): Promise<[BigNumber, BigNumbe
   return [tokenAQty, tokenBQty];
 };
 
-const getContributorTokenShare = async (contId: string) => {
-  const getContributorTokenShare = await new ContractExecuteTransaction()
-    .setContractId(contId)
-    .setGas(1000000)
-    .setFunction(
-      "getContributorTokenShare",
-      new ContractFunctionParameters().addAddress(treasureId.toSolidityAddress())
-    )
-    .freezeWith(client);
-  const getContributorTokenShareTx = await getContributorTokenShare.execute(
-    client
-  );
-  const response = await getContributorTokenShareTx.getRecord(client);
-  const tokenAQty = response.contractFunctionResult!.getInt256(0);
-  const tokenBQty = response.contractFunctionResult!.getInt256(1);
-  console.log(
-    ` ${tokenAQty} units of token A and ${tokenBQty} units of token B contributed by ${treasureId}.`
-  );
-};
-
 const spotPrice = async (contId: string) => {
   const getSpotPrice = await new ContractExecuteTransaction()
     .setContractId(contId)
     .setGas(1000000)
     .setFunction("getSpotPrice")
     .freezeWith(client);
-  const getPairQtyTx = await getSpotPrice.execute(client);
-  const response = await getPairQtyTx.getRecord(client);
+  const spotPriceTx = await getSpotPrice.execute(client);
+  const response = await spotPriceTx.getRecord(client);
   const price = response.contractFunctionResult!.getInt256(0);
 
   console.log(` Spot price for token A is ${price}. \n`);
@@ -276,8 +230,8 @@ const getVariantValue = async (contId: string) => {
     .setGas(1000000)
     .setFunction("getVariantValue")
     .freezeWith(client);
-  const getPairQtyTx = await getVariantValue.execute(client);
-  const response = await getPairQtyTx.getRecord(client);
+  const variantValueTx = await getVariantValue.execute(client);
+  const response = await variantValueTx.getRecord(client);
   const price = response.contractFunctionResult!.getInt256(0);
 
   console.log(` k variant value is ${price}. \n`);
@@ -292,8 +246,8 @@ const getOutGivenIn =async (contId: string) => {
       new ContractFunctionParameters()
           .addInt256(tokenAQty))
     .freezeWith(client);
-  const getPairQtyTx = await getOutGivenIn.execute(client);
-  const response = await getPairQtyTx.getRecord(client);
+  const getOutGivenInTx = await getOutGivenIn.execute(client);
+  const response = await getOutGivenInTx.getRecord(client);
   const tokenBQty = response.contractFunctionResult!.getInt256(0);
 
   console.log(` For tokenAQty ${tokenAQty} the getOutGivenIn tokenBQty is ${tokenBQty}. \n`);
@@ -308,8 +262,8 @@ const getInGivenOut =async (contId: string) => {
       new ContractFunctionParameters()
             .addInt256(tokenBQty))
     .freezeWith(client);
-  const getPairQtyTx = await getInGivenOut.execute(client);
-  const response = await getPairQtyTx.getRecord(client);
+  const getInGivenOutTx = await getInGivenOut.execute(client);
+  const response = await getInGivenOutTx.getRecord(client);
   const tokenAQty = response.contractFunctionResult!.getInt256(0);
 
   console.log(` For tokenBQty ${tokenBQty} the getInGivenOut tokenAQty is ${tokenAQty}. \n`);
@@ -364,14 +318,14 @@ const getPrecisionValue = async (contId: string) => {
 };
 
 const getLpTokenAddress = async (lpTokenProxyId: string) => {
-  const getPrecisionValueTx = await new ContractExecuteTransaction()
+  const getLpTokenAddressTx = await new ContractExecuteTransaction()
     .setContractId(lpTokenProxyId)
     .setGas(1000000)
     .setFunction("getLpTokenAddress",
       new ContractFunctionParameters())
     .freezeWith(client);
-  const getPrecisionValueTxRes = await getPrecisionValueTx.execute(client);
-  const response = await getPrecisionValueTxRes.getRecord(client);
+  const getLpTokenAddressTxRes = await getLpTokenAddressTx.execute(client);
+  const response = await getLpTokenAddressTxRes.getRecord(client);
   const address = response.contractFunctionResult!.getAddress(0);
 
   console.log(` Lp token address ${address}`);
@@ -394,12 +348,9 @@ async function testForSinglePair(contract: DeployedContract, lpContract: Deploye
   const contractProxyId = contract.transparentProxyId!;
   await initializeLPTokenContract(lpTokenProxyId);
   await getLpTokenAddress(lpTokenProxyId);
-  tokenA = TokenId.fromString("0.0.48769837");
-  console.log(`\nUsing pair proxy contractId ${contract.transparentProxyId} and LP token contract proxy id ${lpTokenProxyId} \n`);
+  console.log(`\nUsing pair proxy contractId ${contract.id} and LP token contract proxy id ${lpTokenProxyId} \n`);
   await initialize(contractProxyId, lpContract.transparentProxyAddress!);
   await getPrecisionValue(contractProxyId);
-  await getTreasureBalance([tokenA, tokenB]);
-  await createLiquidityPool(contractProxyId);
   await getTreasureBalance([tokenA, tokenB]);
   await addLiquidity(contractProxyId);
   await getTreasureBalance([tokenA, tokenB]);

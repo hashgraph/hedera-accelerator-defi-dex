@@ -16,8 +16,8 @@ contract MockBaseHTS is IBaseHTS {
         addLiquidityFailBTransfer,
         removeLiquidityFailBTransfer,
         removeLiquidity,
-        initialiseFailATransfer,
-        initialiseFailBTransfer,
+        addLiquidityFailATransfer,
+        removeLiquidityFailATransfer,
         swapBFailedSendingA,
         addLiquidityFailMinting,
         addLiquidityLPTransferFail,
@@ -44,11 +44,11 @@ contract MockBaseHTS is IBaseHTS {
         if (failType == FailTransactionFor.initialise) {
             return 7;
         }
-        if (failType == FailTransactionFor.initialiseFailATransfer) {
-            return 2;
+        if (failType == FailTransactionFor.addLiquidityFailATransfer) {
+            return 1;
         }
-        if (failType == FailTransactionFor.initialiseFailBTransfer) {
-            return 3;
+        if (failType == FailTransactionFor.removeLiquidityFailATransfer) {
+            return 0;
         }
         if (failType == FailTransactionFor.swapAFailedSendingB) {
             return 8;
