@@ -239,7 +239,54 @@ describe("Governor Tests", function () {
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
     });
 
-    // . irrespectiveof vote
+    it.only("Given delegator already voted when delegator delegates then delegatee should be considered. ", async function () {
+      const { instance, tokenCont, signers } = await loadFixture(deployFixture);
+      //Creating a proposal for 20% token share
+      await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
+      const proposalIdResponse = await createProposal(tokenCont, instance, signers[0]);
+      await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent - (1 * precision));
+
+      const record = await proposalIdResponse.wait();
+      const proposalId = record.events[0].args.proposalId.toString();
+
+      const delay = await instance.votingDelay();
+      expect(delay).to.be.equals(0);
+      const period = await instance.votingPeriod();
+      expect(period).to.be.equals(12);
+      const threshold = await instance.proposalThreshold();
+      expect(threshold).to.be.equals(0);
+      const quorumReached = await instance.quorumReached(proposalId);
+      expect(quorumReached).to.be.equals(false);
+      const voteSucceeded = await instance.voteSucceeded(proposalId);
+      expect(voteSucceeded).to.be.equals(false);
+      //Cast vote a for user 1.
+      await instance.castVote(proposalId, 0);
+      await verifyProposalVotes(instance, proposalId, { abstainVotes: 0, againstVotes: 19, forVotes: 0 })
+       //Cast vote a for with delegatee.
+      await tokenCont.setUserBalance(signers[3].address, 0);
+      //user 1 delegates votes to user 3
+      await instance.delegateTo(signers[3].address);
+      expect( await tokenCont.balanceOf(signers[3].address)).to.be.equals(0);
+      //User 3 now votes with different choice
+      await instance.connect(signers[3]).castVote(proposalId, 1);
+      //User 1 votes share reduced to zero and user 3 votes adds to chosen option
+      await verifyProposalVotes(instance, proposalId, { abstainVotes: 0, againstVotes: 0, forVotes: 19 })
+
+      const voteSucceeded1 = await instance.voteSucceeded(proposalId);
+      expect(voteSucceeded1).to.be.equals(true);
+      const quorumReached1 = await instance.quorumReached(proposalId);
+      expect(quorumReached1).to.be.equals(true);
+
+      await mineNBlocks(20);
+      const state = await instance.state(proposalId);
+      expect(state).to.be.equals(4);
+
+      const call = await callParameters(tokenCont);
+      await instance.executePublic(call.targets, call.ethValues, call.calls, call.desc);
+      await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
+
+    });
+
     it("Given delegator not voted when delegator delegates and delegatee votes, delegator should not be allowed to vote ", async function () {
       const { instance, tokenCont, signers } = await loadFixture(deployFixture);
       //Creating a proposal for 20% token share
