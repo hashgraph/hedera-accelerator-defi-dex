@@ -25,7 +25,7 @@ abstract contract GovernorCountingSimpleInternal is
     mapping(uint256 => address) proposalCreators;
     IBaseHTS internal tokenService;
 
-    function functionsInfo() pure internal returns (
+    function mockFunctionCall() pure internal returns (
         address[] memory targets,
         uint256[] memory values,
         bytes[] memory calldatas) {

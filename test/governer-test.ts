@@ -88,7 +88,7 @@ describe("Governor Tests", function () {
       const desc = "Test";
       const userBalance = await tokenCont.balanceOf(signers[0].address);
       expect(userBalance).to.be.equals(1000000000);
-      const proposalPublic = await instance.connect(signers[0]).proposePublic(desc, zeroAddress, treaKey, zeroAddress, adminKey, "Token", "Symbol");
+      const proposalPublic = await instance.connect(signers[0]).createProposal(desc, zeroAddress, treaKey, zeroAddress, adminKey, "Token", "Symbol");
       const userBalanceAfterProposalCreation = await tokenCont.balanceOf(signers[0].address);
       expect(userBalanceAfterProposalCreation).to.be.equals(900000000);
 
@@ -116,7 +116,7 @@ describe("Governor Tests", function () {
       const state = await instance.state(proposalId);
       expect(state).to.be.equals(4);
 
-      await instance.cancelProposalSub(desc);
+      await instance.cancel(desc);
       const userBalanceAfterCancelProposal = await tokenCont.balanceOf(signers[0].address);
       expect(userBalanceAfterCancelProposal).to.be.equals(1000000000);
     });
@@ -128,7 +128,7 @@ describe("Governor Tests", function () {
       const desc = "Test";
       const userBalance = await tokenCont.balanceOf(signers[0].address);
       expect(userBalance).to.be.equals(1000000000);
-      const proposalIdResponse = await instance.connect(signers[0]).proposePublic(desc, zeroAddress, treaKey, zeroAddress, adminKey, "Token", "Symbol");;
+      const proposalIdResponse = await instance.connect(signers[0]).createProposal(desc, zeroAddress, treaKey, zeroAddress, adminKey, "Token", "Symbol");;
       const userBalanceAfterProposalCreation = await tokenCont.balanceOf(signers[0].address);
       expect(userBalanceAfterProposalCreation).to.be.equals(900000000);
 
@@ -156,7 +156,7 @@ describe("Governor Tests", function () {
       const state = await instance.state(proposalId);
       expect(state).to.be.equals(4);
 
-      await instance.executeSubPublic(desc);
+      await instance.executeProposal(desc);
       const userBalanceAfterCancelProposal = await tokenCont.balanceOf(signers[0].address);
       expect(userBalanceAfterCancelProposal).to.be.equals(1000000000);
     });

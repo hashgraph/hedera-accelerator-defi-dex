@@ -41,7 +41,7 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
         __GovernorCountingSimple_init();
     }
 
-    function proposePublic (
+    function createProposal (
         string memory description,
         address _treasurer,
         bytes memory _treasurerKeyBytes,
@@ -50,7 +50,7 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
         string memory _tokenName,
         string memory _tokenSymbol
     ) public returns (uint256) { 
-        (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = functionsInfo();
+        (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = mockFunctionCall();
         uint256 proposalId = propose(targets, values, calldatas, description);
         TokenCreateData memory tokenCreateData = TokenCreateData( _treasurer, _treasurerKeyBytes, _admin,
                                                         _adminKeyBytes,
@@ -62,10 +62,10 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
         return proposalId;
     }
 
-    function cancelProposalSub(
+    function cancel(
         string memory description
     ) public returns (uint256 proposalId) {
-        (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = functionsInfo();
+        (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = mockFunctionCall();
         bytes32 descriptionHash = keccak256(bytes(description));
         proposalId = hashProposal(targets, values, calldatas, descriptionHash);
         require(proposalCreators[proposalId] != address(0), "Proposal not found");
@@ -74,10 +74,10 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
         returnGODToken(proposalId);
     }
 
-    function executeSubPublic(
+    function executeProposal(
         string memory description
     ) public payable returns (uint256) {
-        (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = functionsInfo();
+        (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = mockFunctionCall();
         bytes32 descriptionHash = keccak256(bytes(description));
         return execute(targets, values, calldatas, descriptionHash);
     }

@@ -76,7 +76,7 @@ const execute = async (
 
   const contractAllotTx = await new ContractExecuteTransaction()
     .setContractId(contractId)
-    .setFunction("executePublic", contractFunctionParameters)
+    .setFunction("executeProposal", contractFunctionParameters)
     .setPayableAmount(new Hbar(100))
     .setMaxTransactionFee(new Hbar(100))
     .setGas(9000000)
@@ -330,7 +330,7 @@ async function propose(
 
   const tx = await new ContractExecuteTransaction()
     .setContractId(contractId)
-    .setFunction("proposePublic", contractFunctionParameters)
+    .setFunction("createProposal", contractFunctionParameters)
     .setGas(9000000)
     .freezeWith(client)
     .sign(treasureKey);
