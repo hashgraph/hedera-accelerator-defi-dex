@@ -46,19 +46,11 @@ const readFileContent = (filePath: string) => {
 
 const initialize = async (tokenId: TokenId) => {
   console.log(`\nInitialize contract with token  `);
-  const tokenName = "Governance Hedera Open DEX";
-  const tokenSymbol = "GOD";
   const votingDelay = 0;
   const votingPeriod = 12;
 
   let contractFunctionParameters = new ContractFunctionParameters()
     .addAddress(tokenId.toSolidityAddress()) // token that define the voting weight, to vote user should have % of this token.
-    .addAddress(treasureId.toSolidityAddress())
-    .addBytes(treasureKey.publicKey.toBytes())
-    .addAddress(id.toSolidityAddress())
-    .addBytes(key.publicKey.toBytes())
-    .addString(tokenName)
-    .addString(tokenSymbol)
     .addUint256(votingDelay)
     .addUint256(votingPeriod)
     .addAddress(htsServiceAddress);
@@ -75,22 +67,16 @@ const initialize = async (tokenId: TokenId) => {
 };
 
 const execute = async (
-  targets: Array<string>,
-  ethFees: Array<number>,
-  calls: Array<Uint8Array>,
   description: string
 ) => {
   console.log(`\nExecuting  proposal - `);
 
   const contractFunctionParameters = new ContractFunctionParameters()
-    .addAddressArray(targets)
-    .addUint256Array(ethFees)
-    .addBytesArray(calls)
     .addString(description);
 
   const contractAllotTx = await new ContractExecuteTransaction()
     .setContractId(contractId)
-    .setFunction("executePublic", contractFunctionParameters)
+    .setFunction("executeProposal", contractFunctionParameters)
     .setPayableAmount(new Hbar(100))
     .setMaxTransactionFee(new Hbar(100))
     .setGas(9000000)
@@ -311,7 +297,7 @@ const getPair = async (
 
 async function createPairFromFactory(tokenAddress: string) {
   const GODToken = tokenAddress;
-  // await setupFactory();
+  //await setupFactory();
   const tokenA = TokenId.fromString("0.0.48289687");
   await createPair(factoryContractId, GODToken, tokenA.toSolidityAddress());
 
@@ -326,21 +312,48 @@ async function createPairFromFactory(tokenAddress: string) {
   console.log(`contractId: ${pairContractId}`);
 }
 
+async function propose(
+  description: string,
+  contractId: string | ContractId
+) {
+  console.log(`\nCreating proposal `);
+  const tokenName = "Governance Hedera Open DEX";
+  const tokenSymbol = "GOD";
+  const contractFunctionParameters = new ContractFunctionParameters()
+    .addString(description)
+    .addAddress(treasureId.toSolidityAddress())
+    .addBytes(treasureKey.publicKey.toBytes())
+    .addAddress(id.toSolidityAddress())
+    .addBytes(key.publicKey.toBytes())
+    .addString(tokenName)
+    .addString(tokenSymbol);
+
+  const tx = await new ContractExecuteTransaction()
+    .setContractId(contractId)
+    .setFunction("createProposal", contractFunctionParameters)
+    .setGas(9000000)
+    .freezeWith(client)
+    .sign(treasureKey);
+
+  const executedTx = await tx.execute(client);
+
+  const record = await executedTx.getRecord(client);
+  const receipt = await executedTx.getReceipt(client);
+
+  const status = receipt.status;
+  const proposalId = record.contractFunctionResult?.getUint256(0)!;
+  console.log(`Proposal tx status ${status} with proposal id ${proposalId}`);
+
+  return proposalId;
+};
+
 async function main() {
   console.log(`\nUsing governor proxy contract id ${contractId}`);
   const tokenId = TokenId.fromString("0.0.48602743");
   await initialize(tokenId);
+  const description = "Create token proposal 1";
 
-  const targets = [htsServiceAddress];
-  const ethFees = [0];
-  const associateToken = await associateTokenPublicCallData(tokenId);
-  const calls = [associateToken];
-  const description = "Create token proposal 11";
-
-  const proposalId = await governor.propose(
-    targets,
-    ethFees,
-    calls,
+  const proposalId = await propose(
     description,
     contractId
   );
@@ -352,7 +365,7 @@ async function main() {
   console.log(`\nWaiting for voting period to get over.`);
   await new Promise((f) => setTimeout(f, 15 * 1000)); //Wait till waiting period is over. It's current deadline as per Governance.
   await governor.state(proposalId, contractId); //4 means succeeded
-  await execute(targets, ethFees, calls, description);
+  await execute(description);
   const tokenAddress = await fetchNewTokenAddresses(proposalId);
   console.log(tokenAddress);
 
