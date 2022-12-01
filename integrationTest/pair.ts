@@ -80,7 +80,7 @@ const initializeLPTokenContract = async (lpTokenContractId: string) => {
     .setPayableAmount(new Hbar(60))
     .execute(client);
 
-  await initializeContractTx.getReceipt(client);
+  await contractTokenTx.getReceipt(client);
 
   console.log(`Initialize LP contract with token done.`);
 };
