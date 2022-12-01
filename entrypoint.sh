@@ -43,6 +43,8 @@ echo TREASURE_KEY=$TREASURE_KEY >> .env;
 echo TOKEN_USER_ID=$TOKEN_USER_ID >> .env;
 echo TOKEN_USER_KEY=$TOKEN_USER_KEY >> .env;
 echo CONTRACT_NAME=$CONTRACT_NAME >> .env;
+echo DEX_CONTRACT_OWNER_ID=$DEX_CONTRACT_OWNER_ID >> .env;
+echo DEX_CONTRACT_OWNER_KEY=$DEX_CONTRACT_OWNER_KEY >> .env;
 
 if [ "$CONTRACT_TYPE" = "Logic" ]; then 
     echo "Running contract deployment ........ " $CONTRACT_NAME;
