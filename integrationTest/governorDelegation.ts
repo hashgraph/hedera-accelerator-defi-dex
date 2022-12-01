@@ -122,32 +122,6 @@ const quorumReached = async (proposalId: BigNumber) => {
   console.log(`quorumReached tx status ${receipt.status} with quorumReached ${status}`);
 }
 
-async function createToken(initialSupply: number) {
-  const tx = await new TokenCreateTransaction()
-    .setTokenName("SampleToken")
-    .setTokenSymbol("ST")
-    .setInitialSupply(initialSupply)
-    .setDecimals(0)
-    .setTreasuryAccountId(treasureId)
-    .setTokenType(TokenType.FungibleCommon)
-    .setSupplyType(TokenSupplyType.Infinite)
-    .setSupplyKey(treasureKey)
-    .freezeWith(treasurerClient)
-    .sign(treasureKey);
-
-  const txResponse = await tx.execute(treasurerClient);
-  const txReceipt = await txResponse.getReceipt(treasurerClient);
-  const tokenId = txReceipt.tokenId!;
-  const tokenAddressSol = tokenId.toSolidityAddress();
-  const item = {
-    tokenId: tokenId.toString(),
-    tokenAddressSol,
-  };
-  console.log(`- Token ID: ${item.tokenId}`);
-  console.log(`- Token ID in Solidity format: ${item.tokenAddressSol}`);
-  return item;
-}
-
 const propose = async (
   targets: Array<string>,
   ethFees: Array<number>,
@@ -201,19 +175,48 @@ const delegateTo = async (delegatee: string, contractId: string | ContractId, cl
   console.log(`delegateTo tx status ${receipt.status}`);
 };
 
+const vote = async (
+  proposalId: BigNumber,
+  voteId: number,
+  contractId: string | ContractId,
+  clientArg: Client
+) => {
+  console.log(`\nVote for proposal id ${proposalId} `);
+  const contractFunctionParameters = new ContractFunctionParameters()
+    .addUint256(proposalId)
+    .addUint8(voteId);
+
+  const tx = await new ContractExecuteTransaction()
+    .setContractId(contractId)
+    .setFunction("castVote", contractFunctionParameters)
+    .setGas(900000)
+    .freezeWith(clientArg);
+
+  const executedTx = await tx.execute(clientArg);
+
+  const response = await executedTx.getRecord(clientArg);
+  const receipt = await executedTx.getReceipt(clientArg);
+
+  const status = receipt.status;
+
+  console.log(
+    `Vote tx status ${status} for proposal id ${response.contractFunctionResult?.getUint256(
+      0
+    )}`
+  );
+};
+
 async function main() {
   console.log(`\nUsing governor proxy contract id ${contractId}`);
-  //const token = await createToken(100);
-  //const tokenId = TokenId.fromString(token.tokenId);
-  
+
   const tokenId = TokenId.fromString("0.0.48602743");
-  //await initialize(tokenId);
+  await initialize(tokenId);
 
   const targets = [htsServiceAddress];
   const ethFees = [0];
   const associateToken = await associateTokenPublicCallData(tokenId);
   const calls = [associateToken];
-  const description = "Create token  transfer proposal with delegation 3";
+  const description = "Create token  transfer proposal with delegation 4";
 
   const proposalId = await propose(
     targets,
@@ -224,11 +227,17 @@ async function main() {
   );//Operator must be user that has tokens
 
   const userThatHasTokens = treasurerClient;
-  await governor.vote(proposalId, 1, contractId, userThatHasTokens); //1 is for vote.
+
+  await vote(proposalId, 1, contractId, userThatHasTokens); //1 is for vote.
+
   const userThatHasNoTokens = clientManagement.getDexOwner();
-  await governor.delegateTo(userThatHasNoTokens.id.toSolidityAddress(), contractId, userThatHasTokens);
+
+  await delegateTo(userThatHasNoTokens.id.toSolidityAddress(), contractId, userThatHasTokens);
+
   const clientThatHasNoTokens = clientManagement.dexOwnerClient();
-  await governor.vote(proposalId, 1, contractId, clientThatHasNoTokens); //0 is against vote.
+
+  await vote(proposalId, 1, contractId, clientThatHasNoTokens); //1 is against vote.
+
   await quorumReached(proposalId);
   await governor.voteSucceeded(proposalId, contractId);
   await governor.proposalVotes(proposalId, contractId);
@@ -237,8 +246,8 @@ async function main() {
   await new Promise((f) => setTimeout(f, 15 * 1000)); //Wait till waiting period is over. It's current deadline as per Governance.
   await governor.state(proposalId, contractId); //4 means succeeded
 
-  //const proposalId = new BigNumber("1.14865580126454364656291186207740892360588847590985066738040498365300608938694e+77");
   await execute(targets, ethFees, calls, description);
+
   console.log(`\nDone`);
 }
 
