@@ -45,7 +45,7 @@ abstract contract GovernorCountingSimpleInternal is
 
     /**
      * Using below array for delegation tracking and checking if already delegated.
-     * Its not efficient but saving another state variable. Also, not expecting delegaters 
+     * Its not efficient but saving another state variable. Also, not expecting delegaters
      * would be too many.
      */
     address[] delegaters;
@@ -63,11 +63,9 @@ abstract contract GovernorCountingSimpleInternal is
         address delegator;
     }
 
-    function getDelegatorIndex(address delegator)
-        private
-        view
-        returns (int256)
-    {
+    function getDelegatorIndex(
+        address delegator
+    ) private view returns (int256) {
         for (uint256 i = 0; i < delegaters.length; i++) {
             if (delegaters[i] == delegator) {
                 return int256(i);
@@ -235,7 +233,7 @@ abstract contract GovernorCountingSimpleInternal is
      * @dev Internal execution mechanism. Can be overridden to implement different execution mechanism
      */
     function _execute(
-        uint256 proposalId, /* proposalId */
+        uint256 proposalId /* proposalId */,
         address[] memory,
         uint256[] memory,
         bytes[] memory,
@@ -247,18 +245,17 @@ abstract contract GovernorCountingSimpleInternal is
     /**
      * @dev See {IGovernor-castVote}.
      */
-    function castVote(uint256 proposalId, uint8 support)
-        public
-        virtual
-        override
-        returns (uint256)
-    {
+    function castVote(
+        uint256 proposalId,
+        uint8 support
+    ) public virtual override returns (uint256) {
         address voter = _msgSender();
-        int256 index = getDelegatorIndex(voter);
+        int256 delegatorIndex = getDelegatorIndex(voter);
+        bool noDelegation = (delegatorIndex == -1);
 
-        require(index == -1, "Delegator already delegated.");
+        require(noDelegation, "Delegator already delegated.");
 
-        require(index == -1 && _getVotes(voter, 0, "") > 0, "No voting power");
+        require(noDelegation && _getVotes(voter, 0, "") > 0, "No voting power");
 
         uint256 weight = _castVote(proposalId, voter, support, "");
 
@@ -271,9 +268,9 @@ abstract contract GovernorCountingSimpleInternal is
 
         voters.push(voter);
 
-        if (index >= 0) {
-            votingWeights[delegaters[uint256(index)]].support = 0;
-            votingWeights[delegaters[uint256(index)]].weight = 0;
+        if (delegatorIndex >= 0) {
+            votingWeights[delegaters[uint256(delegatorIndex)]].support = 0;
+            votingWeights[delegaters[uint256(delegatorIndex)]].weight = 0;
         }
 
         return weight;
@@ -318,11 +315,10 @@ abstract contract GovernorCountingSimpleInternal is
         }
     }
 
-    function getTokenBalanceChanged(address voter, uint256 existingWeight)
-        private
-        view
-        returns (int256)
-    {
+    function getTokenBalanceChanged(
+        address voter,
+        uint256 existingWeight
+    ) private view returns (int256) {
         uint256 currentWeight = _getVotes(voter, 0, "");
         return int256(currentWeight) - int256(existingWeight);
     }
