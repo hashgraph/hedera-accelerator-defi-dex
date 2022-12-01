@@ -24,7 +24,9 @@ describe("Helper Tests", function () {
     const filePath = compiledPaths.find(
       (path) => Helper.extractFileName(path).toLowerCase() === contractName
     );
-    const extractedContractName = Helper.extractFileName(filePath!).toLowerCase();
+    const extractedContractName = Helper.extractFileName(
+      filePath!
+    ).toLowerCase();
     expect(extractedContractName).to.be.equals(contractName);
   });
   it("verify that retured paths should not have given contract json", async function () {

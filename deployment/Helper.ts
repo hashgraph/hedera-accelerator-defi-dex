@@ -9,7 +9,7 @@ export class Helper {
     return "";
   }
 
-  static getContractPathList(path:string) {
+  static getContractPathList(path: string) {
     const info: {
       compiledPaths: Array<string>;
     } = {
