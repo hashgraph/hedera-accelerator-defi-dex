@@ -206,7 +206,7 @@ async function main() {
   //const token = await createToken(100);
   //const tokenId = TokenId.fromString(token.tokenId);
   
-  const tokenId = TokenId.fromString("0.0.49000645");
+  const tokenId = TokenId.fromString("0.0.48602743");
   //await initialize(tokenId);
 
   const targets = [htsServiceAddress];

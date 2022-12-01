@@ -15,6 +15,7 @@ describe("Governor Tests", function () {
   const twentyPercent = (total * 0.2);
   const thirtyPercent = (total * 0.3);
   const fiftyPercent = (total * 0.5);
+  const desc = "Test";
 
   const readFileContent = (filePath: string) => {
     const rawdata: any = fs.readFileSync(filePath);
@@ -31,8 +32,6 @@ describe("Governor Tests", function () {
       const votingDelay = 0;
       const votingPeriod = 12;
       const Governor = await ethers.getContractFactory("GovernorTokenCreate");
-      const treaKey = ethers.utils.toUtf8Bytes("treasurer public key");
-      const adminKey = ethers.utils.toUtf8Bytes("Admin public key");
       const args = [zeroAddress, votingDelay, votingPeriod, zeroAddress];
       const instance = await upgrades.deployProxy(Governor, args);
       await instance.deployed();
@@ -117,12 +116,9 @@ describe("Governor Tests", function () {
 
     it("Verify proposal creation to cancel flow ", async function () {
       const { instance, tokenCont, signers } = await loadFixture(deployFixture);
-      const treaKey = ethers.utils.toUtf8Bytes("treasurer public key");
-      const adminKey = ethers.utils.toUtf8Bytes("Admin public key");
-      const desc = "Test";
 
       await verifyAccountBalance(tokenCont, signers[0].address, total * 0.2);
-      const proposalPublic = await instance.connect(signers[0]).createProposal(desc, zeroAddress, treaKey, zeroAddress, adminKey, "Token", "Symbol");
+      const proposalPublic = await createProposal(instance, signers[0]);
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent - (1 * precision));
 
       const record = await proposalPublic.wait();
@@ -160,7 +156,7 @@ describe("Governor Tests", function () {
       const desc = "Test";
 
       await verifyAccountBalance(tokenCont, signers[0].address, total * 0.2);
-      const proposalIdResponse = await instance.connect(signers[0]).createProposal(desc, zeroAddress, treaKey, zeroAddress, adminKey, "Token", "Symbol");
+      const proposalIdResponse = await createProposal(instance, signers[0]);
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent - (1 * precision));
 
       const record = await proposalIdResponse.wait();
@@ -187,8 +183,7 @@ describe("Governor Tests", function () {
       const state = await instance.state(proposalId);
       expect(state).to.be.equals(4);
 
-      const call = await callParameters(tokenCont);
-      await instance.executePublic(call.targets, call.ethValues, call.calls, call.desc);
+      await instance.executeProposal(desc);
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
     });
 
@@ -197,7 +192,7 @@ describe("Governor Tests", function () {
       const desc = "Test";
       //Creating a proposal for 20% token share
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
-      const proposalIdResponse = await createProposal(tokenCont, instance, signers[0]);
+      const proposalIdResponse = await createProposal(instance, signers[0]);
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent - (1 * precision));
 
       const record = await proposalIdResponse.wait();
@@ -239,11 +234,12 @@ describe("Governor Tests", function () {
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
     });
 
-    it.only("Given delegator already voted when delegator delegates then delegatee should be considered. ", async function () {
+    it("Given delegator already voted when delegator delegates then delegatee should be considered. ", async function () {
       const { instance, tokenCont, signers } = await loadFixture(deployFixture);
+      const desc = "Test";
       //Creating a proposal for 20% token share
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
-      const proposalIdResponse = await createProposal(tokenCont, instance, signers[0]);
+      const proposalIdResponse = await createProposal(instance, signers[0]);
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent - (1 * precision));
 
       const record = await proposalIdResponse.wait();
@@ -262,11 +258,11 @@ describe("Governor Tests", function () {
       //Cast vote a for user 1.
       await instance.castVote(proposalId, 0);
       await verifyProposalVotes(instance, proposalId, { abstainVotes: 0, againstVotes: 19, forVotes: 0 })
-       //Cast vote a for with delegatee.
+      //Cast vote a for with delegatee.
       await tokenCont.setUserBalance(signers[3].address, 0);
       //user 1 delegates votes to user 3
       await instance.delegateTo(signers[3].address);
-      expect( await tokenCont.balanceOf(signers[3].address)).to.be.equals(0);
+      expect(await tokenCont.balanceOf(signers[3].address)).to.be.equals(0);
       //User 3 now votes with different choice
       await instance.connect(signers[3]).castVote(proposalId, 1);
       //User 1 votes share reduced to zero and user 3 votes adds to chosen option
@@ -281,8 +277,7 @@ describe("Governor Tests", function () {
       const state = await instance.state(proposalId);
       expect(state).to.be.equals(4);
 
-      const call = await callParameters(tokenCont);
-      await instance.executePublic(call.targets, call.ethValues, call.calls, call.desc);
+      await instance.executeProposal(desc);
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
 
     });
@@ -291,7 +286,7 @@ describe("Governor Tests", function () {
       const { instance, tokenCont, signers } = await loadFixture(deployFixture);
       //Creating a proposal for 20% token share
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
-      const proposalIdResponse = await createProposal(tokenCont, instance, signers[0]);
+      const proposalIdResponse = await createProposal(instance, signers[0]);
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent - (1 * precision));
 
       const record = await proposalIdResponse.wait();
@@ -325,7 +320,7 @@ describe("Governor Tests", function () {
       const { instance, tokenCont, signers } = await loadFixture(deployFixture);
       //Creating a proposal for 20% token share
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
-      const proposalIdResponse = await createProposal(tokenCont, instance, signers[0]);
+      const proposalIdResponse = await createProposal(instance, signers[0]);
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent - (1 * precision));
 
       const record = await proposalIdResponse.wait();
@@ -354,7 +349,7 @@ describe("Governor Tests", function () {
       const { instance, tokenCont, signers } = await loadFixture(deployFixtureWithDelay);
       //Creating a proposal for 20% token share
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
-      const proposalIdResponse = await createProposal(tokenCont, instance, signers[0]);
+      const proposalIdResponse = await createProposal(instance, signers[0]);
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent - (1 * precision));
 
       const record = await proposalIdResponse.wait();
@@ -377,7 +372,7 @@ describe("Governor Tests", function () {
       const { instance, tokenCont, signers } = await loadFixture(deployFixtureWithDelay);
       //Creating a proposal for 20% token share
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
-      const proposalIdResponse = await createProposal(tokenCont, instance, signers[0]);
+      const proposalIdResponse = await createProposal(instance, signers[0]);
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent - (1 * precision));
 
       const record = await proposalIdResponse.wait();
@@ -400,7 +395,7 @@ describe("Governor Tests", function () {
       const { instance, tokenCont, signers } = await loadFixture(deployFixture);
       //Creating a proposal for 20% token share
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
-      const proposalIdResponse = await createProposal(tokenCont, instance, signers[0]);
+      const proposalIdResponse = await createProposal(instance, signers[0]);
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent - (1 * precision));
 
       const record = await proposalIdResponse.wait();
@@ -436,8 +431,7 @@ describe("Governor Tests", function () {
       const state = await instance.state(proposalId);
       expect(state).to.be.equals(4);
 
-      const call = await callParameters(tokenCont);
-      await instance.executePublic(call.targets, call.ethValues, call.calls, call.desc);
+      await instance.executeProposal(desc);
       await verifyAccountBalance(tokenCont, signers[0].address, tenPercentage + 1 * precision);//Returned token
 
     });
@@ -446,7 +440,7 @@ describe("Governor Tests", function () {
       const { instance, tokenCont, signers } = await loadFixture(deployFixture);
       //Creating a proposal for 20% token share
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
-      const proposalIdResponse = await createProposal(tokenCont, instance, signers[0]);
+      const proposalIdResponse = await createProposal(instance, signers[0]);
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent - (1 * precision));
 
       const record = await proposalIdResponse.wait();
@@ -486,8 +480,7 @@ describe("Governor Tests", function () {
       const state = await instance.state(proposalId);
       expect(state).to.be.equals(4);
 
-      const call = await callParameters(tokenCont);
-      await instance.executePublic(call.targets, call.ethValues, call.calls, call.desc);
+      await instance.executeProposal(desc);
       await verifyAccountBalance(tokenCont, signers[0].address, tenPercentage + 1 * precision);//Returned token
 
     });
@@ -496,7 +489,7 @@ describe("Governor Tests", function () {
       const { instance, tokenCont, signers } = await loadFixture(deployFixture);
       //Creating a proposal for 20% token share
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
-      const proposalIdResponse = await createProposal(tokenCont, instance, signers[0]);
+      const proposalIdResponse = await createProposal(instance, signers[0]);
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent - (1 * precision));
 
       const record = await proposalIdResponse.wait();
@@ -520,18 +513,10 @@ describe("Governor Tests", function () {
 
     });
 
-    const callParameters = async (tokenCont: ERC20Mock) => {
-      return {
-        targets: [tokenCont.address],
-        ethValues: [0],
-        calls: [await getCallDataNew()],
-        desc: "Test"
-      }
-    };
-
-    const createProposal = async (tokenCont: ERC20Mock, instance: Contract, account: SignerWithAddress) => {
-      const call = await callParameters(tokenCont);
-      return await instance.connect(account).propose(call.targets, call.ethValues, call.calls, call.desc);
+    const createProposal = async (instance: Contract, account: SignerWithAddress) => {
+      const treaKey = ethers.utils.toUtf8Bytes("treasurer public key");
+      const adminKey = ethers.utils.toUtf8Bytes("Admin public key");
+      return await instance.connect(account).createProposal(desc, zeroAddress, treaKey, zeroAddress, adminKey, "Token", "Symbol");
     }
 
     const verifyProposalVotes = async (instance: Contract, proposalId: any, result: any) => {
