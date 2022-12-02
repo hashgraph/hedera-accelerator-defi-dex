@@ -3,9 +3,7 @@ import * as fs from "fs";
 import {
   ContractExecuteTransaction,
   ContractFunctionParameters,
-  ContractId,
-  Hbar,
-  TokenId,
+  ContractId
 } from "@hashgraph/sdk";
 
 import ClientManagement from "./utils/utils";
@@ -17,6 +15,7 @@ const clientManagement = new ClientManagement();
 const contractService = new ContractService();
 
 const governor = new GovernorMethods();
+const { treasureId, treasureKey } = clientManagement.getTreasure();
 
 let client = clientManagement.createOperatorClient();
 const { key } = clientManagement.getOperator();
@@ -24,91 +23,21 @@ const { adminId, adminKey } = clientManagement.getAdmin();
 
 const adminClient = clientManagement.createClientAsAdmin();
 
-const htsServiceAddress = contractService.getContract(
-  contractService.baseContractName
-).address;
-
 let contractId: string | ContractId = contractService.getContractWithProxy(
-  contractService.governorUpgradeContract
-).transparentProxyId!;
+    contractService.governorUpgradeContract
+  ).transparentProxyId!;
 
-const upgradeContractId = ContractId.fromString(
-  contractService.getContract(contractService.factoryContractName).id!
+const upgradeContractId = ContractId.fromString( 
+    contractService.getContract(
+        contractService.factoryContractName
+    ).id!
 );
 
 const transparentContractId = ContractId.fromString(
-  contractService.getContractWithProxy(contractService.factoryContractName)
-    .transparentProxyId!
+    contractService.getContractWithProxy(
+        contractService.factoryContractName
+    ).transparentProxyId!
 );
-
-const readFileContent = (filePath: string) => {
-  const rawdata: any = fs.readFileSync(filePath);
-  return JSON.parse(rawdata);
-};
-
-const initialize = async (tokenId: TokenId) => {
-  console.log(`\nInitialize contract for text proposal `);
-  const votingDelay = 0;
-  const votingPeriod = 12;
-
-  console.log(`\ntransparentContractId ${transparentContractId}`);
-  console.log(`\nupgradeContractId ${upgradeContractId}`);
-  console.log(`\contractId ${contractId}`);
-
-  let contractFunctionParameters = new ContractFunctionParameters()
-    .addAddress(tokenId.toSolidityAddress())
-    .addAddress(transparentContractId.toSolidityAddress())
-    .addAddress(upgradeContractId.toSolidityAddress())
-    .addUint256(votingDelay)
-    .addUint256(votingPeriod)
-    .addAddress(htsServiceAddress);
-
-  const tx = await new ContractExecuteTransaction()
-    .setContractId(contractId)
-    .setFunction("initialize", contractFunctionParameters)
-    .setGas(900000)
-    .execute(client);
-
-  const receipt = await tx.getReceipt(client);
-
-  console.log(`Initialize contract with token done with status - ${receipt}`);
-};
-
-const execute = async (
-  targets: Array<string>,
-  ethFees: Array<number>,
-  calls: Array<Uint8Array>,
-  description: string
-) => {
-  console.log(`\nExecuting  proposal - `);
-  const contractFunctionParameters = new ContractFunctionParameters()
-    .addAddressArray(targets)
-    .addUint256Array(ethFees)
-    .addBytesArray(calls)
-    .addString(description);
-
-  const contractAllotTx = await new ContractExecuteTransaction()
-    .setContractId(contractId)
-    .setFunction("executePublic", contractFunctionParameters)
-    .setPayableAmount(new Hbar(70))
-    .setMaxTransactionFee(new Hbar(70))
-    .setGas(900000)
-    .freezeWith(client) // admin client
-    .sign(key); //Admin of token
-
-  const executedTx = await contractAllotTx.execute(client);
-
-  const record = await executedTx.getRecord(client);
-  const contractAllotRx = await executedTx.getReceipt(client);
-
-  const status = contractAllotRx.status;
-
-  console.log(
-    `Execute tx status ${status} for proposal id ${record.contractFunctionResult?.getUint256(
-      0
-    )}`
-  );
-};
 
 const quorumReached = async (proposalId: BigNumber) => {
   console.log(`\nGetting quorumReached `);
@@ -149,65 +78,34 @@ const fetchUpgradeContractAddresses = async (proposalId: BigNumber) => {
   const record = await contractTokenTx.getRecord(client);
   const proxy = record.contractFunctionResult!.getAddress(0);
   const contractToUgrade = record.contractFunctionResult!.getAddress(1);
-
-  console.log(`quorumReached tx status ${receipt.status}}`);
-  return { proxy, contractToUgrade };
-};
-
-const associateTokenPublicCallData = async (
-  tokenId: TokenId
-): Promise<Uint8Array> => {
-  const contractJson = readFileContent(
-    "./artifacts/contracts/common/BaseHTS.sol/BaseHTS.json"
+  
+  console.log(
+    `quorumReached tx status ${receipt.status}}`
   );
-  const contractInterface = new ethers.utils.Interface(contractJson.abi);
-
-  const receiver = adminId.toSolidityAddress();
-  const callData = contractInterface.encodeFunctionData(
-    "associateTokenPublic",
-    [receiver, tokenId.toSolidityAddress()]
-  );
-  return ethers.utils.toUtf8Bytes(callData);
+  return {proxy, contractToUgrade};
 };
 
 const upgradeTo = async (newImplementation: string) => {
   const liquidityPool = await new ContractExecuteTransaction()
-    .setContractId(contractId)
-    .setGas(2000000)
-    .setFunction(
-      "upgradeTo",
-      new ContractFunctionParameters().addAddress(newImplementation)
-    )
-    .freezeWith(adminClient)
-    .sign(adminKey);
-  const liquidityPoolTx = await liquidityPool.execute(adminClient);
-  const transferTokenRx = await liquidityPoolTx.getReceipt(adminClient);
-  console.log(`upgradedTo: ${transferTokenRx.status}`);
+      .setContractId(contractId)
+      .setGas(2000000)
+      .setFunction(
+        "upgradeTo",
+        new ContractFunctionParameters()
+          .addAddress(newImplementation)
+      )
+      .freezeWith(adminClient)
+      .sign(adminKey);
+    const liquidityPoolTx = await liquidityPool.execute(adminClient);
+    const transferTokenRx = await liquidityPoolTx.getReceipt(adminClient);
+    console.log(`upgradedTo: ${transferTokenRx.status}`);
 };
-
-// TODO: It is only to check factory contract's method, remove if not required.
-// const checkFactory = async () => {
-//   const liquidityPool = await new ContractExecuteTransaction()
-//       .setContractId(contractId)
-//       .setGas(9000000)
-//       .setFunction(
-//         "getCount",
-//         new ContractFunctionParameters()
-//       )
-
-//     const liquidityPoolTx = await liquidityPool.execute(client);
-//     const transferTokenRx = await liquidityPoolTx.getReceipt(client);
-//     console.log(`checkFactory: ${transferTokenRx.status}`);
-// };
 
 const setupFactory = async () => {
   console.log(`\nSetupFactory`);
-  const baseContract = contractService.getContract(
-    contractService.baseContractName
-  );
-  let contractFunctionParameters = new ContractFunctionParameters().addAddress(
-    baseContract.address
-  );
+  const baseContract = contractService.getContract(contractService.baseContractName);
+  let contractFunctionParameters = new ContractFunctionParameters()
+                                        .addAddress(baseContract.address)
   const contractSetPairsTx = await new ContractExecuteTransaction()
     .setContractId(contractId)
     .setFunction("setUpFactory", contractFunctionParameters)
@@ -216,27 +114,45 @@ const setupFactory = async () => {
   const contractSetPairRx = await contractSetPairsTx.getReceipt(client);
   const response = await contractSetPairsTx.getRecord(client);
   const status = contractSetPairRx.status;
-  console.log(
-    `\nSetupFactory Result ${status} code: ${response.contractFunctionResult!.getAddress()}`
-  );
+  console.log(`\nSetupFactory Result ${status} code: ${response.contractFunctionResult!.getAddress()}`);
 };
+
+async function propose(
+  description: string,
+  contractId: string | ContractId
+) {
+  console.log(`\nCreating proposal `);
+  const contractFunctionParameters = new ContractFunctionParameters()
+    .addString(description)
+    .addAddress(transparentContractId.toSolidityAddress())
+    .addAddress(upgradeContractId.toSolidityAddress());
+
+  const tx = await new ContractExecuteTransaction()
+    .setContractId(contractId)
+    .setFunction("createProposal", contractFunctionParameters)
+    .setGas(9000000)
+    .freezeWith(client)
+    .sign(treasureKey);
+
+  const executedTx = await tx.execute(client);
+
+  const record = await executedTx.getRecord(client);
+  const receipt = await executedTx.getReceipt(client);
+
+  const status = receipt.status;
+  const proposalId = record.contractFunctionResult?.getUint256(0)!;
+  console.log(`Proposal tx status ${status} with proposal id ${proposalId}`);
+
+  return proposalId;
+};
+
 
 async function main() {
   console.log(`\nUsing governor proxy contract id ${contractId}`);
-  //const tokenId = await createToken();
-  const tokenId = TokenId.fromString("0.0.48602743");
-  await initialize(tokenId);
+  await governor.initialize(contractId);
+  const description = "Create Upgrade proposal 20";
 
-  const targets = [htsServiceAddress];
-  const ethFees = [0];
-  const associateToken = await associateTokenPublicCallData(tokenId);
-  const calls = [associateToken];
-  const description = "Create Upgrade proposal 9 OSR";
-
-  const proposalId = await governor.propose(
-    targets,
-    ethFees,
-    calls,
+  const proposalId = await propose(
     description,
     contractId
   );
@@ -248,7 +164,7 @@ async function main() {
   console.log(`\nWaiting for voting period to get over.`);
   await new Promise((f) => setTimeout(f, 15 * 1000)); //Wait till waiting period is over. It's current deadline as per Governance.
   await governor.state(proposalId, contractId); //4 means succeeded
-  await execute(targets, ethFees, calls, description);
+  await governor.execute(description, contractId);
   const contracts = await fetchUpgradeContractAddresses(proposalId);
   console.log(contracts);
   contractId = ContractId.fromSolidityAddress(contracts.proxy);
