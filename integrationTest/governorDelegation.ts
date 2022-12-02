@@ -19,44 +19,32 @@ const clientManagement = new ClientManagement();
 const contractService = new ContractService();
 
 const governor = new GovernorMethods();
+const { id, key } = clientManagement.getOperator();
+const transferTokenId = TokenId.fromString("0.0.48504379");
 
 let client = clientManagement.createOperatorClient();
 const treasurerClient = clientManagement.createClient();
-const dexOwnerClient = clientManagement.dexOwnerClient();
-const { adminId, adminKey } = clientManagement.getAdmin();
-const { id, key } = clientManagement.getOperator();
-
 const { treasureId, treasureKey } = clientManagement.getTreasure();
-const { id: dexOwnerId, key: dexOwnerKey } = clientManagement.getDexOwner();
-
-const htsServiceAddress = contractService.getContract(
-  contractService.baseContractName
-).address;
-
 const contractId = contractService.getContractWithProxy(
   contractService.governorTTContractName
 ).transparentProxyId!;
-const transferTokenId = TokenId.fromString("0.0.48504379");
 
-const readFileContent = (filePath: string) => {
-  const rawdata: any = fs.readFileSync(filePath);
-  return JSON.parse(rawdata);
-};
-
-const propose = async (
+async function propose(
   description: string,
-  contractId: string | ContractId,
-  operator: Client = treasurerClient
-) => {
+  contractId: string | ContractId
+) {
   console.log(`\nCreating proposal `);
-
   const contractFunctionParameters = new ContractFunctionParameters()
-    .addString(description);
+    .addString(description)
+    .addAddress(id.toSolidityAddress())// from
+    .addAddress(treasureId.toSolidityAddress())// to
+    .addAddress(transferTokenId.toSolidityAddress()) // tokenToTransfer
+    .addInt256(new BigNumber(100000000)) // amountToTransfer
 
   const tx = await new ContractExecuteTransaction()
     .setContractId(contractId)
     .setFunction("createProposal", contractFunctionParameters)
-    .setGas(900000)
+    .setGas(9000000)
     .freezeWith(client)
     .sign(treasureKey);
 
@@ -128,9 +116,9 @@ const vote = async (
 
 async function main() {
   console.log(`\nUsing governor proxy contract id ${contractId}`);
-  await governor.initialize(contractId);
+  //await governor.initialize(contractId);
 
-  const description = "Create token  transfer proposal with delegation 4";
+  const description = "Create token  transfer proposal with delegation 5";
 
   const proposalId = await propose(
     description,

@@ -63,21 +63,21 @@ export default class GovernorMethods {
 
   public quorumReached = async (proposalId: BigNumber, contractId: string | ContractId) => {
     console.log(`\nGetting quorumReached `);
-  
+
     let contractFunctionParameters = new ContractFunctionParameters().addUint256(
       proposalId
     );
-  
+
     const contractTokenTx = await new ContractExecuteTransaction()
       .setContractId(contractId)
       .setFunction("quorumReached", contractFunctionParameters)
       .setGas(500000)
       .execute(client);
-  
+
     const receipt = await contractTokenTx.getReceipt(client);
     const record = await contractTokenTx.getRecord(client);
     const status = record.contractFunctionResult!.getBool(0);
-  
+
     console.log(
       `quorumReached tx status ${receipt.status} with quorumReached ${status}`
     );
@@ -88,21 +88,21 @@ export default class GovernorMethods {
     console.log(`\nInitialize contract with token  `);
     const votingDelay = 0;
     const votingPeriod = 12;
-  
+
     let contractFunctionParameters = new ContractFunctionParameters()
       .addAddress(tokenId.toSolidityAddress()) // token that define the voting weight, to vote user should have % of this token.
       .addUint256(votingDelay)
       .addUint256(votingPeriod)
       .addAddress(htsServiceAddress);
-  
+
     const tx = await new ContractExecuteTransaction()
       .setContractId(contractId)
       .setFunction("initialize", contractFunctionParameters)
       .setGas(900000)
       .execute(client);
-  
+
     const receipt = await tx.getReceipt(client);
-  
+
     console.log(`Initialize contract with token done with status - ${receipt}`);
   };
 
@@ -205,10 +205,10 @@ export default class GovernorMethods {
 
   public execute = async (description: string, contractId: string | ContractId) => {
     console.log(`\nExecuting  proposal - `);
-  
+
     const contractFunctionParameters = new ContractFunctionParameters()
       .addString(description);
-  
+
     const contractAllotTx = await new ContractExecuteTransaction()
       .setContractId(contractId)
       .setFunction("executeProposal", contractFunctionParameters)
@@ -217,12 +217,12 @@ export default class GovernorMethods {
       .setGas(900000)
       .freezeWith(client)
       .sign(treasureKey);//Admin of token
-  
+
     const executedTx = await contractAllotTx.execute(client);
     const record = await executedTx.getRecord(client);
     const contractAllotRx = await executedTx.getReceipt(client);
     const status = contractAllotRx.status;
-  
+
     console.log(`Execute tx status ${status} for proposal id ${record.contractFunctionResult?.getUint256(0)}`);
   };
 }
