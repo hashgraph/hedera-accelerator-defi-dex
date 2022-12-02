@@ -23,6 +23,9 @@ const config: HardhatUserConfig = {
     remoteRelay: {
       url: "https://testnet.hashio.io/api",
     },
+    hardhat: {
+      allowUnlimitedContractSize: true,
+    },
   },
 };
 
