@@ -87,7 +87,7 @@ abstract contract GovernorCountingSimpleInternal is
     }
 
     function isDelegated(address account) private view returns (bool) {
-        return delegation[account].delegatee != address(0x0) ? true : false;
+        return delegation[account].delegatee != address(0x0);
     }
 
     function _getVotes(
