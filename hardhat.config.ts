@@ -24,10 +24,9 @@ const config: HardhatUserConfig = {
       url: "https://testnet.hashio.io/api",
     },
     hardhat: {
-      allowUnlimitedContractSize: true
-    }
+      allowUnlimitedContractSize: true,
+    },
   },
-  
 };
 
 export default config;
