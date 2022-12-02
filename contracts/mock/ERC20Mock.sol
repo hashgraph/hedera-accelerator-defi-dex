@@ -28,7 +28,7 @@ contract ERC20Mock is IERC20 {
         total = _total;
     }
 
-    function setUserBalance(address _user,uint256 _userBalance) external {
+    function setUserBalance(address _user, uint256 _userBalance) external {
         userBalance = _userBalance;
         userBalances[_user] = _userBalance;
     }
