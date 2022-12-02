@@ -23,25 +23,6 @@ abstract contract GovernorCountingSimpleInternal is
     mapping(uint256 => address) proposalCreators;
     IBaseHTS internal tokenService;
 
-    function initialize(
-        IERC20 _token,
-        uint256 _votingDelayValue,
-        uint256 _votingPeriodValue,
-        IBaseHTS _tokenService
-    ) public initializer {
-        tokenService = _tokenService;
-        token = _token;
-        precision = 100000000;
-        __Governor_init("HederaTokenCreateGovernor");
-        __GovernorSettings_init(
-            _votingDelayValue, /* 1 block */
-            _votingPeriodValue, /* 1 week */
-            0
-        );
-        __GovernorCountingSimple_init();
-    }
-
-
     function mockFunctionCall()
         internal
         pure
@@ -194,9 +175,11 @@ abstract contract GovernorCountingSimpleInternal is
     }
 
     function cancelProposal(
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
         string memory description
     ) public returns (uint256 proposalId) {
-        (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = mockFunctionCall();
         bytes32 descriptionHash = keccak256(bytes(description));
         proposalId = hashProposal(targets, values, calldatas, descriptionHash);
         require(
@@ -214,10 +197,12 @@ abstract contract GovernorCountingSimpleInternal is
     /**
      * @dev See {IGovernor-execute}.
      */
-    function executeProposal(
+    function executePublic(
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
         string memory description
     ) public payable virtual returns (uint256) {
-        (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = mockFunctionCall();
         bytes32 descriptionHash = keccak256(bytes(description));
         uint256 proposalId = hashProposal(
             targets,
