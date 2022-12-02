@@ -34,28 +34,6 @@ const factoryContractId = ContractId.fromString(
     .transparentProxyId!
 );
 
-const quorumReached = async (proposalId: BigNumber) => {
-  console.log(`\nGetting quorumReached `);
-
-  let contractFunctionParameters = new ContractFunctionParameters().addUint256(
-    proposalId
-  );
-
-  const contractTokenTx = await new ContractExecuteTransaction()
-    .setContractId(contractId)
-    .setFunction("quorumReached", contractFunctionParameters)
-    .setGas(500000)
-    .execute(client);
-
-  const receipt = await contractTokenTx.getReceipt(client);
-  const record = await contractTokenTx.getRecord(client);
-  const status = record.contractFunctionResult!.getBool(0);
-
-  console.log(
-    `quorumReached tx status ${receipt.status} with quorumReached ${status}`
-  );
-};
-
 const fetchNewTokenAddresses = async (proposalId: BigNumber) => {
   console.log(`\nGetting ContractAddresses `);
 
@@ -189,7 +167,7 @@ async function main() {
     contractId
   );
   await governor.vote(proposalId, 1, contractId); //1 is for vote.
-  await quorumReached(proposalId);
+  await governor.quorumReached(proposalId, contractId);
   await governor.voteSucceeded(proposalId, contractId);
   await governor.proposalVotes(proposalId, contractId);
   await governor.state(proposalId, contractId);

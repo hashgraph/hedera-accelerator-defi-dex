@@ -61,6 +61,28 @@ export default class GovernorMethods {
     );
   };
 
+  public quorumReached = async (proposalId: BigNumber, contractId: string | ContractId) => {
+    console.log(`\nGetting quorumReached `);
+  
+    let contractFunctionParameters = new ContractFunctionParameters().addUint256(
+      proposalId
+    );
+  
+    const contractTokenTx = await new ContractExecuteTransaction()
+      .setContractId(contractId)
+      .setFunction("quorumReached", contractFunctionParameters)
+      .setGas(500000)
+      .execute(client);
+  
+    const receipt = await contractTokenTx.getReceipt(client);
+    const record = await contractTokenTx.getRecord(client);
+    const status = record.contractFunctionResult!.getBool(0);
+  
+    console.log(
+      `quorumReached tx status ${receipt.status} with quorumReached ${status}`
+    );
+  };
+
   public initialize = async (contractId: string | ContractId) => {
     const tokenId = TokenId.fromString("0.0.48602743");
     console.log(`\nInitialize contract with token  `);

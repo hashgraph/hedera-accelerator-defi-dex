@@ -696,5 +696,33 @@
         "timestamp": "2022-12-02T08:23:22.537Z",
         "transparentProxyAddress": "0x0000000000000000000000000000000002ebe3ed",
         "transparentProxyId": "0.0.49013741"
+    },
+    {
+        "name": "factory",
+        "id": "0.0.49017831",
+        "address": "0x0000000000000000000000000000000002ebf3e7",
+        "timestamp": "2022-12-02T12:19:00.940Z"
+    },
+    {
+        "name": "governortransfertoken",
+        "id": "0.0.49018497",
+        "address": "0x0000000000000000000000000000000002ebf681",
+        "timestamp": "2022-12-02T13:06:39.159Z"
+    },
+    {
+        "name": "governortransfertoken",
+        "id": "0.0.49018513",
+        "address": "0x0000000000000000000000000000000002ebf691",
+        "timestamp": "2022-12-02T13:10:20.700Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002ebf694",
+        "transparentProxyId": "0.0.49018516"
+    },
+    {
+        "name": "governortransfertoken",
+        "id": "0.0.49018578",
+        "address": "0x0000000000000000000000000000000002ebf6d2",
+        "timestamp": "2022-12-02T13:26:30.215Z",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002ebf6d6",
+        "transparentProxyId": "0.0.49018582"
     }
 ]
