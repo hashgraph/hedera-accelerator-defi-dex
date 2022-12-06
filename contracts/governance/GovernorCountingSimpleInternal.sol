@@ -6,9 +6,9 @@ import "@openzeppelin/contracts-upgradeable/governance/IGovernorUpgradeable.sol"
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorSettingsUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesQuorumFractionUpgradeable.sol";
-import "./IERC20.sol";
-import "./IBaseHTS.sol";
-import "./hedera/HederaResponseCodes.sol";
+import "../common/IERC20.sol";
+import "../common/IBaseHTS.sol";
+import "../common/hedera/HederaResponseCodes.sol";
 import "./GovernorCountingSimpleUpgradeable.sol";
 
 abstract contract GovernorCountingSimpleInternal is
@@ -34,13 +34,12 @@ abstract contract GovernorCountingSimpleInternal is
         precision = 100000000;
         __Governor_init("HederaTokenCreateGovernor");
         __GovernorSettings_init(
-            _votingDelayValue, /* 1 block */
-            _votingPeriodValue, /* 1 week */
+            _votingDelayValue /* 1 block */,
+            _votingPeriodValue /* 1 week */,
             0
         );
         __GovernorCountingSimple_init();
     }
-
 
     function mockFunctionCall()
         internal
@@ -196,7 +195,11 @@ abstract contract GovernorCountingSimpleInternal is
     function cancelProposal(
         string memory description
     ) public returns (uint256 proposalId) {
-        (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = mockFunctionCall();
+        (
+            address[] memory targets,
+            uint256[] memory values,
+            bytes[] memory calldatas
+        ) = mockFunctionCall();
         bytes32 descriptionHash = keccak256(bytes(description));
         proposalId = hashProposal(targets, values, calldatas, descriptionHash);
         require(
@@ -217,7 +220,11 @@ abstract contract GovernorCountingSimpleInternal is
     function executeProposal(
         string memory description
     ) public payable virtual returns (uint256) {
-        (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = mockFunctionCall();
+        (
+            address[] memory targets,
+            uint256[] memory values,
+            bytes[] memory calldatas
+        ) = mockFunctionCall();
         bytes32 descriptionHash = keccak256(bytes(description));
         uint256 proposalId = hashProposal(
             targets,
