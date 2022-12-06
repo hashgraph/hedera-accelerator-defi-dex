@@ -10,10 +10,10 @@ import {
   Hbar,
 } from "@hashgraph/sdk";
 
-import ClientManagement from "./utils/utils";
 import { EventConsumer } from "./utils/EventConsumer";
 import { ContractService } from "../deployment/service/ContractService";
 import { DeployedContract } from "../deployment/model/contract";
+import ClientManagement from "../utils/ClientManagement";
 
 const clientManagement = new ClientManagement();
 const contractService = new ContractService();

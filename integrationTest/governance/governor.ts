@@ -1,5 +1,4 @@
 import { BigNumber } from "bignumber.js";
-import * as fs from "fs";
 import {
   ContractExecuteTransaction,
   ContractFunctionParameters,
@@ -7,12 +6,11 @@ import {
   ContractId,
   TokenId,
 } from "@hashgraph/sdk";
-import { httpRequest } from "../deployment/api/HttpsService";
+import { httpRequest } from "../../deployment/api/HttpsService";
 
-import ClientManagement from "./utils/utils";
-import { ContractService } from "../deployment/service/ContractService";
-import { ethers } from "ethers";
+import { ContractService } from "../../deployment/service/ContractService";
 import GovernorMethods from "./GovernorMethods";
+import ClientManagement from "../../utils/ClientManagement";
 
 const clientManagement = new ClientManagement();
 const contractService = new ContractService();
@@ -76,8 +74,7 @@ const createPair = async (
   const createPairTxRes = await createPairTx.execute(client);
   const receipt = await createPairTxRes.getReceipt(client);
   const record = await createPairTxRes.getRecord(client);
-  const contractAddress =
-    record.contractFunctionResult!.getAddress(0);
+  const contractAddress = record.contractFunctionResult!.getAddress(0);
   console.log(`CreatePair address: ${contractAddress}`);
   console.log(`CreatePair status: ${receipt.status}`);
   return contractAddress;
@@ -122,10 +119,7 @@ async function createPairFromFactory(tokenAddress: string) {
   console.log(`contractId: ${pairContractId}`);
 }
 
-async function propose(
-  description: string,
-  contractId: string | ContractId
-) {
+async function propose(description: string, contractId: string | ContractId) {
   console.log(`\nCreating proposal `);
   const tokenName = "Governance Hedera Open DEX";
   const tokenSymbol = "GOD";
@@ -155,17 +149,14 @@ async function propose(
   console.log(`Proposal tx status ${status} with proposal id ${proposalId}`);
 
   return proposalId;
-};
+}
 
 async function main() {
   console.log(`\nUsing governor proxy contract id ${contractId}`);
   await governor.initialize(contractId);
   const description = "Create token proposal 10";
 
-  const proposalId = await propose(
-    description,
-    contractId
-  );
+  const proposalId = await propose(description, contractId);
   await governor.vote(proposalId, 1, contractId); //1 is for vote.
   await governor.quorumReached(proposalId, contractId);
   await governor.voteSucceeded(proposalId, contractId);

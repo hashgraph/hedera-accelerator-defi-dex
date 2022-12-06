@@ -1,5 +1,5 @@
-import { Helper } from "./Helper";
-import { Deployment } from "./deployContractOnTestnet";
+import { Helper } from "../../utils/Helper";
+import { Deployment } from "../../utils/deployContractOnTestnet";
 import { ContractFunctionParameters } from "@hashgraph/sdk";
 import dotenv from "dotenv";
 dotenv.config();
