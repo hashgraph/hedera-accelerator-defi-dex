@@ -48,19 +48,19 @@ echo DEX_CONTRACT_OWNER_KEY=$DEX_CONTRACT_OWNER_KEY >> .env;
 
 if [ "$CONTRACT_TYPE" = "Logic" ]; then 
     echo "Running contract deployment ........ " $CONTRACT_NAME;
-    npx hardhat run ./deployment/logic.ts;
+    npx hardhat run ./deployment/scripts/logic.ts;
     echo "Deployment done.";
 fi
 
 if [ "$CONTRACT_TYPE" = "Proxy" ]; then 
     echo "Running proxy deployment ........ " $CONTRACT_NAME;
-    npx hardhat run ./deployment/transparentUpgradeableProxy.ts;
+    npx hardhat run ./deployment/scripts/transparentUpgradeableProxy.ts;
     echo "Transparent proxy deployed.";
 fi
 
 if [ "$CONTRACT_TYPE" = "Upgrade" ]; then 
     echo "Running upgrade logic contract ........ " $CONTRACT_NAME;
-    npx hardhat run ./deployment/upgradeProxy.ts;
+    npx hardhat run ./deployment/scripts/upgradeProxy.ts;
     echo "Upgrade done.";
 fi
 
