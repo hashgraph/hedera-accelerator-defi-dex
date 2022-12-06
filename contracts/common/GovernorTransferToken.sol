@@ -4,41 +4,37 @@ import "./GovernorCountingSimpleInternal.sol";
 import "./hedera/HederaTokenService.sol";
 
 contract GovernorTransferToken is GovernorCountingSimpleInternal {
-    address transferFromAccount;
-    address transferToAccount;
-    address tokenToTransfer;
-    int256 transferTokenAmount;
+    
 
-    /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() {
-        _disableInitializers();
+    struct TokenTransferData {
+        address transferFromAccount;
+        address transferToAccount;
+        address tokenToTransfer;
+        int256 transferTokenAmount;
     }
+    mapping(uint256 => TokenTransferData) _proposalData;
 
-    function initialize(
-        IERC20 _token,
+    function createProposal(
+        string memory description,
         address _transferFromAccount,
         address _transferToAccount,
         address _tokenToTransfer,
-        int256 _transferTokenAmount,
-        uint256 _votingDelayValue,
-        uint256 _votingPeriodValue,
-        IBaseHTS _tokenService
-    ) public initializer {
-        tokenService = _tokenService;
-        token = _token;
-        precision = 100000000;
-        transferFromAccount = _transferFromAccount;
-        transferToAccount = _transferToAccount;
-        tokenToTransfer = _tokenToTransfer;
-        transferTokenAmount = _transferTokenAmount;
-        
-        __Governor_init("HederaTransferTokenGovernor");
-        __GovernorSettings_init(
-            _votingDelayValue, /* 1 block */
-            _votingPeriodValue, /* 1 week */
-            0
+        int256 _transferTokenAmount
+    ) public returns (uint256) {
+        (
+            address[] memory targets,
+            uint256[] memory values,
+            bytes[] memory calldatas
+        ) = mockFunctionCall();
+        uint256 proposalId = propose(targets, values, calldatas, description);
+        TokenTransferData memory tokenTransferData = TokenTransferData(
+            _transferFromAccount,
+            _transferToAccount,
+            _tokenToTransfer,
+            _transferTokenAmount
         );
-        __GovernorCountingSimple_init();
+        _proposalData[proposalId] = tokenTransferData;
+        return proposalId;
     }
 
     function quorum(uint256)
@@ -60,17 +56,18 @@ contract GovernorTransferToken is GovernorCountingSimpleInternal {
         bytes[] memory calldatas,
         bytes32 description
     ) internal virtual override {
-        transferToken();
+        transferToken(proposalId);
         super._execute(proposalId,targets, values, calldatas, description);
     }
 
-    function transferToken() internal {
-        tokenService.associateTokenPublic(transferToAccount, tokenToTransfer);
+    function transferToken(uint256 proposalId) internal {
+        TokenTransferData storage tokenTransferData = _proposalData[proposalId];
+        tokenService.associateTokenPublic(tokenTransferData.transferToAccount, tokenTransferData.tokenToTransfer);
         int responseCode = tokenService.transferTokenPublic(
-            tokenToTransfer,
-            transferFromAccount,
-            transferToAccount,
-            int64(transferTokenAmount)
+            tokenTransferData.tokenToTransfer,
+            tokenTransferData.transferFromAccount,
+            tokenTransferData.transferToAccount,
+            int64(tokenTransferData.transferTokenAmount)
         );
         if (responseCode != HederaResponseCodes.SUCCESS) {
             revert("Transfer token failed.");
