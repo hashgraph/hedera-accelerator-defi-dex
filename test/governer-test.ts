@@ -22,9 +22,7 @@ describe("Governor Tests", function () {
     return JSON.parse(rawdata);
   };
 
-  const contractJson = readFileContent(
-    "./artifacts/contracts/mock/ERC20Mock.sol/ERC20Mock.json"
-  );
+  const contractJson = readFileContent("./artifacts/contracts/mock/ERC20Mock.sol/ERC20Mock.json");
   const contractInterface = new ethers.utils.Interface(contractJson.abi);
 
   describe("GovernorCountingSimpleInternal Upgradeable", function () {
@@ -60,7 +58,6 @@ describe("Governor Tests", function () {
       votingPeriod,
       mockBaseHTS.address,
     ];
-
     const instance = await upgrades.deployProxy(Governor, args);
 
     await instance.deployed();
@@ -98,7 +95,7 @@ describe("Governor Tests", function () {
 
   async function mineNBlocks(n: number) {
     for (let index = 0; index < n; index++) {
-      await ethers.provider.send("evm_mine", []);
+      await ethers.provider.send('evm_mine', []);
     }
   }
 
@@ -106,7 +103,7 @@ describe("Governor Tests", function () {
     const getCallDataNew = async (): Promise<string> => {
       const callData = contractInterface.encodeFunctionData("totalSupply", []);
       return callData;
-    };
+    }
 
     it("When user has 20% of token share then votes weight should be 20", async function () {
       const { instance, tokenCont, signers } = await loadFixture(deployFixture);
@@ -161,7 +158,7 @@ describe("Governor Tests", function () {
       const state = await instance.state(proposalId);
       expect(state).to.be.equals(4);
 
-      await instance.cancel(desc);
+      await instance.cancelProposal(desc);
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
     });
 
@@ -662,4 +659,4 @@ describe("Governor Tests", function () {
       expect(userBalance, "Verify user balance ").to.be.equals(balance);
     };
   });
-});
+})

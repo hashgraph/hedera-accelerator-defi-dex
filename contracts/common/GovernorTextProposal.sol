@@ -5,28 +5,13 @@ import "./GovernorCountingSimpleInternal.sol";
 contract GovernorTextProposal is GovernorCountingSimpleInternal {
     using Bits for uint256;
 
-    /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() {
-        _disableInitializers();
-    }
-
-    function initialize(
-        IERC20 _token,
-        uint256 _votingDelayValue,
-        uint256 _votingPeriodValue,
-        IBaseHTS _tokenService
-    ) public initializer {
-        tokenService = _tokenService;
-        token = _token;
-        precision = 100000000;
-        __Governor_init("HederaGovernor");
-        __GovernorSettings_init(
-            _votingDelayValue, /* 1 block */
-            _votingPeriodValue, /* 1 week */
-            0
-        );
-        __GovernorCountingSimple_init();
-    }
+    function createProposal (
+        string memory description
+    ) public returns (uint256) { 
+        (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = mockFunctionCall();
+        uint256 proposalId = propose(targets, values, calldatas, description);
+        return proposalId;
+    } 
 
     function quorum(uint256)
         public

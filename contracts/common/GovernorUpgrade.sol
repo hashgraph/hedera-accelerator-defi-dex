@@ -8,37 +8,31 @@ interface ITransparentProxy {
 }
 
 contract GovernorUpgrade is GovernorCountingSimpleInternal {
-    using Bits for uint256;
-
-    address payable proxyContract;
-    address contractToUpgrade;
-
-    /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() {
-        _disableInitializers();
+    struct TokenUpgradeData {
+        address payable proxyContract;
+        address contractToUpgrade;
     }
 
-    function initialize(
-        IERC20 _token,
-        address payable _proxyContract,
-        address _contractToUpgrade,
-        uint256 _votingDelayValue,
-        uint256 _votingPeriodValue,
-        IBaseHTS _tokenService
-    ) public initializer {
-        tokenService = _tokenService;
-        token = _token;
-        precision = 100000000;
-        proxyContract = _proxyContract;
-        contractToUpgrade = _contractToUpgrade;
+    using Bits for uint256;
+    mapping(uint256 => TokenUpgradeData) _proposalData;
 
-        __Governor_init("HederaGovernor");
-        __GovernorSettings_init(
-            _votingDelayValue, /* 1 block */
-            _votingPeriodValue, /* 1 week */
-            0
+    function createProposal(
+        string memory description,
+        address payable proxyContract,
+        address contractToUpgrade
+    ) public returns (uint256) {
+        (
+            address[] memory targets,
+            uint256[] memory values,
+            bytes[] memory calldatas
+        ) = mockFunctionCall();
+        uint256 proposalId = propose(targets, values, calldatas, description);
+        TokenUpgradeData memory tokenUpgradeData = TokenUpgradeData(
+            proxyContract,
+            contractToUpgrade
         );
-        __GovernorCountingSimple_init();
+        _proposalData[proposalId] = tokenUpgradeData;
+        return proposalId;
     }
 
     function quorum(uint256)
@@ -50,21 +44,16 @@ contract GovernorUpgrade is GovernorCountingSimpleInternal {
         return 1;
     }
 
-    /**
-     * @dev Internal execution mechanism. Can be overridden to implement different execution mechanism
-     */
-    function _execute(
-        uint256 proposalId,
-        address[] memory targets,
-        uint256[] memory values,
-        bytes[] memory calldatas,
-        bytes32 description
-    ) internal virtual override {
-        super._execute(proposalId,targets, values, calldatas, description);
-    }
-
-    function getContractAddresses(uint256 proposalId) public view returns(address, address) {
-        require(state(proposalId) == ProposalState.Executed, "Contract not executed yet!");
-        return (proxyContract, contractToUpgrade);
+    function getContractAddresses(uint256 proposalId)
+        public
+        view
+        returns (address, address)
+    {
+        require(
+            state(proposalId) == ProposalState.Executed,
+            "Contract not executed yet!"
+        );
+        TokenUpgradeData memory tokenUpgradeData = _proposalData[proposalId];
+        return (tokenUpgradeData.proxyContract, tokenUpgradeData.contractToUpgrade);
     }
 }
