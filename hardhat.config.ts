@@ -15,6 +15,9 @@ const config: HardhatUserConfig = {
     settings: {
       optimizer: {
         enabled: true,
+        /// Note: A “runs” parameter of “1” will produce short but expensive code. 
+        ///       In contrast, a larger “runs” parameter will produce longer but more gas efficient code. 
+        ///       The maximum value of the parameter is 2**32-1. So it could change as required.
         runs: 24000,
       },
     },
