@@ -1,7 +1,7 @@
 import inquirer from "inquirer";
-import { main as deployContract } from "../logic";
-import { main as createContractProxy } from "../transparentUpgradeableProxy";
-import { main as updateContractProxy } from "../upgradeProxy";
+import { main as deployContract } from "./scripts/logic";
+import { main as createContractProxy } from "./scripts/transparentUpgradeableProxy";
+import { main as updateContractProxy } from "./scripts/upgradeProxy";
 
 const SUPPORTED_CONTRACTS_FOR_DEPLOYMENT = [
   "Factory",

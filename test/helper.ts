@@ -1,4 +1,4 @@
-import { Helper } from "../deployment/Helper";
+import { Helper } from "../utils/Helper";
 import { expect } from "chai";
 
 describe("Helper Tests", function () {

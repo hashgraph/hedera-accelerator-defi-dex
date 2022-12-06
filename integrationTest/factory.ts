@@ -10,14 +10,13 @@ import {
   PrivateKey,
 } from "@hashgraph/sdk";
 
-import ClientManagement from "./utils/utils";
-import ArrayUtils from "./utils/arrayUtils";
+import { Helper } from "../utils/Helper";
 import { ContractService } from "../deployment/service/ContractService";
 import { httpRequest } from "../deployment/api/HttpsService";
 import * as fs from "fs";
+import ClientManagement from "../utils/ClientManagement";
 
 const clientManagement = new ClientManagement();
-const arrayUtils = new ArrayUtils();
 const client = clientManagement.createOperatorClient();
 const { treasureId, treasureKey } = clientManagement.getTreasure();
 const contractService = new ContractService();
@@ -148,7 +147,7 @@ const getAllPairs = async (contractId: string) => {
   console.log(
     `getPairs Count: ${response.contractFunctionResult!.getUint256(1)}`
   );
-  const modifiedArray = arrayUtils.getAddressArray(
+  const modifiedArray = Helper.getAddressArray(
     response.contractFunctionResult!
   );
   console.log(`get all pair Address: ${modifiedArray}`);
