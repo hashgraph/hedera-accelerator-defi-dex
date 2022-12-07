@@ -57,13 +57,6 @@ export default class ClientManagement {
     };
   };
 
-  public getTokenUser = () => {
-    return {
-      tokenUserId: this.tokenUserId,
-      tokenUserKey: this.tokenUserKey,
-    };
-  };
-
   public getOperator = () => {
     return {
       id: this.tokenUserId,

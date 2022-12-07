@@ -1,45 +1,38 @@
 import { BigNumber } from "bignumber.js";
-import * as fs from "fs";
 import {
-  AccountId,
   Client,
   ContractExecuteTransaction,
   ContractFunctionParameters,
   ContractId,
-  Hbar,
-  TokenId
+  TokenId,
 } from "@hashgraph/sdk";
 
-import ClientManagement from "./utils/utils";
-import { ContractService } from "../deployment/service/ContractService";
-import { ethers } from "ethers";
 import GovernorMethods from "./GovernorMethods";
+import ClientManagement from "../../utils/ClientManagement";
+import { ContractService } from "../../deployment/service/ContractService";
 
 const clientManagement = new ClientManagement();
 const contractService = new ContractService();
 
 const governor = new GovernorMethods();
-const { id, key } = clientManagement.getOperator();
+const { id } = clientManagement.getOperator();
 const transferTokenId = TokenId.fromString("0.0.48504379");
 
-let client = clientManagement.createOperatorClient();
+const client = clientManagement.createOperatorClient();
 const treasurerClient = clientManagement.createClient();
 const { treasureId, treasureKey } = clientManagement.getTreasure();
 const contractId = contractService.getContractWithProxy(
   contractService.governorTTContractName
 ).transparentProxyId!;
 
-async function propose(
-  description: string,
-  contractId: string | ContractId
-) {
+async function propose(description: string, contractId: string | ContractId) {
   console.log(`\nCreating proposal `);
   const contractFunctionParameters = new ContractFunctionParameters()
     .addString(description)
-    .addAddress(id.toSolidityAddress())// from
-    .addAddress(treasureId.toSolidityAddress())// to
+    .addAddress(id.toSolidityAddress()) // from
+    .addAddress(treasureId.toSolidityAddress()) // to
     .addAddress(transferTokenId.toSolidityAddress()) // tokenToTransfer
-    .addInt256(new BigNumber(100000000)) // amountToTransfer
+    .addInt256(new BigNumber(100000000)); // amountToTransfer
 
   const tx = await new ContractExecuteTransaction()
     .setContractId(contractId)
@@ -58,7 +51,7 @@ async function propose(
   console.log(`Proposal tx status ${status} with proposal id ${proposalId}`);
 
   return proposalId;
-};
+}
 
 const delegateTo = async (
   delegatee: string,
@@ -67,9 +60,8 @@ const delegateTo = async (
 ) => {
   console.log(`\ndelegateTo `);
 
-  let contractFunctionParameters = new ContractFunctionParameters().addAddress(
-    delegatee
-  );
+  const contractFunctionParameters =
+    new ContractFunctionParameters().addAddress(delegatee);
 
   const tx = await new ContractExecuteTransaction()
     .setContractId(contractId)
@@ -78,7 +70,6 @@ const delegateTo = async (
     .execute(client);
 
   const receipt = await tx.getReceipt(client);
-  const record = await tx.getRecord(client);
 
   console.log(`delegateTo tx status ${receipt.status}`);
 };
@@ -116,17 +107,14 @@ const vote = async (
 
 async function main() {
   console.log(`\nUsing governor proxy contract id ${contractId}`);
-  //await governor.initialize(contractId);
+  // await governor.initialize(contractId);
 
   const description = "Create token  transfer proposal with delegation 5";
 
-  const proposalId = await propose(
-    description,
-    contractId
-  ); //Operator must be user that has tokens
+  const proposalId = await propose(description, contractId); // Operator must be user that has tokens
 
   const userThatHasTokens = treasurerClient;
-  await vote(proposalId, 1, contractId, userThatHasTokens); //1 is for vote.
+  await vote(proposalId, 1, contractId, userThatHasTokens); // 1 is for vote.
   const userThatHasNoTokens = clientManagement.getDexOwner();
 
   await delegateTo(
@@ -136,14 +124,14 @@ async function main() {
   );
 
   const clientThatHasNoTokens = clientManagement.dexOwnerClient();
-  await vote(proposalId, 1, contractId, clientThatHasNoTokens); //1 is against vote.
+  await vote(proposalId, 1, contractId, clientThatHasNoTokens); // 1 is against vote.
   await governor.quorumReached(proposalId, contractId);
   await governor.voteSucceeded(proposalId, contractId);
   await governor.proposalVotes(proposalId, contractId);
   await governor.state(proposalId, contractId);
   console.log(`\nWaiting for voting period to get over.`);
-  await new Promise((f) => setTimeout(f, 15 * 1000)); //Wait till waiting period is over. It's current deadline as per Governance.
-  await governor.state(proposalId, contractId); //4 means succeeded
+  await new Promise((f) => setTimeout(f, 15 * 1000)); // Wait till waiting period is over. It's current deadline as per Governance.
+  await governor.state(proposalId, contractId); // 4 means succeeded
 
   await governor.execute(description, contractId);
 

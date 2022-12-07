@@ -3,13 +3,13 @@ import * as fs from "fs";
 import {
   ContractExecuteTransaction,
   ContractFunctionParameters,
-  ContractId
+  ContractId,
 } from "@hashgraph/sdk";
 
-import ClientManagement from "./utils/utils";
-import { ContractService } from "../deployment/service/ContractService";
 import { ethers } from "ethers";
 import GovernorMethods from "./GovernorMethods";
+import ClientManagement from "../../utils/ClientManagement";
+import { ContractService } from "../../deployment/service/ContractService";
 
 const clientManagement = new ClientManagement();
 const contractService = new ContractService();
@@ -28,15 +28,12 @@ let contractId: string | ContractId = contractService.getContractWithProxy(
 ).transparentProxyId!;
 
 const upgradeContractId = ContractId.fromString(
-  contractService.getContract(
-    contractService.factoryContractName
-  ).id!
+  contractService.getContract(contractService.factoryContractName).id!
 );
 
 const transparentContractId = ContractId.fromString(
-  contractService.getContractWithProxy(
-    contractService.factoryContractName
-  ).transparentProxyId!
+  contractService.getContractWithProxy(contractService.factoryContractName)
+    .transparentProxyId!
 );
 
 const fetchUpgradeContractAddresses = async (proposalId: BigNumber) => {
@@ -57,9 +54,7 @@ const fetchUpgradeContractAddresses = async (proposalId: BigNumber) => {
   const proxy = record.contractFunctionResult!.getAddress(0);
   const contractToUgrade = record.contractFunctionResult!.getAddress(1);
 
-  console.log(
-    `quorumReached tx status ${receipt.status}}`
-  );
+  console.log(`quorumReached tx status ${receipt.status}}`);
   return { proxy, contractToUgrade };
 };
 
@@ -69,8 +64,7 @@ const upgradeTo = async (newImplementation: string) => {
     .setGas(2000000)
     .setFunction(
       "upgradeTo",
-      new ContractFunctionParameters()
-        .addAddress(newImplementation)
+      new ContractFunctionParameters().addAddress(newImplementation)
     )
     .freezeWith(adminClient)
     .sign(adminKey);
@@ -81,9 +75,12 @@ const upgradeTo = async (newImplementation: string) => {
 
 const setupFactory = async () => {
   console.log(`\nSetupFactory`);
-  const baseContract = contractService.getContract(contractService.baseContractName);
-  let contractFunctionParameters = new ContractFunctionParameters()
-    .addAddress(baseContract.address)
+  const baseContract = contractService.getContract(
+    contractService.baseContractName
+  );
+  let contractFunctionParameters = new ContractFunctionParameters().addAddress(
+    baseContract.address
+  );
   const contractSetPairsTx = await new ContractExecuteTransaction()
     .setContractId(contractId)
     .setFunction("setUpFactory", contractFunctionParameters)
@@ -92,13 +89,12 @@ const setupFactory = async () => {
   const contractSetPairRx = await contractSetPairsTx.getReceipt(client);
   const response = await contractSetPairsTx.getRecord(client);
   const status = contractSetPairRx.status;
-  console.log(`\nSetupFactory Result ${status} code: ${response.contractFunctionResult!.getAddress()}`);
+  console.log(
+    `\nSetupFactory Result ${status} code: ${response.contractFunctionResult!.getAddress()}`
+  );
 };
 
-async function propose(
-  description: string,
-  contractId: string | ContractId
-) {
+async function propose(description: string, contractId: string | ContractId) {
   console.log(`\nCreating proposal `);
   const contractFunctionParameters = new ContractFunctionParameters()
     .addString(description)
@@ -122,18 +118,14 @@ async function propose(
   console.log(`Proposal tx status ${status} with proposal id ${proposalId}`);
 
   return proposalId;
-};
-
+}
 
 async function main() {
   console.log(`\nUsing governor proxy contract id ${contractId}`);
   await governor.initialize(contractId);
   const description = "Create Upgrade proposal 20";
 
-  const proposalId = await propose(
-    description,
-    contractId
-  );
+  const proposalId = await propose(description, contractId);
   await governor.vote(proposalId, 1, contractId); //1 is for vote.
   await governor.quorumReached(proposalId, contractId);
   await governor.voteSucceeded(proposalId, contractId);

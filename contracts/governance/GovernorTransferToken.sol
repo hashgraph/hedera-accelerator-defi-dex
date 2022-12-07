@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.4;
 import "./GovernorCountingSimpleInternal.sol";
-import "./hedera/HederaTokenService.sol";
+import "../common/hedera/HederaTokenService.sol";
 
 contract GovernorTransferToken is GovernorCountingSimpleInternal {
-    
-
     struct TokenTransferData {
         address transferFromAccount;
         address transferToAccount;
@@ -37,12 +35,9 @@ contract GovernorTransferToken is GovernorCountingSimpleInternal {
         return proposalId;
     }
 
-    function quorum(uint256)
-        public
-        pure
-        override(IGovernorUpgradeable)
-        returns (uint256)
-    {
+    function quorum(
+        uint256
+    ) public pure override(IGovernorUpgradeable) returns (uint256) {
         return 1;
     }
 
@@ -57,12 +52,15 @@ contract GovernorTransferToken is GovernorCountingSimpleInternal {
         bytes32 description
     ) internal virtual override {
         transferToken(proposalId);
-        super._execute(proposalId,targets, values, calldatas, description);
+        super._execute(proposalId, targets, values, calldatas, description);
     }
 
     function transferToken(uint256 proposalId) internal {
         TokenTransferData storage tokenTransferData = _proposalData[proposalId];
-        tokenService.associateTokenPublic(tokenTransferData.transferToAccount, tokenTransferData.tokenToTransfer);
+        tokenService.associateTokenPublic(
+            tokenTransferData.transferToAccount,
+            tokenTransferData.tokenToTransfer
+        );
         int responseCode = tokenService.transferTokenPublic(
             tokenTransferData.tokenToTransfer,
             tokenTransferData.transferFromAccount,
