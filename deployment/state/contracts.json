@@ -669,60 +669,14 @@
     },
     {
         "name": "factory",
-        "id": "0.0.49005118",
-        "address": "0x0000000000000000000000000000000002ebc23e",
-        "timestamp": "2022-12-01T06:35:59.121Z"
-    },
-    {
-        "name": "governortextproposal",
-        "id": "0.0.49013712",
-        "address": "0x0000000000000000000000000000000002ebe3d0",
-        "timestamp": "2022-12-02T08:15:16.835Z",
-        "transparentProxyAddress": "0x0000000000000000000000000000000002ebe3d3",
-        "transparentProxyId": "0.0.49013715"
-    },
-    {
-        "name": "governortransfertoken",
-        "id": "0.0.49013720",
-        "address": "0x0000000000000000000000000000000002ebe3d8",
-        "timestamp": "2022-12-02T08:18:35.598Z",
-        "transparentProxyAddress": "0x0000000000000000000000000000000002ebe3df",
-        "transparentProxyId": "0.0.49013727"
-    },
-    {
-        "name": "governorupgrade",
-        "id": "0.0.49013734",
-        "address": "0x0000000000000000000000000000000002ebe3e6",
-        "timestamp": "2022-12-02T08:23:22.537Z",
-        "transparentProxyAddress": "0x0000000000000000000000000000000002ebe3ed",
-        "transparentProxyId": "0.0.49013741"
+        "id": "0.0.49005115",
+        "address": "0x0000000000000000000000000000000002ebc23b",
+        "timestamp": "2022-12-01T06:33:42.068Z"
     },
     {
         "name": "factory",
-        "id": "0.0.49017831",
-        "address": "0x0000000000000000000000000000000002ebf3e7",
-        "timestamp": "2022-12-02T12:19:00.940Z"
-    },
-    {
-        "name": "governortransfertoken",
-        "id": "0.0.49018497",
-        "address": "0x0000000000000000000000000000000002ebf681",
-        "timestamp": "2022-12-02T13:06:39.159Z"
-    },
-    {
-        "name": "governortransfertoken",
-        "id": "0.0.49018513",
-        "address": "0x0000000000000000000000000000000002ebf691",
-        "timestamp": "2022-12-02T13:10:20.700Z",
-        "transparentProxyAddress": "0x0000000000000000000000000000000002ebf694",
-        "transparentProxyId": "0.0.49018516"
-    },
-    {
-        "name": "governortransfertoken",
-        "id": "0.0.49018578",
-        "address": "0x0000000000000000000000000000000002ebf6d2",
-        "timestamp": "2022-12-02T13:26:30.215Z",
-        "transparentProxyAddress": "0x0000000000000000000000000000000002ebf6d6",
-        "transparentProxyId": "0.0.49018582"
+        "id": "0.0.49005265",
+        "address": "0x0000000000000000000000000000000002ebc2d1",
+        "timestamp": "2022-12-01T09:12:58.065Z"
     }
 ]
