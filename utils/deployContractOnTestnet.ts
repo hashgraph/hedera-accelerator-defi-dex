@@ -9,8 +9,8 @@ import {
   ContractFunctionParameters,
 } from "@hashgraph/sdk";
 import * as hethers from "@hashgraph/hethers";
-import { ContractService } from "./service/ContractService";
-import ClientManagement from "../integrationTest/utils/utils";
+import { ContractService } from "../deployment/service/ContractService";
+import ClientManagement from "../utils/ClientManagement";
 
 dotenv.config();
 

@@ -5,8 +5,8 @@ import {
   Hbar,
 } from "@hashgraph/sdk";
 
-import ClientManagement from "./utils/utils";
 import { ContractService } from "../deployment/service/ContractService";
+import ClientManagement from "../utils/ClientManagement";
 
 const clientManagement = new ClientManagement();
 const contractService = new ContractService();

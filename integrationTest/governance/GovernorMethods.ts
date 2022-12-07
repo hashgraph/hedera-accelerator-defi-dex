@@ -4,13 +4,12 @@ import {
   ContractFunctionParameters,
   ContractId,
   Hbar,
-  TokenId
+  TokenId,
 } from "@hashgraph/sdk";
 
-import ClientManagement from "./utils/utils";
-import { ContractService } from "../deployment/service/ContractService";
-
 import dotenv from "dotenv";
+import ClientManagement from "../../utils/ClientManagement";
+import { ContractService } from "../../deployment/service/ContractService";
 
 dotenv.config();
 
@@ -61,12 +60,14 @@ export default class GovernorMethods {
     );
   };
 
-  public quorumReached = async (proposalId: BigNumber, contractId: string | ContractId) => {
+  public quorumReached = async (
+    proposalId: BigNumber,
+    contractId: string | ContractId
+  ) => {
     console.log(`\nGetting quorumReached `);
 
-    let contractFunctionParameters = new ContractFunctionParameters().addUint256(
-      proposalId
-    );
+    let contractFunctionParameters =
+      new ContractFunctionParameters().addUint256(proposalId);
 
     const contractTokenTx = await new ContractExecuteTransaction()
       .setContractId(contractId)
@@ -106,7 +107,10 @@ export default class GovernorMethods {
     console.log(`Initialize contract with token done with status - ${receipt}`);
   };
 
-  public voteSucceeded = async (proposalId: BigNumber, contractId: string | ContractId) => {
+  public voteSucceeded = async (
+    proposalId: BigNumber,
+    contractId: string | ContractId
+  ) => {
     console.log(`\nvoteSucceeded `);
 
     let contractFunctionParameters =
@@ -127,7 +131,10 @@ export default class GovernorMethods {
     );
   };
 
-  public proposalVotes = async (proposalId: BigNumber, contractId: string | ContractId) => {
+  public proposalVotes = async (
+    proposalId: BigNumber,
+    contractId: string | ContractId
+  ) => {
     console.log(`\nGetting proposalVotes - `);
 
     let contractFunctionParameters =
@@ -150,7 +157,10 @@ export default class GovernorMethods {
     );
   };
 
-  public state = async (proposalId: BigNumber, contractId: string | ContractId) => {
+  public state = async (
+    proposalId: BigNumber,
+    contractId: string | ContractId
+  ) => {
     console.log(`\nGet state `);
 
     let contractFunctionParameters =
@@ -198,16 +208,21 @@ export default class GovernorMethods {
 
     const status = receipt.status;
     const proposalId = record.contractFunctionResult?.getUint256(0)!;
-    console.log(`Cancel Proposal tx status ${status} with proposal id ${proposalId}`);
+    console.log(
+      `Cancel Proposal tx status ${status} with proposal id ${proposalId}`
+    );
 
     return proposalId;
   };
 
-  public execute = async (description: string, contractId: string | ContractId) => {
+  public execute = async (
+    description: string,
+    contractId: string | ContractId
+  ) => {
     console.log(`\nExecuting  proposal - `);
 
-    const contractFunctionParameters = new ContractFunctionParameters()
-      .addString(description);
+    const contractFunctionParameters =
+      new ContractFunctionParameters().addString(description);
 
     const contractAllotTx = await new ContractExecuteTransaction()
       .setContractId(contractId)
@@ -216,13 +231,17 @@ export default class GovernorMethods {
       .setMaxTransactionFee(new Hbar(70))
       .setGas(900000)
       .freezeWith(client)
-      .sign(treasureKey);//Admin of token
+      .sign(treasureKey); //Admin of token
 
     const executedTx = await contractAllotTx.execute(client);
     const record = await executedTx.getRecord(client);
     const contractAllotRx = await executedTx.getReceipt(client);
     const status = contractAllotRx.status;
 
-    console.log(`Execute tx status ${status} for proposal id ${record.contractFunctionResult?.getUint256(0)}`);
+    console.log(
+      `Execute tx status ${status} for proposal id ${record.contractFunctionResult?.getUint256(
+        0
+      )}`
+    );
   };
 }

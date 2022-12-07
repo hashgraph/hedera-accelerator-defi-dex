@@ -1,8 +1,8 @@
 import dotenv from "dotenv";
 import { AccountId, ContractFunctionParameters } from "@hashgraph/sdk";
-import { Deployment } from "./deployContractOnTestnet";
-import { DeployedContract } from "./model/contract";
-import { ContractService } from "./service/ContractService";
+import { DeployedContract } from "../model/contract";
+import { ContractService } from "../service/ContractService";
+import { Deployment } from "../../utils/deployContractOnTestnet";
 dotenv.config();
 
 const contractService = new ContractService();
