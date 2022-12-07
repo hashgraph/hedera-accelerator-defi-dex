@@ -3,10 +3,9 @@ import {
   ContractExecuteTransaction,
   ContractFunctionParameters,
 } from "@hashgraph/sdk";
+import ClientManagement from "../../utils/ClientManagement";
 
-import ClientManagement from "../integrationTest/utils/utils";
-
-import { ContractService } from "./service/ContractService";
+import { ContractService } from "../service/ContractService";
 const contractService = new ContractService();
 const clientManagement = new ClientManagement();
 

@@ -13,8 +13,8 @@ import {
 
 import { BigNumber } from "bignumber.js";
 
-import ClientManagement from "./utils/utils";
 import { ContractService } from "../deployment/service/ContractService";
+import ClientManagement from "../utils/ClientManagement";
 
 const cm = new ClientManagement();
 const { id: userAccountId, key: userPrivateKey } = cm.getOperator();

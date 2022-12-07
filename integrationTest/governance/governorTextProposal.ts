@@ -4,12 +4,12 @@ import {
   ContractExecuteTransaction,
   ContractFunctionParameters,
   TokenId,
-  ContractId
+  ContractId,
 } from "@hashgraph/sdk";
 
-import ClientManagement from "./utils/utils";
-import { ContractService } from "../deployment/service/ContractService";
 import GovernorMethods from "./GovernorMethods";
+import ClientManagement from "../../utils/ClientManagement";
+import { ContractService } from "../../deployment/service/ContractService";
 
 const clientManagement = new ClientManagement();
 const contractService = new ContractService();
@@ -23,13 +23,11 @@ const contractId = contractService.getContractWithProxy(
   contractService.governorTextContractName
 ).transparentProxyId!;
 
-async function propose(
-  description: string,
-  contractId: string | ContractId
-) {
+async function propose(description: string, contractId: string | ContractId) {
   console.log(`\nCreating proposal `);
-  const contractFunctionParameters = new ContractFunctionParameters()
-    .addString(description);
+  const contractFunctionParameters = new ContractFunctionParameters().addString(
+    description
+  );
 
   const tx = await new ContractExecuteTransaction()
     .setContractId(contractId)
@@ -48,7 +46,7 @@ async function propose(
   console.log(`Proposal tx status ${status} with proposal id ${proposalId}`);
 
   return proposalId;
-};
+}
 
 async function main() {
   console.log(`\nUsing governor proxy contract id ${contractId}`);
@@ -57,10 +55,7 @@ async function main() {
 
   const description = "Create text proposal 14";
 
-  const proposalId = await propose(
-    description,
-    contractId
-  );
+  const proposalId = await propose(description, contractId);
   await governor.vote(proposalId, 1, contractId); //1 is for vote.
   await governor.quorumReached(proposalId, contractId);
   await governor.voteSucceeded(proposalId, contractId);

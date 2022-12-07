@@ -7,9 +7,9 @@ import {
   TokenId,
 } from "@hashgraph/sdk";
 
-import ClientManagement from "./utils/utils";
-import { ContractService } from "../deployment/service/ContractService";
 import GovernorMethods from "./GovernorMethods";
+import ClientManagement from "../../utils/ClientManagement";
+import { ContractService } from "../../deployment/service/ContractService";
 
 const clientManagement = new ClientManagement();
 const contractService = new ContractService();
@@ -21,20 +21,19 @@ const { id, key } = clientManagement.getOperator();
 
 const { treasureId, treasureKey } = clientManagement.getTreasure();
 
-const contractId = contractService.getContractWithProxy(contractService.governorTTContractName).transparentProxyId!;
+const contractId = contractService.getContractWithProxy(
+  contractService.governorTTContractName
+).transparentProxyId!;
 const transferTokenId = TokenId.fromString("0.0.48504379");
 
-async function propose(
-  description: string,
-  contractId: string | ContractId
-) {
+async function propose(description: string, contractId: string | ContractId) {
   console.log(`\nCreating proposal `);
   const contractFunctionParameters = new ContractFunctionParameters()
     .addString(description)
-    .addAddress(id.toSolidityAddress())// from
-    .addAddress(treasureId.toSolidityAddress())// to
+    .addAddress(id.toSolidityAddress()) // from
+    .addAddress(treasureId.toSolidityAddress()) // to
     .addAddress(transferTokenId.toSolidityAddress()) // tokenToTransfer
-    .addInt256(new BigNumber(100000000)) // amountToTransfer
+    .addInt256(new BigNumber(100000000)); // amountToTransfer
 
   const tx = await new ContractExecuteTransaction()
     .setContractId(contractId)
@@ -53,17 +52,14 @@ async function propose(
   console.log(`Proposal tx status ${status} with proposal id ${proposalId}`);
 
   return proposalId;
-};
+}
 
 async function main() {
   console.log(`\nUsing governor proxy contract id ${contractId}`);
   await governor.initialize(contractId);
   const description = "Create token proposal 5";
 
-  const proposalId = await propose(
-    description,
-    contractId
-  );
+  const proposalId = await propose(description, contractId);
   await governor.vote(proposalId, 1, contractId); //1 is for vote.
   await governor.quorumReached(proposalId, contractId);
   await governor.voteSucceeded(proposalId, contractId);

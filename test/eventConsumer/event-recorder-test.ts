@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import * as fs from "fs";
 
-import { EventConsumer } from "../../integrationTest/utils/EventConsumer";
+import { EventConsumer } from "../../utils/EventConsumer";
 const relativePath = "./test/eventConsumer/";
 describe("EventConsumer", function () {
   describe("getEventsFromRecord", function () {
