@@ -2,6 +2,8 @@ name: Automatically deploy on testnet if contract changed
 
 on:
   push:
+    branches:
+      - develop
 
 env:
   OPERATOR_ID: 0.0.47710057
@@ -28,3 +30,12 @@ jobs:
       - run: npm ci
       - name: Deploy if contract changed
         run:  bash ./deploy.sh ${{ env.OPERATOR_ID }} ${{ env.OPERATOR_KEY }} ${{ env.TREASURE_ID }} ${{ env.TREASURE_KEY }} ${{ env.TOKEN_USER_ID }} ${{ env.TOKEN_USER_KEY }} ${{ env.DEX_CONTRACT_OWNER_ID }} ${{ env.DEX_CONTRACT_OWNER_KEY }}
+      - uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          file_pattern: deployment/state/contractsUAT.json
+          commit_message: Updating UAT contract json  
+          push_options: '--force'
+          skip_dirty_check: false
+          skip_fetch: true
+          skip_checkout: true
+          create_branch: false
