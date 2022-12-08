@@ -2,7 +2,7 @@ name: Automatically deploy on testnet if contract changed
 
 on:
   push:
-  
+
 env:
   OPERATOR_ID: 0.0.47710057
   OPERATOR_KEY: 3030020100300706052b8104000a04220420d38b0ed5f11f8985cd72c8e52c206b512541c6f301ddc9d18bd8b8b25a41a80f
@@ -27,5 +27,4 @@ jobs:
           node-version: '18.x'
       - run: npm ci
       - name: Deploy if contract changed
-        run:  npx hardhat run ./deployment/checkAndDeploy.ts
         run:  bash ./deploy.sh ${{ env.OPERATOR_ID }} ${{ env.OPERATOR_KEY }} ${{ env.TREASURE_ID }} ${{ env.TREASURE_KEY }} ${{ env.TOKEN_USER_ID }} ${{ env.TOKEN_USER_KEY }} ${{ env.DEX_CONTRACT_OWNER_ID }} ${{ env.DEX_CONTRACT_OWNER_KEY }}
