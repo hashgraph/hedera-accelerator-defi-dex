@@ -18,35 +18,35 @@ Tests run before deploying the contract on testnet.
 
 1. Go to [GitHub action page](https://github.com/hashgraph/hedera-accelerator-defi-dex/actions/workflows/deploy-contract-github.yml)
 2. Run this workflow `Deploy a contract to testnet using dispatch` with input parameters contract name and type e.g. contract name = `factory` and contract type = `Logic`. Both name and type are case sensitive.
-3. Monitor the job `Deploy a contract to testnet using dispatch` 
+3. Monitor the `Deploy a contract to testnet using dispatch` workflow.
 
 ####  Proxy contract
 
 1. Go to [GitHub action page](https://github.com/hashgraph/hedera-accelerator-defi-dex/actions/workflows/deploy-contract-github.yml)
 2. Run this workflow `Deploy a contract to testnet using dispatch` with input parameters contract name and type e.g. contract name = `factory` and contract type = `Proxy`. Both name and type are case sensitive.
-3. Monitor the job `Deploy a contract to testnet using dispatch` 
+3. Monitor the `Deploy a contract to testnet using dispatch` workflow.
 
 #### Upgrade implementation contract
 
 1. Go to [GitHub action page](https://github.com/hashgraph/hedera-accelerator-defi-dex/actions/workflows/deploy-contract-github.yml)
 2. Run this workflow `Deploy a contract to testnet using dispatch` with input parameters contract name and type e.g. contract name = `factory` and contract type = `Logic`. Both name and type are case sensitive.
-3. Monitor the job `Deploy a contract to testnet using dispatch`
+3. Monitor the `Deploy a contract to testnet using dispatch` workflow.
 4. Go to [GitHub action page](https://github.com/hashgraph/hedera-accelerator-defi-dex/actions/workflows/deploy-contract-github.yml)
 5. Run this workflow `Deploy a contract to testnet using dispatch` with input parameters contract name and type e.g. contract name = `factory` and contract type = `Upgrade`. Both name and type are case sensitive.
-6. Monitor the job `Deploy a contract to testnet using dispatch`
+6. Monitor the `Deploy a contract to testnet using dispatch` workflow.
 
 ----
 
 ## `Deploy contracts on testnet using command line`
 ### New contract (one time setup needed)
-1. Go to [here](./deployment/contract/deploy.ts)
+1. Go to [./deployment/deploy.ts](./deployment/deploy.ts)
 2. Add new contract name in SUPPORTED_CONTRACTS_FOR_DEPLOYMENT
-3. `run command` npx hardhat run deployment/contract/deploy.ts 
+3. Run `npx hardhat run deployment/deploy.ts`
 
 ### Existing contract
-`run command` npx hardhat run deployment/contract/deploy.ts 
+Run `npx hardhat run deployment/deploy.ts`
 
-once above command executed, it will show options to execute required flow.
+once above command executes, a prompt in terminal displays options to execute required flow.
 -----
 ## [Contract Upgrade Strategy](./UPGRADE.md)
 -----
