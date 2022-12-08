@@ -1,13 +1,10 @@
 import { getAllFilesSync } from "get-all-files";
+import platformPath from "path";
 import { ContractFunctionResult } from "@hashgraph/sdk";
 
 export class Helper {
   static extractFileName(path: string): string {
-    const output = path.split("/").at(-1)?.split(".");
-    if (output && output?.length > 1) {
-      return output[0];
-    }
-    return "";
+    return platformPath.parse(path).name;
   }
 
   static getContractPathList(path: string) {
