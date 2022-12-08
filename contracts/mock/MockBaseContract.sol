@@ -29,6 +29,7 @@ contract MockBaseHTS is IBaseHTS {
     bool internal tokenTest;
     int256 internal trueTransaction = 0;
     FailTransactionFor internal failType;
+    int256 public returnResponseCode = 23;
 
     constructor(bool _isSucces, bool _tokenTest) {
         isSuccess = _isSucces;
@@ -38,6 +39,10 @@ contract MockBaseHTS is IBaseHTS {
     function setFailType(int256 _type) public {
         failType = FailTransactionFor(_type);
         trueTransaction = successForType();
+    }
+
+    function setFailResponseCode(int256 code) public {
+        returnResponseCode = code;
     }
 
     function successForType() internal view returns (int256) {
@@ -156,7 +161,10 @@ contract MockBaseHTS is IBaseHTS {
     {
         ERC20Mock mock = new ERC20Mock(10, 10);
         if (failType == FailTransactionFor.lpTokenCreationFailed) {
-            return (int256(32), address(0x0));
+            if (returnResponseCode == 32) {
+                revert("Can not create token");
+            }
+            return (int256(23), address(0x0));
         }
 
         return (int256(22), address(mock));

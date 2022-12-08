@@ -67,6 +67,35 @@ describe("Governor Tests", function () {
     return { instance, tokenCont, mockBaseHTS, signers };
   }
 
+  async function deployFixtureWithFail() {
+    const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
+    const mockBaseHTS = await MockBaseHTS.deploy(false, true);
+    const signers = await ethers.getSigners();
+    mockBaseHTS.setFailType(0);
+
+    const TokenCont = await ethers.getContractFactory("ERC20Mock");
+    const tokenCont = await TokenCont.deploy(total, 0);
+    await tokenCont.setUserBalance(signers[0].address, twentyPercent);
+    await tokenCont.setUserBalance(signers[1].address, thirtyPercent);
+    await tokenCont.setUserBalance(signers[2].address, fiftyPercent);
+    const votingDelay = 5;
+    const votingPeriod = 12;
+
+    const Governor = await ethers.getContractFactory("GovernorTokenCreate");
+    const args = [
+      tokenCont.address,
+      votingDelay,
+      votingPeriod,
+      mockBaseHTS.address,
+    ];
+
+    const instance = await upgrades.deployProxy(Governor, args);
+    await instance.deployed();
+
+    return { instance, tokenCont, mockBaseHTS, signers };
+  }
+
+
   async function deployFixtureWithDelay() {
     const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
     const mockBaseHTS = await MockBaseHTS.deploy(true, true);
@@ -123,6 +152,27 @@ describe("Governor Tests", function () {
       await tokenCont.setUserBalance(signers[1].address, 30);
       const votes = await instance.getVotes(tokenCont.address, 1);
       expect(votes).to.be.equals(30);
+    });
+
+    it.only("Token Create Fail", async function () {
+      const { instance, mockBaseHTS, signers } = await loadFixture(deployFixtureWithFail);     
+      const desc = "Test";
+      const proposalIdResponse = await createProposal(instance, signers[0]);
+      const record = await proposalIdResponse.wait();
+      const proposalId = record.events[0].args.proposalId.toString();
+      console.log(proposalId);
+      await mineNBlocks(10);
+      await instance.castVote(proposalId, 1);
+      mockBaseHTS.setFailType(13);
+      await mineNBlocks(20);
+      await expect(
+        instance.executeProposal(desc)
+      ).to.revertedWith("Token creation failed.");
+      mockBaseHTS.setFailType(13);
+      mockBaseHTS.setFailResponseCode(32);
+      await expect(
+        instance.executeProposal(desc)
+      ).to.revertedWith("Token creation failed.");
     });
 
     it("Verify proposal creation to cancel flow ", async function () {
@@ -201,9 +251,14 @@ describe("Governor Tests", function () {
       await mineNBlocks(20);
       const state = await instance.state(proposalId);
       expect(state).to.be.equals(4);
+      await expect(
+        instance.getTokenAddress(proposalId)
+      ).to.revertedWith("Contract not executed yet!");
 
       await instance.executeProposal(desc);
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
+      const tokenAddress = await instance.getTokenAddress(proposalId);
+      expect(tokenAddress).to.not.be.equals(zeroAddress);
     });
 
     it("When user delegates votes to different account then delegator voting weight should be removed and delegatee votes should be considered ", async function () {
