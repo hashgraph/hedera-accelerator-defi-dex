@@ -11,6 +11,7 @@ import {
 import * as hethers from "@hashgraph/hethers";
 import { ContractService } from "../deployment/service/ContractService";
 import ClientManagement from "../utils/ClientManagement";
+import ContractMetadata from "../utils/ContractMetadata";
 
 dotenv.config();
 
@@ -120,6 +121,7 @@ export class EtherDeployment {
 export class Deployment {
   private contractService = new ContractService();
   private clientManagement = new ClientManagement();
+  private contractMetadata = new ContractMetadata();
 
   public deployContractAsAdmin = async (
     filePath: string,
@@ -190,7 +192,8 @@ export class Deployment {
     await this.contractService.saveDeployedContract(
       contractId?.toString()!,
       contractId?.toSolidityAddress()!,
-      compiledContract.contractName
+      compiledContract.contractName,
+      this.contractMetadata.calculateHash(compiledContract.contractName)
     );
 
     clientArg.close();
