@@ -12,7 +12,7 @@ describe("Helper Tests", function () {
   });
   it("verify that file name should be empty when path is in-correct", async function () {
     const name = Helper.extractFileName("development");
-    expect(name).to.be.equal("");
+    expect(name).to.be.equal("development");
   });
   it("verify that file name should be empty when path is missing", async function () {
     const name = Helper.extractFileName("");
