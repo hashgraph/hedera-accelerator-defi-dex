@@ -85,6 +85,7 @@ export async function main(_contractName: string? = null) {
     ...contractProxy,
     address: contractGettingUpgraded.address,
     id: contractGettingUpgraded.id,
+    hash: contractGettingUpgraded.hash,
     timestamp: new Date().toISOString(),
   };
   contractService.updateContractRecord(
