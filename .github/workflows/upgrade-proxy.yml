@@ -2,8 +2,6 @@ name: Automatically deploy on testnet if contract changed
 
 on:
   push:
-    branches:
-      - develop
 
 jobs:
   build:
@@ -17,4 +15,4 @@ jobs:
           node-version: '18.x'
       - run: npm ci
       - name: Deploy if contract changed
-        run:  bash ./deployment/checkAndDeploy.ts
+        run:  npx hardhat run ./deployment/checkAndDeploy.ts
