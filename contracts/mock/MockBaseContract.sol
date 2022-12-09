@@ -41,6 +41,10 @@ contract MockBaseHTS is IBaseHTS {
         isSuccess = _success;
     }
 
+    function setTrueTransactionCount(int256 _trueTransaction) public {
+        trueTransaction = _trueTransaction;
+    }
+
     function setFailType(int256 _type) public {
         failType = FailTransactionFor(_type);
         trueTransaction = successForType();
@@ -141,11 +145,7 @@ contract MockBaseHTS is IBaseHTS {
             trueTransaction -= 1;
             return (int256(22), amount);
         }
-
-        if (isSuccess) {
-            return (int256(22), int256(amount));
-        }
-        revert("Mint Failed");
+        return (isSuccess ? int256(22) : int256(23), int256(amount));
     }
 
     function burnTokenPublic(address, int256 amount)
