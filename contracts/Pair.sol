@@ -73,7 +73,7 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
         override
     {
         require(
-            lpTokenContract.lpTokenForUser(toAccount) > _lpToken,
+            lpTokenContract.lpTokenForUser(toAccount) >= _lpToken,
             "user does not have sufficient lpTokens"
         );
         (int256 _tokenAQty, int256 _tokenBQty) = calculateTokenstoGetBack(
