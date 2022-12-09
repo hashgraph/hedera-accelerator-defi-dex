@@ -8,12 +8,11 @@
     "code-format": "prettier --write \"**/*.ts\""
   },
   "devDependencies": {
-    "@hashgraph/sdk": "^2.18.5",
-    "@nomicfoundation/hardhat-chai-matchers": "^1.0.4",
+    "@hashgraph/hardhat-hethers": "^1.0.3",
+    "@hashgraph/sdk": "^2.19.0",
+    "@nomicfoundation/hardhat-chai-matchers": "^1.0.5",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.6",
     "@nomiclabs/hardhat-ethers": "^2.2.1",
-    "@nomiclabs/hardhat-etherscan": "^3.1.2",
-    "@nomiclabs/hardhat-waffle": "^2.0.3",
     "@openzeppelin/contracts": "^4.8.0",
     "@openzeppelin/contracts-upgradeable": "^4.8.0",
     "@openzeppelin/hardhat-upgrades": "^1.21.0",
@@ -21,7 +20,7 @@
     "@typechain/hardhat": "^6.1.4",
     "@types/chai": "^4.3.4",
     "@types/inquirer": "^9.0.3",
-    "@types/mocha": "^10.0.0",
+    "@types/mocha": "^10.0.1",
     "@types/node": "^18.11.9",
     "@typescript-eslint/eslint-plugin": "^5.42.1",
     "@typescript-eslint/parser": "^5.42.1",
@@ -34,13 +33,11 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-promise": "^6.1.1",
-    "ethereum-waffle": "^3.4.4",
     "ethers": "^5.7.2",
     "get-all-files": "^4.1.0",
-    "hardhat": "^2.12.2",
-    "hardhat-gas-reporter": "^1.0.9",
-    "hardhat-hethers": "^1.0.2",
+    "hardhat": "^2.12.3",
     "husky": "^8.0.0",
+    "md5-file": "^5.0.0",
     "prettier": "^2.7.1",
     "prettier-plugin-solidity": "^1.0.0-rc.1",
     "solhint": "^3.3.7",
@@ -48,7 +45,6 @@
     "ts-node": "^10.9.1",
     "typechain": "^8.1.1",
     "typescript": "^4.8.4",
-    "md5-file": "^5.0.0",
     "web3": "^1.8.1"
   }
 }
