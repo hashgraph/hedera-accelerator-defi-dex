@@ -73,10 +73,12 @@ describe("Governor Tests", function () {
 
     await instance.deployed();
 
-    const TextGovernor = await ethers.getContractFactory("GovernorTextProposal");
+    const TextGovernor = await ethers.getContractFactory(
+      "GovernorTextProposal"
+    );
     const textGovernorInstance = await upgrades.deployProxy(TextGovernor, args);
     await textGovernorInstance.deployed();
-    
+
     return { instance, textGovernorInstance, tokenCont, mockBaseHTS, signers };
   }
 
@@ -107,7 +109,6 @@ describe("Governor Tests", function () {
 
     return { instance, tokenCont, mockBaseHTS, signers };
   }
-
 
   async function deployFixtureWithDelay() {
     const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
@@ -168,7 +169,9 @@ describe("Governor Tests", function () {
     });
 
     it("Token Create Fail", async function () {
-      const { instance, mockBaseHTS, signers } = await loadFixture(deployFixtureWithFail);     
+      const { instance, mockBaseHTS, signers } = await loadFixture(
+        deployFixtureWithFail
+      );
       const desc = "Test";
       const proposalIdResponse = await createProposal(instance, signers[0]);
       const record = await proposalIdResponse.wait();
@@ -178,14 +181,14 @@ describe("Governor Tests", function () {
       await instance.castVote(proposalId, 1);
       mockBaseHTS.setFailType(13);
       await mineNBlocks(20);
-      await expect(
-        instance.executeProposal(desc)
-      ).to.revertedWith("Token creation failed.");
+      await expect(instance.executeProposal(desc)).to.revertedWith(
+        "Token creation failed."
+      );
       mockBaseHTS.setFailType(13);
       mockBaseHTS.setFailResponseCode(32);
-      await expect(
-        instance.executeProposal(desc)
-      ).to.revertedWith("Token creation failed.");
+      await expect(instance.executeProposal(desc)).to.revertedWith(
+        "Token creation failed."
+      );
     });
 
     it("Verify proposal creation to cancel flow ", async function () {
@@ -264,9 +267,9 @@ describe("Governor Tests", function () {
       await mineNBlocks(20);
       const state = await instance.state(proposalId);
       expect(state).to.be.equals(4);
-      await expect(
-        instance.getTokenAddress(proposalId)
-      ).to.revertedWith("Contract not executed yet!");
+      await expect(instance.getTokenAddress(proposalId)).to.revertedWith(
+        "Contract not executed yet!"
+      );
 
       await instance.executeProposal(desc);
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
@@ -275,10 +278,15 @@ describe("Governor Tests", function () {
     });
 
     it("Verify TextProposal creation to Execute flow ", async function () {
-      const { textGovernorInstance, tokenCont, signers } = await loadFixture(deployFixture);
+      const { textGovernorInstance, tokenCont, signers } = await loadFixture(
+        deployFixture
+      );
 
       await verifyAccountBalance(tokenCont, signers[0].address, total * 0.2);
-      const proposalPublic = await createProposalForText(textGovernorInstance, signers[0]);
+      const proposalPublic = await createProposalForText(
+        textGovernorInstance,
+        signers[0]
+      );
       await verifyAccountBalance(
         tokenCont,
         signers[0].address,
@@ -294,15 +302,23 @@ describe("Governor Tests", function () {
       expect(period).to.be.equals(12);
       const threshold = await textGovernorInstance.proposalThreshold();
       expect(threshold).to.be.equals(0);
-      const quorumReached = await textGovernorInstance.quorumReached(proposalId);
+      const quorumReached = await textGovernorInstance.quorumReached(
+        proposalId
+      );
       expect(quorumReached).to.be.equals(false);
-      const voteSucceeded = await textGovernorInstance.voteSucceeded(proposalId);
+      const voteSucceeded = await textGovernorInstance.voteSucceeded(
+        proposalId
+      );
       expect(voteSucceeded).to.be.equals(false);
 
       await textGovernorInstance.castVote(proposalId, 1);
-      const voteSucceeded1 = await textGovernorInstance.voteSucceeded(proposalId);
+      const voteSucceeded1 = await textGovernorInstance.voteSucceeded(
+        proposalId
+      );
       expect(voteSucceeded1).to.be.equals(true);
-      const quorumReached1 = await textGovernorInstance.quorumReached(proposalId);
+      const quorumReached1 = await textGovernorInstance.quorumReached(
+        proposalId
+      );
       expect(quorumReached1).to.be.equals(true);
 
       await mineNBlocks(20);
@@ -752,11 +768,7 @@ describe("Governor Tests", function () {
       instance: Contract,
       account: SignerWithAddress
     ) => {
-      return await instance
-        .connect(account)
-        .createProposal(
-          desc,
-        );
+      return await instance.connect(account).createProposal(desc);
     };
 
     const verifyProposalVotes = async (
