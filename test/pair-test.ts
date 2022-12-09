@@ -4,7 +4,7 @@ import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { ethers, upgrades } from "hardhat";
 import { BigNumber, Overrides, PayableOverrides } from "ethers";
-// import Web3 from "web3";
+import Web3 from "web3";
 
 describe("All Tests", function () {
   const tokenBAddress = "0x0000000000000000000000000000000000010001";
