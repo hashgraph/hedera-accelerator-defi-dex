@@ -36,6 +36,15 @@ describe("Governor Tests", function () {
       const instance = await upgrades.deployProxy(Governor, args);
       await instance.deployed();
     });
+
+    it("Verify if the GovernorTextProposal contract is upgradeable safe ", async function () {
+      const votingDelay = 0;
+      const votingPeriod = 12;
+      const Governor = await ethers.getContractFactory("GovernorTextProposal");
+      const args = [zeroAddress, votingDelay, votingPeriod, zeroAddress];
+      const instance = await upgrades.deployProxy(Governor, args);
+      await instance.deployed();
+    });
   });
 
   async function deployFixture() {
@@ -64,7 +73,11 @@ describe("Governor Tests", function () {
 
     await instance.deployed();
 
-    return { instance, tokenCont, mockBaseHTS, signers };
+    const TextGovernor = await ethers.getContractFactory("GovernorTextProposal");
+    const textGovernorInstance = await upgrades.deployProxy(TextGovernor, args);
+    await textGovernorInstance.deployed();
+    
+    return { instance, textGovernorInstance, tokenCont, mockBaseHTS, signers };
   }
 
   async function deployFixtureWithFail() {
@@ -154,7 +167,7 @@ describe("Governor Tests", function () {
       expect(votes).to.be.equals(30);
     });
 
-    it.only("Token Create Fail", async function () {
+    it("Token Create Fail", async function () {
       const { instance, mockBaseHTS, signers } = await loadFixture(deployFixtureWithFail);     
       const desc = "Test";
       const proposalIdResponse = await createProposal(instance, signers[0]);
@@ -259,6 +272,45 @@ describe("Governor Tests", function () {
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
       const tokenAddress = await instance.getTokenAddress(proposalId);
       expect(tokenAddress).to.not.be.equals(zeroAddress);
+    });
+
+    it("Verify TextProposal creation to Execute flow ", async function () {
+      const { textGovernorInstance, tokenCont, signers } = await loadFixture(deployFixture);
+
+      await verifyAccountBalance(tokenCont, signers[0].address, total * 0.2);
+      const proposalPublic = await createProposalForText(textGovernorInstance, signers[0]);
+      await verifyAccountBalance(
+        tokenCont,
+        signers[0].address,
+        twentyPercent - 1 * precision
+      );
+
+      const record = await proposalPublic.wait();
+      const proposalId = record.events[0].args.proposalId.toString();
+
+      const delay = await textGovernorInstance.votingDelay();
+      expect(delay).to.be.equals(0);
+      const period = await textGovernorInstance.votingPeriod();
+      expect(period).to.be.equals(12);
+      const threshold = await textGovernorInstance.proposalThreshold();
+      expect(threshold).to.be.equals(0);
+      const quorumReached = await textGovernorInstance.quorumReached(proposalId);
+      expect(quorumReached).to.be.equals(false);
+      const voteSucceeded = await textGovernorInstance.voteSucceeded(proposalId);
+      expect(voteSucceeded).to.be.equals(false);
+
+      await textGovernorInstance.castVote(proposalId, 1);
+      const voteSucceeded1 = await textGovernorInstance.voteSucceeded(proposalId);
+      expect(voteSucceeded1).to.be.equals(true);
+      const quorumReached1 = await textGovernorInstance.quorumReached(proposalId);
+      expect(quorumReached1).to.be.equals(true);
+
+      await mineNBlocks(20);
+      const state = await textGovernorInstance.state(proposalId);
+      expect(state).to.be.equals(4);
+
+      await textGovernorInstance.executeProposal(desc);
+      await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
     });
 
     it("When user delegates votes to different account then delegator voting weight should be removed and delegatee votes should be considered ", async function () {
@@ -693,6 +745,17 @@ describe("Governor Tests", function () {
           adminKey,
           "Token",
           "Symbol"
+        );
+    };
+
+    const createProposalForText = async (
+      instance: Contract,
+      account: SignerWithAddress
+    ) => {
+      return await instance
+        .connect(account)
+        .createProposal(
+          desc,
         );
     };
 
