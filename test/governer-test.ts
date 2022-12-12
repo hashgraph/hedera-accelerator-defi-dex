@@ -10,6 +10,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 describe("Governor Tests", function () {
   const zeroAddress = "0x1111111000000000000000000000000000000000";
+  const oneAddress = "0x1111111000000000000000000000000000000001";
   const precision = 100000000;
   const total = 100 * precision;
   const twentyPercent = total * 0.2;
@@ -79,7 +80,21 @@ describe("Governor Tests", function () {
     const textGovernorInstance = await upgrades.deployProxy(TextGovernor, args);
     await textGovernorInstance.deployed();
 
-    return { instance, textGovernorInstance, tokenCont, mockBaseHTS, signers };
+    const GovernorUpgrade = await ethers.getContractFactory("GovernorUpgrade");
+    const governorUpgradeInstance = await upgrades.deployProxy(
+      GovernorUpgrade,
+      args
+    );
+    await textGovernorInstance.deployed();
+
+    return {
+      instance,
+      textGovernorInstance,
+      governorUpgradeInstance,
+      tokenCont,
+      mockBaseHTS,
+      signers,
+    };
   }
 
   async function deployFixtureWithFail() {
@@ -745,6 +760,55 @@ describe("Governor Tests", function () {
       );
     });
 
+    it("Verify GovernorUpgrade contract proposal creation to execute flow ", async function () {
+      const { governorUpgradeInstance, signers } = await loadFixture(
+        deployFixture
+      );
+      const proposalId = await getUpgradeProposalId(
+        governorUpgradeInstance,
+        signers[0]
+      );
+
+      await governorUpgradeInstance.castVote(proposalId, 1);
+
+      const voteSucceeded = await governorUpgradeInstance.voteSucceeded(
+        proposalId
+      );
+      expect(voteSucceeded).to.be.equals(true);
+
+      const quorumReached1 = await governorUpgradeInstance.quorumReached(
+        proposalId
+      );
+      expect(quorumReached1).to.be.equals(true);
+
+      await mineNBlocks(20);
+
+      const state = await governorUpgradeInstance.state(proposalId);
+      expect(state).to.be.equals(4);
+
+      await governorUpgradeInstance.executeProposal(desc);
+
+      const addresses = await governorUpgradeInstance.getContractAddresses(
+        proposalId
+      );
+      expect(addresses.length).to.be.equals(2);
+      expect(addresses[0]).to.be.equals(zeroAddress);
+      expect(addresses[1]).to.be.equals(oneAddress);
+    });
+
+    it("Verify GovernorUpgrade contract proposal not executed flow ", async function () {
+      const { governorUpgradeInstance, signers } = await loadFixture(
+        deployFixture
+      );
+      const proposalId = await getUpgradeProposalId(
+        governorUpgradeInstance,
+        signers[0]
+      );
+      await expect(
+        governorUpgradeInstance.getContractAddresses(proposalId)
+      ).to.revertedWith("Contract not executed yet!");
+    });
+
     const createProposal = async (
       instance: Contract,
       account: SignerWithAddress
@@ -770,6 +834,17 @@ describe("Governor Tests", function () {
     ) => {
       return await instance.connect(account).createProposal(desc);
     };
+
+    async function getUpgradeProposalId(
+      instance: Contract,
+      account: SignerWithAddress
+    ) {
+      const pIdResponse = await instance
+        .connect(account)
+        .createProposal(desc, zeroAddress, oneAddress);
+      const record = await pIdResponse.wait();
+      return record.events[0].args.proposalId.toString();
+    }
 
     const verifyProposalVotes = async (
       instance: Contract,
