@@ -3,7 +3,7 @@ import { expect } from "chai";
 
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { ethers, upgrades } from "hardhat";
-import { BigNumber, Overrides, PayableOverrides } from "ethers";
+import { BigNumber } from "ethers";
 
 describe("All Tests", function () {
   const tokenBAddress = "0x0000000000000000000000000000000000010001";
