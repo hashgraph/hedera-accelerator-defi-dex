@@ -22,7 +22,8 @@ contract MockBaseHTS is IBaseHTS {
         addLiquidityFailMinting,
         addLiquidityLPTransferFail,
         swapBFailedSendingB,
-        lpTokenCreationFailed
+        lpTokenCreationFailed,
+        failedTransferToken
     }
 
     bool internal isSuccess;
@@ -34,6 +35,10 @@ contract MockBaseHTS is IBaseHTS {
     constructor(bool _isSucces, bool _tokenTest) {
         isSuccess = _isSucces;
         tokenTest = _tokenTest;
+    }
+
+    function setSuccessStatus(bool _success) public {
+        isSuccess = _success;
     }
 
     function setFailType(int256 _type) public {
@@ -77,6 +82,9 @@ contract MockBaseHTS is IBaseHTS {
             return 7;
         }
         if (failType == FailTransactionFor.lpTokenCreationFailed) {
+            return 1;
+        }
+        if (failType == FailTransactionFor.failedTransferToken) {
             return 1;
         }
         return 0;
