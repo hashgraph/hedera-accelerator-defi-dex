@@ -819,6 +819,78 @@ describe("Governor Tests", function () {
       ).to.revertedWith("Contract not executed yet!");
     });
 
+    it("Verify contract proposal creation failed for getGODToken invocation", async function () {
+      const { governorUpgradeInstance, signers, mockBaseHTS } =
+        await loadFixture(deployFixture);
+
+      await mockBaseHTS.setFailType(14);
+      await mockBaseHTS.setSuccessStatus(false);
+
+      await expect(
+        getUpgradeProposalId(governorUpgradeInstance, signers[0])
+      ).to.revertedWith("Transfer token failed.");
+    });
+
+    it("Verify contract proposal creation failed for returnGODToken invocation", async function () {
+      const { governorUpgradeInstance, signers, mockBaseHTS } =
+        await loadFixture(deployFixture);
+      const proposalId = await getUpgradeProposalId(
+        governorUpgradeInstance,
+        signers[0]
+      );
+
+      await governorUpgradeInstance.castVote(proposalId, 1);
+
+      const voteSucceeded = await governorUpgradeInstance.voteSucceeded(
+        proposalId
+      );
+      expect(voteSucceeded).to.be.equals(true);
+
+      const quorumReached1 = await governorUpgradeInstance.quorumReached(
+        proposalId
+      );
+      expect(quorumReached1).to.be.equals(true);
+
+      await mineNBlocks(20);
+
+      const state = await governorUpgradeInstance.state(proposalId);
+      expect(state).to.be.equals(4);
+
+      await mockBaseHTS.setFailType(8);
+      await mockBaseHTS.setSuccessStatus(false);
+
+      await expect(
+        governorUpgradeInstance.executeProposal(desc)
+      ).to.revertedWith("Transfer token failed.");
+    });
+
+    it("Verify GovernorUpgrade initialize should be failed for initialize called after instance created", async function () {
+      const { governorUpgradeInstance } = await loadFixture(deployFixture);
+      await expect(
+        governorUpgradeInstance.initialize(zeroAddress, 0, 10, zeroAddress)
+      ).to.revertedWith("Initializable: contract is already initialized");
+    });
+
+    it("Verify cancel proposal flow when proposal not found", async function () {
+      const { governorUpgradeInstance, signers } = await loadFixture(
+        deployFixture
+      );
+      await getUpgradeProposalId(governorUpgradeInstance, signers[0]);
+      await expect(
+        governorUpgradeInstance.cancelProposal("not-found")
+      ).to.revertedWith("Proposal not found");
+    });
+
+    it("Verify cancel proposal flow when request send by different user", async function () {
+      const { governorUpgradeInstance, signers } = await loadFixture(
+        deployFixture
+      );
+      await getUpgradeProposalId(governorUpgradeInstance, signers[0]);
+      await expect(
+        governorUpgradeInstance.connect(signers[1]).cancelProposal(desc)
+      ).to.revertedWith("Only proposer can cancel the proposal");
+    });
+
     it("Verify GovernorTransferToken contract proposal creation to execute flow ", async function () {
       const { governorTransferTokenInstance, tokenCont, signers } =
         await loadFixture(deployFixture);
