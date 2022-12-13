@@ -27,7 +27,7 @@ contract LPToken is HederaResponseCodes, ILPToken, Initializable {
         return int256(lpToken.balanceOf(_user));
     }
 
-    function getLpTokenAddress() external view returns (address) {
+    function getLpTokenAddress() external view override returns (address) {
         return address(lpToken);
     }
 

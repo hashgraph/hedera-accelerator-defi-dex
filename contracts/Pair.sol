@@ -310,8 +310,8 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
         return address(this);
     }
 
-    function getTokenPairAddress() public view returns (address, address) {
-        return (pair.tokenA.tokenAddress, pair.tokenB.tokenAddress);
+    function getTokenPairAddress() public view returns (address, address, address) {
+        return (pair.tokenA.tokenAddress, pair.tokenB.tokenAddress, lpTokenContract.getLpTokenAddress());
     }
 
     function getFee() public view returns (int256) {
