@@ -17,6 +17,6 @@ interface ILPToken {
         returns (int256 responseCode);
 
     function lpTokenForUser(address _user) external view returns (int256);
-
+    function getLpTokenAddress() external view returns (address);
     function getAllLPTokenCount() external view returns (int256);
 }

@@ -238,7 +238,11 @@ const getTokenPairAddress = async (contId: string) => {
   const record = await getTokensTx.getRecord(client);
   const newToken0 = record.contractFunctionResult!.getAddress(0);
   const newToken1 = record.contractFunctionResult!.getAddress(1);
-  console.log(`- Addresses for Token0 : ${newToken0} & Token1 : ${newToken1}`);
+  console.log(
+    `- Addresses for Token0 : ${newToken0} & Token1 : ${newToken1}\nlp token: ${record.contractFunctionResult!.getAddress(
+      2
+    )} `
+  );
 };
 
 const getTreasureBalance = async (tokens: Array<TokenId>) => {
