@@ -90,7 +90,7 @@ contract LPToken is HederaResponseCodes, ILPToken, Initializable {
     {
         require((lpAmount > 0), "Please provide token counts");
         require(
-            this.lpTokenForUser(fromUser) > lpAmount,
+            this.lpTokenForUser(fromUser) >= lpAmount,
             "User Does not have lp amount"
         );
         // transfer Lp from users account to contract
@@ -105,7 +105,7 @@ contract LPToken is HederaResponseCodes, ILPToken, Initializable {
             "LP token transfer failed."
         );
         // burn old amount of LP
-        tokenService.burnTokenPublic(address(lpToken), lpAmount);
+        (response, ) = tokenService.burnTokenPublic(address(lpToken), lpAmount);
         require(
             response == HederaResponseCodes.SUCCESS,
             "LP token burn failed."

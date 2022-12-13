@@ -290,11 +290,6 @@ abstract contract GovernorCountingSimpleInternal is
 
         voters.push(voter);
 
-        if (delegatorIndex >= 0) {
-            votingWeights[delegaters[uint256(delegatorIndex)]].support = 0;
-            votingWeights[delegaters[uint256(delegatorIndex)]].weight = 0;
-        }
-
         return weight;
     }
 

@@ -22,22 +22,36 @@ contract MockBaseHTS is IBaseHTS {
         addLiquidityFailMinting,
         addLiquidityLPTransferFail,
         swapBFailedSendingB,
-        lpTokenCreationFailed
+        lpTokenCreationFailed,
+        failedTransferToken
     }
 
     bool internal isSuccess;
     bool internal tokenTest;
     int256 internal trueTransaction = 0;
     FailTransactionFor internal failType;
+    int256 public returnResponseCode = 23;
 
     constructor(bool _isSucces, bool _tokenTest) {
         isSuccess = _isSucces;
         tokenTest = _tokenTest;
     }
 
+    function setSuccessStatus(bool _success) public {
+        isSuccess = _success;
+    }
+
+    function setTrueTransactionCount(int256 _trueTransaction) public {
+        trueTransaction = _trueTransaction;
+    }
+
     function setFailType(int256 _type) public {
         failType = FailTransactionFor(_type);
         trueTransaction = successForType();
+    }
+
+    function setFailResponseCode(int256 code) public {
+        returnResponseCode = code;
     }
 
     function successForType() internal view returns (int256) {
@@ -72,6 +86,9 @@ contract MockBaseHTS is IBaseHTS {
             return 7;
         }
         if (failType == FailTransactionFor.lpTokenCreationFailed) {
+            return 1;
+        }
+        if (failType == FailTransactionFor.failedTransferToken) {
             return 1;
         }
         return 0;
@@ -128,11 +145,7 @@ contract MockBaseHTS is IBaseHTS {
             trueTransaction -= 1;
             return (int256(22), amount);
         }
-
-        if (isSuccess) {
-            return (int256(22), int256(amount));
-        }
-        revert("Mint Failed");
+        return (isSuccess ? int256(22) : int256(23), int256(amount));
     }
 
     function burnTokenPublic(address, int256 amount)
@@ -156,7 +169,10 @@ contract MockBaseHTS is IBaseHTS {
     {
         ERC20Mock mock = new ERC20Mock(10, 10);
         if (failType == FailTransactionFor.lpTokenCreationFailed) {
-            return (int256(32), address(0x0));
+            if (returnResponseCode == 32) {
+                revert("Can not create token");
+            }
+            return (int256(23), address(0x0));
         }
 
         return (int256(22), address(mock));

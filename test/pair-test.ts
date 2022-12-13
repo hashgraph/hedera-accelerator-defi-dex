@@ -107,6 +107,14 @@ describe("All Tests", function () {
       expect(pairs[0]).to.be.equals(pair1);
     });
 
+    it("verify factory initization should be failed for subsequent initization call", async function () {
+      const { factory, mockBaseHTS } = await loadFixture(deployFixture);
+      await factory.setUpFactory(mockBaseHTS.address);
+      await expect(factory.setUpFactory(mockBaseHTS.address)).to.revertedWith(
+        "Initializable: contract is already initialized"
+      );
+    });
+
     it("Check getPairs method", async function () {
       const { factory, mockBaseHTS } = await loadFixture(deployFixture);
       await factory.setUpFactory(mockBaseHTS.address);
@@ -141,6 +149,34 @@ describe("All Tests", function () {
       const pair = await factory.getPair(tokenAAddress, tokenBAddress);
       expect(pair).to.be.not.equal(zeroAddress);
     });
+  });
+
+  it("verify pair initization should be failed for subsequent initization call", async function () {
+    const { swapV2, mockBaseHTS, lpTokenCont } = await loadFixture(
+      deployFixture
+    );
+    await expect(
+      swapV2.initialize(
+        mockBaseHTS.address,
+        lpTokenCont.address,
+        tokenAAddress,
+        tokenBAddress,
+        treasury,
+        fee
+      )
+    ).to.revertedWith("Initializable: contract is already initialized");
+  });
+
+  it("verify pair addresses count", async function () {
+    const { swapV2 } = await loadFixture(deployFixture);
+    const items = await swapV2.getPair();
+    expect(items.length).to.be.equals(2);
+  });
+
+  it("verify contract address is non-empty", async function () {
+    const { swapV2 } = await loadFixture(deployFixture);
+    const address = await swapV2.getContractAddress();
+    expect(address).to.not.equals("");
   });
 
   it("Create a token pair with 0 unit each ", async function () {
@@ -433,6 +469,20 @@ describe("All Tests", function () {
     });
 
     //----------------------------------------------------------------------
+    it("verify remove liquidity should failed when user don't have enough balance ", async function () {
+      const { swapV2 } = await loadFixture(deployFailureFixture);
+      await swapV2.addLiquidity(
+        zeroAddress,
+        tokenAAddress,
+        tokenBAddress,
+        10,
+        10
+      );
+      await expect(swapV2.removeLiquidity(zeroAddress, 11)).to.revertedWith(
+        "user does not have sufficient lpTokens"
+      );
+    });
+
     it("Remove liquidity Fail A Transfer", async function () {
       const { swapV2, mockBaseHTS } = await loadFixture(deployFailureFixture);
       mockBaseHTS.setFailType(8);
@@ -472,7 +522,7 @@ describe("All Tests", function () {
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
       await expect(
         swapV2.addLiquidity(zeroAddress, tokenAAddress, tokenBAddress, 30, 30)
-      ).to.revertedWith("Mint Failed");
+      ).to.revertedWith("LP token minting failed.");
     });
 
     it("Add liquidity Transfer LPToken Fail", async function () {
@@ -517,6 +567,33 @@ describe("All Tests", function () {
       ).to.revertedWith("User Does not have lp amount");
     });
 
+    it("verify removeLPTokenFor call should failed when given amount is <= 0", async function () {
+      const { lpTokenCont } = await loadFixture(deployFixture);
+      await expect(
+        lpTokenCont.removeLPTokenFor(0, zeroAddress)
+      ).to.revertedWith("Please provide token counts");
+    });
+
+    it("verify removeLPTokenFor call should failed during transfer-token call", async function () {
+      const { mockBaseHTS, lpTokenCont } = await loadFixture(deployFixture);
+      await lpTokenCont.allotLPTokenFor(10, 10, userAddress);
+      await mockBaseHTS.setTrueTransactionCount(0);
+      await mockBaseHTS.setSuccessStatus(false);
+      await expect(
+        lpTokenCont.removeLPTokenFor(5, userAddress)
+      ).to.revertedWith("LP token transfer failed.");
+    });
+
+    it("verify removeLPTokenFor call should failed during burn-token call", async function () {
+      const { mockBaseHTS, lpTokenCont } = await loadFixture(deployFixture);
+      await lpTokenCont.allotLPTokenFor(10, 10, userAddress);
+      await mockBaseHTS.setTrueTransactionCount(2);
+      await mockBaseHTS.setSuccessStatus(false);
+      await expect(
+        lpTokenCont.removeLPTokenFor(5, userAddress)
+      ).to.revertedWith("LP token burn failed.");
+    });
+
     it("allotLPToken check LP Tokens", async function () {
       const { swapV2, lpTokenCont } = await loadFixture(deployFixture);
       const tokenBeforeQty = await swapV2.getPairQty();
@@ -524,6 +601,27 @@ describe("All Tests", function () {
       await lpTokenCont.allotLPTokenFor(10, 10, userAddress);
       const result = await lpTokenCont.lpTokenForUser(userAddress);
       await expect(result).to.equal(10);
+    });
+
+    it("verify allotLPToken call when lptoken not exist", async function () {
+      const LPToken = await ethers.getContractFactory("LPToken");
+      const instance = await LPToken.deploy();
+      await expect(
+        instance.allotLPTokenFor(10, 10, userAddress)
+      ).to.revertedWith("Liquidity Token not initialized");
+    });
+
+    it("verify that lptoken address exist", async function () {
+      const { lpTokenCont } = await loadFixture(deployFixture);
+      const address = await lpTokenCont.getLpTokenAddress();
+      expect(address).to.not.equals("");
+    });
+
+    it("verify that lpToken initization failed for subsequent initization call", async function () {
+      const { lpTokenCont, mockBaseHTS } = await loadFixture(deployFixture);
+      await expect(lpTokenCont.initialize(mockBaseHTS.address)).to.revertedWith(
+        "Initializable: contract is already initialized"
+      );
     });
   });
 
