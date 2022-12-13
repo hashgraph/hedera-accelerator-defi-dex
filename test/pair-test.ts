@@ -750,6 +750,7 @@ describe("All Tests", function () {
       const value = await swapV2.getTokenPairAddress();
       expect(value[0]).to.be.equals(tokenAAddress);
       expect(value[1]).to.be.equals(tokenBAddress);
+      expect(value[2]).to.not.be.equals(newZeroAddress);
     });
   });
 

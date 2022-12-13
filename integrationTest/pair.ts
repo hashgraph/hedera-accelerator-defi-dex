@@ -80,7 +80,7 @@ const initializeLPTokenContract = async (lpTokenContractId: string) => {
     .setPayableAmount(new Hbar(60))
     .execute(client);
 
-  await initializeContractTx.getReceipt(client);
+  await contractTokenTx.getReceipt(client);
 
   console.log(`Initialize LP contract with token done.`);
 };
@@ -222,9 +222,8 @@ const getTokenPairAddress = async (
   const response = await getPairQtyTx.getRecord(client);
   const tokenAQty = response.contractFunctionResult!.getInt256(0);
   const tokenBQty = response.contractFunctionResult!.getInt256(1);
-  const lptokenAddress = response.contractFunctionResult!.getInt256(1);
   console.log(
-    ` ${tokenAQty} units of token A and ${tokenBQty} units of token B are present in the pool. ${lptokenAddress} \n`
+    ` ${tokenAQty} units of token A and ${tokenBQty} units of token B are present in the pool. \n`
   );
   return [tokenAQty, tokenBQty];
 };
