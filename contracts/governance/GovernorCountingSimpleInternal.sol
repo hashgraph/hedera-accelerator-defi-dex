@@ -23,6 +23,8 @@ abstract contract GovernorCountingSimpleInternal is
     mapping(uint256 => address) proposalCreators;
     IBaseHTS internal tokenService;
 
+    event GodTokenClaimed(uint256 proposalId, address fromUser, address toUser);
+
     function initialize(
         IERC20 _token,
         uint256 _votingDelayValue,
