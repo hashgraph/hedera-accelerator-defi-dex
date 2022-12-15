@@ -7,6 +7,7 @@ export class ContractService {
   public pairContractName = "pair";
   public baseContractName = "basehts";
   public lpTokenContractName = "lptoken";
+  public splitterContractName = "splitter";
   public governorContractName = "governortokencreate";
   public governorTextContractName = "governortextproposal";
   public governorTTContractName = "governortransfertoken";
