@@ -299,6 +299,7 @@ describe("Governor Tests", function () {
       );
 
       await instance.executeProposal(desc);
+      await instance.claimGODToken(proposalId);
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
       const tokenAddress = await instance.getTokenAddress(proposalId);
       expect(tokenAddress).to.not.be.equals(zeroAddress);
@@ -353,6 +354,7 @@ describe("Governor Tests", function () {
       expect(state).to.be.equals(4);
 
       await textGovernorInstance.executeProposal(desc);
+      await textGovernorInstance.claimGODToken(proposalId);
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
     });
 
@@ -416,6 +418,7 @@ describe("Governor Tests", function () {
       expect(state).to.be.equals(4);
 
       await instance.executeProposal(desc);
+      await instance.claimGODToken(proposalId);
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
     });
 
@@ -475,6 +478,7 @@ describe("Governor Tests", function () {
       expect(state).to.be.equals(4);
 
       await instance.executeProposal(desc);
+      await instance.claimGODToken(proposalId);
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
     });
 
@@ -668,6 +672,7 @@ describe("Governor Tests", function () {
       expect(state).to.be.equals(4);
 
       await instance.executeProposal(desc);
+      await instance.claimGODToken(proposalId);
       await verifyAccountBalance(
         tokenCont,
         signers[0].address,
@@ -732,6 +737,7 @@ describe("Governor Tests", function () {
       expect(state).to.be.equals(4);
 
       await instance.executeProposal(desc);
+      await instance.claimGODToken(proposalId);
       await verifyAccountBalance(
         tokenCont,
         signers[0].address,
@@ -830,39 +836,6 @@ describe("Governor Tests", function () {
 
       await expect(
         getUpgradeProposalId(governorUpgradeInstance, signers[0])
-      ).to.revertedWith("Transfer token failed.");
-    });
-
-    it("Verify contract proposal creation failed for returnGODToken invocation", async function () {
-      const { governorUpgradeInstance, signers, mockBaseHTS } =
-        await loadFixture(deployFixture);
-      const proposalId = await getUpgradeProposalId(
-        governorUpgradeInstance,
-        signers[0]
-      );
-
-      await governorUpgradeInstance.castVote(proposalId, 1);
-
-      const voteSucceeded = await governorUpgradeInstance.voteSucceeded(
-        proposalId
-      );
-      expect(voteSucceeded).to.be.equals(true);
-
-      const quorumReached1 = await governorUpgradeInstance.quorumReached(
-        proposalId
-      );
-      expect(quorumReached1).to.be.equals(true);
-
-      await mineNBlocks(20);
-
-      const state = await governorUpgradeInstance.state(proposalId);
-      expect(state).to.be.equals(4);
-
-      await mockBaseHTS.setFailType(8);
-      await mockBaseHTS.setSuccessStatus(false);
-
-      await expect(
-        governorUpgradeInstance.executeProposal(desc)
       ).to.revertedWith("Transfer token failed.");
     });
 
