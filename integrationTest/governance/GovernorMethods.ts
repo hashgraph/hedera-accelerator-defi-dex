@@ -10,6 +10,7 @@ import {
 import dotenv from "dotenv";
 import ClientManagement from "../../utils/ClientManagement";
 import { ContractService } from "../../deployment/service/ContractService";
+import dex from "../../deployment/model/dex";
 
 dotenv.config();
 
@@ -46,11 +47,6 @@ export default class GovernorMethods {
     const response = await executedTx.getRecord(client);
     const receipt = await executedTx.getReceipt(treasurerClient);
 
-    // const logs = await eventConsumer.getEventsFromRecord(response.contractFunctionResult?.logs, "VoteCast");
-    // logs.forEach(log => {
-    //   console.log(JSON.stringify(log));
-    //});
-
     const status = receipt.status;
 
     console.log(
@@ -85,10 +81,10 @@ export default class GovernorMethods {
   };
 
   public initialize = async (contractId: string | ContractId) => {
-    const tokenId = TokenId.fromString("0.0.48602743");
+    const tokenId = TokenId.fromString(dex.GOD_TOKEN_ID);
     console.log(`\nInitialize contract with token  `);
     const votingDelay = 0;
-    const votingPeriod = 12;
+    const votingPeriod = 100; //Blocks to mint
 
     let contractFunctionParameters = new ContractFunctionParameters()
       .addAddress(tokenId.toSolidityAddress()) // token that define the voting weight, to vote user should have % of this token.
