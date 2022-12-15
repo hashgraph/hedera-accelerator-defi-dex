@@ -165,6 +165,7 @@ abstract contract GovernorCountingSimpleInternal is
         if (responseCode != HederaResponseCodes.SUCCESS) {
             revert("Transfer token failed.");
         }
+        emit GodTokenClaimed(proposalId, address(this), proposalCreators[proposalId]);
     }
 
     function votingDelay()
