@@ -84,7 +84,7 @@ const getTokenTransferData = async (
 
 async function main() {
   console.log(`\nUsing governor proxy contract id ${contractId}`);
-  // await governor.initialize(contractId);
+  await governor.initialize(contractId);
   const description = "Create token proposal 7";
   const title = "Title2";
   const link = "Link2";
