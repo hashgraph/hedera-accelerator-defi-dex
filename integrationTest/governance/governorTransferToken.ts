@@ -66,7 +66,7 @@ const getTokenTransferData = async (
   contractId: string | ContractId
 ) => {
   console.log(`\nGetting getTokenTransferData `);
-  const args = new ContractFunctionParameters().addUint256(Number(1));
+  const args = new ContractFunctionParameters().addUint256(proposalId);
   const txn = await new ContractExecuteTransaction()
     .setContractId(contractId)
     .setFunction("getTokenTransferData", args)
