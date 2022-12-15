@@ -3,7 +3,6 @@ pragma solidity >=0.5.0 <0.9.0;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "../common/hedera/HederaResponseCodes.sol";
-import "prb-math/contracts/PRBMathUD60x18.sol";
 import "../common/IBaseHTS.sol";
 import "./ISplitter.sol";
 import "hardhat/console.sol";
@@ -16,7 +15,6 @@ contract Splitter is ISplitter, HederaResponseCodes, Initializable {
     mapping(IVault => uint256) private _vaultMultipliers;
     uint256 private _totalShares;
     address private owner;
-    using PRBMathUD60x18 for uint256;
 
     modifier onlyOwner() {
         require(owner == msg.sender, "Only Owner can call this function");

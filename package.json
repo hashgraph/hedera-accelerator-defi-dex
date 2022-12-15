@@ -38,7 +38,6 @@
     "hardhat": "^2.12.3",
     "husky": "^8.0.0",
     "md5-file": "^5.0.0",
-    "prb-math": "^2.4.3",
     "prettier": "^2.7.1",
     "prettier-plugin-solidity": "^1.0.0-rc.1",
     "solhint": "^3.3.7",
