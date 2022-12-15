@@ -17,6 +17,8 @@ describe("Governor Tests", function () {
   const thirtyPercent = total * 0.3;
   const fiftyPercent = total * 0.5;
   const desc = "Test";
+  const title = "Title";
+  const link = "Link";
 
   const readFileContent = (filePath: string) => {
     const rawdata: any = fs.readFileSync(filePath);
@@ -891,6 +893,31 @@ describe("Governor Tests", function () {
       ).to.revertedWith("Only proposer can cancel the proposal");
     });
 
+    it("Verify GovernorTransferToken should return data for valid propsal id", async function () {
+      const { governorTransferTokenInstance, tokenCont, signers } =
+        await loadFixture(deployFixture);
+      const proposalId = await getTransferTokenProposalId(
+        governorTransferTokenInstance,
+        signers,
+        tokenCont.address,
+        5
+      );
+      const info = await governorTransferTokenInstance.getTokenTransferData(
+        proposalId
+      );
+      expect(info[0]).to.be.equals(title);
+      expect(info[1]).to.be.equals(link);
+    });
+
+    it("Verify GovernorTransferToken should reverted for invalid propsal id", async function () {
+      const { governorTransferTokenInstance } = await loadFixture(
+        deployFixture
+      );
+      await expect(
+        governorTransferTokenInstance.getTokenTransferData(1)
+      ).to.revertedWith("No data available");
+    });
+
     it("Verify GovernorTransferToken contract proposal creation to execute flow ", async function () {
       const { governorTransferTokenInstance, tokenCont, signers } =
         await loadFixture(deployFixture);
@@ -1000,7 +1027,9 @@ describe("Governor Tests", function () {
           signers[1].address,
           signers[2].address,
           tokenAddress,
-          amount
+          amount,
+          title,
+          link
         );
       const record = await pIdResponse.wait();
       return record.events[0].args.proposalId.toString();
