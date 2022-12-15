@@ -9,13 +9,10 @@ import {
 import { httpRequest } from "../../deployment/api/HttpsService";
 
 import { ContractService } from "../../deployment/service/ContractService";
-import GovernorMethods from "./GovernorMethods";
 import ClientManagement from "../../utils/ClientManagement";
 
 const clientManagement = new ClientManagement();
 const contractService = new ContractService();
-
-const governor = new GovernorMethods();
 
 let client = clientManagement.createOperatorClient();
 const { id, key } = clientManagement.getOperator();
@@ -26,6 +23,12 @@ const { treasureId, treasureKey } = clientManagement.getTreasure();
 const contractId = contractService.getContractWithProxy(
   contractService.splitterContractName
 ).transparentProxyId!;
+
+const vaultContractIds = contractService
+  .getContractsWithProxy(contractService.splitterContractName, 3)
+  .map((obj) => {
+    return obj.transparentProxyId!;
+  });
 
 const initialize = async (
   contractId: string | ContractId,

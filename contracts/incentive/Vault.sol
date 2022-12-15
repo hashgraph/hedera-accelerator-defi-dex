@@ -8,10 +8,9 @@ import "../common/IBaseHTS.sol";
 import "./IVault.sol";
 
 contract Vault is IVault, HederaResponseCodes, Initializable {
-    
     event VaultAdded(IVault vault, uint256 multiplier);
     uint256 _amount;
-    
+
     function initialize(uint256 amount) public initializer {
         _amount = amount;
     }

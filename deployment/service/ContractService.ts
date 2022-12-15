@@ -8,6 +8,7 @@ export class ContractService {
   public baseContractName = "basehts";
   public lpTokenContractName = "lptoken";
   public splitterContractName = "splitter";
+  public vaultContractName = "vault";
   public governorContractName = "governortokencreate";
   public governorTextContractName = "governortextproposal";
   public governorTTContractName = "governortransfertoken";
@@ -136,6 +137,20 @@ export class ContractService {
         contract.transparentProxyId != null
     );
     return matchingProxyContracts[matchingProxyContracts.length - 1];
+  };
+
+  public getContractsWithProxy = (
+    contractName: string,
+    count: number
+  ): DeployedContract[] => {
+    const contracts: Array<DeployedContract> = this.getAllContracts();
+    const matchingProxyContracts = contracts.filter(
+      (contract: DeployedContract) =>
+        contract.name == contractName &&
+        contract.transparentProxyAddress != null &&
+        contract.transparentProxyId != null
+    );
+    return matchingProxyContracts.slice(-count);
   };
 
   public addDeployed = (contract: DeployedContract) => {
