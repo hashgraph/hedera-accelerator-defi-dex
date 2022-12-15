@@ -23,6 +23,8 @@ abstract contract GovernorCountingSimpleInternal is
     mapping(uint256 => address) proposalCreators;
     IBaseHTS internal tokenService;
 
+    event GodTokenClaimed(uint256 proposalId, address fromUser, address toUser);
+
     function initialize(
         IERC20 _token,
         uint256 _votingDelayValue,
@@ -163,6 +165,7 @@ abstract contract GovernorCountingSimpleInternal is
         if (responseCode != HederaResponseCodes.SUCCESS) {
             revert("Transfer token failed.");
         }
+        emit GodTokenClaimed(proposalId, address(this), proposalCreators[proposalId]);
     }
 
     function votingDelay()
@@ -261,7 +264,7 @@ abstract contract GovernorCountingSimpleInternal is
         bytes[] memory,
         bytes32 /*descriptionHash*/
     ) internal virtual override {
-        returnGODToken(proposalId);
+        //returnGODToken(proposalId);
     }
 
     /**
@@ -338,6 +341,10 @@ abstract contract GovernorCountingSimpleInternal is
     ) private view returns (int256) {
         uint256 currentWeight = _getVotes(voter, 0, "");
         return int256(currentWeight) - int256(existingWeight);
+    }
+
+    function claimGODToken(uint256 proposalId) external {
+        returnGODToken(proposalId);
     }
 }
 
