@@ -9,6 +9,8 @@ contract GovernorTransferToken is GovernorCountingSimpleInternal {
         address transferToAccount;
         address tokenToTransfer;
         int256 transferTokenAmount;
+        string title;
+        string linkToDiscussion;
     }
     mapping(uint256 => TokenTransferData) _proposalData;
 
@@ -17,7 +19,9 @@ contract GovernorTransferToken is GovernorCountingSimpleInternal {
         address _transferFromAccount,
         address _transferToAccount,
         address _tokenToTransfer,
-        int256 _transferTokenAmount
+        int256 _transferTokenAmount,
+        string memory title,
+        string memory linkToDiscussion
     ) public returns (uint256) {
         (
             address[] memory targets,
@@ -29,10 +33,23 @@ contract GovernorTransferToken is GovernorCountingSimpleInternal {
             _transferFromAccount,
             _transferToAccount,
             _tokenToTransfer,
-            _transferTokenAmount
+            _transferTokenAmount,
+            title,
+            linkToDiscussion
         );
         _proposalData[proposalId] = tokenTransferData;
         return proposalId;
+    }
+
+    function getTokenTransferData(
+        uint256 proposalId
+    ) external view returns (string memory, string memory) {
+        TokenTransferData storage tokenTransferData = _proposalData[proposalId];
+        require(
+            tokenTransferData.transferFromAccount != address(0),
+            "No data available"
+        );
+        return (tokenTransferData.title, tokenTransferData.linkToDiscussion);
     }
 
     function quorum(
