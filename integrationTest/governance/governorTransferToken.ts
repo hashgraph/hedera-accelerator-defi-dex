@@ -26,14 +26,21 @@ const contractId = contractService.getContractWithProxy(
 ).transparentProxyId!;
 const transferTokenId = TokenId.fromString("0.0.48504379");
 
-async function propose(description: string, contractId: string | ContractId) {
+async function propose(
+  description: string,
+  contractId: string | ContractId,
+  title: string,
+  link: string
+) {
   console.log(`\nCreating proposal `);
   const contractFunctionParameters = new ContractFunctionParameters()
     .addString(description)
     .addAddress(id.toSolidityAddress()) // from
     .addAddress(treasureId.toSolidityAddress()) // to
     .addAddress(transferTokenId.toSolidityAddress()) // tokenToTransfer
-    .addInt256(new BigNumber(100000000)); // amountToTransfer
+    .addInt256(new BigNumber(100000000)) // amountToTransfer
+    .addString(title)
+    .addString(link);
 
   const tx = await new ContractExecuteTransaction()
     .setContractId(contractId)
@@ -54,12 +61,36 @@ async function propose(description: string, contractId: string | ContractId) {
   return proposalId;
 }
 
+const getTokenTransferData = async (
+  proposalId: BigNumber,
+  contractId: string | ContractId
+) => {
+  console.log(`\nGetting getTokenTransferData `);
+  const args = new ContractFunctionParameters().addUint256(Number(1));
+  const txn = await new ContractExecuteTransaction()
+    .setContractId(contractId)
+    .setFunction("getTokenTransferData", args)
+    .setGas(500000)
+    .execute(client);
+
+  const receipt = await txn.getReceipt(client);
+  const record = await txn.getRecord(client);
+  const title = record.contractFunctionResult!.getString(0);
+  const link = record.contractFunctionResult!.getString(1);
+  console.log(
+    `getTokenTransferData tx status ${receipt.status} with title = ${title} & link = ${link}`
+  );
+};
+
 async function main() {
   console.log(`\nUsing governor proxy contract id ${contractId}`);
   await governor.initialize(contractId);
-  const description = "Create token proposal 5";
+  const description = "Create token proposal 7";
+  const title = "Title2";
+  const link = "Link2";
 
-  const proposalId = await propose(description, contractId);
+  const proposalId = await propose(description, contractId, title, link);
+  await getTokenTransferData(proposalId, contractId);
   await governor.vote(proposalId, 1, contractId); //1 is for vote.
   await governor.quorumReached(proposalId, contractId);
   await governor.voteSucceeded(proposalId, contractId);
