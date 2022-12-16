@@ -35,7 +35,6 @@ contract Splitter is ISplitter, HederaResponseCodes, Initializable {
         for (uint256 i = 0; i < vaults.length; i++) {
             _addVault(vaults[i], multipliers[i]);
         }
-        console.logUint(_vaults.length);
     }
 
     function _addVault(IVault vault, uint256 multiplier)
@@ -66,8 +65,7 @@ contract Splitter is ISplitter, HederaResponseCodes, Initializable {
     ) external override returns (int32) {
         for (uint256 i = 0; i < _vaults.length; i++) {
             IVault tempVault = _vaults[i];
-            uint256 percentage = _calculateTokenRewardPercentage(tempVault);
-            uint256 amountToTransfer = multiply(amount, percentage);
+            uint amountToTransfer = _amountToTransfer(tempVault, amount);
             _tokenService.associateTokenPublic(address(tempVault), token);
             _tokenService.transferTokenPublic(
                 token,
@@ -88,7 +86,9 @@ contract Splitter is ISplitter, HederaResponseCodes, Initializable {
         return _addVault(vault, multiplier);
     }
 
-    function deRegisterVault(IVault vault) external override returns (int32) {}
+    function deRegisterVault(IVault vault) external override onlyOwner returns (int32) {
+        // TODO: Need Discussion if we need this
+    }
 
     function rewardTokenPercentage(IVault vault)
         external
@@ -96,6 +96,11 @@ contract Splitter is ISplitter, HederaResponseCodes, Initializable {
         returns (uint256)
     {
         return _calculateTokenRewardPercentage(vault);
+    }
+
+    function _amountToTransfer(IVault vault, uint256 totalAmount) public returns(uint256 amountToTransfer) {
+        uint256 percentage = _calculateTokenRewardPercentage(vault);
+        amountToTransfer = multiply(totalAmount, percentage);
     }
 
     function _calculateTokenRewardPercentage(IVault vault)
@@ -106,7 +111,6 @@ contract Splitter is ISplitter, HederaResponseCodes, Initializable {
             vault
         );
         uint256 perShareReward = divide(vaultWeight, totalWeight);
-        console.logUint(perShareReward);
         return perShareReward;
     }
 

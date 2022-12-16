@@ -36,11 +36,11 @@ describe("All Tests", function () {
     const tokenCont = await TokenCont.deploy(100000000000, 100000000000);
 
     const Vault0 = await ethers.getContractFactory("Vault");
-    const vault0 = await upgrades.deployProxy(Vault0, [1000]);
+    const vault0 = await upgrades.deployProxy(Vault0, [100000000000]);
     const Vault1 = await ethers.getContractFactory("Vault");
-    const vault1 = await await upgrades.deployProxy(Vault1, [50]);
+    const vault1 = await await upgrades.deployProxy(Vault1, [5000000000]);
     const Vault2 = await ethers.getContractFactory("Vault");
-    const vault2 = await await upgrades.deployProxy(Vault2, [100]);
+    const vault2 = await await upgrades.deployProxy(Vault2, [10000000000]);
 
     const Splitter = await ethers.getContractFactory("Splitter");
     const splitter = await upgrades.deployProxy(Splitter, [
@@ -51,7 +51,7 @@ describe("All Tests", function () {
     return { mockBaseHTS, splitter, vault0, vault1, vault2, tokenCont };
   }
   describe("Factory Contract positive Tests", async () => {
-    it.only("Check rewardTokenPercentage method", async function () {
+    it("Check rewardTokenPercentage method", async function () {
       const { splitter, mockBaseHTS, vault0, vault1, vault2 } =
         await loadFixture(deployFixture);
       const value = await splitter.callStatic.rewardTokenPercentage(
@@ -61,7 +61,7 @@ describe("All Tests", function () {
       expect(value).to.be.equals(expectedVal);
     });
 
-    it("Check split token method", async function () {
+    it.only("Check split token method", async function () {
       const { splitter, mockBaseHTS, tokenCont, vault1, vault2 } =
         await loadFixture(deployFixture);
       const value = await splitter.callStatic.splitTokensToVaults(
@@ -70,6 +70,17 @@ describe("All Tests", function () {
         BigNumber.from(10000000000)
       );
       const expectedVal = BigNumber.from(22);
+      expect(value).to.be.equals(expectedVal);
+    });
+
+    it.only("Check split token value for a vault", async function () {
+      const { splitter, mockBaseHTS, tokenCont, vault0, vault1, vault2 } =
+        await loadFixture(deployFixture);
+      const value = await splitter.callStatic._amountToTransfer(
+        vault0.address,
+        BigNumber.from(10000000000)
+      );
+      const expectedVal = BigNumber.from(2127659500);
       expect(value).to.be.equals(expectedVal);
     });
   });
