@@ -368,5 +368,14 @@
         "hash": "d4e3e011dc3fe29a286eaba722aff5a6",
         "transparentProxyAddress": "0x0000000000000000000000000000000002ed3f1c",
         "transparentProxyId": "0.0.49102620"
+    },
+    {
+        "name": "splitter",
+        "id": "0.0.49102658",
+        "address": "0x0000000000000000000000000000000002ed3f42",
+        "timestamp": "2022-12-16T11:40:06.914Z",
+        "hash": "f1c6a95474bd8fafc310b8dd524e0bfd",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002ed3f44",
+        "transparentProxyId": "0.0.49102660"
     }
 ]

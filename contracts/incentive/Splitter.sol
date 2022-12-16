@@ -13,7 +13,6 @@ contract Splitter is ISplitter, HederaResponseCodes, Initializable {
     IBaseHTS internal _tokenService;
     IVault[] private _vaults;
     mapping(IVault => uint256) private _vaultMultipliers;
-    uint256 private _totalShares;
     address private owner;
 
     modifier onlyOwner() {
@@ -53,7 +52,6 @@ contract Splitter is ISplitter, HederaResponseCodes, Initializable {
 
         _vaults.push(vault);
         _vaultMultipliers[vault] = multiplier;
-        _totalShares = _totalShares + multiplier;
         emit VaultAdded(vault, multiplier);
         return HederaResponseCodes.SUCCESS;
     }
@@ -123,8 +121,7 @@ contract Splitter is ISplitter, HederaResponseCodes, Initializable {
     function _totalWeightForAllVaults() private returns (uint256 totalWeight) {
         for (uint256 i = 0; i < _vaults.length; i++) {
             IVault tempVault = _vaults[i];
-            uint256 tokenCount = tempVault.getStakedTokenCount();
-            uint256 weight = tokenCount * _vaultMultipliers[tempVault];
+            uint256 weight = _weightForVault(tempVault);
             totalWeight += weight;
         }
     }
