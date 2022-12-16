@@ -17,6 +17,4 @@ interface ISplitter {
         returns (int32);
 
     function deRegisterVault(IVault vault) external returns (int32);
-
-    function rewardTokenPercentage(IVault vault) external returns (uint256);
 }

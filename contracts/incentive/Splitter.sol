@@ -63,9 +63,14 @@ contract Splitter is ISplitter, HederaResponseCodes, Initializable {
         address fromAccount,
         uint256 amount
     ) external override returns (int32) {
+        uint256 totalWeightForAllVaults = _totalWeightForAllVaults();
         for (uint256 i = 0; i < _vaults.length; i++) {
             IVault tempVault = _vaults[i];
-            uint amountToTransfer = _amountToTransfer(tempVault, amount);
+            uint256 amountToTransfer = _amountToTransfer(
+                tempVault,
+                amount,
+                totalWeightForAllVaults
+            );
             _tokenService.associateTokenPublic(address(tempVault), token);
             _tokenService.transferTokenPublic(
                 token,
@@ -86,47 +91,47 @@ contract Splitter is ISplitter, HederaResponseCodes, Initializable {
         return _addVault(vault, multiplier);
     }
 
-    function deRegisterVault(IVault vault) external override onlyOwner returns (int32) {
+    function deRegisterVault(IVault vault)
+        external
+        override
+        onlyOwner
+        returns (int32)
+    {
         // TODO: Need Discussion if we need this
     }
 
-    function rewardTokenPercentage(IVault vault)
-        external
-        override
-        returns (uint256)
-    {
-        return _calculateTokenRewardPercentage(vault);
-    }
-
-    function _amountToTransfer(IVault vault, uint256 totalAmount) public returns(uint256 amountToTransfer) {
-        uint256 percentage = _calculateTokenRewardPercentage(vault);
+    function _amountToTransfer(
+        IVault vault,
+        uint256 totalAmount,
+        uint256 totalWeightForAllVaults
+    ) private returns (uint256 amountToTransfer) {
+        uint256 percentage = _calculateTokenRewardPercentage(
+            vault,
+            totalWeightForAllVaults
+        );
         amountToTransfer = multiply(totalAmount, percentage);
     }
 
-    function _calculateTokenRewardPercentage(IVault vault)
+    function _calculateTokenRewardPercentage(IVault vault, uint256 totalWeight)
         private
         returns (uint256)
     {
-        (uint256 totalWeight, uint256 vaultWeight) = _totalWeightForVaults(
-            vault
-        );
-        uint256 perShareReward = divide(vaultWeight, totalWeight);
+        uint256 perShareReward = divide(_weightForVault(vault), totalWeight);
         return perShareReward;
     }
 
-    function _totalWeightForVaults(IVault vault)
-        private
-        returns (uint256 totalWeight, uint256 vaultWeight)
-    {
+    function _totalWeightForAllVaults() private returns (uint256 totalWeight) {
         for (uint256 i = 0; i < _vaults.length; i++) {
             IVault tempVault = _vaults[i];
             uint256 tokenCount = tempVault.getStakedTokenCount();
             uint256 weight = tokenCount * _vaultMultipliers[tempVault];
-            if (address(vault) == address(tempVault)) {
-                vaultWeight = weight;
-            }
             totalWeight += weight;
         }
+    }
+
+    function _weightForVault(IVault vault) private returns (uint256 weight) {
+        uint256 tokenCount = vault.getStakedTokenCount();
+        weight = tokenCount * _vaultMultipliers[vault];
     }
 
     function divide(uint256 p0, uint256 p1) internal pure returns (uint256) {

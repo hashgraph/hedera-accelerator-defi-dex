@@ -355,7 +355,18 @@
         "name": "splitter",
         "id": "0.0.49102559",
         "address": "0x0000000000000000000000000000000002ed3edf",
-        "timestamp": "2022-12-16T10:26:34.694Z",
-        "hash": "85b7acb4629507691dc31d95e6ab9f0c"
+        "timestamp": "2022-12-16T10:27:15.835Z",
+        "hash": "85b7acb4629507691dc31d95e6ab9f0c",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002ed3ee2",
+        "transparentProxyId": "0.0.49102562"
+    },
+    {
+        "name": "splitter",
+        "id": "0.0.49102618",
+        "address": "0x0000000000000000000000000000000002ed3f1a",
+        "timestamp": "2022-12-16T11:09:33.644Z",
+        "hash": "d4e3e011dc3fe29a286eaba722aff5a6",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002ed3f1c",
+        "transparentProxyId": "0.0.49102620"
     }
 ]
