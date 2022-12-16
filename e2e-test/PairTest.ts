@@ -51,7 +51,6 @@ const createToken = async (tokenName: string): Promise<TokenId> => {
     .setInitialSupply(20000000000000)
     .setTokenType(TokenType.FungibleCommon)
     .setSupplyType(TokenSupplyType.Infinite)
-    //create the token with the contract as supply and treasury
     .setSupplyKey(treasureKey)
     .setTreasuryAccountId(treasureId)
     .execute(treasurerClient);
