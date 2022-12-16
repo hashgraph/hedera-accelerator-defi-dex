@@ -207,7 +207,7 @@ const pairCurrentPosition = async (
 
 const getTokenPairAddress = async (
   contId: string
-): Promise<[BigNumber, BigNumber]> => {
+): Promise<[string, string]> => {
   const getPairQty = await new ContractExecuteTransaction()
     .setContractId(contId)
     .setGas(1000000)
@@ -215,12 +215,12 @@ const getTokenPairAddress = async (
     .freezeWith(client);
   const getPairQtyTx = await getPairQty.execute(client);
   const response = await getPairQtyTx.getRecord(client);
-  const tokenAQty = response.contractFunctionResult!.getInt256(0);
-  const tokenBQty = response.contractFunctionResult!.getInt256(1);
+  const tokenAAddress = response.contractFunctionResult!.getAddress(0);
+  const tokenBAddress = response.contractFunctionResult!.getAddress(1);
   console.log(
-    ` ${tokenAQty} units of token A and ${tokenBQty} units of token B are present in the pool. \n`
+    ` ${tokenAAddress} address of token A and ${tokenBAddress} address of token B  \n`
   );
-  return [tokenAQty, tokenBQty];
+  return [tokenAAddress, tokenBAddress];
 };
 
 const spotPrice = async (contId: string): Promise<BigNumber> => {
@@ -351,18 +351,15 @@ const getLpTokenAddress = async (lpTokenProxyId: string) => {
   const getLpTokenAddressTxRes = await getLpTokenAddressTx.execute(client);
   const response = await getLpTokenAddressTxRes.getRecord(client);
   const address = response.contractFunctionResult!.getAddress(0);
-  expect(address).not.to.be.NaN;
   console.log(` Lp token address ${address}`);
 };
 
 const getAllLPTokenCount = async (contId: string): Promise<BigNumber> => {
   console.log(`getAllLPTokenCount`);
 
-  const contractFunctionParameters = new ContractFunctionParameters();
-
   const getAllLPTokenCountTx = await new ContractExecuteTransaction()
     .setContractId(contId)
-    .setFunction("getAllLPTokenCount", contractFunctionParameters)
+    .setFunction("getAllLPTokenCount")
     .setGas(2000000)
     .freezeWith(client)
     .sign(key);
