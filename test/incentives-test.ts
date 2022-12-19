@@ -7,7 +7,7 @@ import { BigNumber } from "ethers";
 describe("All Tests", function () {
   const newZeroAddress = "0x0000000000000000000000000000000000000000";
 
-  describe("Swap Upgradeable", function () {
+  describe("Splitter Upgradeable", function () {
     it("Verify if the Splitter contract is upgradeable safe ", async function () {
       const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
       const mockBaseHTS = await MockBaseHTS.deploy(true, true);
@@ -52,7 +52,7 @@ describe("All Tests", function () {
     ]);
     return { mockBaseHTS, splitter, vault0, vault1, vault2, tokenCont };
   }
-  describe("Factory Contract positive Tests", async () => {
+  describe("Splitter Contract positive Tests", async () => {
     it("Check split token method", async function () {
       const { splitter, mockBaseHTS, tokenCont, vault1, vault2 } =
         await loadFixture(deployFixture);

@@ -115,8 +115,8 @@ contract Splitter is ISplitter, HederaResponseCodes, Initializable {
         private
         returns (uint256)
     {
-        uint256 perShareReward = divide(_vaultWeight(vault), totalWeight);
-        return perShareReward;
+        uint256 vaultShareFraction = divide(_vaultWeight(vault), totalWeight);
+        return vaultShareFraction;
     }
 
     function _totalVaultWeight() private returns (uint256 totalWeight) {

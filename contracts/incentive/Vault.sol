@@ -5,7 +5,6 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./IVault.sol";
 
 contract Vault is IVault, Initializable {
-    event VaultAdded(IVault vault, uint256 multiplier);
     uint256 _amount;
 
     function initialize(uint256 amount) public initializer {
