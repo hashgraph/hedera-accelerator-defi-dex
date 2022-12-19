@@ -39,7 +39,7 @@ describe("Vault Tests", function () {
   it("Add staking token", async function () {
     const { vaultContract, signers } = await loadFixture(deployFixture);
     await vaultContract.connect(signers[1]).addToken(stakingToken, 10);
-    const totalValue = await vaultContract.getTVL();
+    const totalValue = await vaultContract.getTotalVolume();
     expect(totalValue).equals(10);
   });
 
@@ -55,7 +55,7 @@ describe("Vault Tests", function () {
   it("Get TVL", async function () {
     const { vaultContract, signers } = await loadFixture(deployFixture);
     await vaultContract.connect(signers[1]).addToken(stakingToken, 10);
-    const totalValue = await vaultContract.getTVL();
+    const totalValue = await vaultContract.getTotalVolume();
     expect(totalValue).equals(10);
   });
 
@@ -70,7 +70,7 @@ describe("Vault Tests", function () {
     await vaultContract.connect(signers[1]).addToken(stakingToken, 10);
     await vaultContract.connect(signers[0]).addToken(rewardToken1, 10);
     await vaultContract.connect(signers[1]).withdraw(0, 10);
-    const totalValue = await vaultContract.getTVL();
+    const totalValue = await vaultContract.getTotalVolume();
     expect(totalValue).equals(0);
   });
 
@@ -84,7 +84,7 @@ describe("Vault Tests", function () {
 
     await vaultContract.connect(signers[1]).withdraw(0, 5);
 
-    const totalValue = await vaultContract.getTVL();
+    const totalValue = await vaultContract.getTotalVolume();
     expect(totalValue).equals(15);
   });
 
