@@ -884,7 +884,7 @@ describe("Governor Tests", function () {
       expect(info[1]).to.be.equals(link);
     });
 
-    it("Verify claimGodToken should be reverted when proposal id is not exist", async function () {
+    it("Verify claimGodToken should be reverted when proposal id does not exist", async function () {
       const { governorTransferTokenInstance, tokenCont, signers } =
         await loadFixture(deployFixture);
       await getTransferTokenProposalId(
@@ -913,7 +913,7 @@ describe("Governor Tests", function () {
       await mineNBlocks(15);
       await expect(governorTransferTokenInstance.claimGODToken(proposalId))
         .to.emit(governorTransferTokenInstance, "GodTokenClaimed")
-        .withArgs(proposalId, anyValue, anyValue);
+        .withArgs(proposalId, anyValue, anyValue, true);
     });
 
     it("Verify claimGodToken should be reverted when proposal is in pending / active state", async function () {
