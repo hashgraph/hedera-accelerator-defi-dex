@@ -18,7 +18,12 @@ abstract contract GovernorCountingSimpleInternal is
     GovernorCountingSimpleUpgradeable,
     HederaResponseCodes
 {
-    event GodTokenClaimed(uint256 proposalId, address fromUser, address toUser);
+    event GodTokenClaimed(
+        uint256 proposalId,
+        address fromUser,
+        address toUser,
+        bool justClaimed
+    );
 
     struct VotingWeight {
         uint256 weight;
@@ -28,6 +33,11 @@ abstract contract GovernorCountingSimpleInternal is
     struct Delegation {
         address delegatee;
         address delegator;
+    }
+
+    struct ProposalInfo {
+        address creator;
+        bool tokenClaimed;
     }
 
     uint256 precision;
@@ -44,11 +54,6 @@ abstract contract GovernorCountingSimpleInternal is
     address[] voters;
     mapping(address => Delegation) delegation;
     mapping(address => VotingWeight) votingWeights;
-
-    struct ProposalInfo {
-        address creator;
-        bool tokenClaimed;
-    }
 
     function initialize(
         IERC20 _token,
@@ -232,8 +237,25 @@ abstract contract GovernorCountingSimpleInternal is
     }
 
     function claimGODToken(uint256 proposalId) external {
+        ProposalInfo storage proposalInfo = proposalCreators[proposalId];
+        require(proposalInfo.creator != address(0), "Proposal not found");
+        if (proposalInfo.tokenClaimed) {
+            emit GodTokenClaimed(
+                proposalId,
+                address(this),
+                proposalInfo.creator,
+                false
+            );
+            return;
+        }
+        ProposalState state = state(proposalId);
+        require(
+            !(state == ProposalState.Pending || state == ProposalState.Active),
+            "Can't claim token"
+        );
         returnGODToken(proposalId);
-        cleanup(proposalCreators[proposalId]);
+        cleanup(proposalInfo.creator);
+        proposalInfo.tokenClaimed = true;
     }
 
     /**
@@ -265,20 +287,17 @@ abstract contract GovernorCountingSimpleInternal is
     }
 
     function returnGODToken(uint256 proposalId) internal {
+        address creator = proposalCreators[proposalId].creator;
         int256 responseCode = tokenService.transferTokenPublic(
             address(token),
             address(this),
-            address(proposalCreators[proposalId]),
+            creator,
             int64(uint64(precision))
         );
         if (responseCode != HederaResponseCodes.SUCCESS) {
             revert("Transfer token failed.");
         }
-        emit GodTokenClaimed(
-            proposalId,
-            address(this),
-            proposalCreators[proposalId]
-        );
+        emit GodTokenClaimed(proposalId, address(this), creator, true);
     }
 
     function cleanup(address voter) private {
