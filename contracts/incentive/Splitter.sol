@@ -13,10 +13,10 @@ contract Splitter is ISplitter, HederaResponseCodes, Initializable {
     IBaseHTS internal _tokenService;
     IVault[] private _vaults;
     mapping(IVault => uint256) private _vaultMultipliers;
-    address private owner;
+    address private _owner;
 
     modifier onlyOwner() {
-        require(owner == msg.sender, "Only Owner can call this function");
+        require(_owner == msg.sender, "Only Owner can call this function");
         _;
     }
 
@@ -30,6 +30,7 @@ contract Splitter is ISplitter, HederaResponseCodes, Initializable {
             "Splitter: vault and multipliers length mismatch"
         );
         require(vaults.length > 0, "Splitter: no vault");
+        _owner = msg.sender;
         _tokenService = tokenService;
         for (uint256 i = 0; i < vaults.length; i++) {
             _addVault(vaults[i], multipliers[i]);
