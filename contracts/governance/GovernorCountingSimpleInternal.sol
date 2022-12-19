@@ -18,12 +18,32 @@ abstract contract GovernorCountingSimpleInternal is
     GovernorCountingSimpleUpgradeable,
     HederaResponseCodes
 {
+    event GodTokenClaimed(uint256 proposalId, address fromUser, address toUser);
+
+    struct VotingWeight {
+        uint256 weight;
+        uint8 support;
+    }
+
+    struct Delegation {
+        address delegatee;
+        address delegator;
+    }
+
     uint256 precision;
     IERC20 token;
     mapping(uint256 => address) proposalCreators;
     IBaseHTS internal tokenService;
 
-    event GodTokenClaimed(uint256 proposalId, address fromUser, address toUser);
+    /**
+     * Using below array for delegation tracking and checking if already delegated.
+     * Its not efficient but saving another state variable. Also, not expecting delegaters
+     * would be too many.
+     */
+    address[] delegaters;
+    address[] voters;
+    mapping(address => Delegation) delegation;
+    mapping(address => VotingWeight) votingWeights;
 
     function initialize(
         IERC20 _token,
@@ -43,57 +63,6 @@ abstract contract GovernorCountingSimpleInternal is
         __GovernorCountingSimple_init();
     }
 
-    function mockFunctionCall()
-        internal
-        pure
-        returns (
-            address[] memory targets,
-            uint256[] memory values,
-            bytes[] memory calldatas
-        )
-    {
-        targets = new address[](1);
-        targets[0] = (address(0));
-        values = new uint256[](1);
-        values[0] = (0);
-        calldatas = new bytes[](1);
-        bytes memory b = "blank";
-        calldatas[0] = (b);
-    }
-
-    mapping(address => VotingWeight) votingWeights;
-
-    /**
-     * Using below array for delegation tracking and checking if already delegated.
-     * Its not efficient but saving another state variable. Also, not expecting delegaters
-     * would be too many.
-     */
-    address[] delegaters;
-    address[] voters;
-
-    mapping(address => Delegation) delegation;
-
-    struct VotingWeight {
-        uint256 weight;
-        uint8 support;
-    }
-
-    struct Delegation {
-        address delegatee;
-        address delegator;
-    }
-
-    function getDelegatorIndex(
-        address delegator
-    ) private view returns (int256) {
-        for (uint256 i = 0; i < delegaters.length; i++) {
-            if (delegaters[i] == delegator) {
-                return int256(i);
-            }
-        }
-        return -1;
-    }
-
     function delegateTo(address delegatee) external {
         address delegator = _msgSender();
         require(
@@ -104,10 +73,6 @@ abstract contract GovernorCountingSimpleInternal is
         require(index == -1, "Delegator already delegated.");
         delegation[delegatee] = Delegation(delegatee, delegator);
         delegaters.push(delegator);
-    }
-
-    function isDelegated(address account) private view returns (bool) {
-        return delegation[account].delegatee != address(0x0);
     }
 
     function _getVotes(
@@ -140,32 +105,6 @@ abstract contract GovernorCountingSimpleInternal is
         );
         proposalCreators[proposalId] = msg.sender;
         return proposalId;
-    }
-
-    function getGODToken() internal {
-        tokenService.associateTokenPublic(address(this), address(token));
-        int256 responseCode = tokenService.transferTokenPublic(
-            address(token),
-            address(msg.sender),
-            address(this),
-            int64(uint64(precision))
-        );
-        if (responseCode != HederaResponseCodes.SUCCESS) {
-            revert("Transfer token failed.");
-        }
-    }
-
-    function returnGODToken(uint256 proposalId) internal {
-        int256 responseCode = tokenService.transferTokenPublic(
-            address(token),
-            address(this),
-            address(proposalCreators[proposalId]),
-            int64(uint64(precision))
-        );
-        if (responseCode != HederaResponseCodes.SUCCESS) {
-            revert("Transfer token failed.");
-        }
-        emit GodTokenClaimed(proposalId, address(this), proposalCreators[proposalId]);
     }
 
     function votingDelay()
@@ -215,6 +154,8 @@ abstract contract GovernorCountingSimpleInternal is
         );
         proposalId = super._cancel(targets, values, calldatas, descriptionHash);
         returnGODToken(proposalId);
+        address voter = _msgSender();
+        cleanup(voter);
     }
 
     /**
@@ -255,19 +196,6 @@ abstract contract GovernorCountingSimpleInternal is
     }
 
     /**
-     * @dev Internal execution mechanism. Can be overridden to implement different execution mechanism
-     */
-    function _execute(
-        uint256 proposalId /* proposalId */,
-        address[] memory,
-        uint256[] memory,
-        bytes[] memory,
-        bytes32 /*descriptionHash*/
-    ) internal virtual override {
-        //returnGODToken(proposalId);
-    }
-
-    /**
      * @dev See {IGovernor-castVote}.
      */
     function castVote(
@@ -294,6 +222,102 @@ abstract contract GovernorCountingSimpleInternal is
         voters.push(voter);
 
         return weight;
+    }
+
+    function getTokenBalanceChanged(
+        address voter,
+        uint256 existingWeight
+    ) private view returns (int256) {
+        uint256 currentWeight = _getVotes(voter, 0, "");
+        return int256(currentWeight) - int256(existingWeight);
+    }
+
+    function claimGODToken(uint256 proposalId) external {
+        returnGODToken(proposalId);
+        cleanup(proposalCreators[proposalId]);
+    }
+
+    /**
+     * @dev Internal execution mechanism. Can be overridden to implement different execution mechanism
+     */
+    function _execute(
+        uint256 /* proposalId */,
+        address[] memory,
+        uint256[] memory,
+        bytes[] memory,
+        bytes32 /*descriptionHash*/
+    ) internal virtual override {
+        //returnGODToken(proposalId);
+        address voter = _msgSender();
+        cleanup(voter);
+    }
+
+    function getGODToken() internal {
+        tokenService.associateTokenPublic(address(this), address(token));
+        int256 responseCode = tokenService.transferTokenPublic(
+            address(token),
+            address(msg.sender),
+            address(this),
+            int64(uint64(precision))
+        );
+        if (responseCode != HederaResponseCodes.SUCCESS) {
+            revert("Transfer token failed.");
+        }
+    }
+
+    function returnGODToken(uint256 proposalId) internal {
+        int256 responseCode = tokenService.transferTokenPublic(
+            address(token),
+            address(this),
+            address(proposalCreators[proposalId]),
+            int64(uint64(precision))
+        );
+        if (responseCode != HederaResponseCodes.SUCCESS) {
+            revert("Transfer token failed.");
+        }
+        emit GodTokenClaimed(
+            proposalId,
+            address(this),
+            proposalCreators[proposalId]
+        );
+    }
+
+    function cleanup(address voter) private {
+        removeAnArrayElement(voter, voters);
+        removeAnArrayElement(voter, delegaters);
+    }
+
+    function mockFunctionCall()
+        internal
+        pure
+        returns (
+            address[] memory targets,
+            uint256[] memory values,
+            bytes[] memory calldatas
+        )
+    {
+        targets = new address[](1);
+        targets[0] = (address(0));
+        values = new uint256[](1);
+        values[0] = (0);
+        calldatas = new bytes[](1);
+        bytes memory b = "blank";
+        calldatas[0] = (b);
+    }
+
+    function getDelegatorIndex(
+        address delegator
+    ) private view returns (int256) {
+        for (uint256 i = 0; i < delegaters.length; i++) {
+            if (delegaters[i] == delegator) {
+                return int256(i);
+            }
+        }
+        return -1;
+    }
+
+    function isDelegated(address account) private view returns (bool) {
+        return delegation[account].delegatee != address(0x0);
     }
 
     function adjustIfVoterTokenBalanceChanged(
@@ -335,17 +359,28 @@ abstract contract GovernorCountingSimpleInternal is
         }
     }
 
-    function getTokenBalanceChanged(
-        address voter,
-        uint256 existingWeight
-    ) private view returns (int256) {
-        uint256 currentWeight = _getVotes(voter, 0, "");
-        return int256(currentWeight) - int256(existingWeight);
+    function removeAnArrayElement(
+        address itemToRemove,
+        address[] storage items
+    ) internal {
+        uint index = items.length;
+        for (uint i = 0; i < items.length; i++) {
+            if (items[i] == itemToRemove) {
+                index = i;
+            }
+        }
+        if (index >= items.length) return;
+
+        items[index] = items[items.length - 1];
+        items.pop();
     }
 
-    function claimGODToken(uint256 proposalId) external {
-        returnGODToken(proposalId);
-    }
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+    uint256[49] private __gap;
 }
 
 library Bits {
