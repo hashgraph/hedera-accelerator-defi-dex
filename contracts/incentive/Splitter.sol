@@ -62,7 +62,7 @@ contract Splitter is ISplitter, HederaResponseCodes, Initializable {
         address fromAccount,
         uint256 amount
     ) external override returns (int32) {
-        uint256 totalWeightForAllVaults = _totalWeightForAllVaults();
+        uint256 totalWeightForAllVaults = _totalVaultWeight();
         for (uint256 i = 0; i < _vaults.length; i++) {
             IVault tempVault = _vaults[i];
             uint256 amountToTransfer = _amountToTransfer(
@@ -115,19 +115,19 @@ contract Splitter is ISplitter, HederaResponseCodes, Initializable {
         private
         returns (uint256)
     {
-        uint256 perShareReward = divide(_weightForVault(vault), totalWeight);
+        uint256 perShareReward = divide(_vaultWeight(vault), totalWeight);
         return perShareReward;
     }
 
-    function _totalWeightForAllVaults() private returns (uint256 totalWeight) {
+    function _totalVaultWeight() private returns (uint256 totalWeight) {
         for (uint256 i = 0; i < _vaults.length; i++) {
             IVault tempVault = _vaults[i];
-            uint256 weight = _weightForVault(tempVault);
+            uint256 weight = _vaultWeight(tempVault);
             totalWeight += weight;
         }
     }
 
-    function _weightForVault(IVault vault) private returns (uint256 weight) {
+    function _vaultWeight(IVault vault) private returns (uint256 weight) {
         uint256 tokenCount = vault.getStakedTokenCount();
         weight = tokenCount * _vaultMultipliers[vault];
     }

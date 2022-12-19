@@ -2,11 +2,9 @@
 pragma solidity >=0.5.0 <0.9.0;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "../common/hedera/HederaResponseCodes.sol";
-import "../common/IBaseHTS.sol";
 import "./IVault.sol";
 
-contract Vault is IVault, HederaResponseCodes, Initializable {
+contract Vault is IVault, Initializable {
     event VaultAdded(IVault vault, uint256 multiplier);
     uint256 _amount;
 
