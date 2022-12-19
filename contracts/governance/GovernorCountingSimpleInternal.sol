@@ -32,7 +32,7 @@ abstract contract GovernorCountingSimpleInternal is
 
     uint256 precision;
     IERC20 token;
-    mapping(uint256 => address) proposalCreators;
+    mapping(uint256 => ProposalInfo) proposalCreators;
     IBaseHTS internal tokenService;
 
     /**
@@ -44,6 +44,11 @@ abstract contract GovernorCountingSimpleInternal is
     address[] voters;
     mapping(address => Delegation) delegation;
     mapping(address => VotingWeight) votingWeights;
+
+    struct ProposalInfo {
+        address creator;
+        bool tokenClaimed;
+    }
 
     function initialize(
         IERC20 _token,
@@ -103,7 +108,7 @@ abstract contract GovernorCountingSimpleInternal is
             calldatas,
             description
         );
-        proposalCreators[proposalId] = msg.sender;
+        proposalCreators[proposalId] = ProposalInfo(msg.sender, false);
         return proposalId;
     }
 
@@ -144,16 +149,10 @@ abstract contract GovernorCountingSimpleInternal is
         ) = mockFunctionCall();
         bytes32 descriptionHash = keccak256(bytes(description));
         proposalId = hashProposal(targets, values, calldatas, descriptionHash);
-        require(
-            proposalCreators[proposalId] != address(0),
-            "Proposal not found"
-        );
-        require(
-            msg.sender == proposalCreators[proposalId],
-            "Only proposer can cancel the proposal"
-        );
+        address creator = proposalCreators[proposalId].creator;
+        require(creator != address(0), "Proposal not found");
+        require(msg.sender == creator, "Only proposer can cancel the proposal");
         proposalId = super._cancel(targets, values, calldatas, descriptionHash);
-        returnGODToken(proposalId);
         address voter = _msgSender();
         cleanup(voter);
     }
