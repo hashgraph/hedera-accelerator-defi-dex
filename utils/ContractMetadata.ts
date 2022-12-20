@@ -12,6 +12,8 @@ export default class ClientMetadata {
     "GovernorTransferToken",
     "GovernorTextProposal",
     "GovernorTokenCreate",
+    "Splitter",
+    "Vault",
   ];
 
   static SUPPORTED_PROXY_OPTIONS = ["create", "update"];
