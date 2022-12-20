@@ -18,12 +18,7 @@ abstract contract GovernorCountingSimpleInternal is
     GovernorCountingSimpleUpgradeable,
     HederaResponseCodes
 {
-    event GodTokenClaimed(
-        uint256 proposalId,
-        address fromUser,
-        address toUser,
-        bool justClaimed
-    );
+    event GodTokenClaimed(uint256 proposalId, address fromUser, address toUser);
 
     struct VotingWeight {
         uint256 weight;
@@ -239,15 +234,7 @@ abstract contract GovernorCountingSimpleInternal is
     function claimGODToken(uint256 proposalId) external {
         ProposalInfo storage proposalInfo = proposalCreators[proposalId];
         require(proposalInfo.creator != address(0), "Proposal not found");
-        if (proposalInfo.tokenClaimed) {
-            emit GodTokenClaimed(
-                proposalId,
-                address(this),
-                proposalInfo.creator,
-                false
-            );
-            return;
-        }
+        require(!proposalInfo.tokenClaimed, "Token already claimed");
         ProposalState state = state(proposalId);
         require(
             !(state == ProposalState.Pending || state == ProposalState.Active),
@@ -297,7 +284,7 @@ abstract contract GovernorCountingSimpleInternal is
         if (responseCode != HederaResponseCodes.SUCCESS) {
             revert("Transfer token failed.");
         }
-        emit GodTokenClaimed(proposalId, address(this), creator, true);
+        emit GodTokenClaimed(proposalId, address(this), creator);
     }
 
     function cleanup(address voter) private {

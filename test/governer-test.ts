@@ -913,7 +913,7 @@ describe("Governor Tests", function () {
       await mineNBlocks(15);
       await expect(governorTransferTokenInstance.claimGODToken(proposalId))
         .to.emit(governorTransferTokenInstance, "GodTokenClaimed")
-        .withArgs(proposalId, anyValue, anyValue, true);
+        .withArgs(proposalId, anyValue, anyValue);
     });
 
     it("Verify claimGodToken should be reverted when proposal is in pending / active state", async function () {
@@ -945,11 +945,11 @@ describe("Governor Tests", function () {
       await mineNBlocks(15);
       await expect(governorTransferTokenInstance.claimGODToken(proposalId))
         .to.emit(governorTransferTokenInstance, "GodTokenClaimed")
-        .withArgs(proposalId, anyValue, anyValue, true);
+        .withArgs(proposalId, anyValue, anyValue);
 
-      await expect(governorTransferTokenInstance.claimGODToken(proposalId))
-        .to.emit(governorTransferTokenInstance, "GodTokenClaimed")
-        .withArgs(proposalId, anyValue, anyValue, false);
+      await expect(
+        governorTransferTokenInstance.claimGODToken(proposalId)
+      ).to.revertedWith("Token already claimed");
     });
 
     it("Verify GovernorTransferToken should reverted for invalid propsal id", async function () {
