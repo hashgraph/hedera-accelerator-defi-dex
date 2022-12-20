@@ -11,16 +11,14 @@ import { httpRequest } from "../../deployment/api/HttpsService";
 import { ContractService } from "../../deployment/service/ContractService";
 import GovernorMethods from "./GovernorMethods";
 import ClientManagement from "../../utils/ClientManagement";
+import { Helper } from "../../utils/Helper";
 
 const clientManagement = new ClientManagement();
 const contractService = new ContractService();
-
 const governor = new GovernorMethods();
 
-let client = clientManagement.createOperatorClient();
+const client = clientManagement.createOperatorClient();
 const { id, key } = clientManagement.getOperator();
-const { adminId, adminKey } = clientManagement.getAdmin();
-
 const { treasureId, treasureKey } = clientManagement.getTreasure();
 
 const contractId = contractService.getContractWithProxy(
@@ -33,11 +31,10 @@ const factoryContractId = ContractId.fromString(
 );
 
 const fetchNewTokenAddresses = async (proposalId: BigNumber) => {
-  console.log(`\nGetting ContractAddresses `);
+  console.log(`\nGetting new token address `);
 
-  let contractFunctionParameters = new ContractFunctionParameters().addUint256(
-    proposalId
-  );
+  const contractFunctionParameters =
+    new ContractFunctionParameters().addUint256(proposalId);
 
   const contractTokenTx = await new ContractExecuteTransaction()
     .setContractId(contractId)
@@ -49,7 +46,7 @@ const fetchNewTokenAddresses = async (proposalId: BigNumber) => {
   const record = await contractTokenTx.getRecord(client);
   const tokenAddress = record.contractFunctionResult!.getAddress(0);
 
-  console.log(`quorumReached tx status ${receipt.status}}`);
+  console.log(`token address tx status ${receipt.status}`);
   return tokenAddress;
 };
 
@@ -104,7 +101,7 @@ const getPair = async (
 
 async function createPairFromFactory(tokenAddress: string) {
   const GODToken = tokenAddress;
-  //await setupFactory();
+  // await setupFactory();
   const tokenA = TokenId.fromString("0.0.48289687");
   await createPair(factoryContractId, GODToken, tokenA.toSolidityAddress());
 
@@ -119,12 +116,19 @@ async function createPairFromFactory(tokenAddress: string) {
   console.log(`contractId: ${pairContractId}`);
 }
 
-async function propose(description: string, contractId: string | ContractId) {
+async function propose(
+  contractId: string | ContractId,
+  title: string,
+  description: string,
+  link: string
+) {
   console.log(`\nCreating proposal `);
   const tokenName = "Governance Hedera Open DEX";
   const tokenSymbol = "GOD";
   const contractFunctionParameters = new ContractFunctionParameters()
+    .addString(title)
     .addString(description)
+    .addString(link)
     .addAddress(treasureId.toSolidityAddress())
     .addBytes(treasureKey.publicKey.toBytes())
     .addAddress(id.toSolidityAddress())
@@ -154,18 +158,18 @@ async function propose(description: string, contractId: string | ContractId) {
 async function main() {
   console.log(`\nUsing governor proxy contract id ${contractId}`);
   await governor.initialize(contractId);
-  const description = "Create token proposal 10";
-
-  const proposalId = await propose(description, contractId);
-  await governor.vote(proposalId, 1, contractId); //1 is for vote.
+  const title = "Create Token Proposal - 1";
+  const proposalId = await propose(contractId, title, "description", "link"); // title should be unique for each proposal
+  await governor.getProposalDetails(proposalId, contractId);
+  await governor.vote(proposalId, 1, contractId); // 1 is for vote.
   await governor.quorumReached(proposalId, contractId);
   await governor.voteSucceeded(proposalId, contractId);
   await governor.proposalVotes(proposalId, contractId);
   await governor.state(proposalId, contractId);
   console.log(`\nWaiting for voting period to get over.`);
-  await new Promise((f) => setTimeout(f, 15 * 1000)); //Wait till waiting period is over. It's current deadline as per Governance.
-  await governor.state(proposalId, contractId); //4 means succeeded
-  await governor.execute(description, contractId);
+  await Helper.delay(15 * 1000); // Wait till waiting period is over. It's current deadline as per Governance.
+  await governor.state(proposalId, contractId); // 4 means succeeded
+  await governor.execute(title, contractId);
   const tokenAddress = await fetchNewTokenAddresses(proposalId);
   console.log(tokenAddress);
   await createPairFromFactory(tokenAddress);

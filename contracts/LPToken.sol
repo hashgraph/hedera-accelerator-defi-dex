@@ -11,19 +11,15 @@ import "./ILPToken.sol";
 
 contract LPToken is HederaResponseCodes, ILPToken, Initializable {
     IBaseHTS tokenService;
-    address internal creator;
     IERC20 lpToken;
 
     using Bits for uint256;
 
     event SenderDetail(address indexed _from, string msg);
 
-    function lpTokenForUser(address _user)
-        external
-        view
-        override
-        returns (int256)
-    {
+    function lpTokenForUser(
+        address _user
+    ) external view override returns (int256) {
         return int256(lpToken.balanceOf(_user));
     }
 
@@ -35,14 +31,17 @@ contract LPToken is HederaResponseCodes, ILPToken, Initializable {
         return int256(lpToken.totalSupply());
     }
 
-    function initialize(IBaseHTS _tokenService)
-        external
-        payable
-        override
-        initializer
-    {
+    function initialize(
+        IBaseHTS _tokenService,
+        string memory tokenName,
+        string memory tokenSymbol
+    ) external payable override initializer {
         tokenService = _tokenService;
-        (, address newToken) = createFungibleTokenPublic(0);
+        (, address newToken) = createFungibleTokenPublic(
+            0,
+            tokenName,
+            tokenSymbol
+        );
         lpToken = IERC20(newToken);
     }
 
@@ -70,24 +69,21 @@ contract LPToken is HederaResponseCodes, ILPToken, Initializable {
             response == HederaResponseCodes.SUCCESS,
             "LP token minting failed."
         );
-        response = tokenService.transferTokenPublic(
-            address(lpToken),
-            address(tokenService),
+        bool isTransferSuccessful = lpToken.transfer(
             _toUser,
-            mintingAmount
+            uint256(mintingAmount)
         );
         require(
-            response == HederaResponseCodes.SUCCESS,
-            "LP token transfer failed."
+            isTransferSuccessful,
+            "LPToken: token transfer failed from contract."
         );
         return HederaResponseCodes.SUCCESS;
     }
 
-    function removeLPTokenFor(int256 lpAmount, address fromUser)
-        external
-        override
-        returns (int256 responseCode)
-    {
+    function removeLPTokenFor(
+        int256 lpAmount,
+        address fromUser
+    ) external override returns (int256 responseCode) {
         require((lpAmount > 0), "Please provide token counts");
         require(
             this.lpTokenForUser(fromUser) >= lpAmount,
@@ -97,12 +93,12 @@ contract LPToken is HederaResponseCodes, ILPToken, Initializable {
         int256 response = tokenService.transferTokenPublic(
             address(lpToken),
             fromUser,
-            address(tokenService),
+            address(this),
             lpAmount
         );
         require(
             response == HederaResponseCodes.SUCCESS,
-            "LP token transfer failed."
+            "LPToken: token transfer failed to contract."
         );
         // burn old amount of LP
         (response, ) = tokenService.burnTokenPublic(address(lpToken), lpAmount);
@@ -113,10 +109,11 @@ contract LPToken is HederaResponseCodes, ILPToken, Initializable {
         return HederaResponseCodes.SUCCESS;
     }
 
-    function createFungibleTokenPublic(int256 mintingAmount)
-        internal
-        returns (int256 responseCode, address tokenAddress)
-    {
+    function createFungibleTokenPublic(
+        int256 mintingAmount,
+        string memory tokenName,
+        string memory tokenSymbol
+    ) internal returns (int256 responseCode, address tokenAddress) {
         uint256 supplyKeyType;
         IHederaTokenService.KeyValue memory supplyKeyValue;
 
@@ -128,13 +125,13 @@ contract LPToken is HederaResponseCodes, ILPToken, Initializable {
         keys[0] = IHederaTokenService.TokenKey(supplyKeyType, supplyKeyValue);
 
         IHederaTokenService.Expiry memory expiry;
-        expiry.autoRenewAccount = address(tokenService);
+        expiry.autoRenewAccount = address(this);
         expiry.autoRenewPeriod = 8000000;
 
         IHederaTokenService.HederaToken memory myToken;
-        myToken.name = "Lab49";
-        myToken.symbol = "L49";
-        myToken.treasury = address(tokenService);
+        myToken.name = tokenName;
+        myToken.symbol = tokenSymbol;
+        myToken.treasury = address(this);
         myToken.expiry = expiry;
         myToken.tokenKeys = keys;
 
@@ -155,7 +152,7 @@ contract LPToken is HederaResponseCodes, ILPToken, Initializable {
 
         require(
             responseCode == HederaResponseCodes.SUCCESS,
-            "Token creation failed."
+            "LPToken: Token creation failed."
         );
     }
 

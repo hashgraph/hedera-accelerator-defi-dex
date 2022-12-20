@@ -8,21 +8,25 @@ import "./IBaseHTS.sol";
 contract BaseHTS is HederaTokenService, IBaseHTS {
     event SenderDetail(address indexed _from, string msg);
 
+    address private constant _HBARX = address(0x0000000000000000000000000000000002eeff69);
+
+    function hbarxAddress() external pure override returns (address) {
+        return _HBARX;
+    }
+
     function transferTokenPublic(
         address token,
         address sender,
         address receiver,
         int256 amount
-    ) external override returns (int256 responseCode) {
-        responseCode = HederaTokenService.transferToken(
-            token,
-            sender,
-            receiver,
-            int64(amount)
-        );
-        if (responseCode != HederaResponseCodes.SUCCESS) {
-            revert("Transfer token failed.");
-        }
+    ) external override returns (int256) {
+        return
+            HederaTokenService.transferToken(
+                token,
+                sender,
+                receiver,
+                int64(amount)
+            );
     }
 
     function associateTokenPublic(address account, address token)
@@ -67,7 +71,7 @@ contract BaseHTS is HederaTokenService, IBaseHTS {
         override
         returns (int256 responseCode, int256 newTotalSupply)
     {
-        int64[] memory serialNumbers;
+         int64[] memory serialNumbers;
         (int256 responseCodeNew, uint64 newTotalSupplyNew) = HederaTokenService
             .burnToken(token, uint64(uint256(amount)), serialNumbers);
         if (responseCodeNew != HederaResponseCodes.SUCCESS) {
@@ -92,9 +96,15 @@ contract BaseHTS is HederaTokenService, IBaseHTS {
             initialTotalSupply,
             decimals
         );
+    }
 
-        if (responseCode != HederaResponseCodes.SUCCESS) {
-            revert("createFungibleToken Failed");
-        }
+    function transferHBAR(int256 amount, address payable toAccount)
+        external
+        payable
+        override
+        returns (int256 responseCode)
+    {
+        (bool sent, ) = toAccount.call{value: uint256(amount)}("");
+        return sent ? HederaResponseCodes.SUCCESS : HederaResponseCodes.FAIL_INVALID;
     }
 }

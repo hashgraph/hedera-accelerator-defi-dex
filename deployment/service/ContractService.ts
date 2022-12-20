@@ -7,10 +7,13 @@ export class ContractService {
   public pairContractName = "pair";
   public baseContractName = "basehts";
   public lpTokenContractName = "lptoken";
+  public splitterContractName = "splitter";
+  public vaultContractName = "vault";
   public governorContractName = "governortokencreate";
   public governorTextContractName = "governortextproposal";
   public governorTTContractName = "governortransfertoken";
   public governorUpgradeContract = "governorupgrade";
+  public vaultContract = "vault";
 
   private contractRecordFile = "./deployment/state/contracts.json";
   static DEV_CONTRACTS_PATH = "./deployment/state/contracts.json";
@@ -84,6 +87,7 @@ export class ContractService {
       id: contractId,
       address: contractAddress,
       timestamp: new Date().toISOString(),
+      hash: "",
     };
 
     const contractsWithNewContract = [...contracts, newContract];
@@ -133,6 +137,45 @@ export class ContractService {
         contract.name == contractName &&
         contract.transparentProxyAddress != null &&
         contract.transparentProxyId != null
+    );
+    return matchingProxyContracts[matchingProxyContracts.length - 1];
+  };
+
+  public getContractWithProxyAtIndex = (
+    contractName: string,
+    index: number
+  ): DeployedContract => {
+    const contracts: Array<DeployedContract> = this.getAllContracts();
+    const matchingProxyContracts = contracts.filter(
+      (contract: DeployedContract) =>
+        contract.name == contractName &&
+        contract.transparentProxyAddress != null &&
+        contract.transparentProxyId != null
+    );
+    return matchingProxyContracts[matchingProxyContracts.length - (1 + index)];
+  };
+
+  public getContractsWithProxy = (
+    contractName: string,
+    count: number
+  ): DeployedContract[] => {
+    const contracts: Array<DeployedContract> = this.getAllContracts();
+    const matchingProxyContracts = contracts.filter(
+      (contract: DeployedContract) =>
+        contract.name == contractName &&
+        contract.transparentProxyAddress != null &&
+        contract.transparentProxyId != null
+    );
+    return matchingProxyContracts.slice(-count);
+  };
+
+  public getContractWithProxyById = (contractId: string): DeployedContract => {
+    const contracts: Array<DeployedContract> = this.getAllContracts();
+    const matchingProxyContracts = contracts.filter(
+      (contract: DeployedContract) =>
+        contract.transparentProxyAddress != null &&
+        contract.transparentProxyId != null &&
+        contract.transparentProxyId === contractId
     );
     return matchingProxyContracts[matchingProxyContracts.length - 1];
   };

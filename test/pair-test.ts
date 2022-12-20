@@ -33,15 +33,41 @@ describe("All Tests", function () {
 
   async function deployFixture() {
     const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-    const mockBaseHTS = await MockBaseHTS.deploy(true, false);
-    mockBaseHTS.setFailType(0);
+    const mockBaseHTS = await MockBaseHTS.deploy(false, tokenCAddress);
 
+    const signers = await ethers.getSigners();
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
-    const tokenCont = await TokenCont.deploy(10, 10);
+    const tokenCont = await TokenCont.deploy(
+      "tokenName",
+      "tokenSymbol",
+      10,
+      10
+    );
+    const token1Address = tokenCont.address;
+
+    const TokenCont1 = await ethers.getContractFactory("ERC20Mock");
+    const tokenCont1 = await TokenCont1.deploy(
+      "tokenName1",
+      "tokenSymbol1",
+      10,
+      10
+    );
+    const token2Address = tokenCont1.address;
+
+    const TokenCont2 = await ethers.getContractFactory("ERC20Mock");
+    const tokenCont2 = await TokenCont2.deploy(
+      "tokenName2",
+      "tokenSymbol2",
+      10,
+      10
+    );
+    const token3Address = tokenCont2.address;
 
     const LpTokenCont = await ethers.getContractFactory("LPToken");
     const lpTokenCont = await upgrades.deployProxy(LpTokenCont, [
       mockBaseHTS.address,
+      "tokenName",
+      "tokenSymbol",
     ]);
     await lpTokenCont.deployed();
 
@@ -49,8 +75,8 @@ describe("All Tests", function () {
     const swapV2 = await upgrades.deployProxy(SwapV2, [
       mockBaseHTS.address,
       lpTokenCont.address,
-      tokenAAddress,
-      tokenBAddress,
+      token1Address,
+      token2Address,
       treasury,
       fee,
     ]);
@@ -61,20 +87,36 @@ describe("All Tests", function () {
     const Factory = await ethers.getContractFactory("Factory");
     const factory = await Factory.deploy();
 
-    return { swapV2, mockBaseHTS, lpTokenCont, factory };
+    return {
+      swapV2,
+      mockBaseHTS,
+      lpTokenCont,
+      factory,
+      token1Address,
+      token2Address,
+      signers,
+      token3Address,
+    };
   }
 
-  async function deployFailureFixture() {
+  async function deployFixtureHBARX() {
     const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-    const mockBaseHTS = await MockBaseHTS.deploy(false, false);
-    await mockBaseHTS.setFailType(0);
+    const mockBaseHTS = await MockBaseHTS.deploy(false, tokenCAddress);
+    const signers = await ethers.getSigners();
 
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
-    const tokenCont = await TokenCont.deploy(10, 10);
+    const tokenCont = await TokenCont.deploy(
+      "tokenName",
+      "tokenSymbol",
+      10,
+      10
+    );
 
     const LpTokenCont = await ethers.getContractFactory("LPToken");
     const lpTokenCont = await upgrades.deployProxy(LpTokenCont, [
       mockBaseHTS.address,
+      "tokenName",
+      "tokenSymbol",
     ]);
     await lpTokenCont.deployed();
 
@@ -83,7 +125,7 @@ describe("All Tests", function () {
       mockBaseHTS.address,
       lpTokenCont.address,
       tokenAAddress,
-      tokenBAddress,
+      tokenCAddress,
       treasury,
       fee,
     ]);
@@ -91,62 +133,216 @@ describe("All Tests", function () {
 
     precision = await swapV2.getPrecisionValue();
 
-    return { swapV2, mockBaseHTS, lpTokenCont };
+    const Factory = await ethers.getContractFactory("Factory");
+    const factory = await Factory.deploy();
+
+    return { swapV2, mockBaseHTS, lpTokenCont, factory, signers };
   }
+
+  async function deployFailureFixture() {
+    const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
+    const mockBaseHTS = await MockBaseHTS.deploy(false, tokenCAddress);
+
+    const TokenCont = await ethers.getContractFactory("ERC20Mock");
+    const tokenCont = await TokenCont.deploy(
+      "tokenName",
+      "tokenSymbol",
+      10,
+      10
+    );
+    const token1Address = tokenCont.address;
+
+    const TokenCont1 = await ethers.getContractFactory("ERC20Mock");
+    const tokenCont1 = await TokenCont1.deploy(
+      "tokenName1",
+      "tokenSymbol1",
+      10,
+      10
+    );
+    const token2Address = tokenCont1.address;
+
+    const LpTokenCont = await ethers.getContractFactory("LPToken");
+    const lpTokenCont = await upgrades.deployProxy(LpTokenCont, [
+      mockBaseHTS.address,
+      "tokenName",
+      "tokenSymbol",
+    ]);
+    await lpTokenCont.deployed();
+
+    const SwapV2 = await ethers.getContractFactory("Pair");
+    const swapV2 = await upgrades.deployProxy(SwapV2, [
+      mockBaseHTS.address,
+      lpTokenCont.address,
+      token1Address,
+      token2Address,
+      treasury,
+      fee,
+    ]);
+    await swapV2.deployed();
+
+    precision = await swapV2.getPrecisionValue();
+
+    return {
+      swapV2,
+      mockBaseHTS,
+      lpTokenCont,
+      token1Address,
+      token2Address,
+      tokenCont,
+      tokenCont1,
+    };
+  }
+
+  it("Add liquidity to the pool by adding 50 units of HBAR and 50 units of token B  ", async function () {
+    const { swapV2 } = await loadFixture(deployFixture);
+    const tx = await swapV2.addLiquidity(
+      zeroAddress,
+      tokenAAddress,
+      tokenBAddress,
+      precision.mul(50),
+      precision.mul(50)
+    );
+    await tx.wait();
+    const tokenQty = await swapV2.getPairQty();
+    expect(tokenQty[0]).to.be.equals(precision.mul(50));
+    expect(tokenQty[1]).to.be.equals(precision.mul(50));
+  });
+
+  it("Add liquidity for HBAR", async function () {
+    const { swapV2 } = await loadFixture(deployFixture);
+    const tx = await swapV2.addLiquidity(
+      zeroAddress,
+      tokenAAddress,
+      tokenCAddress,
+      precision.mul(50),
+      precision.mul(50),
+      {
+        value: ethers.utils.parseEther("0.0000000050"),
+      }
+    );
+    await tx.wait();
+    const tokenQty = await swapV2.getPairQty();
+    expect(tokenQty[0]).to.be.equals(precision.mul(50));
+    expect(tokenQty[1]).to.be.equals(precision.mul(50));
+  });
+
+  it("Add liquidity for HBAR fail", async function () {
+    const { swapV2 } = await loadFixture(deployFixture);
+    await expect(
+      swapV2.addLiquidity(
+        zeroAddress,
+        tokenAAddress,
+        tokenCAddress,
+        precision.mul(50),
+        precision.mul(50),
+        {
+          value: ethers.utils.parseEther("0.0000000030"),
+        }
+      )
+    ).to.revertedWith("Please pass valid Hbars");
+  });
+
+  it("Swap 1 units of token HBAR  ", async function () {
+    const { swapV2, signers } = await loadFixture(deployFixtureHBARX);
+    const tokenAPoolQty = BigNumber.from(200).mul(precision);
+    const tokenCPoolQty = BigNumber.from(220).mul(precision);
+    await swapV2.addLiquidity(
+      signers[0].address,
+      tokenAAddress,
+      tokenCAddress,
+      tokenAPoolQty,
+      tokenCPoolQty,
+      {
+        value: ethers.utils.parseEther("0.0000000220"),
+      }
+    );
+    const tokenBeforeQty = await swapV2.getPairQty();
+    expect(Number(tokenBeforeQty[0])).to.be.equals(tokenAPoolQty);
+    var addTokenAQty = BigNumber.from(1).mul(precision);
+    const feeForTokenA = await swapV2.feeForToken(addTokenAQty);
+    const addTokenAQtyAfterFee =
+      Number(addTokenAQty) - Number(feeForTokenA) / 2;
+    const tx = await swapV2.swapToken(zeroAddress, tokenAAddress, addTokenAQty);
+    await tx.wait();
+
+    const tokenQty = await swapV2.getPairQty();
+    expect(tokenQty[0]).to.be.equals(tokenAPoolQty.add(addTokenAQtyAfterFee));
+    const feeForTokenB = await swapV2.feeForToken(tokenQty[1]);
+    const tokenBResultantQtyAfterFee =
+      Number(tokenQty[1]) - Number(feeForTokenB);
+    const tokenBResultantQty =
+      Number(tokenBResultantQtyAfterFee) / Number(precision);
+    expect(tokenBResultantQty).to.be.equals(217.81637026);
+  });
 
   describe("Factory Contract positive Tests", async () => {
     it("Check createPair method", async function () {
-      const { factory, mockBaseHTS } = await loadFixture(deployFixture);
-      await factory.setUpFactory(mockBaseHTS.address);
-      await factory.createPair(tokenAAddress, tokenBAddress, treasury, fee);
-      const pair1 = await factory.getPair(tokenAAddress, tokenBAddress);
-      await factory.createPair(tokenAAddress, tokenBAddress, treasury, fee);
-      const pair2 = await factory.getPair(tokenAAddress, tokenBAddress);
+      const { factory, mockBaseHTS, signers, token1Address, token2Address } =
+        await loadFixture(deployFixture);
+      await factory.setUpFactory(mockBaseHTS.address, signers[0].address);
+      await factory.createPair(token1Address, token2Address, treasury, fee);
+      const pair1 = await factory.getPair(token1Address, token2Address);
+      await factory.createPair(token1Address, token2Address, treasury, fee);
+      const pair2 = await factory.getPair(token1Address, token2Address);
       expect(pair1).to.be.equals(pair2);
       const pairs = await factory.getPairs();
       expect(pairs[0]).to.be.equals(pair1);
     });
 
     it("verify factory initization should be failed for subsequent initization call", async function () {
-      const { factory, mockBaseHTS } = await loadFixture(deployFixture);
-      await factory.setUpFactory(mockBaseHTS.address);
-      await expect(factory.setUpFactory(mockBaseHTS.address)).to.revertedWith(
-        "Initializable: contract is already initialized"
+      const { factory, mockBaseHTS, signers } = await loadFixture(
+        deployFixture
       );
+      await factory.setUpFactory(mockBaseHTS.address, signers[0].address);
+      await expect(
+        factory.setUpFactory(mockBaseHTS.address, signers[0].address)
+      ).to.revertedWith("Initializable: contract is already initialized");
     });
 
     it("Check getPairs method", async function () {
-      const { factory, mockBaseHTS } = await loadFixture(deployFixture);
-      await factory.setUpFactory(mockBaseHTS.address);
-      await factory.createPair(tokenAAddress, tokenBAddress, treasury, fee);
+      const {
+        factory,
+        mockBaseHTS,
+        signers,
+        token1Address,
+        token2Address,
+        token3Address,
+      } = await loadFixture(deployFixture);
+      await factory.setUpFactory(mockBaseHTS.address, signers[0].address);
+      await factory.createPair(token1Address, token2Address, treasury, fee);
       const pairs = await factory.getPairs();
       expect(pairs.length).to.be.equals(1);
-      await factory.createPair(tokenAAddress, tokenCAddress, treasury, fee);
+      await factory.createPair(token2Address, token3Address, treasury, fee);
       const pairs2 = await factory.getPairs();
       expect(pairs2.length).to.be.equals(2);
     });
 
     it("Check For identical Tokens", async function () {
-      const { factory, mockBaseHTS } = await loadFixture(deployFixture);
-      await factory.setUpFactory(mockBaseHTS.address);
+      const { factory, mockBaseHTS, signers } = await loadFixture(
+        deployFixture
+      );
+      await factory.setUpFactory(mockBaseHTS.address, signers[0].address);
       await expect(
         factory.createPair(tokenAAddress, tokenAAddress, treasury, fee)
       ).to.revertedWith("IDENTICAL_ADDRESSES");
     });
 
     it("Check For zero Token address", async function () {
-      const { factory, mockBaseHTS } = await loadFixture(deployFixture);
-      await factory.setUpFactory(mockBaseHTS.address);
+      const { factory, mockBaseHTS, signers } = await loadFixture(
+        deployFixture
+      );
+      await factory.setUpFactory(mockBaseHTS.address, signers[0].address);
       await expect(
         factory.createPair(newZeroAddress, tokenAAddress, treasury, fee)
       ).to.revertedWith("ZERO_ADDRESS");
     });
 
     it("Check getPair method", async function () {
-      const { factory, mockBaseHTS } = await loadFixture(deployFixture);
-      await factory.setUpFactory(mockBaseHTS.address);
-      await factory.createPair(tokenAAddress, tokenBAddress, treasury, fee);
-      const pair = await factory.getPair(tokenAAddress, tokenBAddress);
+      const { factory, mockBaseHTS, signers, token1Address, token2Address } =
+        await loadFixture(deployFixture);
+      await factory.setUpFactory(mockBaseHTS.address, signers[0].address);
+      await factory.createPair(token1Address, token2Address, treasury, fee);
+      const pair = await factory.getPair(token1Address, token2Address);
       expect(pair).to.be.not.equal(zeroAddress);
     });
   });
@@ -187,13 +383,15 @@ describe("All Tests", function () {
   });
 
   it("Swap 1 units of token A  ", async function () {
-    const { swapV2 } = await loadFixture(deployFixture);
+    const { swapV2, token1Address, token2Address } = await loadFixture(
+      deployFixture
+    );
     const tokenAPoolQty = BigNumber.from(200).mul(precision);
     const tokenBPoolQty = BigNumber.from(220).mul(precision);
     await swapV2.addLiquidity(
       zeroAddress,
-      tokenAAddress,
-      tokenBAddress,
+      token1Address,
+      token2Address,
       tokenAPoolQty,
       tokenBPoolQty
     );
@@ -203,7 +401,7 @@ describe("All Tests", function () {
     const feeForTokenA = await swapV2.feeForToken(addTokenAQty);
     const addTokenAQtyAfterFee =
       Number(addTokenAQty) - Number(feeForTokenA) / 2;
-    const tx = await swapV2.swapToken(zeroAddress, tokenAAddress, addTokenAQty);
+    const tx = await swapV2.swapToken(zeroAddress, token1Address, addTokenAQty);
     await tx.wait();
 
     const tokenQty = await swapV2.getPairQty();
@@ -213,17 +411,19 @@ describe("All Tests", function () {
       Number(tokenQty[1]) - Number(feeForTokenB);
     const tokenBResultantQty =
       Number(tokenBResultantQtyAfterFee) / Number(precision);
-    expect(tokenBResultantQty).to.be.equals(217.8163702);
+    expect(tokenBResultantQty).to.be.equals(217.81637026);
   });
 
   it("Swap 1 units of token B  ", async function () {
-    const { swapV2 } = await loadFixture(deployFixture);
+    const { swapV2, token1Address, token2Address } = await loadFixture(
+      deployFixture
+    );
     const tokenAPoolQty = BigNumber.from(114).mul(precision);
     const tokenBPoolQty = BigNumber.from(220).mul(precision);
     await swapV2.addLiquidity(
       zeroAddress,
-      tokenAAddress,
-      tokenBAddress,
+      token1Address,
+      token2Address,
       tokenAPoolQty,
       tokenBPoolQty
     );
@@ -233,7 +433,7 @@ describe("All Tests", function () {
     const feeForTokenB = await swapV2.feeForToken(addTokenBQty);
     const addTokenBQtyAfterFee =
       Number(addTokenBQty) - Number(feeForTokenB) / 2;
-    const tx = await swapV2.swapToken(zeroAddress, tokenBAddress, addTokenBQty);
+    const tx = await swapV2.swapToken(zeroAddress, token2Address, addTokenBQty);
     await tx.wait();
 
     const tokenQty = await swapV2.getPairQty();
@@ -244,17 +444,19 @@ describe("All Tests", function () {
       Number(tokenQty[0]) - Number(feeForTokenA);
     const tokenAResultantQty =
       Number(tokenAResultantQtyAfterFee) / Number(precision);
-    expect(tokenAResultantQty).to.be.equals(112.9146473);
+    expect(tokenAResultantQty).to.be.equals(112.91464718);
   });
 
   it("Swap 100 units of token A - breaching slippage  ", async function () {
-    const { swapV2 } = await loadFixture(deployFixture);
+    const { swapV2, token1Address, token2Address } = await loadFixture(
+      deployFixture
+    );
     const tokenAPoolQty = BigNumber.from(200).mul(precision);
     const tokenBPoolQty = BigNumber.from(220).mul(precision);
     await swapV2.addLiquidity(
       zeroAddress,
-      tokenAAddress,
-      tokenBAddress,
+      token1Address,
+      token2Address,
       tokenAPoolQty,
       tokenBPoolQty
     );
@@ -262,18 +464,20 @@ describe("All Tests", function () {
     expect(Number(tokenBeforeQty[0])).to.be.equals(tokenAPoolQty);
     const addTokenAQty = BigNumber.from(100).mul(precision);
     await expect(
-      swapV2.swapToken(zeroAddress, tokenAAddress, addTokenAQty)
+      swapV2.swapToken(zeroAddress, token1Address, addTokenAQty)
     ).to.revertedWith("Slippage threshold breached.");
   });
 
   it("Swap 100 units of token B - breaching slippage  ", async function () {
-    const { swapV2 } = await loadFixture(deployFixture);
+    const { swapV2, token1Address, token2Address } = await loadFixture(
+      deployFixture
+    );
     const tokenAPoolQty = BigNumber.from(114).mul(precision);
     const tokenBPoolQty = BigNumber.from(220).mul(precision);
     await swapV2.addLiquidity(
       zeroAddress,
-      tokenAAddress,
-      tokenBAddress,
+      token1Address,
+      token2Address,
       tokenAPoolQty,
       tokenBPoolQty
     );
@@ -281,7 +485,7 @@ describe("All Tests", function () {
     expect(Number(tokenBeforeQty[1])).to.be.equals(tokenBPoolQty);
     const addTokenBQty = BigNumber.from(100).mul(precision);
     await expect(
-      swapV2.swapToken(zeroAddress, tokenBAddress, addTokenBQty)
+      swapV2.swapToken(zeroAddress, token2Address, addTokenBQty)
     ).to.revertedWith("Slippage threshold breached.");
   });
 
@@ -303,9 +507,6 @@ describe("All Tests", function () {
 
     const tx = await swapV2.removeLiquidity(zeroAddress, 5);
     await tx.wait();
-
-    const userlpToken = await lpTokenCont.lpTokenForUser(zeroAddress);
-    expect(userlpToken).to.be.equals(10);
 
     const tokenQty = await swapV2.getPairQty();
     expect(tokenQty[0]).to.be.equals(precision.mul(50));
@@ -362,17 +563,18 @@ describe("All Tests", function () {
 
     //----------------------------------------------------------------------
     it("Swap Token A with Fail A transfer", async function () {
-      const { swapV2 } = await loadFixture(deployFailureFixture);
+      const { swapV2, mockBaseHTS, token1Address, token2Address } =
+        await loadFixture(deployFailureFixture);
       await swapV2.addLiquidity(
         zeroAddress,
-        tokenAAddress,
-        tokenBAddress,
+        token1Address,
+        token2Address,
         precision.mul(100),
         precision.mul(100)
       );
-      const tokenBeforeQty = await swapV2.getPairQty();
+      await mockBaseHTS.setPassTransactionCount(0);
       await expect(
-        swapV2.swapToken(zeroAddress, tokenAAddress, 30)
+        swapV2.swapToken(zeroAddress, token1Address, 30)
       ).to.revertedWith(
         "swapTokenA: Transferring token A to contract failed with status code"
       );
@@ -381,21 +583,22 @@ describe("All Tests", function () {
     //----------------------------------------------------------------------
 
     it("Swap Token A with Fail B transfer", async function () {
-      const { swapV2, mockBaseHTS } = await loadFixture(deployFailureFixture);
-      mockBaseHTS.setFailType(2);
+      const { swapV2, token1Address, token2Address, tokenCont1 } =
+        await loadFixture(deployFailureFixture);
       const totalQtyA = precision.mul(1000);
       await swapV2.addLiquidity(
         zeroAddress,
-        tokenAAddress,
-        tokenBAddress,
+        token1Address,
+        token2Address,
         totalQtyA,
         precision.mul(50)
       );
       const tokenBeforeQty = await swapV2.getPairQty();
 
       expect(tokenBeforeQty[0]).to.be.equals(totalQtyA);
+      await tokenCont1.setTransaferFailed(true);
       await expect(
-        swapV2.swapToken(zeroAddress, tokenAAddress, precision.mul(1))
+        swapV2.swapToken(zeroAddress, token1Address, precision.mul(1))
       ).to.revertedWith(
         "swapTokenA: Transferring token B to user failed with status code"
       );
@@ -403,41 +606,42 @@ describe("All Tests", function () {
 
     //----------------------------------------------------------------------
     it("Swap Token B with Fail B transfer", async function () {
-      const { swapV2, mockBaseHTS } = await loadFixture(deployFailureFixture);
-      mockBaseHTS.setFailType(12);
+      const { swapV2, mockBaseHTS, token1Address, token2Address } =
+        await loadFixture(deployFailureFixture);
       const totalQtyA = precision.mul(1000);
       await swapV2.addLiquidity(
         zeroAddress,
-        tokenAAddress,
-        tokenBAddress,
+        token1Address,
+        token2Address,
         totalQtyA,
         precision.mul(1000)
       );
       const tokenBeforeQty = await swapV2.getPairQty();
       expect(Number(tokenBeforeQty[0])).to.be.equals(precision.mul(1000));
-
+      mockBaseHTS.setPassTransactionCount(0);
       await expect(
-        swapV2.swapToken(zeroAddress, tokenBAddress, precision.mul(1))
+        swapV2.swapToken(zeroAddress, token2Address, precision.mul(1))
       ).to.revertedWith(
         "swapTokenB: Transferring token B to contract failed with status code"
       );
     });
 
     it("Swap Token B with Fail A transfer", async function () {
-      const { swapV2, mockBaseHTS } = await loadFixture(deployFailureFixture);
-      mockBaseHTS.setFailType(9);
+      const { swapV2, token1Address, token2Address, tokenCont } =
+        await loadFixture(deployFailureFixture);
       const totalQtyA = precision.mul(1000);
       await swapV2.addLiquidity(
         zeroAddress,
-        tokenAAddress,
-        tokenBAddress,
+        token1Address,
+        token2Address,
         totalQtyA,
         precision.mul(1000)
       );
       const tokenBeforeQty = await swapV2.getPairQty();
       expect(Number(tokenBeforeQty[0])).to.be.equals(precision.mul(1000));
+      await tokenCont.setTransaferFailed(true);
       await expect(
-        swapV2.swapToken(zeroAddress, tokenBAddress, precision.mul(1))
+        swapV2.swapToken(zeroAddress, token2Address, precision.mul(1))
       ).to.revertedWith(
         "swapTokenB: Transferring token A to user failed with status code"
       );
@@ -446,7 +650,7 @@ describe("All Tests", function () {
     //----------------------------------------------------------------------
     it("Add liquidity Fail A Transfer", async function () {
       const { swapV2, mockBaseHTS } = await loadFixture(deployFailureFixture);
-      mockBaseHTS.setFailType(7);
+      mockBaseHTS.setPassTransactionCount(2);
       const tokenBeforeQty = await swapV2.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
       await expect(
@@ -458,7 +662,7 @@ describe("All Tests", function () {
 
     it("Add liquidity Fail B Transfer", async function () {
       const { swapV2, mockBaseHTS } = await loadFixture(deployFailureFixture);
-      mockBaseHTS.setFailType(4);
+      mockBaseHTS.setPassTransactionCount(3);
       const tokenBeforeQty = await swapV2.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
       await expect(
@@ -484,20 +688,22 @@ describe("All Tests", function () {
     });
 
     it("Remove liquidity Fail A Transfer", async function () {
-      const { swapV2, mockBaseHTS } = await loadFixture(deployFailureFixture);
-      mockBaseHTS.setFailType(8);
+      const { swapV2, mockBaseHTS, tokenCont } = await loadFixture(
+        deployFailureFixture
+      );
       const tokenBeforeQty = await swapV2.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
+      await tokenCont.setTransaferFailed(true);
       await expect(swapV2.removeLiquidity(zeroAddress, 5)).to.revertedWith(
         "Remove liquidity: Transferring token A to contract failed with status code"
       );
     });
 
     it("Remove liquidity Fail B Transfer", async function () {
-      const { swapV2, mockBaseHTS, lpTokenCont } = await loadFixture(
+      const { swapV2, mockBaseHTS, tokenCont1 } = await loadFixture(
         deployFailureFixture
       );
-      mockBaseHTS.setFailType(5);
+      await tokenCont1.setTransaferFailed(true);
       const tokenBeforeQty = await swapV2.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
       await expect(swapV2.removeLiquidity(zeroAddress, 5)).to.revertedWith(
@@ -506,8 +712,7 @@ describe("All Tests", function () {
     });
 
     it("Remove liquidity Fail not sufficient tokens", async function () {
-      const { swapV2, mockBaseHTS } = await loadFixture(deployFailureFixture);
-      mockBaseHTS.setFailType(5);
+      const { swapV2 } = await loadFixture(deployFailureFixture);
       const tokenBeforeQty = await swapV2.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
       await expect(swapV2.removeLiquidity(zeroAddress, 110)).to.revertedWith(
@@ -517,29 +722,31 @@ describe("All Tests", function () {
 
     it("Add liquidity Fail Minting", async function () {
       const { swapV2, mockBaseHTS } = await loadFixture(deployFailureFixture);
-      mockBaseHTS.setFailType(10);
       const tokenBeforeQty = await swapV2.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
+      await mockBaseHTS.setPassTransactionCount(5);
       await expect(
         swapV2.addLiquidity(zeroAddress, tokenAAddress, tokenBAddress, 30, 30)
       ).to.revertedWith("LP token minting failed.");
     });
 
     it("Add liquidity Transfer LPToken Fail", async function () {
-      const { swapV2, mockBaseHTS } = await loadFixture(deployFailureFixture);
-      mockBaseHTS.setFailType(11);
-      const tokenBeforeQty = await swapV2.getPairQty();
-      expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
-      await expect(
-        swapV2.addLiquidity(zeroAddress, tokenAAddress, tokenBAddress, 30, 30)
-      ).to.revertedWith("LP token transfer failed.");
-    });
-
-    it("allotLPToken fail for zero token count", async function () {
       const { swapV2, mockBaseHTS, lpTokenCont } = await loadFixture(
         deployFailureFixture
       );
-      mockBaseHTS.setFailType(11);
+      const tokenBeforeQty = await swapV2.getPairQty();
+      expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
+      await mockBaseHTS.setPassTransactionCount(6);
+      const lpTokenAddress = await lpTokenCont.getLpTokenAddress();
+      const lpToken = await ethers.getContractAt("ERC20Mock", lpTokenAddress);
+      await lpToken.setTransaferFailed(true); //Forcing transfer to fail
+      await expect(
+        swapV2.addLiquidity(zeroAddress, tokenAAddress, tokenBAddress, 30, 30)
+      ).to.revertedWith("LPToken: token transfer failed from contract.");
+    });
+
+    it("allotLPToken fail for zero token count", async function () {
+      const { swapV2, lpTokenCont } = await loadFixture(deployFailureFixture);
       const tokenBeforeQty = await swapV2.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
       await expect(
@@ -549,13 +756,17 @@ describe("All Tests", function () {
 
     it("LPToken creation failed while initialize LP contract.", async function () {
       const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-      const mockBaseHTS = await MockBaseHTS.deploy(false, false);
-      await mockBaseHTS.setFailType(13);
+      const mockBaseHTS = await MockBaseHTS.deploy(false, newZeroAddress);
 
       const LpTokenCont = await ethers.getContractFactory("LPToken");
+      await mockBaseHTS.setPassTransactionCount(0);
       await expect(
-        upgrades.deployProxy(LpTokenCont, [mockBaseHTS.address])
-      ).to.revertedWith("Token creation failed.");
+        upgrades.deployProxy(LpTokenCont, [
+          mockBaseHTS.address,
+          "tokenName",
+          "tokenSymbol",
+        ])
+      ).to.revertedWith("LPToken: Token creation failed.");
     });
 
     it("removeLPTokenFor fail for less lp Token", async function () {
@@ -577,18 +788,16 @@ describe("All Tests", function () {
     it("verify removeLPTokenFor call should failed during transfer-token call", async function () {
       const { mockBaseHTS, lpTokenCont } = await loadFixture(deployFixture);
       await lpTokenCont.allotLPTokenFor(10, 10, userAddress);
-      await mockBaseHTS.setTrueTransactionCount(0);
-      await mockBaseHTS.setSuccessStatus(false);
+      await mockBaseHTS.setPassTransactionCount(0);
       await expect(
         lpTokenCont.removeLPTokenFor(5, userAddress)
-      ).to.revertedWith("LP token transfer failed.");
+      ).to.revertedWith("LPToken: token transfer failed to contract.");
     });
 
     it("verify removeLPTokenFor call should failed during burn-token call", async function () {
       const { mockBaseHTS, lpTokenCont } = await loadFixture(deployFixture);
       await lpTokenCont.allotLPTokenFor(10, 10, userAddress);
-      await mockBaseHTS.setTrueTransactionCount(2);
-      await mockBaseHTS.setSuccessStatus(false);
+      await mockBaseHTS.setPassTransactionCount(1);
       await expect(
         lpTokenCont.removeLPTokenFor(5, userAddress)
       ).to.revertedWith("LP token burn failed.");
@@ -619,9 +828,9 @@ describe("All Tests", function () {
 
     it("verify that lpToken initization failed for subsequent initization call", async function () {
       const { lpTokenCont, mockBaseHTS } = await loadFixture(deployFixture);
-      await expect(lpTokenCont.initialize(mockBaseHTS.address)).to.revertedWith(
-        "Initializable: contract is already initialized"
-      );
+      await expect(
+        lpTokenCont.initialize(mockBaseHTS.address, "name", "symbol")
+      ).to.revertedWith("Initializable: contract is already initialized");
     });
   });
 
@@ -637,7 +846,7 @@ describe("All Tests", function () {
       );
       const value = await swapV2.getSpotPrice();
 
-      expect(value).to.be.equals(20000000);
+      expect(value).to.be.equals(200000000);
     });
 
     it("Check spot price for tokens B", async function () {
@@ -651,7 +860,7 @@ describe("All Tests", function () {
       );
       const value = await swapV2.getSpotPrice();
 
-      expect(value).to.be.equals(5000000);
+      expect(value).to.be.equals(50000000);
     });
 
     it("Check spot price for tokens with reverse", async function () {
@@ -665,7 +874,7 @@ describe("All Tests", function () {
       );
       const value = await swapV2.getSpotPrice();
 
-      expect(value).to.be.equals(5000000);
+      expect(value).to.be.equals(50000000);
     });
 
     it("check get out given In price value without precision", async function () {
@@ -711,7 +920,7 @@ describe("All Tests", function () {
       );
       const value = await swapV2.getSpotPrice();
 
-      expect(Number(value)).to.be.equals(Number(7145946));
+      expect(Number(value)).to.be.equals(Number(71459466));
     });
 
     it("check spot price for front end", async function () {
@@ -730,7 +939,7 @@ describe("All Tests", function () {
       const value = await swapV2.getSpotPrice();
       const output = Number(value) / Number(precisionValue);
 
-      expect(output).to.be.equals(0.7145946);
+      expect(output).to.be.equals(0.71459466);
     });
 
     it("check spot price for big number", async function () {
@@ -745,13 +954,13 @@ describe("All Tests", function () {
         tokenBQ
       );
       const value = await swapV2.getSpotPrice();
-      expect(Number(value)).to.be.equals(Number(5243534));
+      expect(Number(value)).to.be.equals(Number(52435344));
     });
 
     it("check precision value", async function () {
       const { swapV2 } = await loadFixture(deployFixture);
       const value = await swapV2.getPrecisionValue();
-      expect(Number(value)).to.be.equals(Number(10000000));
+      expect(Number(value)).to.be.equals(Number(100000000));
     });
 
     it("check getOutGivenIn for big number with precision", async function () {
@@ -764,12 +973,15 @@ describe("All Tests", function () {
         tokenAAddress,
         tokenBAddress,
         tokenAQ,
-        tokenBQ
+        tokenBQ,
+        {
+          value: ethers.utils.parseEther("10"),
+        }
       );
       const deltaAQty = BigNumber.from(10).mul(precision);
       const value = await swapV2.getOutGivenIn(deltaAQty);
 
-      expect(Number(value)).to.be.equals(Number(47058824));
+      expect(Number(value)).to.be.equals(Number(470588236));
     });
 
     it("check getInGivenOut for big number with precision", async function () {
@@ -787,7 +999,7 @@ describe("All Tests", function () {
         BigNumber.from("1").mul(precision)
       );
       const valueWithoutPrecision = Number(value) / Number(precision);
-      expect(valueWithoutPrecision).to.be.equals(0.5205479);
+      expect(valueWithoutPrecision).to.be.equals(0.52054794);
     });
   });
 
@@ -821,7 +1033,7 @@ describe("All Tests", function () {
       const deltaAQty = BigNumber.from(1).mul(precision);
       const slippage = await swapV2.slippageOutGivenIn(deltaAQty);
       const slippageWithoutPrecision = Number(slippage) / Number(precision);
-      expect(slippageWithoutPrecision).to.be.equals(0.0086956);
+      expect(slippageWithoutPrecision).to.be.equals(0.00869565);
     });
 
     it("Verify slippageInGivenOut ", async function () {
@@ -838,16 +1050,18 @@ describe("All Tests", function () {
       const deltaBQty = BigNumber.from(1).mul(precision);
       const slippage = await swapV2.slippageInGivenOut(deltaBQty);
       const slippageWithoutPrecision = Number(slippage) / Number(precision);
-      expect(slippageWithoutPrecision).to.be.equals(0.0045661);
+      expect(slippageWithoutPrecision).to.be.equals(0.00456621);
     });
   });
 
   describe("Mirror Node API requirement test cases", async () => {
     it("Get Token Pair address", async function () {
-      const { swapV2 } = await loadFixture(deployFixture);
+      const { swapV2, token1Address, token2Address } = await loadFixture(
+        deployFixture
+      );
       const value = await swapV2.getTokenPairAddress();
-      expect(value[0]).to.be.equals(tokenAAddress);
-      expect(value[1]).to.be.equals(tokenBAddress);
+      expect(value[0]).to.be.equals(token1Address);
+      expect(value[1]).to.be.equals(token2Address);
       expect(value[2]).to.not.be.equals(newZeroAddress);
     });
   });
@@ -871,7 +1085,7 @@ describe("All Tests", function () {
         10
       );
       const value = await swapV2.feeForToken(tokenAPoolQty);
-      expect(value).to.be.equals(Number(500000));
+      expect(value).to.be.equals(Number(5000000));
     });
   });
 });

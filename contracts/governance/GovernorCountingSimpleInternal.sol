@@ -18,8 +18,6 @@ abstract contract GovernorCountingSimpleInternal is
     GovernorCountingSimpleUpgradeable,
     HederaResponseCodes
 {
-    event GodTokenClaimed(uint256 proposalId, address fromUser, address toUser);
-
     struct VotingWeight {
         uint256 weight;
         uint8 support;
@@ -30,9 +28,26 @@ abstract contract GovernorCountingSimpleInternal is
         address delegator;
     }
 
+    struct ProposalInfo {
+        address creator;
+        string title;
+        string description;
+        string link;
+    }
+
+    event ProposalDetails(
+        uint256 proposalId,
+        address proposer,
+        string title,
+        string description,
+        string link,
+        uint256 startBlock,
+        uint256 endBlock
+    );
+
     uint256 precision;
     IERC20 token;
-    mapping(uint256 => address) proposalCreators;
+    mapping(uint256 => ProposalInfo) proposalCreators;
     IBaseHTS internal tokenService;
 
     /**
@@ -90,21 +105,51 @@ abstract contract GovernorCountingSimpleInternal is
         return percentageShare;
     }
 
-    function propose(
-        address[] memory targets,
-        uint256[] memory values,
-        bytes[] memory calldatas,
-        string memory description
-    ) public virtual override returns (uint256) {
+    function _createProposal(
+        string memory title,
+        string memory description,
+        string memory link
+    ) internal returns (uint256) {
         getGODToken();
-        uint256 proposalId = super.propose(
-            targets,
-            values,
-            calldatas,
-            description
+        (
+            address[] memory targets,
+            uint256[] memory values,
+            bytes[] memory calldatas
+        ) = mockFunctionCall();
+        uint256 proposalId = super.propose(targets, values, calldatas, title);
+        proposalCreators[proposalId] = ProposalInfo(
+            _msgSender(),
+            title,
+            description,
+            link
         );
-        proposalCreators[proposalId] = msg.sender;
+        emit ProposalDetails(
+            proposalId,
+            _msgSender(),
+            title,
+            description,
+            link,
+            proposalSnapshot(proposalId),
+            proposalDeadline(proposalId)
+        );
         return proposalId;
+    }
+
+    function getProposalDetails(
+        uint proposalId
+    )
+        public
+        view
+        returns (address, string memory, string memory, string memory)
+    {
+        ProposalInfo memory proposalInfo = proposalCreators[proposalId];
+        require(proposalInfo.creator != address(0), "Proposal not found");
+        return (
+            proposalInfo.creator,
+            proposalInfo.title,
+            proposalInfo.description,
+            proposalInfo.link
+        );
     }
 
     function votingDelay()
@@ -135,41 +180,35 @@ abstract contract GovernorCountingSimpleInternal is
     }
 
     function cancelProposal(
-        string memory description
+        string memory title
     ) public returns (uint256 proposalId) {
         (
             address[] memory targets,
             uint256[] memory values,
             bytes[] memory calldatas
         ) = mockFunctionCall();
-        bytes32 descriptionHash = keccak256(bytes(description));
+        bytes32 descriptionHash = keccak256(bytes(title));
         proposalId = hashProposal(targets, values, calldatas, descriptionHash);
-        require(
-            proposalCreators[proposalId] != address(0),
-            "Proposal not found"
-        );
-        require(
-            msg.sender == proposalCreators[proposalId],
-            "Only proposer can cancel the proposal"
-        );
+        address creator = proposalCreators[proposalId].creator;
+        require(creator != address(0), "Proposal not found");
+        require(msg.sender == creator, "Only proposer can cancel the proposal");
         proposalId = super._cancel(targets, values, calldatas, descriptionHash);
-        returnGODToken(proposalId);
-        address voter = _msgSender();
-        cleanup(voter);
+        returnGODToken(creator);
+        cleanup(creator);
     }
 
     /**
      * @dev See {IGovernor-execute}.
      */
     function executeProposal(
-        string memory description
+        string memory title
     ) public payable virtual returns (uint256) {
         (
             address[] memory targets,
             uint256[] memory values,
             bytes[] memory calldatas
         ) = mockFunctionCall();
-        bytes32 descriptionHash = keccak256(bytes(description));
+        bytes32 descriptionHash = keccak256(bytes(title));
         uint256 proposalId = hashProposal(
             targets,
             values,
@@ -232,24 +271,19 @@ abstract contract GovernorCountingSimpleInternal is
         return int256(currentWeight) - int256(existingWeight);
     }
 
-    function claimGODToken(uint256 proposalId) external {
-        returnGODToken(proposalId);
-        cleanup(proposalCreators[proposalId]);
-    }
-
     /**
      * @dev Internal execution mechanism. Can be overridden to implement different execution mechanism
      */
     function _execute(
-        uint256 /* proposalId */,
+        uint256 proposalId,
         address[] memory,
         uint256[] memory,
         bytes[] memory,
         bytes32 /*descriptionHash*/
     ) internal virtual override {
-        //returnGODToken(proposalId);
-        address voter = _msgSender();
-        cleanup(voter);
+        address creator = proposalCreators[proposalId].creator;
+        returnGODToken(creator);
+        cleanup(creator);
     }
 
     function getGODToken() internal {
@@ -261,24 +295,17 @@ abstract contract GovernorCountingSimpleInternal is
             int64(uint64(precision))
         );
         if (responseCode != HederaResponseCodes.SUCCESS) {
-            revert("Transfer token failed.");
+            revert(
+                "GovernorCountingSimpleInternal: token transfer failed to contract."
+            );
         }
     }
 
-    function returnGODToken(uint256 proposalId) internal {
-        int256 responseCode = tokenService.transferTokenPublic(
-            address(token),
-            address(this),
-            address(proposalCreators[proposalId]),
-            int64(uint64(precision))
-        );
-        if (responseCode != HederaResponseCodes.SUCCESS) {
-            revert("Transfer token failed.");
-        }
-        emit GodTokenClaimed(
-            proposalId,
-            address(this),
-            proposalCreators[proposalId]
+    function returnGODToken(address creator) internal {
+        bool result = token.transfer(creator, precision);
+        require(
+            result,
+            "GovernorCountingSimpleInternal: token transfer failed from contract."
         );
     }
 
