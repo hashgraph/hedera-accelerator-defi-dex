@@ -9,6 +9,7 @@ import "hardhat/console.sol";
 
 contract Splitter is ISplitter, HederaResponseCodes, Initializable {
     event VaultAdded(IVault vault, uint256 multiplier);
+    event TokenTransferred(IVault vault, uint256 amount);
 
     IBaseHTS internal _tokenService;
     IVault[] private _vaults;
@@ -77,6 +78,7 @@ contract Splitter is ISplitter, HederaResponseCodes, Initializable {
                 address(tempVault),
                 int256(amountToTransfer)
             );
+            emit TokenTransferred(tempVault, amountToTransfer);
         }
         return HederaResponseCodes.SUCCESS;
     }
@@ -140,7 +142,7 @@ contract Splitter is ISplitter, HederaResponseCodes, Initializable {
         return ((p0 * p1) / getPrecisionValue());
     }
 
-    function getPrecisionValue() public pure returns (uint256) {
+    function getPrecisionValue() internal pure returns (uint256) {
         return 100000000;
     }
 }
