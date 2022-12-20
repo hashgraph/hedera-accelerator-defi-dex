@@ -196,5 +196,23 @@
         "hash": "9b21ca6eb216f47424c364c5bdcf5389",
         "transparentProxyAddress": "0x0000000000000000000000000000000002ec8e18",
         "transparentProxyId": "0.0.49057304"
+    },
+    {
+        "name": "splitter",
+        "id": "0.0.49126408",
+        "address": "0x0000000000000000000000000000000002ed9c08",
+        "timestamp": "2022-12-20T08:40:53.445Z",
+        "hash": "e675744059100590c659d4464d73da8f",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002ed85be",
+        "transparentProxyId": "0.0.49120702"
+    },
+    {
+        "name": "vault",
+        "id": "0.0.49126410",
+        "address": "0x0000000000000000000000000000000002ed9c0a",
+        "timestamp": "2022-12-20T08:41:08.319Z",
+        "hash": "00bff8b9db4f0942706840efd0fe2466",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002ed3e4e",
+        "transparentProxyId": "0.0.49102414"
     }
 ]
