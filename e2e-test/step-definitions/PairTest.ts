@@ -1,10 +1,10 @@
+import { binding, given, then, when } from "cucumber-tsflow";
+import { assert, expect } from "chai";
 import { ContractService } from "../../deployment/service/ContractService";
 import { DeployedContract } from "../../deployment/model/contract";
 import ClientManagement from "../../utils/ClientManagement";
 import { TokenId } from "@hashgraph/sdk";
 import Pair from "../business/Pair";
-import { expect } from "chai";
-import { Test } from "mocha";
 import { BigNumber } from "bignumber.js";
 
 const clientManagement = new ClientManagement();
@@ -26,11 +26,19 @@ const pair = new Pair();
 
 let tokenA: TokenId;
 let tokenB: TokenId;
-let lpTokenProxyId;
-let contractProxyId;
+let lpTokenProxyId: string;
+let contractProxyId: string;
+let tokensBefore: BigNumber[];
+let tokensAfter: BigNumber[];
 
-describe("E2E tests - pair contract", function () {
-  before(async function () {
+@binding()
+export class PairTestSteps {
+  @given(
+    /User have created pair of tokens and intialized them/,
+    undefined,
+    30000
+  )
+  public async createTokenPairAndInitializeThem(): Promise<void> {
     const num = Math.floor(Math.random() * 10) + 1;
     tokenA = await pair.createToken(
       "A" + num,
@@ -64,17 +72,21 @@ describe("E2E tests - pair contract", function () {
       client,
       key
     );
-  });
+  }
 
-  it("Verify token balance before and after adding liquidity", async function () {
-    const tokensBefore = await pair.pairCurrentPosition(
-      contractProxyId,
-      client
-    );
+  @when(
+    /User adds (\d*) units of tokenA and (\d*) units of tokenB/,
+    undefined,
+    30000
+  )
+  public async addLiquidity(
+    tokenACount: number,
+    tokenBCount: number
+  ): Promise<void> {
+    tokensBefore = await pair.pairCurrentPosition(contractProxyId, client);
     let precision = await pair.getPrecisionValue(contractProxyId, client);
-    const tokenAQty = await pair.withPrecision(210, precision);
-    console.log("value of tokenAQty", tokenAQty);
-    const tokenBQty = await pair.withPrecision(230, precision);
+    const tokenAQty = await pair.withPrecision(tokenACount, precision);
+    const tokenBQty = await pair.withPrecision(tokenBCount, precision);
     await pair.addLiquidity(
       contractProxyId,
       tokenAQty,
@@ -85,12 +97,22 @@ describe("E2E tests - pair contract", function () {
       client,
       treasureKey
     );
-    const tokensAfter = await pair.pairCurrentPosition(contractProxyId, client);
-    expect(tokensAfter[0]).to.be.equal(
-      BigNumber.sum(tokensBefore[0], tokenAQty)
-    );
-    expect(tokensAfter[1]).to.be.equal(
-      BigNumber.sum(tokensBefore[1], tokenBQty)
-    );
-  });
-});
+  }
+
+  @then(
+    /User verifies tokens count in pool is correct after adding (\d*) units of tokenA and (\d*) units of tokenB/,
+    undefined,
+    30000
+  )
+  public async verifyTokensInPool(
+    tokenACount: number,
+    tokenBCount: number
+  ): Promise<void> {
+    let precision = await pair.getPrecisionValue(contractProxyId, client);
+    const tokenAQty = await pair.withPrecision(tokenACount, precision);
+    const tokenBQty = await pair.withPrecision(tokenBCount, precision);
+    tokensAfter = await pair.pairCurrentPosition(contractProxyId, client);
+    expect(tokensAfter[0]).to.eql(BigNumber.sum(tokensBefore[0], tokenAQty));
+    expect(tokensAfter[1]).to.eql(BigNumber.sum(tokensBefore[1], tokenBQty));
+  }
+}
