@@ -100,7 +100,7 @@ export class PairTestSteps {
   }
 
   @then(
-    /User verifies tokens count in pool is correct after adding (\d*) units of tokenA and (\d*) units of tokenB/,
+    /Then  tokenA and tokenB balances in the pool are (\d*) units and (\d*) units respectively/,
     undefined,
     30000
   )
