@@ -11,13 +11,27 @@ describe("All Tests", function () {
     it("Verify if the Splitter contract is upgradeable safe ", async function () {
       const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
       const mockBaseHTS = await MockBaseHTS.deploy(true, true);
+      const TokenCont = await ethers.getContractFactory("ERC20Mock");
+      const tokenCont = await TokenCont.deploy(10000000000, 0);
 
       const Vault0 = await ethers.getContractFactory("Vault");
-      const vault0 = await upgrades.deployProxy(Vault0, [1000]);
+      const vault0 = await upgrades.deployProxy(Vault0, [
+        tokenCont.address,
+        100,
+        mockBaseHTS.address,
+      ]);
       const Vault1 = await ethers.getContractFactory("Vault");
-      const vault1 = await upgrades.deployProxy(Vault1, [1000]);
+      const vault1 = await upgrades.deployProxy(Vault1, [
+        tokenCont.address,
+        100,
+        mockBaseHTS.address,
+      ]);
       const Vault2 = await ethers.getContractFactory("Vault");
-      const vault2 = await upgrades.deployProxy(Vault2, [1000]);
+      const vault2 = await upgrades.deployProxy(Vault2, [
+        tokenCont.address,
+        100,
+        mockBaseHTS.address,
+      ]);
 
       const Splitter = await ethers.getContractFactory("Splitter");
       const splitter = await upgrades.deployProxy(Splitter, [
@@ -31,13 +45,27 @@ describe("All Tests", function () {
     it("Verify if the Splitter Initialisation works", async function () {
       const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
       const mockBaseHTS = await MockBaseHTS.deploy(true, true);
+      const TokenCont = await ethers.getContractFactory("ERC20Mock");
+      const tokenCont = await TokenCont.deploy(100000000000, 100000000000);
 
       const Vault0 = await ethers.getContractFactory("Vault");
-      const vault0 = await upgrades.deployProxy(Vault0, [1000]);
+      const vault0 = await upgrades.deployProxy(Vault0, [
+        tokenCont.address,
+        100,
+        mockBaseHTS.address,
+      ]);
       const Vault1 = await ethers.getContractFactory("Vault");
-      const vault1 = await upgrades.deployProxy(Vault1, [1000]);
+      const vault1 = await upgrades.deployProxy(Vault1, [
+        tokenCont.address,
+        100,
+        mockBaseHTS.address,
+      ]);
       const Vault2 = await ethers.getContractFactory("Vault");
-      const vault2 = await upgrades.deployProxy(Vault2, [1000]);
+      const vault2 = await upgrades.deployProxy(Vault2, [
+        tokenCont.address,
+        100,
+        mockBaseHTS.address,
+      ]);
 
       const Splitter = await ethers.getContractFactory("Splitter");
       await expect(
@@ -97,16 +125,37 @@ describe("All Tests", function () {
 
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
     const tokenCont = await TokenCont.deploy(100000000000, 100000000000);
+
     const signers = await ethers.getSigners();
     const signer1 = signers[1];
     const Vault0 = await ethers.getContractFactory("Vault");
-    const vault0 = await upgrades.deployProxy(Vault0, [100000000000]);
+    const vault0 = await upgrades.deployProxy(Vault0, [
+      tokenCont.address,
+      100,
+      mockBaseHTS.address,
+    ]);
+    vault0.addToken(tokenCont.address, 100000000000);
     const Vault1 = await ethers.getContractFactory("Vault");
-    const vault1 = await upgrades.deployProxy(Vault1, [5000000000]);
+    const vault1 = await upgrades.deployProxy(Vault1, [
+      tokenCont.address,
+      100,
+      mockBaseHTS.address,
+    ]);
+    vault1.addToken(tokenCont.address, 5000000000);
     const Vault2 = await ethers.getContractFactory("Vault");
-    const vault2 = await upgrades.deployProxy(Vault2, [10000000000]);
+    const vault2 = await upgrades.deployProxy(Vault2, [
+      tokenCont.address,
+      100,
+      mockBaseHTS.address,
+    ]);
+    vault2.addToken(tokenCont.address, 10000000000);
     const Vault3 = await ethers.getContractFactory("Vault");
-    const vault3 = await upgrades.deployProxy(Vault3, [10000000000]);
+    const vault3 = await upgrades.deployProxy(Vault3, [
+      tokenCont.address,
+      100,
+      mockBaseHTS.address,
+    ]);
+    vault3.addToken(tokenCont.address, 10000000000);
 
     const Splitter = await ethers.getContractFactory("Splitter");
     const splitter = await upgrades.deployProxy(Splitter, [

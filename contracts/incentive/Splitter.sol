@@ -115,13 +115,14 @@ contract Splitter is ISplitter, HederaResponseCodes, Initializable {
 
     function _calculateTokenRewardPercentage(IVault vault, uint256 totalWeight)
         private
+        view
         returns (uint256)
     {
         uint256 vaultShareFraction = divide(_vaultWeight(vault), totalWeight);
         return vaultShareFraction;
     }
 
-    function _totalVaultWeight() private returns (uint256 totalWeight) {
+    function _totalVaultWeight() private view returns (uint256 totalWeight) {
         for (uint256 i = 0; i < _vaults.length; i++) {
             IVault tempVault = _vaults[i];
             uint256 weight = _vaultWeight(tempVault);
@@ -129,8 +130,8 @@ contract Splitter is ISplitter, HederaResponseCodes, Initializable {
         }
     }
 
-    function _vaultWeight(IVault vault) private returns (uint256 weight) {
-        uint256 tokenCount = vault.getStakedTokenCount();
+    function _vaultWeight(IVault vault) private view returns (uint256 weight) {
+        uint256 tokenCount = vault.getTotalVolume();
         weight = tokenCount * _vaultMultipliers[vault];
     }
 
