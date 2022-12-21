@@ -30,9 +30,14 @@ abstract contract GovernorCountingSimpleInternal is
         address delegator;
     }
 
+    struct ProposalInfo {
+        address creator;
+        bool tokenClaimed;
+    }
+
     uint256 precision;
     IERC20 token;
-    mapping(uint256 => address) proposalCreators;
+    mapping(uint256 => ProposalInfo) proposalCreators;
     IBaseHTS internal tokenService;
 
     /**
@@ -103,7 +108,7 @@ abstract contract GovernorCountingSimpleInternal is
             calldatas,
             description
         );
-        proposalCreators[proposalId] = msg.sender;
+        proposalCreators[proposalId] = ProposalInfo(msg.sender, false);
         return proposalId;
     }
 
@@ -144,16 +149,10 @@ abstract contract GovernorCountingSimpleInternal is
         ) = mockFunctionCall();
         bytes32 descriptionHash = keccak256(bytes(description));
         proposalId = hashProposal(targets, values, calldatas, descriptionHash);
-        require(
-            proposalCreators[proposalId] != address(0),
-            "Proposal not found"
-        );
-        require(
-            msg.sender == proposalCreators[proposalId],
-            "Only proposer can cancel the proposal"
-        );
+        address creator = proposalCreators[proposalId].creator;
+        require(creator != address(0), "Proposal not found");
+        require(msg.sender == creator, "Only proposer can cancel the proposal");
         proposalId = super._cancel(targets, values, calldatas, descriptionHash);
-        returnGODToken(proposalId);
         address voter = _msgSender();
         cleanup(voter);
     }
@@ -233,8 +232,17 @@ abstract contract GovernorCountingSimpleInternal is
     }
 
     function claimGODToken(uint256 proposalId) external {
+        ProposalInfo storage proposalInfo = proposalCreators[proposalId];
+        require(proposalInfo.creator != address(0), "Proposal not found");
+        require(!proposalInfo.tokenClaimed, "Token already claimed");
+        ProposalState state = state(proposalId);
+        require(
+            !(state == ProposalState.Pending || state == ProposalState.Active),
+            "Can't claim token"
+        );
         returnGODToken(proposalId);
-        cleanup(proposalCreators[proposalId]);
+        cleanup(proposalInfo.creator);
+        proposalInfo.tokenClaimed = true;
     }
 
     /**
@@ -266,20 +274,17 @@ abstract contract GovernorCountingSimpleInternal is
     }
 
     function returnGODToken(uint256 proposalId) internal {
+        address creator = proposalCreators[proposalId].creator;
         int256 responseCode = tokenService.transferTokenPublic(
             address(token),
             address(this),
-            address(proposalCreators[proposalId]),
+            creator,
             int64(uint64(precision))
         );
         if (responseCode != HederaResponseCodes.SUCCESS) {
             revert("Transfer token failed.");
         }
-        emit GodTokenClaimed(
-            proposalId,
-            address(this),
-            proposalCreators[proposalId]
-        );
+        emit GodTokenClaimed(proposalId, address(this), creator);
     }
 
     function cleanup(address voter) private {
