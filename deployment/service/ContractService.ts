@@ -13,6 +13,7 @@ export class ContractService {
   public governorTextContractName = "governortextproposal";
   public governorTTContractName = "governortransfertoken";
   public governorUpgradeContract = "governorupgrade";
+  public vaultContract = "vault";
 
   private contractRecordFile = "./deployment/state/contracts.json";
   static DEV_CONTRACTS_PATH = "./deployment/state/contracts.json";
