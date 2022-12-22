@@ -173,6 +173,7 @@ export default class GovernorMethods {
     const state = record.contractFunctionResult!.getInt256(0);
 
     console.log(`state tx status ${receipt.status}, state ${state} `);
+    return state;
   };
 
   public cancelProposal = async (
@@ -239,6 +240,7 @@ export default class GovernorMethods {
         0
       )}`
     );
+    return status.toString() === "SUCCESS";
   };
 
   public claimGODToken = async (
