@@ -14,11 +14,9 @@ export class EventConsumer {
 
   public getSignatureAndEventEntries() {
     const details: any[] = [];
-    for (const entry of Array.from(this.eventSignatureToNameMap.entries())) {
-      const key = entry[0];
-      const value = entry[1];
-      details.push({ eventName: value.name, eventSignatue: key });
-    }
+    this.eventSignatureToNameMap.forEach((value, key) => {
+      details.push({ eventName: value.name, eventSignature: key });
+    });
     return details;
   }
 
@@ -78,10 +76,8 @@ export class EventConsumer {
   private fillSignatureMap() {
     this.abi.forEach((eventAbi: any) => {
       if (eventAbi.type === "event") {
-        this.eventSignatureToNameMap.set(
-          this.web3.eth.abi.encodeEventSignature(eventAbi),
-          eventAbi
-        );
+        const signature = this.web3.eth.abi.encodeEventSignature(eventAbi);
+        this.eventSignatureToNameMap.set(signature, eventAbi);
       }
     });
   }
@@ -100,21 +96,22 @@ export class EventConsumer {
 
   private decodeLog(logs: any[]) {
     const eventsResult = new Map<string, any[]>();
-    logs.forEach((log) => {
+    for (const log of logs) {
       try {
-        const eventAbi = this.eventSignatureToNameMap.get(log.topics[0]);
-        if (eventAbi !== undefined) {
+        const data = log.data;
+        const topics = log.topics;
+        const eventAbi = this.eventSignatureToNameMap.get(topics[0]);
+        if (eventAbi) {
           const decodedLog = this.web3.eth.abi.decodeLog(
             eventAbi.inputs,
-            log.data,
-            eventAbi.anonymous === true ? log.topics.splice(1) : log.topics
+            data,
+            eventAbi.anonymous === true ? topics.splice(1) : topics
           );
           const items = eventsResult.get(eventAbi.name) ?? [];
-          items.push(decodedLog);
-          eventsResult.set(eventAbi.name, items);
+          eventsResult.set(eventAbi.name, [...items, decodedLog]);
         }
       } catch (e: any) {}
-    });
+    }
     return eventsResult;
   }
 }

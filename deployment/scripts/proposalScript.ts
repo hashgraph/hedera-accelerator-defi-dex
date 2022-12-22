@@ -9,19 +9,21 @@ let contractId: string | undefined;
 
 export async function main() {
   contractId = process.env.PROPOSAL_CONTRACT_ID;
-  if (contractId === undefined) {
-    throw Error("proposal contract id missing");
+  if (!contractId) {
+    throw Error("Proposal contract id missing.");
   }
   const events = await eventReader(contractId);
   const proposalsExecuted = events.get("ProposalExecuted") ?? [];
   const proposalsCanceled = events.get("ProposalCanceled") ?? [];
-  let proposalsCreated = events.get("ProposalCreated") ?? [];
-  proposalsCreated = removeSubset(proposalsCreated, proposalsExecuted);
-  proposalsCreated = removeSubset(proposalsCreated, proposalsCanceled);
-  if (proposalsCreated.length <= 0) {
-    console.log("- no proposal pending for execution.");
+  const proposalsCreated = events.get("ProposalCreated") ?? [];
+  const proposalsActive = removeSubset(proposalsCreated, [
+    ...proposalsExecuted,
+    ...proposalsCanceled,
+  ]);
+  if (proposalsActive.length <= 0) {
+    console.log("- No active proposal.");
   } else {
-    await executeProposals(proposalsCreated);
+    await executeProposals(proposalsActive);
   }
 }
 
@@ -34,27 +36,22 @@ function removeSubset(superset: any[], subset: any[]) {
   });
 }
 
-async function executePrposal(proposal: any) {
-  const { proposalId, description } = proposal;
-  try {
-    console.log("\n------- exectuion started:", proposalId);
-    const state = await governor.state(proposalId, contractId!);
-    Number(state) === 4 &&
-      (await governor.execute(description, contractId!)) &&
-      (await governor.claimGODToken(proposalId, contractId!));
-    console.log("------- exectuion completed:", proposalId);
-  } catch (e) {
-    console.error("- failed to execute propsal:", proposal.proposalId, e);
-  }
-}
-
 async function executeProposals(proposals: any[]) {
-  console.log("- proposals execution flow started");
-  for (let index = 0; index < proposals.length; index++) {
-    const proposal = proposals[index];
-    await executePrposal(proposal);
+  console.log(`- Proposals execution started (${proposals.length}).`);
+  for (const proposal of proposals) {
+    try {
+      const { proposalId, description } = proposal;
+      console.log("\n--- Proposal execution started:", proposalId);
+      const state = await governor.state(proposalId, contractId!);
+      Number(state) === 4 &&
+        (await governor.execute(description, contractId!)) &&
+        (await governor.claimGODToken(proposalId, contractId!));
+      console.log("--- Proposal execution succeeded:", proposalId);
+    } catch (e) {
+      console.error("- Proposal execution failed:", proposal.proposalId, e);
+    }
   }
-  console.log("- proposals execution flow ended");
+  console.log("- Proposals execution ended.\n");
 }
 
 main()
