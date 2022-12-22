@@ -82,22 +82,6 @@ const getTokenTransferData = async (
   );
 };
 
-const claimGodToken = async (
-  proposalId: BigNumber,
-  contractId: string | ContractId
-) => {
-  console.log(`\nGetting claimGodToken `);
-  const args = new ContractFunctionParameters().addUint256(proposalId);
-  const txn = await new ContractExecuteTransaction()
-    .setContractId(contractId)
-    .setFunction("claimGODToken", args)
-    .setGas(500000)
-    .execute(client);
-
-  const receipt = await txn.getReceipt(client);
-  console.log(`claimGodToken tx status ${receipt.status}`);
-};
-
 async function main() {
   console.log(`\nUsing governor proxy contract id ${contractId}`);
   await governor.initialize(contractId);
@@ -116,7 +100,7 @@ async function main() {
   await new Promise((f) => setTimeout(f, 15 * 1000)); //Wait till waiting period is over. It's current deadline as per Governance.
   await governor.state(proposalId, contractId); //4 means succeeded
   await governor.execute(description, contractId);
-  await claimGodToken(proposalId, contractId);
+  await governor.claimGODToken(proposalId, contractId);
   console.log(`\nDone`);
 }
 
