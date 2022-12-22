@@ -72,8 +72,8 @@ contract Vault is HederaResponseCodes, Initializable {
         for (uint256 i; i < rewardTokens.length; i++) {
             address token = rewardTokens[i];
             userStakedTokenContribution[user].lastClaimedAmount[
-                    token
-                ] = rewards[token].amount;
+                token
+            ] = rewards[token].amount;
             tokenService.associateTokenPublic(token, address(user));
         }
     }
@@ -136,7 +136,7 @@ contract Vault is HederaResponseCodes, Initializable {
 
     function withdraw(uint256 _startPosition, uint256 _amount) public {
         require(_amount != 0, "Please provide amount");
-        unlock(_startPosition, _amount);
+        unlock();
         claimAllReward(_startPosition);
         int256 responseCode = tokenService.transferTokenPublic(
             address(stakingToken),
@@ -153,28 +153,12 @@ contract Vault is HederaResponseCodes, Initializable {
         stakingTokenTotalAmount -= _amount;
     }
 
-    function unlock(uint256 _startPosition, uint256 _amount)
-        internal
-        returns (
-            uint256,
-            uint256,
-            uint256
-        )
-    {
-        if (
+    function unlock() private view {
+        require(
             (userStakedTokenContribution[msg.sender].lockTimeStart +
-                lockPeriod) < block.timestamp
-        ) {
-            return (
-                block.timestamp,
-                userStakedTokenContribution[msg.sender].lockTimeStart,
-                lockPeriod
-            );
-        } else {
-            revert(
-                "you can't unlock your token because the lock period is not reached"
-            );
-        }
+                lockPeriod) < block.timestamp,
+            "you can't unlock your token because the lock period is not reached"
+        );
     }
 
     function claimAllReward(uint256 _startPosition)
