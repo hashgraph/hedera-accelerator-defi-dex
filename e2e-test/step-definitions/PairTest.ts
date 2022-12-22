@@ -30,6 +30,8 @@ let lpTokenProxyId: string;
 let contractProxyId: string;
 let tokensBefore: BigNumber[];
 let tokensAfter: BigNumber[];
+let lpTokensInPool: BigNumber;
+let lpTokenQty: BigNumber;
 
 @binding()
 export class PairTestSteps {
@@ -100,7 +102,7 @@ export class PairTestSteps {
   }
 
   @then(
-    /Then  tokenA and tokenB balances in the pool are (\d*) units and (\d*) units respectively/,
+    /tokenA and tokenB balances in the pool are (\d*) units and (\d*) units respectively/,
     undefined,
     30000
   )
@@ -114,5 +116,75 @@ export class PairTestSteps {
     tokensAfter = await pair.pairCurrentPosition(contractProxyId, client);
     expect(tokensAfter[0]).to.eql(BigNumber.sum(tokensBefore[0], tokenAQty));
     expect(tokensAfter[1]).to.eql(BigNumber.sum(tokensBefore[1], tokenBQty));
+  }
+
+  @given(/User gets the count of lptokens from  pool/, undefined, 30000)
+  public async getLPTokensFromPool(): Promise<void> {
+    lpTokensInPool = await pair.getAllLPTokenCount(
+      lpTokenProxyId,
+      client,
+      key,
+      treasureKey
+    );
+  }
+
+  @when(/User returns (\d*) units of lptoken/, undefined, 30000)
+  public async returnLPTokensAndRemoveLiquidity(
+    lpTokenCount: number
+  ): Promise<void> {
+    tokensBefore = await pair.pairCurrentPosition(contractProxyId, client);
+    let precision = await pair.getPrecisionValue(contractProxyId, client);
+    lpTokenQty = await pair.withPrecision(lpTokenCount, precision);
+    await pair.removeLiquidity(
+      contractProxyId,
+      lpTokenQty,
+      treasureId,
+      client,
+      treasureKey
+    );
+  }
+
+  @then(/User verfies quantity of tokenA and tokenB left in pool is correct/)
+  public async verifyTokensLeftInPoolAfterRemovingLiquidity(): Promise<void> {
+    let tokenAProd: BigNumber = lpTokenQty.multipliedBy(tokensBefore[0]);
+    let tokenAQuantity: BigNumber = tokenAProd.dividedBy(lpTokensInPool);
+    let tokenBProd: BigNumber = lpTokenQty.multipliedBy(tokensBefore[1]);
+    let tokenBQuantity: BigNumber = tokenBProd.dividedBy(lpTokensInPool);
+    tokensAfter = await pair.pairCurrentPosition(contractProxyId, client);
+    expect(tokenAQuantity).to.eql(tokensAfter[0]);
+    expect(tokenBQuantity).to.eql(tokensAfter[1]);
+  }
+
+  @given(/tokenA and tokenB are present in pool/, undefined, 30000)
+  public async tokensArePresent(): Promise<void> {
+    let tokensQty = await pair.pairCurrentPosition(contractProxyId, client);
+    expect(Number(tokensQty[0])).to.greaterThan(0);
+    expect(Number(tokensQty[1])).to.greaterThan(0);
+  }
+
+  @when(/User swap (\d*) unit of tokenA/, undefined, 30000)
+  public async swapTokenA(tokenACount: number): Promise<void> {
+    let precision = await pair.getPrecisionValue(contractProxyId, client);
+    const tokenAQty = await pair.withPrecision(tokenACount, precision);
+    tokensBefore = await pair.pairCurrentPosition(contractProxyId, client);
+    await pair.swapTokenA(
+      contractProxyId,
+      tokenAQty,
+      treasureId,
+      tokenA,
+      client,
+      treasureKey
+    );
+  }
+
+  @then(
+    /tokenA quantity is increased in pool and tokenB quantity is decreased/,
+    undefined,
+    30000
+  )
+  public async verifyTokenAQtyIncreasedAndTokenBQtyDecreased(): Promise<void> {
+    tokensAfter = await pair.pairCurrentPosition(contractProxyId, client);
+    expect(tokensAfter[0].isGreaterThan(tokensBefore[0])).to.be.true;
+    expect(tokensAfter[1].isLessThan(tokensBefore[1])).to.be.true;
   }
 }
