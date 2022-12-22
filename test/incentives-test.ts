@@ -134,28 +134,28 @@ describe("All Tests", function () {
       100,
       mockBaseHTS.address,
     ]);
-    vault0.addToken(tokenCont.address, 100000000000);
+    vault0.addStakeAccount(100000000000);
     const Vault1 = await ethers.getContractFactory("Vault");
     const vault1 = await upgrades.deployProxy(Vault1, [
       tokenCont.address,
       100,
       mockBaseHTS.address,
     ]);
-    vault1.addToken(tokenCont.address, 5000000000);
+    vault1.addStakeAccount(5000000000);
     const Vault2 = await ethers.getContractFactory("Vault");
     const vault2 = await upgrades.deployProxy(Vault2, [
       tokenCont.address,
       100,
       mockBaseHTS.address,
     ]);
-    vault2.addToken(tokenCont.address, 10000000000);
+    vault2.addStakeAccount(10000000000);
     const Vault3 = await ethers.getContractFactory("Vault");
     const vault3 = await upgrades.deployProxy(Vault3, [
       tokenCont.address,
       100,
       mockBaseHTS.address,
     ]);
-    vault3.addToken(tokenCont.address, 10000000000);
+    vault3.addStakeAccount(10000000000);
 
     const Splitter = await ethers.getContractFactory("Splitter");
     const splitter = await upgrades.deployProxy(Splitter, [

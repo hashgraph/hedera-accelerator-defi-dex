@@ -9,8 +9,6 @@ import "../common/hedera/HederaTokenService.sol";
 import "prb-math/contracts/PRBMathUD60x18.sol";
 import "../common/hedera/HederaResponseCodes.sol";
 
-import "hardhat/console.sol";
-
 contract Vault is HederaResponseCodes, Initializable {
     struct UserInfo {
         uint256 shares;
@@ -27,12 +25,12 @@ contract Vault is HederaResponseCodes, Initializable {
     using PRBMathUD60x18 for uint256;
     IERC20 private stakingToken;
     uint256 private lockPeriod;
-    uint256 private totalTokens;
-    address[] private tokenAddress;
+    uint256 private stakingTokenTotalAmount;
+    address[] private rewardTokens;
     address private owner;
     IBaseHTS private tokenService;
-    mapping(address => UserInfo) public userContribution;
-    mapping(address => RewardsInfo) public rewardsAddress;
+    mapping(address => UserInfo) public userStakedTokenContribution;
+    mapping(address => RewardsInfo) public rewards;
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Not authorized");
@@ -49,7 +47,6 @@ contract Vault is HederaResponseCodes, Initializable {
             "Staking token should not be empty."
         );
         owner = msg.sender;
-        console.log(owner);
         lockPeriod = _lockPeriod;
         tokenService = _tokenService;
         tokenService.associateTokenPublic(_stakingToken, address(this));
@@ -58,58 +55,59 @@ contract Vault is HederaResponseCodes, Initializable {
 
     //we need to set the amount of each reward address to the lastClaimed amount of the user
     function addStakeAccount(uint256 _amount)
-        internal
+        public
         returns (uint256 timeStamp)
     {
-        if (!userContribution[msg.sender].exist) {
-            for (uint256 i; i < tokenAddress.length; i++) {
-                address token = tokenAddress[i];
-                userContribution[msg.sender].lastClaimedAmount[
-                        token
-                    ] = rewardsAddress[token].amount;
-                tokenService.associateTokenPublic(token, address(msg.sender));
-            }
-            int256 responseCode = tokenService.transferTokenPublic(
-                address(stakingToken),
-                msg.sender,
-                address(this),
-                int64(uint64(_amount))
-            );
-            require(
-                responseCode == HederaResponseCodes.SUCCESS,
-                "Vault: Add stake failed when contributor does not exist."
-            );
-            userContribution[msg.sender].shares = _amount;
-            userContribution[msg.sender].exist = true;
-            userContribution[msg.sender].lockTimeStart = block.timestamp;
-            totalTokens += _amount;
-            return block.timestamp;
+        require(_amount != 0, "Please provide amount");
+        if (!userStakedTokenContribution[msg.sender].exist) {
+            _setUpStaker(msg.sender);
+            return _updateStakeContribution(msg.sender, _amount);
         } else {
             claimAllReward(0);
-            int256 responseCode = tokenService.transferTokenPublic(
-                address(stakingToken),
-                msg.sender,
-                address(this),
-                int64(uint64(_amount))
-            );
-            require(
-                responseCode == HederaResponseCodes.SUCCESS,
-                "Vault: Add stake failed when contributor exist."
-            );
-            userContribution[msg.sender].shares += _amount;
-            userContribution[msg.sender].lockTimeStart = block.timestamp;
-            totalTokens += _amount;
+            return _updateStakeContribution(msg.sender, _amount);
         }
     }
 
-    function addReward(address _token, uint256 _amount) internal onlyOwner {
-        require(totalTokens != 0, "No token staked yet");
+    function _setUpStaker(address user) private {
+        for (uint256 i; i < rewardTokens.length; i++) {
+            address token = rewardTokens[i];
+            userStakedTokenContribution[user].lastClaimedAmount[
+                    token
+                ] = rewards[token].amount;
+            tokenService.associateTokenPublic(token, address(user));
+        }
+    }
+
+    function _updateStakeContribution(address user, uint256 amount)
+        private
+        returns (uint256 timeStamp)
+    {
+        int256 responseCode = tokenService.transferTokenPublic(
+            address(stakingToken),
+            user,
+            address(this),
+            int64(uint64(amount))
+        );
+        require(
+            responseCode == HederaResponseCodes.SUCCESS,
+            "Vault: Add stake failed."
+        );
+        userStakedTokenContribution[user].shares += amount;
+        userStakedTokenContribution[user].exist = true;
+        userStakedTokenContribution[user].lockTimeStart = block.timestamp;
+        stakingTokenTotalAmount += amount;
+        return block.timestamp;
+    }
+
+    function addReward(address _token, uint256 _amount) public onlyOwner {
+        require(_amount != 0, "Please provide amount");
+        require(stakingTokenTotalAmount != 0, "No token staked yet");
         uint256 perShareRewards;
-        perShareRewards = _amount.div(totalTokens);
-        if (!rewardsAddress[_token].exist) {
-            tokenAddress.push(_token);
-            rewardsAddress[_token].exist = true;
-            rewardsAddress[_token].amount = perShareRewards;
+        perShareRewards = _amount.div(stakingTokenTotalAmount);
+        if (!rewards[_token].exist) {
+            rewardTokens.push(_token);
+            rewards[_token].exist = true;
+            rewards[_token].amount = perShareRewards;
             tokenService.associateTokenPublic(_token, address(this));
             int256 responseCode = tokenService.transferTokenPublic(
                 address(_token),
@@ -122,7 +120,7 @@ contract Vault is HederaResponseCodes, Initializable {
                 "Vault: Add reward failed on token exist."
             );
         } else {
-            rewardsAddress[_token].amount += perShareRewards;
+            rewards[_token].amount += perShareRewards;
             int256 responseCode = tokenService.transferTokenPublic(
                 address(_token),
                 address(owner),
@@ -133,15 +131,6 @@ contract Vault is HederaResponseCodes, Initializable {
                 responseCode == HederaResponseCodes.SUCCESS,
                 "Vault: Add reward failed on token not exist."
             );
-        }
-    }
-
-    function addToken(address _token, uint256 _amount) public {
-        require(_amount != 0, "Please provide amount");
-        if (_token == address(stakingToken)) {
-            addStakeAccount(_amount);
-        } else {
-            addReward(_token, _amount);
         }
     }
 
@@ -160,8 +149,8 @@ contract Vault is HederaResponseCodes, Initializable {
             "Withdraw failed."
         );
 
-        userContribution[msg.sender].shares -= _amount;
-        totalTokens -= _amount;
+        userStakedTokenContribution[msg.sender].shares -= _amount;
+        stakingTokenTotalAmount -= _amount;
     }
 
     function unlock(uint256 _startPosition, uint256 _amount)
@@ -173,12 +162,12 @@ contract Vault is HederaResponseCodes, Initializable {
         )
     {
         if (
-            (userContribution[msg.sender].lockTimeStart + lockPeriod) <
-            block.timestamp
+            (userStakedTokenContribution[msg.sender].lockTimeStart +
+                lockPeriod) < block.timestamp
         ) {
             return (
                 block.timestamp,
-                userContribution[msg.sender].lockTimeStart,
+                userStakedTokenContribution[msg.sender].lockTimeStart,
                 lockPeriod
             );
         } else {
@@ -194,46 +183,13 @@ contract Vault is HederaResponseCodes, Initializable {
     {
         for (
             uint256 i = _startPosition;
-            i < tokenAddress.length && i < _startPosition + 10;
+            i < rewardTokens.length && i < _startPosition + 10;
             i++
         ) {
-            uint256 reward;
-            address token = tokenAddress[i];
-            if (userContribution[msg.sender].lastClaimedAmount[token] == 0) {
-                tokenService.associateTokenPublic(token, address(msg.sender));
-            }
-            reward = (rewardsAddress[token].amount -
-                userContribution[msg.sender].lastClaimedAmount[token]).mul(
-                    userContribution[msg.sender].shares
-                );
-            userContribution[msg.sender].lastClaimedAmount[
-                token
-            ] = rewardsAddress[token].amount;
-
-            int256 responseCode = tokenService.transferTokenPublic(
-                address(token),
-                address(this),
-                address(msg.sender),
-                int64(uint64(reward))
-            );
-            require(
-                responseCode == HederaResponseCodes.SUCCESS,
-                "Claim all reward failed."
-            );
+            address token = rewardTokens[i];
+            _claimRewardForToken(token);
         }
-        return (_startPosition, tokenAddress.length);
-    }
-
-    function getLockedAmount() public view returns (uint256) {
-        return userContribution[msg.sender].shares;
-    }
-
-    function getTotalVolume() public view returns (uint256) {
-        return totalTokens;
-    }
-
-    function getLockPeriod() public view returns (uint256) {
-        return lockPeriod;
+        return (_startPosition, rewardTokens.length);
     }
 
     function claimSpecificReward(address[] memory _token)
@@ -243,28 +199,47 @@ contract Vault is HederaResponseCodes, Initializable {
         for (uint256 i; i < _token.length; i++) {
             uint256 reward;
             address token = _token[i];
-            if (userContribution[msg.sender].lastClaimedAmount[token] == 0) {
-                tokenService.associateTokenPublic(token, address(msg.sender));
-            }
-            reward = (rewardsAddress[token].amount -
-                userContribution[msg.sender].lastClaimedAmount[token]).mul(
-                    userContribution[msg.sender].shares
-                );
-            userContribution[msg.sender].lastClaimedAmount[
-                token
-            ] = rewardsAddress[token].amount;
-
-            int256 responseCode = tokenService.transferTokenPublic(
-                address(token),
-                address(this),
-                address(msg.sender),
-                int64(uint64(reward))
-            );
-            require(
-                responseCode == HederaResponseCodes.SUCCESS,
-                "Claim specific reward failed."
-            );
+            _claimRewardForToken(token);
         }
         return _token.length;
+    }
+
+    function _claimRewardForToken(address token) private {
+        uint256 reward;
+        if (
+            userStakedTokenContribution[msg.sender].lastClaimedAmount[token] ==
+            0
+        ) {
+            tokenService.associateTokenPublic(token, address(msg.sender));
+        }
+        reward = (rewards[token].amount -
+            userStakedTokenContribution[msg.sender].lastClaimedAmount[token])
+            .mul(userStakedTokenContribution[msg.sender].shares);
+        userStakedTokenContribution[msg.sender].lastClaimedAmount[
+            token
+        ] = rewards[token].amount;
+
+        int256 responseCode = tokenService.transferTokenPublic(
+            address(token),
+            address(this),
+            address(msg.sender),
+            int64(uint64(reward))
+        );
+        require(
+            responseCode == HederaResponseCodes.SUCCESS,
+            "Claim reward failed."
+        );
+    }
+
+    function getLockedAmount() public view returns (uint256) {
+        return userStakedTokenContribution[msg.sender].shares;
+    }
+
+    function getTotalVolume() public view returns (uint256) {
+        return stakingTokenTotalAmount;
+    }
+
+    function getLockPeriod() public view returns (uint256) {
+        return lockPeriod;
     }
 }
