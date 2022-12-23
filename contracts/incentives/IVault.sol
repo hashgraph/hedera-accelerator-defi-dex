@@ -4,7 +4,10 @@ pragma solidity ^0.8;
 
 interface IVault {
 
-    function addToken(address _token, uint _amount) external;
+    function addReward(address _token, uint256 _amount, address _fromAccount) external;
+    function addStakeAccount(uint256 _amount)
+        external
+        returns (uint256 timeStamp);
     function getTotalVolume() external view returns(uint);
     function getLockPeriod() external view returns(uint);
 }
