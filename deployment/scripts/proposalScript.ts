@@ -13,17 +13,17 @@ export async function main() {
     throw Error("Proposal contract id missing.");
   }
   const events = await eventReader(contractId);
-  const proposalsExecuted = events.get("ProposalExecuted") ?? [];
-  const proposalsCanceled = events.get("ProposalCanceled") ?? [];
-  const proposalsCreated = events.get("ProposalCreated") ?? [];
-  const proposalsActive = removeSubset(proposalsCreated, [
-    ...proposalsExecuted,
-    ...proposalsCanceled,
+  const executedProposals = events.get("ProposalExecuted") ?? [];
+  const cancelledProposals = events.get("ProposalCanceled") ?? [];
+  const createdProposals = events.get("ProposalCreated") ?? [];
+  const activeProposals = removeSubset(createdProposals, [
+    ...executedProposals,
+    ...cancelledProposals,
   ]);
-  if (proposalsActive.length <= 0) {
+  if (activeProposals.length <= 0) {
     console.log("- No active proposal.");
   } else {
-    await executeProposals(proposalsActive);
+    await executeProposals(activeProposals);
   }
 }
 

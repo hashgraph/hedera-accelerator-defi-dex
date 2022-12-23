@@ -12,7 +12,7 @@ export async function main(_contractId: string? = null) {
   const contractId =
     _contractId ?? process.env.PROPOSAL_CONTRACT_ID ?? undefined;
   let contract: DeployedContract;
-  if (contractId !== undefined) {
+  if (contractId) {
     contract = contractService.getContractWithProxyById(contractId);
   } else {
     const contractName = await helper.prompt(
