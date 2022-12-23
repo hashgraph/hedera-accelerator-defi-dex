@@ -5,8 +5,14 @@
     "strict": true,
     "esModuleInterop": true,
     "outDir": "dist",
-    "declaration": true
+    "declaration": true,
+    "experimentalDecorators":true,
+    "allowJs": true,
+    "emitDecoratorMetadata": true 
   },
   "include": ["./scripts", "./test", "./typechain"],
-  "files": ["./hardhat.config.ts"]
+  "files": ["./hardhat.config.ts"],
+  
+  
+
 }

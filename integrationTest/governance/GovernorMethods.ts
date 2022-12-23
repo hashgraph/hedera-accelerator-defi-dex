@@ -173,22 +173,17 @@ export default class GovernorMethods {
     const state = record.contractFunctionResult!.getInt256(0);
 
     console.log(`state tx status ${receipt.status}, state ${state} `);
+    return state;
   };
 
   public cancelProposal = async (
-    targets: Array<string>,
-    ethFees: Array<number>,
-    calls: Array<Uint8Array>,
     description: string,
     contractId: string | ContractId
   ) => {
     console.log(`\nCancel proposal `);
 
-    const contractFunctionParameters = new ContractFunctionParameters()
-      .addAddressArray(targets)
-      .addUint256Array(ethFees)
-      .addBytesArray(calls)
-      .addString(description);
+    const contractFunctionParameters =
+      new ContractFunctionParameters().addString(description);
 
     const tx = await new ContractExecuteTransaction()
       .setContractId(contractId)
@@ -239,5 +234,22 @@ export default class GovernorMethods {
         0
       )}`
     );
+    return status.toString() === "SUCCESS";
+  };
+
+  public claimGODToken = async (
+    proposalId: BigNumber,
+    contractId: string | ContractId
+  ) => {
+    console.log(`\nExecuting claimGODToken flow`);
+    const args = new ContractFunctionParameters().addUint256(proposalId);
+    const txn = await new ContractExecuteTransaction()
+      .setContractId(contractId)
+      .setFunction("claimGODToken", args)
+      .setGas(500000)
+      .execute(client);
+
+    const receipt = await txn.getReceipt(client);
+    console.log(`claimGODToken tx status ${receipt.status}`);
   };
 }

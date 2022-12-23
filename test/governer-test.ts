@@ -7,6 +7,7 @@ import { ethers, upgrades } from "hardhat";
 import { Contract } from "ethers";
 import { ERC20Mock } from "../typechain";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 
 describe("Governor Tests", function () {
   const zeroAddress = "0x1111111000000000000000000000000000000000";
@@ -254,6 +255,7 @@ describe("Governor Tests", function () {
       expect(state).to.be.equals(4);
 
       await instance.cancelProposal(desc);
+      await instance.claimGODToken(proposalId);
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
     });
 
@@ -880,6 +882,74 @@ describe("Governor Tests", function () {
       );
       expect(info[0]).to.be.equals(title);
       expect(info[1]).to.be.equals(link);
+    });
+
+    it("Verify claimGodToken should be reverted when proposal id does not exist", async function () {
+      const { governorTransferTokenInstance, tokenCont, signers } =
+        await loadFixture(deployFixture);
+      await getTransferTokenProposalId(
+        governorTransferTokenInstance,
+        signers,
+        tokenCont.address,
+        5
+      );
+
+      await expect(
+        governorTransferTokenInstance.claimGODToken(1)
+      ).to.revertedWith("Proposal not found");
+    });
+
+    it("Verify claimGodToken should emit an event", async function () {
+      const { governorTransferTokenInstance, tokenCont, signers } =
+        await loadFixture(deployFixture);
+      const proposalId = await getTransferTokenProposalId(
+        governorTransferTokenInstance,
+        signers,
+        tokenCont.address,
+        5
+      );
+
+      await governorTransferTokenInstance.castVote(proposalId, 1);
+      await mineNBlocks(15);
+      await expect(governorTransferTokenInstance.claimGODToken(proposalId))
+        .to.emit(governorTransferTokenInstance, "GodTokenClaimed")
+        .withArgs(proposalId, anyValue, anyValue);
+    });
+
+    it("Verify claimGodToken should be reverted when proposal is in pending / active state", async function () {
+      const { governorTransferTokenInstance, tokenCont, signers } =
+        await loadFixture(deployFixture);
+      const proposalId = await getTransferTokenProposalId(
+        governorTransferTokenInstance,
+        signers,
+        tokenCont.address,
+        5
+      );
+
+      await expect(
+        governorTransferTokenInstance.claimGODToken(proposalId)
+      ).to.revertedWith("Can't claim token");
+    });
+
+    it("Verify claimGodToken should emit same event for subsequent claim call", async function () {
+      const { governorTransferTokenInstance, tokenCont, signers } =
+        await loadFixture(deployFixture);
+      const proposalId = await getTransferTokenProposalId(
+        governorTransferTokenInstance,
+        signers,
+        tokenCont.address,
+        5
+      );
+
+      await governorTransferTokenInstance.castVote(proposalId, 1);
+      await mineNBlocks(15);
+      await expect(governorTransferTokenInstance.claimGODToken(proposalId))
+        .to.emit(governorTransferTokenInstance, "GodTokenClaimed")
+        .withArgs(proposalId, anyValue, anyValue);
+
+      await expect(
+        governorTransferTokenInstance.claimGODToken(proposalId)
+      ).to.revertedWith("Token already claimed");
     });
 
     it("Verify GovernorTransferToken should reverted for invalid propsal id", async function () {

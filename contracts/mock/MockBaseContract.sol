@@ -23,8 +23,11 @@ contract MockBaseHTS is IBaseHTS {
         addLiquidityLPTransferFail,
         swapBFailedSendingB,
         lpTokenCreationFailed,
-        failedTransferToken
-    }
+        failedTransferToken,
+        vaultAddRewardFailExistCase,
+        vaultAddRewardFailNotExistCase,
+        vaultAddStakeFailExistCase
+    }// 17
 
     bool internal isSuccess;
     bool internal tokenTest;
@@ -91,6 +94,13 @@ contract MockBaseHTS is IBaseHTS {
         if (failType == FailTransactionFor.failedTransferToken) {
             return 1;
         }
+        if (failType == FailTransactionFor.vaultAddRewardFailExistCase) {
+            return 1;
+        }
+        if (failType == FailTransactionFor.vaultAddStakeFailExistCase) {
+            return 2;
+        }
+        
         return 0;
     }
 

@@ -13,6 +13,7 @@ export class ContractService {
   public governorTextContractName = "governortextproposal";
   public governorTTContractName = "governortransfertoken";
   public governorUpgradeContract = "governorupgrade";
+  public vaultContract = "vault";
 
   private contractRecordFile = "./deployment/state/contracts.json";
   static DEV_CONTRACTS_PATH = "./deployment/state/contracts.json";
@@ -151,6 +152,17 @@ export class ContractService {
         contract.transparentProxyId != null
     );
     return matchingProxyContracts.slice(-count);
+  };
+
+  public getContractWithProxyById = (contractId: string): DeployedContract => {
+    const contracts: Array<DeployedContract> = this.getAllContracts();
+    const matchingProxyContracts = contracts.filter(
+      (contract: DeployedContract) =>
+        contract.transparentProxyAddress != null &&
+        contract.transparentProxyId != null &&
+        contract.transparentProxyId === contractId
+    );
+    return matchingProxyContracts[matchingProxyContracts.length - 1];
   };
 
   public addDeployed = (contract: DeployedContract) => {
