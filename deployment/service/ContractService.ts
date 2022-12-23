@@ -154,6 +154,17 @@ export class ContractService {
     return matchingProxyContracts.slice(-count);
   };
 
+  public getContractWithProxyById = (contractId: string): DeployedContract => {
+    const contracts: Array<DeployedContract> = this.getAllContracts();
+    const matchingProxyContracts = contracts.filter(
+      (contract: DeployedContract) =>
+        contract.transparentProxyAddress != null &&
+        contract.transparentProxyId != null &&
+        contract.transparentProxyId === contractId
+    );
+    return matchingProxyContracts[matchingProxyContracts.length - 1];
+  };
+
   public addDeployed = (contract: DeployedContract) => {
     const contracts: [DeployedContract] = this.readFileContent();
     contracts.push(contract);
