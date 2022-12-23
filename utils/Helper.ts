@@ -1,6 +1,7 @@
 import { getAllFilesSync } from "get-all-files";
 import platformPath from "path";
 import { ContractFunctionResult } from "@hashgraph/sdk";
+import inquirer from "inquirer";
 
 export class Helper {
   static extractFileName(path: string): string {
@@ -41,4 +42,17 @@ export class Helper {
     }
     return result;
   };
+
+  async prompt(inputs: string[], userMessage: string) {
+    return (
+      await inquirer.prompt([
+        {
+          type: "rawlist",
+          name: "option",
+          message: userMessage,
+          choices: [...inputs, "exit"],
+        },
+      ])
+    ).option;
+  }
 }

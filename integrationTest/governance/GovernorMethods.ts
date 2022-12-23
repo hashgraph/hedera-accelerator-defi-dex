@@ -173,22 +173,17 @@ export default class GovernorMethods {
     const state = record.contractFunctionResult!.getInt256(0);
 
     console.log(`state tx status ${receipt.status}, state ${state} `);
+    return state;
   };
 
   public cancelProposal = async (
-    targets: Array<string>,
-    ethFees: Array<number>,
-    calls: Array<Uint8Array>,
     description: string,
     contractId: string | ContractId
   ) => {
     console.log(`\nCancel proposal `);
 
-    const contractFunctionParameters = new ContractFunctionParameters()
-      .addAddressArray(targets)
-      .addUint256Array(ethFees)
-      .addBytesArray(calls)
-      .addString(description);
+    const contractFunctionParameters =
+      new ContractFunctionParameters().addString(description);
 
     const tx = await new ContractExecuteTransaction()
       .setContractId(contractId)
@@ -239,6 +234,7 @@ export default class GovernorMethods {
         0
       )}`
     );
+    return status.toString() === "SUCCESS";
   };
 
   public claimGODToken = async (
