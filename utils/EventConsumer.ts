@@ -95,23 +95,23 @@ export class EventConsumer {
   }
 
   private decodeLog(logs: any[]) {
-    const eventsResult = new Map<string, any[]>();
+    const eventsMap = new Map<string, any[]>();
     for (const log of logs) {
       try {
         const data = log.data;
         const topics = log.topics;
         const eventAbi = this.eventSignatureToNameMap.get(topics[0]);
         if (eventAbi) {
-          const decodedLog = this.web3.eth.abi.decodeLog(
+          const event = this.web3.eth.abi.decodeLog(
             eventAbi.inputs,
             data,
             eventAbi.anonymous === true ? topics.splice(1) : topics
           );
-          const items = eventsResult.get(eventAbi.name) ?? [];
-          eventsResult.set(eventAbi.name, [...items, decodedLog]);
+          const events = eventsMap.get(eventAbi.name) ?? [];
+          eventsMap.set(eventAbi.name, [...events, event]);
         }
       } catch (e: any) {}
     }
-    return eventsResult;
+    return eventsMap;
   }
 }
