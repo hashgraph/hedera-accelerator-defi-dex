@@ -144,15 +144,16 @@ export class PairTestSteps {
     );
   }
 
-  @then(/User verfies quantity of tokenA and tokenB left in pool is correct/)
-  public async verifyTokensLeftInPoolAfterRemovingLiquidity(): Promise<void> {
-    let tokenAProd: BigNumber = lpTokenQty.multipliedBy(tokensBefore[0]);
-    let tokenAQuantity: BigNumber = tokenAProd.dividedBy(lpTokensInPool);
-    let tokenBProd: BigNumber = lpTokenQty.multipliedBy(tokensBefore[1]);
-    let tokenBQuantity: BigNumber = tokenBProd.dividedBy(lpTokensInPool);
+  @then(
+    /User verfies (\d*) units of tokenA and (\d*) units of tokenB are left in pool/
+  )
+  public async verifyTokensLeftInPoolAfterRemovingLiquidity(
+    tokenAQuantity: Number,
+    tokenBQuantity: Number
+  ): Promise<void> {
     tokensAfter = await pair.pairCurrentPosition(contractProxyId, client);
-    expect(tokenAQuantity).to.eql(tokensAfter[0]);
-    expect(tokenBQuantity).to.eql(tokensAfter[1]);
+    expect(Number(tokenAQuantity)).to.eql(Number(tokensAfter[0]));
+    expect(Number(tokenBQuantity)).to.equal(Number(tokensAfter[1]));
   }
 
   @given(/tokenA and tokenB are present in pool/, undefined, 30000)
@@ -178,13 +179,16 @@ export class PairTestSteps {
   }
 
   @then(
-    /tokenA quantity is increased in pool and tokenB quantity is decreased/,
+    /increased tokenA quantity is (\d*) and decreased tokenB quantity is (\d*) in pool/,
     undefined,
     30000
   )
-  public async verifyTokenAQtyIncreasedAndTokenBQtyDecreased(): Promise<void> {
+  public async verifyTokenAQtyIncreasedAndTokenBQtyDecreased(
+    tokenAQuantity: BigNumber,
+    tokenBQuantity: BigNumber
+  ): Promise<void> {
     tokensAfter = await pair.pairCurrentPosition(contractProxyId, client);
-    expect(tokensAfter[0].isGreaterThan(tokensBefore[0])).to.be.true;
-    expect(tokensAfter[1].isLessThan(tokensBefore[1])).to.be.true;
+    expect(Number(tokenAQuantity)).to.eql(Number(tokensAfter[0]));
+    expect(Number(tokenBQuantity)).to.equal(Number(tokensAfter[1]));
   }
 }
