@@ -32,7 +32,11 @@ let tokensBefore: BigNumber[];
 let tokensAfter: BigNumber[];
 let lpTokensInPool: BigNumber;
 let lpTokenQty: BigNumber;
-
+let sportPriceTokenA: BigNumber;
+let varaintVal: BigNumber;
+let tokenAQty: BigNumber;
+let slippageOutGivenIn: BigNumber;
+let slippageInGivenOut: BigNumber;
 @binding()
 export class PairTestSteps {
   @given(
@@ -145,7 +149,9 @@ export class PairTestSteps {
   }
 
   @then(
-    /User verifies (\d*) units of tokenA and (\d*) units of tokenB are left in pool/
+    /User verifies (\d*) units of tokenA and (\d*) units of tokenB are left in pool/,
+    undefined,
+    30000
   )
   public async verifyTokensLeftInPoolAfterRemovingLiquidity(
     tokenAQuantity: Number,
@@ -202,5 +208,71 @@ export class PairTestSteps {
     expect(Number(tokenBQuantity)).to.eql(
       Number(Number(tokensAfter[1].dividedBy(withPrecision)).toFixed())
     );
+  }
+
+  @when(/User fetch spot price for tokenA/, undefined, 30000)
+  public async fetchSpotPriceForTokenA() {
+    sportPriceTokenA = await pair.spotPrice(contractProxyId, client);
+  }
+
+  @then(/Expected spot price for tokenA should be (\d*)/, undefined, 30000)
+  public async verifySportPriceISNotZero(expectedSpotPrice: string) {
+    expect(Number(sportPriceTokenA)).to.eql(Number(expectedSpotPrice));
+  }
+
+  @when(/User gives (\d*) units of tokenB to the pool/, undefined, 30000)
+  public async calculateTokenAQtyForGivenTokenBQty(tokenBCount: number) {
+    let precision = await pair.getPrecisionValue(contractProxyId, client);
+    const tokenBQty = await pair.withPrecision(tokenBCount, precision);
+    tokenAQty = await pair.getInGivenOut(contractProxyId, tokenBQty, client);
+  }
+
+  @then(/Expected tokenA quantity should be (\d*)/, undefined, 30000)
+  public async verifyTokenAQty(expectedTokenAQty: string) {
+    let precision = await pair.getPrecisionValue(contractProxyId, client);
+    let withPrecision = pair.withPrecision(1, precision);
+    expect(Number(expectedTokenAQty)).to.eql(
+      Number(Number(tokenAQty.dividedBy(withPrecision)).toFixed())
+    );
+  }
+
+  @when(
+    /User gives (\d*) units of tokenA for calculating slippage out/,
+    undefined,
+    30000
+  )
+  public async calculateSlippageOut(tokenACount: number) {
+    let precision = await pair.getPrecisionValue(contractProxyId, client);
+    const tokenAQty = await pair.withPrecision(tokenACount, precision);
+    slippageOutGivenIn = await pair.slippageOutGivenIn(
+      contractProxyId,
+      tokenAQty,
+      client
+    );
+  }
+
+  @then(/Expected slippage out value should be (\d*)/, undefined, 30000)
+  public async verifySlippageOut(expectedSlippageOut: string) {
+    expect(Number(slippageOutGivenIn)).to.eql(Number(expectedSlippageOut));
+  }
+
+  @when(
+    /User gives (\d*) units of tokenB for calculating slippage in/,
+    undefined,
+    30000
+  )
+  public async calculateSlippageIn(tokenBCount: number) {
+    let precision = await pair.getPrecisionValue(contractProxyId, client);
+    const tokenBQty = await pair.withPrecision(tokenBCount, precision);
+    slippageInGivenOut = await pair.slippageInGivenOut(
+      contractProxyId,
+      tokenBQty,
+      client
+    );
+  }
+
+  @then(/Expected slippage in value should be (\d*)/, undefined, 30000)
+  public async verifySlippageIn(expectedSlippageIn: string) {
+    expect(Number(slippageInGivenOut)).to.eql(Number(expectedSlippageIn));
   }
 }
