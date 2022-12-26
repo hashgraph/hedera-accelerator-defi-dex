@@ -145,15 +145,21 @@ export class PairTestSteps {
   }
 
   @then(
-    /User verfies (\d*) units of tokenA and (\d*) units of tokenB are left in pool/
+    /User verifies (\d*) units of tokenA and (\d*) units of tokenB are left in pool/
   )
   public async verifyTokensLeftInPoolAfterRemovingLiquidity(
     tokenAQuantity: Number,
     tokenBQuantity: Number
   ): Promise<void> {
     tokensAfter = await pair.pairCurrentPosition(contractProxyId, client);
-    expect(Number(tokenAQuantity)).to.eql(Number(tokensAfter[0]));
-    expect(Number(tokenBQuantity)).to.equal(Number(tokensAfter[1]));
+    let precision = await pair.getPrecisionValue(contractProxyId, client);
+    let withPrecision = pair.withPrecision(1, precision);
+    expect(Number(tokenAQuantity)).to.eql(
+      Number(Number(tokensAfter[0].dividedBy(withPrecision)).toFixed())
+    );
+    expect(Number(tokenBQuantity)).to.eql(
+      Number(Number(tokensAfter[1].dividedBy(withPrecision)).toFixed())
+    );
   }
 
   @given(/tokenA and tokenB are present in pool/, undefined, 30000)
@@ -188,7 +194,13 @@ export class PairTestSteps {
     tokenBQuantity: BigNumber
   ): Promise<void> {
     tokensAfter = await pair.pairCurrentPosition(contractProxyId, client);
-    expect(Number(tokenAQuantity)).to.eql(Number(tokensAfter[0]));
-    expect(Number(tokenBQuantity)).to.equal(Number(tokensAfter[1]));
+    let precision = await pair.getPrecisionValue(contractProxyId, client);
+    let withPrecision = pair.withPrecision(1, precision);
+    expect(Number(tokenAQuantity)).to.eql(
+      Number(Number(tokensAfter[0].dividedBy(withPrecision)).toFixed())
+    );
+    expect(Number(tokenBQuantity)).to.eql(
+      Number(Number(tokensAfter[1].dividedBy(withPrecision)).toFixed())
+    );
   }
 }

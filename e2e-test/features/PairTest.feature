@@ -10,12 +10,12 @@ Feature: Pair contract e2e test
     Scenario: Verify token balance after removing liquidity
         Given User gets the count of lptokens from  pool
         When User returns 5 units of lptoken
-        Then User verfies 2052223346 units of tokenA and 2247673189 units of tokenB are left in pool
+        Then User verifies 205 units of tokenA and 224 units of tokenB are left in pool
     
     Scenario: Verify swapping tokenA increase the tokenA quantity and decreases tokenB quantity
         Given tokenA and tokenB are present in pool
         When User swap 1 unit of tokenA
-        Then increased tokenA quantity is 2061973346 and decreased tokenB quantity is 2237310811 in pool
+        Then increased tokenA quantity is 206 and decreased tokenB quantity is 223 in pool
 
         
       
