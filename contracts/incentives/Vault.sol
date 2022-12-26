@@ -48,17 +48,17 @@ contract Vault is HederaResponseCodes, Initializable {
     }
 
     //we need to set the amount of each reward address to the lastClaimed amount of the user
-    function addStakeAccount(address account, uint256 amount)
+    function addStake(uint256 amount)
         external
         returns (uint256 timeStamp)
     {
         require(amount != 0, "Please provide amount");
-        if (!userStakedTokenContribution[account].exist) {
-            _setUpStaker(account);
-            return _updateStakeContribution(account, amount);
+        if (!userStakedTokenContribution[msg.sender].exist) {
+            _setUpStaker(msg.sender);
+            return _updateStakeContribution(msg.sender, amount);
         } else {
-            claimAllReward(0, account);
-            return _updateStakeContribution(account, amount);
+            claimAllReward(0, msg.sender);
+            return _updateStakeContribution(msg.sender, amount);
         }
     }
 

@@ -14,6 +14,7 @@ const clientManagement = new ClientManagement();
 const contractService = new ContractService();
 
 let client = clientManagement.createOperatorClient();
+let treasureClient = clientManagement.createClient();
 
 const { treasureId, treasureKey } = clientManagement.getTreasure();
 const tokenA = TokenId.fromString("0.0.48289687");
@@ -79,19 +80,17 @@ const vaultAddStakingToken = async (
     .setContractId(contractId)
     .setGas(9000000)
     .setFunction(
-      "addStakeAccount",
-      new ContractFunctionParameters()
-        .addAddress(treasureId.toSolidityAddress())
-        .addUint256(withPrecision(stakeAmount))
+      "addStake",
+      new ContractFunctionParameters().addUint256(withPrecision(stakeAmount))
     )
     .setMaxTransactionFee(new Hbar(100))
-    .freezeWith(client)
+    .freezeWith(treasureClient)
     .sign(treasureKey);
 
   const vaultAddStakingTokenTxRes = await vaultAddStakingTokenTx.execute(
-    client
+    treasureClient
   );
-  const receipt = await vaultAddStakingTokenTxRes.getReceipt(client);
+  const receipt = await vaultAddStakingTokenTxRes.getReceipt(treasureClient);
   console.log(`vaultAddStakingToken: ${receipt.status}`);
 };
 

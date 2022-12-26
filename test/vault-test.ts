@@ -78,14 +78,12 @@ describe("Vault Tests", function () {
 
   it("Add staking token", async function () {
     const { vaultContract, signers } = await loadFixture(deployFixture);
-    await vaultContract
-      .connect(signers[1])
-      .addStakeAccount(signers[1].address, 10);
+    await vaultContract.connect(signers[1]).addStake(10);
     const totalValue = await vaultContract.getTotalVolume();
     expect(totalValue).equals(10);
-    await expect(
-      vaultContract.connect(signers[1]).addStakeAccount(signers[1].address, 0)
-    ).to.revertedWith("Please provide amount");
+    await expect(vaultContract.connect(signers[1]).addStake(0)).to.revertedWith(
+      "Please provide amount"
+    );
   });
 
   it("Add reward token", async function () {
@@ -101,9 +99,7 @@ describe("Vault Tests", function () {
     const { vaultContract, signers, mockBaseHTS } = await loadFixture(
       deployFailFixture
     );
-    await vaultContract
-      .connect(signers[1])
-      .addStakeAccount(signers[1].address, 10);
+    await vaultContract.connect(signers[1]).addStake(10);
     mockBaseHTS.setFailType(15); //1 pass transaction
     await expect(
       vaultContract
@@ -128,23 +124,21 @@ describe("Vault Tests", function () {
     );
     mockBaseHTS.setFailType(16); // 0 pass transaction
     await expect(
-      vaultContract.connect(signers[1]).addStakeAccount(signers[1].address, 10)
+      vaultContract.connect(signers[1]).addStake(10)
     ).to.revertedWith("Vault: Add stake failed.");
 
     mockBaseHTS.setFailType(0); //multiple pass transaction
-    await vaultContract
-      .connect(signers[1])
-      .addStakeAccount(signers[1].address, 10);
+    await vaultContract.connect(signers[1]).addStake(10);
     await vaultContract
       .connect(signers[0])
       .addReward(rewardToken1, 10, signers[0].address);
     mockBaseHTS.setFailType(15); //1 pass transaction
     await expect(
-      vaultContract.connect(signers[1]).addStakeAccount(signers[1].address, 10)
+      vaultContract.connect(signers[1]).addStake(10)
     ).to.revertedWith("Claim reward failed.");
     mockBaseHTS.setFailType(17); //2 pass transaction
     await expect(
-      vaultContract.connect(signers[1]).addStakeAccount(signers[1].address, 10)
+      vaultContract.connect(signers[1]).addStake(10)
     ).to.revertedWith("Vault: Add stake failed.");
   });
 
@@ -155,9 +149,7 @@ describe("Vault Tests", function () {
     await expect(
       vaultContract.connect(signers[1]).withdraw(signers[1].address, 0, 0)
     ).to.revertedWith("Please provide amount");
-    await vaultContract
-      .connect(signers[1])
-      .addStakeAccount(signers[1].address, 10);
+    await vaultContract.connect(signers[1]).addStake(10);
     await vaultContract
       .connect(signers[0])
       .addReward(rewardToken1, 10, signers[0].address);
@@ -174,9 +166,7 @@ describe("Vault Tests", function () {
     await expect(
       vaultContract.connect(signers[1]).withdraw(signers[1].address, 0, 0)
     ).to.revertedWith("Please provide amount");
-    await vaultContract
-      .connect(signers[1])
-      .addStakeAccount(signers[1].address, 10);
+    await vaultContract.connect(signers[1]).addStake(10);
     await vaultContract
       .connect(signers[0])
       .addReward(rewardToken1, 10, signers[0].address);
@@ -190,9 +180,7 @@ describe("Vault Tests", function () {
 
   it("Get staked amount", async function () {
     const { vaultContract, signers } = await loadFixture(deployFixture);
-    await vaultContract
-      .connect(signers[1])
-      .addStakeAccount(signers[1].address, 10);
+    await vaultContract.connect(signers[1]).addStake(10);
     const totalValue = await vaultContract
       .connect(signers[1])
       .getLockedAmount(signers[1].address);
@@ -201,9 +189,7 @@ describe("Vault Tests", function () {
 
   it("Get TVL", async function () {
     const { vaultContract, signers } = await loadFixture(deployFixture);
-    await vaultContract
-      .connect(signers[1])
-      .addStakeAccount(signers[1].address, 10);
+    await vaultContract.connect(signers[1]).addStake(10);
     const totalValue = await vaultContract.getTotalVolume();
     expect(totalValue).equals(10);
   });
@@ -216,9 +202,7 @@ describe("Vault Tests", function () {
 
   it("one people, one type of reward, add reward, withdraw", async function () {
     const { vaultContract, signers } = await loadFixture(deployFixture);
-    await vaultContract
-      .connect(signers[1])
-      .addStakeAccount(signers[1].address, 10);
+    await vaultContract.connect(signers[1]).addStake(10);
     await vaultContract
       .connect(signers[0])
       .addReward(rewardToken1, 10, signers[0].address);
@@ -229,12 +213,8 @@ describe("Vault Tests", function () {
 
   it("two people, two type of reward, one withdraw, add reward", async function () {
     const { vaultContract, signers } = await loadFixture(deployFixture);
-    await vaultContract
-      .connect(signers[1])
-      .addStakeAccount(signers[1].address, 10);
-    await vaultContract
-      .connect(signers[2])
-      .addStakeAccount(signers[2].address, 10);
+    await vaultContract.connect(signers[1]).addStake(10);
+    await vaultContract.connect(signers[2]).addStake(10);
 
     await vaultContract
       .connect(signers[0])
@@ -251,9 +231,7 @@ describe("Vault Tests", function () {
 
   it("one people, one type of reward,  add reward, one withdraw, all claim", async function () {
     const { vaultContract, signers } = await loadFixture(deployFixture);
-    await vaultContract
-      .connect(signers[1])
-      .addStakeAccount(signers[1].address, 10);
+    await vaultContract.connect(signers[1]).addStake(10);
     await vaultContract
       .connect(signers[0])
       .addReward(rewardToken1, 10, signers[0].address);
@@ -268,9 +246,7 @@ describe("Vault Tests", function () {
 
   it("one people, one type of reward,  add reward, one withdraw, claim specific reward", async function () {
     const { vaultContract, signers } = await loadFixture(deployFixture);
-    await vaultContract
-      .connect(signers[1])
-      .addStakeAccount(signers[1].address, 10);
+    await vaultContract.connect(signers[1]).addStake(10);
     await vaultContract
       .connect(signers[0])
       .addReward(rewardToken1, 10, signers[0].address);
