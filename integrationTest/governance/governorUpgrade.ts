@@ -123,7 +123,7 @@ async function propose(description: string, contractId: string | ContractId) {
 async function main() {
   console.log(`\nUsing governor proxy contract id ${contractId}`);
   await governor.initialize(contractId);
-  const description = "Create Upgrade proposal 20";
+  const description = "Create Upgrade proposal 21";
 
   const proposalId = await propose(description, contractId);
   await governor.vote(proposalId, 1, contractId); //1 is for vote.

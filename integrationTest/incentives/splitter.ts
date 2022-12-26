@@ -14,9 +14,15 @@ const clientManagement = new ClientManagement();
 const contractService = new ContractService();
 
 let client = clientManagement.createOperatorClient();
+let treasureClient = clientManagement.createClient();
 
 const { treasureId, treasureKey } = clientManagement.getTreasure();
 const tokenA = TokenId.fromString("0.0.48289687");
+const tokenB = TokenId.fromString("0.0.48289686");
+const tokenC = TokenId.fromString("0.0.48301281");
+const tokenD = TokenId.fromString("0.0.48301282");
+const tokenE = TokenId.fromString("0.0.48301300");
+const tokenF = TokenId.fromString("0.0.48301322");
 
 const contractId = contractService.getContractWithProxy(
   contractService.splitterContractName
@@ -31,6 +37,10 @@ const vaultContractAddresses = contractService
   .map((obj) => {
     return obj.transparentProxyAddress!;
   });
+
+const withPrecision = (value: number): BigNumber => {
+  return new BigNumber(value).multipliedBy(100000000);
+};
 
 const vaultContractIds = contractService
   .getContractsWithProxy(contractService.vaultContractName, 3)
@@ -48,7 +58,10 @@ const vaultInitialize = async (
     .setGas(9000000)
     .setFunction(
       "initialize",
-      new ContractFunctionParameters().addUint256(stakeAmount)
+      new ContractFunctionParameters()
+        .addAddress(tokenF.toSolidityAddress())
+        .addUint256(10) // block time
+        .addAddress(baseService)
     )
     .setMaxTransactionFee(new Hbar(100))
     .freezeWith(client);
@@ -56,6 +69,29 @@ const vaultInitialize = async (
   const vaultInitializeTxRes = await vaultInitializeTx.execute(client);
   const receipt = await vaultInitializeTxRes.getReceipt(client);
   console.log(`vaultInitialize: ${receipt.status}`);
+};
+
+const vaultAddStakingToken = async (
+  contractId: string | ContractId,
+  stakeAmount: number
+) => {
+  console.log(`vaultAddStakingToken ${contractId}`);
+  const vaultAddStakingTokenTx = await new ContractExecuteTransaction()
+    .setContractId(contractId)
+    .setGas(9000000)
+    .setFunction(
+      "addStake",
+      new ContractFunctionParameters().addUint256(withPrecision(stakeAmount))
+    )
+    .setMaxTransactionFee(new Hbar(100))
+    .freezeWith(treasureClient)
+    .sign(treasureKey);
+
+  const vaultAddStakingTokenTxRes = await vaultAddStakingTokenTx.execute(
+    treasureClient
+  );
+  const receipt = await vaultAddStakingTokenTxRes.getReceipt(treasureClient);
+  console.log(`vaultAddStakingToken: ${receipt.status}`);
 };
 
 const initialize = async (contractId: string | ContractId) => {
@@ -103,11 +139,12 @@ const splitTokens = async (contractId: string | ContractId) => {
 async function main() {
   /// Code to be uncommented if new fresh vault deployed
 
-  // const stakeAmounts = [100000000000, 5000000000, 10000000000];
-  // for (let index = 0; index < vaultContractIds.length; index++) {
-  //   const element = vaultContractIds[index];
-  //   await vaultInitialize(element, stakeAmounts[index]);
-  // }
+  const stakeAmounts = [1000, 50, 100];
+  for (let index = 0; index < vaultContractIds.length; index++) {
+    const element = vaultContractIds[index];
+    await vaultInitialize(element, stakeAmounts[index]);
+    await vaultAddStakingToken(element, stakeAmounts[index]);
+  }
   await initialize(contractId);
   await splitTokens(contractId);
 }

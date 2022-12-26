@@ -71,13 +71,8 @@ contract Splitter is ISplitter, HederaResponseCodes, Initializable {
                 amount,
                 totalWeightForAllVaults
             );
-            _tokenService.associateTokenPublic(address(tempVault), token);
-            _tokenService.transferTokenPublic(
-                token,
-                fromAccount,
-                address(tempVault),
-                int256(amountToTransfer)
-            );
+            require(amountToTransfer != 0, "Splitter: Split amount should not be zero.");
+            tempVault.addReward(token, amountToTransfer, fromAccount);
             emit TokenTransferred(tempVault, amountToTransfer);
         }
         return HederaResponseCodes.SUCCESS;
