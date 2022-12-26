@@ -18,8 +18,6 @@ abstract contract GovernorCountingSimpleInternal is
     GovernorCountingSimpleUpgradeable,
     HederaResponseCodes
 {
-    event GodTokenClaimed(uint256 proposalId, address fromUser, address toUser);
-
     struct VotingWeight {
         uint256 weight;
         uint8 support;
@@ -32,7 +30,6 @@ abstract contract GovernorCountingSimpleInternal is
 
     struct ProposalInfo {
         address creator;
-        bool tokenClaimed;
     }
 
     uint256 precision;
@@ -108,7 +105,7 @@ abstract contract GovernorCountingSimpleInternal is
             calldatas,
             description
         );
-        proposalCreators[proposalId] = ProposalInfo(msg.sender, false);
+        proposalCreators[proposalId] = ProposalInfo(msg.sender);
         return proposalId;
     }
 
@@ -153,8 +150,7 @@ abstract contract GovernorCountingSimpleInternal is
         require(creator != address(0), "Proposal not found");
         require(msg.sender == creator, "Only proposer can cancel the proposal");
         proposalId = super._cancel(targets, values, calldatas, descriptionHash);
-        address voter = _msgSender();
-        cleanup(voter);
+        returnGODToken(proposalId);
     }
 
     /**
@@ -231,33 +227,17 @@ abstract contract GovernorCountingSimpleInternal is
         return int256(currentWeight) - int256(existingWeight);
     }
 
-    function claimGODToken(uint256 proposalId) external {
-        ProposalInfo storage proposalInfo = proposalCreators[proposalId];
-        require(proposalInfo.creator != address(0), "Proposal not found");
-        require(!proposalInfo.tokenClaimed, "Token already claimed");
-        ProposalState state = state(proposalId);
-        require(
-            !(state == ProposalState.Pending || state == ProposalState.Active),
-            "Can't claim token"
-        );
-        returnGODToken(proposalId);
-        cleanup(proposalInfo.creator);
-        proposalInfo.tokenClaimed = true;
-    }
-
     /**
      * @dev Internal execution mechanism. Can be overridden to implement different execution mechanism
      */
     function _execute(
-        uint256 /* proposalId */,
+        uint256 proposalId,
         address[] memory,
         uint256[] memory,
         bytes[] memory,
         bytes32 /*descriptionHash*/
     ) internal virtual override {
-        //returnGODToken(proposalId);
-        address voter = _msgSender();
-        cleanup(voter);
+        returnGODToken(proposalId);
     }
 
     function getGODToken() internal {
@@ -284,7 +264,7 @@ abstract contract GovernorCountingSimpleInternal is
         if (responseCode != HederaResponseCodes.SUCCESS) {
             revert("Transfer token failed.");
         }
-        emit GodTokenClaimed(proposalId, address(this), creator);
+        cleanup(creator);
     }
 
     function cleanup(address voter) private {

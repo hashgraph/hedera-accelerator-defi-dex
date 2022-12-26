@@ -236,20 +236,4 @@ export default class GovernorMethods {
     );
     return status.toString() === "SUCCESS";
   };
-
-  public claimGODToken = async (
-    proposalId: BigNumber,
-    contractId: string | ContractId
-  ) => {
-    console.log(`\nExecuting claimGODToken flow`);
-    const args = new ContractFunctionParameters().addUint256(proposalId);
-    const txn = await new ContractExecuteTransaction()
-      .setContractId(contractId)
-      .setFunction("claimGODToken", args)
-      .setGas(500000)
-      .execute(client);
-
-    const receipt = await txn.getReceipt(client);
-    console.log(`claimGODToken tx status ${receipt.status}`);
-  };
 }

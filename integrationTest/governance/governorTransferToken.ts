@@ -100,7 +100,6 @@ async function main() {
   await new Promise((f) => setTimeout(f, 15 * 1000)); //Wait till waiting period is over. It's current deadline as per Governance.
   await governor.state(proposalId, contractId); //4 means succeeded
   await governor.execute(description, contractId);
-  await governor.claimGODToken(proposalId, contractId);
   console.log(`\nDone`);
 }
 
