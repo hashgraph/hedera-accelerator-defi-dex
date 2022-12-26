@@ -17,8 +17,11 @@ dotenv.config();
 const clientManagement = new ClientManagement();
 const contractService = new ContractService();
 
-let client = clientManagement.createOperatorClient();
-const { treasureId, treasureKey } = clientManagement.getTreasure();
+const client = clientManagement.createOperatorClient();
+const { treasureKey } = clientManagement.getTreasure();
+
+const adminClient = clientManagement.createClientAsAdmin();
+const { adminKey } = clientManagement.getAdmin();
 
 const treasurerClient = clientManagement.createClient();
 const htsServiceAddress = contractService.getContract(
@@ -26,6 +29,37 @@ const htsServiceAddress = contractService.getContract(
 ).address;
 
 export default class GovernorMethods {
+  upgradeTo = async (proxyAddress: string, logicAddress: string) => {
+    const args = new ContractFunctionParameters().addAddress(logicAddress);
+    const txn = await new ContractExecuteTransaction()
+      .setContractId(ContractId.fromSolidityAddress(proxyAddress))
+      .setGas(2000000)
+      .setFunction("upgradeTo", args)
+      .freezeWith(adminClient)
+      .sign(adminKey);
+    const txnResponse = await txn.execute(adminClient);
+    const txnReceipt = await txnResponse.getReceipt(adminClient);
+    console.log(`upgradedTo txn status: ${txnReceipt.status}`);
+  };
+
+  getContractAddresses = async (contractId: string, proposalId: BigNumber) => {
+    const args = new ContractFunctionParameters().addUint256(proposalId);
+    const txnResponse = await new ContractExecuteTransaction()
+      .setContractId(contractId)
+      .setGas(500000)
+      .setFunction("getContractAddresses", args)
+      .execute(client);
+    const receipt = await txnResponse.getReceipt(client);
+    const record = await txnResponse.getRecord(client);
+    const proxyAddress = record.contractFunctionResult!.getAddress(0);
+    const logicAddress = record.contractFunctionResult!.getAddress(1);
+    console.log(`getContractAddresses txn status: ${receipt.status}}`);
+    return {
+      proxyAddress,
+      logicAddress,
+    };
+  };
+
   public vote = async (
     proposalId: BigNumber,
     voteId: number,
