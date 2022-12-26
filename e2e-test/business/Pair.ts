@@ -160,4 +160,81 @@ export default class Pair {
     console.log(` Get Precision Value ${precision}`);
     return precision;
   };
+
+  public getAllLPTokenCount = async (
+    contId: string,
+    client: Client,
+    key: PrivateKey,
+    treasureKey: PrivateKey
+  ): Promise<BigNumber> => {
+    console.log(`getAllLPTokenCount`);
+
+    const getAllLPTokenCountTx = await new ContractExecuteTransaction()
+      .setContractId(contId)
+      .setFunction("getAllLPTokenCount")
+      .setGas(9000000)
+      .freezeWith(client)
+      .sign(key);
+
+    const signTx = await getAllLPTokenCountTx.sign(treasureKey);
+
+    const executedTx = await signTx.execute(client);
+    const executedRx = await executedTx.getReceipt(client);
+    const response = await executedTx.getRecord(client);
+    const status = executedRx.status;
+    console.log(
+      `getAllLPTokenCount code: ${response.contractFunctionResult!.getInt256()}`
+    );
+    return response.contractFunctionResult!.getInt256();
+  };
+
+  public removeLiquidity = async (
+    contId: string,
+    lpToken: BigNumber,
+    treasureId: AccountId,
+    client: Client,
+    treasureKey: PrivateKey
+  ) => {
+    console.log(` Removing ${lpToken} units of LPToken from the pool.`);
+    const removeLiquidity = await new ContractExecuteTransaction()
+      .setContractId(contId)
+      .setGas(9000000)
+      .setFunction(
+        "removeLiquidity",
+        new ContractFunctionParameters()
+          .addAddress(treasureId.toSolidityAddress())
+          .addInt256(lpToken)
+      )
+      .freezeWith(client)
+      .sign(treasureKey);
+    const removeLiquidityTx = await removeLiquidity.execute(client);
+    const removeLiquidityRx = await removeLiquidityTx.getReceipt(client);
+    console.log(` Liquidity remove status: ${removeLiquidityRx.status}`);
+  };
+
+  public swapTokenA = async (
+    contId: string,
+    tokenAQty: BigNumber,
+    treasureId: AccountId,
+    tokenA: TokenId,
+    client: Client,
+    treasureKey: PrivateKey
+  ) => {
+    console.log(` Swapping a ${tokenAQty} units of token A from the pool.`);
+    const swapToken = await new ContractExecuteTransaction()
+      .setContractId(contId)
+      .setGas(9000000)
+      .setFunction(
+        "swapToken",
+        new ContractFunctionParameters()
+          .addAddress(treasureId.toSolidityAddress())
+          .addAddress(tokenA.toSolidityAddress())
+          .addInt256(tokenAQty)
+      )
+      .freezeWith(client)
+      .sign(treasureKey);
+    const swapTokenTx = await swapToken.execute(client);
+    const swapTokenRx = await swapTokenTx.getReceipt(client);
+    console.log(` Swap status: ${swapTokenRx.status}`);
+  };
 }
