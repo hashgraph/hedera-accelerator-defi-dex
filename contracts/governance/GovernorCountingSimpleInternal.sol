@@ -150,7 +150,8 @@ abstract contract GovernorCountingSimpleInternal is
         require(creator != address(0), "Proposal not found");
         require(msg.sender == creator, "Only proposer can cancel the proposal");
         proposalId = super._cancel(targets, values, calldatas, descriptionHash);
-        returnGODToken(proposalId);
+        returnGODToken(creator);
+        cleanup(creator);
     }
 
     /**
@@ -237,7 +238,9 @@ abstract contract GovernorCountingSimpleInternal is
         bytes[] memory,
         bytes32 /*descriptionHash*/
     ) internal virtual override {
-        returnGODToken(proposalId);
+        address creator = proposalCreators[proposalId].creator;
+        returnGODToken(creator);
+        cleanup(creator);
     }
 
     function getGODToken() internal {
@@ -253,8 +256,7 @@ abstract contract GovernorCountingSimpleInternal is
         }
     }
 
-    function returnGODToken(uint256 proposalId) internal {
-        address creator = proposalCreators[proposalId].creator;
+    function returnGODToken(address creator) internal {
         int256 responseCode = tokenService.transferTokenPublic(
             address(token),
             address(this),
@@ -264,7 +266,6 @@ abstract contract GovernorCountingSimpleInternal is
         if (responseCode != HederaResponseCodes.SUCCESS) {
             revert("Transfer token failed.");
         }
-        cleanup(creator);
     }
 
     function cleanup(address voter) private {
