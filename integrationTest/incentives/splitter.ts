@@ -94,32 +94,6 @@ const vaultAddStakingToken = async (
   console.log(`vaultAddStakingToken: ${receipt.status}`);
 };
 
-const vaultAddRewardToken = async (
-  contractId: string | ContractId,
-  rewardAmount: number
-) => {
-  console.log(`vaultAddStakingToken ${contractId}`);
-  const vaultAddStakingTokenTx = await new ContractExecuteTransaction()
-    .setContractId(contractId)
-    .setGas(9000000)
-    .setFunction(
-      "addStakeAccount",
-      new ContractFunctionParameters()
-        .addAddress(treasureId.toSolidityAddress())
-        .addUint256(withPrecision(rewardAmount))
-        .addAddress(baseService)
-    )
-    .setMaxTransactionFee(new Hbar(100))
-    .freezeWith(client)
-    .sign(treasureKey);
-
-  const vaultAddStakingTokenTxRes = await vaultAddStakingTokenTx.execute(
-    client
-  );
-  const receipt = await vaultAddStakingTokenTxRes.getReceipt(client);
-  console.log(`vaultAddStakingToken: ${receipt.status}`);
-};
-
 const initialize = async (contractId: string | ContractId) => {
   console.log(`Splitter Initialize`);
   console.log(`vault addresses ${vaultContractAddresses}`);
@@ -131,7 +105,7 @@ const initialize = async (contractId: string | ContractId) => {
       new ContractFunctionParameters()
         .addAddress(baseService)
         .addAddressArray(vaultContractAddresses)
-        .addUint256Array([1, 14, 30]) //
+        .addUint256Array([1, 14, 30])
     )
     .setMaxTransactionFee(new Hbar(100))
     .freezeWith(client);

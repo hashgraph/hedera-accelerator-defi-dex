@@ -97,14 +97,14 @@ contract Vault is HederaResponseCodes, Initializable {
         }
     }
 
-    function withdraw(address account, uint256 startPosition, uint256 amount) public {
+    function withdraw(uint256 startPosition, uint256 amount) public {
         require(amount != 0, "Please provide amount");
-        _unlock(account);
-        claimAllReward(startPosition, account);
+        _unlock(msg.sender);
+        claimAllReward(startPosition, (msg.sender));
         int256 responseCode = tokenService.transferTokenPublic(
             address(stakingToken),
             address(this),
-            address(account),
+            address(msg.sender),
             int64(uint64(amount))
         );
         require(
@@ -112,7 +112,7 @@ contract Vault is HederaResponseCodes, Initializable {
             "Withdraw failed."
         );
 
-        userStakedTokenContribution[account].shares -= amount;
+        userStakedTokenContribution[msg.sender].shares -= amount;
         stakingTokenTotalAmount -= amount;
     }
 

@@ -147,7 +147,7 @@ describe("Vault Tests", function () {
       deployFailFixture
     );
     await expect(
-      vaultContract.connect(signers[1]).withdraw(signers[1].address, 0, 0)
+      vaultContract.connect(signers[1]).withdraw(0, 0)
     ).to.revertedWith("Please provide amount");
     await vaultContract.connect(signers[1]).addStake(10);
     await vaultContract
@@ -155,7 +155,7 @@ describe("Vault Tests", function () {
       .addReward(rewardToken1, 10, signers[0].address);
     mockBaseHTS.setFailType(17); //2 pass transaction
     await expect(
-      vaultContract.connect(signers[1]).withdraw(signers[1].address, 0, 10)
+      vaultContract.connect(signers[1]).withdraw(0, 10)
     ).to.revertedWith("Withdraw failed.");
   });
 
@@ -164,7 +164,7 @@ describe("Vault Tests", function () {
       deployFailFixture
     );
     await expect(
-      vaultContract.connect(signers[1]).withdraw(signers[1].address, 0, 0)
+      vaultContract.connect(signers[1]).withdraw(0, 0)
     ).to.revertedWith("Please provide amount");
     await vaultContract.connect(signers[1]).addStake(10);
     await vaultContract
@@ -206,7 +206,7 @@ describe("Vault Tests", function () {
     await vaultContract
       .connect(signers[0])
       .addReward(rewardToken1, 10, signers[0].address);
-    await vaultContract.connect(signers[1]).withdraw(signers[1].address, 0, 10);
+    await vaultContract.connect(signers[1]).withdraw(0, 10);
     const totalValue = await vaultContract.getTotalVolume();
     expect(totalValue).equals(0);
   });
@@ -223,7 +223,7 @@ describe("Vault Tests", function () {
       .connect(signers[0])
       .addReward(rewardToken2, 10, signers[0].address);
 
-    await vaultContract.connect(signers[1]).withdraw(signers[1].address, 0, 5);
+    await vaultContract.connect(signers[1]).withdraw(0, 5);
 
     const totalValue = await vaultContract.getTotalVolume();
     expect(totalValue).equals(15);
@@ -235,7 +235,7 @@ describe("Vault Tests", function () {
     await vaultContract
       .connect(signers[0])
       .addReward(rewardToken1, 10, signers[0].address);
-    await vaultContract.connect(signers[1]).withdraw(signers[1].address, 0, 10);
+    await vaultContract.connect(signers[1]).withdraw(0, 10);
     const result = await vaultContract.callStatic.claimAllReward(
       0,
       signers[0].address
@@ -250,7 +250,7 @@ describe("Vault Tests", function () {
     await vaultContract
       .connect(signers[0])
       .addReward(rewardToken1, 10, signers[0].address);
-    await vaultContract.connect(signers[1]).withdraw(signers[1].address, 0, 10);
+    await vaultContract.connect(signers[1]).withdraw(0, 10);
     const result = await vaultContract.callStatic.claimSpecificReward(
       [rewardToken1],
       signers[0].address
