@@ -17,43 +17,41 @@ contract GovernorUpgrade is GovernorCountingSimpleInternal {
     mapping(uint256 => TokenUpgradeData) _proposalData;
 
     function createProposal(
+        string memory title,
         string memory description,
+        string memory linkToDiscussion,
         address payable proxyContract,
         address contractToUpgrade
     ) public returns (uint256) {
-        (
-            address[] memory targets,
-            uint256[] memory values,
-            bytes[] memory calldatas
-        ) = mockFunctionCall();
-        uint256 proposalId = propose(targets, values, calldatas, description);
-        TokenUpgradeData memory tokenUpgradeData = TokenUpgradeData(
+        uint256 proposalId = _createProposal(
+            title,
+            description,
+            linkToDiscussion
+        );
+        _proposalData[proposalId] = TokenUpgradeData(
             proxyContract,
             contractToUpgrade
         );
-        _proposalData[proposalId] = tokenUpgradeData;
         return proposalId;
     }
 
-    function quorum(uint256)
-        public
-        pure
-        override(IGovernorUpgradeable)
-        returns (uint256)
-    {
+    function quorum(
+        uint256
+    ) public pure override(IGovernorUpgradeable) returns (uint256) {
         return 1;
     }
 
-    function getContractAddresses(uint256 proposalId)
-        public
-        view
-        returns (address, address)
-    {
+    function getContractAddresses(
+        uint256 proposalId
+    ) public view returns (address, address) {
         require(
             state(proposalId) == ProposalState.Executed,
             "Contract not executed yet!"
         );
         TokenUpgradeData memory tokenUpgradeData = _proposalData[proposalId];
-        return (tokenUpgradeData.proxyContract, tokenUpgradeData.contractToUpgrade);
+        return (
+            tokenUpgradeData.proxyContract,
+            tokenUpgradeData.contractToUpgrade
+        );
     }
 }
