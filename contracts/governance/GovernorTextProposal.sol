@@ -5,20 +5,22 @@ import "./GovernorCountingSimpleInternal.sol";
 contract GovernorTextProposal is GovernorCountingSimpleInternal {
     using Bits for uint256;
 
-    function createProposal (
-        string memory description
-    ) public returns (uint256) { 
-        (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = mockFunctionCall();
-        uint256 proposalId = propose(targets, values, calldatas, description);
+    function createProposal(
+        string memory title,
+        string memory description,
+        string memory linkToDiscussion
+    ) public returns (uint256) {
+        uint256 proposalId = _createProposal(
+            title,
+            description,
+            linkToDiscussion
+        );
         return proposalId;
-    } 
+    }
 
-    function quorum(uint256)
-        public
-        pure
-        override(IGovernorUpgradeable)
-        returns (uint256)
-    {
+    function quorum(
+        uint256
+    ) public pure override(IGovernorUpgradeable) returns (uint256) {
         return 1;
     }
 
@@ -32,6 +34,6 @@ contract GovernorTextProposal is GovernorCountingSimpleInternal {
         bytes[] memory calldatas,
         bytes32 description
     ) internal virtual override {
-        super._execute(proposalId,targets, values, calldatas, description);
+        super._execute(proposalId, targets, values, calldatas, description);
     }
 }
