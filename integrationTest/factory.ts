@@ -18,8 +18,9 @@ import ClientManagement from "../utils/ClientManagement";
 
 const clientManagement = new ClientManagement();
 const client = clientManagement.createOperatorClient();
+const treasureClient = clientManagement.createClient();
 const { treasureId, treasureKey } = clientManagement.getTreasure();
-const { id, key } = clientManagement.getOperator();
+const { id } = clientManagement.getOperator();
 const contractService = new ContractService();
 
 const tokenA = TokenId.fromString("0.0.48289687");
@@ -28,6 +29,8 @@ const tokenC = TokenId.fromString("0.0.48301281");
 const tokenD = TokenId.fromString("0.0.48301282");
 const tokenE = TokenId.fromString("0.0.48301300");
 const tokenF = TokenId.fromString("0.0.48301322");
+const tokenGOD = TokenId.fromString("0.0.48602639");
+const tokenHBARX = TokenId.fromString("0.0.49217385");
 
 const baseContract = contractService.getContract(
   contractService.baseContractName
@@ -36,7 +39,7 @@ const contractId = contractService.getContractWithProxy(
   contractService.factoryContractName
 ).transparentProxyId!;
 
-let precision = 10000000;
+let precision = 100000000;
 
 const readFileContent = (filePath: string) => {
   const rawdata: any = fs.readFileSync(filePath);
@@ -93,7 +96,7 @@ const createPair = async (
       new ContractFunctionParameters()
         .addAddress(token0.toSolidityAddress())
         .addAddress(token1.toSolidityAddress())
-        .addAddress(treasureId.toSolidityAddress())
+        .addAddress(id.toSolidityAddress())
         .addInt256(new BigNumber(10))
     )
     .setMaxTransactionFee(new Hbar(100))
@@ -162,25 +165,30 @@ const addLiquidity = async (
   token0: TokenId,
   token1: TokenId
 ) => {
-  const tokenAQty = withPrecision(210);
-  const tokenBQty = withPrecision(230);
+  const tokenAQty = withPrecision(10);
+  const tokenBQty = withPrecision(10);
   console.log(
     `Adding ${tokenAQty} units of token A and ${tokenBQty} units of token B to the pool.`
   );
-  const addLiquidityTx = await new ContractExecuteTransaction()
+  let params = new ContractFunctionParameters()
+    .addAddress(treasureId.toSolidityAddress())
+    .addAddress(token0.toSolidityAddress())
+    .addAddress(token1.toSolidityAddress())
+    .addInt256(tokenAQty)
+    .addInt256(tokenBQty);
+
+  const addLiquidityMutableTx = new ContractExecuteTransaction()
     .setContractId(contId)
     .setGas(9000000)
-    .setFunction(
-      "addLiquidity",
-      new ContractFunctionParameters()
-        .addAddress(treasureId.toSolidityAddress())
-        .addAddress(token0.toSolidityAddress())
-        .addAddress(token1.toSolidityAddress())
-        .addInt256(tokenAQty)
-        .addInt256(tokenBQty)
-    )
+    .setFunction("addLiquidity", params);
+  if (token0 == tokenHBARX || token1 == tokenHBARX) {
+    console.log("setting Hbar... OSR");
+    addLiquidityMutableTx.setPayableAmount(new Hbar(10));
+  }
+  const addLiquidityTx = await addLiquidityMutableTx
     .freezeWith(client)
     .sign(treasureKey);
+
   const addLiquidityTxRes = await addLiquidityTx.execute(client);
   const receipt = await addLiquidityTxRes.getReceipt(client);
 
@@ -212,16 +220,17 @@ const swapToken = async (contId: string, token: TokenId) => {
   console.log(`Swapping a ${tokenQty} units of token A from the pool.`);
   const swapToken = await new ContractExecuteTransaction()
     .setContractId(contId)
-    .setGas(3000000)
+    .setGas(5000000)
     .setFunction(
       "swapToken",
       new ContractFunctionParameters()
-        .addAddress(id.toSolidityAddress())
+        .addAddress(treasureId.toSolidityAddress())
         .addAddress(token.toSolidityAddress())
         .addInt256(tokenQty)
     )
+    .setPayableAmount(new Hbar(1))
     .freezeWith(client)
-    .sign(key);
+    .sign(treasureKey);
   const swapTokenTx = await swapToken.execute(client);
   const receipt = await swapTokenTx.getReceipt(client);
 
@@ -262,8 +271,9 @@ const getTreasureBalance = async (tokens: Array<TokenId>) => {
 
 async function main() {
   await setupFactory();
-  await testForSinglePair(contractId, tokenC, tokenB);
+  await testForSinglePair(contractId, tokenC, tokenHBARX);
   await testForSinglePair(contractId, tokenC, tokenD);
+  await testForSinglePair(contractId, tokenA, tokenGOD);
 }
 
 async function testForSinglePair(

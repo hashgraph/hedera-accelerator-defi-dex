@@ -4,13 +4,10 @@ import {
   ContractExecuteTransaction,
   ContractFunctionParameters,
   AccountBalanceQuery,
-  TokenCreateTransaction,
-  TokenType,
-  TokenSupplyType,
   Hbar,
 } from "@hashgraph/sdk";
 
-import { EventConsumer } from "./utils/EventConsumer";
+import { EventConsumer } from "../utils/EventConsumer";
 import { ContractService } from "../deployment/service/ContractService";
 import { DeployedContract } from "../deployment/model/contract";
 import ClientManagement from "../utils/ClientManagement";
@@ -20,13 +17,12 @@ const contractService = new ContractService();
 
 const htsServiceAddress = contractService.getContract(
   contractService.baseContractName
-).address;
+);
 
 const client = clientManagement.createOperatorClient();
 
 const { treasureId, treasureKey } = clientManagement.getTreasure();
-const treasurerClient = clientManagement.createClient();
-const { key } = clientManagement.getOperator();
+const { id, key } = clientManagement.getOperator();
 
 const lpTokenContracts = [
   contractService.getContractWithProxy(contractService.lpTokenContractName),
@@ -41,35 +37,36 @@ const withPrecision = (value: number): BigNumber => {
   return new BigNumber(value).multipliedBy(precision);
 };
 
-let tokenA: TokenId;
-let tokenB: TokenId;
+let tokenA = TokenId.fromString("0.0.49173962");
+let tokenB = TokenId.fromString("0.0.48289686");
 
-const createToken = async (tokenName: string): Promise<TokenId> => {
-  const createTokenTx = await new TokenCreateTransaction()
-    .setTokenName("Token" + tokenName)
-    .setTokenSymbol("Token Symbol" + tokenName)
-    .setDecimals(8)
-    .setInitialSupply(20000000000000)
-    .setTokenType(TokenType.FungibleCommon)
-    .setSupplyType(TokenSupplyType.Infinite)
-    //create the token with the contract as supply and treasury
-    .setSupplyKey(treasureKey)
-    .setTreasuryAccountId(treasureId)
-    .execute(treasurerClient);
-
-  const tokenCreateTx = await createTokenTx.getReceipt(client);
-  const tokenId = tokenCreateTx.tokenId;
+const htsCreateHBARX = async (contractId: string): Promise<TokenId> => {
+  const tokenAQty = withPrecision(10);
+  const tokenBQty = withPrecision(10);
+  const htsCreateHBARXTx = await new ContractExecuteTransaction()
+    .setContractId(contractId)
+    .setGas(9000000)
+    .setFunction("setupHBARX", new ContractFunctionParameters())
+    .setPayableAmount(new Hbar(30))
+    .freezeWith(client)
+    .sign(key);
+  const htsCreateHBARXTxRes = await htsCreateHBARXTx.execute(client);
+  const htsCreateHBARRx = await htsCreateHBARXTxRes.getReceipt(client);
+  const record = await htsCreateHBARXTxRes.getRecord(client);
+  console.log(` htsCreateHBARX: ${htsCreateHBARRx.status}`);
   console.log(
-    `Token created ${tokenId}, Token Address ${tokenId?.toSolidityAddress()}`
+    ` HBARX address: ${record.contractFunctionResult!.getAddress(0)}`
   );
-  return tokenId!;
+  return TokenId.fromSolidityAddress(
+    record.contractFunctionResult!.getAddress(0)
+  );
 };
 
 const initializeLPTokenContract = async (lpTokenContractId: string) => {
   console.log(`Initialize LP contract with lp contract ${lpTokenContractId}`);
 
   let contractFunctionParameters = new ContractFunctionParameters().addAddress(
-    htsServiceAddress
+    htsServiceAddress.address
   );
 
   const initializeContractTx = await new ContractExecuteTransaction()
@@ -77,10 +74,10 @@ const initializeLPTokenContract = async (lpTokenContractId: string) => {
     .setFunction("initialize", contractFunctionParameters)
     .setGas(500000)
     .setMaxTransactionFee(new Hbar(50))
-    .setPayableAmount(new Hbar(60))
+    .setPayableAmount(new Hbar(60)) //25.31548535 should be sent
     .execute(client);
 
-  await contractTokenTx.getReceipt(client);
+  await initializeContractTx.getReceipt(client);
 
   console.log(`Initialize LP contract with token done.`);
 };
@@ -92,7 +89,7 @@ const initialize = async (contId: string, lpTokenProxyAdd: string) => {
     .setFunction(
       "initialize",
       new ContractFunctionParameters()
-        .addAddress(htsServiceAddress)
+        .addAddress(htsServiceAddress.address)
         .addAddress(lpTokenProxyAdd)
         .addAddress(tokenA.toSolidityAddress())
         .addAddress(tokenB.toSolidityAddress())
@@ -123,8 +120,8 @@ const getTreasureBalance = async (tokens: Array<TokenId>) => {
 };
 
 const addLiquidity = async (contId: string) => {
-  const tokenAQty = withPrecision(210);
-  const tokenBQty = withPrecision(230);
+  const tokenAQty = withPrecision(10);
+  const tokenBQty = withPrecision(10);
   console.log(
     ` Adding ${tokenAQty} units of token A and ${tokenBQty} units of token B to the pool.`
   );
@@ -140,17 +137,17 @@ const addLiquidity = async (contId: string) => {
         .addInt256(tokenAQty)
         .addInt256(tokenBQty)
     )
+    .setPayableAmount(new Hbar(10))
     .freezeWith(client)
     .sign(treasureKey);
   const addLiquidityTxRes = await addLiquidityTx.execute(client);
   const addLiquidityRx = await addLiquidityTxRes.getReceipt(client);
-
   console.log(` Liquidity added status: ${addLiquidityRx.status}`);
   const result = await pairCurrentPosition(contId);
 };
 
 const removeLiquidity = async (contId: string) => {
-  const lpToken = withPrecision(5);
+  const lpToken = withPrecision(1);
   console.log(` Removing ${lpToken} units of LPToken from the pool.`);
   const removeLiquidity = await new ContractExecuteTransaction()
     .setContractId(contId)
@@ -171,11 +168,11 @@ const removeLiquidity = async (contId: string) => {
 };
 
 const swapTokenA = async (contId: string) => {
-  const tokenAQty = withPrecision(1);
+  const tokenAQty = withPrecision(0.5);
   console.log(` Swapping a ${tokenAQty} units of token A from the pool.`);
   const swapToken = await new ContractExecuteTransaction()
     .setContractId(contId)
-    .setGas(2000000)
+    .setGas(5000000)
     .setFunction(
       "swapToken",
       new ContractFunctionParameters()
@@ -183,6 +180,7 @@ const swapTokenA = async (contId: string) => {
         .addAddress(tokenA.toSolidityAddress())
         .addInt256(tokenAQty)
     )
+    .setPayableAmount(new Hbar(0.5))
     .freezeWith(client)
     .sign(treasureKey);
   const swapTokenTx = await swapToken.execute(client);
@@ -358,11 +356,26 @@ const getLpTokenAddress = async (lpTokenProxyId: string) => {
   console.log(` Lp token address ${address}`);
 };
 
+const setSlippage = async (contId: string, slippage: BigNumber) => {
+  const transaction = await new ContractExecuteTransaction()
+    .setContractId(contId)
+    .setGas(1000000)
+    .setFunction(
+      "setSlippage",
+      new ContractFunctionParameters().addInt256(slippage)
+    )
+    .freezeWith(client);
+  const txRes = await transaction.execute(client);
+  const record = await txRes.getRecord(client);
+  const receipt = await txRes.getReceipt(client);
+  console.log(` setSlippage ${receipt.status}`);
+};
+
 async function main() {
   let index = 0;
   for (const contract of contracts) {
-    tokenA = await createToken("A" + index);
-    tokenB = await createToken("B" + index);
+    tokenA = TokenId.fromString("0.0.49217385"); // hbarx
+    tokenB = TokenId.fromString("0.0.48289686");
     console.log(`\nTesting started for token A${index} and token B${index}`);
     await testForSinglePair(contract, lpTokenContracts[index]);
     index++;
@@ -390,6 +403,7 @@ async function testForSinglePair(
   await getTokenPairAddress(contractProxyId);
   await pairCurrentPosition(contractProxyId);
   await getTreasureBalance([tokenA, tokenB]);
+  await setSlippage(contractProxyId, new BigNumber(50000000));
   await swapTokenA(contractProxyId);
   await spotPrice(contractProxyId);
   await getVariantValue(contractProxyId);

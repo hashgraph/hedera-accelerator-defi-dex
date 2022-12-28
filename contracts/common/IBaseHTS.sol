@@ -33,4 +33,7 @@ interface IBaseHTS {
         uint256 initialTotalSupply,
         uint256 decimals
     ) external payable returns (int256 responseCode, address tokenAddress);
+
+    function hbarxAddress() external returns(address);
+    function transferHBAR(int256 amount, address payable toAccount) external payable returns (int256 responseCode);
 }
