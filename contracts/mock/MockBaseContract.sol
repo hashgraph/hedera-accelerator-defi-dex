@@ -34,10 +34,12 @@ contract MockBaseHTS is IBaseHTS {
     int256 internal trueTransaction = 0;
     FailTransactionFor internal failType;
     int256 public returnResponseCode = 23;
+    address private hbarx;
 
-    constructor(bool _isSucces, bool _tokenTest) {
+    constructor(bool _isSucces, bool _tokenTest, address _hbarx) {
         isSuccess = _isSucces;
         tokenTest = _tokenTest;
+        hbarx = _hbarx;
     }
 
     function setSuccessStatus(bool _success) public {
@@ -110,6 +112,15 @@ contract MockBaseHTS is IBaseHTS {
         address to,
         int256 amount
     ) external override returns (int256 responseCode) {
+        return _transferToken(token, from, to, amount);
+    }
+
+    function _transferToken(
+        address token,
+        address from,
+        address to,
+        int256 amount
+    ) private returns (int256 responseCode) {
         if (tokenTest) {
             uint256 newAmount = (IERC20Mock(token).balanceOf(from)) - uint256(amount);
             IERC20Mock(token).setUserBalance(from, newAmount);
@@ -146,9 +157,16 @@ contract MockBaseHTS is IBaseHTS {
         return isSuccess ? int256(22) : int256(23);
     }
 
-    function mintTokenPublic(address, int256 amount)
+    function mintTokenPublic(address token, int256 amount)
         external
         override
+        returns (int256 responseCode, int256 newTotalSupply)
+    {
+       return _mintToken(token, amount);
+    }
+
+    function _mintToken(address token, int256 amount)
+        private
         returns (int256 responseCode, int256 newTotalSupply)
     {
         if (trueTransaction > 0) {
@@ -158,10 +176,18 @@ contract MockBaseHTS is IBaseHTS {
         return (isSuccess ? int256(22) : int256(23), int256(amount));
     }
 
-    function burnTokenPublic(address, int256 amount)
+    function burnTokenPublic(address token, int256 amount)
         external
         view
         override
+        returns (int256 responseCode, int256 newTotalSupply)
+    {
+        return _burnToken(token, amount);
+    }
+
+    function _burnToken(address token, int256 amount)
+        private
+        view
         returns (int256 responseCode, int256 newTotalSupply)
     {
         return ((isSuccess) ? int256(22) : int256(23), amount);
@@ -187,4 +213,25 @@ contract MockBaseHTS is IBaseHTS {
 
         return (int256(22), address(mock));
     }
+
+    function hbarxAddress() external override view returns(address) {
+        return hbarx;
+    }
+    function createHBARX() external override payable returns (int256 responseCode) {
+        if (trueTransaction > 0) {
+            trueTransaction -= 1;
+            return int256(22);
+        }
+        return isSuccess ? int256(22) : int256(23);
+    }
+
+    function burnHBARX(int256 amount, address payable ) external override payable returns (int256 responseCode) {
+        
+        if (trueTransaction > 0) {
+            trueTransaction -= 1;
+            return int256(22);
+        }
+        return isSuccess ? int256(22) : int256(23);
+    }
+
 }

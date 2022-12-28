@@ -33,7 +33,7 @@ describe("All Tests", function () {
 
   async function deployFixture() {
     const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-    const mockBaseHTS = await MockBaseHTS.deploy(true, false);
+    const mockBaseHTS = await MockBaseHTS.deploy(true, false, tokenCAddress);
     mockBaseHTS.setFailType(0);
 
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
@@ -66,7 +66,7 @@ describe("All Tests", function () {
 
   async function deployFailureFixture() {
     const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-    const mockBaseHTS = await MockBaseHTS.deploy(false, false);
+    const mockBaseHTS = await MockBaseHTS.deploy(false, false, tokenCAddress);
     await mockBaseHTS.setFailType(0);
 
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
@@ -93,6 +93,39 @@ describe("All Tests", function () {
 
     return { swapV2, mockBaseHTS, lpTokenCont };
   }
+
+  it("Add liquidity to the pool by adding 50 units of token and 50 units of token B  ", async function () {
+    const { swapV2 } = await loadFixture(deployFixture);
+    const tx = await swapV2.addLiquidity(
+      zeroAddress,
+      tokenAAddress,
+      tokenBAddress,
+      precision.mul(50),
+      precision.mul(50)
+    );
+    await tx.wait();
+    const tokenQty = await swapV2.getPairQty();
+    expect(tokenQty[0]).to.be.equals(precision.mul(50));
+    expect(tokenQty[1]).to.be.equals(precision.mul(50));
+  });
+
+  it.only("Add liquidity for hbarx", async function () {
+    const { swapV2 } = await loadFixture(deployFixture);
+    const tx = await swapV2.addLiquidity(
+      zeroAddress,
+      tokenAAddress,
+      tokenCAddress,
+      precision.mul(50),
+      precision.mul(50),
+      {
+        value: ethers.utils.parseEther("0.0000000050"),
+      }
+    );
+    await tx.wait();
+    const tokenQty = await swapV2.getPairQty();
+    expect(tokenQty[0]).to.be.equals(precision.mul(50));
+    expect(tokenQty[1]).to.be.equals(precision.mul(50));
+  });
 
   describe("Factory Contract positive Tests", async () => {
     it("Check createPair method", async function () {
@@ -213,7 +246,7 @@ describe("All Tests", function () {
       Number(tokenQty[1]) - Number(feeForTokenB);
     const tokenBResultantQty =
       Number(tokenBResultantQtyAfterFee) / Number(precision);
-    expect(tokenBResultantQty).to.be.equals(217.8163702);
+    expect(tokenBResultantQty).to.be.equals(217.81637026);
   });
 
   it("Swap 1 units of token B  ", async function () {
@@ -244,7 +277,7 @@ describe("All Tests", function () {
       Number(tokenQty[0]) - Number(feeForTokenA);
     const tokenAResultantQty =
       Number(tokenAResultantQtyAfterFee) / Number(precision);
-    expect(tokenAResultantQty).to.be.equals(112.9146473);
+    expect(tokenAResultantQty).to.be.equals(112.91464718);
   });
 
   it("Swap 100 units of token A - breaching slippage  ", async function () {
@@ -637,7 +670,7 @@ describe("All Tests", function () {
       );
       const value = await swapV2.getSpotPrice();
 
-      expect(value).to.be.equals(20000000);
+      expect(value).to.be.equals(200000000);
     });
 
     it("Check spot price for tokens B", async function () {
@@ -651,7 +684,7 @@ describe("All Tests", function () {
       );
       const value = await swapV2.getSpotPrice();
 
-      expect(value).to.be.equals(5000000);
+      expect(value).to.be.equals(50000000);
     });
 
     it("Check spot price for tokens with reverse", async function () {
@@ -665,7 +698,7 @@ describe("All Tests", function () {
       );
       const value = await swapV2.getSpotPrice();
 
-      expect(value).to.be.equals(5000000);
+      expect(value).to.be.equals(50000000);
     });
 
     it("check get out given In price value without precision", async function () {
@@ -711,7 +744,7 @@ describe("All Tests", function () {
       );
       const value = await swapV2.getSpotPrice();
 
-      expect(Number(value)).to.be.equals(Number(7145946));
+      expect(Number(value)).to.be.equals(Number(71459466));
     });
 
     it("check spot price for front end", async function () {
@@ -730,7 +763,7 @@ describe("All Tests", function () {
       const value = await swapV2.getSpotPrice();
       const output = Number(value) / Number(precisionValue);
 
-      expect(output).to.be.equals(0.7145946);
+      expect(output).to.be.equals(0.71459466);
     });
 
     it("check spot price for big number", async function () {
@@ -745,13 +778,13 @@ describe("All Tests", function () {
         tokenBQ
       );
       const value = await swapV2.getSpotPrice();
-      expect(Number(value)).to.be.equals(Number(5243534));
+      expect(Number(value)).to.be.equals(Number(52435344));
     });
 
     it("check precision value", async function () {
       const { swapV2 } = await loadFixture(deployFixture);
       const value = await swapV2.getPrecisionValue();
-      expect(Number(value)).to.be.equals(Number(10000000));
+      expect(Number(value)).to.be.equals(Number(100000000));
     });
 
     it("check getOutGivenIn for big number with precision", async function () {
@@ -764,12 +797,15 @@ describe("All Tests", function () {
         tokenAAddress,
         tokenBAddress,
         tokenAQ,
-        tokenBQ
+        tokenBQ,
+        {
+          value: ethers.utils.parseEther("10"),
+        }
       );
       const deltaAQty = BigNumber.from(10).mul(precision);
       const value = await swapV2.getOutGivenIn(deltaAQty);
 
-      expect(Number(value)).to.be.equals(Number(47058824));
+      expect(Number(value)).to.be.equals(Number(470588236));
     });
 
     it("check getInGivenOut for big number with precision", async function () {
@@ -787,7 +823,7 @@ describe("All Tests", function () {
         BigNumber.from("1").mul(precision)
       );
       const valueWithoutPrecision = Number(value) / Number(precision);
-      expect(valueWithoutPrecision).to.be.equals(0.5205479);
+      expect(valueWithoutPrecision).to.be.equals(0.52054794);
     });
   });
 
@@ -821,7 +857,7 @@ describe("All Tests", function () {
       const deltaAQty = BigNumber.from(1).mul(precision);
       const slippage = await swapV2.slippageOutGivenIn(deltaAQty);
       const slippageWithoutPrecision = Number(slippage) / Number(precision);
-      expect(slippageWithoutPrecision).to.be.equals(0.0086956);
+      expect(slippageWithoutPrecision).to.be.equals(0.00869565);
     });
 
     it("Verify slippageInGivenOut ", async function () {
@@ -838,7 +874,7 @@ describe("All Tests", function () {
       const deltaBQty = BigNumber.from(1).mul(precision);
       const slippage = await swapV2.slippageInGivenOut(deltaBQty);
       const slippageWithoutPrecision = Number(slippage) / Number(precision);
-      expect(slippageWithoutPrecision).to.be.equals(0.0045661);
+      expect(slippageWithoutPrecision).to.be.equals(0.00456621);
     });
   });
 
@@ -871,7 +907,7 @@ describe("All Tests", function () {
         10
       );
       const value = await swapV2.feeForToken(tokenAPoolQty);
-      expect(value).to.be.equals(Number(500000));
+      expect(value).to.be.equals(Number(5000000));
     });
   });
 });
