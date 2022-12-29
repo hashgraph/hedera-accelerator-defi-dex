@@ -135,7 +135,7 @@ describe("Vault Tests", function () {
     mockBaseHTS.setFailType(15); //1 pass transaction
     await expect(
       vaultContract.connect(signers[1]).addStake(10)
-    ).to.revertedWith("Claim reward failed.");
+    ).to.revertedWith("Vault: Claim reward failed.");
     mockBaseHTS.setFailType(17); //2 pass transaction
     await expect(
       vaultContract.connect(signers[1]).addStake(10)
@@ -156,7 +156,7 @@ describe("Vault Tests", function () {
     mockBaseHTS.setFailType(17); //2 pass transaction
     await expect(
       vaultContract.connect(signers[1]).withdraw(0, 10)
-    ).to.revertedWith("Withdraw failed.");
+    ).to.revertedWith("Vault: Withdraw failed.");
   });
 
   it("claim Specific token fail", async function () {
@@ -175,7 +175,7 @@ describe("Vault Tests", function () {
       vaultContract
         .connect(signers[1])
         .claimSpecificReward([rewardToken1], signers[1].address)
-    ).to.revertedWith("Claim reward failed.");
+    ).to.revertedWith("Vault: Claim reward failed.");
   });
 
   it("Get staked amount", async function () {

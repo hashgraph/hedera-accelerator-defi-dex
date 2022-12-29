@@ -532,7 +532,7 @@ describe("All Tests", function () {
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
       await expect(
         swapV2.addLiquidity(zeroAddress, tokenAAddress, tokenBAddress, 30, 30)
-      ).to.revertedWith("LP token transfer failed.");
+      ).to.revertedWith("LPToken: token transfer failed from contract.");
     });
 
     it("allotLPToken fail for zero token count", async function () {
@@ -581,7 +581,7 @@ describe("All Tests", function () {
       await mockBaseHTS.setSuccessStatus(false);
       await expect(
         lpTokenCont.removeLPTokenFor(5, userAddress)
-      ).to.revertedWith("LP token transfer failed.");
+      ).to.revertedWith("LPToken: token transfer failed to contract.");
     });
 
     it("verify removeLPTokenFor call should failed during burn-token call", async function () {
