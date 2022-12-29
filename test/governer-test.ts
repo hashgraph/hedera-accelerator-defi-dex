@@ -209,12 +209,12 @@ describe("Governor Tests", function () {
       mockBaseHTS.setFailType(13);
       await mineNBlocks(20);
       await expect(instance.executeProposal(title)).to.revertedWith(
-        "Token creation failed."
+        "GovernorTokenCreate: Token creation failed."
       );
       mockBaseHTS.setFailType(13);
       mockBaseHTS.setFailResponseCode(32);
       await expect(instance.executeProposal(title)).to.revertedWith(
-        "Token creation failed."
+        "GovernorTokenCreate: Token creation failed."
       );
     });
 
