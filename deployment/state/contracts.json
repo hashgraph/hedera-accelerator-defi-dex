@@ -548,5 +548,32 @@
         "hash": "caf8d82a97726c0ac3329e1a9f858833",
         "transparentProxyAddress": "0x0000000000000000000000000000000002ecdf7c",
         "transparentProxyId": "0.0.49078140"
+    },
+    {
+        "name": "governortextproposal",
+        "id": "0.0.49176052",
+        "address": "0x0000000000000000000000000000000002ee5df4",
+        "timestamp": "2022-12-28T14:14:51.741Z",
+        "hash": "b63677e63c646d5399545e6ee788e5d9",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002ee5dfb",
+        "transparentProxyId": "0.0.49176059"
+    },
+    {
+        "name": "governortransfertoken",
+        "id": "0.0.49180061",
+        "address": "0x0000000000000000000000000000000002ee6d9d",
+        "timestamp": "2022-12-29T11:53:57.198Z",
+        "hash": "e39cede609e779827fdb4b62b0962461",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002ee6d9f",
+        "transparentProxyId": "0.0.49180063"
+    },
+    {
+        "name": "governorupgrade",
+        "id": "0.0.49180574",
+        "address": "0x0000000000000000000000000000000002ee6f9e",
+        "timestamp": "2022-12-29T12:19:38.232Z",
+        "hash": "a619df86324b01fa0f929272cb1950b5",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002ee6fa0",
+        "transparentProxyId": "0.0.49180576"
     }
 ]
