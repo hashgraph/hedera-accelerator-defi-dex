@@ -147,7 +147,7 @@ contract LPToken is HederaResponseCodes, ILPToken, Initializable {
 
         require(
             responseCode == HederaResponseCodes.SUCCESS,
-            "Token creation failed."
+            "LPToken: Token creation failed."
         );
     }
 

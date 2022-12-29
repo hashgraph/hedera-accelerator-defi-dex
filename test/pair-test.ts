@@ -555,7 +555,7 @@ describe("All Tests", function () {
       const LpTokenCont = await ethers.getContractFactory("LPToken");
       await expect(
         upgrades.deployProxy(LpTokenCont, [mockBaseHTS.address])
-      ).to.revertedWith("Token creation failed.");
+      ).to.revertedWith("LPToken: Token creation failed.");
     });
 
     it("removeLPTokenFor fail for less lp Token", async function () {

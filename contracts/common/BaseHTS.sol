@@ -86,9 +86,5 @@ contract BaseHTS is HederaTokenService, IBaseHTS {
             initialTotalSupply,
             decimals
         );
-
-        if (responseCode != HederaResponseCodes.SUCCESS) {
-            revert("createFungibleToken Failed");
-        }
     }
 }
