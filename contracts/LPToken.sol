@@ -18,12 +18,9 @@ contract LPToken is HederaResponseCodes, ILPToken, Initializable {
 
     event SenderDetail(address indexed _from, string msg);
 
-    function lpTokenForUser(address _user)
-        external
-        view
-        override
-        returns (int256)
-    {
+    function lpTokenForUser(
+        address _user
+    ) external view override returns (int256) {
         return int256(lpToken.balanceOf(_user));
     }
 
@@ -35,12 +32,9 @@ contract LPToken is HederaResponseCodes, ILPToken, Initializable {
         return int256(lpToken.totalSupply());
     }
 
-    function initialize(IBaseHTS _tokenService)
-        external
-        payable
-        override
-        initializer
-    {
+    function initialize(
+        IBaseHTS _tokenService
+    ) external payable override initializer {
         tokenService = _tokenService;
         (, address newToken) = createFungibleTokenPublic(0);
         lpToken = IERC20(newToken);
@@ -78,16 +72,15 @@ contract LPToken is HederaResponseCodes, ILPToken, Initializable {
         );
         require(
             response == HederaResponseCodes.SUCCESS,
-            "LP token transfer failed."
+            "LPToken: token transfer failed from contract."
         );
         return HederaResponseCodes.SUCCESS;
     }
 
-    function removeLPTokenFor(int256 lpAmount, address fromUser)
-        external
-        override
-        returns (int256 responseCode)
-    {
+    function removeLPTokenFor(
+        int256 lpAmount,
+        address fromUser
+    ) external override returns (int256 responseCode) {
         require((lpAmount > 0), "Please provide token counts");
         require(
             this.lpTokenForUser(fromUser) >= lpAmount,
@@ -102,7 +95,7 @@ contract LPToken is HederaResponseCodes, ILPToken, Initializable {
         );
         require(
             response == HederaResponseCodes.SUCCESS,
-            "LP token transfer failed."
+            "LPToken: token transfer failed to contract."
         );
         // burn old amount of LP
         (response, ) = tokenService.burnTokenPublic(address(lpToken), lpAmount);
@@ -113,10 +106,9 @@ contract LPToken is HederaResponseCodes, ILPToken, Initializable {
         return HederaResponseCodes.SUCCESS;
     }
 
-    function createFungibleTokenPublic(int256 mintingAmount)
-        internal
-        returns (int256 responseCode, address tokenAddress)
-    {
+    function createFungibleTokenPublic(
+        int256 mintingAmount
+    ) internal returns (int256 responseCode, address tokenAddress) {
         uint256 supplyKeyType;
         IHederaTokenService.KeyValue memory supplyKeyValue;
 

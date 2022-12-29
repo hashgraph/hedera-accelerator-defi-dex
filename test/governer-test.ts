@@ -827,7 +827,9 @@ describe("Governor Tests", function () {
 
       await expect(
         getUpgradeProposalId(governorUpgradeInstance, signers[0])
-      ).to.revertedWith("Transfer token failed.");
+      ).to.revertedWith(
+        "GovernorCountingSimpleInternal: token transfer failed to contract."
+      );
     });
 
     it("Verify GovernorUpgrade initialize should be failed for initialize called after instance created", async function () {
@@ -940,7 +942,7 @@ describe("Governor Tests", function () {
 
       await expect(
         governorTransferTokenInstance.executeProposal(title)
-      ).to.revertedWith("Transfer token failed.");
+      ).to.revertedWith("GovernorTransferToken: transfer token failed.");
     });
 
     const createProposal = async (
