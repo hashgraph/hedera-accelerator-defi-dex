@@ -3,7 +3,6 @@ pragma solidity ^0.8.4;
 import "./GovernorCountingSimpleInternal.sol";
 
 contract GovernorTokenCreate is GovernorCountingSimpleInternal {
-
     struct TokenCreateData {
         address treasurer;
         bytes treasurerKeyBytes;
@@ -16,35 +15,38 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
 
     using Bits for uint256;
     mapping(uint256 => TokenCreateData) _proposalData;
-    address newTokenAddress;
 
-    function createProposal (
+    function createProposal(
+        string memory title,
         string memory description,
+        string memory linkToDiscussion,
         address _treasurer,
         bytes memory _treasurerKeyBytes,
         address _admin,
         bytes memory _adminKeyBytes,
         string memory _tokenName,
         string memory _tokenSymbol
-    ) public returns (uint256) { 
-        (address[] memory targets, uint256[] memory values, bytes[] memory calldatas) = mockFunctionCall();
-        uint256 proposalId = propose(targets, values, calldatas, description);
-        TokenCreateData memory tokenCreateData = TokenCreateData( _treasurer, _treasurerKeyBytes, _admin,
-                                                        _adminKeyBytes,
-                                                        _tokenName,
-                                                        _tokenSymbol,
-                                                        address(0)
-                                                        );
-        _proposalData[proposalId] = tokenCreateData;
+    ) public returns (uint256) {
+        uint256 proposalId = _createProposal(
+            title,
+            description,
+            linkToDiscussion
+        );
+        _proposalData[proposalId] = TokenCreateData(
+            _treasurer,
+            _treasurerKeyBytes,
+            _admin,
+            _adminKeyBytes,
+            _tokenName,
+            _tokenSymbol,
+            address(0)
+        );
         return proposalId;
-    } 
-    
-    function quorum(uint256)
-        public
-        pure
-        override(IGovernorUpgradeable)
-        returns (uint256)
-    {
+    }
+
+    function quorum(
+        uint256
+    ) public pure override(IGovernorUpgradeable) returns (uint256) {
         return 1;
     }
 
@@ -59,13 +61,12 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
         bytes32 description
     ) internal virtual override {
         createToken(proposalId);
-        super._execute(proposalId,targets, values, calldatas, description);
+        super._execute(proposalId, targets, values, calldatas, description);
     }
 
-    function createToken(uint256 proposalId)
-        internal
-        returns (int256 responseCode, address tokenAddress)
-    {
+    function createToken(
+        uint256 proposalId
+    ) internal returns (int256 responseCode, address tokenAddress) {
         TokenCreateData storage tokenCreateData = _proposalData[proposalId];
         uint256 supplyKeyType;
         uint256 adminKeyType;
@@ -117,8 +118,11 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
         tokenCreateData.newTokenAddress = tokenAddress;
     }
 
-    function getTokenAddress(uint256 proposalId) public view returns(address) {
-        require(state(proposalId) == ProposalState.Executed, "Contract not executed yet!");
+    function getTokenAddress(uint256 proposalId) public view returns (address) {
+        require(
+            state(proposalId) == ProposalState.Executed,
+            "Contract not executed yet!"
+        );
         TokenCreateData memory tokenCreateData = _proposalData[proposalId];
         return tokenCreateData.newTokenAddress;
     }

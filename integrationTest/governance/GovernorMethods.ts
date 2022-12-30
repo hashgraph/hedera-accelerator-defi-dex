@@ -53,7 +53,7 @@ export default class GovernorMethods {
     const record = await txnResponse.getRecord(client);
     const proxyAddress = record.contractFunctionResult!.getAddress(0);
     const logicAddress = record.contractFunctionResult!.getAddress(1);
-    console.log(`getContractAddresses txn status: ${receipt.status}}`);
+    console.log(`getContractAddresses txn status: ${receipt.status}`);
     return {
       proxyAddress,
       logicAddress,
@@ -211,13 +211,13 @@ export default class GovernorMethods {
   };
 
   public cancelProposal = async (
-    description: string,
+    title: string,
     contractId: string | ContractId
   ) => {
     console.log(`\nCancel proposal `);
 
     const contractFunctionParameters =
-      new ContractFunctionParameters().addString(description);
+      new ContractFunctionParameters().addString(title);
 
     const tx = await new ContractExecuteTransaction()
       .setContractId(contractId)
@@ -240,14 +240,11 @@ export default class GovernorMethods {
     return proposalId;
   };
 
-  public execute = async (
-    description: string,
-    contractId: string | ContractId
-  ) => {
+  public execute = async (title: string, contractId: string | ContractId) => {
     console.log(`\nExecuting  proposal - `);
 
     const contractFunctionParameters =
-      new ContractFunctionParameters().addString(description);
+      new ContractFunctionParameters().addString(title);
 
     const contractAllotTx = await new ContractExecuteTransaction()
       .setContractId(contractId)
@@ -269,5 +266,26 @@ export default class GovernorMethods {
       )}`
     );
     return status.toString() === "SUCCESS";
+  };
+
+  public getProposalDetails = async (
+    proposalId: BigNumber,
+    contractId: string | ContractId
+  ) => {
+    console.log(`\nGetting proposal details`);
+    const args = new ContractFunctionParameters().addUint256(proposalId);
+    const tx = await new ContractExecuteTransaction()
+      .setContractId(contractId)
+      .setFunction("getProposalDetails", args)
+      .setGas(500000)
+      .execute(client);
+    const txReceipt = await tx.getReceipt(client);
+    const txRecord = await tx.getRecord(client);
+    const title = txRecord.contractFunctionResult!.getString(1);
+    const description = txRecord.contractFunctionResult!.getString(2);
+    const link = txRecord.contractFunctionResult!.getString(3);
+    console.log(
+      `Proposal details tx status ${txReceipt.status} with proposal id = ${proposalId}, title = ${title}, description = ${description} & link = ${link}`
+    );
   };
 }

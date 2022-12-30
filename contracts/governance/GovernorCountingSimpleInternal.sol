@@ -30,7 +30,20 @@ abstract contract GovernorCountingSimpleInternal is
 
     struct ProposalInfo {
         address creator;
+        string title;
+        string description;
+        string link;
     }
+
+    event ProposalDetails(
+        uint256 proposalId,
+        address proposer,
+        string title,
+        string description,
+        string link,
+        uint256 startBlock,
+        uint256 endBlock
+    );
 
     uint256 precision;
     IERC20 token;
@@ -92,21 +105,51 @@ abstract contract GovernorCountingSimpleInternal is
         return percentageShare;
     }
 
-    function propose(
-        address[] memory targets,
-        uint256[] memory values,
-        bytes[] memory calldatas,
-        string memory description
-    ) public virtual override returns (uint256) {
+    function _createProposal(
+        string memory title,
+        string memory description,
+        string memory link
+    ) internal returns (uint256) {
         getGODToken();
-        uint256 proposalId = super.propose(
-            targets,
-            values,
-            calldatas,
-            description
+        (
+            address[] memory targets,
+            uint256[] memory values,
+            bytes[] memory calldatas
+        ) = mockFunctionCall();
+        uint256 proposalId = super.propose(targets, values, calldatas, title);
+        proposalCreators[proposalId] = ProposalInfo(
+            _msgSender(),
+            title,
+            description,
+            link
         );
-        proposalCreators[proposalId] = ProposalInfo(msg.sender);
+        emit ProposalDetails(
+            proposalId,
+            _msgSender(),
+            title,
+            description,
+            link,
+            proposalSnapshot(proposalId),
+            proposalDeadline(proposalId)
+        );
         return proposalId;
+    }
+
+    function getProposalDetails(
+        uint proposalId
+    )
+        public
+        view
+        returns (address, string memory, string memory, string memory)
+    {
+        ProposalInfo memory proposalInfo = proposalCreators[proposalId];
+        require(proposalInfo.creator != address(0), "Proposal not found");
+        return (
+            proposalInfo.creator,
+            proposalInfo.title,
+            proposalInfo.description,
+            proposalInfo.link
+        );
     }
 
     function votingDelay()
@@ -137,14 +180,14 @@ abstract contract GovernorCountingSimpleInternal is
     }
 
     function cancelProposal(
-        string memory description
+        string memory title
     ) public returns (uint256 proposalId) {
         (
             address[] memory targets,
             uint256[] memory values,
             bytes[] memory calldatas
         ) = mockFunctionCall();
-        bytes32 descriptionHash = keccak256(bytes(description));
+        bytes32 descriptionHash = keccak256(bytes(title));
         proposalId = hashProposal(targets, values, calldatas, descriptionHash);
         address creator = proposalCreators[proposalId].creator;
         require(creator != address(0), "Proposal not found");
@@ -158,14 +201,14 @@ abstract contract GovernorCountingSimpleInternal is
      * @dev See {IGovernor-execute}.
      */
     function executeProposal(
-        string memory description
+        string memory title
     ) public payable virtual returns (uint256) {
         (
             address[] memory targets,
             uint256[] memory values,
             bytes[] memory calldatas
         ) = mockFunctionCall();
-        bytes32 descriptionHash = keccak256(bytes(description));
+        bytes32 descriptionHash = keccak256(bytes(title));
         uint256 proposalId = hashProposal(
             targets,
             values,
