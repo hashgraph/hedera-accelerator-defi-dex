@@ -64,6 +64,39 @@ describe("All Tests", function () {
     return { swapV2, mockBaseHTS, lpTokenCont, factory };
   }
 
+  async function deployFixtureHBARX() {
+    const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
+    const mockBaseHTS = await MockBaseHTS.deploy(true, false, tokenCAddress);
+    mockBaseHTS.setFailType(0);
+
+    const TokenCont = await ethers.getContractFactory("ERC20Mock");
+    const tokenCont = await TokenCont.deploy(10, 10);
+
+    const LpTokenCont = await ethers.getContractFactory("LPToken");
+    const lpTokenCont = await upgrades.deployProxy(LpTokenCont, [
+      mockBaseHTS.address,
+    ]);
+    await lpTokenCont.deployed();
+
+    const SwapV2 = await ethers.getContractFactory("Pair");
+    const swapV2 = await upgrades.deployProxy(SwapV2, [
+      mockBaseHTS.address,
+      lpTokenCont.address,
+      tokenAAddress,
+      tokenCAddress,
+      treasury,
+      fee,
+    ]);
+    await swapV2.deployed();
+
+    precision = await swapV2.getPrecisionValue();
+
+    const Factory = await ethers.getContractFactory("Factory");
+    const factory = await Factory.deploy();
+
+    return { swapV2, mockBaseHTS, lpTokenCont, factory };
+  }
+
   async function deployFailureFixture() {
     const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
     const mockBaseHTS = await MockBaseHTS.deploy(false, false, tokenCAddress);
@@ -109,7 +142,7 @@ describe("All Tests", function () {
     expect(tokenQty[1]).to.be.equals(precision.mul(50));
   });
 
-  it.only("Add liquidity for hbarx", async function () {
+  it("Add liquidity for hbarx", async function () {
     const { swapV2 } = await loadFixture(deployFixture);
     const tx = await swapV2.addLiquidity(
       zeroAddress,
@@ -125,6 +158,55 @@ describe("All Tests", function () {
     const tokenQty = await swapV2.getPairQty();
     expect(tokenQty[0]).to.be.equals(precision.mul(50));
     expect(tokenQty[1]).to.be.equals(precision.mul(50));
+  });
+
+  it("Add liquidity for hbarx fail", async function () {
+    const { swapV2 } = await loadFixture(deployFixture);
+    await expect(
+      swapV2.addLiquidity(
+        zeroAddress,
+        tokenAAddress,
+        tokenCAddress,
+        precision.mul(50),
+        precision.mul(50),
+        {
+          value: ethers.utils.parseEther("0.0000000030"),
+        }
+      )
+    ).to.revertedWith("Please pass valid Hbars");
+  });
+
+  it("Swap 1 units of token hbarx  ", async function () {
+    const { swapV2 } = await loadFixture(deployFixtureHBARX);
+    const tokenAPoolQty = BigNumber.from(200).mul(precision);
+    const tokenCPoolQty = BigNumber.from(220).mul(precision);
+    await swapV2.addLiquidity(
+      zeroAddress,
+      tokenAAddress,
+      tokenCAddress,
+      tokenAPoolQty,
+      tokenCPoolQty,
+      {
+        value: ethers.utils.parseEther("0.0000000220"),
+      }
+    );
+    const tokenBeforeQty = await swapV2.getPairQty();
+    expect(Number(tokenBeforeQty[0])).to.be.equals(tokenAPoolQty);
+    var addTokenAQty = BigNumber.from(1).mul(precision);
+    const feeForTokenA = await swapV2.feeForToken(addTokenAQty);
+    const addTokenAQtyAfterFee =
+      Number(addTokenAQty) - Number(feeForTokenA) / 2;
+    const tx = await swapV2.swapToken(zeroAddress, tokenAAddress, addTokenAQty);
+    await tx.wait();
+
+    const tokenQty = await swapV2.getPairQty();
+    expect(tokenQty[0]).to.be.equals(tokenAPoolQty.add(addTokenAQtyAfterFee));
+    const feeForTokenB = await swapV2.feeForToken(tokenQty[1]);
+    const tokenBResultantQtyAfterFee =
+      Number(tokenQty[1]) - Number(feeForTokenB);
+    const tokenBResultantQty =
+      Number(tokenBResultantQtyAfterFee) / Number(precision);
+    expect(tokenBResultantQty).to.be.equals(217.81637026);
   });
 
   describe("Factory Contract positive Tests", async () => {
@@ -582,7 +664,11 @@ describe("All Tests", function () {
 
     it("LPToken creation failed while initialize LP contract.", async function () {
       const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-      const mockBaseHTS = await MockBaseHTS.deploy(false, false);
+      const mockBaseHTS = await MockBaseHTS.deploy(
+        false,
+        false,
+        newZeroAddress
+      );
       await mockBaseHTS.setFailType(13);
 
       const LpTokenCont = await ethers.getContractFactory("LPToken");

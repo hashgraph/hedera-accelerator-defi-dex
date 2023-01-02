@@ -13,7 +13,7 @@ describe("Vault Tests", function () {
 
   it("Verify if the Vault Initialisation works", async function () {
     const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-    const mockBaseHTS = await MockBaseHTS.deploy(true, true);
+    const mockBaseHTS = await MockBaseHTS.deploy(true, true, newZeroAddress);
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
     const tokenCont = await TokenCont.deploy(100000000000, 100000000000);
 
@@ -34,7 +34,7 @@ describe("Vault Tests", function () {
 
   async function deployFixture() {
     const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-    const mockBaseHTS = await MockBaseHTS.deploy(true, false);
+    const mockBaseHTS = await MockBaseHTS.deploy(true, false, newZeroAddress);
     mockBaseHTS.setFailType(0);
 
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
@@ -56,7 +56,7 @@ describe("Vault Tests", function () {
 
   async function deployFailFixture() {
     const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-    const mockBaseHTS = await MockBaseHTS.deploy(false, false);
+    const mockBaseHTS = await MockBaseHTS.deploy(false, false, newZeroAddress);
     mockBaseHTS.setFailType(0);
 
     const TokenCont = await ethers.getContractFactory("ERC20Mock");

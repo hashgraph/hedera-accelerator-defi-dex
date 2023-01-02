@@ -53,7 +53,7 @@ describe("Governor Tests", function () {
 
   async function deployFixture() {
     const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-    const mockBaseHTS = await MockBaseHTS.deploy(true, true);
+    const mockBaseHTS = await MockBaseHTS.deploy(true, true, zeroAddress);
     const signers = await ethers.getSigners();
     mockBaseHTS.setFailType(0);
 
@@ -112,7 +112,7 @@ describe("Governor Tests", function () {
 
   async function deployFixtureWithFail() {
     const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-    const mockBaseHTS = await MockBaseHTS.deploy(false, true);
+    const mockBaseHTS = await MockBaseHTS.deploy(false, true, zeroAddress);
     const signers = await ethers.getSigners();
     mockBaseHTS.setFailType(0);
 
@@ -140,7 +140,7 @@ describe("Governor Tests", function () {
 
   async function deployFixtureWithDelay() {
     const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-    const mockBaseHTS = await MockBaseHTS.deploy(true, true);
+    const mockBaseHTS = await MockBaseHTS.deploy(true, true, zeroAddress);
     const signers = await ethers.getSigners();
     mockBaseHTS.setFailType(0);
 
