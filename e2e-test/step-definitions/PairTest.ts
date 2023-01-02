@@ -160,12 +160,12 @@ export class PairTestSteps {
     tokensAfter = await pair.pairCurrentPosition(contractProxyId, client);
     let precision = await pair.getPrecisionValue(contractProxyId, client);
     let withPrecision = pair.withPrecision(1, precision);
-    expect(Number(tokenAQuantity)).to.eql(
+    expect(
       Number(Number(tokensAfter[0].dividedBy(withPrecision)).toFixed())
-    );
-    expect(Number(tokenBQuantity)).to.eql(
+    ).to.eql(Number(tokenAQuantity));
+    expect(
       Number(Number(tokensAfter[1].dividedBy(withPrecision)).toFixed())
-    );
+    ).to.eql(Number(tokenBQuantity));
   }
 
   @given(/tokenA and tokenB are present in pool/, undefined, 30000)
@@ -202,12 +202,12 @@ export class PairTestSteps {
     tokensAfter = await pair.pairCurrentPosition(contractProxyId, client);
     let precision = await pair.getPrecisionValue(contractProxyId, client);
     let withPrecision = pair.withPrecision(1, precision);
-    expect(Number(tokenAQuantity)).to.eql(
+    expect(
       Number(Number(tokensAfter[0].dividedBy(withPrecision)).toFixed())
-    );
-    expect(Number(tokenBQuantity)).to.eql(
+    ).to.eql(Number(tokenAQuantity));
+    expect(
       Number(Number(tokensAfter[1].dividedBy(withPrecision)).toFixed())
-    );
+    ).to.eql(Number(tokenBQuantity));
   }
 
   @when(/User fetch spot price for tokenA/, undefined, 30000)
@@ -231,8 +231,8 @@ export class PairTestSteps {
   public async verifyTokenAQty(expectedTokenAQty: string) {
     let precision = await pair.getPrecisionValue(contractProxyId, client);
     let withPrecision = pair.withPrecision(1, precision);
-    expect(Number(expectedTokenAQty)).to.eql(
-      Number(Number(tokenAQty.dividedBy(withPrecision)).toFixed())
+    expect(Number(Number(tokenAQty.dividedBy(withPrecision)).toFixed())).to.eql(
+      Number(expectedTokenAQty)
     );
   }
 
