@@ -44,9 +44,6 @@ let tokenB = TokenId.fromString("0.0.48289686");
 const htsCreateHBARX = async (contractId: string): Promise<TokenId> => {
   const tokenAQty = withPrecision(10);
   const tokenBQty = withPrecision(10);
-  console.log(
-    ` Adding ${tokenAQty} units of token A and ${tokenBQty} units of token B to the pool.`
-  );
   const htsCreateHBARXTx = await new ContractExecuteTransaction()
     .setContractId(contractId)
     .setGas(9000000)
@@ -377,9 +374,9 @@ const setSlippage = async (contId: string, slippage: BigNumber) => {
 
 async function main() {
   let index = 0;
-  // await htsCreateHBARX(htsServiceAddress.id);
+  await htsCreateHBARX(htsServiceAddress.id);
   for (const contract of contracts) {
-    tokenA = TokenId.fromString("0.0.49173962");
+    tokenA = TokenId.fromString("0.0.49199007"); // hbarx
     tokenB = TokenId.fromString("0.0.48289686");
     console.log(`\nTesting started for token A${index} and token B${index}`);
     await testForSinglePair(contract, lpTokenContracts[index]);
@@ -394,11 +391,11 @@ async function testForSinglePair(
 ) {
   const lpTokenProxyId = lpContract.transparentProxyId!;
   const contractProxyId = contract.transparentProxyId!;
-  // await initializeLPTokenContract(lpTokenProxyId);
-  // await getLpTokenAddress(lpTokenProxyId);
-  // console.log(
-  //   `\nUsing pair proxy contractId ${contract.id} and LP token contract proxy id ${lpTokenProxyId} \n`
-  // );
+  await initializeLPTokenContract(lpTokenProxyId);
+  await getLpTokenAddress(lpTokenProxyId);
+  console.log(
+    `\nUsing pair proxy contractId ${contract.id} and LP token contract proxy id ${lpTokenProxyId} \n`
+  );
   await initialize(contractProxyId, lpContract.transparentProxyAddress!);
   await getPrecisionValue(contractProxyId);
   await getTreasureBalance([tokenA, tokenB]);

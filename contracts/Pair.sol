@@ -373,8 +373,8 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
         string memory errorMessage
     ) private {
         if (reciever == address(this) && token == tokenService.hbarxAddress()) {
-            require(msg.value == uint256(tokenQty), "Please pass valid Hbars");
-            (bool success, ) = address(tokenService).call{value: msg.value}(
+            require(msg.value >= uint256(tokenQty), "Please pass valid Hbars");
+            (bool success, ) = address(tokenService).call{value: uint256(tokenQty)}(
                 abi.encodeWithSelector(IBaseHTS.createHBARX.selector)
             );
             require(success == true, errorMessage);
