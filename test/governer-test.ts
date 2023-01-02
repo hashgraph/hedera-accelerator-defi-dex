@@ -200,7 +200,6 @@ describe("Governor Tests", function () {
       const { instance, mockBaseHTS, signers } = await loadFixture(
         deployFixtureWithFail
       );
-      const desc = "Test";
       const proposalIdResponse = await createProposal(instance, signers[0]);
       const record = await proposalIdResponse.wait();
       const proposalId = record.events[0].args.proposalId.toString();
@@ -209,12 +208,12 @@ describe("Governor Tests", function () {
       await instance.castVote(proposalId, 1);
       mockBaseHTS.setFailType(13);
       await mineNBlocks(20);
-      await expect(instance.executeProposal(desc)).to.revertedWith(
+      await expect(instance.executeProposal(title)).to.revertedWith(
         "Token creation failed."
       );
       mockBaseHTS.setFailType(13);
       mockBaseHTS.setFailResponseCode(32);
-      await expect(instance.executeProposal(desc)).to.revertedWith(
+      await expect(instance.executeProposal(title)).to.revertedWith(
         "Token creation failed."
       );
     });
@@ -254,8 +253,7 @@ describe("Governor Tests", function () {
       const state = await instance.state(proposalId);
       expect(state).to.be.equals(4);
 
-      await instance.cancelProposal(desc);
-      await instance.claimGODToken(proposalId);
+      await instance.cancelProposal(title);
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
     });
 
@@ -263,7 +261,6 @@ describe("Governor Tests", function () {
       const { instance, tokenCont, signers } = await loadFixture(deployFixture);
       const treaKey = ethers.utils.toUtf8Bytes("treasurer public key");
       const adminKey = ethers.utils.toUtf8Bytes("Admin public key");
-      const desc = "Test";
 
       await verifyAccountBalance(tokenCont, signers[0].address, total * 0.2);
       const proposalIdResponse = await createProposal(instance, signers[0]);
@@ -300,8 +297,7 @@ describe("Governor Tests", function () {
         "Contract not executed yet!"
       );
 
-      await instance.executeProposal(desc);
-      await instance.claimGODToken(proposalId);
+      await instance.executeProposal(title);
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
       const tokenAddress = await instance.getTokenAddress(proposalId);
       expect(tokenAddress).to.not.be.equals(zeroAddress);
@@ -355,14 +351,12 @@ describe("Governor Tests", function () {
       const state = await textGovernorInstance.state(proposalId);
       expect(state).to.be.equals(4);
 
-      await textGovernorInstance.executeProposal(desc);
-      await textGovernorInstance.claimGODToken(proposalId);
+      await textGovernorInstance.executeProposal(title);
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
     });
 
     it("When user delegates votes to different account then delegator voting weight should be removed and delegatee votes should be considered ", async function () {
       const { instance, tokenCont, signers } = await loadFixture(deployFixture);
-      const desc = "Test";
       //Creating a proposal for 20% token share
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
       const proposalIdResponse = await createProposal(instance, signers[0]);
@@ -419,14 +413,12 @@ describe("Governor Tests", function () {
       const state = await instance.state(proposalId);
       expect(state).to.be.equals(4);
 
-      await instance.executeProposal(desc);
-      await instance.claimGODToken(proposalId);
+      await instance.executeProposal(title);
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
     });
 
     it("Given delegator already voted when delegator delegates then delegatee should be considered. ", async function () {
       const { instance, tokenCont, signers } = await loadFixture(deployFixture);
-      const desc = "Test";
       //Creating a proposal for 20% token share
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
       const proposalIdResponse = await createProposal(instance, signers[0]);
@@ -479,8 +471,7 @@ describe("Governor Tests", function () {
       const state = await instance.state(proposalId);
       expect(state).to.be.equals(4);
 
-      await instance.executeProposal(desc);
-      await instance.claimGODToken(proposalId);
+      await instance.executeProposal(title);
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
     });
 
@@ -673,8 +664,7 @@ describe("Governor Tests", function () {
       const state = await instance.state(proposalId);
       expect(state).to.be.equals(4);
 
-      await instance.executeProposal(desc);
-      await instance.claimGODToken(proposalId);
+      await instance.executeProposal(title);
       await verifyAccountBalance(
         tokenCont,
         signers[0].address,
@@ -738,8 +728,7 @@ describe("Governor Tests", function () {
       const state = await instance.state(proposalId);
       expect(state).to.be.equals(4);
 
-      await instance.executeProposal(desc);
-      await instance.claimGODToken(proposalId);
+      await instance.executeProposal(title);
       await verifyAccountBalance(
         tokenCont,
         signers[0].address,
@@ -806,7 +795,7 @@ describe("Governor Tests", function () {
       const state = await governorUpgradeInstance.state(proposalId);
       expect(state).to.be.equals(4);
 
-      await governorUpgradeInstance.executeProposal(desc);
+      await governorUpgradeInstance.executeProposal(title);
 
       const addresses = await governorUpgradeInstance.getContractAddresses(
         proposalId
@@ -864,7 +853,7 @@ describe("Governor Tests", function () {
       );
       await getUpgradeProposalId(governorUpgradeInstance, signers[0]);
       await expect(
-        governorUpgradeInstance.connect(signers[1]).cancelProposal(desc)
+        governorUpgradeInstance.connect(signers[1]).cancelProposal(title)
       ).to.revertedWith("Only proposer can cancel the proposal");
     });
 
@@ -877,79 +866,13 @@ describe("Governor Tests", function () {
         tokenCont.address,
         5
       );
-      const info = await governorTransferTokenInstance.getTokenTransferData(
+      const info = await governorTransferTokenInstance.getProposalDetails(
         proposalId
       );
-      expect(info[0]).to.be.equals(title);
-      expect(info[1]).to.be.equals(link);
-    });
-
-    it("Verify claimGodToken should be reverted when proposal id does not exist", async function () {
-      const { governorTransferTokenInstance, tokenCont, signers } =
-        await loadFixture(deployFixture);
-      await getTransferTokenProposalId(
-        governorTransferTokenInstance,
-        signers,
-        tokenCont.address,
-        5
-      );
-
-      await expect(
-        governorTransferTokenInstance.claimGODToken(1)
-      ).to.revertedWith("Proposal not found");
-    });
-
-    it("Verify claimGodToken should emit an event", async function () {
-      const { governorTransferTokenInstance, tokenCont, signers } =
-        await loadFixture(deployFixture);
-      const proposalId = await getTransferTokenProposalId(
-        governorTransferTokenInstance,
-        signers,
-        tokenCont.address,
-        5
-      );
-
-      await governorTransferTokenInstance.castVote(proposalId, 1);
-      await mineNBlocks(15);
-      await expect(governorTransferTokenInstance.claimGODToken(proposalId))
-        .to.emit(governorTransferTokenInstance, "GodTokenClaimed")
-        .withArgs(proposalId, anyValue, anyValue);
-    });
-
-    it("Verify claimGodToken should be reverted when proposal is in pending / active state", async function () {
-      const { governorTransferTokenInstance, tokenCont, signers } =
-        await loadFixture(deployFixture);
-      const proposalId = await getTransferTokenProposalId(
-        governorTransferTokenInstance,
-        signers,
-        tokenCont.address,
-        5
-      );
-
-      await expect(
-        governorTransferTokenInstance.claimGODToken(proposalId)
-      ).to.revertedWith("Can't claim token");
-    });
-
-    it("Verify claimGodToken should emit same event for subsequent claim call", async function () {
-      const { governorTransferTokenInstance, tokenCont, signers } =
-        await loadFixture(deployFixture);
-      const proposalId = await getTransferTokenProposalId(
-        governorTransferTokenInstance,
-        signers,
-        tokenCont.address,
-        5
-      );
-
-      await governorTransferTokenInstance.castVote(proposalId, 1);
-      await mineNBlocks(15);
-      await expect(governorTransferTokenInstance.claimGODToken(proposalId))
-        .to.emit(governorTransferTokenInstance, "GodTokenClaimed")
-        .withArgs(proposalId, anyValue, anyValue);
-
-      await expect(
-        governorTransferTokenInstance.claimGODToken(proposalId)
-      ).to.revertedWith("Token already claimed");
+      expect(info[0]).to.be.equals(signers[0].address);
+      expect(info[1]).to.be.equals(title);
+      expect(info[2]).to.be.equals(desc);
+      expect(info[3]).to.be.equals(link);
     });
 
     it("Verify GovernorTransferToken should reverted for invalid propsal id", async function () {
@@ -957,8 +880,8 @@ describe("Governor Tests", function () {
         deployFixture
       );
       await expect(
-        governorTransferTokenInstance.getTokenTransferData(1)
-      ).to.revertedWith("No data available");
+        governorTransferTokenInstance.getProposalDetails(1)
+      ).to.revertedWith("Proposal not found");
     });
 
     it("Verify GovernorTransferToken contract proposal creation to execute flow ", async function () {
@@ -982,7 +905,7 @@ describe("Governor Tests", function () {
       await mineNBlocks(20);
       const state = await governorTransferTokenInstance.state(proposalId);
       expect(state).to.be.equals(4);
-      await governorTransferTokenInstance.executeProposal(desc);
+      await governorTransferTokenInstance.executeProposal(title);
       await verifyAccountBalance(
         tokenCont,
         signers[1].address,
@@ -1016,7 +939,7 @@ describe("Governor Tests", function () {
       await mockBaseHTS.setSuccessStatus(false);
 
       await expect(
-        governorTransferTokenInstance.executeProposal(desc)
+        governorTransferTokenInstance.executeProposal(title)
       ).to.revertedWith("Transfer token failed.");
     });
 
@@ -1024,14 +947,16 @@ describe("Governor Tests", function () {
       instance: Contract,
       account: SignerWithAddress
     ) => {
-      const treaKey = ethers.utils.toUtf8Bytes("treasurer public key");
+      const treasurerKey = ethers.utils.toUtf8Bytes("treasurer public key");
       const adminKey = ethers.utils.toUtf8Bytes("Admin public key");
       return await instance
         .connect(account)
         .createProposal(
+          title,
           desc,
+          link,
           zeroAddress,
-          treaKey,
+          treasurerKey,
           zeroAddress,
           adminKey,
           "Token",
@@ -1043,7 +968,7 @@ describe("Governor Tests", function () {
       instance: Contract,
       account: SignerWithAddress
     ) => {
-      return await instance.connect(account).createProposal(desc);
+      return await instance.connect(account).createProposal(title, desc, link);
     };
 
     async function getUpgradeProposalId(
@@ -1052,7 +977,7 @@ describe("Governor Tests", function () {
     ) {
       const pIdResponse = await instance
         .connect(account)
-        .createProposal(desc, zeroAddress, oneAddress);
+        .createProposal(title, desc, link, zeroAddress, oneAddress);
       const record = await pIdResponse.wait();
       return record.events[0].args.proposalId.toString();
     }
@@ -1066,13 +991,13 @@ describe("Governor Tests", function () {
       const pIdResponse = await instance
         .connect(signers[0])
         .createProposal(
+          title,
           desc,
+          link,
           signers[1].address,
           signers[2].address,
           tokenAddress,
-          amount,
-          title,
-          link
+          amount
         );
       const record = await pIdResponse.wait();
       return record.events[0].args.proposalId.toString();

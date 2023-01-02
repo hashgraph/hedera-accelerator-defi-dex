@@ -24,6 +24,9 @@ export async function main(_contractId: string? = null) {
     }
     contract = contractService.getContractWithProxy(contractName.toLowerCase());
   }
+  if (!contract) {
+    throw Error("Failed to get contract details.");
+  }
   const filePath = contractMetadata.getFilePath(contract.name);
   const eventConsumer = new EventConsumer(filePath);
   const events = await eventConsumer.getEventsFromMirror(
