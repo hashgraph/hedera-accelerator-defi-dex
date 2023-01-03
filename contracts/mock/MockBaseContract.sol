@@ -9,6 +9,7 @@ import "hardhat/console.sol";
 
 contract MockBaseHTS is IBaseHTS {
     bool internal tokenTest;
+    bool private revertCreateToken;
     int256 private passTransactionCount = 100;
     int256 private successCode = 22;
     int256 private failureCode = 23;
@@ -19,6 +20,10 @@ contract MockBaseHTS is IBaseHTS {
 
     function setPassTransactionCount(int256 _passTransactionCount) public {
         passTransactionCount = _passTransactionCount;
+    }
+
+    function setRevertCreateToken(bool _revertCreateToken) public {
+        revertCreateToken = _revertCreateToken;
     }
 
     function transferTokenPublic(
@@ -96,6 +101,9 @@ contract MockBaseHTS is IBaseHTS {
         override
         returns (int256 responseCode, address tokenAddress)
     {
+        if (revertCreateToken) {
+            revert();
+        }
         if (passTransactionCount > 0) {
             passTransactionCount -= 1;
             ERC20Mock mock = new ERC20Mock(10, 10);
