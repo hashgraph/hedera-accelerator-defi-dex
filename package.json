@@ -6,7 +6,7 @@
     "deploy": "npx hardhat run ./deployment/swapContract.ts",
     "prepare": "husky install",
     "code-format": "prettier --write \"**/*.ts\"",
-    "test": "./node_modules/.bin/cucumber-js -p default "
+    "test": "./node_modules/.bin/cucumber-js -p default --exit" 
     
   },
   "devDependencies": {
