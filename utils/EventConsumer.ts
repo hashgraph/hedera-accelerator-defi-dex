@@ -105,7 +105,7 @@ export class EventConsumer {
           const event = this.web3.eth.abi.decodeLog(
             eventAbi.inputs,
             data,
-            eventAbi.anonymous === true ? topics.splice(1) : topics
+            eventAbi.anonymous === false ? topics.splice(1) : topics
           );
           const events = eventsMap.get(eventAbi.name) ?? [];
           eventsMap.set(eventAbi.name, [...events, event]);
