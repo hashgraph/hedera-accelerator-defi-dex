@@ -43,25 +43,3 @@ jobs:
           skip_fetch: true
           skip_checkout: true
           create_branch: false
-  # approved:
-  #   if: github.event.review.state == 'approved'
-  #   runs-on: windows-latest 
-
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #     - name: Use Node.js 18.x
-  #       uses: actions/setup-node@v3
-  #       with:
-  #         node-version: '18.x'
-  #     - run: npm ci
-  #     - name: Running build and deployment
-  #       run:  bash ./e2e-test.sh Pair Logic ${{ env.OPERATOR_ID }} ${{ env.OPERATOR_KEY }} ${{ env.TREASURE_ID }} ${{ env.TREASURE_KEY }} ${{ env.TOKEN_USER_ID }} ${{ env.TOKEN_USER_KEY }} ${{ env.DEX_CONTRACT_OWNER_ID }} ${{ env.DEX_CONTRACT_OWNER_KEY }}
-  #     - uses: stefanzweifel/git-auto-commit-action@v4
-  #       with:
-  #         file_pattern: deployment/state/contracts.json
-  #         commit_message: Updating contract record  
-  #         push_options: '--force'
-  #         skip_dirty_check: false
-  #         skip_fetch: true
-  #         skip_checkout: true
-  #         create_branch: false
