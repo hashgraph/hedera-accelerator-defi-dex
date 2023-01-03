@@ -295,7 +295,9 @@ abstract contract GovernorCountingSimpleInternal is
             int64(uint64(precision))
         );
         if (responseCode != HederaResponseCodes.SUCCESS) {
-            revert("Transfer token failed.");
+            revert(
+                "GovernorCountingSimpleInternal: token transfer failed to contract."
+            );
         }
     }
 
@@ -307,7 +309,9 @@ abstract contract GovernorCountingSimpleInternal is
             int64(uint64(precision))
         );
         if (responseCode != HederaResponseCodes.SUCCESS) {
-            revert("Transfer token failed.");
+            revert(
+                "GovernorCountingSimpleInternal: token transfer failed from contract."
+            );
         }
     }
 

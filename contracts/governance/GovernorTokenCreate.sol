@@ -113,7 +113,7 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
 
         require(
             responseCode == HederaResponseCodes.SUCCESS,
-            "Token creation failed."
+            "GovernorTokenCreate: Token creation failed."
         );
         tokenCreateData.newTokenAddress = tokenAddress;
     }

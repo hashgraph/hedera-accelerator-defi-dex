@@ -68,7 +68,7 @@ contract GovernorTransferToken is GovernorCountingSimpleInternal {
             int64(tokenTransferData.transferTokenAmount)
         );
         if (responseCode != HederaResponseCodes.SUCCESS) {
-            revert("Transfer token failed.");
+            revert("GovernorTransferToken: transfer token failed.");
         }
     }
 }
