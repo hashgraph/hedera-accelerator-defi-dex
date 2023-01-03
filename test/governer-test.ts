@@ -205,6 +205,11 @@ describe("Governor Tests", function () {
       await instance.castVote(proposalId, 1);
       await mineNBlocks(20);
       await mockBaseHTS.setPassTransactionCount(0); // 0 pass transaction
+      await mockBaseHTS.setRevertCreateToken(true);
+      await expect(instance.executeProposal(title)).to.revertedWith(
+        "GovernorTokenCreate: Token creation failed."
+      );
+      await mockBaseHTS.setRevertCreateToken(false);
       await expect(instance.executeProposal(title)).to.revertedWith(
         "GovernorTokenCreate: Token creation failed."
       );
