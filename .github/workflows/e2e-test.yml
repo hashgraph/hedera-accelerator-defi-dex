@@ -22,7 +22,7 @@ env:
 
 jobs:
   build:
-    if: github.event.review.state == 'approved' || github.event.pull_request.opened == true
+    if: github.event.review.state == 'approved' || github.event.review.state == 'submitted'
     runs-on: windows-latest 
 
     steps:
