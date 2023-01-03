@@ -13,7 +13,7 @@ describe("Vault Tests", function () {
 
   it("Verify if the Vault Initialisation works", async function () {
     const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-    const mockBaseHTS = await MockBaseHTS.deploy(true, true);
+    const mockBaseHTS = await MockBaseHTS.deploy(true);
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
     const tokenCont = await TokenCont.deploy(100000000000, 100000000000);
 
@@ -34,8 +34,7 @@ describe("Vault Tests", function () {
 
   async function deployFixture() {
     const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-    const mockBaseHTS = await MockBaseHTS.deploy(true, false);
-    mockBaseHTS.setFailType(0);
+    const mockBaseHTS = await MockBaseHTS.deploy(false);
 
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
     const tokenCont = await TokenCont.deploy(total, 0);
@@ -56,8 +55,7 @@ describe("Vault Tests", function () {
 
   async function deployFailFixture() {
     const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-    const mockBaseHTS = await MockBaseHTS.deploy(false, false);
-    mockBaseHTS.setFailType(0);
+    const mockBaseHTS = await MockBaseHTS.deploy(false);
 
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
     const tokenCont = await TokenCont.deploy(total, 0);
@@ -100,17 +98,17 @@ describe("Vault Tests", function () {
       deployFailFixture
     );
     await vaultContract.connect(signers[1]).addStake(10);
-    mockBaseHTS.setFailType(15); //1 pass transaction
+    mockBaseHTS.setPassTransactionCount(1); // 1 pass transaction
     await expect(
       vaultContract
         .connect(signers[0])
         .addReward(rewardToken1, 10, signers[0].address)
     ).to.revertedWith("Vault: Add reward failed on token exist.");
-    mockBaseHTS.setFailType(0); //multiple pass transaction
+    mockBaseHTS.setPassTransactionCount(2); // 2 pass transaction
     await vaultContract
       .connect(signers[0])
       .addReward(rewardToken1, 10, signers[0].address);
-    mockBaseHTS.setFailType(16); // 0 pass transaction
+    mockBaseHTS.setPassTransactionCount(0); // 0 pass transaction
     await expect(
       vaultContract
         .connect(signers[0])
@@ -122,21 +120,21 @@ describe("Vault Tests", function () {
     const { vaultContract, signers, mockBaseHTS } = await loadFixture(
       deployFailFixture
     );
-    mockBaseHTS.setFailType(16); // 0 pass transaction
+    mockBaseHTS.setPassTransactionCount(0); // 0 pass transaction
     await expect(
       vaultContract.connect(signers[1]).addStake(10)
     ).to.revertedWith("Vault: Add stake failed.");
 
-    mockBaseHTS.setFailType(0); //multiple pass transaction
+    mockBaseHTS.setPassTransactionCount(4); // 4 pass transaction
     await vaultContract.connect(signers[1]).addStake(10);
     await vaultContract
       .connect(signers[0])
       .addReward(rewardToken1, 10, signers[0].address);
-    mockBaseHTS.setFailType(15); //1 pass transaction
+    mockBaseHTS.setPassTransactionCount(1); // 1 pass transaction
     await expect(
       vaultContract.connect(signers[1]).addStake(10)
     ).to.revertedWith("Vault: Claim reward failed.");
-    mockBaseHTS.setFailType(17); //2 pass transaction
+    mockBaseHTS.setPassTransactionCount(2); // 2 pass transaction
     await expect(
       vaultContract.connect(signers[1]).addStake(10)
     ).to.revertedWith("Vault: Add stake failed.");
@@ -153,7 +151,7 @@ describe("Vault Tests", function () {
     await vaultContract
       .connect(signers[0])
       .addReward(rewardToken1, 10, signers[0].address);
-    mockBaseHTS.setFailType(17); //2 pass transaction
+    mockBaseHTS.setPassTransactionCount(2); // 2 pass transaction
     await expect(
       vaultContract.connect(signers[1]).withdraw(0, 10)
     ).to.revertedWith("Vault: Withdraw failed.");
@@ -170,7 +168,7 @@ describe("Vault Tests", function () {
     await vaultContract
       .connect(signers[0])
       .addReward(rewardToken1, 10, signers[0].address);
-    mockBaseHTS.setFailType(15); //1 pass transaction
+    mockBaseHTS.setPassTransactionCount(1); // 1 pass transaction
     await expect(
       vaultContract
         .connect(signers[1])

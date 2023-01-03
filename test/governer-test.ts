@@ -53,9 +53,8 @@ describe("Governor Tests", function () {
 
   async function deployFixture() {
     const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-    const mockBaseHTS = await MockBaseHTS.deploy(true, true);
+    const mockBaseHTS = await MockBaseHTS.deploy(true);
     const signers = await ethers.getSigners();
-    mockBaseHTS.setFailType(0);
 
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
     const tokenCont = await TokenCont.deploy(total, 0);
@@ -112,9 +111,8 @@ describe("Governor Tests", function () {
 
   async function deployFixtureWithFail() {
     const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-    const mockBaseHTS = await MockBaseHTS.deploy(false, true);
+    const mockBaseHTS = await MockBaseHTS.deploy(true);
     const signers = await ethers.getSigners();
-    mockBaseHTS.setFailType(0);
 
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
     const tokenCont = await TokenCont.deploy(total, 0);
@@ -140,9 +138,8 @@ describe("Governor Tests", function () {
 
   async function deployFixtureWithDelay() {
     const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-    const mockBaseHTS = await MockBaseHTS.deploy(true, true);
+    const mockBaseHTS = await MockBaseHTS.deploy(true);
     const signers = await ethers.getSigners();
-    mockBaseHTS.setFailType(0);
 
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
     const tokenCont = await TokenCont.deploy(total, 0);
@@ -206,13 +203,8 @@ describe("Governor Tests", function () {
       console.log(proposalId);
       await mineNBlocks(10);
       await instance.castVote(proposalId, 1);
-      mockBaseHTS.setFailType(13);
       await mineNBlocks(20);
-      await expect(instance.executeProposal(title)).to.revertedWith(
-        "GovernorTokenCreate: Token creation failed."
-      );
-      mockBaseHTS.setFailType(13);
-      mockBaseHTS.setFailResponseCode(32);
+      await mockBaseHTS.setPassTransactionCount(0); // 0 pass transaction
       await expect(instance.executeProposal(title)).to.revertedWith(
         "GovernorTokenCreate: Token creation failed."
       );
@@ -822,8 +814,7 @@ describe("Governor Tests", function () {
       const { governorUpgradeInstance, signers, mockBaseHTS } =
         await loadFixture(deployFixture);
 
-      await mockBaseHTS.setFailType(14);
-      await mockBaseHTS.setSuccessStatus(false);
+      await mockBaseHTS.setPassTransactionCount(1);
 
       await expect(
         getUpgradeProposalId(governorUpgradeInstance, signers[0])
@@ -937,8 +928,7 @@ describe("Governor Tests", function () {
       const state = await governorTransferTokenInstance.state(proposalId);
       expect(state).to.be.equals(4);
 
-      await mockBaseHTS.setFailType(14);
-      await mockBaseHTS.setSuccessStatus(false);
+      await mockBaseHTS.setPassTransactionCount(1);
 
       await expect(
         governorTransferTokenInstance.executeProposal(title)
