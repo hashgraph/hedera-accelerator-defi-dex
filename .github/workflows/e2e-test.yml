@@ -5,8 +5,8 @@ on:
       - opened
     branches:
       - temp-develop
-  pull_request_review:
-    types: [submitted]
+  # pull_request_review:
+  #   types: [submitted]
 
 env:
   OPERATOR_ID: 0.0.47710057
@@ -22,8 +22,8 @@ env:
 
 jobs:
   build:
-    if: github.event.review.state == 'approved' || github.event.review.state == 'submitted'
-    runs-on: windows-latest 
+    # if: github.event.review.state == 'approved' 
+    runs-on: ubuntu-latest 
 
     steps:
       - uses: actions/checkout@v3
