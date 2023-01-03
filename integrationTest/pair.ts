@@ -23,7 +23,7 @@ const client = clientManagement.createOperatorClient();
 
 const { treasureId, treasureKey } = clientManagement.getTreasure();
 const treasurerClient = clientManagement.createClient();
-const { key } = clientManagement.getOperator();
+const { id, key } = clientManagement.getOperator();
 
 const lpTokenContracts = [
   contractService.getContractWithProxy(contractService.lpTokenContractName),
@@ -173,7 +173,7 @@ const swapTokenA = async (contId: string) => {
   console.log(` Swapping a ${tokenAQty} units of token A from the pool.`);
   const swapToken = await new ContractExecuteTransaction()
     .setContractId(contId)
-    .setGas(2000000)
+    .setGas(5000000)
     .setFunction(
       "swapToken",
       new ContractFunctionParameters()
@@ -374,9 +374,9 @@ const setSlippage = async (contId: string, slippage: BigNumber) => {
 
 async function main() {
   let index = 0;
-  await htsCreateHBARX(htsServiceAddress.id);
+  //await htsCreateHBARX(htsServiceAddress.id);
   for (const contract of contracts) {
-    tokenA = TokenId.fromString("0.0.49199007"); // hbarx
+    tokenA = TokenId.fromString("0.0.49200796"); // hbarx
     tokenB = TokenId.fromString("0.0.48289686");
     console.log(`\nTesting started for token A${index} and token B${index}`);
     await testForSinglePair(contract, lpTokenContracts[index]);

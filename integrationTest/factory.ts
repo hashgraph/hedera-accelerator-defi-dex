@@ -19,6 +19,7 @@ import ClientManagement from "../utils/ClientManagement";
 const clientManagement = new ClientManagement();
 const client = clientManagement.createOperatorClient();
 const { treasureId, treasureKey } = clientManagement.getTreasure();
+const { id } = clientManagement.getOperator();
 const contractService = new ContractService();
 
 const tokenA = TokenId.fromString("0.0.48289687");
@@ -27,6 +28,7 @@ const tokenC = TokenId.fromString("0.0.48301281");
 const tokenD = TokenId.fromString("0.0.48301282");
 const tokenE = TokenId.fromString("0.0.48301300");
 const tokenF = TokenId.fromString("0.0.48301322");
+const tokenGOD = TokenId.fromString("0.0.48602639");
 
 const baseContract = contractService.getContract(
   contractService.baseContractName
@@ -92,7 +94,7 @@ const createPair = async (
       new ContractFunctionParameters()
         .addAddress(token0.toSolidityAddress())
         .addAddress(token1.toSolidityAddress())
-        .addAddress(treasureId.toSolidityAddress())
+        .addAddress(id.toSolidityAddress())
         .addInt256(new BigNumber(10))
     )
     .setMaxTransactionFee(new Hbar(100))
@@ -211,7 +213,7 @@ const swapToken = async (contId: string, token: TokenId) => {
   console.log(`Swapping a ${tokenQty} units of token A from the pool.`);
   const swapToken = await new ContractExecuteTransaction()
     .setContractId(contId)
-    .setGas(2000000)
+    .setGas(5000000)
     .setFunction(
       "swapToken",
       new ContractFunctionParameters()
@@ -219,6 +221,7 @@ const swapToken = async (contId: string, token: TokenId) => {
         .addAddress(token.toSolidityAddress())
         .addInt256(tokenQty)
     )
+    .setPayableAmount(new Hbar(1))
     .freezeWith(client)
     .sign(treasureKey);
   const swapTokenTx = await swapToken.execute(client);
@@ -263,6 +266,7 @@ async function main() {
   await setupFactory();
   await testForSinglePair(contractId, tokenC, tokenB);
   await testForSinglePair(contractId, tokenC, tokenD);
+  await testForSinglePair(contractId, tokenA, tokenGOD);
 }
 
 async function testForSinglePair(
