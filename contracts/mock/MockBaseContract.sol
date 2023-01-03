@@ -8,100 +8,17 @@ import "./ERC20Mock.sol";
 import "hardhat/console.sol";
 
 contract MockBaseHTS is IBaseHTS {
-    enum FailTransactionFor {
-        initialise,
-        swapAFailedSendingA,
-        swapAFailedSendingB,
-        addLiquidity,
-        addLiquidityFailBTransfer,
-        removeLiquidityFailBTransfer,
-        removeLiquidity,
-        addLiquidityFailATransfer,
-        removeLiquidityFailATransfer,
-        swapBFailedSendingA,
-        addLiquidityFailMinting,
-        addLiquidityLPTransferFail,
-        swapBFailedSendingB,
-        lpTokenCreationFailed,
-        failedTransferToken,
-        vaultAddRewardFailExistCase,
-        vaultAddRewardFailNotExistCase,
-        vaultAddStakeFailExistCase
-    }// 17
-
-    bool internal isSuccess;
     bool internal tokenTest;
-    int256 internal trueTransaction = 0;
-    FailTransactionFor internal failType;
-    int256 public returnResponseCode = 23;
+    int256 private passTransactionCount = 100;
+    int256 private successCode = 22;
+    int256 private failureCode = 23;
 
-    constructor(bool _isSucces, bool _tokenTest) {
-        isSuccess = _isSucces;
+    constructor(bool _tokenTest) {
         tokenTest = _tokenTest;
     }
 
-    function setSuccessStatus(bool _success) public {
-        isSuccess = _success;
-    }
-
-    function setTrueTransactionCount(int256 _trueTransaction) public {
-        trueTransaction = _trueTransaction;
-    }
-
-    function setFailType(int256 _type) public {
-        failType = FailTransactionFor(_type);
-        trueTransaction = successForType();
-    }
-
-    function setFailResponseCode(int256 code) public {
-        returnResponseCode = code;
-    }
-
-    function successForType() internal view returns (int256) {
-        if (failType == FailTransactionFor.initialise) {
-            return 7;
-        }
-        if (failType == FailTransactionFor.addLiquidityFailATransfer) {
-            return 1;
-        }
-        if (failType == FailTransactionFor.removeLiquidityFailATransfer) {
-            return 0;
-        }
-        if (failType == FailTransactionFor.swapAFailedSendingB) {
-            return 8;
-        }
-        if (failType == FailTransactionFor.swapBFailedSendingA) {
-            return 9;
-        }
-        if (failType == FailTransactionFor.addLiquidityFailBTransfer) {
-            return 3;
-        }
-        if (failType == FailTransactionFor.removeLiquidityFailBTransfer) {
-            return 1;
-        }
-        if (failType == FailTransactionFor.addLiquidityFailMinting) {
-            return 5;
-        }
-        if (failType == FailTransactionFor.addLiquidityLPTransferFail) {
-            return 6;
-        }
-        if (failType == FailTransactionFor.swapBFailedSendingB) {
-            return 7;
-        }
-        if (failType == FailTransactionFor.lpTokenCreationFailed) {
-            return 1;
-        }
-        if (failType == FailTransactionFor.failedTransferToken) {
-            return 1;
-        }
-        if (failType == FailTransactionFor.vaultAddRewardFailExistCase) {
-            return 1;
-        }
-        if (failType == FailTransactionFor.vaultAddStakeFailExistCase) {
-            return 2;
-        }
-        
-        return 0;
+    function setPassTransactionCount(int256 _passTransactionCount) public {
+        passTransactionCount = _passTransactionCount;
     }
 
     function transferTokenPublic(
@@ -111,60 +28,62 @@ contract MockBaseHTS is IBaseHTS {
         int256 amount
     ) external override returns (int256 responseCode) {
         if (tokenTest) {
-            uint256 newAmount = (IERC20Mock(token).balanceOf(from)) - uint256(amount);
+            uint256 newAmount = (IERC20Mock(token).balanceOf(from)) -
+                uint256(amount);
             IERC20Mock(token).setUserBalance(from, newAmount);
-            uint256 newAmountRec = (IERC20Mock(token).balanceOf(to)) + uint256(amount);
-            IERC20Mock(token).setUserBalance(to, newAmountRec);      
+            uint256 newAmountRec = (IERC20Mock(token).balanceOf(to)) +
+                uint256(amount);
+            IERC20Mock(token).setUserBalance(to, newAmountRec);
         }
-        if (trueTransaction > 0) {
-            trueTransaction -= 1;
-            return int256(22);
+        if (passTransactionCount > 0) {
+            passTransactionCount -= 1;
+            return successCode;
         }
-
-        int256 result = isSuccess ? int256(22) : int256(23);
-        return result;
+        return failureCode;
     }
 
-    function associateTokenPublic(address, address)
-        external
-        override
-        returns (int256 responseCode)
-    {
-        if (trueTransaction > 0) {
-            trueTransaction -= 1;
-            return int256(22);
+    function associateTokenPublic(
+        address,
+        address
+    ) external override returns (int256 responseCode) {
+        if (passTransactionCount > 0) {
+            passTransactionCount -= 1;
+            return successCode;
         }
-        return isSuccess ? int256(22) : int256(23);
+        return failureCode;
     }
 
-    function associateTokensPublic(address, address[] memory)
-        external
-        view
-        override
-        returns (int256 responseCode)
-    {
-        return isSuccess ? int256(22) : int256(23);
-    }
-
-    function mintTokenPublic(address, int256 amount)
-        external
-        override
-        returns (int256 responseCode, int256 newTotalSupply)
-    {
-        if (trueTransaction > 0) {
-            trueTransaction -= 1;
-            return (int256(22), amount);
+    function associateTokensPublic(
+        address,
+        address[] memory
+    ) external override returns (int256 responseCode) {
+        if (passTransactionCount > 0) {
+            passTransactionCount -= 1;
+            return successCode;
         }
-        return (isSuccess ? int256(22) : int256(23), int256(amount));
+        return failureCode;
     }
 
-    function burnTokenPublic(address, int256 amount)
-        external
-        view
-        override
-        returns (int256 responseCode, int256 newTotalSupply)
-    {
-        return ((isSuccess) ? int256(22) : int256(23), amount);
+    function mintTokenPublic(
+        address,
+        int256 amount
+    ) external override returns (int256 responseCode, int256 newTotalSupply) {
+        if (passTransactionCount > 0) {
+            passTransactionCount -= 1;
+            return (successCode, amount);
+        }
+        return (failureCode, 0);
+    }
+
+    function burnTokenPublic(
+        address,
+        int256 amount
+    ) external override returns (int256 responseCode, int256 newTotalSupply) {
+        if (passTransactionCount > 0) {
+            passTransactionCount -= 1;
+            return (successCode, amount);
+        }
+        return (failureCode, 0);
     }
 
     function createFungibleTokenPublic(
@@ -177,14 +96,11 @@ contract MockBaseHTS is IBaseHTS {
         override
         returns (int256 responseCode, address tokenAddress)
     {
-        ERC20Mock mock = new ERC20Mock(10, 10);
-        if (failType == FailTransactionFor.lpTokenCreationFailed) {
-            if (returnResponseCode == 32) {
-                revert("Can not create token");
-            }
-            return (int256(23), address(0x0));
+        if (passTransactionCount > 0) {
+            passTransactionCount -= 1;
+            ERC20Mock mock = new ERC20Mock(10, 10);
+            return (successCode, address(mock));
         }
-
-        return (int256(22), address(mock));
+        return (failureCode, address(0));
     }
 }

@@ -10,7 +10,7 @@ describe("All Tests", function () {
   describe("Splitter Upgradeable", function () {
     it("Verify if the Splitter contract is upgradeable safe ", async function () {
       const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-      const mockBaseHTS = await MockBaseHTS.deploy(true, true);
+      const mockBaseHTS = await MockBaseHTS.deploy(true);
       const TokenCont = await ethers.getContractFactory("ERC20Mock");
       const tokenCont = await TokenCont.deploy(10000000000, 0);
 
@@ -44,7 +44,7 @@ describe("All Tests", function () {
 
     it("Verify if the Splitter Initialisation works", async function () {
       const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-      const mockBaseHTS = await MockBaseHTS.deploy(true, true);
+      const mockBaseHTS = await MockBaseHTS.deploy(true);
       const TokenCont = await ethers.getContractFactory("ERC20Mock");
       const tokenCont = await TokenCont.deploy(100000000000, 100000000000);
 
@@ -120,8 +120,7 @@ describe("All Tests", function () {
 
   async function deployFixture() {
     const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-    const mockBaseHTS = await MockBaseHTS.deploy(true, true);
-    mockBaseHTS.setFailType(0);
+    const mockBaseHTS = await MockBaseHTS.deploy(true);
 
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
     const tokenCont = await TokenCont.deploy(100000000000, 100000000000);
