@@ -5,8 +5,8 @@ on:
       - opened
     branches:
       - temp-develop
-  # pull_request_review:
-  #   types: [submitted]
+  pull_request_review:
+    types: [submitted]
 
 env:
   OPERATOR_ID: 0.0.47710057
@@ -22,7 +22,7 @@ env:
 
 jobs:
   build:
-    # if: github.event.review.state == 'approved' 
+    if: github.event.review.state == 'approved' || github.event.action == 'opened'
     runs-on: ubuntu-latest 
 
     steps:
