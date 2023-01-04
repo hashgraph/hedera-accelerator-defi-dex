@@ -11,8 +11,6 @@ contract MockBaseHTS is IBaseHTS {
     bool internal tokenTest;
     bool private revertCreateToken;
     int256 private passTransactionCount = 100;
-    int256 private successCode = 22;
-    int256 private failureCode = 23;
 
     constructor(bool _tokenTest) {
         tokenTest = _tokenTest;
@@ -31,59 +29,39 @@ contract MockBaseHTS is IBaseHTS {
         address from,
         address to,
         int256 amount
-    ) external override returns (int256 responseCode) {
+    ) external override returns (int256) {
         if (tokenTest) {
             ERC20Mock(token).transfer(from, to, uint(amount));
         }
-        if (passTransactionCount > 0) {
-            passTransactionCount -= 1;
-            return successCode;
-        }
-        return failureCode;
+        return getResponseCode();
     }
 
     function associateTokenPublic(
         address,
         address
-    ) external override returns (int256 responseCode) {
-        if (passTransactionCount > 0) {
-            passTransactionCount -= 1;
-            return successCode;
-        }
-        return failureCode;
+    ) external override returns (int256) {
+        return getResponseCode();
     }
 
     function associateTokensPublic(
         address,
         address[] memory
-    ) external override returns (int256 responseCode) {
-        if (passTransactionCount > 0) {
-            passTransactionCount -= 1;
-            return successCode;
-        }
-        return failureCode;
+    ) external override returns (int256) {
+        return getResponseCode();
     }
 
     function mintTokenPublic(
         address,
         int256 amount
-    ) external override returns (int256 responseCode, int256 newTotalSupply) {
-        if (passTransactionCount > 0) {
-            passTransactionCount -= 1;
-            return (successCode, amount);
-        }
-        return (failureCode, 0);
+    ) external override returns (int256, int256) {
+        return (getResponseCode(), amount);
     }
 
     function burnTokenPublic(
         address,
         int256 amount
-    ) external override returns (int256 responseCode, int256 newTotalSupply) {
-        if (passTransactionCount > 0) {
-            passTransactionCount -= 1;
-            return (successCode, amount);
-        }
-        return (failureCode, 0);
+    ) external override returns (int256, int256) {
+        return (getResponseCode(), amount);
     }
 
     function createFungibleTokenPublic(
@@ -99,11 +77,18 @@ contract MockBaseHTS is IBaseHTS {
         if (revertCreateToken) {
             revert();
         }
+        responseCode = getResponseCode();
+        if (responseCode == 22) {
+            tokenAddress = address(new ERC20Mock(10, 10));
+        }
+        return (responseCode, tokenAddress);
+    }
+
+    function getResponseCode() private returns (int) {
         if (passTransactionCount > 0) {
             passTransactionCount -= 1;
-            ERC20Mock mock = new ERC20Mock(10, 10);
-            return (successCode, address(mock));
+            return int(22);
         }
-        return (failureCode, address(0));
+        return int(23);
     }
 }
