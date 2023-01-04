@@ -41,6 +41,6 @@ sed -i~ '/^CONTRACT_NAME=/s/=.*/="LPToken"/' .env
 npx hardhat run ./deployment/scripts/logic.ts;
 npx hardhat run ./deployment/scripts/transparentUpgradeableProxy.ts;
 
-npm run test
+npm run e2e-test
 
 echo "********************  Done *************************************";
