@@ -33,12 +33,7 @@ contract MockBaseHTS is IBaseHTS {
         int256 amount
     ) external override returns (int256 responseCode) {
         if (tokenTest) {
-            uint256 newAmount = (IERC20Mock(token).balanceOf(from)) -
-                uint256(amount);
-            IERC20Mock(token).setUserBalance(from, newAmount);
-            uint256 newAmountRec = (IERC20Mock(token).balanceOf(to)) +
-                uint256(amount);
-            IERC20Mock(token).setUserBalance(to, newAmountRec);
+            ERC20Mock(token).transfer(from, to, uint(amount));
         }
         if (passTransactionCount > 0) {
             passTransactionCount -= 1;
