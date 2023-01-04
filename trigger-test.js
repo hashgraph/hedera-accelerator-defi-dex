@@ -3,7 +3,7 @@ const {
 } = require('child_process')
 
 // your cmd to start the process, possibly spawn('npm.cmd', ['test'))
-const proc = spawn('npm.cmd',['test'])
+const proc = spawn('npm',['test'])
 proc.stdout.on('data', (data) => {
   console.log(`stdout: ${data}`)
   if (data.includes('View your Cucumber Report at')) {
