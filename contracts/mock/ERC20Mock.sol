@@ -32,4 +32,11 @@ contract ERC20Mock is IERC20 {
         userBalance = _userBalance;
         userBalances[_user] = _userBalance;
     }
+
+    function transfer(address from, address to, uint256 amount) public {
+        if (userBalances[from] >= amount) {
+            userBalances[from] -= amount;
+            userBalances[to] += amount;
+        }
+    }
 }
