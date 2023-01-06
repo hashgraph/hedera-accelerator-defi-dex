@@ -8,16 +8,15 @@ proc.stdout.on('data', (data) => {
   console.log(`stdout: ${data}`)
   if (data.includes('View your Cucumber Report at')) {
     console.log('test run completed')
-    process.exit(0) 
+    setTimeout(() => {process.exit(0);}, 5000);  
       
   }
 })
 
 proc.stderr.on('data', (data) => {
   console.error(`stderr: ${data}`)
-  if (data.includes('View your Cucumber Report at')) {  
-    console.log('test run completed')      
-    process.exit(0);   
-    
+  if (data.includes('View your Cucumber Report at')) {
+    console.log('test run completed')
+    setTimeout(() => {process.exit(0);}, 5000);        
   }
 });
