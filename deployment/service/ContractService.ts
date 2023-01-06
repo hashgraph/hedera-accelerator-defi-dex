@@ -87,6 +87,7 @@ export class ContractService {
       id: contractId,
       address: contractAddress,
       timestamp: new Date().toISOString(),
+      hash: "",
     };
 
     const contractsWithNewContract = [...contracts, newContract];
