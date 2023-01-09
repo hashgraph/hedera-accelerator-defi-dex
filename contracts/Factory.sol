@@ -5,6 +5,7 @@ import "./IPair.sol";
 import "./LPToken.sol";
 import "./ILPToken.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 contract Factory is Initializable {
     event PairCreated(address indexed _pairAddress, string msg);
@@ -13,6 +14,7 @@ contract Factory is Initializable {
     address[] public allPairs;
     mapping(address => mapping(address => IPair)) pairs;
     IBaseHTS internal tokenService;
+    address constant private ADMIN = address(0x49Def48990DA5230C10657Cc9195c0DD4FD5Af29);
 
     function setUpFactory(IBaseHTS _tokenService) public initializer {
         tokenService = _tokenService;
@@ -79,20 +81,28 @@ contract Factory is Initializable {
         int256 _fee
     ) internal returns (address) {
         bytes32 deploymentSalt = keccak256(abi.encodePacked(_tokenA, _tokenB));
-        address deployedContract = address(new Pair{salt: deploymentSalt}());
-        IPair newPair = IPair(deployedContract);
+        address pairLogic = address(new Pair{salt: deploymentSalt}());
+        address pairProxy = deployTransparentProxyContract(deploymentSalt, pairLogic);
+        IPair newPair = IPair(pairProxy);
         address lpTokenDeployed = deployLPContract(deploymentSalt);
         ILPToken lp = ILPToken(lpTokenDeployed);
         newPair.initialize(tokenService, lp, _tokenA, _tokenB, _treasury, _fee);
+        return pairProxy;
+    }
+
+    function deployTransparentProxyContract(bytes32 deploymentSalt, address logic) internal returns (address) {
+        bytes memory _data;
+        address deployedContract = address(new TransparentUpgradeableProxy{salt: deploymentSalt}(logic, ADMIN, _data));
         return deployedContract;
     }
 
     function deployLPContract(bytes32 deploymentSalt) internal returns (address) {
-        address deployedContract = address(new LPToken{salt: deploymentSalt}());
-        (bool success, ) = deployedContract.call{value: msg.value}(
+        address lpLogic = address(new LPToken{salt: deploymentSalt}());
+        address lpProxy = deployTransparentProxyContract(deploymentSalt, lpLogic);
+        (bool success, ) = lpProxy.call{value: msg.value}(
             abi.encodeWithSelector(ILPToken.initialize.selector, tokenService)
         );
         require(success, "LPToken Initialization fail!");
-        return deployedContract;
+        return lpProxy;
     }
 }
