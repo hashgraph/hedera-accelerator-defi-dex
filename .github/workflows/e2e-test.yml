@@ -1,13 +1,8 @@
 name: Deploy contract to testnet and run e2e-test
 on:
   pull_request:
-    types:
-      - opened
-    branches:
-      - develop
-  pull_request_review:
-    types: [submitted] 
-    branches: develop 
+    types: [opened, closed]
+    branches: develop
 
 env:
   OPERATOR_ID: 0.0.47710057
@@ -23,7 +18,7 @@ env:
 
 jobs:
   build:
-    if: github.event.review.state == 'approved' || github.event.action == 'opened'
+    if: github.event.action == 'opened' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest 
 
     steps:
