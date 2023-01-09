@@ -3,7 +3,7 @@ on:
   pull_request:
     types: [opened, closed]
     branches:
-      - temp-develop
+      - open-merge-test
 
 env:
   OPERATOR_ID: 0.0.47710057
