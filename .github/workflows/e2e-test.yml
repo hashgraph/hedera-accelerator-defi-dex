@@ -2,8 +2,7 @@ name: Deploy contract to testnet and run e2e-test
 on:
   pull_request:
     types: [opened, closed]
-    branches:
-      - open-merge-test
+    branches: open-merge-test
 
 env:
   OPERATOR_ID: 0.0.47710057
@@ -19,7 +18,6 @@ env:
 
 jobs:
   build:
-  if_merged:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest 
 
