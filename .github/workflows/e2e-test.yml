@@ -25,7 +25,6 @@ env:
 
 jobs:
   build:
-    if: github.event.review.state == 'approved' || github.event.action == 'opened'
     runs-on: ubuntu-latest 
 
     steps:
