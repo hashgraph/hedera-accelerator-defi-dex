@@ -8,6 +8,8 @@ on:
   pull_request_review:
     types: [submitted] 
     branches: develop 
+    review_states:
+      - approved
 
 env:
   OPERATOR_ID: 0.0.47710057
