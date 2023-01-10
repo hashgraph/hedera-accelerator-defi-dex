@@ -11,9 +11,10 @@ contract MockBaseHTS is IBaseHTS {
     bool internal tokenTest;
     bool private revertCreateToken;
     int256 private passTransactionCount = 100;
-
-    constructor(bool _tokenTest) {
+    address private hbarx;
+    constructor(bool _tokenTest, address _hbarx) {
         tokenTest = _tokenTest;
+        hbarx = _hbarx;
     }
 
     function setPassTransactionCount(int256 _passTransactionCount) public {
@@ -91,4 +92,13 @@ contract MockBaseHTS is IBaseHTS {
         }
         return int(23);
     }
+
+    function hbarxAddress() external override view returns(address) {
+        return hbarx;
+    }
+
+    function transferHBAR(int256, address payable ) external payable override returns (int256 responseCode) {
+        return getResponseCode();
+    }
+
 }

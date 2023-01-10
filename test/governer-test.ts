@@ -53,7 +53,7 @@ describe("Governor Tests", function () {
 
   async function deployFixture() {
     const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-    const mockBaseHTS = await MockBaseHTS.deploy(true);
+    const mockBaseHTS = await MockBaseHTS.deploy(true, zeroAddress);
     const signers = await ethers.getSigners();
 
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
@@ -111,7 +111,7 @@ describe("Governor Tests", function () {
 
   async function deployFixtureWithFail() {
     const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-    const mockBaseHTS = await MockBaseHTS.deploy(true);
+    const mockBaseHTS = await MockBaseHTS.deploy(true, zeroAddress);
     const signers = await ethers.getSigners();
 
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
@@ -138,7 +138,7 @@ describe("Governor Tests", function () {
 
   async function deployFixtureWithDelay() {
     const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-    const mockBaseHTS = await MockBaseHTS.deploy(true);
+    const mockBaseHTS = await MockBaseHTS.deploy(true, zeroAddress);
     const signers = await ethers.getSigners();
 
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
