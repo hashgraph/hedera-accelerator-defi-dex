@@ -183,7 +183,7 @@ const addLiquidity = async (
     .setFunction("addLiquidity", params);
   if (token0 == tokenHBARX || token1 == tokenHBARX) {
     console.log("setting Hbar... OSR");
-    addLiquidityMutableTx.setPayableAmount(new Hbar(10));
+    addLiquidityMutableTx.setPayableAmount(new Hbar(2.3));
   }
   const addLiquidityTx = await addLiquidityMutableTx
     .freezeWith(client)
@@ -270,7 +270,7 @@ const getTreasureBalance = async (tokens: Array<TokenId>) => {
 };
 
 async function main() {
-  await setupFactory();
+  //await setupFactory();
   await testForSinglePair(contractId, tokenC, tokenHBARX);
   await testForSinglePair(contractId, tokenC, tokenD);
   await testForSinglePair(contractId, tokenA, tokenGOD);
