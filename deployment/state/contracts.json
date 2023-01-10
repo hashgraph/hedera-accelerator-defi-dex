@@ -872,5 +872,59 @@
         "hash": "b648068f6c0414fe1b6d2d0b8f66ab7d",
         "transparentProxyAddress": "0x0000000000000000000000000000000002ef9d74",
         "transparentProxyId": "0.0.49257844"
+    },
+    {
+        "name": "governorupgrade",
+        "id": "0.0.49258657",
+        "address": "0x0000000000000000000000000000000002efa0a1",
+        "timestamp": "2023-01-10T14:29:37.192Z",
+        "hash": "e653aa34f7a3886fedfe512d3dcd9a7c",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002ee6fa0",
+        "transparentProxyId": "0.0.49180576"
+    },
+    {
+        "name": "governortransfertoken",
+        "id": "0.0.49258677",
+        "address": "0x0000000000000000000000000000000002efa0b5",
+        "timestamp": "2023-01-10T14:30:06.373Z",
+        "hash": "f6112c25caa21daea516c4dd65b76d40",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002ee6d9f",
+        "transparentProxyId": "0.0.49180063"
+    },
+    {
+        "name": "governortextproposal",
+        "id": "0.0.49258686",
+        "address": "0x0000000000000000000000000000000002efa0be",
+        "timestamp": "2023-01-10T14:30:31.156Z",
+        "hash": "f1208610b9997572cb8d7f4dff7cc6be",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002ee5dfb",
+        "transparentProxyId": "0.0.49176059"
+    },
+    {
+        "name": "governortokencreate",
+        "id": "0.0.49258696",
+        "address": "0x0000000000000000000000000000000002efa0c8",
+        "timestamp": "2023-01-10T14:31:04.351Z",
+        "hash": "dcc3a06384b4b38163b5f736784f85ef",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002ec8e18",
+        "transparentProxyId": "0.0.49057304"
+    },
+    {
+        "name": "splitter",
+        "id": "0.0.49258700",
+        "address": "0x0000000000000000000000000000000002efa0cc",
+        "timestamp": "2023-01-10T14:31:19.804Z",
+        "hash": "bba165e5d7f3f2952807b15a9305110d",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002ed85be",
+        "transparentProxyId": "0.0.49120702"
+    },
+    {
+        "name": "vault",
+        "id": "0.0.49258705",
+        "address": "0x0000000000000000000000000000000002efa0d1",
+        "timestamp": "2023-01-10T14:31:36.998Z",
+        "hash": "e8afadd1e7d9db1bb202fa1c31dfe458",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002ed3e4e",
+        "transparentProxyId": "0.0.49102414"
     }
 ]
