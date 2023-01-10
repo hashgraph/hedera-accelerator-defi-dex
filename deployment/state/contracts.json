@@ -791,5 +791,23 @@
         "hash": "9333404b7c2541cf7173fb53414669ff",
         "transparentProxyAddress": "0x0000000000000000000000000000000002ef8cfd",
         "transparentProxyId": "0.0.49253629"
+    },
+    {
+        "name": "factory",
+        "id": "0.0.49255242",
+        "address": "0x0000000000000000000000000000000002ef934a",
+        "timestamp": "2023-01-10T12:48:53.498Z",
+        "hash": "ae8a948acf03360c06f3bc21faf63edd",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002ef9399",
+        "transparentProxyId": "0.0.49255321"
+    },
+    {
+        "name": "factory",
+        "id": "0.0.49255773",
+        "address": "0x0000000000000000000000000000000002ef955d",
+        "timestamp": "2023-01-10T13:09:03.052Z",
+        "hash": "4d04ef3e59bcd0f6866927ec1cca26ec",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002ef95a5",
+        "transparentProxyId": "0.0.49255845"
     }
 ]

@@ -40,28 +40,6 @@ const withPrecision = (value: number): BigNumber => {
 let tokenA = TokenId.fromString("0.0.49173962");
 let tokenB = TokenId.fromString("0.0.48289686");
 
-const htsCreateHBARX = async (contractId: string): Promise<TokenId> => {
-  const tokenAQty = withPrecision(10);
-  const tokenBQty = withPrecision(10);
-  const htsCreateHBARXTx = await new ContractExecuteTransaction()
-    .setContractId(contractId)
-    .setGas(9000000)
-    .setFunction("setupHBARX", new ContractFunctionParameters())
-    .setPayableAmount(new Hbar(30))
-    .freezeWith(client)
-    .sign(key);
-  const htsCreateHBARXTxRes = await htsCreateHBARXTx.execute(client);
-  const htsCreateHBARRx = await htsCreateHBARXTxRes.getReceipt(client);
-  const record = await htsCreateHBARXTxRes.getRecord(client);
-  console.log(` htsCreateHBARX: ${htsCreateHBARRx.status}`);
-  console.log(
-    ` HBARX address: ${record.contractFunctionResult!.getAddress(0)}`
-  );
-  return TokenId.fromSolidityAddress(
-    record.contractFunctionResult!.getAddress(0)
-  );
-};
-
 const initializeLPTokenContract = async (lpTokenContractId: string) => {
   console.log(`Initialize LP contract with lp contract ${lpTokenContractId}`);
 

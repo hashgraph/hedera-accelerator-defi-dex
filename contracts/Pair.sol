@@ -384,13 +384,18 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
         int256 tokenQty,
         string memory errorMessage
     ) private {
-        if (reciever == address(this) && token == tokenService.hbarxAddress()) {
-            require(msg.value >= uint256(tokenQty), "Please pass valid Hbars");
-        } else if (token == tokenService.hbarxAddress()) {
-            (bool sent, ) = address(tokenService).call{value: uint256(tokenQty)}(
-                abi.encodeWithSelector(IBaseHTS.transferHBAR.selector, uint256(tokenQty), payable(reciever))
-            );
-            require(sent, errorMessage);
+        if (token == tokenService.hbarxAddress()) {
+            if (sender == address(this)) {
+                require(address(this).balance >= uint256(tokenQty), "Contract does not have sufficient Hbars");
+            } else {
+                require(msg.value >= uint256(tokenQty), "Please pass valid Hbars");
+            }
+            if (reciever != address(this)) {
+                (bool sent, ) = address(tokenService).call{value: uint256(tokenQty)}(
+                    abi.encodeWithSelector(IBaseHTS.transferHBAR.selector, uint256(tokenQty), payable(reciever))
+                );
+                require(sent, errorMessage);
+            }
         } else {
             int256 response = tokenService.transferTokenPublic(
                 token,
