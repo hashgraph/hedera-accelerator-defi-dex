@@ -19,6 +19,7 @@ import ClientManagement from "../utils/ClientManagement";
 const clientManagement = new ClientManagement();
 const client = clientManagement.createOperatorClient();
 const { treasureId, treasureKey } = clientManagement.getTreasure();
+const { id, key } = clientManagement.getOperator();
 const contractService = new ContractService();
 
 const tokenA = TokenId.fromString("0.0.48289687");
@@ -211,16 +212,16 @@ const swapToken = async (contId: string, token: TokenId) => {
   console.log(`Swapping a ${tokenQty} units of token A from the pool.`);
   const swapToken = await new ContractExecuteTransaction()
     .setContractId(contId)
-    .setGas(2000000)
+    .setGas(3000000)
     .setFunction(
       "swapToken",
       new ContractFunctionParameters()
-        .addAddress(treasureId.toSolidityAddress())
+        .addAddress(id.toSolidityAddress())
         .addAddress(token.toSolidityAddress())
         .addInt256(tokenQty)
     )
     .freezeWith(client)
-    .sign(treasureKey);
+    .sign(key);
   const swapTokenTx = await swapToken.execute(client);
   const receipt = await swapTokenTx.getReceipt(client);
 

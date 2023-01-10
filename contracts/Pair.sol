@@ -160,15 +160,21 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
             "swapTokenA: Transferring token B to user failed with status code"
         );
         // fee transfer
-        transferTokensInternally(
-            address(this),
+        tokenService.associateTokenPublic(treasury, pair.tokenA.tokenAddress);
+        transferTokenInternally(
+            to,
             treasury,
             pair.tokenA.tokenAddress,
-            pair.tokenB.tokenAddress,
             feeTokenA / 2,
+            "swapTokenAFee: Transferring fee as token A to treasuary failed with status code"
+        );
+        tokenService.associateTokenPublic(treasury, pair.tokenB.tokenAddress);
+        transferTokenInternally(
+            address(this),
+            treasury,
+            pair.tokenB.tokenAddress,
             feeTokenB / 2,
-            "swapFeeTokenA: Transferring fee as token A to treasuary failed with status code",
-            "swapFeeTokenB: Transferring fee as token B to treasuary failed with status code"
+            "swapTokenAFee: Transferring fee as token B to treasuary failed with status code"
         );
     }
 
@@ -206,15 +212,21 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
         );
 
         // fee transfer
-        transferTokensInternally(
+        tokenService.associateTokenPublic(treasury, pair.tokenB.tokenAddress);
+        transferTokenInternally(
+            to,
+            treasury,
+            pair.tokenB.tokenAddress,
+            feeTokenB / 2,
+            "swapTokenBFee: Transferring fee as token B to treasuary failed with status code"
+        );
+        tokenService.associateTokenPublic(treasury, pair.tokenA.tokenAddress);
+        transferTokenInternally(
             address(this),
             treasury,
             pair.tokenA.tokenAddress,
-            pair.tokenB.tokenAddress,
             feeTokenA / 2,
-            feeTokenB / 2,
-            "swapFeeTokenA: Transferring fee as token A to treasuary failed with status code",
-            "swapFeeTokenB: Transferring fee as token B to treasuary failed with status code"
+            "swapTokenBFee: Transferring fee as token A to treasuary failed with status code"
         );
     }
 
