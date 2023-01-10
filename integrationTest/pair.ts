@@ -25,10 +25,24 @@ const { treasureId, treasureKey } = clientManagement.getTreasure();
 const { id, key } = clientManagement.getOperator();
 
 const lpTokenContracts = [
-  contractService.getContractWithProxy(contractService.lpTokenContractName),
+  contractService.getContractWithProxyAtIndex(
+    contractService.lpTokenContractName,
+    0
+  ),
+  contractService.getContractWithProxyAtIndex(
+    contractService.lpTokenContractName,
+    1
+  ),
 ];
 const contracts = [
-  contractService.getContractWithProxy(contractService.pairContractName),
+  contractService.getContractWithProxyAtIndex(
+    contractService.pairContractName,
+    0
+  ),
+  contractService.getContractWithProxyAtIndex(
+    contractService.pairContractName,
+    1
+  ),
 ];
 
 let precision = 0;
@@ -36,6 +50,10 @@ let precision = 0;
 const withPrecision = (value: number): BigNumber => {
   return new BigNumber(value).multipliedBy(precision);
 };
+const token0 = TokenId.fromString("0.0.48289687");
+const token1 = TokenId.fromString("0.0.48289686");
+const token2 = TokenId.fromString("0.0.48301281");
+const tokenHBARX = TokenId.fromString("0.0.49217385");
 
 let tokenA = TokenId.fromString("0.0.49173962");
 let tokenB = TokenId.fromString("0.0.48289686");
@@ -71,7 +89,7 @@ const initialize = async (contId: string, lpTokenProxyAdd: string) => {
         .addAddress(lpTokenProxyAdd)
         .addAddress(tokenA.toSolidityAddress())
         .addAddress(tokenB.toSolidityAddress())
-        .addAddress(treasureId.toSolidityAddress())
+        .addAddress(id.toSolidityAddress())
         .addInt256(new BigNumber(10))
     )
     .freezeWith(client)
@@ -350,10 +368,11 @@ const setSlippage = async (contId: string, slippage: BigNumber) => {
 };
 
 async function main() {
+  let tokens = [tokenHBARX, token0, token1, token2];
   let index = 0;
   for (const contract of contracts) {
-    tokenA = TokenId.fromString("0.0.49217385"); // hbarx
-    tokenB = TokenId.fromString("0.0.48289686");
+    tokenA = tokens[index];
+    tokenB = tokens[index + 1];
     console.log(`\nTesting started for token A${index} and token B${index}`);
     await testForSinglePair(contract, lpTokenContracts[index]);
     index++;

@@ -125,7 +125,7 @@ describe("All Tests", function () {
     return { swapV2, mockBaseHTS, lpTokenCont };
   }
 
-  it("Add liquidity to the pool by adding 50 units of token and 50 units of token B  ", async function () {
+  it("Add liquidity to the pool by adding 50 units of HBAR and 50 units of token B  ", async function () {
     const { swapV2 } = await loadFixture(deployFixture);
     const tx = await swapV2.addLiquidity(
       zeroAddress,
@@ -140,7 +140,7 @@ describe("All Tests", function () {
     expect(tokenQty[1]).to.be.equals(precision.mul(50));
   });
 
-  it("Add liquidity for hbarx", async function () {
+  it("Add liquidity for HBAR", async function () {
     const { swapV2 } = await loadFixture(deployFixture);
     const tx = await swapV2.addLiquidity(
       zeroAddress,
@@ -158,7 +158,7 @@ describe("All Tests", function () {
     expect(tokenQty[1]).to.be.equals(precision.mul(50));
   });
 
-  it("Add liquidity for hbarx fail", async function () {
+  it("Add liquidity for HBAR fail", async function () {
     const { swapV2 } = await loadFixture(deployFixture);
     await expect(
       swapV2.addLiquidity(
@@ -174,7 +174,7 @@ describe("All Tests", function () {
     ).to.revertedWith("Please pass valid Hbars");
   });
 
-  it("Swap 1 units of token hbarx  ", async function () {
+  it("Swap 1 units of token HBAR  ", async function () {
     const { swapV2, signers } = await loadFixture(deployFixtureHBARX);
     const tokenAPoolQty = BigNumber.from(200).mul(precision);
     const tokenCPoolQty = BigNumber.from(220).mul(precision);
