@@ -50,7 +50,7 @@ contract BaseHTS is HederaTokenService, IBaseHTS {
         override
         returns (int256 responseCode, int256 newTotalSupply)
     {
-        emit SenderDetail(msg.sender, "mintToken");
+        emit SenderDetail(msg.sender, "mintTokenPublic");
         bytes[] memory metadata;
 
         (int256 responseCodeNew, uint64 newTotalSupplyNew, ) = mintToken(

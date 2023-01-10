@@ -165,8 +165,8 @@ const addLiquidity = async (
   token0: TokenId,
   token1: TokenId
 ) => {
-  const tokenAQty = withPrecision(10);
-  const tokenBQty = withPrecision(10);
+  const tokenAQty = withPrecision(2.1);
+  const tokenBQty = withPrecision(2.3);
   console.log(
     `Adding ${tokenAQty} units of token A and ${tokenBQty} units of token B to the pool.`
   );
@@ -196,7 +196,7 @@ const addLiquidity = async (
 };
 
 const removeLiquidity = async (contId: string) => {
-  const lpToken = withPrecision(5);
+  const lpToken = withPrecision(0.05);
   console.log(`Removing ${lpToken} units of LPToken from the pool.`);
   const removeLiquidity = await new ContractExecuteTransaction()
     .setContractId(contId)
@@ -216,7 +216,7 @@ const removeLiquidity = async (contId: string) => {
 };
 
 const swapToken = async (contId: string, token: TokenId) => {
-  const tokenQty = withPrecision(1);
+  const tokenQty = withPrecision(0.01);
   console.log(`Swapping a ${tokenQty} units of token A from the pool.`);
   const swapToken = await new ContractExecuteTransaction()
     .setContractId(contId)
@@ -228,7 +228,7 @@ const swapToken = async (contId: string, token: TokenId) => {
         .addAddress(token.toSolidityAddress())
         .addInt256(tokenQty)
     )
-    .setPayableAmount(new Hbar(1))
+    .setPayableAmount(new Hbar(0.01))
     .freezeWith(client)
     .sign(treasureKey);
   const swapTokenTx = await swapToken.execute(client);
