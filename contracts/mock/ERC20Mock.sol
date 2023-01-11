@@ -2,15 +2,22 @@
 pragma solidity ^0.8.0;
 import "../common/IERC20.sol";
 
+import "hardhat/console.sol";
+
 contract ERC20Mock is IERC20 {
     uint256 total;
     uint256 userBalance;
     mapping(address => uint256) userBalances;
+    bool private transferFailed;
 
     constructor(uint256 _total, uint256 _userBalance) {
         total = _total;
         userBalance = _userBalance;
         userBalances[address(0)] = _userBalance;
+    }
+
+    function setTransaferFailed(bool _transferFailed) public {
+        transferFailed = _transferFailed;
     }
 
     function totalSupply() external view override returns (uint256) {
@@ -40,8 +47,7 @@ contract ERC20Mock is IERC20 {
         }
     }
 
-    function transfer(
-        address to,
-        uint256 amount
-    ) external override returns (bool) {}
+    function transfer(address, uint256) external view override returns (bool) {
+        return transferFailed ? false : true;
+    }
 }

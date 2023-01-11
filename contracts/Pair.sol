@@ -95,11 +95,9 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
         lpTokenContract.removeLPTokenFor(_lpToken, toAccount);
     }
 
-    function calculateTokenstoGetBack(int256 _lpToken)
-        internal
-        view
-        returns (int256, int256)
-    {
+    function calculateTokenstoGetBack(
+        int256 _lpToken
+    ) internal view returns (int256, int256) {
         int256 allLPTokens = lpTokenContract.getAllLPTokenCount();
 
         int256 tokenAQuantity = (_lpToken * pair.tokenA.tokenQty) / allLPTokens;
@@ -402,7 +400,11 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
             }
         } else {
             if (sender == address(this)) {
-                IERC20(token).transfer(reciever, uint(tokenQty));
+                bool isSuccess = IERC20(token).transfer(
+                    reciever,
+                    uint(tokenQty)
+                );
+                require(isSuccess, errorMessage);
             } else {
                 int256 response = tokenService.transferTokenPublic(
                     token,
