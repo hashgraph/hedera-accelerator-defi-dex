@@ -32,9 +32,9 @@ abstract contract IPair {
         address _tokenB,
         int256 _tokenAQty,
         int256 _tokenBQty
-    ) external virtual;
+    ) external virtual payable;
 
-    function removeLiquidity(address fromAccount, int256 _lpToken)
+    function removeLiquidity(address payable fromAccount, int256 _lpToken)
         external
         virtual;
 
@@ -42,5 +42,5 @@ abstract contract IPair {
         address to,
         address _token,
         int256 _deltaQty
-    ) external virtual;
+    ) external virtual payable;
 }

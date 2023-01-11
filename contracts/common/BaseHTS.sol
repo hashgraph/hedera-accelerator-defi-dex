@@ -8,6 +8,12 @@ import "./IBaseHTS.sol";
 contract BaseHTS is HederaTokenService, IBaseHTS {
     event SenderDetail(address indexed _from, string msg);
 
+    address private constant _HBARX = address(0x0000000000000000000000000000000002eeff69);
+
+    function hbarxAddress() external pure override returns (address) {
+        return _HBARX;
+    }
+
     function transferTokenPublic(
         address token,
         address sender,
@@ -23,24 +29,27 @@ contract BaseHTS is HederaTokenService, IBaseHTS {
             );
     }
 
-    function associateTokenPublic(
-        address account,
-        address token
-    ) external override returns (int256 responseCode) {
+    function associateTokenPublic(address account, address token)
+        external
+        override
+        returns (int256 responseCode)
+    {
         return HederaTokenService.associateToken(account, token);
     }
 
-    function associateTokensPublic(
-        address account,
-        address[] memory tokens
-    ) external override returns (int256 responseCode) {
+    function associateTokensPublic(address account, address[] memory tokens)
+        external
+        override
+        returns (int256 responseCode)
+    {
         return HederaTokenService.associateTokens(account, tokens);
     }
 
-    function mintTokenPublic(
-        address token,
-        int256 amount
-    ) external override returns (int256 responseCode, int256 newTotalSupply) {
+    function mintTokenPublic(address token, int256 amount)
+        external
+        override
+        returns (int256 responseCode, int256 newTotalSupply)
+    {
         emit SenderDetail(msg.sender, "mintTokenPublic");
         bytes[] memory metadata;
 
@@ -57,11 +66,12 @@ contract BaseHTS is HederaTokenService, IBaseHTS {
         return (responseCodeNew, int256(uint256(newTotalSupplyNew)));
     }
 
-    function burnTokenPublic(
-        address token,
-        int256 amount
-    ) external override returns (int256 responseCode, int256 newTotalSupply) {
-        int64[] memory serialNumbers;
+    function burnTokenPublic(address token, int256 amount)
+        external
+        override
+        returns (int256 responseCode, int256 newTotalSupply)
+    {
+         int64[] memory serialNumbers;
         (int256 responseCodeNew, uint64 newTotalSupplyNew) = HederaTokenService
             .burnToken(token, uint64(uint256(amount)), serialNumbers);
         if (responseCodeNew != HederaResponseCodes.SUCCESS) {
@@ -86,5 +96,15 @@ contract BaseHTS is HederaTokenService, IBaseHTS {
             initialTotalSupply,
             decimals
         );
+    }
+
+    function transferHBAR(int256 amount, address payable toAccount)
+        external
+        payable
+        override
+        returns (int256 responseCode)
+    {
+        (bool sent, ) = toAccount.call{value: uint256(amount)}("");
+        return sent ? HederaResponseCodes.SUCCESS : HederaResponseCodes.FAIL_INVALID;
     }
 }

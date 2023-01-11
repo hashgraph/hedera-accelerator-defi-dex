@@ -6,8 +6,8 @@
     "deploy": "npx hardhat run ./deployment/swapContract.ts",
     "prepare": "husky install",
     "code-format": "prettier --write \"**/*.ts\"",
-    "test": ".\\node_modules\\.bin\\cucumber-js -p default "
-    
+    "test": "./node_modules/.bin/cucumber-js -p default",
+    "e2e-test": "node trigger-test.js"
   },
   "devDependencies": {
     "@hashgraph/hardhat-hethers": "^1.0.3",
