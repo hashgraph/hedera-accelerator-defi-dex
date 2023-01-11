@@ -48,6 +48,6 @@ contract ERC20Mock is IERC20 {
     }
 
     function transfer(address, uint256) external view override returns (bool) {
-        return transferFailed ? false : true;
+        return !transferFailed;
     }
 }
