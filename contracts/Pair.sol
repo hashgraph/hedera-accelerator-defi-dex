@@ -5,6 +5,7 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./common/hedera/HederaResponseCodes.sol";
 import "./common/IBaseHTS.sol";
+import "./common/IERC20.sol";
 import "./ILPToken.sol";
 import "./IPair.sol";
 
@@ -49,7 +50,7 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
         address _tokenB,
         int256 _tokenAQty,
         int256 _tokenBQty
-    ) external virtual override payable {
+    ) external payable virtual override {
         tokenService.associateTokenPublic(address(this), _tokenA);
         tokenService.associateTokenPublic(address(this), _tokenB);
         transferTokensInternally(
@@ -67,11 +68,10 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
         lpTokenContract.allotLPTokenFor(_tokenAQty, _tokenBQty, fromAccount);
     }
 
-    function removeLiquidity(address payable toAccount, int256 _lpToken)
-        external
-        virtual
-        override
-    {
+    function removeLiquidity(
+        address payable toAccount,
+        int256 _lpToken
+    ) external virtual override {
         require(
             lpTokenContract.lpTokenForUser(toAccount) >= _lpToken,
             "user does not have sufficient lpTokens"
@@ -112,7 +112,7 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
         address to,
         address _token,
         int256 _deltaQty
-    ) external virtual override payable {
+    ) external payable virtual override {
         require(
             _token == pair.tokenA.tokenAddress ||
                 _token == pair.tokenB.tokenAddress,
@@ -286,11 +286,9 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
         return slippage;
     }
 
-    function slippageOutGivenIn(int256 _tokenAQty)
-        public
-        view
-        returns (int256)
-    {
+    function slippageOutGivenIn(
+        int256 _tokenAQty
+    ) public view returns (int256) {
         int256 precision = getPrecisionValue();
         int256 tokenAQ = pair.tokenA.tokenQty;
         int256 tokenBQ = pair.tokenB.tokenQty;
@@ -302,11 +300,9 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
             spotValueExpected;
     }
 
-    function slippageInGivenOut(int256 _tokenBQty)
-        public
-        view
-        returns (int256)
-    {
+    function slippageInGivenOut(
+        int256 _tokenBQty
+    ) public view returns (int256) {
         int256 precision = getPrecisionValue();
         int256 tokenAQ = pair.tokenA.tokenQty;
         int256 tokenBQ = pair.tokenB.tokenQty;
@@ -325,11 +321,7 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
     function getTokenPairAddress()
         public
         view
-        returns (
-            address,
-            address,
-            address
-        )
+        returns (address, address, address)
     {
         return (
             pair.tokenA.tokenAddress,
@@ -386,24 +378,40 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
     ) private {
         if (token == tokenService.hbarxAddress()) {
             if (sender == address(this)) {
-                require(address(this).balance >= uint256(tokenQty), "Contract does not have sufficient Hbars");
+                require(
+                    address(this).balance >= uint256(tokenQty),
+                    "Contract does not have sufficient Hbars"
+                );
             } else {
-                require(msg.value >= uint256(tokenQty), "Please pass valid Hbars");
+                require(
+                    msg.value >= uint256(tokenQty),
+                    "Please pass valid Hbars"
+                );
             }
             if (reciever != address(this)) {
-                (bool sent, ) = address(tokenService).call{value: uint256(tokenQty)}(
-                    abi.encodeWithSelector(IBaseHTS.transferHBAR.selector, uint256(tokenQty), payable(reciever))
+                (bool sent, ) = address(tokenService).call{
+                    value: uint256(tokenQty)
+                }(
+                    abi.encodeWithSelector(
+                        IBaseHTS.transferHBAR.selector,
+                        uint256(tokenQty),
+                        payable(reciever)
+                    )
                 );
                 require(sent, errorMessage);
             }
         } else {
-            int256 response = tokenService.transferTokenPublic(
-                token,
-                sender,
-                reciever,
-                tokenQty
-            );
-            require(response == HederaResponseCodes.SUCCESS, errorMessage);
+            if (sender == address(this)) {
+                IERC20(token).transfer(reciever, uint(tokenQty));
+            } else {
+                int256 response = tokenService.transferTokenPublic(
+                    token,
+                    sender,
+                    reciever,
+                    tokenQty
+                );
+                require(response == HederaResponseCodes.SUCCESS, errorMessage);
+            }
         }
     }
 }
