@@ -7,7 +7,7 @@ import { BigNumber } from "ethers";
 
 describe("All Tests", function () {
   const tokenBAddress = "0x0000000000000000000000000000000000010001";
-  let tokenAAddress = "0x0000000000000000000000000000000000020002";
+  const tokenAAddress = "0x0000000000000000000000000000000000020002";
   const tokenCAddress = "0x0000000000000000000000000000000000020003";
   const zeroAddress = "0x1111111000000000000000000000000000000000";
   const newZeroAddress = "0x0000000000000000000000000000000000000000";
@@ -114,6 +114,11 @@ describe("All Tests", function () {
 
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
     const tokenCont = await TokenCont.deploy(10, 10);
+    const token1Address = tokenCont.address;
+
+    const TokenCont1 = await ethers.getContractFactory("ERC20Mock");
+    const tokenCont1 = await TokenCont1.deploy(10, 10);
+    const token2Address = tokenCont1.address;
 
     const LpTokenCont = await ethers.getContractFactory("LPToken");
     const lpTokenCont = await upgrades.deployProxy(LpTokenCont, [
@@ -125,8 +130,8 @@ describe("All Tests", function () {
     const swapV2 = await upgrades.deployProxy(SwapV2, [
       mockBaseHTS.address,
       lpTokenCont.address,
-      tokenAAddress,
-      tokenBAddress,
+      token1Address,
+      token2Address,
       treasury,
       fee,
     ]);
@@ -134,7 +139,15 @@ describe("All Tests", function () {
 
     precision = await swapV2.getPrecisionValue();
 
-    return { swapV2, mockBaseHTS, lpTokenCont };
+    return {
+      swapV2,
+      mockBaseHTS,
+      lpTokenCont,
+      token1Address,
+      token2Address,
+      tokenCont,
+      tokenCont1,
+    };
   }
 
   it("Add liquidity to the pool by adding 50 units of HBAR and 50 units of token B  ", async function () {
@@ -495,17 +508,18 @@ describe("All Tests", function () {
 
     //----------------------------------------------------------------------
     it("Swap Token A with Fail A transfer", async function () {
-      const { swapV2, mockBaseHTS } = await loadFixture(deployFailureFixture);
+      const { swapV2, mockBaseHTS, token1Address, token2Address } =
+        await loadFixture(deployFailureFixture);
       await swapV2.addLiquidity(
         zeroAddress,
-        tokenAAddress,
-        tokenBAddress,
+        token1Address,
+        token2Address,
         precision.mul(100),
         precision.mul(100)
       );
       await mockBaseHTS.setPassTransactionCount(0);
       await expect(
-        swapV2.swapToken(zeroAddress, tokenAAddress, 30)
+        swapV2.swapToken(zeroAddress, token1Address, 30)
       ).to.revertedWith(
         "swapTokenA: Transferring token A to contract failed with status code"
       );
@@ -514,21 +528,22 @@ describe("All Tests", function () {
     //----------------------------------------------------------------------
 
     it("Swap Token A with Fail B transfer", async function () {
-      const { swapV2, mockBaseHTS } = await loadFixture(deployFailureFixture);
+      const { swapV2, token1Address, token2Address, tokenCont1 } =
+        await loadFixture(deployFailureFixture);
       const totalQtyA = precision.mul(1000);
       await swapV2.addLiquidity(
         zeroAddress,
-        tokenAAddress,
-        tokenBAddress,
+        token1Address,
+        token2Address,
         totalQtyA,
         precision.mul(50)
       );
       const tokenBeforeQty = await swapV2.getPairQty();
 
       expect(tokenBeforeQty[0]).to.be.equals(totalQtyA);
-      mockBaseHTS.setPassTransactionCount(2);
+      await tokenCont1.setTransaferFailed(true);
       await expect(
-        swapV2.swapToken(zeroAddress, tokenAAddress, precision.mul(1))
+        swapV2.swapToken(zeroAddress, token1Address, precision.mul(1))
       ).to.revertedWith(
         "swapTokenA: Transferring token B to user failed with status code"
       );
@@ -536,12 +551,13 @@ describe("All Tests", function () {
 
     //----------------------------------------------------------------------
     it("Swap Token B with Fail B transfer", async function () {
-      const { swapV2, mockBaseHTS } = await loadFixture(deployFailureFixture);
+      const { swapV2, mockBaseHTS, token1Address, token2Address } =
+        await loadFixture(deployFailureFixture);
       const totalQtyA = precision.mul(1000);
       await swapV2.addLiquidity(
         zeroAddress,
-        tokenAAddress,
-        tokenBAddress,
+        token1Address,
+        token2Address,
         totalQtyA,
         precision.mul(1000)
       );
@@ -549,27 +565,28 @@ describe("All Tests", function () {
       expect(Number(tokenBeforeQty[0])).to.be.equals(precision.mul(1000));
       mockBaseHTS.setPassTransactionCount(0);
       await expect(
-        swapV2.swapToken(zeroAddress, tokenBAddress, precision.mul(1))
+        swapV2.swapToken(zeroAddress, token2Address, precision.mul(1))
       ).to.revertedWith(
         "swapTokenB: Transferring token B to contract failed with status code"
       );
     });
 
     it("Swap Token B with Fail A transfer", async function () {
-      const { swapV2, mockBaseHTS } = await loadFixture(deployFailureFixture);
+      const { swapV2, token1Address, token2Address, tokenCont } =
+        await loadFixture(deployFailureFixture);
       const totalQtyA = precision.mul(1000);
       await swapV2.addLiquidity(
         zeroAddress,
-        tokenAAddress,
-        tokenBAddress,
+        token1Address,
+        token2Address,
         totalQtyA,
         precision.mul(1000)
       );
       const tokenBeforeQty = await swapV2.getPairQty();
       expect(Number(tokenBeforeQty[0])).to.be.equals(precision.mul(1000));
-      mockBaseHTS.setPassTransactionCount(2);
+      await tokenCont.setTransaferFailed(true);
       await expect(
-        swapV2.swapToken(zeroAddress, tokenBAddress, precision.mul(1))
+        swapV2.swapToken(zeroAddress, token2Address, precision.mul(1))
       ).to.revertedWith(
         "swapTokenB: Transferring token A to user failed with status code"
       );
@@ -616,20 +633,22 @@ describe("All Tests", function () {
     });
 
     it("Remove liquidity Fail A Transfer", async function () {
-      const { swapV2, mockBaseHTS } = await loadFixture(deployFailureFixture);
+      const { swapV2, mockBaseHTS, tokenCont } = await loadFixture(
+        deployFailureFixture
+      );
       const tokenBeforeQty = await swapV2.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
-      mockBaseHTS.setPassTransactionCount(0);
+      await tokenCont.setTransaferFailed(true);
       await expect(swapV2.removeLiquidity(zeroAddress, 5)).to.revertedWith(
         "Remove liquidity: Transferring token A to contract failed with status code"
       );
     });
 
     it("Remove liquidity Fail B Transfer", async function () {
-      const { swapV2, mockBaseHTS, lpTokenCont } = await loadFixture(
+      const { swapV2, mockBaseHTS, tokenCont1 } = await loadFixture(
         deployFailureFixture
       );
-      mockBaseHTS.setPassTransactionCount(1);
+      await tokenCont1.setTransaferFailed(true);
       const tokenBeforeQty = await swapV2.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
       await expect(swapV2.removeLiquidity(zeroAddress, 5)).to.revertedWith(
@@ -973,10 +992,12 @@ describe("All Tests", function () {
 
   describe("Mirror Node API requirement test cases", async () => {
     it("Get Token Pair address", async function () {
-      const { swapV2 } = await loadFixture(deployFixture);
+      const { swapV2, token1Address, token2Address } = await loadFixture(
+        deployFixture
+      );
       const value = await swapV2.getTokenPairAddress();
-      expect(value[0]).to.be.equals(tokenAAddress);
-      expect(value[1]).to.be.equals(tokenBAddress);
+      expect(value[0]).to.be.equals(token1Address);
+      expect(value[1]).to.be.equals(token2Address);
       expect(value[2]).to.not.be.equals(newZeroAddress);
     });
   });
