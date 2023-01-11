@@ -1,0 +1,11 @@
+@startuml
+UIHederaService --> Pair: Creates the Swap transaction 
+UIHederaService -> UIHederaService: Invoke Swap function call
+UIHederaService --> HashConnect: Get user'signature for the transaction
+HashConnect --> UIHederaService: Returns signed transaction
+UIHederaService --> TransactionSignerSC: Send signed transaction to smart contract
+BackedJob --> TransactionSignerSC: Pull Signed transactions from smart contract in batch
+BackedJob --> BackedJob: Sign the existing signed trasaction with DEX owner key
+BackedJob --> BackedJob: Execute the transaction and transfer happens successfully
+Pair --> UI: Emit event which UI subscribe and show the success of failure message
+@enduml 

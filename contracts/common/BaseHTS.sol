@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import "./hedera/HederaTokenService.sol";
 import "./hedera/HederaResponseCodes.sol";
 import "./IBaseHTS.sol";
+import "./IERC20.sol";
 
 contract BaseHTS is HederaTokenService, IBaseHTS {
     address private constant _HBARX =
