@@ -49,7 +49,7 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
         address _tokenB,
         int256 _tokenAQty,
         int256 _tokenBQty
-    ) external virtual override {
+    ) external virtual override payable {
         tokenService.associateTokenPublic(address(this), _tokenA);
         tokenService.associateTokenPublic(address(this), _tokenB);
         transferTokensInternally(
@@ -67,7 +67,7 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
         lpTokenContract.allotLPTokenFor(_tokenAQty, _tokenBQty, fromAccount);
     }
 
-    function removeLiquidity(address toAccount, int256 _lpToken)
+    function removeLiquidity(address payable toAccount, int256 _lpToken)
         external
         virtual
         override
@@ -112,7 +112,7 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
         address to,
         address _token,
         int256 _deltaQty
-    ) external virtual override {
+    ) external virtual override payable {
         require(
             _token == pair.tokenA.tokenAddress ||
                 _token == pair.tokenB.tokenAddress,
@@ -261,7 +261,7 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
     }
 
     function getPrecisionValue() public pure returns (int256) {
-        return 10000000;
+        return 100000000;
     }
 
     function getOutGivenIn(int256 amountTokenA) public view returns (int256) {
@@ -278,7 +278,7 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
 
     function getSlippage() public view returns (int256) {
         // 0.005 should be default as per requirement.
-        return (slippage <= 0) ? int256(50000) : slippage;
+        return (slippage <= 0) ? int256(500000) : slippage;
     }
 
     function setSlippage(int256 _slippage) external returns (int256) {
@@ -322,8 +322,20 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
         return address(this);
     }
 
-    function getTokenPairAddress() public view returns (address, address, address) {
-        return (pair.tokenA.tokenAddress, pair.tokenB.tokenAddress, lpTokenContract.getLpTokenAddress());
+    function getTokenPairAddress()
+        public
+        view
+        returns (
+            address,
+            address,
+            address
+        )
+    {
+        return (
+            pair.tokenA.tokenAddress,
+            pair.tokenB.tokenAddress,
+            lpTokenContract.getLpTokenAddress()
+        );
     }
 
     function getFee() public view returns (int256) {
@@ -372,12 +384,26 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
         int256 tokenQty,
         string memory errorMessage
     ) private {
-        int256 response = tokenService.transferTokenPublic(
-            token,
-            sender,
-            reciever,
-            tokenQty
-        );
-        require(response == HederaResponseCodes.SUCCESS, errorMessage);
+        if (token == tokenService.hbarxAddress()) {
+            if (sender == address(this)) {
+                require(address(this).balance >= uint256(tokenQty), "Contract does not have sufficient Hbars");
+            } else {
+                require(msg.value >= uint256(tokenQty), "Please pass valid Hbars");
+            }
+            if (reciever != address(this)) {
+                (bool sent, ) = address(tokenService).call{value: uint256(tokenQty)}(
+                    abi.encodeWithSelector(IBaseHTS.transferHBAR.selector, uint256(tokenQty), payable(reciever))
+                );
+                require(sent, errorMessage);
+            }
+        } else {
+            int256 response = tokenService.transferTokenPublic(
+                token,
+                sender,
+                reciever,
+                tokenQty
+            );
+            require(response == HederaResponseCodes.SUCCESS, errorMessage);
+        }
     }
 }

@@ -18,6 +18,10 @@ contract Factory is Initializable {
         tokenService = _tokenService;
     }
 
+    function hbarxAddress() external returns (address) {
+        return tokenService.hbarxAddress();
+    }
+
     function sortTokens(address tokenA, address tokenB)
         private
         pure
