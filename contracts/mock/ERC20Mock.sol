@@ -39,4 +39,9 @@ contract ERC20Mock is IERC20 {
             userBalances[to] += amount;
         }
     }
+
+    function transfer(
+        address to,
+        uint256 amount
+    ) external override returns (bool) {}
 }
