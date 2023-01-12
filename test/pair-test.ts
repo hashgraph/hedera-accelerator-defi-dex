@@ -73,7 +73,7 @@ describe("All Tests", function () {
       factory,
       token1Address,
       token2Address,
-      signers
+      signers,
     };
   }
 
