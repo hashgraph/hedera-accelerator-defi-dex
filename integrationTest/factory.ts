@@ -5,9 +5,7 @@ import {
   TokenId,
   AccountBalanceQuery,
   Hbar,
-  AccountCreateTransaction,
-  Client,
-  PrivateKey,
+  AccountId,
 } from "@hashgraph/sdk";
 
 import { Helper } from "../utils/Helper";
@@ -41,34 +39,16 @@ const contractId = contractService.getContractWithProxy(
 
 let precision = 100000000;
 
-const readFileContent = (filePath: string) => {
-  const rawdata: any = fs.readFileSync(filePath);
-  return JSON.parse(rawdata);
-};
 const withPrecision = (value: number): BigNumber => {
   return new BigNumber(value).multipliedBy(precision);
 };
 
-const getPrecisionValue = async (contractId: string) => {
-  const getPrecisionValueTx = await new ContractExecuteTransaction()
-    .setContractId(contractId)
-    .setGas(1000000)
-    .setFunction("getPrecisionValue", new ContractFunctionParameters())
-    .freezeWith(client);
-  const getPrecisionValueTxRes = await getPrecisionValueTx.execute(client);
-  const response = await getPrecisionValueTxRes.getRecord(client);
-  const precisionLocal = response.contractFunctionResult!.getInt256(0);
-
-  precision = Number(precisionLocal);
-
-  console.log(`getPrecisionValue ${precision}`);
-};
-
 const setupFactory = async () => {
   console.log(`\nSetupFactory`);
-  let contractFunctionParameters = new ContractFunctionParameters().addAddress(
-    baseContract.address
-  );
+  const adminId = AccountId.fromString(process.env.ADMIN_ID!);
+  let contractFunctionParameters = new ContractFunctionParameters()
+    .addAddress(baseContract.address)
+    .addAddress(adminId.toSolidityAddress());
   const contractTx = await new ContractExecuteTransaction()
     .setContractId(contractId)
     .setFunction("setUpFactory", contractFunctionParameters)

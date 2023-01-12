@@ -5,6 +5,7 @@ import "./IPair.sol";
 import "./LPToken.sol";
 import "./ILPToken.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 contract Factory is Initializable {
     event PairCreated(address indexed _pairAddress, string msg);
@@ -13,20 +14,24 @@ contract Factory is Initializable {
     address[] public allPairs;
     mapping(address => mapping(address => IPair)) pairs;
     IBaseHTS internal tokenService;
+    address private admin;
 
-    function setUpFactory(IBaseHTS _tokenService) public initializer {
+    function setUpFactory(
+        IBaseHTS _tokenService,
+        address _admin
+    ) public initializer {
         tokenService = _tokenService;
+        admin = _admin;
     }
 
     function hbarxAddress() external returns (address) {
         return tokenService.hbarxAddress();
     }
 
-    function sortTokens(address tokenA, address tokenB)
-        private
-        pure
-        returns (address token0, address token1)
-    {
+    function sortTokens(
+        address tokenA,
+        address tokenB
+    ) private pure returns (address token0, address token1) {
         require(tokenA != tokenB, "IDENTICAL_ADDRESSES");
         (token0, token1) = tokenA < tokenB
             ? (tokenA, tokenB)
@@ -34,11 +39,10 @@ contract Factory is Initializable {
         require(token0 != address(0), "ZERO_ADDRESS");
     }
 
-    function getPair(address _tokenA, address _tokenB)
-        public
-        view
-        returns (address)
-    {
+    function getPair(
+        address _tokenA,
+        address _tokenB
+    ) public view returns (address) {
         (address token0, address token1) = sortTokens(_tokenA, _tokenB);
         IPair pair = pairs[token0][token1];
         return address(pair);
@@ -79,20 +83,45 @@ contract Factory is Initializable {
         int256 _fee
     ) internal returns (address) {
         bytes32 deploymentSalt = keccak256(abi.encodePacked(_tokenA, _tokenB));
-        address deployedContract = address(new Pair{salt: deploymentSalt}());
-        IPair newPair = IPair(deployedContract);
+        address pairLogic = address(new Pair{salt: deploymentSalt}());
+        address pairProxy = deployTransparentProxyContract(
+            deploymentSalt,
+            pairLogic
+        );
+        IPair newPair = IPair(pairProxy);
         address lpTokenDeployed = deployLPContract(deploymentSalt);
         ILPToken lp = ILPToken(lpTokenDeployed);
         newPair.initialize(tokenService, lp, _tokenA, _tokenB, _treasury, _fee);
+        return pairProxy;
+    }
+
+    function deployTransparentProxyContract(
+        bytes32 deploymentSalt,
+        address logic
+    ) internal returns (address) {
+        bytes memory _data;
+        address deployedContract = address(
+            new TransparentUpgradeableProxy{salt: deploymentSalt}(
+                logic,
+                admin,
+                _data
+            )
+        );
         return deployedContract;
     }
 
-    function deployLPContract(bytes32 deploymentSalt) internal returns (address) {
-        address deployedContract = address(new LPToken{salt: deploymentSalt}());
-        (bool success, ) = deployedContract.call{value: msg.value}(
+    function deployLPContract(
+        bytes32 deploymentSalt
+    ) internal returns (address) {
+        address lpLogic = address(new LPToken{salt: deploymentSalt}());
+        address lpProxy = deployTransparentProxyContract(
+            deploymentSalt,
+            lpLogic
+        );
+        (bool success, ) = lpProxy.call{value: msg.value}(
             abi.encodeWithSelector(ILPToken.initialize.selector, tokenService)
         );
         require(success, "LPToken Initialization fail!");
-        return deployedContract;
+        return lpProxy;
     }
 }
