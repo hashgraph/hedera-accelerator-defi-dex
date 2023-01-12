@@ -3,12 +3,12 @@ import {
   ContractExecuteTransaction,
   ContractFunctionParameters,
   TokenId,
-  AccountBalanceQuery,
   Hbar,
   PrivateKey,
   Client,
   AccountId,
 } from "@hashgraph/sdk";
+import { Helper } from "../../utils/Helper";
 
 export default class Factory {
   public withPrecision = (value: number, precision: number): BigNumber => {
@@ -91,6 +91,33 @@ export default class Factory {
     console.log(`getPair: ${response.contractFunctionResult!.getAddress(0)}`);
     const receiptRx = await executedTx.getReceipt(client);
     console.log(`getPair: ${receiptRx.status}`);
-    return `0x${response.contractFunctionResult!.getAddress(0)}`;
+    return response.contractFunctionResult!.getAddress(0);
+  };
+
+  public getAllPairs = async (
+    contractId: string,
+    client: Client
+  ): Promise<string[]> => {
+    console.log(`getting AllPairs`);
+    const getAllPairsTx = await new ContractExecuteTransaction()
+      .setContractId(contractId)
+      .setGas(9999999)
+      .setFunction("getPairs")
+      .freezeWith(client);
+
+    const executedTx = await getAllPairsTx.execute(client);
+    const response = await executedTx.getRecord(client);
+
+    console.log(
+      `getPairs Count: ${response.contractFunctionResult!.getUint256(1)}`
+    );
+    const modifiedArray = Helper.getAddressArray(
+      response.contractFunctionResult!
+    );
+    console.log(`get all pair Address: ${modifiedArray}`);
+
+    const receipt = await executedTx.getReceipt(client);
+    console.log(`getPairs: ${receipt.status}`);
+    return modifiedArray;
   };
 }
