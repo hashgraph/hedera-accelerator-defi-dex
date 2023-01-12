@@ -4,12 +4,13 @@ pragma solidity ^0.8.4;
 import "@openzeppelin/contracts-upgradeable/governance/GovernorUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/governance/IGovernorUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorSettingsUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorCountingSimpleUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesQuorumFractionUpgradeable.sol";
 import "../common/IERC20.sol";
 import "../common/IBaseHTS.sol";
 import "../common/hedera/HederaResponseCodes.sol";
-import "./GovernorCountingSimpleUpgradeable.sol";
+import "./GODHolder.sol";
 
 abstract contract GovernorCountingSimpleInternal is
     Initializable,
@@ -17,16 +18,6 @@ abstract contract GovernorCountingSimpleInternal is
     GovernorSettingsUpgradeable,
     GovernorCountingSimpleUpgradeable
 {
-    struct VotingWeight {
-        uint256 weight;
-        uint8 support;
-    }
-
-    struct Delegation {
-        address delegatee;
-        address delegator;
-    }
-
     struct ProposalInfo {
         address creator;
         string title;
@@ -48,24 +39,19 @@ abstract contract GovernorCountingSimpleInternal is
     IERC20 token;
     mapping(uint256 => ProposalInfo) proposalCreators;
     IBaseHTS internal tokenService;
+    IGODHolder godHolder;
 
-    /**
-     * Using below array for delegation tracking and checking if already delegated.
-     * Its not efficient but saving another state variable. Also, not expecting delegaters
-     * would be too many.
-     */
-    address[] delegaters;
-    address[] voters;
-    mapping(address => Delegation) delegation;
-    mapping(address => VotingWeight) votingWeights;
+    mapping(uint256 => address[]) proposalVoters;
 
     function initialize(
         IERC20 _token,
         uint256 _votingDelayValue,
         uint256 _votingPeriodValue,
-        IBaseHTS _tokenService
+        IBaseHTS _tokenService,
+        IGODHolder _godHolder
     ) public initializer {
         tokenService = _tokenService;
+        godHolder = _godHolder;
         token = _token;
         precision = 100000000;
         __Governor_init("HederaTokenCreateGovernor");
@@ -77,28 +63,16 @@ abstract contract GovernorCountingSimpleInternal is
         __GovernorCountingSimple_init();
     }
 
-    function delegateTo(address delegatee) external {
-        address delegator = _msgSender();
-        require(
-            delegation[delegator].delegatee == address(0x0),
-            "Delegatee cannot delegate further."
-        );
-        int256 index = getDelegatorIndex(delegator);
-        require(index == -1, "Delegator already delegated.");
-        delegation[delegatee] = Delegation(delegatee, delegator);
-        delegaters.push(delegator);
-    }
-
     function _getVotes(
         address account,
         uint256,
         bytes memory /*params*/
     ) internal view virtual override returns (uint256) {
-        address userAccount = account;
-        if (isDelegated(account)) {
-            userAccount = delegation[account].delegator;
+        uint256 balance = godHolder.balanceOfVoter(account);
+        if (balance == 0) {
+            balance = token.balanceOf(account);
         }
-        uint256 share = (token.balanceOf(userAccount) * precision) /
+        uint256 share = (balance * precision) /
             token.totalSupply();
         uint256 percentageShare = share / (precision / 100);
         return percentageShare;
@@ -193,7 +167,9 @@ abstract contract GovernorCountingSimpleInternal is
         require(msg.sender == creator, "Only proposer can cancel the proposal");
         proposalId = super._cancel(targets, values, calldatas, descriptionHash);
         returnGODToken(creator);
-        cleanup(creator);
+        address[] memory voters = proposalVoters[proposalId];
+        godHolder.removeActiveProposals(voters, proposalId);
+        cleanup(proposalId);
     }
 
     /**
@@ -208,14 +184,6 @@ abstract contract GovernorCountingSimpleInternal is
             bytes[] memory calldatas
         ) = mockFunctionCall();
         bytes32 descriptionHash = keccak256(bytes(title));
-        uint256 proposalId = hashProposal(
-            targets,
-            values,
-            calldatas,
-            descriptionHash
-        );
-        adjustIfVoterTokenBalanceChanged(proposalId, voters);
-        adjustIfVoterTokenBalanceChanged(proposalId, delegaters);
         return execute(targets, values, calldatas, descriptionHash);
     }
 
@@ -241,33 +209,14 @@ abstract contract GovernorCountingSimpleInternal is
         uint8 support
     ) public virtual override returns (uint256) {
         address voter = _msgSender();
-        int256 delegatorIndex = getDelegatorIndex(voter);
-        bool noDelegation = (delegatorIndex == -1);
-
-        require(noDelegation, "Delegator already delegated.");
-
-        require(noDelegation && _getVotes(voter, 0, "") > 0, "No voting power");
+        require(_getVotes(voter, 0, "") > 0, "No voting power");
 
         uint256 weight = _castVote(proposalId, voter, support, "");
-
-        removeExistingVotingWeight(proposalId);
-
-        adjustIfVoterTokenBalanceChanged(proposalId, voters);
-
-        VotingWeight memory userWeight = VotingWeight(weight, support);
-        votingWeights[voter] = userWeight;
-
+        godHolder.grabTokensFromUser(voter);
+        godHolder.addProposalForVoter(voter, proposalId);
+        address[] storage voters = proposalVoters[proposalId];
         voters.push(voter);
-
         return weight;
-    }
-
-    function getTokenBalanceChanged(
-        address voter,
-        uint256 existingWeight
-    ) private view returns (int256) {
-        uint256 currentWeight = _getVotes(voter, 0, "");
-        return int256(currentWeight) - int256(existingWeight);
     }
 
     /**
@@ -282,7 +231,9 @@ abstract contract GovernorCountingSimpleInternal is
     ) internal virtual override {
         address creator = proposalCreators[proposalId].creator;
         returnGODToken(creator);
-        cleanup(creator);
+        address[] memory voters = proposalVoters[proposalId];
+        godHolder.removeActiveProposals(voters, proposalId);
+        cleanup(proposalId);
     }
 
     function getGODToken() internal {
@@ -301,16 +252,15 @@ abstract contract GovernorCountingSimpleInternal is
     }
 
     function returnGODToken(address creator) internal {
-        bool result = token.transfer(creator, precision);
+        bool tranferStatus = token.transfer(creator, precision);
         require(
-            result,
-            "GovernorCountingSimpleInternal: token transfer failed from contract."
+            tranferStatus,
+            "GovernorCountingSimpleInternal: returnGODToken failed from contract."
         );
     }
 
-    function cleanup(address voter) private {
-        removeAnArrayElement(voter, voters);
-        removeAnArrayElement(voter, delegaters);
+    function cleanup(uint256 proposal) private {
+        delete (proposalVoters[proposal]);
     }
 
     function mockFunctionCall()
@@ -329,76 +279,6 @@ abstract contract GovernorCountingSimpleInternal is
         calldatas = new bytes[](1);
         bytes memory b = "blank";
         calldatas[0] = (b);
-    }
-
-    function getDelegatorIndex(
-        address delegator
-    ) private view returns (int256) {
-        for (uint256 i = 0; i < delegaters.length; i++) {
-            if (delegaters[i] == delegator) {
-                return int256(i);
-            }
-        }
-        return -1;
-    }
-
-    function isDelegated(address account) private view returns (bool) {
-        return delegation[account].delegatee != address(0x0);
-    }
-
-    function adjustIfVoterTokenBalanceChanged(
-        uint256 proposalId,
-        address[] memory localVoters
-    ) private {
-        for (uint256 i = 0; i < localVoters.length; i++) {
-            address voter = localVoters[i];
-            VotingWeight memory existingVotedWeight = votingWeights[voter];
-            int256 adjustedWeight = getTokenBalanceChanged(
-                voter,
-                existingVotedWeight.weight
-            );
-            if (hasVoted(proposalId, voter)) {
-                adjustVote(
-                    proposalId,
-                    voter,
-                    existingVotedWeight.support,
-                    adjustedWeight,
-                    ""
-                );
-            }
-        }
-    }
-
-    function removeExistingVotingWeight(uint256 proposalId) private {
-        for (uint256 i = 0; i < delegaters.length; i++) {
-            address delegator = delegaters[i];
-            VotingWeight memory existingVotedWeight = votingWeights[delegator];
-            if (hasVoted(proposalId, delegator)) {
-                adjustVote(
-                    proposalId,
-                    delegator,
-                    existingVotedWeight.support,
-                    -1 * int256(existingVotedWeight.weight),
-                    ""
-                );
-            }
-        }
-    }
-
-    function removeAnArrayElement(
-        address itemToRemove,
-        address[] storage items
-    ) internal {
-        uint index = items.length;
-        for (uint i = 0; i < items.length; i++) {
-            if (items[i] == itemToRemove) {
-                index = i;
-            }
-        }
-        if (index >= items.length) return;
-
-        items[index] = items[items.length - 1];
-        items.pop();
     }
 
     /**

@@ -12,6 +12,7 @@ contract MockBaseHTS is IBaseHTS {
     bool private revertCreateToken;
     int256 private passTransactionCount = 100;
     address private hbarx;
+
     constructor(bool _tokenTest, address _hbarx) {
         tokenTest = _tokenTest;
         hbarx = _hbarx;
@@ -105,5 +106,4 @@ contract MockBaseHTS is IBaseHTS {
     ) external payable override returns (int256 responseCode) {
         return getResponseCode();
     }
-
 }

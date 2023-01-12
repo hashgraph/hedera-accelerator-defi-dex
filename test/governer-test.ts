@@ -21,22 +21,18 @@ describe("Governor Tests", function () {
   const title = "Title";
   const link = "Link";
 
-  const readFileContent = (filePath: string) => {
-    const rawdata: any = fs.readFileSync(filePath);
-    return JSON.parse(rawdata);
-  };
-
-  const contractJson = readFileContent(
-    "./artifacts/contracts/mock/ERC20Mock.sol/ERC20Mock.json"
-  );
-  const contractInterface = new ethers.utils.Interface(contractJson.abi);
-
   describe("GovernorCountingSimpleInternal Upgradeable", function () {
     it("Verify if the Governor contract is upgradeable safe ", async function () {
       const votingDelay = 0;
       const votingPeriod = 12;
       const Governor = await ethers.getContractFactory("GovernorTokenCreate");
-      const args = [zeroAddress, votingDelay, votingPeriod, zeroAddress];
+      const args = [
+        zeroAddress,
+        votingDelay,
+        votingPeriod,
+        zeroAddress,
+        zeroAddress,
+      ];
       const instance = await upgrades.deployProxy(Governor, args);
       await instance.deployed();
     });
@@ -45,7 +41,20 @@ describe("Governor Tests", function () {
       const votingDelay = 0;
       const votingPeriod = 12;
       const Governor = await ethers.getContractFactory("GovernorTextProposal");
-      const args = [zeroAddress, votingDelay, votingPeriod, zeroAddress];
+      const args = [
+        zeroAddress,
+        votingDelay,
+        votingPeriod,
+        zeroAddress,
+        zeroAddress,
+      ];
+      const instance = await upgrades.deployProxy(Governor, args);
+      await instance.deployed();
+    });
+
+    it("Verify if the GODHolder contract is upgradeable safe ", async function () {
+      const Governor = await ethers.getContractFactory("GODHolder");
+      const args = [zeroAddress, zeroAddress];
       const instance = await upgrades.deployProxy(Governor, args);
       await instance.deployed();
     });
@@ -54,8 +63,11 @@ describe("Governor Tests", function () {
   async function deployFixture() {
     const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
     const mockBaseHTS = await MockBaseHTS.deploy(true, zeroAddress);
-    const signers = await ethers.getSigners();
+    return basicDeployments(mockBaseHTS);
+  }
 
+  async function basicDeployments(mockBaseHTS: any) {
+    const signers = await ethers.getSigners();
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
     const tokenCont = await TokenCont.deploy(
       "tokenName",
@@ -69,6 +81,12 @@ describe("Governor Tests", function () {
     const votingDelay = 0;
     const votingPeriod = 12;
 
+    const GODHolder = await ethers.getContractFactory("GODHolder");
+    const godHolder = await upgrades.deployProxy(GODHolder, [
+      mockBaseHTS.address,
+      tokenCont.address,
+    ]);
+
     const Governor = await ethers.getContractFactory("GovernorTokenCreate");
     console.log(`token Service address ${mockBaseHTS.address}`);
     const args = [
@@ -76,6 +94,7 @@ describe("Governor Tests", function () {
       votingDelay,
       votingPeriod,
       mockBaseHTS.address,
+      godHolder.address,
     ];
     const instance = await upgrades.deployProxy(Governor, args);
 
@@ -102,7 +121,6 @@ describe("Governor Tests", function () {
       args
     );
     await governorTransferTokenInstance.deployed();
-
     return {
       instance,
       textGovernorInstance,
@@ -111,71 +129,8 @@ describe("Governor Tests", function () {
       tokenCont,
       mockBaseHTS,
       signers,
+      godHolder,
     };
-  }
-
-  async function deployFixtureWithFail() {
-    const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-    const mockBaseHTS = await MockBaseHTS.deploy(true, zeroAddress);
-    const signers = await ethers.getSigners();
-
-    const TokenCont = await ethers.getContractFactory("ERC20Mock");
-    const tokenCont = await TokenCont.deploy(
-      "tokenName",
-      "tokenSymbol",
-      total,
-      0
-    );
-    await tokenCont.setUserBalance(signers[0].address, twentyPercent);
-    await tokenCont.setUserBalance(signers[1].address, thirtyPercent);
-    await tokenCont.setUserBalance(signers[2].address, fiftyPercent);
-    const votingDelay = 5;
-    const votingPeriod = 12;
-
-    const Governor = await ethers.getContractFactory("GovernorTokenCreate");
-    const args = [
-      tokenCont.address,
-      votingDelay,
-      votingPeriod,
-      mockBaseHTS.address,
-    ];
-
-    const instance = await upgrades.deployProxy(Governor, args);
-    await instance.deployed();
-
-    return { instance, tokenCont, mockBaseHTS, signers };
-  }
-
-  async function deployFixtureWithDelay() {
-    const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-    const mockBaseHTS = await MockBaseHTS.deploy(true, zeroAddress);
-    const signers = await ethers.getSigners();
-
-    const TokenCont = await ethers.getContractFactory("ERC20Mock");
-    const tokenCont = await TokenCont.deploy(
-      "tokenName",
-      "tokenSymbol",
-      total,
-      0
-    );
-    await tokenCont.setUserBalance(signers[0].address, twentyPercent);
-    await tokenCont.setUserBalance(signers[1].address, thirtyPercent);
-    await tokenCont.setUserBalance(signers[2].address, fiftyPercent);
-    const votingDelay = 5;
-    const votingPeriod = 12;
-
-    const Governor = await ethers.getContractFactory("GovernorTokenCreate");
-    const args = [
-      tokenCont.address,
-      votingDelay,
-      votingPeriod,
-      mockBaseHTS.address,
-    ];
-
-    const instance = await upgrades.deployProxy(Governor, args);
-    await instance.deployed();
-
-    return { instance, tokenCont, mockBaseHTS, signers };
   }
 
   async function mineNBlocks(n: number) {
@@ -185,18 +140,13 @@ describe("Governor Tests", function () {
   }
 
   describe("Governor functionality", async () => {
-    const getCallDataNew = async (): Promise<string> => {
-      const callData = contractInterface.encodeFunctionData("totalSupply", []);
-      return callData;
-    };
-
     it("When user has 20% of token share then votes weight should be 20", async function () {
       const { instance, tokenCont, signers } = await loadFixture(deployFixture);
       await tokenCont.setTotal(100);
       await tokenCont.setUserBalance(signers[0].address, 20);
       const votes = await instance
         .connect(signers[0])
-        .getVotes(tokenCont.address, 1);
+        .getVotes(signers[0].address, 1);
       expect(votes).to.be.equals(20);
     });
 
@@ -204,13 +154,13 @@ describe("Governor Tests", function () {
       const { instance, tokenCont, signers } = await loadFixture(deployFixture);
       await tokenCont.setTotal(100);
       await tokenCont.setUserBalance(signers[1].address, 30);
-      const votes = await instance.getVotes(tokenCont.address, 1);
+      const votes = await instance.getVotes(signers[1].address, 1);
       expect(votes).to.be.equals(30);
     });
 
     it("Token Create Fail", async function () {
       const { instance, mockBaseHTS, signers } = await loadFixture(
-        deployFixtureWithFail
+        deployFixture
       );
       const proposalIdResponse = await createProposal(instance, signers[0]);
       const record = await proposalIdResponse.wait();
@@ -231,8 +181,9 @@ describe("Governor Tests", function () {
     });
 
     it("Verify proposal creation to cancel flow ", async function () {
-      const { instance, tokenCont, signers } = await loadFixture(deployFixture);
-
+      const { instance, tokenCont, signers, godHolder } = await loadFixture(
+        deployFixture
+      );
       await verifyAccountBalance(tokenCont, signers[0].address, total * 0.2);
       const proposalPublic = await createProposal(instance, signers[0]);
       await verifyAccountBalance(
@@ -261,18 +212,34 @@ describe("Governor Tests", function () {
       const quorumReached1 = await instance.quorumReached(proposalId);
       expect(quorumReached1).to.be.equals(true);
 
+      expect(quorumReached1).to.be.equals(true);
+      const activeProposals =
+        await godHolder.callStatic.getActiveProposalsForUser();
+      expect(activeProposals.length).to.be.equals(1);
+      const canWithdrawGod = await godHolder.callStatic.canUserClaimGodTokens();
+      expect(canWithdrawGod).to.be.equals(false);
+
+      await expect(godHolder.revertTokensForVoter()).to.revertedWith(
+        "User's Proposals are active"
+      );
+
       await mineNBlocks(20);
       const state = await instance.state(proposalId);
       expect(state).to.be.equals(4);
 
       await instance.cancelProposal(title);
+      await verifyAccountBalance(tokenCont, signers[0].address, 1 * precision);
+      const canWithdrawGod1 =
+        await godHolder.callStatic.canUserClaimGodTokens();
+      expect(canWithdrawGod1).to.be.equals(true);
+      await godHolder.revertTokensForVoter();
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
     });
 
     it("Verify proposal creation to execute flow ", async function () {
-      const { instance, tokenCont, signers } = await loadFixture(deployFixture);
-      const treaKey = ethers.utils.toUtf8Bytes("treasurer public key");
-      const adminKey = ethers.utils.toUtf8Bytes("Admin public key");
+      const { instance, tokenCont, signers, godHolder } = await loadFixture(
+        deployFixture
+      );
 
       await verifyAccountBalance(tokenCont, signers[0].address, total * 0.2);
       const proposalIdResponse = await createProposal(instance, signers[0]);
@@ -302,6 +269,13 @@ describe("Governor Tests", function () {
       const quorumReached1 = await instance.quorumReached(proposalId);
       expect(quorumReached1).to.be.equals(true);
 
+      expect(quorumReached1).to.be.equals(true);
+      const activeProposals =
+        await godHolder.callStatic.getActiveProposalsForUser();
+      expect(activeProposals.length).to.be.equals(1);
+      const canWithdrawGod = await godHolder.callStatic.canUserClaimGodTokens();
+      expect(canWithdrawGod).to.be.equals(false);
+
       await mineNBlocks(20);
       const state = await instance.state(proposalId);
       expect(state).to.be.equals(4);
@@ -310,16 +284,19 @@ describe("Governor Tests", function () {
       );
 
       await instance.executeProposal(title);
+      await verifyAccountBalance(tokenCont, signers[0].address, 1 * precision);
+      const canWithdrawGod1 =
+        await godHolder.callStatic.canUserClaimGodTokens();
+      expect(canWithdrawGod1).to.be.equals(true);
+      await godHolder.revertTokensForVoter();
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
       const tokenAddress = await instance.getTokenAddress(proposalId);
       expect(tokenAddress).to.not.be.equals(zeroAddress);
     });
 
     it("Verify TextProposal creation to Execute flow ", async function () {
-      const { textGovernorInstance, tokenCont, signers } = await loadFixture(
-        deployFixture
-      );
-
+      const { textGovernorInstance, tokenCont, signers, godHolder } =
+        await loadFixture(deployFixture);
       await verifyAccountBalance(tokenCont, signers[0].address, total * 0.2);
       const proposalPublic = await createProposalForText(
         textGovernorInstance,
@@ -358,427 +335,23 @@ describe("Governor Tests", function () {
         proposalId
       );
       expect(quorumReached1).to.be.equals(true);
+      const activeProposals =
+        await godHolder.callStatic.getActiveProposalsForUser();
+      expect(activeProposals.length).to.be.equals(1);
+      const canWithdrawGod = await godHolder.callStatic.canUserClaimGodTokens();
+      expect(canWithdrawGod).to.be.equals(false);
 
       await mineNBlocks(20);
       const state = await textGovernorInstance.state(proposalId);
       expect(state).to.be.equals(4);
 
       await textGovernorInstance.executeProposal(title);
+      await verifyAccountBalance(tokenCont, signers[0].address, 1 * precision);
+      const canWithdrawGod1 =
+        await godHolder.callStatic.canUserClaimGodTokens();
+      expect(canWithdrawGod1).to.be.equals(true);
+      await godHolder.revertTokensForVoter();
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
-    });
-
-    it("When user delegates votes to different account then delegator voting weight should be removed and delegatee votes should be considered ", async function () {
-      const { instance, tokenCont, signers } = await loadFixture(deployFixture);
-      //Creating a proposal for 20% token share
-      await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
-      const proposalIdResponse = await createProposal(instance, signers[0]);
-      await verifyAccountBalance(
-        tokenCont,
-        signers[0].address,
-        twentyPercent - 1 * precision
-      );
-
-      const record = await proposalIdResponse.wait();
-      const proposalId = record.events[0].args.proposalId.toString();
-
-      const delay = await instance.votingDelay();
-      expect(delay).to.be.equals(0);
-      const period = await instance.votingPeriod();
-      expect(period).to.be.equals(12);
-      const threshold = await instance.proposalThreshold();
-      expect(threshold).to.be.equals(0);
-      const quorumReached = await instance.quorumReached(proposalId);
-      expect(quorumReached).to.be.equals(false);
-      const voteSucceeded = await instance.voteSucceeded(proposalId);
-      expect(voteSucceeded).to.be.equals(false);
-      //Cast vote a for user 1.
-      await instance.castVote(proposalId, 0);
-      await verifyProposalVotes(instance, proposalId, {
-        abstainVotes: 0,
-        againstVotes: 19,
-        forVotes: 0,
-      });
-      //Cast another vote for user 2
-      await instance.connect(signers[1]).castVote(proposalId, 1);
-      verifyProposalVotes(instance, proposalId, {
-        abstainVotes: 0,
-        againstVotes: 19,
-        forVotes: 30,
-      });
-      //user 1 delegates votes to user 3
-      await instance.delegateTo(signers[2].address);
-      //User 3 now votes with different choice
-      await instance.connect(signers[2]).castVote(proposalId, 1);
-      //User 1 votes share reduced to zero and user 3 votes adds to chosen option
-      await verifyProposalVotes(instance, proposalId, {
-        abstainVotes: 0,
-        againstVotes: 0,
-        forVotes: 49,
-      });
-
-      const voteSucceeded1 = await instance.voteSucceeded(proposalId);
-      expect(voteSucceeded1).to.be.equals(true);
-      const quorumReached1 = await instance.quorumReached(proposalId);
-      expect(quorumReached1).to.be.equals(true);
-
-      await mineNBlocks(20);
-      const state = await instance.state(proposalId);
-      expect(state).to.be.equals(4);
-
-      await instance.executeProposal(title);
-      await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
-    });
-
-    it("Given delegator already voted when delegator delegates then delegatee should be considered. ", async function () {
-      const { instance, tokenCont, signers } = await loadFixture(deployFixture);
-      //Creating a proposal for 20% token share
-      await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
-      const proposalIdResponse = await createProposal(instance, signers[0]);
-      await verifyAccountBalance(
-        tokenCont,
-        signers[0].address,
-        twentyPercent - 1 * precision
-      );
-
-      const record = await proposalIdResponse.wait();
-      const proposalId = record.events[0].args.proposalId.toString();
-
-      const delay = await instance.votingDelay();
-      expect(delay).to.be.equals(0);
-      const period = await instance.votingPeriod();
-      expect(period).to.be.equals(12);
-      const threshold = await instance.proposalThreshold();
-      expect(threshold).to.be.equals(0);
-      const quorumReached = await instance.quorumReached(proposalId);
-      expect(quorumReached).to.be.equals(false);
-      const voteSucceeded = await instance.voteSucceeded(proposalId);
-      expect(voteSucceeded).to.be.equals(false);
-      //Cast vote a for user 1.
-      await instance.castVote(proposalId, 0);
-      await verifyProposalVotes(instance, proposalId, {
-        abstainVotes: 0,
-        againstVotes: 19,
-        forVotes: 0,
-      });
-      //Cast vote a for with delegatee.
-      await tokenCont.setUserBalance(signers[3].address, 0);
-      //user 1 delegates votes to user 3
-      await instance.delegateTo(signers[3].address);
-      expect(await tokenCont.balanceOf(signers[3].address)).to.be.equals(0);
-      //User 3 now votes with different choice
-      await instance.connect(signers[3]).castVote(proposalId, 1);
-      //User 1 votes share reduced to zero and user 3 votes adds to chosen option
-      await verifyProposalVotes(instance, proposalId, {
-        abstainVotes: 0,
-        againstVotes: 0,
-        forVotes: 19,
-      });
-
-      const voteSucceeded1 = await instance.voteSucceeded(proposalId);
-      expect(voteSucceeded1).to.be.equals(true);
-      const quorumReached1 = await instance.quorumReached(proposalId);
-      expect(quorumReached1).to.be.equals(true);
-
-      await mineNBlocks(20);
-      const state = await instance.state(proposalId);
-      expect(state).to.be.equals(4);
-
-      await instance.executeProposal(title);
-      await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
-    });
-
-    it("Given delegator not voted when delegator delegates and delegatee votes, delegator should not be allowed to vote ", async function () {
-      const { instance, tokenCont, signers } = await loadFixture(deployFixture);
-      //Creating a proposal for 20% token share
-      await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
-      const proposalIdResponse = await createProposal(instance, signers[0]);
-      await verifyAccountBalance(
-        tokenCont,
-        signers[0].address,
-        twentyPercent - 1 * precision
-      );
-
-      const record = await proposalIdResponse.wait();
-      const proposalId = record.events[0].args.proposalId.toString();
-
-      const delay = await instance.votingDelay();
-      expect(delay).to.be.equals(0);
-      const period = await instance.votingPeriod();
-      expect(period).to.be.equals(12);
-      const threshold = await instance.proposalThreshold();
-      expect(threshold).to.be.equals(0);
-      const quorumReached = await instance.quorumReached(proposalId);
-      expect(quorumReached).to.be.equals(false);
-      const voteSucceeded = await instance.voteSucceeded(proposalId);
-      expect(voteSucceeded).to.be.equals(false);
-
-      //user 1 delegated to user 3
-      await instance.delegateTo(signers[2].address);
-
-      //User 3 now votes with different choice
-      await instance.connect(signers[2]).castVote(proposalId, 1);
-      //User 1 votes share reduced to zero and user 3 votes adds to chosen option
-      await verifyProposalVotes(instance, proposalId, {
-        abstainVotes: 0,
-        againstVotes: 0,
-        forVotes: 19,
-      });
-
-      //Now user1 try to cast vote .
-      await expect(instance.castVote(proposalId, 0)).to.revertedWith(
-        "Delegator already delegated."
-      );
-    });
-
-    it("Given delegator not voted when delegator delegates, delegator should not be allowed to vote ", async function () {
-      const { instance, tokenCont, signers } = await loadFixture(deployFixture);
-      //Creating a proposal for 20% token share
-      await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
-      const proposalIdResponse = await createProposal(instance, signers[0]);
-      await verifyAccountBalance(
-        tokenCont,
-        signers[0].address,
-        twentyPercent - 1 * precision
-      );
-
-      const record = await proposalIdResponse.wait();
-      const proposalId = record.events[0].args.proposalId.toString();
-
-      const delay = await instance.votingDelay();
-      expect(delay).to.be.equals(0);
-      const period = await instance.votingPeriod();
-      expect(period).to.be.equals(12);
-      const threshold = await instance.proposalThreshold();
-      expect(threshold).to.be.equals(0);
-      const quorumReached = await instance.quorumReached(proposalId);
-      expect(quorumReached).to.be.equals(false);
-      const voteSucceeded = await instance.voteSucceeded(proposalId);
-      expect(voteSucceeded).to.be.equals(false);
-
-      //user 1 delegated to user 3
-      await instance.delegateTo(signers[2].address);
-
-      //Now user1 try to cast vote .
-      await expect(instance.castVote(proposalId, 0)).to.revertedWith(
-        "Delegator already delegated."
-      );
-    });
-
-    it("Given delegator already delegated when tries again then should fail ", async function () {
-      const { instance, tokenCont, signers } = await loadFixture(
-        deployFixtureWithDelay
-      );
-      //Creating a proposal for 20% token share
-      await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
-      const proposalIdResponse = await createProposal(instance, signers[0]);
-      await verifyAccountBalance(
-        tokenCont,
-        signers[0].address,
-        twentyPercent - 1 * precision
-      );
-
-      const record = await proposalIdResponse.wait();
-      const proposalId = record.events[0].args.proposalId.toString();
-
-      const delay = await instance.votingDelay();
-      expect(delay).to.be.equals(5);
-      const period = await instance.votingPeriod();
-      expect(period).to.be.equals(12);
-
-      //user 1 delegated to user 3
-      await instance.delegateTo(signers[2].address);
-
-      //Now user1 try to cast vote .
-      await expect(instance.delegateTo(signers[1].address)).to.revertedWith(
-        "Delegator already delegated."
-      );
-    });
-
-    it("Given delegator already delegated when delegatee tries delegation again then should fail ", async function () {
-      const { instance, tokenCont, signers } = await loadFixture(
-        deployFixtureWithDelay
-      );
-      //Creating a proposal for 20% token share
-      await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
-      const proposalIdResponse = await createProposal(instance, signers[0]);
-      await verifyAccountBalance(
-        tokenCont,
-        signers[0].address,
-        twentyPercent - 1 * precision
-      );
-
-      const record = await proposalIdResponse.wait();
-      const proposalId = record.events[0].args.proposalId.toString();
-
-      const delay = await instance.votingDelay();
-      expect(delay).to.be.equals(5);
-      const period = await instance.votingPeriod();
-      expect(period).to.be.equals(12);
-
-      //user 1 delegated to user 3
-      await instance.delegateTo(signers[2].address);
-
-      //Now user1 try to delegate to user 2, it should fail.
-      await expect(
-        instance.connect(signers[2]).delegateTo(signers[1].address)
-      ).to.revertedWith("Delegatee cannot delegate further.");
-    });
-
-    it("Given user has already voted when user does token transfer then voting weight should be adjusted ", async function () {
-      const { instance, tokenCont, signers } = await loadFixture(deployFixture);
-      //Creating a proposal for 20% token share
-      await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
-      const proposalIdResponse = await createProposal(instance, signers[0]);
-      await verifyAccountBalance(
-        tokenCont,
-        signers[0].address,
-        twentyPercent - 1 * precision
-      );
-
-      const record = await proposalIdResponse.wait();
-      const proposalId = record.events[0].args.proposalId.toString();
-
-      const delay = await instance.votingDelay();
-      expect(delay).to.be.equals(0);
-      const period = await instance.votingPeriod();
-      expect(period).to.be.equals(12);
-      const threshold = await instance.proposalThreshold();
-      expect(threshold).to.be.equals(0);
-      const quorumReached = await instance.quorumReached(proposalId);
-      expect(quorumReached).to.be.equals(false);
-      const voteSucceeded = await instance.voteSucceeded(proposalId);
-      expect(voteSucceeded).to.be.equals(false);
-      //Cast vote a for user 1.
-      await instance.castVote(proposalId, 0);
-      await verifyProposalVotes(instance, proposalId, {
-        abstainVotes: 0,
-        againstVotes: 19,
-        forVotes: 0,
-      });
-
-      const tenPercentage = thirtyPercent - twentyPercent;
-      await tokenCont.setUserBalance(signers[0].address, tenPercentage);
-
-      //Cast vote a for user 2.
-      await instance.connect(signers[1]).castVote(proposalId, 1);
-      await verifyProposalVotes(instance, proposalId, {
-        abstainVotes: 0,
-        againstVotes: 10,
-        forVotes: 30,
-      });
-
-      const voteSucceeded1 = await instance.voteSucceeded(proposalId);
-      expect(voteSucceeded1).to.be.equals(true);
-      const quorumReached1 = await instance.quorumReached(proposalId);
-      expect(quorumReached1).to.be.equals(true);
-
-      await mineNBlocks(20);
-      const state = await instance.state(proposalId);
-      expect(state).to.be.equals(4);
-
-      await instance.executeProposal(title);
-      await verifyAccountBalance(
-        tokenCont,
-        signers[0].address,
-        tenPercentage + 1 * precision
-      ); //Returned token
-    });
-
-    it("Given user has already delegated and voted when delegator does token transfer then voting weight should be adjusted ", async function () {
-      const { instance, tokenCont, signers } = await loadFixture(deployFixture);
-      //Creating a proposal for 20% token share
-      await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
-      const proposalIdResponse = await createProposal(instance, signers[0]);
-      await verifyAccountBalance(
-        tokenCont,
-        signers[0].address,
-        twentyPercent - 1 * precision
-      );
-
-      const record = await proposalIdResponse.wait();
-      const proposalId = record.events[0].args.proposalId.toString();
-
-      const delay = await instance.votingDelay();
-      expect(delay).to.be.equals(0);
-      const period = await instance.votingPeriod();
-      expect(period).to.be.equals(12);
-      const threshold = await instance.proposalThreshold();
-      expect(threshold).to.be.equals(0);
-      const quorumReached = await instance.quorumReached(proposalId);
-      expect(quorumReached).to.be.equals(false);
-      const voteSucceeded = await instance.voteSucceeded(proposalId);
-      expect(voteSucceeded).to.be.equals(false);
-
-      //user 1 delegates
-      await instance.delegateTo(signers[2].address);
-
-      //Cast vote a for with delegatee.
-      await instance.connect(signers[2]).castVote(proposalId, 1);
-      await verifyProposalVotes(instance, proposalId, {
-        abstainVotes: 0,
-        againstVotes: 0,
-        forVotes: 19,
-      });
-
-      const tenPercentage = thirtyPercent - twentyPercent;
-      await tokenCont.setUserBalance(signers[0].address, tenPercentage);
-
-      //Cast vote a for user 2.
-      await instance.connect(signers[1]).castVote(proposalId, 1);
-      await verifyProposalVotes(instance, proposalId, {
-        abstainVotes: 0,
-        againstVotes: 0,
-        forVotes: 40,
-      });
-
-      const voteSucceeded1 = await instance.voteSucceeded(proposalId);
-      expect(voteSucceeded1).to.be.equals(true);
-      const quorumReached1 = await instance.quorumReached(proposalId);
-      expect(quorumReached1).to.be.equals(true);
-
-      await mineNBlocks(20);
-      const state = await instance.state(proposalId);
-      expect(state).to.be.equals(4);
-
-      await instance.executeProposal(title);
-      await verifyAccountBalance(
-        tokenCont,
-        signers[0].address,
-        tenPercentage + 1 * precision
-      ); //Returned token
-    });
-
-    it("Given user has zero tokens when delegator cast vote then revert with no voting power ", async function () {
-      const { instance, tokenCont, signers } = await loadFixture(deployFixture);
-      //Creating a proposal for 20% token share
-      await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
-      const proposalIdResponse = await createProposal(instance, signers[0]);
-      await verifyAccountBalance(
-        tokenCont,
-        signers[0].address,
-        twentyPercent - 1 * precision
-      );
-
-      const record = await proposalIdResponse.wait();
-      const proposalId = record.events[0].args.proposalId.toString();
-
-      const delay = await instance.votingDelay();
-      expect(delay).to.be.equals(0);
-      const period = await instance.votingPeriod();
-      expect(period).to.be.equals(12);
-      const threshold = await instance.proposalThreshold();
-      expect(threshold).to.be.equals(0);
-      const quorumReached = await instance.quorumReached(proposalId);
-      expect(quorumReached).to.be.equals(false);
-      const voteSucceeded = await instance.voteSucceeded(proposalId);
-      expect(voteSucceeded).to.be.equals(false);
-
-      //Cast vote a for with delegatee.
-      await tokenCont.setUserBalance(signers[0].address, 0);
-
-      await expect(instance.castVote(proposalId, 1)).to.revertedWith(
-        "No voting power"
-      );
     });
 
     it("Verify GovernorUpgrade contract proposal creation to execute flow ", async function () {
@@ -846,8 +419,45 @@ describe("Governor Tests", function () {
     it("Verify GovernorUpgrade initialize should be failed for initialize called after instance created", async function () {
       const { governorUpgradeInstance } = await loadFixture(deployFixture);
       await expect(
-        governorUpgradeInstance.initialize(zeroAddress, 0, 10, zeroAddress)
+        governorUpgradeInstance.initialize(
+          zeroAddress,
+          0,
+          10,
+          zeroAddress,
+          zeroAddress
+        )
       ).to.revertedWith("Initializable: contract is already initialized");
+    });
+
+    it("Verify GODHolder initialize should be failed for initialize called after instance created", async function () {
+      const { godHolder } = await loadFixture(deployFixture);
+      await expect(
+        godHolder.initialize(zeroAddress, zeroAddress)
+      ).to.revertedWith("Initializable: contract is already initialized");
+    });
+
+    it("Verify GODHolder grabtoken revert", async function () {
+      const { godHolder, signers, mockBaseHTS } = await loadFixture(
+        deployFixture
+      );
+      await mockBaseHTS.setPassTransactionCount(1);
+      await expect(
+        godHolder.grabTokensFromUser(signers[0].address)
+      ).to.revertedWith("GODHolder: token transfer failed to contract.");
+    });
+
+    it("Verify GODHolder revertTokensForVoter revert", async function () {
+      const { godHolder, signers, tokenCont } = await loadFixture(
+        deployFixture
+      );
+      await expect(godHolder.revertTokensForVoter()).to.revertedWith(
+        "GODHolder: No amount for the Voter."
+      );
+      godHolder.grabTokensFromUser(signers[0].address);
+      await tokenCont.setTransaferFailed(true);
+      await expect(godHolder.revertTokensForVoter()).to.revertedWith(
+        "GODHolder: token transfer failed from contract."
+      );
     });
 
     it("Verify cancel proposal flow when proposal not found", async function () {
