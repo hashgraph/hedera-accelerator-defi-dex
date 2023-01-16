@@ -5,12 +5,21 @@ import "../common/IERC20.sol";
 import "hardhat/console.sol";
 
 contract ERC20Mock is IERC20 {
+    string tokeName;
+    string tokenSymbol;
     uint256 total;
     uint256 userBalance;
     mapping(address => uint256) userBalances;
     bool private transferFailed;
 
-    constructor(uint256 _total, uint256 _userBalance) {
+    constructor(
+        string memory _name,
+        string memory _symbol,
+        uint256 _total,
+        uint256 _userBalance
+    ) {
+        tokeName = _name;
+        tokenSymbol = _symbol;
         total = _total;
         userBalance = _userBalance;
         userBalances[address(0)] = _userBalance;
@@ -49,5 +58,13 @@ contract ERC20Mock is IERC20 {
 
     function transfer(address, uint256) external view override returns (bool) {
         return !transferFailed;
+    }
+
+    function name() external view override returns (string memory) {
+        return tokeName;
+    }
+
+    function symbol() external view override returns (string memory) {
+        return tokenSymbol;
     }
 }

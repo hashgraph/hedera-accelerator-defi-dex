@@ -11,7 +11,6 @@ import "./ILPToken.sol";
 
 contract LPToken is HederaResponseCodes, ILPToken, Initializable {
     IBaseHTS tokenService;
-    address internal creator;
     IERC20 lpToken;
 
     using Bits for uint256;
@@ -33,10 +32,16 @@ contract LPToken is HederaResponseCodes, ILPToken, Initializable {
     }
 
     function initialize(
-        IBaseHTS _tokenService
+        IBaseHTS _tokenService,
+        string memory tokenName,
+        string memory tokenSymbol
     ) external payable override initializer {
         tokenService = _tokenService;
-        (, address newToken) = createFungibleTokenPublic(0);
+        (, address newToken) = createFungibleTokenPublic(
+            0,
+            tokenName,
+            tokenSymbol
+        );
         lpToken = IERC20(newToken);
     }
 
@@ -66,7 +71,7 @@ contract LPToken is HederaResponseCodes, ILPToken, Initializable {
         );
         response = tokenService.transferTokenPublic(
             address(lpToken),
-            address(tokenService),
+            address(this),
             _toUser,
             mintingAmount
         );
@@ -90,7 +95,7 @@ contract LPToken is HederaResponseCodes, ILPToken, Initializable {
         int256 response = tokenService.transferTokenPublic(
             address(lpToken),
             fromUser,
-            address(tokenService),
+            address(this),
             lpAmount
         );
         require(
@@ -107,7 +112,9 @@ contract LPToken is HederaResponseCodes, ILPToken, Initializable {
     }
 
     function createFungibleTokenPublic(
-        int256 mintingAmount
+        int256 mintingAmount,
+        string memory tokenName,
+        string memory tokenSymbol
     ) internal returns (int256 responseCode, address tokenAddress) {
         uint256 supplyKeyType;
         IHederaTokenService.KeyValue memory supplyKeyValue;
@@ -120,13 +127,13 @@ contract LPToken is HederaResponseCodes, ILPToken, Initializable {
         keys[0] = IHederaTokenService.TokenKey(supplyKeyType, supplyKeyValue);
 
         IHederaTokenService.Expiry memory expiry;
-        expiry.autoRenewAccount = address(tokenService);
+        expiry.autoRenewAccount = address(this);
         expiry.autoRenewPeriod = 8000000;
 
         IHederaTokenService.HederaToken memory myToken;
-        myToken.name = "Lab49";
-        myToken.symbol = "L49";
-        myToken.treasury = address(tokenService);
+        myToken.name = tokenName;
+        myToken.symbol = tokenSymbol;
+        myToken.treasury = address(this);
         myToken.expiry = expiry;
         myToken.tokenKeys = keys;
 
