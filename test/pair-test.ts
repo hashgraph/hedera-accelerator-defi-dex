@@ -35,6 +35,7 @@ describe("All Tests", function () {
     const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
     const mockBaseHTS = await MockBaseHTS.deploy(false, tokenCAddress);
 
+    const signers = await ethers.getSigners();
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
     const tokenCont = await TokenCont.deploy(10, 10);
     const token1Address = tokenCont.address;
@@ -72,6 +73,7 @@ describe("All Tests", function () {
       factory,
       token1Address,
       token2Address,
+      signers,
     };
   }
 
@@ -234,8 +236,10 @@ describe("All Tests", function () {
 
   describe("Factory Contract positive Tests", async () => {
     it("Check createPair method", async function () {
-      const { factory, mockBaseHTS } = await loadFixture(deployFixture);
-      await factory.setUpFactory(mockBaseHTS.address);
+      const { factory, mockBaseHTS, signers } = await loadFixture(
+        deployFixture
+      );
+      await factory.setUpFactory(mockBaseHTS.address, signers[0].address);
       await factory.createPair(tokenAAddress, tokenBAddress, treasury, fee);
       const pair1 = await factory.getPair(tokenAAddress, tokenBAddress);
       await factory.createPair(tokenAAddress, tokenBAddress, treasury, fee);
@@ -246,16 +250,20 @@ describe("All Tests", function () {
     });
 
     it("verify factory initization should be failed for subsequent initization call", async function () {
-      const { factory, mockBaseHTS } = await loadFixture(deployFixture);
-      await factory.setUpFactory(mockBaseHTS.address);
-      await expect(factory.setUpFactory(mockBaseHTS.address)).to.revertedWith(
-        "Initializable: contract is already initialized"
+      const { factory, mockBaseHTS, signers } = await loadFixture(
+        deployFixture
       );
+      await factory.setUpFactory(mockBaseHTS.address, signers[0].address);
+      await expect(
+        factory.setUpFactory(mockBaseHTS.address, signers[0].address)
+      ).to.revertedWith("Initializable: contract is already initialized");
     });
 
     it("Check getPairs method", async function () {
-      const { factory, mockBaseHTS } = await loadFixture(deployFixture);
-      await factory.setUpFactory(mockBaseHTS.address);
+      const { factory, mockBaseHTS, signers } = await loadFixture(
+        deployFixture
+      );
+      await factory.setUpFactory(mockBaseHTS.address, signers[0].address);
       await factory.createPair(tokenAAddress, tokenBAddress, treasury, fee);
       const pairs = await factory.getPairs();
       expect(pairs.length).to.be.equals(1);
@@ -265,24 +273,30 @@ describe("All Tests", function () {
     });
 
     it("Check For identical Tokens", async function () {
-      const { factory, mockBaseHTS } = await loadFixture(deployFixture);
-      await factory.setUpFactory(mockBaseHTS.address);
+      const { factory, mockBaseHTS, signers } = await loadFixture(
+        deployFixture
+      );
+      await factory.setUpFactory(mockBaseHTS.address, signers[0].address);
       await expect(
         factory.createPair(tokenAAddress, tokenAAddress, treasury, fee)
       ).to.revertedWith("IDENTICAL_ADDRESSES");
     });
 
     it("Check For zero Token address", async function () {
-      const { factory, mockBaseHTS } = await loadFixture(deployFixture);
-      await factory.setUpFactory(mockBaseHTS.address);
+      const { factory, mockBaseHTS, signers } = await loadFixture(
+        deployFixture
+      );
+      await factory.setUpFactory(mockBaseHTS.address, signers[0].address);
       await expect(
         factory.createPair(newZeroAddress, tokenAAddress, treasury, fee)
       ).to.revertedWith("ZERO_ADDRESS");
     });
 
     it("Check getPair method", async function () {
-      const { factory, mockBaseHTS } = await loadFixture(deployFixture);
-      await factory.setUpFactory(mockBaseHTS.address);
+      const { factory, mockBaseHTS, signers } = await loadFixture(
+        deployFixture
+      );
+      await factory.setUpFactory(mockBaseHTS.address, signers[0].address);
       await factory.createPair(tokenAAddress, tokenBAddress, treasury, fee);
       const pair = await factory.getPair(tokenAAddress, tokenBAddress);
       expect(pair).to.be.not.equal(zeroAddress);
