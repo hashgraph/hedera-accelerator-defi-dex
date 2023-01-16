@@ -80,7 +80,9 @@ contract MockBaseHTS is IBaseHTS {
         }
         responseCode = getResponseCode();
         if (responseCode == 22) {
-            tokenAddress = address(new ERC20Mock(10, 10));
+            tokenAddress = address(
+                new ERC20Mock("newTokenName", "newTokenSymbol", 10, 10)
+            );
         }
         return (responseCode, tokenAddress);
     }
@@ -93,11 +95,14 @@ contract MockBaseHTS is IBaseHTS {
         return int(23);
     }
 
-    function hbarxAddress() external override view returns(address) {
+    function hbarxAddress() external view override returns (address) {
         return hbarx;
     }
 
-    function transferHBAR(int256, address payable ) external payable override returns (int256 responseCode) {
+    function transferHBAR(
+        int256,
+        address payable
+    ) external payable override returns (int256 responseCode) {
         return getResponseCode();
     }
 

@@ -37,16 +37,37 @@ describe("All Tests", function () {
 
     const signers = await ethers.getSigners();
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
-    const tokenCont = await TokenCont.deploy(10, 10);
+    const tokenCont = await TokenCont.deploy(
+      "tokenName",
+      "tokenSymbol",
+      10,
+      10
+    );
     const token1Address = tokenCont.address;
 
     const TokenCont1 = await ethers.getContractFactory("ERC20Mock");
-    const tokenCont1 = await TokenCont1.deploy(10, 10);
+    const tokenCont1 = await TokenCont1.deploy(
+      "tokenName1",
+      "tokenSymbol1",
+      10,
+      10
+    );
     const token2Address = tokenCont1.address;
+
+    const TokenCont2 = await ethers.getContractFactory("ERC20Mock");
+    const tokenCont2 = await TokenCont2.deploy(
+      "tokenName2",
+      "tokenSymbol2",
+      10,
+      10
+    );
+    const token3Address = tokenCont2.address;
 
     const LpTokenCont = await ethers.getContractFactory("LPToken");
     const lpTokenCont = await upgrades.deployProxy(LpTokenCont, [
       mockBaseHTS.address,
+      "tokenName",
+      "tokenSymbol",
     ]);
     await lpTokenCont.deployed();
 
@@ -74,6 +95,7 @@ describe("All Tests", function () {
       token1Address,
       token2Address,
       signers,
+      token3Address,
     };
   }
 
@@ -83,11 +105,18 @@ describe("All Tests", function () {
     const signers = await ethers.getSigners();
 
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
-    const tokenCont = await TokenCont.deploy(10, 10);
+    const tokenCont = await TokenCont.deploy(
+      "tokenName",
+      "tokenSymbol",
+      10,
+      10
+    );
 
     const LpTokenCont = await ethers.getContractFactory("LPToken");
     const lpTokenCont = await upgrades.deployProxy(LpTokenCont, [
       mockBaseHTS.address,
+      "tokenName",
+      "tokenSymbol",
     ]);
     await lpTokenCont.deployed();
 
@@ -115,16 +144,28 @@ describe("All Tests", function () {
     const mockBaseHTS = await MockBaseHTS.deploy(false, tokenCAddress);
 
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
-    const tokenCont = await TokenCont.deploy(10, 10);
+    const tokenCont = await TokenCont.deploy(
+      "tokenName",
+      "tokenSymbol",
+      10,
+      10
+    );
     const token1Address = tokenCont.address;
 
     const TokenCont1 = await ethers.getContractFactory("ERC20Mock");
-    const tokenCont1 = await TokenCont1.deploy(10, 10);
+    const tokenCont1 = await TokenCont1.deploy(
+      "tokenName1",
+      "tokenSymbol1",
+      10,
+      10
+    );
     const token2Address = tokenCont1.address;
 
     const LpTokenCont = await ethers.getContractFactory("LPToken");
     const lpTokenCont = await upgrades.deployProxy(LpTokenCont, [
       mockBaseHTS.address,
+      "tokenName",
+      "tokenSymbol",
     ]);
     await lpTokenCont.deployed();
 
@@ -236,14 +277,14 @@ describe("All Tests", function () {
 
   describe("Factory Contract positive Tests", async () => {
     it("Check createPair method", async function () {
-      const { factory, mockBaseHTS, signers } = await loadFixture(
+      const { factory, mockBaseHTS, signers, token1Address, token2Address } = await loadFixture(
         deployFixture
       );
       await factory.setUpFactory(mockBaseHTS.address, signers[0].address);
-      await factory.createPair(tokenAAddress, tokenBAddress, treasury, fee);
-      const pair1 = await factory.getPair(tokenAAddress, tokenBAddress);
-      await factory.createPair(tokenAAddress, tokenBAddress, treasury, fee);
-      const pair2 = await factory.getPair(tokenAAddress, tokenBAddress);
+      await factory.createPair(token1Address, token2Address, treasury, fee);
+      const pair1 = await factory.getPair(token1Address, token2Address);
+      await factory.createPair(token1Address, token2Address, treasury, fee);
+      const pair2 = await factory.getPair(token1Address, token2Address);
       expect(pair1).to.be.equals(pair2);
       const pairs = await factory.getPairs();
       expect(pairs[0]).to.be.equals(pair1);
@@ -260,14 +301,16 @@ describe("All Tests", function () {
     });
 
     it("Check getPairs method", async function () {
-      const { factory, mockBaseHTS, signers } = await loadFixture(
-        deployFixture
-      );
+      const { factory, mockBaseHTS, signers, token1Address,
+        token2Address,
+        token3Address, } = await loadFixture(
+          deployFixture
+        );
       await factory.setUpFactory(mockBaseHTS.address, signers[0].address);
-      await factory.createPair(tokenAAddress, tokenBAddress, treasury, fee);
+      await factory.createPair(token1Address, token2Address, treasury, fee);
       const pairs = await factory.getPairs();
       expect(pairs.length).to.be.equals(1);
-      await factory.createPair(tokenAAddress, tokenCAddress, treasury, fee);
+      await factory.createPair(token2Address, token3Address, treasury, fee);
       const pairs2 = await factory.getPairs();
       expect(pairs2.length).to.be.equals(2);
     });
@@ -293,12 +336,12 @@ describe("All Tests", function () {
     });
 
     it("Check getPair method", async function () {
-      const { factory, mockBaseHTS, signers } = await loadFixture(
+      const { factory, mockBaseHTS, signers, token1Address, token2Address } = await loadFixture(
         deployFixture
       );
       await factory.setUpFactory(mockBaseHTS.address, signers[0].address);
       await factory.createPair(tokenAAddress, tokenBAddress, treasury, fee);
-      const pair = await factory.getPair(tokenAAddress, tokenBAddress);
+      const pair = await factory.getPair(token1Address, token2Address);
       expect(pair).to.be.not.equal(zeroAddress);
     });
   });
@@ -715,7 +758,11 @@ describe("All Tests", function () {
       const LpTokenCont = await ethers.getContractFactory("LPToken");
       await mockBaseHTS.setPassTransactionCount(0);
       await expect(
-        upgrades.deployProxy(LpTokenCont, [mockBaseHTS.address])
+        upgrades.deployProxy(LpTokenCont, [
+          mockBaseHTS.address,
+          "tokenName",
+          "tokenSymbol",
+        ])
       ).to.revertedWith("LPToken: Token creation failed.");
     });
 
@@ -778,9 +825,9 @@ describe("All Tests", function () {
 
     it("verify that lpToken initization failed for subsequent initization call", async function () {
       const { lpTokenCont, mockBaseHTS } = await loadFixture(deployFixture);
-      await expect(lpTokenCont.initialize(mockBaseHTS.address)).to.revertedWith(
-        "Initializable: contract is already initialized"
-      );
+      await expect(
+        lpTokenCont.initialize(mockBaseHTS.address, "name", "symbol")
+      ).to.revertedWith("Initializable: contract is already initialized");
     });
   });
 

@@ -5,6 +5,7 @@ import {
   ContractFunctionParameters,
   AccountBalanceQuery,
   Hbar,
+  TokenInfoQuery,
 } from "@hashgraph/sdk";
 
 import { EventConsumer } from "../utils/EventConsumer";
@@ -58,13 +59,17 @@ const tokenHBARX = TokenId.fromString("0.0.49217385");
 let tokenA = TokenId.fromString("0.0.49173962");
 let tokenB = TokenId.fromString("0.0.48289686");
 
-const initializeLPTokenContract = async (lpTokenContractId: string) => {
+const initializeLPTokenContract = async (
+  lpTokenContractId: string,
+  tokenName: string,
+  tokenSymbol: string
+) => {
   console.log(`Initialize LP contract with lp contract ${lpTokenContractId}`);
 
-  let contractFunctionParameters = new ContractFunctionParameters().addAddress(
-    htsServiceAddress.address
-  );
-
+  let contractFunctionParameters = new ContractFunctionParameters()
+    .addAddress(htsServiceAddress.address)
+    .addString(tokenSymbol)
+    .addString(tokenName);
   const initializeContractTx = await new ContractExecuteTransaction()
     .setContractId(lpTokenContractId)
     .setFunction("initialize", contractFunctionParameters)
@@ -77,6 +82,14 @@ const initializeLPTokenContract = async (lpTokenContractId: string) => {
 
   console.log(`Initialize LP contract with token done.`);
 };
+
+async function tokenQueryFunction(tokenId: string) {
+  const response = await new TokenInfoQuery()
+    .setTokenId(tokenId)
+    .execute(client);
+  console.log(`- Token name: ${response.name} symbol $${response.symbol}`);
+  return { name: response.name, symbol: response.symbol };
+}
 
 const initialize = async (contId: string, lpTokenProxyAdd: string) => {
   const initialize = await new ContractExecuteTransaction()
@@ -386,7 +399,8 @@ async function testForSinglePair(
 ) {
   const lpTokenProxyId = lpContract.transparentProxyId!;
   const contractProxyId = contract.transparentProxyId!;
-  await initializeLPTokenContract(lpTokenProxyId);
+  const { lpTokenSymbol, lpTokenName } = await createLPTokenName();
+  await initializeLPTokenContract(lpTokenProxyId, lpTokenName, lpTokenSymbol);
   await getLpTokenAddress(lpTokenProxyId);
   console.log(
     `\nUsing pair proxy contractId ${contract.id} and LP token contract proxy id ${lpTokenProxyId} \n`
@@ -409,6 +423,16 @@ async function testForSinglePair(
   await pairCurrentPosition(contractProxyId);
   await slippageOutGivenIn(contractProxyId);
   await slippageInGivenOut(contractProxyId);
+}
+
+async function createLPTokenName() {
+  const tokenADetail = await tokenQueryFunction(tokenA.toString());
+  const tokenBDetail = await tokenQueryFunction(tokenB.toString());
+  const symbols = [tokenADetail.symbol, tokenBDetail.symbol];
+  symbols.sort();
+  const lpTokenSymbol = symbols[0] + "-" + symbols[1];
+  const lpTokenName = lpTokenSymbol + " name";
+  return { lpTokenSymbol, lpTokenName };
 }
 
 main()

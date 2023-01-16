@@ -57,7 +57,12 @@ describe("Governor Tests", function () {
     const signers = await ethers.getSigners();
 
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
-    const tokenCont = await TokenCont.deploy(total, 0);
+    const tokenCont = await TokenCont.deploy(
+      "tokenName",
+      "tokenSymbol",
+      total,
+      0
+    );
     await tokenCont.setUserBalance(signers[0].address, twentyPercent);
     await tokenCont.setUserBalance(signers[1].address, thirtyPercent);
     await tokenCont.setUserBalance(signers[2].address, fiftyPercent);
@@ -115,7 +120,12 @@ describe("Governor Tests", function () {
     const signers = await ethers.getSigners();
 
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
-    const tokenCont = await TokenCont.deploy(total, 0);
+    const tokenCont = await TokenCont.deploy(
+      "tokenName",
+      "tokenSymbol",
+      total,
+      0
+    );
     await tokenCont.setUserBalance(signers[0].address, twentyPercent);
     await tokenCont.setUserBalance(signers[1].address, thirtyPercent);
     await tokenCont.setUserBalance(signers[2].address, fiftyPercent);
@@ -142,7 +152,12 @@ describe("Governor Tests", function () {
     const signers = await ethers.getSigners();
 
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
-    const tokenCont = await TokenCont.deploy(total, 0);
+    const tokenCont = await TokenCont.deploy(
+      "tokenName",
+      "tokenSymbol",
+      total,
+      0
+    );
     await tokenCont.setUserBalance(signers[0].address, twentyPercent);
     await tokenCont.setUserBalance(signers[1].address, thirtyPercent);
     await tokenCont.setUserBalance(signers[2].address, fiftyPercent);

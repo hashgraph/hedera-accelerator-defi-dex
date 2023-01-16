@@ -12,7 +12,12 @@ describe("All Tests", function () {
       const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
       const mockBaseHTS = await MockBaseHTS.deploy(true, newZeroAddress);
       const TokenCont = await ethers.getContractFactory("ERC20Mock");
-      const tokenCont = await TokenCont.deploy(10000000000, 0);
+      const tokenCont = await TokenCont.deploy(
+        "tokenName",
+        "tokenSymbol",
+        10000000000,
+        0
+      );
 
       const Vault0 = await ethers.getContractFactory("Vault");
       const vault0 = await upgrades.deployProxy(Vault0, [
@@ -46,7 +51,12 @@ describe("All Tests", function () {
       const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
       const mockBaseHTS = await MockBaseHTS.deploy(true, newZeroAddress);
       const TokenCont = await ethers.getContractFactory("ERC20Mock");
-      const tokenCont = await TokenCont.deploy(100000000000, 100000000000);
+      const tokenCont = await TokenCont.deploy(
+        "tokenName",
+        "tokenSymbol",
+        100000000000,
+        100000000000
+      );
 
       const Vault0 = await ethers.getContractFactory("Vault");
       const vault0 = await upgrades.deployProxy(Vault0, [
@@ -123,7 +133,12 @@ describe("All Tests", function () {
     const mockBaseHTS = await MockBaseHTS.deploy(true, newZeroAddress);
 
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
-    const tokenCont = await TokenCont.deploy(100000000000, 100000000000);
+    const tokenCont = await TokenCont.deploy(
+      "tokenName",
+      "tokenSymbol",
+      100000000000,
+      100000000000
+    );
 
     const signers = await ethers.getSigners();
     const signer1 = signers[1];
