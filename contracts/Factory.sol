@@ -89,13 +89,13 @@ contract Factory is Initializable {
             deploymentSalt,
             pairLogic
         );
-        IPair newPair = IPair(pairProxy);
         address lpTokenDeployed = deployLPContract(
             deploymentSalt,
             _tokenA,
             _tokenB
         );
         ILPToken lp = ILPToken(lpTokenDeployed);
+        IPair newPair = IPair(pairProxy);
         newPair.initialize(tokenService, lp, _tokenA, _tokenB, _treasury, _fee);
         return pairProxy;
     }
@@ -131,7 +131,12 @@ contract Factory is Initializable {
             lpLogic
         );
         (bool success, ) = lpProxy.call{value: msg.value}(
-            abi.encodeWithSelector(ILPToken.initialize.selector, tokenService)
+            abi.encodeWithSelector(
+                ILPToken.initialize.selector,
+                tokenService,
+                lpTokenName,
+                lpTokenSymbol
+            )
         );
         require(success, "LPToken Initialization fail!");
         return lpProxy;

@@ -277,9 +277,8 @@ describe("All Tests", function () {
 
   describe("Factory Contract positive Tests", async () => {
     it("Check createPair method", async function () {
-      const { factory, mockBaseHTS, signers, token1Address, token2Address } = await loadFixture(
-        deployFixture
-      );
+      const { factory, mockBaseHTS, signers, token1Address, token2Address } =
+        await loadFixture(deployFixture);
       await factory.setUpFactory(mockBaseHTS.address, signers[0].address);
       await factory.createPair(token1Address, token2Address, treasury, fee);
       const pair1 = await factory.getPair(token1Address, token2Address);
@@ -301,11 +300,14 @@ describe("All Tests", function () {
     });
 
     it("Check getPairs method", async function () {
-      const { factory, mockBaseHTS, signers, token1Address,
+      const {
+        factory,
+        mockBaseHTS,
+        signers,
+        token1Address,
         token2Address,
-        token3Address, } = await loadFixture(
-          deployFixture
-        );
+        token3Address,
+      } = await loadFixture(deployFixture);
       await factory.setUpFactory(mockBaseHTS.address, signers[0].address);
       await factory.createPair(token1Address, token2Address, treasury, fee);
       const pairs = await factory.getPairs();
@@ -336,11 +338,10 @@ describe("All Tests", function () {
     });
 
     it("Check getPair method", async function () {
-      const { factory, mockBaseHTS, signers, token1Address, token2Address } = await loadFixture(
-        deployFixture
-      );
+      const { factory, mockBaseHTS, signers, token1Address, token2Address } =
+        await loadFixture(deployFixture);
       await factory.setUpFactory(mockBaseHTS.address, signers[0].address);
-      await factory.createPair(tokenAAddress, tokenBAddress, treasury, fee);
+      await factory.createPair(token1Address, token2Address, treasury, fee);
       const pair = await factory.getPair(token1Address, token2Address);
       expect(pair).to.be.not.equal(zeroAddress);
     });
