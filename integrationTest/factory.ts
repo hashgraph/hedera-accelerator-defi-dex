@@ -249,7 +249,12 @@ const getTreasureBalance = async (tokens: Array<TokenId>) => {
 };
 
 async function main() {
-  await setupFactory();
+  try {
+    await setupFactory();
+  } catch (error) {
+    console.error(error);
+  }
+
   await testForSinglePair(contractId, tokenC, tokenHBARX);
   await testForSinglePair(contractId, tokenC, tokenD);
   await testForSinglePair(contractId, tokenA, tokenGOD);

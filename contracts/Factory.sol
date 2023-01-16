@@ -4,6 +4,7 @@ import "./Pair.sol";
 import "./IPair.sol";
 import "./LPToken.sol";
 import "./ILPToken.sol";
+import "./common/IERC20.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
@@ -88,9 +89,13 @@ contract Factory is Initializable {
             deploymentSalt,
             pairLogic
         );
-        IPair newPair = IPair(pairProxy);
-        address lpTokenDeployed = deployLPContract(deploymentSalt);
+        address lpTokenDeployed = deployLPContract(
+            deploymentSalt,
+            _tokenA,
+            _tokenB
+        );
         ILPToken lp = ILPToken(lpTokenDeployed);
+        IPair newPair = IPair(pairProxy);
         newPair.initialize(tokenService, lp, _tokenA, _tokenB, _treasury, _fee);
         return pairProxy;
     }
@@ -111,17 +116,39 @@ contract Factory is Initializable {
     }
 
     function deployLPContract(
-        bytes32 deploymentSalt
+        bytes32 deploymentSalt,
+        address _tokenA,
+        address _tokenB
     ) internal returns (address) {
+        string memory lpTokenSymbol = getLPTokenSymbol(_tokenA, _tokenB);
+        string memory lpTokenName = string.concat(
+            lpTokenSymbol,
+            " LP token name"
+        );
         address lpLogic = address(new LPToken{salt: deploymentSalt}());
         address lpProxy = deployTransparentProxyContract(
             deploymentSalt,
             lpLogic
         );
         (bool success, ) = lpProxy.call{value: msg.value}(
-            abi.encodeWithSelector(ILPToken.initialize.selector, tokenService)
+            abi.encodeWithSelector(
+                ILPToken.initialize.selector,
+                tokenService,
+                lpTokenName,
+                lpTokenSymbol
+            )
         );
         require(success, "LPToken Initialization fail!");
         return lpProxy;
+    }
+
+    function getLPTokenSymbol(
+        address _tokenA,
+        address _tokenB
+    ) private returns (string memory) {
+        string memory tokenASymbol = IERC20(_tokenA).symbol();
+        string memory tokenBSymbol = IERC20(_tokenB).symbol();
+        string memory tokenASymbolWithHypen = string.concat(tokenASymbol, "-");
+        return string.concat(tokenASymbolWithHypen, tokenBSymbol);
     }
 }

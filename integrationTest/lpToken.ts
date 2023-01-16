@@ -25,13 +25,17 @@ const contracts = [
 
 const precision = 10000000;
 
-const initialize = async (contId: string) => {
+const initialize = async (
+  contId: string,
+  tokenName: string,
+  tokenSymbol: string
+) => {
   console.log(`Initialize contract with token  `);
 
-  let contractFunctionParameters = new ContractFunctionParameters().addAddress(
-    htsServiceAddress
-  );
-
+  let contractFunctionParameters = new ContractFunctionParameters()
+    .addAddress(htsServiceAddress)
+    .addString(tokenName)
+    .addString(tokenSymbol);
   const contractTokenTx = await new ContractExecuteTransaction()
     .setContractId(contId)
     .setFunction("initialize", contractFunctionParameters)
@@ -61,7 +65,8 @@ const allotLPTokenFor = async (contId: string) => {
     .setFunction("allotLPTokenFor", contractFunctionParameters)
     .setGas(900000)
     .setMaxTransactionFee(new Hbar(50))
-    .freezeWith(client);
+    .freezeWith(client)
+    .sign(key);
 
   const signTx = await contractAllotTx.sign(treasureKey); //For associating a token to treasurer
 
@@ -169,7 +174,7 @@ async function main() {
 }
 
 async function forSingleContract(contractId: string) {
-  await initialize(contractId);
+  await initialize(contractId, "tokenName", "tokenSymbol");
   await getLpTokenAddress(contractId);
   await allotLPTokenFor(contractId);
   await removeLPTokenFor(contractId);
