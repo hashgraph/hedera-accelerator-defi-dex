@@ -9,7 +9,7 @@ import "../common/hedera/HederaTokenService.sol";
 import "prb-math/contracts/PRBMathUD60x18.sol";
 import "../common/hedera/HederaResponseCodes.sol";
 
-contract Vault is HederaResponseCodes, Initializable {
+contract Vault is Initializable {
     struct UserInfo {
         uint256 shares;
         mapping(address => uint256) lastClaimedAmount;

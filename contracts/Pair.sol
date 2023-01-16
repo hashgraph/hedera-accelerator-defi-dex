@@ -9,7 +9,7 @@ import "./common/IERC20.sol";
 import "./ILPToken.sol";
 import "./IPair.sol";
 
-contract Pair is IPair, HederaResponseCodes, Initializable {
+contract Pair is IPair, Initializable {
     IBaseHTS internal tokenService;
     ILPToken internal lpTokenContract;
 
