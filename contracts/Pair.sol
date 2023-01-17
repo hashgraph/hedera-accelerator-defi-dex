@@ -116,6 +116,13 @@ contract Pair is IPair, Initializable {
                 _token == pair.tokenB.tokenAddress,
             "Pls pass correct token to swap."
         );
+        if (_token == tokenService.hbarxAddress()) {
+            require(
+                _deltaQty == 0,
+                "HBARs should be passed as payble              "
+            );
+            _deltaQty = int256(msg.value);
+        }
 
         if (_token == pair.tokenA.tokenAddress) {
             doTokenASwap(to, _deltaQty);

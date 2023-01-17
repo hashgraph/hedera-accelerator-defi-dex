@@ -206,11 +206,12 @@ const swapToken = async (contId: string, token: TokenId) => {
       new ContractFunctionParameters()
         .addAddress(treasureId.toSolidityAddress())
         .addAddress(token.toSolidityAddress())
-        .addInt256(tokenQty)
+        .addInt256(token == tokenHBARX ? BigNumber(0) : tokenQty)
     )
-    .setPayableAmount(new Hbar(0.01))
+    .setPayableAmount(token == tokenHBARX ? new Hbar(0.01) : new Hbar(0))
     .freezeWith(client)
     .sign(treasureKey);
+
   const swapTokenTx = await swapToken.execute(client);
   const receipt = await swapTokenTx.getReceipt(client);
 
@@ -279,6 +280,7 @@ async function testForSinglePair(
   await getTreasureBalance([token0, token1]);
   await removeLiquidity(pairContractId);
   await swapToken(pairContractId, token0);
+  await swapToken(pairContractId, token1);
   await getTreasureBalance([token0, token1]);
   await swapToken(pairContractId, token1);
   await getTreasureBalance([token0, token1]);
