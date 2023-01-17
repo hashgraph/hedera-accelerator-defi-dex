@@ -9,6 +9,7 @@ export default class ClientMetadata {
     "GovernorTransferToken",
     "GovernorTextProposal",
     "GovernorTokenCreate",
+    "Splitter",
   ];
 
   static SUPPORTED_CONTRACTS_FOR_DEPLOYMENT = [

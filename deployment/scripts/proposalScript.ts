@@ -103,6 +103,7 @@ async function checkAndUpdateIfRequired(proposal: any) {
   const proxyDev = contractService.getContractWithProxyById(proxyIdString);
   switch (proxyDev.name) {
     case contractService.factoryContractName:
+    case contractService.splitterContractName:
     case contractService.governorContractName:
     case contractService.governorTextContractName:
     case contractService.governorTTContractName:
