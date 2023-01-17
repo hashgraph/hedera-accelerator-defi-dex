@@ -1,6 +1,7 @@
 name: Automatically deploy on testnet if contract changed
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - contract-upgrade-flow-changes
