@@ -6,4 +6,5 @@ export interface DeployedContract {
   transparentProxyId?: string;
   timestamp: string;
   hash: string;
+  endBlock?: string;
 }

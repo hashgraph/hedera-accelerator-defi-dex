@@ -186,4 +186,19 @@ export class ContractService {
     const data = JSON.stringify(contracts, null, 4);
     fs.writeFileSync(this.contractRecordFile, data);
   };
+
+  public updateDeployed = (contract: DeployedContract) => {
+    const contracts: [DeployedContract] = this.readFileContent();
+    const items = contracts.filter((item) => item.name !== contract.name);
+    items.push(contract);
+    const data = JSON.stringify(items, null, 4);
+    fs.writeFileSync(this.contractRecordFile, data);
+  };
+
+  public remove = (id: string) => {
+    const contracts: [DeployedContract] = this.readFileContent();
+    const items = contracts.filter((item) => item.id !== id);
+    const data = JSON.stringify(items, null, 4);
+    fs.writeFileSync(this.contractRecordFile, data);
+  };
 }

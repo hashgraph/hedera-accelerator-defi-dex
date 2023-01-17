@@ -3,6 +3,14 @@ import md5File from "md5-file";
 import { ContractService } from "../deployment/service/ContractService";
 
 export default class ClientMetadata {
+  static SUPPORTED_CONTRACTS_FOR_UPGRADE = [
+    "Factory",
+    "GovernorUpgrade",
+    "GovernorTransferToken",
+    "GovernorTextProposal",
+    "GovernorTokenCreate",
+  ];
+
   static SUPPORTED_CONTRACTS_FOR_DEPLOYMENT = [
     "Factory",
     "LPToken",
@@ -40,15 +48,12 @@ export default class ClientMetadata {
   };
 
   public getAllChangedContractNames = (): Array<string> => {
-    let eligibleContractsForDeployments = new Array<string>();
-
+    const eligibleContractsForDeployments: string[] = [];
     ClientMetadata.SUPPORTED_CONTRACTS_FOR_DEPLOYMENT.forEach((name) => {
       const contractName = name.toLowerCase();
-      console.log(`Checking contract deploy ${contractName}`);
       const hash = this.calculateHash(contractName);
       const contract = this.contractService.getContract(contractName);
-      if (contract?.hash != hash) {
-        console.log(`Eligible for contract deployment ${contractName} `);
+      if (contract?.hash !== hash) {
         eligibleContractsForDeployments.push(contractName);
       }
     });

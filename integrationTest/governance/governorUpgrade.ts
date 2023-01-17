@@ -1,22 +1,13 @@
-import {
-  ContractExecuteTransaction,
-  ContractFunctionParameters,
-  ContractId,
-} from "@hashgraph/sdk";
+import { ContractId } from "@hashgraph/sdk";
 
 import GovernorMethods from "./GovernorMethods";
-import ClientManagement from "../../utils/ClientManagement";
 import { ContractService } from "../../deployment/service/ContractService";
 import { Helper } from "../../utils/Helper";
 
-const clientManagement = new ClientManagement();
 const contractService = new ContractService();
 const governor = new GovernorMethods();
 
-const { treasureKey } = clientManagement.getTreasure();
-const client = clientManagement.createOperatorClient();
-
-const contractId: string | ContractId = contractService.getContractWithProxy(
+const contractId = contractService.getContractWithProxy(
   contractService.governorUpgradeContract
 ).transparentProxyId!;
 
@@ -29,43 +20,20 @@ const transparentContractId = ContractId.fromString(
     .transparentProxyId!
 );
 
-async function propose(
-  contractId: string | ContractId,
-  title: string,
-  description: string,
-  link: string
-) {
-  console.log(`\nCreating proposal `);
-  const contractFunctionParameters = new ContractFunctionParameters()
-    .addString(title)
-    .addString(description)
-    .addString(link)
-    .addAddress(transparentContractId.toSolidityAddress())
-    .addAddress(upgradeContractId.toSolidityAddress());
-  const tx = await new ContractExecuteTransaction()
-    .setContractId(contractId)
-    .setFunction("createProposal", contractFunctionParameters)
-    .setGas(9000000)
-    .freezeWith(client)
-    .sign(treasureKey);
-
-  const executedTx = await tx.execute(client);
-
-  const record = await executedTx.getRecord(client);
-  const receipt = await executedTx.getReceipt(client);
-
-  const status = receipt.status;
-  const proposalId = record.contractFunctionResult?.getUint256(0)!;
-  console.log(`Proposal tx status ${status} with proposal id ${proposalId}`);
-
-  return proposalId;
-}
-
 async function main() {
   console.log(`\nUsing governor proxy contract id ${contractId}`);
   await governor.initialize(contractId);
-  const title = "Upgrade Proposal - 1";
-  const proposalId = await propose(contractId, title, "description", "link"); // title should be unique for each proposal
+  const title = "Upgrade Proposal - 2"; // title should be unique for each proposal
+  const { proposalId, success: status } =
+    await governor.createContractUpgradeProposal(
+      ContractId.fromString(contractId),
+      transparentContractId,
+      upgradeContractId,
+      title,
+      "description",
+      "link"
+    );
+  console.log(`Proposal tx status ${status} with proposal id ${proposalId}`);
   await governor.getProposalDetails(proposalId, contractId);
   await governor.vote(proposalId, 1, contractId); // 1 is for vote.
   await governor.quorumReached(proposalId, contractId);
