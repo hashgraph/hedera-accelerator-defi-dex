@@ -2,7 +2,7 @@ import { Helper } from "./Helper";
 import md5File from "md5-file";
 import { ContractService } from "../deployment/service/ContractService";
 
-export default class ClientMetadata {
+export default class ContractMetadata {
   static SUPPORTED_CONTRACTS_FOR_UPGRADE = [
     "Factory",
     "GovernorUpgrade",
@@ -50,7 +50,7 @@ export default class ClientMetadata {
 
   public getAllChangedContractNames = (): Array<string> => {
     const eligibleContractsForDeployments: string[] = [];
-    ClientMetadata.SUPPORTED_CONTRACTS_FOR_DEPLOYMENT.forEach((name) => {
+    ContractMetadata.SUPPORTED_CONTRACTS_FOR_DEPLOYMENT.forEach((name) => {
       const contractName = name.toLowerCase();
       const hash = this.calculateHash(contractName);
       const contract = this.contractService.getContract(contractName);

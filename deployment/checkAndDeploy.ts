@@ -1,7 +1,6 @@
 import { ContractId } from "@hashgraph/sdk";
 import { DeployedContract } from "./model/contract";
 import { main as deployContract } from "./scripts/logic";
-import { main as updateContractProxy } from "./scripts/upgradeProxy";
 import { main as createContractProxy } from "./scripts/transparentUpgradeableProxy";
 import { ContractService } from "./service/ContractService";
 import { Helper } from "../utils/Helper";
