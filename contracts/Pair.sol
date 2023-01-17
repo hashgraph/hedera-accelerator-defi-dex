@@ -120,7 +120,6 @@ contract Pair is IPair, Initializable {
             "Pls pass correct token to swap."
         );
         _deltaQty = _tokenQuantity(_token, _deltaQty);
-
         if (_token == pair.tokenA.tokenAddress) {
             doTokenASwap(to, _deltaQty);
         } else {
