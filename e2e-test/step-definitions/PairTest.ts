@@ -43,9 +43,11 @@ let varaintVal: BigNumber;
 let tokenAQty: BigNumber;
 let slippageOutGivenIn: BigNumber;
 let slippageInGivenOut: BigNumber;
+let lpTokenSymbol: string;
+let lpTokenName: string;
 @binding()
 export class PairTestSteps {
-  @given(/User have created pair of tokens/, undefined, 30000)
+  @given(/User create two new tokens/, undefined, 30000)
   public async createTokenPairAndInitializeThem(): Promise<void> {
     const num = Math.floor(Math.random() * 10) + 1;
     tokenA = await pair.createToken(
@@ -262,7 +264,9 @@ export class PairTestSteps {
     await pair.initializeLPTokenContract(
       lpTokenProxyId,
       client,
-      htsServiceAddress
+      htsServiceAddress,
+      lpTokenSymbol,
+      lpTokenName
     );
   }
 
@@ -281,10 +285,30 @@ export class PairTestSteps {
     );
   }
 
-  @when(/User set (\d*) as the slippage value/)
+  @when(/User set (\d*) as the slippage value/, undefined, 30000)
   public async setSlippageVal(slippage: number): Promise<void> {
     let precision = await pair.getPrecisionValue(contractProxyId, client);
     let slippageWithPrecision = pair.withPrecision(slippage, precision);
     pair.setSlippage(contractProxyId, client, slippageWithPrecision);
+  }
+
+  @when(
+    /User define lptoken name and symbol for newly created tokens/,
+    undefined,
+    30000
+  )
+  public async createLPTokenName(): Promise<void> {
+    const tokenADetail = await pair.tokenQueryFunction(
+      tokenA.toString(),
+      client
+    );
+    const tokenBDetail = await pair.tokenQueryFunction(
+      tokenB.toString(),
+      client
+    );
+    const symbols = await [tokenADetail.symbol, tokenBDetail.symbol];
+    await symbols.sort();
+    lpTokenSymbol = (await symbols[0]) + "-" + symbols[1];
+    lpTokenName = (await lpTokenSymbol) + " name";
   }
 }

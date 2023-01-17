@@ -10,6 +10,7 @@ import {
   PrivateKey,
   Client,
   AccountId,
+  TokenInfoQuery,
 } from "@hashgraph/sdk";
 
 export default class Pair {
@@ -42,11 +43,15 @@ export default class Pair {
   public initializeLPTokenContract = async (
     lpTokenContractId: string,
     client: Client,
-    htsServiceAddress: string
+    htsServiceAddress: string,
+    tokenSymbol: string,
+    tokenName: string
   ) => {
     console.log(`Initialize LP contract with lp contract ${lpTokenContractId}`);
-    let contractFunctionParameters =
-      new ContractFunctionParameters().addAddress(htsServiceAddress);
+    let contractFunctionParameters = new ContractFunctionParameters()
+      .addAddress(htsServiceAddress)
+      .addString(tokenSymbol)
+      .addString(tokenName);
     const initializeContractTx = await new ContractExecuteTransaction()
       .setContractId(lpTokenContractId)
       .setFunction("initialize", contractFunctionParameters)
@@ -367,5 +372,16 @@ export default class Pair {
       ` For tokenBQty ${tokenBQty} the slippageInGivenOut tokenAQty is ${tokenAQty}. \n`
     );
     return tokenAQty;
+  };
+
+  public tokenQueryFunction = async (
+    tokenId: string,
+    client: Client
+  ): Promise<any> => {
+    const response = await new TokenInfoQuery()
+      .setTokenId(tokenId)
+      .execute(client);
+    console.log(`- Token name: ${response.name} symbol $${response.symbol}`);
+    return { name: response.name, symbol: response.symbol };
   };
 }

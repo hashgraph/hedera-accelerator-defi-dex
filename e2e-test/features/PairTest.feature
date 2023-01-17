@@ -4,7 +4,8 @@ Feature: Pair contract e2e test
     This feature file contains e2e test for pair contract
 
     Scenario: Verify token balance before and after adding liquidity
-        Given User have created pair of tokens
+        Given User create two new tokens
+        When User define lptoken name and symbol for newly created tokens 
         When User initialize lptoken contract
         When User initialize pair contract         
         When User adds 210 units of tokenA and 230 units of tokenB
