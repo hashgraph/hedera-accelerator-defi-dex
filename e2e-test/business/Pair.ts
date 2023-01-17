@@ -3,7 +3,6 @@ import {
   TokenId,
   ContractExecuteTransaction,
   ContractFunctionParameters,
-  AccountBalanceQuery,
   TokenCreateTransaction,
   TokenType,
   TokenSupplyType,
@@ -30,7 +29,7 @@ export default class Pair {
       .setSupplyType(TokenSupplyType.Infinite)
       .setSupplyKey(treasureKey)
       .setTreasuryAccountId(treasureId)
-      .execute(treasurerClient);
+      .execute(client);
 
     const tokenCreateTx = await createTokenTx.getReceipt(client);
     const tokenId = tokenCreateTx.tokenId;
@@ -119,7 +118,8 @@ export default class Pair {
     tokenA: TokenId,
     tokenB: TokenId,
     client: Client,
-    treasureKey: PrivateKey
+    treasureKey: PrivateKey,
+    hbar: number
   ) => {
     console.log(
       ` Adding ${tokenAQty} units of token A and ${tokenBQty} units of token B to the pool.`
@@ -136,6 +136,7 @@ export default class Pair {
           .addInt256(tokenAQty)
           .addInt256(tokenBQty)
       )
+      .setPayableAmount(new Hbar(hbar))
       .freezeWith(client)
       .sign(treasureKey);
     const addLiquidityTxRes = await addLiquidityTx.execute(client);
@@ -218,12 +219,13 @@ export default class Pair {
     treasureId: AccountId,
     tokenA: TokenId,
     client: Client,
-    treasureKey: PrivateKey
+    treasureKey: PrivateKey,
+    key: PrivateKey
   ) => {
     console.log(` Swapping a ${tokenAQty} units of token A from the pool.`);
     const swapToken = await new ContractExecuteTransaction()
       .setContractId(contId)
-      .setGas(9000000)
+      .setGas(9990000)
       .setFunction(
         "swapToken",
         new ContractFunctionParameters()
@@ -231,11 +233,36 @@ export default class Pair {
           .addAddress(tokenA.toSolidityAddress())
           .addInt256(tokenAQty)
       )
+      .setPayableAmount(new Hbar(0.1))
       .freezeWith(client)
       .sign(treasureKey);
-    const swapTokenTx = await swapToken.execute(client);
+    const newTrx = await swapToken.sign(key);
+    const swapTokenTx = await newTrx.execute(client);
     const swapTokenRx = await swapTokenTx.getReceipt(client);
     console.log(` Swap status: ${swapTokenRx.status}`);
+  };
+
+  public setSlippage = async (
+    contId: string,
+    client: Client,
+    slppageVal: BigNumber
+  ) => {
+    const setSlippageTx = await new ContractExecuteTransaction()
+      .setContractId(contId)
+      .setGas(1000000)
+      .setFunction(
+        "setSlippage",
+        new ContractFunctionParameters().addInt256(slppageVal)
+      )
+      .freezeWith(client);
+    const setSlippageTxResult = await setSlippageTx.execute(client);
+    const response = await setSlippageTxResult.getRecord(client);
+    const slippage = response.contractFunctionResult!.getInt256(0);
+
+    const setSlippageyRx = await setSlippageTxResult.getReceipt(client);
+    console.log(` set slippage status: ${setSlippageyRx.status}`);
+
+    console.log(` Slippage value is -  ${slippage}  \n`);
   };
 
   public spotPrice = async (

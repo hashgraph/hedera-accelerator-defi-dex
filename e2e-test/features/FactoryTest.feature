@@ -26,3 +26,22 @@ Feature: Factory contract e2e test
     Scenario: Verify user can not create pair with same token
         When User create a new token 
         Then User gets message "CONTRACT_REVERT_EXECUTED" on creating pair with same token
+
+     Scenario: Verify tokenA and HBAR balance before and after adding liquidity
+        When User create pair of tokenA and HBAR        
+        When User adds 5 units of first token and 9 units of HBAR token        
+        Then first token and HBAR balances in the pool are 5 units and 9 units respectively
+
+     Scenario: Verify token balance after removing liquidity for HBAR and some other token
+        Given User fetches the count of lptokens from pool
+        When User gives 1 units of lptoken to pool
+        Then User verifies 4 units of tokenA and 8 units of HBAR are left in pool
+    
+    Scenario: Verify user is able to perform swap with HBAR and other token
+        Given tokenA and HBAR are present in pool
+        When User update the slippage value to 1 
+        When User make swap of 1 unit of tokenA with HBAR
+        Then tokenA quantity is 4 and HBAR quantity is 9 in pool
+    
+    Scenario: Verify user can not create pair with same token
+        Then User gets message "CONTRACT_REVERT_EXECUTED" on creating pair with two HBAR tokens
