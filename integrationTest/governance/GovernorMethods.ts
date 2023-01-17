@@ -288,4 +288,37 @@ export default class GovernorMethods {
       `Proposal details tx status ${txReceipt.status} with proposal id = ${proposalId}, title = ${title}, description = ${description} & link = ${link}`
     );
   };
+
+  public createContractUpgradeProposal = async (
+    contractId: ContractId,
+    targetProxyId: ContractId,
+    targetLogicId: ContractId,
+    title: string,
+    description: string,
+    link: string
+  ) => {
+    const contractFunctionParameters = new ContractFunctionParameters()
+      .addString(title)
+      .addString(description)
+      .addString(link)
+      .addAddress(targetProxyId.toSolidityAddress())
+      .addAddress(targetLogicId.toSolidityAddress());
+
+    const tx = await new ContractExecuteTransaction()
+      .setContractId(contractId)
+      .setFunction("createProposal", contractFunctionParameters)
+      .setGas(9000000)
+      .freezeWith(client)
+      .sign(treasureKey);
+
+    const txnResponse = await tx.execute(client);
+    const txRecord = await txnResponse.getRecord(client);
+    const txnReceipt = await txnResponse.getReceipt(client);
+    const status = txnReceipt.status;
+    const proposalId = txRecord.contractFunctionResult?.getUint256(0)!;
+    return {
+      proposalId,
+      success: status.toString().toLowerCase() === "success",
+    };
+  };
 }

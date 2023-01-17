@@ -22,7 +22,7 @@ const upgradeGovernor = contractDevService.getContract(
 );
 const governorMethods = new GovernorMethods();
 const gitLastCommitMessage = Helper.getGitLastCommitMessage();
-const upgradeSupportList = ContractMetadata.SUPPORTED_CONTRACTS_FOR_UPGRADE.map(
+const proxySupportedList = ContractMetadata.SUPPORTED_CONTRACTS_FOR_UPGRADE.map(
   (item) => item.toLowerCase()
 );
 
@@ -32,13 +32,13 @@ async function main() {
   for (const contractName of contractsToDeploy) {
     const deployedProxyContract =
       contractDevService.getContractWithProxy(contractName);
-    if (!deployedProxyContract) {
+    if (!deployedProxyContract.transparentProxyId) {
+      await deployContract(contractName);
       await createContractProxy(contractName);
-      await updateContractProxy(contractName);
       const deployedNewProxyContract =
         contractDevService.getContractWithProxy(contractName);
       contractUatService.addDeployed(deployedNewProxyContract);
-    } else if (upgradeSupportList.includes(contractName)) {
+    } else if (proxySupportedList.includes(contractName)) {
       const newVersion = await deployContract(contractName);
       contractDevService.remove(newVersion.id); // remove entry from dev json
       await createProposal(deployedProxyContract, newVersion.id);

@@ -86,10 +86,12 @@ async function onPostExecute(proposal: any) {
 
 async function checkAndUpdateIfRequired(proposal: any) {
   const { proposalId, endBlock } = proposal;
-  const { proxyId, logicId } = await governor.getContractAddresses(
+  const { proxyAddress, logicAddress } = await governor.getContractAddresses(
     contractId!,
     proposalId
   );
+  const proxyId = ContractId.fromSolidityAddress(proxyAddress);
+  const logicId = ContractId.fromSolidityAddress(logicAddress);
   const proxyIdString = proxyId.toString();
   const proxyUAT = contractUATService.getContractWithProxyById(proxyIdString);
   if (canSkipProxyUpdate(proxyUAT, endBlock)) {
