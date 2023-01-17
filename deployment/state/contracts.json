@@ -448,5 +448,15 @@
         "transparentProxyAddress": "0x0000000000000000000000000000000002f0695a",
         "transparentProxyId": "0.0.49310042",
         "endBlock": "29559850"
+    },
+    {
+        "name": "splitter",
+        "id": "0.0.49320051",
+        "address": "0000000000000000000000000000000002f09073",
+        "timestamp": "2023-01-17T12:03:48.401Z",
+        "hash": "3dfaa0a4f981fa49bf47b85578e55603",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002ed85be",
+        "transparentProxyId": "0.0.49120702",
+        "endBlock": "29561868"
     }
 ]
