@@ -69,14 +69,12 @@ contract LPToken is HederaResponseCodes, ILPToken, Initializable {
             response == HederaResponseCodes.SUCCESS,
             "LP token minting failed."
         );
-        response = tokenService.transferTokenPublic(
-            address(lpToken),
-            address(this),
+        bool isTransferSuccessful = lpToken.transfer(
             _toUser,
-            mintingAmount
+            uint256(mintingAmount)
         );
         require(
-            response == HederaResponseCodes.SUCCESS,
+            isTransferSuccessful,
             "LPToken: token transfer failed from contract."
         );
         return HederaResponseCodes.SUCCESS;
