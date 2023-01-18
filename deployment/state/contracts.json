@@ -104,5 +104,14 @@
         "hash": "3dfaa0a4f981fa49bf47b85578e55603",
         "transparentProxyAddress": "0x0000000000000000000000000000000002ed85be",
         "transparentProxyId": "0.0.49120702"
+    },
+    {
+        "name": "governortextproposal",
+        "id": "0.0.49329394",
+        "address": "0000000000000000000000000000000002f0b4f2",
+        "timestamp": "2023-01-18T12:42:49.897Z",
+        "hash": "2851c47f1c16f07c8088c34712bd8b4e",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002ee5dfb",
+        "transparentProxyId": "0.0.49176059"
     }
 ]
