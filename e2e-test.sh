@@ -30,11 +30,10 @@ echo "********************  Deployment *************************************"
 
 echo "Running contract deployment ........ " $CONTRACT_NAME;
 
-echo CONTRACT_NAME=Pair >> .env;
-npx hardhat run ./deployment/scripts/logic.ts;
-npx hardhat run ./deployment/scripts/transparentUpgradeableProxy.ts;
+echo CONTRACT_NAME=LPToken >> .env;
 
-declare -a arr=("LPToken" "Factory")
+
+declare -a arr=("LPToken" "Pair" "Factory")
 for i in "${arr[@]}"
 do
     echo "Starting deployment for CONTRACT_NAME  " $i
