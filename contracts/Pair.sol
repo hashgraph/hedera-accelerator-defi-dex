@@ -316,6 +316,15 @@ contract Pair is IPair, HederaResponseCodes, Initializable {
         return address(this);
     }
 
+    function getLpTokenContractAddress()
+        external
+        view
+        override
+        returns (address)
+    {
+        return address(lpTokenContract);
+    }
+
     function getTokenPairAddress()
         public
         view

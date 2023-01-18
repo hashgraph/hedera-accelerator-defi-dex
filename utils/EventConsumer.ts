@@ -2,6 +2,7 @@ import * as fs from "fs";
 import Web3 from "web3";
 import axios from "axios";
 export class EventConsumer {
+  private baseUrl = "https://testnet.mirrornode.hedera.com";
   private abi: any;
   private web3 = new Web3();
   private eventSignatureToNameMap = new Map<string, any>();
@@ -67,10 +68,19 @@ export class EventConsumer {
       console.log(`- Waiting 10s to allow transaction propagation to mirror`);
       await delay(10000);
     }
-    const url = `https://testnet.mirrornode.hedera.com/api/v1/contracts/${contractId}/results/logs?order=desc`;
+    const allLogs: any[] = [];
+    let url = `${this.baseUrl}/api/v1/contracts/${contractId}/results/logs?order=asc&limit=100`;
+    while ((url = await this.getLogsInBatches(url, allLogs)));
+    return this.decodeLog(allLogs);
+  }
+
+  private async getLogsInBatches(url: string, allLogs: any[]) {
     console.log("- Request url:", url);
-    const response = await axios.get(url);
-    return this.decodeLog(response.data.logs);
+    const data = (await axios.get(url))?.data;
+    const logs = data?.logs ?? [];
+    const next = data?.links?.next;
+    allLogs.push(...logs);
+    return next ? this.baseUrl + next : next;
   }
 
   private fillSignatureMap() {
@@ -95,6 +105,7 @@ export class EventConsumer {
   }
 
   private decodeLog(logs: any[]) {
+    console.log("- Logs count:", logs.length);
     const eventsMap = new Map<string, any[]>();
     for (const log of logs) {
       try {
