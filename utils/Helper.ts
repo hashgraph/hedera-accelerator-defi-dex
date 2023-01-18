@@ -2,6 +2,7 @@ import { getAllFilesSync } from "get-all-files";
 import platformPath from "path";
 import { ContractFunctionResult } from "@hashgraph/sdk";
 import inquirer from "inquirer";
+import { execSync } from "child_process";
 
 export class Helper {
   static extractFileName(path: string): string {
@@ -58,5 +59,9 @@ export class Helper {
 
   static async delay(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  static getGitLastCommitMessage() {
+    return execSync("git log -1 HEAD --pretty=format:%s").toString().trim();
   }
 }

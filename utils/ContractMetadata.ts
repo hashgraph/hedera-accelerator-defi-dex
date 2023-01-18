@@ -2,7 +2,16 @@ import { Helper } from "./Helper";
 import md5File from "md5-file";
 import { ContractService } from "../deployment/service/ContractService";
 
-export default class ClientMetadata {
+export default class ContractMetadata {
+  static SUPPORTED_CONTRACTS_FOR_UPGRADE = [
+    "Factory",
+    "GovernorUpgrade",
+    "GovernorTransferToken",
+    "GovernorTextProposal",
+    "GovernorTokenCreate",
+    "Splitter",
+  ];
+
   static SUPPORTED_CONTRACTS_FOR_DEPLOYMENT = [
     "Factory",
     "LPToken",
@@ -18,7 +27,9 @@ export default class ClientMetadata {
 
   static SUPPORTED_PROXY_OPTIONS = ["create", "update"];
 
-  private contractService = new ContractService();
+  private contractUATService = new ContractService(
+    ContractService.UAT_CONTRACTS_PATH
+  );
 
   public getFilePath = (contractNameArgs: string) => {
     const contractName = contractNameArgs.toLowerCase();
@@ -40,15 +51,13 @@ export default class ClientMetadata {
   };
 
   public getAllChangedContractNames = (): Array<string> => {
-    let eligibleContractsForDeployments = new Array<string>();
-
-    ClientMetadata.SUPPORTED_CONTRACTS_FOR_DEPLOYMENT.forEach((name) => {
+    const eligibleContractsForDeployments: string[] = [];
+    ContractMetadata.SUPPORTED_CONTRACTS_FOR_UPGRADE.forEach((name) => {
       const contractName = name.toLowerCase();
-      console.log(`Checking contract deploy ${contractName}`);
       const hash = this.calculateHash(contractName);
-      const contract = this.contractService.getContract(contractName);
-      if (contract?.hash != hash) {
-        console.log(`Eligible for contract deployment ${contractName} `);
+      const contract =
+        this.contractUATService.getContractWithProxy(contractName);
+      if (contract?.hash !== hash) {
         eligibleContractsForDeployments.push(contractName);
       }
     });

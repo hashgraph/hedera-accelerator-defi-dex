@@ -29,7 +29,23 @@ const htsServiceAddress = contractService.getContract(
 ).address;
 
 export default class GovernorMethods {
+  getCurrentImplementationFromProxy = async (proxyId: string) => {
+    const tx = await new ContractExecuteTransaction()
+      .setContractId(proxyId)
+      .setGas(2000000)
+      .setFunction("implementation", new ContractFunctionParameters())
+      .freezeWith(adminClient)
+      .sign(adminKey);
+    const txResponse = await tx.execute(adminClient);
+    const txRecord = await txResponse.getRecord(adminClient);
+    const impAddress = txRecord.contractFunctionResult!.getAddress(0);
+    console.log(`- current implementation/logic address: ${impAddress}`);
+    return impAddress;
+  };
+
   upgradeTo = async (proxyAddress: string, logicAddress: string) => {
+    const proxyId = ContractId.fromSolidityAddress(proxyAddress).toString();
+    await this.getCurrentImplementationFromProxy(proxyId);
     const args = new ContractFunctionParameters().addAddress(logicAddress);
     const txn = await new ContractExecuteTransaction()
       .setContractId(ContractId.fromSolidityAddress(proxyAddress))
@@ -39,7 +55,8 @@ export default class GovernorMethods {
       .sign(adminKey);
     const txnResponse = await txn.execute(adminClient);
     const txnReceipt = await txnResponse.getReceipt(adminClient);
-    console.log(`upgradedTo txn status: ${txnReceipt.status}`);
+    console.log(`- upgradedTo txn status: ${txnReceipt.status}`);
+    await this.getCurrentImplementationFromProxy(proxyId);
   };
 
   getContractAddresses = async (contractId: string, proposalId: BigNumber) => {
@@ -49,15 +66,25 @@ export default class GovernorMethods {
       .setGas(500000)
       .setFunction("getContractAddresses", args)
       .execute(client);
-    const receipt = await txnResponse.getReceipt(client);
     const record = await txnResponse.getRecord(client);
     const proxyAddress = record.contractFunctionResult!.getAddress(0);
     const logicAddress = record.contractFunctionResult!.getAddress(1);
-    console.log(`getContractAddresses txn status: ${receipt.status}`);
-    return {
+    const proxyId = ContractId.fromSolidityAddress(proxyAddress);
+    const logicId = ContractId.fromSolidityAddress(logicAddress);
+    const proxyIdString = proxyId.toString();
+    const logicIdString = logicId.toString();
+    const response = {
+      proxyId,
+      proxyIdString,
       proxyAddress,
+      logicId,
+      logicIdString,
       logicAddress,
     };
+    console.log(
+      `- read proxy and new implementation/logic addresses from proposal: ${proxyAddress}, ${logicAddress}`
+    );
+    return response;
   };
 
   public vote = async (
@@ -191,8 +218,6 @@ export default class GovernorMethods {
     proposalId: BigNumber,
     contractId: string | ContractId
   ) => {
-    console.log(`\nGet state `);
-
     let contractFunctionParameters =
       new ContractFunctionParameters().addUint256(proposalId);
 
@@ -205,8 +230,9 @@ export default class GovernorMethods {
     const receipt = await contractTokenTx.getReceipt(client);
     const record = await contractTokenTx.getRecord(client);
     const state = record.contractFunctionResult!.getInt256(0);
-
-    console.log(`state tx status ${receipt.status}, state ${state} `);
+    console.log(
+      `- proposal state tx status: ${receipt.status}, state: ${state} `
+    );
     return state;
   };
 
@@ -241,8 +267,6 @@ export default class GovernorMethods {
   };
 
   public execute = async (title: string, contractId: string | ContractId) => {
-    console.log(`\nExecuting  proposal - `);
-
     const contractFunctionParameters =
       new ContractFunctionParameters().addString(title);
 
@@ -259,11 +283,9 @@ export default class GovernorMethods {
     const record = await executedTx.getRecord(client);
     const contractAllotRx = await executedTx.getReceipt(client);
     const status = contractAllotRx.status;
-
+    const pId = record.contractFunctionResult?.getUint256(0);
     console.log(
-      `Execute tx status ${status} for proposal id ${record.contractFunctionResult?.getUint256(
-        0
-      )}`
+      `- proposal execute tx status: ${status}, proposalId ${pId?.toFixed()}`
     );
     return status.toString() === "SUCCESS";
   };
@@ -287,5 +309,38 @@ export default class GovernorMethods {
     console.log(
       `Proposal details tx status ${txReceipt.status} with proposal id = ${proposalId}, title = ${title}, description = ${description} & link = ${link}`
     );
+  };
+
+  public createContractUpgradeProposal = async (
+    contractId: ContractId,
+    targetProxyId: ContractId,
+    targetLogicId: ContractId,
+    title: string,
+    description: string,
+    link: string
+  ) => {
+    const contractFunctionParameters = new ContractFunctionParameters()
+      .addString(title)
+      .addString(description)
+      .addString(link)
+      .addAddress(targetProxyId.toSolidityAddress())
+      .addAddress(targetLogicId.toSolidityAddress());
+
+    const tx = await new ContractExecuteTransaction()
+      .setContractId(contractId)
+      .setFunction("createProposal", contractFunctionParameters)
+      .setGas(9000000)
+      .freezeWith(client)
+      .sign(treasureKey);
+
+    const txnResponse = await tx.execute(client);
+    const txRecord = await txnResponse.getRecord(client);
+    const txnReceipt = await txnResponse.getReceipt(client);
+    const status = txnReceipt.status;
+    const proposalId = txRecord.contractFunctionResult?.getUint256(0)!;
+    return {
+      proposalId,
+      success: status.toString().toLowerCase() === "success",
+    };
   };
 }

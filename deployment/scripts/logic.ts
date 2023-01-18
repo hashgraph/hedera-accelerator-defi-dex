@@ -27,7 +27,7 @@ export async function main(_contractName: string? = null) {
       deployedContract
     )}`
   );
-  return `successfully deployed`;
+  return deployedContract;
 }
 
 if (require.main === module) {
