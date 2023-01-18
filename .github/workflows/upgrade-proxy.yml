@@ -3,7 +3,7 @@ name: Automatically deploy on testnet if contract changed
 on:
   push:
     branches:
-      - contract-upgrade-flow-changes-1
+      - develop
 
 env:
   OPERATOR_ID: 0.0.47710057
