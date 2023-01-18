@@ -38,10 +38,10 @@ contract Splitter is ISplitter, HederaResponseCodes, Initializable {
         }
     }
 
-    function _addVault(IVault vault, uint256 multiplier)
-        private
-        returns (int32)
-    {
+    function _addVault(
+        IVault vault,
+        uint256 multiplier
+    ) private returns (int32) {
         require(
             address(vault) != address(0),
             "Splitter: account is the zero address"
@@ -71,28 +71,26 @@ contract Splitter is ISplitter, HederaResponseCodes, Initializable {
                 amount,
                 totalWeightForAllVaults
             );
-            require(amountToTransfer != 0, "Splitter: Split amount should not be zero.");
+            require(
+                amountToTransfer != 0,
+                "Splitter: Split amount should not be zero."
+            );
             tempVault.addReward(token, amountToTransfer, fromAccount);
             emit TokenTransferred(tempVault, amountToTransfer);
         }
         return HederaResponseCodes.SUCCESS;
     }
 
-    function registerVault(IVault vault, uint16 multiplier)
-        external
-        override
-        onlyOwner
-        returns (int32)
-    {
+    function registerVault(
+        IVault vault,
+        uint16 multiplier
+    ) external override onlyOwner returns (int32) {
         return _addVault(vault, multiplier);
     }
 
-    function deRegisterVault(IVault vault)
-        external
-        override
-        onlyOwner
-        returns (int32)
-    {
+    function deRegisterVault(
+        IVault vault
+    ) external override onlyOwner returns (int32) {
         // TODO: Need Discussion if we need this
     }
 
@@ -108,11 +106,10 @@ contract Splitter is ISplitter, HederaResponseCodes, Initializable {
         amountToTransfer = multiply(totalAmount, percentage);
     }
 
-    function _calculateTokenRewardPercentage(IVault vault, uint256 totalWeight)
-        private
-        view
-        returns (uint256)
-    {
+    function _calculateTokenRewardPercentage(
+        IVault vault,
+        uint256 totalWeight
+    ) private view returns (uint256) {
         uint256 vaultShareFraction = divide(_vaultWeight(vault), totalWeight);
         return vaultShareFraction;
     }

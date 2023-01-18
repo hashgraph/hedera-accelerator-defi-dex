@@ -10,9 +10,10 @@ interface ISplitter {
         uint256 amount
     ) external returns (int32);
 
-    function registerVault(IVault vault, uint16 multiplier)
-        external
-        returns (int32);
+    function registerVault(
+        IVault vault,
+        uint16 multiplier
+    ) external returns (int32);
 
     function deRegisterVault(IVault vault) external returns (int32);
 }
