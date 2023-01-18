@@ -7,6 +7,7 @@ import {
   PrivateKey,
   Client,
   AccountId,
+  AccountBalanceQuery,
 } from "@hashgraph/sdk";
 import { Helper } from "../../utils/Helper";
 
@@ -21,8 +22,10 @@ export default class Factory {
     client: Client
   ) => {
     console.log(`\nSetupFactory`);
-    let contractFunctionParameters =
-      new ContractFunctionParameters().addAddress(baseContractAddress);
+    const adminId = AccountId.fromString(process.env.ADMIN_ID!);
+    let contractFunctionParameters = new ContractFunctionParameters()
+      .addAddress(baseContractAddress)
+      .addAddress(adminId.toSolidityAddress());
     const contractTx = await new ContractExecuteTransaction()
       .setContractId(contractId)
       .setFunction("setUpFactory", contractFunctionParameters)
@@ -46,7 +49,7 @@ export default class Factory {
   ) => {
     const createPairTx = await new ContractExecuteTransaction()
       .setContractId(contractId)
-      .setGas(9000000)
+      .setGas(9990000)
       .setFunction(
         "createPair",
         new ContractFunctionParameters()
@@ -119,5 +122,39 @@ export default class Factory {
     const receipt = await executedTx.getReceipt(client);
     console.log(`getPairs: ${receipt.status}`);
     return modifiedArray;
+  };
+
+  public getTokenPairAddress = async (
+    contId: string,
+    client: Client,
+    treasureKey: PrivateKey
+  ): Promise<string> => {
+    const getTokensTxReq = await new ContractExecuteTransaction()
+      .setContractId(contId)
+      .setGas(2000000)
+      .setFunction("getTokenPairAddress")
+      .freezeWith(client)
+      .sign(treasureKey);
+    const getTokensTx = await getTokensTxReq.execute(client);
+    const record = await getTokensTx.getRecord(client);
+    const firstTokenAddress = record.contractFunctionResult!.getAddress(0);
+    const secondTokenAddress = record.contractFunctionResult!.getAddress(1);
+    const lpTokenAddress = record.contractFunctionResult!.getAddress(2);
+    return lpTokenAddress;
+  };
+
+  public getTokenBalance = async (
+    tokenId: TokenId,
+    accountId: AccountId,
+    client: Client
+  ): Promise<Long> => {
+    const treasureBalanceTx = await new AccountBalanceQuery()
+      .setAccountId(accountId)
+      .execute(client);
+    const responseTokens = treasureBalanceTx.tokens ?? new Map<TokenId, Long>();
+
+    console.log(` Treasure Token Balance for : ${responseTokens.get(tokenId)}`);
+
+    return responseTokens.get(tokenId)!;
   };
 }

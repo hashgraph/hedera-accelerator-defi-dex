@@ -6,6 +6,7 @@ import ClientManagement from "../../utils/ClientManagement";
 import { TokenId } from "@hashgraph/sdk";
 import Pair from "../business/Pair";
 import { BigNumber } from "bignumber.js";
+import Factory from "../business/Factory";
 
 const clientManagement = new ClientManagement();
 const contractService = new ContractService();
@@ -15,14 +16,19 @@ const lpTokenContract = contractService.getContractWithProxy(
 const pairContract = contractService.getContractWithProxy(
   contractService.pairContractName
 );
+const factoryContractId = contractService.getContractWithProxy(
+  contractService.factoryContractName
+).transparentProxyId!;
+
 const { treasureId, treasureKey } = clientManagement.getTreasure();
 const treasurerClient = clientManagement.createClient();
-const { key } = clientManagement.getOperator();
+const { id, key } = clientManagement.getOperator();
 const client = clientManagement.createOperatorClient();
 const htsServiceAddress = contractService.getContract(
   contractService.baseContractName
 ).address;
 const pair = new Pair();
+const factory = new Factory();
 
 let tokenA: TokenId;
 let tokenB: TokenId;
@@ -37,46 +43,26 @@ let varaintVal: BigNumber;
 let tokenAQty: BigNumber;
 let slippageOutGivenIn: BigNumber;
 let slippageInGivenOut: BigNumber;
+let lpTokenSymbol: string;
+let lpTokenName: string;
 @binding()
 export class PairTestSteps {
-  @given(
-    /User have created pair of tokens and intialized them/,
-    undefined,
-    30000
-  )
+  @given(/User create two new tokens/, undefined, 30000)
   public async createTokenPairAndInitializeThem(): Promise<void> {
     const num = Math.floor(Math.random() * 10) + 1;
     tokenA = await pair.createToken(
       "A" + num,
-      treasureKey,
-      treasureId,
+      key,
+      id,
       treasurerClient,
       client
     );
     tokenB = await pair.createToken(
       "B" + num,
-      treasureKey,
-      treasureId,
+      key,
+      id,
       treasurerClient,
       client
-    );
-    console.log(`\nToken pair created using ${tokenA} and ${tokenB}`);
-    lpTokenProxyId = await lpTokenContract.transparentProxyId!;
-    contractProxyId = await pairContract.transparentProxyId!;
-    await pair.initializeLPTokenContract(
-      lpTokenProxyId,
-      client,
-      htsServiceAddress
-    );
-    await pair.initializePairContract(
-      contractProxyId,
-      lpTokenContract.transparentProxyAddress!,
-      htsServiceAddress,
-      tokenA,
-      tokenB,
-      treasureId,
-      client,
-      key
     );
   }
 
@@ -97,11 +83,12 @@ export class PairTestSteps {
       contractProxyId,
       tokenAQty,
       tokenBQty,
-      treasureId,
+      id,
       tokenA,
       tokenB,
       client,
-      treasureKey
+      key,
+      tokenBCount
     );
   }
 
@@ -139,13 +126,7 @@ export class PairTestSteps {
     tokensBefore = await pair.pairCurrentPosition(contractProxyId, client);
     let precision = await pair.getPrecisionValue(contractProxyId, client);
     lpTokenQty = await pair.withPrecision(lpTokenCount, precision);
-    await pair.removeLiquidity(
-      contractProxyId,
-      lpTokenQty,
-      treasureId,
-      client,
-      treasureKey
-    );
+    await pair.removeLiquidity(contractProxyId, lpTokenQty, id, client, key);
   }
 
   @then(
@@ -183,10 +164,11 @@ export class PairTestSteps {
     await pair.swapTokenA(
       contractProxyId,
       tokenAQty,
-      treasureId,
+      id,
       tokenA,
       client,
-      treasureKey
+      treasureKey,
+      key
     );
   }
 
@@ -274,5 +256,59 @@ export class PairTestSteps {
   @then(/Expected slippage in value should be (\d*)/, undefined, 30000)
   public async verifySlippageIn(expectedSlippageIn: string) {
     expect(Number(slippageInGivenOut)).to.eql(Number(expectedSlippageIn));
+  }
+
+  @when(/User initialize lptoken contract/, undefined, 30000)
+  public async initializeLPTokenContract(): Promise<void> {
+    lpTokenProxyId = await lpTokenContract.transparentProxyId!;
+    await pair.initializeLPTokenContract(
+      lpTokenProxyId,
+      client,
+      htsServiceAddress,
+      lpTokenSymbol,
+      lpTokenName
+    );
+  }
+
+  @when(/User initialize pair contract/, undefined, 30000)
+  public async initializePairOfTokens(): Promise<void> {
+    contractProxyId = await pairContract.transparentProxyId!;
+    await pair.initializePairContract(
+      contractProxyId,
+      lpTokenContract.transparentProxyAddress!,
+      htsServiceAddress,
+      tokenA,
+      tokenB,
+      treasureId,
+      client,
+      treasureKey
+    );
+  }
+
+  @when(/User set (\d*) as the slippage value/, undefined, 30000)
+  public async setSlippageVal(slippage: number): Promise<void> {
+    let precision = await pair.getPrecisionValue(contractProxyId, client);
+    let slippageWithPrecision = pair.withPrecision(slippage, precision);
+    pair.setSlippage(contractProxyId, client, slippageWithPrecision);
+  }
+
+  @when(
+    /User define lptoken name and symbol for newly created tokens/,
+    undefined,
+    30000
+  )
+  public async createLPTokenName(): Promise<void> {
+    const tokenADetail = await pair.tokenQueryFunction(
+      tokenA.toString(),
+      client
+    );
+    const tokenBDetail = await pair.tokenQueryFunction(
+      tokenB.toString(),
+      client
+    );
+    const symbols = await [tokenADetail.symbol, tokenBDetail.symbol];
+    await symbols.sort();
+    lpTokenSymbol = (await symbols[0]) + "-" + symbols[1];
+    lpTokenName = (await lpTokenSymbol) + " name";
   }
 }
