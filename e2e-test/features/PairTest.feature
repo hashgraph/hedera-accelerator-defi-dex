@@ -1,9 +1,13 @@
+@Pair
 Feature: Pair contract e2e test
 
     This feature file contains e2e test for pair contract
 
     Scenario: Verify token balance before and after adding liquidity
-        Given User have created pair of tokens and intialized them
+        Given User create two new tokens
+        When User define lptoken name and symbol for newly created tokens 
+        When User initialize lptoken contract
+        When User initialize pair contract         
         When User adds 210 units of tokenA and 230 units of tokenB
         Then  tokenA and tokenB balances in the pool are 210 units and 230 units respectively   
     
@@ -20,7 +24,7 @@ Feature: Pair contract e2e test
     Scenario: Verify sport price for tokenA 
         Given tokenA and tokenB are present in pool
         When User fetch spot price for tokenA
-        Then Expected spot price for tokenA should be 9216302
+        Then Expected spot price for tokenA should be 92163026
 
     Scenario: Verify tokenA quantity for the given tokenB quantity
         Given tokenA and tokenB are present in pool
@@ -30,11 +34,11 @@ Feature: Pair contract e2e test
     Scenario: Verify slippage out value for given in tokenA quantity
         Given tokenA and tokenB are present in pool
         When User gives 10 units of tokenA for calculating slippage out
-        Then Expected slippage out value should be 462540
+        Then Expected slippage out value should be 4625403
 
      Scenario: Verify slippage in value for given out tokenB quantity
         Given tokenA and tokenB are present in pool
         When User gives 10 units of tokenB for calculating slippage in
-        Then Expected slippage in value should be 467878
+        Then Expected slippage in value should be 4678776    
         
       
