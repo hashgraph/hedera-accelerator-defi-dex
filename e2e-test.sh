@@ -28,18 +28,18 @@ fi
 
 echo "********************  Deployment *************************************"
 
-echo "Starting deployment for CONTRACT_NAME  " $CONTRACT_NAME;
-echo "Starting deployment for CONTRACT_TYPE  " $CONTRACT_TYPE;
+echo "Starting deployment  "
 
-echo "Running contract deployment ........ " $CONTRACT_NAME;
-echo CONTRACT_NAME=Pair >> .env;
-npx hardhat run ./deployment/scripts/logic.ts;
-npx hardhat run ./deployment/scripts/transparentUpgradeableProxy.ts;
+declare -a arr=("Pair" "LPToken" "Factory")
+for i in "${arr[@]}"
+do
+    echo "Starting deployment for CONTRACT_NAME  " $i
+    echo "Running contract deployment ........" $i
+    sed -i~ '/^CONTRACT_NAME=/s/=.*/='"$i"'/' .env
+    npx hardhat run ./deployment/scripts/logic.ts;
+    npx hardhat run ./deployment/scripts/transparentUpgradeableProxy.ts;
 
-sed -i~ '/^CONTRACT_NAME=/s/=.*/="LPToken"/' .env
-
-npx hardhat run ./deployment/scripts/logic.ts;
-npx hardhat run ./deployment/scripts/transparentUpgradeableProxy.ts;
+done
 
 npm run e2e-test
 
