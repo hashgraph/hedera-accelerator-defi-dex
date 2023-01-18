@@ -4,7 +4,7 @@ const {
 
 // your cmd to start the process, possibly spawn('npm.cmd', ['test'))
 const proc = spawn('npm',['test'])
-const flag = false;
+let flag = false;
 proc.stdout.on('data', (data) => {
   if(data.includes('failed')){
     flag = true;
