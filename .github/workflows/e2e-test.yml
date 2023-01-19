@@ -4,7 +4,7 @@ on:
     types: opened
     branches: temp-develop
   push:
-    branches:temp-develop
+    branches: temp-develop
 
 env:
   OPERATOR_ID: 0.0.47710057
