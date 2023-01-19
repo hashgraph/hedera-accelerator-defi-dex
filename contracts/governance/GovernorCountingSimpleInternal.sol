@@ -15,8 +15,7 @@ abstract contract GovernorCountingSimpleInternal is
     Initializable,
     GovernorUpgradeable,
     GovernorSettingsUpgradeable,
-    GovernorCountingSimpleUpgradeable,
-    HederaResponseCodes
+    GovernorCountingSimpleUpgradeable
 {
     struct VotingWeight {
         uint256 weight;
