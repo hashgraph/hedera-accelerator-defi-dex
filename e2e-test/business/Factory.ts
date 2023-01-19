@@ -49,7 +49,7 @@ export default class Factory {
   ) => {
     const createPairTx = await new ContractExecuteTransaction()
       .setContractId(contractId)
-      .setGas(99900000)
+      .setGas(9999000)
       .setFunction(
         "createPair",
         new ContractFunctionParameters()
