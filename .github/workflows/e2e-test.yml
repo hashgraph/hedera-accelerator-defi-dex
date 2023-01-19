@@ -2,9 +2,9 @@ name: Deploy contract to testnet and run e2e-test
 on:
   pull_request:
     types: opened
-    branches: temp-develop
+    branches: temp-develop2
   push:
-    branches: temp-develop
+    branches: temp-develop2
 
 env:
   OPERATOR_ID: 0.0.47710057
