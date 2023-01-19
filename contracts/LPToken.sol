@@ -9,7 +9,7 @@ import "./common/IERC20.sol";
 import "./common/hedera/HederaTokenService.sol";
 import "./ILPToken.sol";
 
-contract LPToken is HederaResponseCodes, ILPToken, Initializable {
+contract LPToken is ILPToken, Initializable {
     IBaseHTS tokenService;
     IERC20 lpToken;
 

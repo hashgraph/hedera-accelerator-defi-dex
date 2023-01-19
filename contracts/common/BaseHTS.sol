@@ -53,9 +53,9 @@ contract BaseHTS is HederaTokenService, IBaseHTS {
         emit SenderDetail(msg.sender, "mintTokenPublic");
         bytes[] memory metadata;
 
-        (int256 responseCodeNew, uint64 newTotalSupplyNew, ) = mintToken(
+        (int256 responseCodeNew, int64 newTotalSupplyNew, ) = mintToken(
             token,
-            uint64(uint256(amount)),
+            int64(amount),
             metadata
         );
 
@@ -63,7 +63,7 @@ contract BaseHTS is HederaTokenService, IBaseHTS {
             revert("Mint Failed");
         }
 
-        return (responseCodeNew, int256(uint256(newTotalSupplyNew)));
+        return (responseCodeNew, int256(int256(newTotalSupplyNew)));
     }
 
     function burnTokenPublic(address token, int256 amount)
@@ -72,12 +72,12 @@ contract BaseHTS is HederaTokenService, IBaseHTS {
         returns (int256 responseCode, int256 newTotalSupply)
     {
          int64[] memory serialNumbers;
-        (int256 responseCodeNew, uint64 newTotalSupplyNew) = HederaTokenService
-            .burnToken(token, uint64(uint256(amount)), serialNumbers);
+        (int256 responseCodeNew, int64 newTotalSupplyNew) = HederaTokenService
+            .burnToken(token, int64(amount), serialNumbers);
         if (responseCodeNew != HederaResponseCodes.SUCCESS) {
             revert("Burn Failed");
         }
-        return (responseCodeNew, int256(uint256(newTotalSupplyNew)));
+        return (responseCodeNew, int256(newTotalSupplyNew));
     }
 
     function createFungibleTokenPublic(
@@ -93,8 +93,8 @@ contract BaseHTS is HederaTokenService, IBaseHTS {
         emit SenderDetail(msg.sender, "createFungibleTokenPublic");
         (responseCode, tokenAddress) = createFungibleToken(
             token,
-            initialTotalSupply,
-            decimals
+            int64(uint64(initialTotalSupply)),
+            int32(uint32(decimals))
         );
     }
 
