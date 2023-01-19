@@ -11,6 +11,8 @@ contract ERC20Mock is IERC20 {
     uint256 userBalance;
     mapping(address => uint256) userBalances;
     bool private transferFailed;
+    int failTransferAfterCount;
+    bool isFailTransferAfterCountEnabled;
 
     constructor(
         string memory _name,
@@ -27,6 +29,13 @@ contract ERC20Mock is IERC20 {
 
     function setTransaferFailed(bool _transferFailed) public {
         transferFailed = _transferFailed;
+    }
+
+    function failTransferAfterNSuccessfulTransfers(
+        int _failTransferAfterCount
+    ) public {
+        failTransferAfterCount = _failTransferAfterCount;
+        isFailTransferAfterCountEnabled = true;
     }
 
     function totalSupply() external view override returns (uint256) {
@@ -56,8 +65,22 @@ contract ERC20Mock is IERC20 {
         }
     }
 
-    function transfer(address, uint256) external view override returns (bool) {
-        return !transferFailed;
+    function transfer(
+        address to,
+        uint256 amount
+    ) external override returns (bool) {
+        if (
+            transferFailed ||
+            (isFailTransferAfterCountEnabled && failTransferAfterCount == 0)
+        ) {
+            return false;
+        } else {
+            if (isFailTransferAfterCountEnabled) {
+                failTransferAfterCount -= 1;
+            }
+            userBalances[to] += amount;
+            return true;
+        }
     }
 
     function name() external view override returns (string memory) {

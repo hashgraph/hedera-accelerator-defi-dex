@@ -169,7 +169,6 @@ contract Vault is HederaResponseCodes, Initializable {
         address user
     ) public returns (uint256) {
         for (uint256 i; i < tokens.length; i++) {
-            uint256 reward;
             address token = tokens[i];
             _claimRewardForToken(token, user);
         }
