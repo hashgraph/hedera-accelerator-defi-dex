@@ -54,7 +54,7 @@ const withPrecision = (value: number): BigNumber => {
 const token0 = TokenId.fromString("0.0.48289687");
 const token1 = TokenId.fromString("0.0.48289686");
 const token2 = TokenId.fromString("0.0.48301281");
-const tokenHBARX = TokenId.fromString("0.0.49217385");
+const tokenHBARX = TokenId.fromString(dex.HBARX_TOKEN_ID);
 
 let tokenA = TokenId.fromString("0.0.49173962");
 let tokenB = TokenId.fromString("0.0.48289686");

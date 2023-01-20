@@ -301,17 +301,11 @@ abstract contract GovernorCountingSimpleInternal is
     }
 
     function returnGODToken(address creator) internal {
-        int256 responseCode = tokenService.transferTokenPublic(
-            address(token),
-            address(this),
-            creator,
-            int64(uint64(precision))
+        bool result = token.transfer(creator, precision);
+        require(
+            result,
+            "GovernorCountingSimpleInternal: token transfer failed from contract."
         );
-        if (responseCode != HederaResponseCodes.SUCCESS) {
-            revert(
-                "GovernorCountingSimpleInternal: token transfer failed from contract."
-            );
-        }
     }
 
     function cleanup(address voter) private {
