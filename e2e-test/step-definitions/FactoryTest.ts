@@ -44,13 +44,13 @@ let lpTokenQty: BigNumber;
 export class FactorySteps {
   @given(/User have setup the factory/, undefined, 30000)
   public async setUpFactory(): Promise<void> {
-    await console.log(
+    console.log(
       "*******************Starting factory test with following credentials*******************"
     );
-    await console.log("contractId : ", contractId);
-    await console.log("baseContractAddress : ", baseContractAddress);
-    await console.log("TOKEN_USER_ID : ", id);
-    await console.log("treasureId :", treasureId);
+    console.log("contractId : ", contractId);
+    console.log("baseContractAddress : ", baseContractAddress);
+    console.log("TOKEN_USER_ID : ", id);
+    console.log("treasureId :", treasureId);
     await factory.setupFactory(baseContractAddress, contractId, client);
   }
 
