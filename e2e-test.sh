@@ -30,8 +30,19 @@ echo "********************  Deployment *************************************"
 
 echo "Running contract deployment ........ " $CONTRACT_NAME;
 
-echo CONTRACT_NAME=LPToken >> .env;
+echo OPERATOR_ID=$OPERATOR_ID >> .env;
+echo OPERATOR_KEY=$OPERATOR_KEY >> .env;
+echo ADMIN_ID=$ADMIN_ID >> .env;
+echo ADMIN_KEY=$ADMIN_KEY >> .env;
+echo TREASURE_ID=$TREASURE_ID >> .env;
+echo TREASURE_KEY=$TREASURE_KEY >> .env;
+echo TOKEN_USER_ID=$TOKEN_USER_ID >> .env;
+echo TOKEN_USER_KEY=$TOKEN_USER_KEY >> .env;
+echo CONTRACT_NAME=$CONTRACT_NAME >> .env;
+echo DEX_CONTRACT_OWNER_ID=$DEX_CONTRACT_OWNER_ID >> .env;
+echo DEX_CONTRACT_OWNER_KEY=$DEX_CONTRACT_OWNER_KEY >> .env;
 
+cat .env;
 
 declare -a arr=("LPToken" "Pair" "Factory")
 for i in "${arr[@]}"

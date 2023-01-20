@@ -49,6 +49,11 @@ let lpTokenName: string;
 export class PairTestSteps {
   @given(/User create two new tokens/, undefined, 30000)
   public async createTokenPairAndInitializeThem(): Promise<void> {
+    await console.log(
+      "*******************Starting pair test with following credentials*******************"
+    );
+    await console.log("TOKEN_USER_ID : ", id);
+    await console.log("treasureId :", treasureId);
     const num = Math.floor(Math.random() * 10) + 1;
     tokenA = await pair.createToken(
       "A" + num,
@@ -273,6 +278,13 @@ export class PairTestSteps {
   @when(/User initialize pair contract/, undefined, 30000)
   public async initializePairOfTokens(): Promise<void> {
     contractProxyId = await pairContract.transparentProxyId!;
+    await console.log("Initializing pair contract with following");
+    await console.log("contractId : ", contractProxyId);
+    await console.log("treasureId : ", treasureId);
+    await console.log(
+      "lpTokenContract.transparentProxyAddress : ",
+      lpTokenContract.transparentProxyAddress
+    );
     await pair.initializePairContract(
       contractProxyId,
       lpTokenContract.transparentProxyAddress!,
