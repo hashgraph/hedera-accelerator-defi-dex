@@ -113,5 +113,12 @@
         "hash": "2851c47f1c16f07c8088c34712bd8b4e",
         "transparentProxyAddress": "0x0000000000000000000000000000000002ee5dfb",
         "transparentProxyId": "0.0.49176059"
+    },
+    {
+        "name": "basehts",
+        "id": "0.0.49351041",
+        "address": "0x0000000000000000000000000000000002f10981",
+        "timestamp": "2023-01-20T10:51:37.472Z",
+        "hash": "0a51b79dd6433a755b1f9040dd0bc938"
     }
 ]
