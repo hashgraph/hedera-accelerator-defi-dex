@@ -113,7 +113,7 @@ async function main() {
   }
 
   for (const contractName of contractService.allGovernorContracts) {
-    const contract = await contractService.getContractWithProxy(contractName);
+    const contract = contractService.getContractWithProxy(contractName);
     console.log(
       `\n${contractName} transparent proxy contractId: ${contract.transparentProxyId!}`
     );
