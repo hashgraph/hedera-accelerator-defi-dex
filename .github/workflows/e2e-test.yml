@@ -1,7 +1,9 @@
 name: Deploy contract to testnet and run e2e-test
 on:
   pull_request:
-    types: [opened, closed]
+    types: opened
+    branches: develop
+  push:
     branches: develop
 
 env:
@@ -18,7 +20,7 @@ env:
 
 jobs:
   build:
-    if: github.event.action == 'opened' || github.event.pull_request.merged == true
+    if: github.event.action == 'opened' || github.event_name == 'push'
     runs-on: ubuntu-latest 
 
     steps:
