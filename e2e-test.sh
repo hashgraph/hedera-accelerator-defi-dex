@@ -42,8 +42,6 @@ echo CONTRACT_NAME=$CONTRACT_NAME >> .env;
 echo DEX_CONTRACT_OWNER_ID=$DEX_CONTRACT_OWNER_ID >> .env;
 echo DEX_CONTRACT_OWNER_KEY=$DEX_CONTRACT_OWNER_KEY >> .env;
 
-cat .env;
-
 declare -a arr=("LPToken" "Pair" "Factory")
 for i in "${arr[@]}"
 do
