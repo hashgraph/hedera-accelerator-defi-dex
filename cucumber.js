@@ -2,7 +2,8 @@ let common = [
   'e2e-test/features/**/*.feature',
   '--require-module ts-node/register',
   '--require e2e-test/step-definitions/**/*.ts',
-  '--publish'
+  '--publish',
+  '--tags=@Pair'
 ].join(' ');
 
 module.exports = {
