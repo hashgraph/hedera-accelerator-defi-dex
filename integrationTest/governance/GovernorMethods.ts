@@ -45,21 +45,6 @@ export default class GovernorMethods {
     return impAddress;
   };
 
-  withdrawGOD = async () => {
-    console.log(`get Pair`);
-    const getPair = await new ContractExecuteTransaction()
-      .setContractId(godHolder.transparentProxyId!)
-      .setGas(9999999)
-      .setFunction("withdrawTokens", new ContractFunctionParameters())
-      .freezeWith(client);
-    const getPairTx = await getPair.execute(client);
-    const response = await getPairTx.getRecord(client);
-    console.log(`getPair: ${response.contractFunctionResult!.getAddress(0)}`);
-    const receipt = await getPairTx.getReceipt(client);
-    console.log(`getPair: ${receipt.status}`);
-    return `0x${response.contractFunctionResult!.getAddress(0)}`;
-  };
-
   canClaimGod = async (client: Client) => {
     console.log(`canClaimGod`);
     const args = new ContractFunctionParameters();
@@ -194,7 +179,7 @@ export default class GovernorMethods {
     const tokenId = TokenId.fromString(dex.GOD_TOKEN_ID);
     console.log(`\nInitialize contract with token  `);
     const votingDelay = 0;
-    const votingPeriod = 10; //Blocks to mint
+    const votingPeriod = 100; //Blocks to mint
 
     let contractFunctionParameters = new ContractFunctionParameters()
       .addAddress(tokenId.toSolidityAddress()) // token that define the voting weight, to vote user should have % of this token.

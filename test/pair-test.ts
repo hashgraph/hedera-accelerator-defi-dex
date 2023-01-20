@@ -689,7 +689,9 @@ describe("All Tests", function () {
     });
 
     it("Add liquidity Transfer LPToken Fail", async function () {
-      const { swapV2, mockBaseHTS, lpTokenCont } = await loadFixture(deployFixture);
+      const { swapV2, mockBaseHTS, lpTokenCont } = await loadFixture(
+        deployFixture
+      );
       const tokenBeforeQty = await swapV2.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
       await mockBaseHTS.setPassTransactionCount(6);

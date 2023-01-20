@@ -176,7 +176,7 @@ async function main() {
   await governor.proposalVotes(proposalId, contractId);
   await governor.state(proposalId, contractId);
   console.log(`\nWaiting for voting period to get over.`);
-  await Helper.delay(16 * 1000); // Wait till waiting period is over. It's current deadline as per Governance.
+  await Helper.delay(15 * 1000); // Wait till waiting period is over. It's current deadline as per Governance.
   await governor.state(proposalId, contractId); // 4 means succeeded
   await governor.execute(title, contractId);
   await governor.execute(title1, contractId);
