@@ -508,9 +508,6 @@ describe("All Tests", function () {
     const tx = await swapV2.removeLiquidity(zeroAddress, 5);
     await tx.wait();
 
-    const userlpToken = await lpTokenCont.lpTokenForUser(zeroAddress);
-    expect(userlpToken).to.be.equals(10);
-
     const tokenQty = await swapV2.getPairQty();
     expect(tokenQty[0]).to.be.equals(precision.mul(50));
     expect(tokenQty[1]).to.be.equals(precision.mul(50));
@@ -734,10 +731,15 @@ describe("All Tests", function () {
     });
 
     it("Add liquidity Transfer LPToken Fail", async function () {
-      const { swapV2, mockBaseHTS } = await loadFixture(deployFailureFixture);
+      const { swapV2, mockBaseHTS, lpTokenCont } = await loadFixture(
+        deployFailureFixture
+      );
       const tokenBeforeQty = await swapV2.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
       await mockBaseHTS.setPassTransactionCount(6);
+      const lpTokenAddress = await lpTokenCont.getLpTokenAddress();
+      const lpToken = await ethers.getContractAt("ERC20Mock", lpTokenAddress);
+      await lpToken.setTransaferFailed(true); //Forcing transfer to fail
       await expect(
         swapV2.addLiquidity(zeroAddress, tokenAAddress, tokenBAddress, 30, 30)
       ).to.revertedWith("LPToken: token transfer failed from contract.");

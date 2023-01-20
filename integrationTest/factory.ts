@@ -13,6 +13,7 @@ import { ContractService } from "../deployment/service/ContractService";
 import { httpRequest } from "../deployment/api/HttpsService";
 import * as fs from "fs";
 import ClientManagement from "../utils/ClientManagement";
+import dex from "../deployment/model/dex";
 
 const clientManagement = new ClientManagement();
 const client = clientManagement.createOperatorClient();
@@ -27,8 +28,8 @@ const tokenC = TokenId.fromString("0.0.48301281");
 const tokenD = TokenId.fromString("0.0.48301282");
 const tokenE = TokenId.fromString("0.0.48301300");
 const tokenF = TokenId.fromString("0.0.48301322");
-const tokenGOD = TokenId.fromString("0.0.48602639");
-const tokenHBARX = TokenId.fromString("0.0.49217385");
+const tokenGOD = TokenId.fromString(dex.GOD_TOKEN_ID);
+const tokenHBARX = TokenId.fromString(dex.HBARX_TOKEN_ID);
 
 const baseContract = contractService.getContract(
   contractService.baseContractName

@@ -7,7 +7,7 @@ import "../common/IBaseHTS.sol";
 import "./ISplitter.sol";
 import "hardhat/console.sol";
 
-contract Splitter is ISplitter, HederaResponseCodes, Initializable {
+contract Splitter is ISplitter, Initializable {
     event VaultAdded(IVault vault, uint256 multiplier);
     event TokenTransferred(IVault vault, uint256 amount);
 
