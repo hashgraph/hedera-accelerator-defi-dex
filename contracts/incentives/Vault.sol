@@ -102,16 +102,8 @@ contract Vault is Initializable {
         require(amount != 0, "Please provide amount");
         _unlock(msg.sender);
         claimAllReward(startPosition, (msg.sender));
-        int256 responseCode = tokenService.transferTokenPublic(
-            address(stakingToken),
-            address(this),
-            address(msg.sender),
-            int64(uint64(amount))
-        );
-        require(
-            responseCode == HederaResponseCodes.SUCCESS,
-            "Vault: Withdraw failed."
-        );
+        bool isTransferSuccessful = stakingToken.transfer(msg.sender, amount);
+        require(isTransferSuccessful, "Vault: Withdraw failed.");
 
         userStakedTokenContribution[msg.sender].shares -= amount;
         stakingTokenTotalAmount -= amount;
@@ -177,7 +169,6 @@ contract Vault is Initializable {
         address user
     ) public returns (uint256) {
         for (uint256 i; i < tokens.length; i++) {
-            uint256 reward;
             address token = tokens[i];
             _claimRewardForToken(token, user);
         }
@@ -197,16 +188,8 @@ contract Vault is Initializable {
             token
         ].amount;
 
-        int256 responseCode = tokenService.transferTokenPublic(
-            address(token),
-            address(this),
-            address(user),
-            int64(uint64(reward))
-        );
-        require(
-            responseCode == HederaResponseCodes.SUCCESS,
-            "Vault: Claim reward failed."
-        );
+        bool isTransferSuccessful = IERC20(token).transfer(user, reward);
+        require(isTransferSuccessful, "Vault: Claim reward failed.");
     }
 
     function getLockedAmount(address user) public view returns (uint256) {
