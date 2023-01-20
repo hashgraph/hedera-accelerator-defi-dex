@@ -120,5 +120,86 @@
         "address": "0x0000000000000000000000000000000002f10981",
         "timestamp": "2023-01-20T10:51:37.472Z",
         "hash": "0a51b79dd6433a755b1f9040dd0bc938"
+    },
+    {
+        "name": "factory",
+        "id": "0.0.49352474",
+        "address": "0x0000000000000000000000000000000002f10f1a",
+        "timestamp": "2023-01-20T11:33:07.134Z",
+        "hash": "31e2db244b30260c2fbd57bb513de94c",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002f10f2a",
+        "transparentProxyId": "0.0.49352490"
+    },
+    {
+        "name": "governorupgrade",
+        "id": "0.0.49352515",
+        "address": "0x0000000000000000000000000000000002f10f43",
+        "timestamp": "2023-01-20T11:34:06.915Z",
+        "hash": "83ca22e68586d237a9d343054e2288e6",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002f10f4e",
+        "transparentProxyId": "0.0.49352526"
+    },
+    {
+        "name": "governortransfertoken",
+        "id": "0.0.49352545",
+        "address": "0x0000000000000000000000000000000002f10f61",
+        "timestamp": "2023-01-20T11:34:54.754Z",
+        "hash": "f468d029c0b2ee67029283a0624911a2",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002f10f69",
+        "transparentProxyId": "0.0.49352553"
+    },
+    {
+        "name": "governortextproposal",
+        "id": "0.0.49352573",
+        "address": "0x0000000000000000000000000000000002f10f7d",
+        "timestamp": "2023-01-20T11:35:50.459Z",
+        "hash": "0138bb383a290f05d8a6c280e3c341c1",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002f10f83",
+        "transparentProxyId": "0.0.49352579"
+    },
+    {
+        "name": "governortokencreate",
+        "id": "0.0.49352601",
+        "address": "0x0000000000000000000000000000000002f10f99",
+        "timestamp": "2023-01-20T11:36:43.296Z",
+        "hash": "49ac8b0c474e1a23c8b5863107b9bc31",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002f10fa2",
+        "transparentProxyId": "0.0.49352610"
+    },
+    {
+        "name": "splitter",
+        "id": "0.0.49352625",
+        "address": "0x0000000000000000000000000000000002f10fb1",
+        "timestamp": "2023-01-20T11:37:40.434Z",
+        "hash": "779e7eb87415fcaccfa2bc704ff7d9fe",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002f10fb3",
+        "transparentProxyId": "0.0.49352627"
+    },
+    {
+        "name": "vault",
+        "id": "0.0.49352634",
+        "address": "0x0000000000000000000000000000000002f10fba",
+        "timestamp": "2023-01-20T11:38:20.705Z",
+        "hash": "802141e5aa0b1725218a4e9cd487e3a3",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002f10fc0",
+        "transparentProxyId": "0.0.49352640"
+    },
+    {
+        "name": "lptoken",
+        "id": "0.0.49352650",
+        "address": "0x0000000000000000000000000000000002f10fca",
+        "timestamp": "2023-01-20T11:39:38.138Z",
+        "hash": "74f691d2a187591ac1f55178220f8ea9",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002f10fd0",
+        "transparentProxyId": "0.0.49352656"
+    },
+    {
+        "name": "pair",
+        "id": "0.0.49352665",
+        "address": "0x0000000000000000000000000000000002f10fd9",
+        "timestamp": "2023-01-20T11:40:14.509Z",
+        "hash": "ebb9eb5f4da1acbfab7b85ebea7e054e",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002f10fe6",
+        "transparentProxyId": "0.0.49352678"
     }
 ]
