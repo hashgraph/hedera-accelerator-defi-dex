@@ -53,6 +53,9 @@ contract Pair is IPair, Initializable {
     ) external payable virtual override {
         tokenService.associateTokenPublic(address(this), _tokenA);
         tokenService.associateTokenPublic(address(this), _tokenB);
+        _tokenAQty = _tokenQuantity(_tokenA, _tokenAQty);
+        _tokenBQty = _tokenQuantity(_tokenB, _tokenBQty);
+
         transferTokensInternally(
             fromAccount,
             address(this),
@@ -66,6 +69,17 @@ contract Pair is IPair, Initializable {
         pair.tokenA.tokenQty += _tokenAQty;
         pair.tokenB.tokenQty += _tokenBQty;
         lpTokenContract.allotLPTokenFor(_tokenAQty, _tokenBQty, fromAccount);
+    }
+
+    function _tokenQuantity(
+        address token,
+        int256 quantity
+    ) private returns (int256) {
+        if (token == tokenService.hbarxAddress()) {
+            require(quantity == 0, "HBARs should be passed as payble");
+            return int256(msg.value);
+        }
+        return quantity;
     }
 
     function removeLiquidity(
@@ -116,13 +130,7 @@ contract Pair is IPair, Initializable {
                 _token == pair.tokenB.tokenAddress,
             "Pls pass correct token to swap."
         );
-        if (_token == tokenService.hbarxAddress()) {
-            require(
-                _deltaQty == 0,
-                "HBARs should be passed as payble"
-            );
-            _deltaQty = int256(msg.value);
-        }
+        _deltaQty = _tokenQuantity(_token, _deltaQty);
 
         if (_token == pair.tokenA.tokenAddress) {
             doTokenASwap(to, _deltaQty);
