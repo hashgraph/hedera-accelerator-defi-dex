@@ -30,7 +30,9 @@ contract GODHolder is IGODHolder, Initializable {
         address voter,
         uint256 proposalId
     ) external override returns (int32) {
-        return _updateActiveProposal(voter, proposalId, true);
+        uint256[] storage proposals = activeProposalsForUsers[voter];
+        proposals.push(proposalId);
+        return HederaResponseCodes.SUCCESS;
     }
 
     function getActiveProposalsForUser()
@@ -46,7 +48,8 @@ contract GODHolder is IGODHolder, Initializable {
         uint256 proposalId
     ) external override returns (int32) {
         for (uint256 i = 0; i < voters.length; i++) {
-            _updateActiveProposal(voters[i], proposalId, false);
+            uint256[] storage proposals = activeProposalsForUsers[voters[i]];
+            _removeAnArrayElement(proposalId, proposals);
         }
         return HederaResponseCodes.SUCCESS;
     }
@@ -86,23 +89,10 @@ contract GODHolder is IGODHolder, Initializable {
             address(this),
             int256(amount)
         );
-        if (responseCode != HederaResponseCodes.SUCCESS) {
-            revert("GODHolder: token transfer failed to contract.");
-        }
-    }
-
-    function _updateActiveProposal(
-        address voter,
-        uint256 proposalId,
-        bool isAddOperation
-    ) private returns (int32) {
-        uint256[] storage proposals = activeProposalsForUsers[voter];
-        if (isAddOperation) {
-            proposals.push(proposalId);
-        } else {
-            _removeAnArrayElement(proposalId, proposals);
-        }
-        return HederaResponseCodes.SUCCESS;
+        require(
+            responseCode == HederaResponseCodes.SUCCESS,
+            "GODHolder: token transfer failed to contract."
+        );
     }
 
     function _removeAnArrayElement(
@@ -113,6 +103,7 @@ contract GODHolder is IGODHolder, Initializable {
         for (uint i = 0; i < items.length; i++) {
             if (items[i] == itemToRemove) {
                 index = i;
+                break;
             }
         }
         if (index >= items.length) return;

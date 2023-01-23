@@ -167,8 +167,6 @@ abstract contract GovernorCountingSimpleInternal is
         require(msg.sender == creator, "Only proposer can cancel the proposal");
         proposalId = super._cancel(targets, values, calldatas, descriptionHash);
         returnGODToken(creator);
-        address[] memory voters = proposalVoters[proposalId];
-        godHolder.removeActiveProposals(voters, proposalId);
         cleanup(proposalId);
     }
 
@@ -231,8 +229,6 @@ abstract contract GovernorCountingSimpleInternal is
     ) internal virtual override {
         address creator = proposalCreators[proposalId].creator;
         returnGODToken(creator);
-        address[] memory voters = proposalVoters[proposalId];
-        godHolder.removeActiveProposals(voters, proposalId);
         cleanup(proposalId);
     }
 
@@ -260,6 +256,8 @@ abstract contract GovernorCountingSimpleInternal is
     }
 
     function cleanup(uint256 proposal) private {
+        address[] memory voters = proposalVoters[proposal];
+        godHolder.removeActiveProposals(voters, proposal);
         delete (proposalVoters[proposal]);
     }
 
