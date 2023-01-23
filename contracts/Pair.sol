@@ -119,7 +119,7 @@ contract Pair is IPair, Initializable {
         if (_token == tokenService.hbarxAddress()) {
             require(
                 _deltaQty == 0,
-                "HBARs should be passed as payble              "
+                "HBARs should be passed as payble"
             );
             _deltaQty = int256(msg.value);
         }
