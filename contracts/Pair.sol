@@ -71,17 +71,6 @@ contract Pair is IPair, Initializable {
         lpTokenContract.allotLPTokenFor(_tokenAQty, _tokenBQty, fromAccount);
     }
 
-    function _tokenQuantity(
-        address token,
-        int256 quantity
-    ) private returns (int256) {
-        if (token == tokenService.hbarxAddress()) {
-            require(quantity == 0, "HBARs should be passed as payble");
-            return int256(msg.value);
-        }
-        return quantity;
-    }
-
     function removeLiquidity(
         address payable toAccount,
         int256 _lpToken
@@ -439,5 +428,16 @@ contract Pair is IPair, Initializable {
                 require(response == HederaResponseCodes.SUCCESS, errorMessage);
             }
         }
+    }
+
+    function _tokenQuantity(
+        address token,
+        int256 quantity
+    ) private returns (int256) {
+        if (token == tokenService.hbarxAddress()) {
+            require(quantity == 0, "HBARs should be passed as payble");
+            return int256(msg.value);
+        }
+        return quantity;
     }
 }
