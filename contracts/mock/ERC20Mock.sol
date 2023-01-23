@@ -8,7 +8,6 @@ contract ERC20Mock is IERC20 {
     string tokeName;
     string tokenSymbol;
     uint256 total;
-    uint256 userBalance;
     mapping(address => uint256) userBalances;
     bool private transferFailed;
     int failTransferAfterCount;
@@ -23,7 +22,6 @@ contract ERC20Mock is IERC20 {
         tokeName = _name;
         tokenSymbol = _symbol;
         total = _total;
-        userBalance = _userBalance;
         userBalances[address(0)] = _userBalance;
     }
 
@@ -43,10 +41,7 @@ contract ERC20Mock is IERC20 {
     }
 
     function balanceOf(address user) external view override returns (uint256) {
-        if (userBalances[user] != 0) {
-            return userBalances[user];
-        }
-        return userBalance;
+       return userBalances[user];
     }
 
     function setTotal(uint256 _total) external {
@@ -54,7 +49,6 @@ contract ERC20Mock is IERC20 {
     }
 
     function setUserBalance(address _user, uint256 _userBalance) external {
-        userBalance = _userBalance;
         userBalances[_user] = _userBalance;
     }
 
