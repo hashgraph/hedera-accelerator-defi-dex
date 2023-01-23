@@ -169,18 +169,17 @@ describe("All Tests", function () {
     ).to.revertedWith("Please pass valid Hbars");
   });
 
-  it.only("Swap 1 units of token HBAR pass ", async function () {
+  it("Swap 1 units of token HBAR pass ", async function () {
     const { swapV2, signers, token1Address, token2Address } = await loadFixture(
       deployFixtureHBARX
     );
     const tokenAPoolQty = BigNumber.from(200).mul(precision);
-    const tokenCPoolQty = BigNumber.from(220).mul(precision);
     await swapV2.addLiquidity(
       signers[0].address,
       token1Address,
       token2Address,
       tokenAPoolQty,
-      tokenCPoolQty,
+      0,
       {
         value: ethers.utils.parseEther("0.0000000220"),
       }
@@ -211,13 +210,12 @@ describe("All Tests", function () {
       deployFixtureHBARX
     );
     const tokenAPoolQty = BigNumber.from(200).mul(precision);
-    const tokenCPoolQty = BigNumber.from(220).mul(precision);
     await swapV2.addLiquidity(
       signers[0].address,
       token1Address,
       token2Address,
       tokenAPoolQty,
-      tokenCPoolQty,
+      0,
       {
         value: ethers.utils.parseEther("0.0000000220"),
       }
