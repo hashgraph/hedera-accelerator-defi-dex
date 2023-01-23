@@ -201,5 +201,14 @@
         "hash": "ebb9eb5f4da1acbfab7b85ebea7e054e",
         "transparentProxyAddress": "0x0000000000000000000000000000000002f10fe6",
         "transparentProxyId": "0.0.49352678"
+    },
+    {
+        "name": "governorupgrade",
+        "id": "0.0.49390909",
+        "address": "0000000000000000000000000000000002f1a53d",
+        "timestamp": "2023-01-23T10:40:04.876Z",
+        "hash": "f767e15579803dd84c4dc0f9223d89c0",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002f10f4e",
+        "transparentProxyId": "0.0.49352526"
     }
 ]
