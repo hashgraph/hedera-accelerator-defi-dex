@@ -210,5 +210,50 @@
         "hash": "f767e15579803dd84c4dc0f9223d89c0",
         "transparentProxyAddress": "0x0000000000000000000000000000000002f10f4e",
         "transparentProxyId": "0.0.49352526"
+    },
+    {
+        "name": "governorupgrade",
+        "id": "0.0.49392566",
+        "address": "0x0000000000000000000000000000000002f1abb6",
+        "timestamp": "2023-01-23T11:21:51.273Z",
+        "hash": "f767e15579803dd84c4dc0f9223d89c0",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002f1abbf",
+        "transparentProxyId": "0.0.49392575"
+    },
+    {
+        "name": "governortransfertoken",
+        "id": "0.0.49392590",
+        "address": "0x0000000000000000000000000000000002f1abce",
+        "timestamp": "2023-01-23T11:22:47.887Z",
+        "hash": "c6b2552c041e63e549030e794470606f",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002f1abd7",
+        "transparentProxyId": "0.0.49392599"
+    },
+    {
+        "name": "governortextproposal",
+        "id": "0.0.49392624",
+        "address": "0x0000000000000000000000000000000002f1abf0",
+        "timestamp": "2023-01-23T11:24:14.350Z",
+        "hash": "52bd8d29d6482047f4f5a4087c127e2f",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002f1abf7",
+        "transparentProxyId": "0.0.49392631"
+    },
+    {
+        "name": "governortokencreate",
+        "id": "0.0.49392648",
+        "address": "0x0000000000000000000000000000000002f1ac08",
+        "timestamp": "2023-01-23T11:25:12.804Z",
+        "hash": "82ed638850c168aed3be2698d551d3da",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002f1ac10",
+        "transparentProxyId": "0.0.49392656"
+    },
+    {
+        "name": "godholder",
+        "id": "0.0.49392764",
+        "address": "0x0000000000000000000000000000000002f1ac7c",
+        "timestamp": "2023-01-23T11:31:44.136Z",
+        "hash": "bc5cfcbb93d861ea8bedc8d789762a37",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002f1acb8",
+        "transparentProxyId": "0.0.49392824"
     }
 ]

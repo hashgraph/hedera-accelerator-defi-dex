@@ -196,7 +196,9 @@ export default class GovernorMethods {
 
     const receipt = await tx.getReceipt(client);
 
-    console.log(`Initialize contract with token done with status - ${receipt}`);
+    console.log(
+      `Initialize contract with token done with status - ${receipt.status}`
+    );
   };
 
   public initializeGodHolder = async () => {
@@ -216,7 +218,7 @@ export default class GovernorMethods {
     const receipt = await tx.getReceipt(client);
 
     console.log(
-      `Initialize GodHolder contract with token done with status - ${receipt}`
+      `Initialize GodHolder contract with token done with status - ${receipt.status}`
     );
   };
 
