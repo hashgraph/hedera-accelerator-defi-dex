@@ -204,11 +204,10 @@ export class FactorySteps {
     tokensBefore = await pair.pairCurrentPosition(pairContractId, client);
     let precision = await pair.getPrecisionValue(pairContractId, client);
     const tokenAQty = await pair.withPrecision(tokenACount, precision);
-    const tokenBQty = await pair.withPrecision(tokenBCount, precision);
     await pair.addLiquidity(
       pairContractId,
       tokenAQty,
-      tokenBQty,
+      new BigNumber(0),
       id,
       tokenOne,
       tokenHBARX,
