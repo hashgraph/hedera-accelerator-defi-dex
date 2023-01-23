@@ -169,7 +169,7 @@ describe("All Tests", function () {
     ).to.revertedWith("Please pass valid Hbars");
   });
 
-  it("Swap 1 units of token HBAR  ", async function () {
+  it.only("Swap 1 units of token HBAR pass ", async function () {
     const { swapV2, signers, token1Address, token2Address } = await loadFixture(
       deployFixtureHBARX
     );
@@ -191,14 +191,9 @@ describe("All Tests", function () {
     const feeForTokenA = await swapV2.feeForToken(addTokenAQty);
     const addTokenAQtyAfterFee =
       Number(addTokenAQty) - Number(feeForTokenA) / 2;
-    const tx = await swapV2.swapToken(
-      zeroAddress,
-      token1Address,
-      addTokenAQty,
-      {
-        value: ethers.utils.parseEther("0.0000000001"),
-      }
-    );
+    const tx = await swapV2.swapToken(zeroAddress, token1Address, 0, {
+      value: ethers.utils.parseEther("0.0000000001"),
+    });
     await tx.wait();
 
     const tokenQty = await swapV2.getPairQty();
@@ -209,6 +204,30 @@ describe("All Tests", function () {
     const tokenBResultantQty =
       Number(tokenBResultantQtyAfterFee) / Number(precision);
     expect(tokenBResultantQty).to.be.equals(217.81637026);
+  });
+
+  it("Swap 1 units of token HBAR fail ", async function () {
+    const { swapV2, signers, token1Address, token2Address } = await loadFixture(
+      deployFixtureHBARX
+    );
+    const tokenAPoolQty = BigNumber.from(200).mul(precision);
+    const tokenCPoolQty = BigNumber.from(220).mul(precision);
+    await swapV2.addLiquidity(
+      signers[0].address,
+      token1Address,
+      token2Address,
+      tokenAPoolQty,
+      tokenCPoolQty,
+      {
+        value: ethers.utils.parseEther("0.0000000220"),
+      }
+    );
+    var addTokenAQty = BigNumber.from(1).mul(precision);
+    await expect(
+      swapV2.swapToken(zeroAddress, token1Address, addTokenAQty, {
+        value: ethers.utils.parseEther("0.0000000001"),
+      })
+    ).to.revertedWith("HBARs should be passed as payble");
   });
 
   describe("Factory Contract positive Tests", async () => {
