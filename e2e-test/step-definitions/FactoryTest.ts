@@ -177,7 +177,7 @@ export class FactorySteps {
       tokenOne,
       tokenHBARX,
       treasureId,
-      key,
+      treasureKey,
       client
     );
 
