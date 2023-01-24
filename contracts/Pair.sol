@@ -38,6 +38,10 @@ contract Pair is IPair, Initializable {
         fee = _fee;
         treasury = _treasury;
         pair = Pair(Token(_tokenA, int256(0)), Token(_tokenB, int256(0)));
+        _associateToken(address(this), _tokenA);
+        _associateToken(address(this), _tokenB);
+        _associateToken(treasury, _tokenA);
+        _associateToken(treasury, _tokenB);
     }
 
     function getPair() external view override returns (Pair memory) {
@@ -51,8 +55,6 @@ contract Pair is IPair, Initializable {
         int256 _tokenAQty,
         int256 _tokenBQty
     ) external payable virtual override {
-        tokenService.associateTokenPublic(address(this), _tokenA);
-        tokenService.associateTokenPublic(address(this), _tokenB);
         _tokenAQty = _tokenQuantity(_tokenA, _tokenAQty);
         _tokenBQty = _tokenQuantity(_tokenB, _tokenBQty);
 
@@ -152,7 +154,8 @@ contract Pair is IPair, Initializable {
         );
 
         pair.tokenB.tokenQty -= deltaBQty;
-        tokenService.associateTokenPublic(to, pair.tokenB.tokenAddress);
+
+        _associateToken(to, pair.tokenB.tokenAddress);
         transferTokenInternally(
             address(this),
             to,
@@ -161,7 +164,6 @@ contract Pair is IPair, Initializable {
             "swapTokenA: Transferring token B to user failed with status code"
         );
         // fee transfer
-        tokenService.associateTokenPublic(treasury, pair.tokenA.tokenAddress);
         transferTokenInternally(
             to,
             treasury,
@@ -169,7 +171,6 @@ contract Pair is IPair, Initializable {
             feeTokenA / 2,
             "swapTokenAFee: Transferring fee as token A to treasuary failed with status code"
         );
-        tokenService.associateTokenPublic(treasury, pair.tokenB.tokenAddress);
         transferTokenInternally(
             address(this),
             treasury,
@@ -203,7 +204,7 @@ contract Pair is IPair, Initializable {
         );
 
         pair.tokenA.tokenQty -= deltaAQty;
-        tokenService.associateTokenPublic(to, pair.tokenA.tokenAddress);
+        _associateToken(to, pair.tokenA.tokenAddress);
         transferTokenInternally(
             address(this),
             to,
@@ -213,7 +214,6 @@ contract Pair is IPair, Initializable {
         );
 
         // fee transfer
-        tokenService.associateTokenPublic(treasury, pair.tokenB.tokenAddress);
         transferTokenInternally(
             to,
             treasury,
@@ -221,7 +221,6 @@ contract Pair is IPair, Initializable {
             feeTokenB / 2,
             "swapTokenBFee: Transferring fee as token B to treasuary failed with status code"
         );
-        tokenService.associateTokenPublic(treasury, pair.tokenA.tokenAddress);
         transferTokenInternally(
             address(this),
             treasury,
@@ -387,46 +386,98 @@ contract Pair is IPair, Initializable {
         string memory errorMessage
     ) private {
         if (token == tokenService.hbarxAddress()) {
-            if (sender == address(this)) {
-                require(
-                    address(this).balance >= uint256(tokenQty),
-                    "Contract does not have sufficient Hbars"
-                );
+            if (_isContractSendingTokens(sender)) {
+                _checkIfContractHaveRequiredHBARBalance(tokenQty);
             } else {
-                require(
-                    msg.value >= uint256(tokenQty),
-                    "Please pass valid Hbars"
-                );
+                _checkIfCallerSentCorrectHBARs(tokenQty);
             }
-            if (reciever != address(this)) {
-                (bool sent, ) = address(tokenService).call{
-                    value: uint256(tokenQty)
-                }(
-                    abi.encodeWithSelector(
-                        IBaseHTS.transferHBAR.selector,
-                        uint256(tokenQty),
-                        payable(reciever)
-                    )
-                );
-                require(sent, errorMessage);
+            if (!_isContractRecievingTokens(reciever)) {
+                _transferHbars(tokenQty, reciever, errorMessage);
             }
         } else {
-            if (sender == address(this)) {
-                bool isSuccess = IERC20(token).transfer(
-                    reciever,
-                    uint(tokenQty)
-                );
-                require(isSuccess, errorMessage);
-            } else {
-                int256 response = tokenService.transferTokenPublic(
+            if (_isContractSendingTokens(sender)) {
+                _transferTokenFromContract(
                     token,
+                    tokenQty,
+                    reciever,
+                    errorMessage
+                );
+            } else {
+                _transferTokenFromSender(
+                    token,
+                    tokenQty,
                     sender,
                     reciever,
-                    tokenQty
+                    errorMessage
                 );
-                require(response == HederaResponseCodes.SUCCESS, errorMessage);
             }
         }
+    }
+
+    function _isContractSendingTokens(
+        address sender
+    ) private view returns (bool) {
+        return sender == address(this);
+    }
+
+    function _isContractRecievingTokens(
+        address reciever
+    ) private view returns (bool) {
+        return reciever == address(this);
+    }
+
+    function _checkIfContractHaveRequiredHBARBalance(
+        int256 tokenQty
+    ) private view {
+        require(
+            address(this).balance >= uint256(tokenQty),
+            "Contract does not have sufficient Hbars"
+        );
+    }
+
+    function _checkIfCallerSentCorrectHBARs(int256 tokenQty) private view {
+        require(msg.value >= uint256(tokenQty), "Please pass correct Hbars");
+    }
+
+    function _transferHbars(
+        int256 tokenQty,
+        address reciever,
+        string memory errorMessage
+    ) private {
+        (bool sent, ) = address(tokenService).call{value: uint256(tokenQty)}(
+            abi.encodeWithSelector(
+                IBaseHTS.transferHBAR.selector,
+                uint256(tokenQty),
+                payable(reciever)
+            )
+        );
+        require(sent, errorMessage);
+    }
+
+    function _transferTokenFromContract(
+        address token,
+        int256 tokenQty,
+        address reciever,
+        string memory errorMessage
+    ) private {
+        bool isSuccess = IERC20(token).transfer(reciever, uint(tokenQty));
+        require(isSuccess, errorMessage);
+    }
+
+    function _transferTokenFromSender(
+        address token,
+        int256 tokenQty,
+        address sender,
+        address reciever,
+        string memory errorMessage
+    ) private {
+        int256 response = tokenService.transferTokenPublic(
+            token,
+            sender,
+            reciever,
+            tokenQty
+        );
+        require(response == HederaResponseCodes.SUCCESS, errorMessage);
     }
 
     function _tokenQuantity(
@@ -438,5 +489,11 @@ contract Pair is IPair, Initializable {
             return int256(msg.value);
         }
         return quantity;
+    }
+
+    function _associateToken(address account, address token) private {
+        if (token != tokenService.hbarxAddress()) {
+            tokenService.associateTokenPublic(account, token);
+        }
     }
 }

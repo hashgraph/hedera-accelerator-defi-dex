@@ -105,6 +105,7 @@ contract BaseHTS is HederaTokenService, IBaseHTS {
         returns (int256 responseCode)
     {
         (bool sent, ) = toAccount.call{value: uint256(amount)}("");
-        return sent ? HederaResponseCodes.SUCCESS : HederaResponseCodes.FAIL_INVALID;
+        require(sent, "BaseHTS: transferHBAR fail.");
+        return HederaResponseCodes.SUCCESS;
     }
 }
