@@ -1,5 +1,6 @@
 import { BigNumber } from "bignumber.js";
 import {
+  Client,
   ContractExecuteTransaction,
   ContractFunctionParameters,
   ContractId,
@@ -22,11 +23,12 @@ const { treasureKey } = clientManagement.getTreasure();
 
 const adminClient = clientManagement.createClientAsAdmin();
 const { adminKey } = clientManagement.getAdmin();
-
-const treasurerClient = clientManagement.createClient();
 const htsServiceAddress = contractService.getContract(
   contractService.baseContractName
 ).address;
+const godHolder = contractService.getContract(
+  contractService.godHolderContract
+);
 
 export default class GovernorMethods {
   getCurrentImplementationFromProxy = async (proxyId: string) => {
@@ -41,6 +43,38 @@ export default class GovernorMethods {
     const impAddress = txRecord.contractFunctionResult!.getAddress(0);
     console.log(`- current implementation/logic address: ${impAddress}`);
     return impAddress;
+  };
+
+  canClaimGod = async (client: Client) => {
+    console.log(`canClaimGod`);
+    const args = new ContractFunctionParameters();
+    const txn = await new ContractExecuteTransaction()
+      .setContractId(godHolder.transparentProxyId!)
+      .setGas(9000000)
+      .setFunction("canUserClaimGodTokens", args)
+      .freezeWith(client);
+    const txnResponse = await txn.execute(client);
+    const txnRecord = await txnResponse.getRecord(client);
+    const txnResult = txnRecord.contractFunctionResult!.getBool(0);
+    console.log(`canClaimGod txn result: ${txnResult}`);
+    const txnReceipt = await txnResponse.getReceipt(client);
+    console.log(`canClaimGod txn status: ${txnReceipt.status}`);
+  };
+
+  revertGod = async (client: Client) => {
+    console.log(`revertGod`);
+    const args = new ContractFunctionParameters();
+    const txn = await new ContractExecuteTransaction()
+      .setContractId(godHolder.transparentProxyId!)
+      .setGas(9000000)
+      .setFunction("revertTokensForVoter", args)
+      .freezeWith(client);
+    const txnResponse = await txn.execute(client);
+    const txnRecord = await txnResponse.getRecord(client);
+    const txnResult = txnRecord.contractFunctionResult!.getUint256(0);
+    console.log(`revertGod txn result: ${txnResult}`);
+    const txnReceipt = await txnResponse.getReceipt(client);
+    console.log(`revertGod txn status: ${txnReceipt.status}`);
   };
 
   upgradeTo = async (proxyAddress: string, logicAddress: string) => {
@@ -90,7 +124,8 @@ export default class GovernorMethods {
   public vote = async (
     proposalId: BigNumber,
     voteId: number,
-    contractId: string | ContractId
+    contractId: string | ContractId,
+    client: Client
   ) => {
     console.log(`\nVote for proposal id ${proposalId} `);
     const contractFunctionParameters = new ContractFunctionParameters()
@@ -100,13 +135,12 @@ export default class GovernorMethods {
     const tx = await new ContractExecuteTransaction()
       .setContractId(contractId)
       .setFunction("castVote", contractFunctionParameters)
-      .setGas(900000)
-      .freezeWith(treasurerClient);
+      .setGas(9900000);
 
-    const executedTx = await tx.execute(treasurerClient);
+    const executedTx = await tx.execute(client);
 
     const response = await executedTx.getRecord(client);
-    const receipt = await executedTx.getReceipt(treasurerClient);
+    const receipt = await executedTx.getReceipt(client);
 
     const status = receipt.status;
 
@@ -151,7 +185,8 @@ export default class GovernorMethods {
       .addAddress(tokenId.toSolidityAddress()) // token that define the voting weight, to vote user should have % of this token.
       .addUint256(votingDelay)
       .addUint256(votingPeriod)
-      .addAddress(htsServiceAddress);
+      .addAddress(htsServiceAddress)
+      .addAddress(godHolder.transparentProxyAddress!);
 
     const tx = await new ContractExecuteTransaction()
       .setContractId(contractId)
@@ -161,7 +196,30 @@ export default class GovernorMethods {
 
     const receipt = await tx.getReceipt(client);
 
-    console.log(`Initialize contract with token done with status - ${receipt}`);
+    console.log(
+      `Initialize contract with token done with status - ${receipt.status}`
+    );
+  };
+
+  public initializeGodHolder = async () => {
+    const tokenId = TokenId.fromString(dex.GOD_TOKEN_ID);
+    console.log(`\nInitialize GodHolder contract with token  `);
+
+    let contractFunctionParameters = new ContractFunctionParameters()
+      .addAddress(htsServiceAddress)
+      .addAddress(tokenId.toSolidityAddress());
+
+    const tx = await new ContractExecuteTransaction()
+      .setContractId(godHolder.transparentProxyId!)
+      .setFunction("initialize", contractFunctionParameters)
+      .setGas(900000)
+      .execute(client);
+
+    const receipt = await tx.getReceipt(client);
+
+    console.log(
+      `Initialize GodHolder contract with token done with status - ${receipt.status}`
+    );
   };
 
   public voteSucceeded = async (

@@ -32,6 +32,10 @@ const contractId = contractService.getContractWithProxy(
   contractService.factoryContractName
 ).transparentProxyId!;
 
+const godHolderContractId = contractService.getContractWithProxy(
+  contractService.godHolderContract
+).transparentProxyId!;
+
 const setupFactory = async () => {
   console.log(`\nSetupFactory`);
   const adminId = AccountId.fromString(process.env.ADMIN_ID!);
@@ -109,6 +113,13 @@ async function main() {
     await createPair(contractId, tokenA, tokenGOD);
   } catch (error) {
     console.log(`Create pair failed for ${tokenA} and ${tokenGOD}`);
+    console.error(error);
+  }
+
+  try {
+    await governor.initializeGodHolder();
+  } catch (error) {
+    console.log(`Initialise GODHolder failed`);
     console.error(error);
   }
 

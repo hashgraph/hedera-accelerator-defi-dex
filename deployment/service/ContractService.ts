@@ -20,6 +20,7 @@ export class ContractService {
     this.governorTTContractName,
     this.governorUpgradeContract,
   ];
+  public godHolderContract = "godholder";
 
   private contractRecordFile = "./deployment/state/contracts.json";
   static DEV_CONTRACTS_PATH = "./deployment/state/contracts.json";
