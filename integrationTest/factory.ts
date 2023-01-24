@@ -155,16 +155,21 @@ const addLiquidity = async (
     .addAddress(treasureId.toSolidityAddress())
     .addAddress(token0.toSolidityAddress())
     .addAddress(token1.toSolidityAddress())
-    .addInt256(tokenAQty)
-    .addInt256(tokenBQty);
+    .addInt256(token0 == tokenHBARX ? new BigNumber(0) : tokenAQty)
+    .addInt256(token1 == tokenHBARX ? new BigNumber(0) : tokenBQty);
 
   const addLiquidityMutableTx = new ContractExecuteTransaction()
     .setContractId(contId)
     .setGas(9000000)
     .setFunction("addLiquidity", params);
-  if (token0 == tokenHBARX || token1 == tokenHBARX) {
-    addLiquidityMutableTx.setPayableAmount(new Hbar(2.3));
-  }
+  const hbar =
+    tokenA == tokenHBARX
+      ? new Hbar(2.1)
+      : tokenB == tokenHBARX
+      ? new Hbar(2.3)
+      : new Hbar(0);
+  addLiquidityMutableTx.setPayableAmount(hbar);
+
   const addLiquidityTx = await addLiquidityMutableTx
     .freezeWith(client)
     .sign(treasureKey);
