@@ -1,32 +1,120 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 import "./Pair.sol";
-import "./IPair.sol";
 import "./LPToken.sol";
 import "./ILPToken.sol";
 import "./common/IERC20.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
+import "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
+import "hardhat/console.sol";
 
 contract Factory is Initializable {
     event PairCreated(address indexed _pairAddress, string msg);
     event Initializing(address indexed _pairAddress, string msg);
 
-    address[] public allPairs;
-    mapping(address => mapping(address => IPair)) pairs;
-    IBaseHTS internal tokenService;
-    address private admin;
+    address private owner;
+    IBaseHTS private service;
 
-    function setUpFactory(
-        IBaseHTS _tokenService,
-        address _admin
-    ) public initializer {
-        tokenService = _tokenService;
-        admin = _admin;
+    address[] private pairs;
+    mapping(address => mapping(address => address)) private pairsMap;
+
+    UpgradeableBeacon private lpBeacon;
+    UpgradeableBeacon private pairBeacon;
+
+    function setUpFactory(IBaseHTS _service) public initializer {
+        service = _service;
+        owner = msg.sender;
     }
 
     function hbarxAddress() external returns (address) {
-        return tokenService.hbarxAddress();
+        return service.hbarxAddress();
+    }
+
+    function getPair(
+        address _tokenA,
+        address _tokenB
+    ) external view returns (address) {
+        (address token0, address token1) = sortTokens(_tokenA, _tokenB);
+        return pairsMap[token0][token1];
+    }
+
+    function getPairs() external view returns (address[] memory) {
+        return pairs;
+    }
+
+    function createPair(
+        address _tokenA,
+        address _tokenB,
+        address _treasury,
+        int256 _fee
+    ) external payable returns (address pair) {
+        (address _token0, address _token1) = sortTokens(_tokenA, _tokenB);
+        pair = pairsMap[_token0][_token1];
+        if (pair == address(0)) {
+            IPair iPair = _createPairContractInternally(
+                _token0,
+                _token1,
+                _treasury,
+                _fee
+            );
+            pair = address(iPair);
+            pairsMap[_token0][_token1] = pair;
+            pairs.push(pair);
+            emit PairCreated(pair, "New Pair Created");
+        }
+    }
+
+    // -------------------------------------------------------------------------------------------------//
+    // --------------------------------- OWNER BLOCK STARTED -----------------------------------------//
+    // -------------------------------------------------------------------------------------------------//
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Factory: auth failed");
+        _;
+    }
+
+    function getPairImplementation() external view onlyOwner returns (address) {
+        return pairBeacon.implementation();
+    }
+
+    function getLpTokenImplementation()
+        external
+        view
+        onlyOwner
+        returns (address)
+    {
+        return lpBeacon.implementation();
+    }
+
+    function upgradePairImplementation() external onlyOwner {
+        pairBeacon.upgradeTo(address(new Pair()));
+    }
+
+    function upgradeLpTokenImplementation() external onlyOwner {
+        lpBeacon.upgradeTo(address(new LPToken()));
+    }
+
+    // -------------------------------------------------------------------------------------------------//
+    // ----------------------------------- OWNER BLOCK ENDED -----------------------------------------//
+    // -------------------------------------------------------------------------------------------------//
+
+    // -------------------------------------------------------------------------------------------------//
+    // --------------------------------- PRIVATE BLOCK STARTED -----------------------------------------//
+    // -------------------------------------------------------------------------------------------------//
+
+    modifier pairBeaconInitOnce() {
+        if (address(pairBeacon) == address(0)) {
+            pairBeacon = new UpgradeableBeacon(address(new Pair()));
+        }
+        _;
+    }
+
+    modifier lpBeaconInitOnce() {
+        if (address(lpBeacon) == address(0)) {
+            lpBeacon = new UpgradeableBeacon(address(new LPToken()));
+        }
+        _;
     }
 
     function sortTokens(
@@ -40,108 +128,6 @@ contract Factory is Initializable {
         require(token0 != address(0), "ZERO_ADDRESS");
     }
 
-    function getPair(
-        address _tokenA,
-        address _tokenB
-    ) public view returns (address) {
-        (address token0, address token1) = sortTokens(_tokenA, _tokenB);
-        IPair pair = pairs[token0][token1];
-        return address(pair);
-    }
-
-    function getPairs() public view returns (address[] memory) {
-        return allPairs;
-    }
-
-    function createPair(
-        address _tokenA,
-        address _tokenB,
-        address _treasury,
-        int256 _fee
-    ) external payable returns (address) {
-        (address token0, address token1) = sortTokens(_tokenA, _tokenB);
-        IPair pair = pairs[token0][token1];
-        if (address(pair) == address(0)) {
-            address deployedPair = deployContract(
-                token0,
-                token1,
-                _treasury,
-                _fee
-            );
-            IPair newPair = IPair(deployedPair);
-            pairs[token0][token1] = newPair;
-            allPairs.push(address(newPair));
-            emit PairCreated(deployedPair, "New Pair Created");
-            return deployedPair;
-        }
-        return address(pair);
-    }
-
-    function deployContract(
-        address _tokenA,
-        address _tokenB,
-        address _treasury,
-        int256 _fee
-    ) internal returns (address) {
-        bytes32 deploymentSalt = keccak256(abi.encodePacked(_tokenA, _tokenB));
-        address pairLogic = address(new Pair{salt: deploymentSalt}());
-        address pairProxy = deployTransparentProxyContract(
-            deploymentSalt,
-            pairLogic
-        );
-        address lpTokenDeployed = deployLPContract(
-            deploymentSalt,
-            _tokenA,
-            _tokenB
-        );
-        ILPToken lp = ILPToken(lpTokenDeployed);
-        IPair newPair = IPair(pairProxy);
-        newPair.initialize(tokenService, lp, _tokenA, _tokenB, _treasury, _fee);
-        return pairProxy;
-    }
-
-    function deployTransparentProxyContract(
-        bytes32 deploymentSalt,
-        address logic
-    ) internal returns (address) {
-        bytes memory _data;
-        address deployedContract = address(
-            new TransparentUpgradeableProxy{salt: deploymentSalt}(
-                logic,
-                admin,
-                _data
-            )
-        );
-        return deployedContract;
-    }
-
-    function deployLPContract(
-        bytes32 deploymentSalt,
-        address _tokenA,
-        address _tokenB
-    ) internal returns (address) {
-        string memory lpTokenSymbol = getLPTokenSymbol(_tokenA, _tokenB);
-        string memory lpTokenName = string.concat(
-            lpTokenSymbol,
-            " LP token name"
-        );
-        address lpLogic = address(new LPToken{salt: deploymentSalt}());
-        address lpProxy = deployTransparentProxyContract(
-            deploymentSalt,
-            lpLogic
-        );
-        (bool success, ) = lpProxy.call{value: msg.value}(
-            abi.encodeWithSelector(
-                ILPToken.initialize.selector,
-                tokenService,
-                lpTokenName,
-                lpTokenSymbol
-            )
-        );
-        require(success, "LPToken Initialization fail!");
-        return lpProxy;
-    }
-
     function getLPTokenSymbol(
         address _tokenA,
         address _tokenB
@@ -151,4 +137,46 @@ contract Factory is Initializable {
         string memory tokenASymbolWithHypen = string.concat(tokenASymbol, "-");
         return string.concat(tokenASymbolWithHypen, tokenBSymbol);
     }
+
+    function _createPairContractInternally(
+        address _tokenA,
+        address _tokenB,
+        address _treasury,
+        int256 _fee
+    ) private pairBeaconInitOnce returns (IPair pair) {
+        ILPToken _lpContract = _createLpContractInternally(_tokenA, _tokenB);
+
+        pair = IPair(_createProxy(pairBeacon));
+        pair.initialize(
+            service,
+            _lpContract,
+            _tokenA,
+            _tokenB,
+            _treasury,
+            _fee
+        );
+    }
+
+    function _createLpContractInternally(
+        address _tokenA,
+        address _tokenB
+    ) private lpBeaconInitOnce returns (ILPToken lp) {
+        string memory lpTokenSymbol = getLPTokenSymbol(_tokenA, _tokenB);
+        string memory lpTokenName = string.concat(
+            lpTokenSymbol,
+            " LP token name"
+        );
+
+        lp = ILPToken(_createProxy(lpBeacon));
+        lp.initialize{value: msg.value}(service, lpTokenName, lpTokenSymbol);
+    }
+
+    function _createProxy(UpgradeableBeacon beacon) private returns (address) {
+        bytes memory _data;
+        return address(new BeaconProxy(address(beacon), _data));
+    }
+
+    // ------------------------------------------------------------------------------------------------- //
+    // ------------------------------------ PRIVATE BLOCK ENDED ---------------------------------------- //
+    // ------------------------------------------------------------------------------------------------- //
 }
