@@ -358,7 +358,7 @@ export class FactorySteps {
     tokenAQty = await pair.getInGivenOut(pairContractId, tokenHBARQty, client);
   }
 
-  @then(/Expected tokenA quantity should be (\d*)/, undefined, 30000)
+  @then(/Expected quantity of tokenA should be (\d*)/, undefined, 30000)
   public async verifyTokenAQty(expectedTokenAQty: string) {
     let precision = await pair.getPrecisionValue(pairContractId, client);
     let withPrecision = pair.withPrecision(1, precision);

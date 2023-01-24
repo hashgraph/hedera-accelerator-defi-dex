@@ -49,7 +49,7 @@ Feature: Factory contract e2e test
      Scenario: Verify tokenA quantity for the given HBAR quantity
         Given tokenA and HBAR are present in pool
         When User gives 10 units of HBAR to the pool
-        Then Expected tokenA quantity should be 42
+        Then Expected quantity of tokenA should be 42
 
     Scenario: Verify slippage out value for given in tokenA quantity
         Given tokenA and HBAR are present in pool
