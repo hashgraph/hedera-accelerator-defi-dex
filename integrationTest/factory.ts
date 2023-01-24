@@ -6,6 +6,8 @@ import {
   AccountBalanceQuery,
   Hbar,
   AccountId,
+  ContractId,
+  ContractFunctionResult,
 } from "@hashgraph/sdk";
 
 import { Helper } from "../utils/Helper";
@@ -46,10 +48,9 @@ const withPrecision = (value: number): BigNumber => {
 
 const setupFactory = async () => {
   console.log(`\nSetupFactory`);
-  const adminId = AccountId.fromString(process.env.ADMIN_ID!);
-  let contractFunctionParameters = new ContractFunctionParameters()
-    .addAddress(baseContract.address)
-    .addAddress(adminId.toSolidityAddress());
+  let contractFunctionParameters = new ContractFunctionParameters().addAddress(
+    baseContract.address
+  );
   const contractTx = await new ContractExecuteTransaction()
     .setContractId(contractId)
     .setFunction("setUpFactory", contractFunctionParameters)
@@ -250,6 +251,8 @@ const getTreasureBalance = async (tokens: Array<TokenId>) => {
 };
 
 async function main() {
+  // await updatePairLogic();
+  // await updateLpLogic();
   try {
     await setupFactory();
   } catch (error) {
@@ -266,22 +269,57 @@ async function testForSinglePair(
   token0: TokenId,
   token1: TokenId
 ) {
-  await createPair(contractId, token0, token1);
-  await getAllPairs(contractId);
+  await getCurrentImpl("getPairImplementation");
+  await getCurrentImpl("getLpTokenImplementation");
+  // await createPair(contractId, token0, token1);
+  // await getAllPairs(contractId);
   const pairAddress = await getPair(contractId, token0, token1);
-
   const response = await httpRequest(pairAddress, undefined);
   const pairContractId = response.contract_id;
-  console.log(`contractId: ${pairContractId}`);
-  await getTreasureBalance([token0, token1]);
-  await getTokenPairAddress(pairContractId);
+  // console.log(`contractId: ${pairContractId}`);
+  // await getTreasureBalance([token0, token1]);
+  // await getTokenPairAddress(pairContractId);
   await addLiquidity(pairContractId, token0, token1);
-  await getTreasureBalance([token0, token1]);
-  await removeLiquidity(pairContractId);
-  await swapToken(pairContractId, token0);
-  await getTreasureBalance([token0, token1]);
-  await swapToken(pairContractId, token1);
-  await getTreasureBalance([token0, token1]);
+  // await getTreasureBalance([token0, token1]);
+  // await removeLiquidity(pairContractId);
+  // await swapToken(pairContractId, token0);
+  // await getTreasureBalance([token0, token1]);
+  // await swapToken(pairContractId, token1);
+  // await getTreasureBalance([token0, token1]);
+}
+
+async function getCurrentImpl(funName: string) {
+  const conId = ContractId.fromString(contractId);
+  const result = await executeTxn(conId, funName);
+  console.log(`- Factory#${funName}() called:`, result.getAddress(0));
+}
+
+async function updatePairLogic() {
+  const conId = ContractId.fromString(contractId);
+  await getCurrentImpl("getPairImplementation");
+  await executeTxn(conId, "upgradePairImplementation");
+  await getCurrentImpl("getPairImplementation");
+}
+async function updateLpLogic() {
+  const conId = ContractId.fromString(contractId);
+  await getCurrentImpl("getLpTokenImplementation");
+  await executeTxn(conId, "upgradeLpTokenImplementation");
+  await getCurrentImpl("getLpTokenImplementation");
+}
+
+async function executeTxn(
+  contractId: ContractId,
+  functionName: string,
+  functionArgs: ContractFunctionParameters = new ContractFunctionParameters()
+): Promise<ContractFunctionResult> {
+  const txn = new ContractExecuteTransaction()
+    .setContractId(contractId)
+    .setGas(9000000)
+    .setFunction(functionName, functionArgs);
+
+  const txnResponse = await txn.execute(client);
+  const txnRecord = await txnResponse.getRecord(client);
+  return txnRecord.contractFunctionResult!;
 }
 
 main()

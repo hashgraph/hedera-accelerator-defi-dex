@@ -7,7 +7,6 @@ import "./common/IERC20.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
-import "hardhat/console.sol";
 
 contract Factory is Initializable {
     event PairCreated(address indexed _pairAddress, string msg);
