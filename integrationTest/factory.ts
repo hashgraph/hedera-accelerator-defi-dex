@@ -163,9 +163,9 @@ const addLiquidity = async (
     .setGas(9000000)
     .setFunction("addLiquidity", params);
   const hbar =
-    tokenA == tokenHBARX
+    token0 == tokenHBARX
       ? new Hbar(2.1)
-      : tokenB == tokenHBARX
+      : token1 == tokenHBARX
       ? new Hbar(2.3)
       : new Hbar(0);
   addLiquidityMutableTx.setPayableAmount(hbar);

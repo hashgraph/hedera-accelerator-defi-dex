@@ -300,5 +300,50 @@
         "hash": "1188c3f1f18e66631e5e29a2aa745fd6",
         "transparentProxyAddress": "0x0000000000000000000000000000000002f1c7c4",
         "transparentProxyId": "0.0.49399748"
+    },
+    {
+        "name": "lptoken",
+        "id": "0.0.49401984",
+        "address": "0x0000000000000000000000000000000002f1d080",
+        "timestamp": "2023-01-24T11:23:28.786Z",
+        "hash": "74f691d2a187591ac1f55178220f8ea9",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002f1d089",
+        "transparentProxyId": "0.0.49401993"
+    },
+    {
+        "name": "lptoken",
+        "id": "0.0.49402009",
+        "address": "0x0000000000000000000000000000000002f1d099",
+        "timestamp": "2023-01-24T11:24:32.586Z",
+        "hash": "74f691d2a187591ac1f55178220f8ea9",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002f1d0a1",
+        "transparentProxyId": "0.0.49402017"
+    },
+    {
+        "name": "pair",
+        "id": "0.0.49402127",
+        "address": "0x0000000000000000000000000000000002f1d10f",
+        "timestamp": "2023-01-24T11:28:58.906Z",
+        "hash": "f911c2df74c59dcc2dc0e32b9858a1a6",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002f1d116",
+        "transparentProxyId": "0.0.49402134"
+    },
+    {
+        "name": "pair",
+        "id": "0.0.49402150",
+        "address": "0x0000000000000000000000000000000002f1d126",
+        "timestamp": "2023-01-24T11:29:52.692Z",
+        "hash": "f911c2df74c59dcc2dc0e32b9858a1a6",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002f1d135",
+        "transparentProxyId": "0.0.49402165"
+    },
+    {
+        "name": "factory",
+        "id": "0.0.49402270",
+        "address": "0x0000000000000000000000000000000002f1d19e",
+        "timestamp": "2023-01-24T11:32:54.776Z",
+        "hash": "ba0d40dc798d6227cc677cf7f32d633e",
+        "transparentProxyAddress": "0x0000000000000000000000000000000002f1d1b7",
+        "transparentProxyId": "0.0.49402295"
     }
 ]
