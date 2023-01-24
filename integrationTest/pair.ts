@@ -12,6 +12,7 @@ import { EventConsumer } from "../utils/EventConsumer";
 import { ContractService } from "../deployment/service/ContractService";
 import { DeployedContract } from "../deployment/model/contract";
 import ClientManagement from "../utils/ClientManagement";
+import dex from "../deployment/model/dex";
 
 const clientManagement = new ClientManagement();
 const contractService = new ContractService();
@@ -143,10 +144,16 @@ const addLiquidity = async (contId: string) => {
         .addAddress(treasureId.toSolidityAddress())
         .addAddress(tokenA.toSolidityAddress())
         .addAddress(tokenB.toSolidityAddress())
-        .addInt256(tokenAQty)
-        .addInt256(tokenBQty)
+        .addInt256(tokenA == tokenHBARX ? new BigNumber(0) : tokenAQty)
+        .addInt256(tokenB == tokenHBARX ? new BigNumber(0) : tokenBQty)
     )
-    .setPayableAmount(new Hbar(10))
+    .setPayableAmount(
+      tokenA == tokenHBARX
+        ? new Hbar(2.1)
+        : tokenB == tokenHBARX
+        ? new Hbar(2.3)
+        : new Hbar(0)
+    )
     .freezeWith(client)
     .sign(treasureKey);
   const addLiquidityTxRes = await addLiquidityTx.execute(client);
@@ -187,9 +194,9 @@ const swapTokenA = async (contId: string) => {
       new ContractFunctionParameters()
         .addAddress(treasureId.toSolidityAddress())
         .addAddress(tokenA.toSolidityAddress())
-        .addInt256(tokenAQty)
+        .addInt256(tokenA == tokenHBARX ? new BigNumber(0) : tokenAQty)
     )
-    .setPayableAmount(new Hbar(0.01))
+    .setPayableAmount(tokenA == tokenHBARX ? new Hbar(0.01) : new Hbar(0))
     .freezeWith(client)
     .sign(treasureKey);
   const swapTokenTx = await swapToken.execute(client);
