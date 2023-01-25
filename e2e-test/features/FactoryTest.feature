@@ -29,19 +29,41 @@ Feature: Factory contract e2e test
 
      Scenario: Verify tokenA and HBAR balance before and after adding liquidity
         When User create pair of tokenA and HBAR        
-        When User adds 5 units of first token and 9 units of HBAR token        
-        Then first token and HBAR balances in the pool are 5 units and 9 units respectively
+        When User adds 90 units of first token and 30 units of HBAR token        
+        Then first token and HBAR balances in the pool are 90 units and 30 units respectively
 
      Scenario: Verify token balance after removing liquidity for HBAR and some other token
         Given User fetches the count of lptokens from pool
         When User gives 1 units of lptoken to pool
-        Then User verifies 4 units of tokenA and 8 units of HBAR are left in pool
+        Then User verifies 88 units of tokenA and 29 units of HBAR are left in pool
     
     Scenario: Verify user is able to perform swap with HBAR and other token
         Given tokenA and HBAR are present in pool
         When User update the slippage value to 1 
         When User make swap of 1 unit of tokenA with HBAR
-        Then tokenA quantity is 4 and HBAR quantity is 9 in pool
+        Then tokenA quantity is 85 and HBAR quantity is 30 in pool
     
     Scenario: Verify user can not create pair with same token
         Then User gets message "CONTRACT_REVERT_EXECUTED" on creating pair with two HBAR tokens
+    
+     Scenario: Verify tokenA quantity for the given HBAR quantity
+        Given tokenA and HBAR are present in pool
+        When User gives 10 units of HBAR to the pool
+        Then Expected quantity of tokenA should be 42
+
+    Scenario: Verify slippage out value for given in tokenA quantity
+        Given tokenA and HBAR are present in pool
+        When User gives 2 units of tokenA to calculate slippage out
+        Then Slippage out value should be 2290466
+
+    Scenario: Verify slippage in value for given out HBAR quantity
+        Given tokenA and HBAR are present in pool
+        When User gives 10 units of HBAR to calculate slippage in
+        Then Slippage in value should be 49025256    
+
+#TO-DO - Add scenario when functionalty is available to get spot price for give
+    # Scenario: Verify spot price for HBAR
+    
+    
+
+   

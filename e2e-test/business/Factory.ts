@@ -29,7 +29,7 @@ export default class Factory {
     const contractTx = await new ContractExecuteTransaction()
       .setContractId(contractId)
       .setFunction("setUpFactory", contractFunctionParameters)
-      .setGas(9000000)
+      .setGas(9900000)
       .execute(client);
     const receipt = await contractTx.getReceipt(client);
     const response = await contractTx.getRecord(client);
