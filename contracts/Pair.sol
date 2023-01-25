@@ -385,7 +385,7 @@ contract Pair is IPair, Initializable {
         int256 tokenQty,
         string memory errorMessage
     ) private {
-        if (token == tokenService.hbarxAddress()) {
+        if (_tokenIsHBARX(token)) {
             if (_isContractSendingTokens(sender)) {
                 _checkIfContractHaveRequiredHBARBalance(tokenQty);
             } else {
@@ -480,7 +480,7 @@ contract Pair is IPair, Initializable {
         address token,
         int256 quantity
     ) private returns (int256) {
-        if (token == tokenService.hbarxAddress()) {
+        if (_tokenIsHBARX(token)) {
             require(quantity == 0, "HBARs should be passed as payble");
             return int256(msg.value);
         }
@@ -488,8 +488,12 @@ contract Pair is IPair, Initializable {
     }
 
     function _associateToken(address account, address token) private {
-        if (token != tokenService.hbarxAddress()) {
+        if (_tokenIsHBARX(token)) {
             tokenService.associateTokenPublic(account, token);
         }
+    }
+
+    function _tokenIsHBARX(address token) private returns(bool) {
+        return token == tokenService.hbarxAddress();
     }
 }
