@@ -12,21 +12,25 @@ interface IBaseHTS {
         int256 amount
     ) external returns (int256 responseCode);
 
-    function associateTokenPublic(address account, address token)
-        external
-        returns (int256 responseCode);
+    function associateTokenPublic(
+        address account,
+        address token
+    ) external returns (int256 responseCode);
 
-    function associateTokensPublic(address account, address[] memory tokens)
-        external
-        returns (int256 responseCode);
+    function associateTokensPublic(
+        address account,
+        address[] memory tokens
+    ) external returns (int256 responseCode);
 
-    function mintTokenPublic(address token, int256 amount)
-        external
-        returns (int256 responseCode, int256 newTotalSupply);
+    function mintTokenPublic(
+        address token,
+        int256 amount
+    ) external returns (int256 responseCode, int256 newTotalSupply);
 
-    function burnTokenPublic(address token, int256 amount)
-        external
-        returns (int256 responseCode, int256 newTotalSupply);
+    function burnTokenPublic(
+        address token,
+        int256 amount
+    ) external returns (int256 responseCode, int256 newTotalSupply);
 
     function createFungibleTokenPublic(
         IHederaTokenService.HederaToken memory token,
@@ -34,6 +38,9 @@ interface IBaseHTS {
         uint256 decimals
     ) external payable returns (int256 responseCode, address tokenAddress);
 
-    function hbarxAddress() external returns(address);
-    function transferHBAR(int256 amount, address payable toAccount) external payable returns (int256 responseCode);
+    function hbarxAddress() external returns (address);
+
+    function transferHBAR(
+        address payable toAccount
+    ) external payable returns (bool);
 }
