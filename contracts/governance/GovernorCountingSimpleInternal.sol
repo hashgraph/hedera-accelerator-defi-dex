@@ -42,18 +42,21 @@ abstract contract GovernorCountingSimpleInternal is
     IGODHolder godHolder;
 
     mapping(uint256 => address[]) proposalVoters;
+    uint256 quorumThreshold;
 
     function initialize(
         IERC20 _token,
         uint256 _votingDelayValue,
         uint256 _votingPeriodValue,
         IBaseHTS _tokenService,
-        IGODHolder _godHolder
+        IGODHolder _godHolder,
+        uint256 _quorumThreshold
     ) public initializer {
         tokenService = _tokenService;
         godHolder = _godHolder;
         token = _token;
         precision = 100000000;
+        quorumThreshold = _quorumThreshold == 0 ? 5 : _quorumThreshold;
         __Governor_init("HederaTokenCreateGovernor");
         __GovernorSettings_init(
             _votingDelayValue /* 1 block */,
@@ -72,10 +75,7 @@ abstract contract GovernorCountingSimpleInternal is
         if (balance == 0) {
             balance = token.balanceOf(account);
         }
-        uint256 share = (balance * precision) /
-            token.totalSupply();
-        uint256 percentageShare = share / (precision / 100);
-        return percentageShare;
+        return balance;
     }
 
     function _createProposal(
@@ -259,6 +259,12 @@ abstract contract GovernorCountingSimpleInternal is
         address[] memory voters = proposalVoters[proposal];
         godHolder.removeActiveProposals(voters, proposal);
         delete (proposalVoters[proposal]);
+    }
+
+    function quorum(
+        uint256
+    ) public view override(IGovernorUpgradeable) returns (uint256) {
+        return quorumThreshold;
     }
 
     function mockFunctionCall()
