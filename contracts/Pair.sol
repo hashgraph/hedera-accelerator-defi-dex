@@ -488,7 +488,7 @@ contract Pair is IPair, Initializable {
     }
 
     function _associateToken(address account, address token) private {
-        if (_tokenIsHBARX(token)) {
+        if (!_tokenIsHBARX(token)) {
             tokenService.associateTokenPublic(account, token);
         }
     }
