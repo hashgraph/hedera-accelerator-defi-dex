@@ -444,12 +444,8 @@ contract Pair is IPair, Initializable {
         address reciever,
         string memory errorMessage
     ) private {
-        (bool sent, ) = address(tokenService).call{value: uint256(tokenQty)}(
-            abi.encodeWithSelector(
-                IBaseHTS.transferHBAR.selector,
-                uint256(tokenQty),
-                payable(reciever)
-            )
+        bool sent = tokenService.transferHBAR{value: uint256(tokenQty)}(
+            payable(reciever)
         );
         require(sent, errorMessage);
     }

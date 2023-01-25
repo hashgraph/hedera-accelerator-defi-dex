@@ -92,11 +92,9 @@ contract BaseHTS is HederaTokenService, IBaseHTS {
     }
 
     function transferHBAR(
-        int256 amount,
         address payable toAccount
-    ) external payable override returns (int256 responseCode) {
-        (bool sent, ) = toAccount.call{value: uint256(amount)}("");
-        require(sent, "BaseHTS: transferHBAR fail.");
-        return HederaResponseCodes.SUCCESS;
+    ) external payable override returns (bool) {
+        (bool sent, ) = toAccount.call{value: uint256(msg.value)}("");
+        return sent;
     }
 }

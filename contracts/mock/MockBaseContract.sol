@@ -101,9 +101,8 @@ contract MockBaseHTS is IBaseHTS {
     }
 
     function transferHBAR(
-        int256,
         address payable
-    ) external payable override returns (int256 responseCode) {
-        return getResponseCode();
+    ) external payable override returns (bool) {
+        return getResponseCode() == int(22) ? true : false;
     }
 }
