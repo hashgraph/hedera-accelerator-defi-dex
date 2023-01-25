@@ -35,12 +35,6 @@ contract GovernorUpgrade is GovernorCountingSimpleInternal {
         return proposalId;
     }
 
-    function quorum(
-        uint256
-    ) public pure override(IGovernorUpgradeable) returns (uint256) {
-        return 1;
-    }
-
     function getContractAddresses(
         uint256 proposalId
     ) public view returns (address, address) {

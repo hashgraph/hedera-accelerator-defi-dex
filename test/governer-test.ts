@@ -10,6 +10,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 
 describe("Governor Tests", function () {
+  const defaultQuorumThresholdValue = 5;
   const zeroAddress = "0x1111111000000000000000000000000000000000";
   const oneAddress = "0x1111111000000000000000000000000000000001";
   const precision = 100000000;
@@ -32,6 +33,7 @@ describe("Governor Tests", function () {
         votingPeriod,
         zeroAddress,
         zeroAddress,
+        defaultQuorumThresholdValue,
       ];
       const instance = await upgrades.deployProxy(Governor, args);
       await instance.deployed();
@@ -47,6 +49,7 @@ describe("Governor Tests", function () {
         votingPeriod,
         zeroAddress,
         zeroAddress,
+        defaultQuorumThresholdValue,
       ];
       const instance = await upgrades.deployProxy(Governor, args);
       await instance.deployed();
@@ -88,6 +91,7 @@ describe("Governor Tests", function () {
       votingPeriod,
       mockBaseHTS.address,
       godHolder.address,
+      defaultQuorumThresholdValue,
     ];
     const instance = await upgrades.deployProxy(Governor, args);
 
@@ -133,7 +137,7 @@ describe("Governor Tests", function () {
   }
 
   describe("Governor functionality", async () => {
-    it("When user has 20% of token share then votes weight should be 20", async function () {
+    it("When user has 20 units of token then votes weight should be 20", async function () {
       const { instance, tokenCont, signers } = await loadFixture(deployFixture);
       await tokenCont.setTotal(100);
       await tokenCont.setUserBalance(signers[0].address, 20);
@@ -143,7 +147,7 @@ describe("Governor Tests", function () {
       expect(votes).to.be.equals(20);
     });
 
-    it("When user has 30% of token share then votes weight should be 30", async function () {
+    it("When user has 30 units of token then votes weight should be 30", async function () {
       const { instance, tokenCont, signers } = await loadFixture(deployFixture);
       await tokenCont.setTotal(100);
       await tokenCont.setUserBalance(signers[1].address, 30);
@@ -287,6 +291,179 @@ describe("Governor Tests", function () {
       expect(tokenAddress).to.not.be.equals(zeroAddress);
     });
 
+    it("When proposal created and user voted against then quorum should be reached ", async function () {
+      const { instance, tokenCont, signers, godHolder } = await loadFixture(
+        deployFixture
+      );
+
+      await verifyAccountBalance(tokenCont, signers[0].address, total * 0.2);
+      const proposalIdResponse = await createProposal(instance, signers[0]);
+      await verifyAccountBalance(
+        tokenCont,
+        signers[0].address,
+        twentyPercent - 1 * precision
+      );
+
+      const record = await proposalIdResponse.wait();
+      const proposalId = record.events[0].args.proposalId.toString();
+
+      const delay = await instance.votingDelay();
+      expect(delay).to.be.equals(0);
+      const period = await instance.votingPeriod();
+      expect(period).to.be.equals(12);
+      const threshold = await instance.proposalThreshold();
+      expect(threshold).to.be.equals(0);
+      const quorumReached = await instance.quorumReached(proposalId);
+      expect(quorumReached).to.be.equals(false);
+      const voteSucceeded = await instance.voteSucceeded(proposalId);
+      expect(voteSucceeded).to.be.equals(false);
+
+      await instance.castVote(proposalId, 2);
+
+      const quorumReached1 = await instance.quorumReached(proposalId);
+      expect(quorumReached1).to.be.equals(true);
+    });
+
+    it("When proposal created and user voted for with vote share less than 5 then quorum should not be reached ", async function () {
+      const { instance, tokenCont, signers, godHolder } = await loadFixture(
+        deployFixture
+      );
+
+      await verifyAccountBalance(tokenCont, signers[0].address, total * 0.2);
+      const proposalIdResponse = await createProposal(instance, signers[0]);
+      await verifyAccountBalance(
+        tokenCont,
+        signers[0].address,
+        twentyPercent - 1 * precision
+      );
+
+      const record = await proposalIdResponse.wait();
+      const proposalId = record.events[0].args.proposalId.toString();
+
+      const delay = await instance.votingDelay();
+      expect(delay).to.be.equals(0);
+      const period = await instance.votingPeriod();
+      expect(period).to.be.equals(12);
+      const threshold = await instance.proposalThreshold();
+      expect(threshold).to.be.equals(0);
+      const quorumReached = await instance.quorumReached(proposalId);
+      expect(quorumReached).to.be.equals(false);
+      const voteSucceeded = await instance.voteSucceeded(proposalId);
+      expect(voteSucceeded).to.be.equals(false);
+      const balanceLessThanRequiredQuorum = defaultQuorumThresholdValue - 1;
+      await tokenCont.setUserBalance(
+        signers[1].address,
+        balanceLessThanRequiredQuorum
+      );
+      await verifyAccountBalance(
+        tokenCont,
+        signers[1].address,
+        balanceLessThanRequiredQuorum
+      );
+      await instance.connect(signers[1]).castVote(proposalId, 1);
+
+      const quorumReached1 = await instance.quorumReached(proposalId);
+      expect(quorumReached1).to.be.equals(false);
+    });
+
+    it("When proposal created and user voted against then votes should not be succeeded ", async function () {
+      const { instance, tokenCont, signers, godHolder } = await loadFixture(
+        deployFixture
+      );
+
+      await verifyAccountBalance(tokenCont, signers[0].address, total * 0.2);
+      const proposalIdResponse = await createProposal(instance, signers[0]);
+      await verifyAccountBalance(
+        tokenCont,
+        signers[0].address,
+        twentyPercent - 1 * precision
+      );
+
+      const record = await proposalIdResponse.wait();
+      const proposalId = record.events[0].args.proposalId.toString();
+
+      const delay = await instance.votingDelay();
+      expect(delay).to.be.equals(0);
+      const period = await instance.votingPeriod();
+      expect(period).to.be.equals(12);
+      const threshold = await instance.proposalThreshold();
+      expect(threshold).to.be.equals(0);
+      const quorumReached = await instance.quorumReached(proposalId);
+      expect(quorumReached).to.be.equals(false);
+      const voteSucceeded = await instance.voteSucceeded(proposalId);
+      expect(voteSucceeded).to.be.equals(false);
+
+      await instance.castVote(proposalId, 2);
+
+      const voteSucceeded1 = await instance.voteSucceeded(proposalId);
+      expect(voteSucceeded1).to.be.equals(false);
+    });
+
+    it("When proposal created and user opted abstain then quorum should not be reached ", async function () {
+      const { instance, tokenCont, signers, godHolder } = await loadFixture(
+        deployFixture
+      );
+
+      await verifyAccountBalance(tokenCont, signers[0].address, total * 0.2);
+      const proposalIdResponse = await createProposal(instance, signers[0]);
+      await verifyAccountBalance(
+        tokenCont,
+        signers[0].address,
+        twentyPercent - 1 * precision
+      );
+
+      const record = await proposalIdResponse.wait();
+      const proposalId = record.events[0].args.proposalId.toString();
+
+      const delay = await instance.votingDelay();
+      expect(delay).to.be.equals(0);
+      const period = await instance.votingPeriod();
+      expect(period).to.be.equals(12);
+      const threshold = await instance.proposalThreshold();
+      expect(threshold).to.be.equals(0);
+      const quorumReached = await instance.quorumReached(proposalId);
+      expect(quorumReached).to.be.equals(false);
+      const voteSucceeded = await instance.voteSucceeded(proposalId);
+      expect(voteSucceeded).to.be.equals(false);
+
+      await instance.castVote(proposalId, 0); //Against vote does reach quorum
+      const quorumReached1 = await instance.quorumReached(proposalId);
+      expect(quorumReached1).to.be.equals(false);
+    });
+
+    it("When proposal created and user opted abstain then vote should not be succeeded ", async function () {
+      const { instance, tokenCont, signers, godHolder } = await loadFixture(
+        deployFixture
+      );
+
+      await verifyAccountBalance(tokenCont, signers[0].address, total * 0.2);
+      const proposalIdResponse = await createProposal(instance, signers[0]);
+      await verifyAccountBalance(
+        tokenCont,
+        signers[0].address,
+        twentyPercent - 1 * precision
+      );
+
+      const record = await proposalIdResponse.wait();
+      const proposalId = record.events[0].args.proposalId.toString();
+
+      const delay = await instance.votingDelay();
+      expect(delay).to.be.equals(0);
+      const period = await instance.votingPeriod();
+      expect(period).to.be.equals(12);
+      const threshold = await instance.proposalThreshold();
+      expect(threshold).to.be.equals(0);
+      const quorumReached = await instance.quorumReached(proposalId);
+      expect(quorumReached).to.be.equals(false);
+      const voteSucceeded = await instance.voteSucceeded(proposalId);
+      expect(voteSucceeded).to.be.equals(false);
+
+      await instance.castVote(proposalId, 0);
+
+      const voteSucceeded1 = await instance.voteSucceeded(proposalId);
+      expect(voteSucceeded1).to.be.equals(false);
+    });
+
     it("Verify TextProposal creation to Execute flow ", async function () {
       const { textGovernorInstance, tokenCont, signers, godHolder } =
         await loadFixture(deployFixture);
@@ -417,7 +594,8 @@ describe("Governor Tests", function () {
           0,
           10,
           zeroAddress,
-          zeroAddress
+          zeroAddress,
+          defaultQuorumThresholdValue
         )
       ).to.revertedWith("Initializable: contract is already initialized");
     });
