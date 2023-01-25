@@ -155,16 +155,21 @@ const addLiquidity = async (
     .addAddress(treasureId.toSolidityAddress())
     .addAddress(token0.toSolidityAddress())
     .addAddress(token1.toSolidityAddress())
-    .addInt256(tokenAQty)
-    .addInt256(tokenBQty);
+    .addInt256(token0 == tokenHBARX ? new BigNumber(0) : tokenAQty)
+    .addInt256(token1 == tokenHBARX ? new BigNumber(0) : tokenBQty);
 
   const addLiquidityMutableTx = new ContractExecuteTransaction()
     .setContractId(contId)
     .setGas(9000000)
     .setFunction("addLiquidity", params);
-  if (token0 == tokenHBARX || token1 == tokenHBARX) {
-    addLiquidityMutableTx.setPayableAmount(new Hbar(2.3));
-  }
+  const hbar =
+    tokenA == tokenHBARX
+      ? new Hbar(2.1)
+      : tokenB == tokenHBARX
+      ? new Hbar(2.3)
+      : new Hbar(0);
+  addLiquidityMutableTx.setPayableAmount(hbar);
+
   const addLiquidityTx = await addLiquidityMutableTx
     .freezeWith(client)
     .sign(treasureKey);
@@ -206,11 +211,12 @@ const swapToken = async (contId: string, token: TokenId) => {
       new ContractFunctionParameters()
         .addAddress(treasureId.toSolidityAddress())
         .addAddress(token.toSolidityAddress())
-        .addInt256(tokenQty)
+        .addInt256(token == tokenHBARX ? BigNumber(0) : tokenQty)
     )
-    .setPayableAmount(new Hbar(0.01))
+    .setPayableAmount(token == tokenHBARX ? new Hbar(0.01) : new Hbar(0))
     .freezeWith(client)
     .sign(treasureKey);
+
   const swapTokenTx = await swapToken.execute(client);
   const receipt = await swapTokenTx.getReceipt(client);
 
@@ -279,6 +285,7 @@ async function testForSinglePair(
   await getTreasureBalance([token0, token1]);
   await removeLiquidity(pairContractId);
   await swapToken(pairContractId, token0);
+  await swapToken(pairContractId, token1);
   await getTreasureBalance([token0, token1]);
   await swapToken(pairContractId, token1);
   await getTreasureBalance([token0, token1]);

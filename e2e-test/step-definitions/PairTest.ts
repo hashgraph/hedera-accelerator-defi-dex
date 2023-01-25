@@ -7,6 +7,7 @@ import { TokenId } from "@hashgraph/sdk";
 import Pair from "../business/Pair";
 import { BigNumber } from "bignumber.js";
 import Factory from "../business/Factory";
+import dex from "../../deployment/model/dex";
 
 const clientManagement = new ClientManagement();
 const contractService = new ContractService();
@@ -82,8 +83,16 @@ export class PairTestSteps {
   ): Promise<void> {
     tokensBefore = await pair.pairCurrentPosition(contractProxyId, client);
     let precision = await pair.getPrecisionValue(contractProxyId, client);
-    const tokenAQty = await pair.withPrecision(tokenACount, precision);
-    const tokenBQty = await pair.withPrecision(tokenBCount, precision);
+    const tokenAQty =
+      tokenA.toSolidityAddress() != dex.HBARX_TOKEN_ADDRESS
+        ? await pair.withPrecision(tokenACount, precision)
+        : new BigNumber(0);
+    const tokenBQty =
+      tokenB.toSolidityAddress() != dex.HBARX_TOKEN_ADDRESS
+        ? await pair.withPrecision(tokenBCount, precision)
+        : new BigNumber(0);
+    tokenBCount =
+      tokenB.toSolidityAddress() != dex.HBARX_TOKEN_ADDRESS ? 0 : tokenBCount;
     await pair.addLiquidity(
       contractProxyId,
       tokenAQty,
@@ -164,7 +173,10 @@ export class PairTestSteps {
   @when(/User swap (\d*) unit of tokenA/, undefined, 30000)
   public async swapTokenA(tokenACount: number): Promise<void> {
     let precision = await pair.getPrecisionValue(contractProxyId, client);
-    const tokenAQty = await pair.withPrecision(tokenACount, precision);
+    const tokenAQty =
+      tokenB.toSolidityAddress() != dex.HBARX_TOKEN_ADDRESS
+        ? await pair.withPrecision(tokenACount, precision)
+        : new BigNumber(0);
     tokensBefore = await pair.pairCurrentPosition(contractProxyId, client);
     await pair.swapTokenA(
       contractProxyId,
