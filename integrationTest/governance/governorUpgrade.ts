@@ -3,6 +3,7 @@ import { ContractId } from "@hashgraph/sdk";
 import GovernorMethods from "./GovernorMethods";
 import { ContractService } from "../../deployment/service/ContractService";
 import { Helper } from "../../utils/Helper";
+import ClientManagement from "../../utils/ClientManagement";
 
 const contractService = new ContractService();
 const governor = new GovernorMethods();
@@ -20,6 +21,9 @@ const transparentContractId = ContractId.fromString(
     .transparentProxyId!
 );
 
+const clientManagement = new ClientManagement();
+const client = clientManagement.createOperatorClient();
+
 async function main() {
   console.log(`\nUsing governor proxy contract id ${contractId}`);
   await governor.initialize(contractId);
@@ -35,7 +39,7 @@ async function main() {
     );
   console.log(`Proposal tx status ${status} with proposal id ${proposalId}`);
   await governor.getProposalDetails(proposalId, contractId);
-  await governor.vote(proposalId, 1, contractId); // 1 is for vote.
+  await governor.vote(proposalId, 1, contractId, client); // 1 is for vote.
   await governor.quorumReached(proposalId, contractId);
   await governor.voteSucceeded(proposalId, contractId);
   await governor.proposalVotes(proposalId, contractId);

@@ -31,6 +31,8 @@ const godHolder = contractService.getContract(
 );
 
 export default class GovernorMethods {
+  private defaultQuorumThresholdValue = 5;
+
   getCurrentImplementationFromProxy = async (proxyId: string) => {
     const tx = await new ContractExecuteTransaction()
       .setContractId(proxyId)
@@ -186,7 +188,8 @@ export default class GovernorMethods {
       .addUint256(votingDelay)
       .addUint256(votingPeriod)
       .addAddress(htsServiceAddress)
-      .addAddress(godHolder.transparentProxyAddress!);
+      .addAddress(godHolder.transparentProxyAddress!)
+      .addUint256(this.defaultQuorumThresholdValue);
 
     const tx = await new ContractExecuteTransaction()
       .setContractId(contractId)
