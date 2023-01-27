@@ -7,7 +7,7 @@ import "./IBaseHTS.sol";
 
 contract BaseHTS is HederaTokenService, IBaseHTS {
     address private constant _HBARX =
-        address(0x0000000000000000000000000000000002eeff69);
+        address(0x0000000000000000000000000000000000002182);
 
     function hbarxAddress() external pure override returns (address) {
         return _HBARX;
