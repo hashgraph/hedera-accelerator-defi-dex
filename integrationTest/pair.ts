@@ -52,13 +52,13 @@ let precision = 0;
 const withPrecision = (value: number): BigNumber => {
   return new BigNumber(value).multipliedBy(precision);
 };
-const token0 = TokenId.fromString("0.0.48289687");
-const token1 = TokenId.fromString("0.0.48289686");
-const token2 = TokenId.fromString("0.0.48301281");
+const token0 = TokenId.fromString(dex.TOKEN_LAB49_1);
+const token1 = TokenId.fromString(dex.TOKEN_LAB49_2);
+const token2 = TokenId.fromString(dex.TOKEN_LAB49_3);
 const tokenHBARX = TokenId.fromString(dex.HBARX_TOKEN_ID);
 
-let tokenA = TokenId.fromString("0.0.49173962");
-let tokenB = TokenId.fromString("0.0.48289686");
+let tokenA = TokenId.fromString(dex.TOKEN_LAB49_1);
+let tokenB = TokenId.fromString(dex.TOKEN_LAB49_2);
 
 const initializeLPTokenContract = async (
   lpTokenContractId: string,
@@ -388,7 +388,7 @@ const setSlippage = async (contId: string, slippage: BigNumber) => {
 };
 
 async function main() {
-  let tokens = [tokenHBARX, token0, token1, token2];
+  const tokens = [tokenHBARX, token0, token1, token2];
   let index = 0;
   for (const contract of contracts) {
     tokenA = tokens[index];
