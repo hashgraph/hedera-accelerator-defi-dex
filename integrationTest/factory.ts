@@ -22,12 +22,9 @@ const { treasureId, treasureKey } = clientManagement.getTreasure();
 const { id } = clientManagement.getOperator();
 const contractService = new ContractService();
 
-const tokenA = TokenId.fromString("0.0.48289687");
-const tokenB = TokenId.fromString("0.0.48289686");
-const tokenC = TokenId.fromString("0.0.48301281");
-const tokenD = TokenId.fromString("0.0.48301282");
-const tokenE = TokenId.fromString("0.0.48301300");
-const tokenF = TokenId.fromString("0.0.48301322");
+const tokenA = TokenId.fromString(dex.TOKEN_LAB49_1);
+const tokenB = TokenId.fromString(dex.TOKEN_LAB49_2);
+const tokenC = TokenId.fromString(dex.TOKEN_LAB49_3);
 const tokenGOD = TokenId.fromString(dex.GOD_TOKEN_ID);
 const tokenHBARX = TokenId.fromString(dex.HBARX_TOKEN_ID);
 
@@ -262,8 +259,8 @@ async function main() {
     console.error(error);
   }
 
-  await testForSinglePair(contractId, tokenC, tokenHBARX);
-  await testForSinglePair(contractId, tokenC, tokenD);
+  await testForSinglePair(contractId, tokenB, tokenHBARX);
+  await testForSinglePair(contractId, tokenB, tokenC);
   await testForSinglePair(contractId, tokenA, tokenGOD);
 }
 

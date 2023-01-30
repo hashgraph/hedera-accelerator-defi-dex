@@ -10,6 +10,7 @@ import GovernorMethods from "./GovernorMethods";
 import { ContractService } from "../../deployment/service/ContractService";
 import ClientManagement from "../../utils/ClientManagement";
 import { Helper } from "../../utils/Helper";
+import dex from "../../deployment/model/dex";
 
 const governor = new GovernorMethods();
 const clientManagement = new ClientManagement();
@@ -23,7 +24,7 @@ const contractId = contractService.getContractWithProxy(
   contractService.governorTTContractName
 ).transparentProxyId!;
 
-const transferTokenId = TokenId.fromString("0.0.48504379");
+const transferTokenId = TokenId.fromString(dex.LAB49_1_TOKEN_ADDRESS);
 
 async function propose(
   contractId: string | ContractId,
