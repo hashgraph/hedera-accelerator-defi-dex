@@ -19,9 +19,9 @@ const { id } = clientManagement.getOperator();
 const contractService = new ContractService();
 const governor = new GovernorMethods();
 
-const tokenA = TokenId.fromString("0.0.48289687");
-const tokenC = TokenId.fromString("0.0.48301281");
-const tokenD = TokenId.fromString("0.0.48301282");
+const tokenA = TokenId.fromString(dex.TOKEN_LAB49_1);
+const tokenB = TokenId.fromString(dex.TOKEN_LAB49_2);
+const tokenC = TokenId.fromString(dex.TOKEN_LAB49_3);
 const tokenGOD = TokenId.fromString(dex.GOD_TOKEN_ID);
 const tokenHBARX = TokenId.fromString(dex.HBARX_TOKEN_ID);
 
@@ -96,16 +96,16 @@ async function main() {
   }
 
   try {
-    await createPair(contractId, tokenC, tokenHBARX);
+    await createPair(contractId, tokenB, tokenHBARX);
   } catch (error) {
-    console.log(`Create pair failed for ${tokenC} and ${tokenHBARX}`);
+    console.log(`Create pair failed for ${tokenB} and ${tokenHBARX}`);
     console.error(error);
   }
 
   try {
-    await createPair(contractId, tokenC, tokenD);
+    await createPair(contractId, tokenB, tokenC);
   } catch (error) {
-    console.log(`Create pair failed for ${tokenC} and ${tokenD}`);
+    console.log(`Create pair failed for ${tokenB} and ${tokenC}`);
     console.error(error);
   }
 
