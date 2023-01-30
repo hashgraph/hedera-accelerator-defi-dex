@@ -42,7 +42,7 @@ abstract contract GovernorCountingSimpleInternal is
     IGODHolder godHolder;
 
     mapping(uint256 => address[]) proposalVoters;
-    uint256 quorumThreshold;
+    uint256 quorumThresholdInBsp;
 
     function initialize(
         IERC20 _token,
@@ -50,13 +50,15 @@ abstract contract GovernorCountingSimpleInternal is
         uint256 _votingPeriodValue,
         IBaseHTS _tokenService,
         IGODHolder _godHolder,
-        uint256 _quorumThreshold
+        uint256 _quorumThresholdInBsp
     ) public initializer {
         tokenService = _tokenService;
         godHolder = _godHolder;
         token = _token;
         precision = 100000000;
-        quorumThreshold = _quorumThreshold == 0 ? 5 : _quorumThreshold;
+        quorumThresholdInBsp = _quorumThresholdInBsp == 0
+            ? 5
+            : _quorumThresholdInBsp;
         __Governor_init("HederaTokenCreateGovernor");
         __GovernorSettings_init(
             _votingDelayValue /* 1 block */,
@@ -264,7 +266,13 @@ abstract contract GovernorCountingSimpleInternal is
     function quorum(
         uint256
     ) public view override(IGovernorUpgradeable) returns (uint256) {
-        return quorumThreshold;
+        uint256 totalSupply = token.totalSupply();
+        uint256 value = totalSupply * quorumThresholdInBsp;
+        require(
+            value >= 10_000,
+            "GOD token total supply multiple by quorum threshold in BSP cannot be less than 10,000"
+        );
+        return value / 10_000;
     }
 
     function mockFunctionCall()
