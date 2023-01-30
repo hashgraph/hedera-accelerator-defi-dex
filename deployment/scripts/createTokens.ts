@@ -8,10 +8,10 @@ import ClientManagement from "../../utils/ClientManagement";
 
 async function main() {
   await createGODToken(200000 * 100000000);
-  await createCommonToken("HBAR", "HBAR", 0);
-  await createCommonToken("LAB49A", "LAB49A", 200000 * 1e8);
-  await createCommonToken("LAB49B", "LAB49B", 200000 * 1e8);
-  await createCommonToken("LAB49C", "LAB49C", 200000 * 1e8);
+  await createToken("HBAR", "HBAR", 0);
+  await createToken("LAB49A", "LAB49A", 200000 * 1e8);
+  await createToken("LAB49B", "LAB49B", 200000 * 1e8);
+  await createToken("LAB49C", "LAB49C", 200000 * 1e8);
   return "executed successfully";
 }
 
@@ -44,7 +44,7 @@ async function createGODToken(initialSupply: number) {
   return item;
 }
 
-async function createCommonToken(
+async function createToken(
   tokenName: string,
   tokenSymbol: string,
   initialSupply: number
