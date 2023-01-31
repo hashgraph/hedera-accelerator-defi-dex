@@ -24,7 +24,7 @@ const contractId = contractService.getContractWithProxy(
   contractService.governorTTContractName
 ).transparentProxyId!;
 
-const transferTokenId = TokenId.fromString(dex.LAB49_1_TOKEN_ADDRESS);
+const transferTokenId = TokenId.fromString(dex.TOKEN_LAB49_1);
 
 async function propose(
   contractId: string | ContractId,
