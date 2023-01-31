@@ -104,5 +104,50 @@
         "hash": "2b8e1f8408441650aadcdc9d5344b9fd",
         "transparentProxyAddress": "0x00000000000000000000000000000000002eb121",
         "transparentProxyId": "0.0.3060001"
+    },
+    {
+        "name": "factory",
+        "id": "0.0.3061875",
+        "address": "00000000000000000000000000000000002eb873",
+        "timestamp": "2023-01-31T08:25:57.361Z",
+        "hash": "555a9b88e50a37737b7f946c3c5e5a23",
+        "transparentProxyAddress": "0x0000000000000000000000000000000000002321",
+        "transparentProxyId": "0.0.8993"
+    },
+    {
+        "name": "governorupgrade",
+        "id": "0.0.3061883",
+        "address": "00000000000000000000000000000000002eb87b",
+        "timestamp": "2023-01-31T08:26:06.091Z",
+        "hash": "fbb7cc6ae3112388e0670e01f11ea9fb",
+        "transparentProxyAddress": "0x0000000000000000000000000000000000002359",
+        "transparentProxyId": "0.0.9049"
+    },
+    {
+        "name": "governortransfertoken",
+        "id": "0.0.3061890",
+        "address": "00000000000000000000000000000000002eb882",
+        "timestamp": "2023-01-31T08:26:15.570Z",
+        "hash": "8fede69c37c1a22eb7a24caa9396bbd7",
+        "transparentProxyAddress": "0x0000000000000000000000000000000000002367",
+        "transparentProxyId": "0.0.9063"
+    },
+    {
+        "name": "governortextproposal",
+        "id": "0.0.3061898",
+        "address": "00000000000000000000000000000000002eb88a",
+        "timestamp": "2023-01-31T08:26:22.776Z",
+        "hash": "de08ec22b73c6da4cc4ad85aef6a2a89",
+        "transparentProxyAddress": "0x0000000000000000000000000000000000002379",
+        "transparentProxyId": "0.0.9081"
+    },
+    {
+        "name": "governortokencreate",
+        "id": "0.0.3061908",
+        "address": "00000000000000000000000000000000002eb894",
+        "timestamp": "2023-01-31T08:26:32.450Z",
+        "hash": "ef7c14142902a5b1ff5d2e8b0e0f77cf",
+        "transparentProxyAddress": "0x000000000000000000000000000000000000238e",
+        "transparentProxyId": "0.0.9102"
     }
 ]
