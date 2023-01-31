@@ -95,5 +95,14 @@
         "hash": "4e634fcde2567f8d719a976326be7385",
         "transparentProxyAddress": "0x00000000000000000000000000000000000023b5",
         "transparentProxyId": "0.0.9141"
+    },
+    {
+        "name": "governortransfertoken",
+        "id": "0.0.3059995",
+        "address": "0x00000000000000000000000000000000002eb11b",
+        "timestamp": "2023-01-31T06:42:39.147Z",
+        "hash": "2b8e1f8408441650aadcdc9d5344b9fd",
+        "transparentProxyAddress": "0x00000000000000000000000000000000002eb121",
+        "transparentProxyId": "0.0.3060001"
     }
 ]
