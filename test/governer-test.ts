@@ -7,10 +7,10 @@ import { ethers, upgrades } from "hardhat";
 import { Contract } from "ethers";
 import { ERC20Mock } from "../typechain";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 
 describe("Governor Tests", function () {
   const defaultQuorumThresholdValue = 5;
+  const defaultQuorumThresholdValueInBsp = defaultQuorumThresholdValue * 100;
   const zeroAddress = "0x1111111000000000000000000000000000000000";
   const oneAddress = "0x1111111000000000000000000000000000000001";
   const precision = 100000000;
@@ -33,7 +33,7 @@ describe("Governor Tests", function () {
         votingPeriod,
         zeroAddress,
         zeroAddress,
-        defaultQuorumThresholdValue,
+        defaultQuorumThresholdValueInBsp,
       ];
       const instance = await upgrades.deployProxy(Governor, args);
       await instance.deployed();
@@ -49,7 +49,7 @@ describe("Governor Tests", function () {
         votingPeriod,
         zeroAddress,
         zeroAddress,
-        defaultQuorumThresholdValue,
+        defaultQuorumThresholdValueInBsp,
       ];
       const instance = await upgrades.deployProxy(Governor, args);
       await instance.deployed();
@@ -84,14 +84,13 @@ describe("Governor Tests", function () {
     ]);
 
     const Governor = await ethers.getContractFactory("GovernorTokenCreate");
-    console.log(`token Service address ${mockBaseHTS.address}`);
     const args = [
       tokenCont.address,
       votingDelay,
       votingPeriod,
       mockBaseHTS.address,
       godHolder.address,
-      defaultQuorumThresholdValue,
+      defaultQuorumThresholdValueInBsp,
     ];
     const instance = await upgrades.deployProxy(Governor, args);
 
@@ -136,6 +135,43 @@ describe("Governor Tests", function () {
     }
   }
 
+  describe("Quorum tests", async () => {
+    it("Verify default quorum threshold for governance contract", async function () {
+      const { instance, tokenCont } = await loadFixture(deployFixture);
+
+      const updatedTotal = await tokenCont.totalSupply();
+      expect(updatedTotal).to.be.equals(total);
+      const result = await instance.quorum(123);
+      expect(result).to.be.equals(defaultQuorumThresholdValue * precision);
+    });
+
+    it("When total supply of the GOD token is increased then its quorum threshold should also increased.", async function () {
+      const { instance, tokenCont } = await loadFixture(deployFixture);
+      const newTotal = total * 2;
+      await tokenCont.setTotal(newTotal);
+      const updatedTotal = await tokenCont.totalSupply();
+      expect(updatedTotal).to.be.equals(newTotal);
+      const result = await instance.quorum(123);
+      const correctQuorumNumber =
+        (defaultQuorumThresholdValue / 100) * newTotal;
+      expect(result).to.be.equals(correctQuorumNumber.toFixed(0));
+    });
+
+    it("When default(5%) quorum threshold results in zero quorum threshold value then quorum call should fail. ", async function () {
+      const { instance, tokenCont } = await loadFixture(deployFixture);
+      const newTotal = 19;
+      await tokenCont.setTotal(newTotal);
+      const updatedTotal = await tokenCont.totalSupply();
+      expect(updatedTotal).to.be.equals(newTotal);
+      const correctQuorumNumber =
+        (defaultQuorumThresholdValue / 100) * newTotal;
+      expect(Math.floor(correctQuorumNumber)).to.be.equals(0);
+      await expect(instance.quorum(123)).revertedWith(
+        "GOD token total supply multiple by quorum threshold in BSP cannot be less than 10,000"
+      );
+    });
+  });
+
   describe("Governor functionality", async () => {
     it("When user has 20 units of token then votes weight should be 20", async function () {
       const { instance, tokenCont, signers } = await loadFixture(deployFixture);
@@ -162,7 +198,6 @@ describe("Governor Tests", function () {
       const proposalIdResponse = await createProposal(instance, signers[0]);
       const record = await proposalIdResponse.wait();
       const proposalId = record.events[0].args.proposalId.toString();
-      console.log(proposalId);
       await mineNBlocks(10);
       await instance.castVote(proposalId, 1);
       await mineNBlocks(20);
@@ -198,6 +233,11 @@ describe("Governor Tests", function () {
       expect(period).to.be.equals(12);
       const threshold = await instance.proposalThreshold();
       expect(threshold).to.be.equals(0);
+      await verifyProposalVotes(instance, proposalId, {
+        abstainVotes: 0,
+        againstVotes: 0,
+        forVotes: 0,
+      });
       const quorumReached = await instance.quorumReached(proposalId);
       expect(quorumReached).to.be.equals(false);
       const voteSucceeded = await instance.voteSucceeded(proposalId);
@@ -595,7 +635,7 @@ describe("Governor Tests", function () {
           10,
           zeroAddress,
           zeroAddress,
-          defaultQuorumThresholdValue
+          defaultQuorumThresholdValueInBsp
         )
       ).to.revertedWith("Initializable: contract is already initialized");
     });
