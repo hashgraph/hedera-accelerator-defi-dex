@@ -158,5 +158,32 @@
         "hash": "555a9b88e50a37737b7f946c3c5e5a23",
         "transparentProxyAddress": "0x0000000000000000000000000000000000002321",
         "transparentProxyId": "0.0.8993"
+    },
+    {
+        "name": "factory",
+        "id": "0.0.3074446",
+        "address": "0x00000000000000000000000000000000002ee98e",
+        "timestamp": "2023-01-31T16:30:59.397Z",
+        "hash": "555a9b88e50a37737b7f946c3c5e5a23",
+        "transparentProxyAddress": "0x00000000000000000000000000000000002ee996",
+        "transparentProxyId": "0.0.3074454"
+    },
+    {
+        "name": "godholder",
+        "id": "0.0.3075133",
+        "address": "0x00000000000000000000000000000000002eec3d",
+        "timestamp": "2023-01-31T17:03:22.012Z",
+        "hash": "b5b9b919ac551d5b2a9a56f84ee37464",
+        "transparentProxyAddress": "0x00000000000000000000000000000000002eec43",
+        "transparentProxyId": "0.0.3075139"
+    },
+    {
+        "name": "governortokencreate",
+        "id": "0.0.3075155",
+        "address": "0x00000000000000000000000000000000002eec53",
+        "timestamp": "2023-01-31T17:04:33.411Z",
+        "hash": "58c15271e174587b217de1cbb99d414b",
+        "transparentProxyAddress": "0x00000000000000000000000000000000002eec5e",
+        "transparentProxyId": "0.0.3075166"
     }
 ]
