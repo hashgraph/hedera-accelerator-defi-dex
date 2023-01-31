@@ -57,7 +57,7 @@ abstract contract GovernorCountingSimpleInternal is
         token = _token;
         precision = 100000000;
         quorumThresholdInBsp = _quorumThresholdInBsp == 0
-            ? 5
+            ? 500
             : _quorumThresholdInBsp;
         __Governor_init("HederaTokenCreateGovernor");
         __GovernorSettings_init(
