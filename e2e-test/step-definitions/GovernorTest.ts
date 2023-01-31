@@ -88,8 +88,9 @@ export class GovernorSteps {
     );
   }
 
-  @then(/user verify that recieved proposal id is not null/, undefined, 30000)
-  public async verifyProposalID(): Promise<void> {
-    expect(proposalID).not.null;
+  @then(/user verify that proposal state is (\d*)/, undefined, 30000)
+  public async verifyProposaState(proposalState: string): Promise<void> {
+    const currentState = await governor.state(proposalID, contractId, client);
+    expect(Number(currentState)).to.eql(Number(proposalState));
   }
 }
