@@ -11,6 +11,7 @@ import "../common/IERC20.sol";
 import "../common/IBaseHTS.sol";
 import "../common/hedera/HederaResponseCodes.sol";
 import "./GODHolder.sol";
+import "../common/HDMath.sol";
 
 abstract contract GovernorCountingSimpleInternal is
     Initializable,
@@ -43,6 +44,7 @@ abstract contract GovernorCountingSimpleInternal is
 
     mapping(uint256 => address[]) proposalVoters;
     uint256 quorumThresholdInBsp;
+    bool isLinear = true;
 
     function initialize(
         IERC20 _token,
@@ -77,7 +79,7 @@ abstract contract GovernorCountingSimpleInternal is
         if (balance == 0) {
             balance = token.balanceOf(account);
         }
-        return balance;
+        return isLinear ? balance : uint256(HDMath.sqrt(int256(balance)));
     }
 
     function _createProposal(
@@ -210,10 +212,9 @@ abstract contract GovernorCountingSimpleInternal is
     ) public virtual override returns (uint256) {
         address voter = _msgSender();
         require(_getVotes(voter, 0, "") > 0, "No voting power");
-
-        uint256 weight = _castVote(proposalId, voter, support, "");
         godHolder.grabTokensFromUser(voter);
         godHolder.addProposalForVoter(voter, proposalId);
+        uint256 weight = _castVote(proposalId, voter, support, "");
         address[] storage voters = proposalVoters[proposalId];
         voters.push(voter);
         return weight;
