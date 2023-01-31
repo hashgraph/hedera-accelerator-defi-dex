@@ -8,6 +8,7 @@ import "./common/IBaseHTS.sol";
 import "./common/IERC20.sol";
 import "./common/hedera/HederaTokenService.sol";
 import "./ILPToken.sol";
+import "./common/HDMath.sol";
 
 contract LPToken is ILPToken, Initializable {
     IBaseHTS tokenService;
@@ -55,7 +56,7 @@ contract LPToken is ILPToken, Initializable {
             (amountA > 0 && amountB > 0),
             "Please provide positive token counts"
         );
-        int256 mintingAmount = sqrt(amountA * amountB);
+        int256 mintingAmount = HDMath.sqrt(amountA * amountB);
         require(
             address(lpToken) > address(0x0),
             "Liquidity Token not initialized"
@@ -154,15 +155,6 @@ contract LPToken is ILPToken, Initializable {
             responseCode == HederaResponseCodes.SUCCESS,
             "LPToken: Token creation failed."
         );
-    }
-
-    function sqrt(int256 value) public pure returns (int256 output) {
-        int256 modifiedValue = (value + 1) / 2;
-        output = value;
-        while (modifiedValue < output) {
-            output = modifiedValue;
-            modifiedValue = (value / modifiedValue + modifiedValue) / 2;
-        }
     }
 }
 

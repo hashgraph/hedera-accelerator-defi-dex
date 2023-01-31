@@ -77,11 +77,11 @@ contract GODHolder is IGODHolder, Initializable {
     function grabTokensFromUser(
         address user
     ) external override returns (uint256 amount) {
-        if (godTokenForUsers[user] > 0) {
+        if (godTokenForUsers[user] > 0 && _token.balanceOf(user) == 0) {
             return godTokenForUsers[user];
         }
         amount = _token.balanceOf(user);
-        godTokenForUsers[user] = amount;
+        godTokenForUsers[user] = godTokenForUsers[user] + amount;
         _tokenService.associateTokenPublic(address(this), address(_token));
         int256 responseCode = _tokenService.transferTokenPublic(
             address(_token),
