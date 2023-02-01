@@ -90,6 +90,7 @@ export class GovernorSteps {
 
   @then(/user verify that proposal state is (\d*)/, undefined, 30000)
   public async verifyProposaState(proposalState: string): Promise<void> {
+    console.log(`ProposalId: ${proposalID}`);
     const currentState = await governor.state(proposalID, contractId, client);
     expect(Number(currentState)).to.eql(Number(proposalState));
   }
