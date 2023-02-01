@@ -43,7 +43,7 @@ abstract contract GovernorCountingSimpleInternal is
 
     mapping(uint256 => address[]) proposalVoters;
     uint256 quorumThresholdInBsp;
-    bool private constant isLinear = true;
+    bool isLinearVoting;
 
     function initialize(
         IERC20 _token,
@@ -51,7 +51,8 @@ abstract contract GovernorCountingSimpleInternal is
         uint256 _votingPeriodValue,
         IBaseHTS _tokenService,
         IGODHolder _godHolder,
-        uint256 _quorumThresholdInBsp
+        uint256 _quorumThresholdInBsp,
+        bool _isLinearVoting
     ) public initializer {
         tokenService = _tokenService;
         godHolder = _godHolder;
@@ -60,6 +61,7 @@ abstract contract GovernorCountingSimpleInternal is
         quorumThresholdInBsp = _quorumThresholdInBsp == 0
             ? 500
             : _quorumThresholdInBsp;
+        isLinearVoting = _isLinearVoting;
         __Governor_init("HederaTokenCreateGovernor");
         __GovernorSettings_init(
             _votingDelayValue /* 1 block */,
@@ -78,7 +80,7 @@ abstract contract GovernorCountingSimpleInternal is
         if (balance == 0) {
             balance = token.balanceOf(account);
         }
-        return isLinear ? balance : uint256(_sqrt(int256(balance)));
+        return isLinearVoting ? balance : uint256(_sqrt(int256(balance)));
     }
 
     function _createProposal(
