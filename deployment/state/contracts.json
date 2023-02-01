@@ -194,5 +194,14 @@
         "hash": "180dc4c5342cedf6b9dc57247dd75253",
         "transparentProxyAddress": "0x00000000000000000000000000000000002f9fb1",
         "transparentProxyId": "0.0.3121073"
+    },
+    {
+        "name": "governortokencreate",
+        "id": "0.0.3122484",
+        "address": "0x00000000000000000000000000000000002fa534",
+        "timestamp": "2023-02-01T10:23:28.003Z",
+        "hash": "c1cc3ef8dcb2039f8241c48b2bb96a26",
+        "transparentProxyAddress": "0x00000000000000000000000000000000002fa536",
+        "transparentProxyId": "0.0.3122486"
     }
 ]

@@ -80,7 +80,7 @@ abstract contract GovernorCountingSimpleInternal is
         if (balance == 0) {
             balance = token.balanceOf(account);
         }
-        return isLinearVoting ? balance : uint256(_sqrt(int256(balance)));
+        return isLinearVoting ? balance : _sqrt(balance);
     }
 
     function getVotingPower() public view returns (uint256) {
@@ -272,7 +272,7 @@ abstract contract GovernorCountingSimpleInternal is
     function quorum(
         uint256
     ) public view override(IGovernorUpgradeable) returns (uint256) {
-        uint256 totalSupply =  isLinearVoting ? token.totalSupply() : uint256(_sqrt(int256(token.totalSupply())));
+        uint256 totalSupply =  isLinearVoting ? token.totalSupply() : _sqrt(token.totalSupply());
         uint256 value = totalSupply * quorumThresholdInBsp;
         require(
             value >= 10_000,
@@ -300,8 +300,8 @@ abstract contract GovernorCountingSimpleInternal is
     }
 
 
-    function _sqrt(int256 value) public pure returns (int256 output) {
-        int256 modifiedValue = (value + 1) / 2;
+    function _sqrt(uint256 value) public pure returns (uint256 output) {
+        uint256 modifiedValue = (value + 1) / 2;
         output = value;
         while (modifiedValue < output) {
             output = modifiedValue;
