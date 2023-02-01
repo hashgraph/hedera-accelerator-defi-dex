@@ -287,6 +287,18 @@ describe("Governor Tests", function () {
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
     });
 
+    it("Verify quadratic voting power of user", async function () {
+      const { instance } = await loadFixture(deployFixtureForQuadratic);
+      const votingPower = await instance.getVotingPower();
+      expect(votingPower).to.be.equals(Math.floor(Math.sqrt(20 * precision)));
+    });
+
+    it("Verify linear voting power of user", async function () {
+      const { instance } = await loadFixture(deployFixture);
+      const votingPower = await instance.getVotingPower();
+      expect(votingPower).to.be.equals(20 * precision);
+    });
+
     it("Verify proposal creation to execute flow ", async function () {
       const { instance, tokenCont, signers, godHolder } = await loadFixture(
         deployFixture
