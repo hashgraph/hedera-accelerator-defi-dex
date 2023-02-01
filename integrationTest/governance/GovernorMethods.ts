@@ -51,6 +51,7 @@ export default class GovernorMethods {
 
   transferGodToken = async (client: Client) => {
     //Create the transfer transaction
+    console.log("transferring tokens to TokenUser");
     const transaction = await new TransferTransaction()
       .addTokenTransfer(dex.GOD_LOCAL_TOKEN_ID, treasureId, -900000000000000)
       .addTokenTransfer(dex.GOD_LOCAL_TOKEN_ID, id, 900000000000000)
@@ -199,7 +200,7 @@ export default class GovernorMethods {
     const tokenId = TokenId.fromString(dex.GOD_LOCAL_TOKEN_ID);
     console.log(`\nInitialize contract with token  `);
     const votingDelay = 0;
-    const votingPeriod = 10; //Blocks to mint
+    const votingPeriod = 100; //Blocks to mint
 
     let contractFunctionParameters = new ContractFunctionParameters()
       .addAddress(tokenId.toSolidityAddress()) // token that define the voting weight, to vote user should have % of this token.
@@ -207,7 +208,8 @@ export default class GovernorMethods {
       .addUint256(votingPeriod)
       .addAddress(htsServiceAddress)
       .addAddress(godHolder.transparentProxyAddress!)
-      .addUint256(this.defaultQuorumThresholdInBsp);
+      .addUint256(this.defaultQuorumThresholdInBsp)
+      .addBool(true);
 
     const tx = await new ContractExecuteTransaction()
       .setContractId(contractId)

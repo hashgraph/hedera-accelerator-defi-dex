@@ -160,23 +160,27 @@ async function main() {
   console.log(`\nUsing governor proxy contract id ${contractId}`);
   try {
     await governor.initializeGodHolder();
+  } catch (error) {
+    console.error(error);
+  }
+  try {
     await governor.initialize(contractId);
   } catch (error) {
     console.error(error);
   }
-  const title = "Create Token Proposal - 7";
+  const title = "Create Token Proposal - 9";
   const proposalId = await propose(contractId, title, "description", "link"); // title should be unique for each proposal
-  const title1 = "Create Token Proposal - 8";
+  const title1 = "Create Token Proposal - 10";
   const proposalId1 = await propose(contractId, title1, "description", "link");
 
   await governor.getProposalDetails(proposalId, contractId);
   await governor.vote(proposalId, 1, contractId, client); // 1 is for vote.
   await governor.transferGodToken(client);
   await governor.vote(proposalId, 1, contractId, treasurerClient);
-  await governor.proposalVotes(proposalId, contractId);
-  await governor.proposalVotes(proposalId1, contractId);
   await governor.vote(proposalId1, 1, contractId, client); // 1 is for vote.
   await governor.vote(proposalId1, 1, contractId, treasurerClient);
+  await governor.proposalVotes(proposalId, contractId);
+  await governor.proposalVotes(proposalId1, contractId);
   await governor.quorumReached(proposalId, contractId);
   await governor.voteSucceeded(proposalId, contractId);
   await governor.proposalVotes(proposalId, contractId);
