@@ -268,7 +268,7 @@ abstract contract GovernorCountingSimpleInternal is
     function quorum(
         uint256
     ) public view override(IGovernorUpgradeable) returns (uint256) {
-        uint256 totalSupply = token.totalSupply();
+        uint256 totalSupply =  isLinearVoting ? token.totalSupply() : uint256(_sqrt(int256(token.totalSupply())));
         uint256 value = totalSupply * quorumThresholdInBsp;
         require(
             value >= 10_000,
