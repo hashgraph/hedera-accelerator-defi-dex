@@ -158,5 +158,14 @@
         "hash": "555a9b88e50a37737b7f946c3c5e5a23",
         "transparentProxyAddress": "0x0000000000000000000000000000000000002321",
         "transparentProxyId": "0.0.8993"
+    },
+    {
+        "name": "factory",
+        "id": "0.0.3123990",
+        "address": "0x00000000000000000000000000000000002fab16",
+        "timestamp": "2023-02-01T13:39:30.756Z",
+        "hash": "555a9b88e50a37737b7f946c3c5e5a23",
+        "transparentProxyAddress": "0x00000000000000000000000000000000002fab1a",
+        "transparentProxyId": "0.0.3123994"
     }
 ]
