@@ -83,6 +83,10 @@ abstract contract GovernorCountingSimpleInternal is
         return isLinearVoting ? balance : uint256(_sqrt(int256(balance)));
     }
 
+    function getVotingPower() public view returns (uint256) {
+        return _getVotes(msg.sender, 0, "");
+    }
+
     function _createProposal(
         string memory title,
         string memory description,
