@@ -43,7 +43,6 @@ abstract contract GovernorCountingSimpleInternal is
 
     mapping(uint256 => address[]) proposalVoters;
     uint256 quorumThresholdInBsp;
-    bool isLinearVoting;
 
     function initialize(
         IERC20 _token,
@@ -51,8 +50,7 @@ abstract contract GovernorCountingSimpleInternal is
         uint256 _votingPeriodValue,
         IBaseHTS _tokenService,
         IGODHolder _godHolder,
-        uint256 _quorumThresholdInBsp,
-        bool _isLinearVoting
+        uint256 _quorumThresholdInBsp
     ) public initializer {
         tokenService = _tokenService;
         godHolder = _godHolder;
@@ -61,7 +59,6 @@ abstract contract GovernorCountingSimpleInternal is
         quorumThresholdInBsp = _quorumThresholdInBsp == 0
             ? 500
             : _quorumThresholdInBsp;
-        isLinearVoting = _isLinearVoting;
         __Governor_init("HederaTokenCreateGovernor");
         __GovernorSettings_init(
             _votingDelayValue /* 1 block */,
@@ -80,11 +77,7 @@ abstract contract GovernorCountingSimpleInternal is
         if (balance == 0) {
             balance = token.balanceOf(account);
         }
-        return isLinearVoting ? balance : uint256(_sqrt(int256(balance)));
-    }
-
-    function getVotingPower() public view returns (uint256) {
-        return _getVotes(msg.sender, 0, "");
+        return balance;
     }
 
     function _createProposal(
@@ -272,7 +265,7 @@ abstract contract GovernorCountingSimpleInternal is
     function quorum(
         uint256
     ) public view override(IGovernorUpgradeable) returns (uint256) {
-        uint256 totalSupply =  isLinearVoting ? token.totalSupply() : uint256(_sqrt(int256(token.totalSupply())));
+        uint256 totalSupply = token.totalSupply();
         uint256 value = totalSupply * quorumThresholdInBsp;
         require(
             value >= 10_000,
@@ -297,16 +290,6 @@ abstract contract GovernorCountingSimpleInternal is
         calldatas = new bytes[](1);
         bytes memory b = "blank";
         calldatas[0] = (b);
-    }
-
-
-    function _sqrt(int256 value) public pure returns (int256 output) {
-        int256 modifiedValue = (value + 1) / 2;
-        output = value;
-        while (modifiedValue < output) {
-            output = modifiedValue;
-            modifiedValue = (value / modifiedValue + modifiedValue) / 2;
-        }
     }
 
     /**

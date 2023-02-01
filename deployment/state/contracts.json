@@ -188,20 +188,11 @@
     },
     {
         "name": "governortokencreate",
-        "id": "0.0.3075155",
-        "address": "0x00000000000000000000000000000000002eec53",
-        "timestamp": "2023-01-31T17:04:33.411Z",
-        "hash": "58c15271e174587b217de1cbb99d414b",
-        "transparentProxyAddress": "0x00000000000000000000000000000000002eec5e",
-        "transparentProxyId": "0.0.3075166"
-    },
-    {
-        "name": "governortokencreate",
-        "id": "0.0.3121070",
-        "address": "0x00000000000000000000000000000000002f9fae",
-        "timestamp": "2023-02-01T06:41:51.986Z",
-        "hash": "180dc4c5342cedf6b9dc57247dd75253",
-        "transparentProxyAddress": "0x00000000000000000000000000000000002f9fb1",
-        "transparentProxyId": "0.0.3121073"
+        "id": "0.0.3122484",
+        "address": "0x00000000000000000000000000000000002fa534",
+        "timestamp": "2023-02-01T10:23:28.003Z",
+        "hash": "c1cc3ef8dcb2039f8241c48b2bb96a26",
+        "transparentProxyAddress": "0x00000000000000000000000000000000002fa536",
+        "transparentProxyId": "0.0.3122486"
     }
 ]

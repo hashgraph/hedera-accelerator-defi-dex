@@ -34,7 +34,6 @@ describe("Governor Tests", function () {
         zeroAddress,
         zeroAddress,
         defaultQuorumThresholdValueInBsp,
-        true,
       ];
       const instance = await upgrades.deployProxy(Governor, args);
       await instance.deployed();
@@ -51,7 +50,6 @@ describe("Governor Tests", function () {
         zeroAddress,
         zeroAddress,
         defaultQuorumThresholdValueInBsp,
-        true,
       ];
       const instance = await upgrades.deployProxy(Governor, args);
       await instance.deployed();
@@ -61,16 +59,16 @@ describe("Governor Tests", function () {
   async function deployFixture() {
     const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
     const mockBaseHTS = await MockBaseHTS.deploy(true, zeroAddress);
-    return basicDeployments(mockBaseHTS, true);
+    return basicDeployments(mockBaseHTS);
   }
 
   async function deployFixtureForQuadratic() {
     const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
     const mockBaseHTS = await MockBaseHTS.deploy(true, zeroAddress);
-    return basicDeployments(mockBaseHTS, false);
+    return basicDeployments(mockBaseHTS);
   }
 
-  async function basicDeployments(mockBaseHTS: any, linear: boolean) {
+  async function basicDeployments(mockBaseHTS: any) {
     const signers = await ethers.getSigners();
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
     const tokenCont = await TokenCont.deploy(
@@ -99,7 +97,6 @@ describe("Governor Tests", function () {
       mockBaseHTS.address,
       godHolder.address,
       defaultQuorumThresholdValueInBsp,
-      linear,
     ];
     const instance = await upgrades.deployProxy(Governor, args);
 
@@ -257,7 +254,7 @@ describe("Governor Tests", function () {
       await verifyProposalVotes(instance, proposalId, {
         abstainVotes: 0,
         againstVotes: 0,
-        forVotes: 19 * precision,
+        forVotes: twentyPercent - 1 * precision,
       });
       expect(voteSucceeded1).to.be.equals(true);
       const quorumReached1 = await instance.quorumReached(proposalId);
@@ -285,18 +282,6 @@ describe("Governor Tests", function () {
       expect(canWithdrawGod1).to.be.equals(true);
       await godHolder.revertTokensForVoter();
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
-    });
-
-    it("Verify quadratic voting power of user", async function () {
-      const { instance } = await loadFixture(deployFixtureForQuadratic);
-      const votingPower = await instance.getVotingPower();
-      expect(votingPower).to.be.equals(Math.floor(Math.sqrt(20 * precision)));
-    });
-
-    it("Verify linear voting power of user", async function () {
-      const { instance } = await loadFixture(deployFixture);
-      const votingPower = await instance.getVotingPower();
-      expect(votingPower).to.be.equals(20 * precision);
     });
 
     it("Verify proposal creation to execute flow ", async function () {
@@ -334,69 +319,8 @@ describe("Governor Tests", function () {
       await verifyProposalVotes(instance, proposalId, {
         abstainVotes: 0,
         againstVotes: 0,
-        forVotes: 19 * precision,
+        forVotes: twentyPercent - 1 * precision,
       });
-      expect(quorumReached1).to.be.equals(true);
-      const activeProposals =
-        await godHolder.callStatic.getActiveProposalsForUser();
-      expect(activeProposals.length).to.be.equals(1);
-      const canWithdrawGod = await godHolder.callStatic.canUserClaimGodTokens();
-      expect(canWithdrawGod).to.be.equals(false);
-
-      await mineNBlocks(20);
-      const state = await instance.state(proposalId);
-      expect(state).to.be.equals(4);
-      await expect(instance.getTokenAddress(proposalId)).to.revertedWith(
-        "Contract not executed yet!"
-      );
-
-      await instance.executeProposal(title);
-      await verifyAccountBalance(tokenCont, signers[0].address, 1 * precision);
-      const canWithdrawGod1 =
-        await godHolder.callStatic.canUserClaimGodTokens();
-      expect(canWithdrawGod1).to.be.equals(true);
-      await godHolder.revertTokensForVoter();
-      await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
-      const tokenAddress = await instance.getTokenAddress(proposalId);
-      expect(tokenAddress).to.not.be.equals(zeroAddress);
-    });
-
-    it("Verify proposal creation to execute flow for quadratic ", async function () {
-      const { instance, tokenCont, signers, godHolder } = await loadFixture(
-        deployFixtureForQuadratic
-      );
-
-      await verifyAccountBalance(tokenCont, signers[0].address, total * 0.2);
-      const proposalIdResponse = await createProposal(instance, signers[0]);
-      await verifyAccountBalance(
-        tokenCont,
-        signers[0].address,
-        twentyPercent - 1 * precision
-      );
-
-      const record = await proposalIdResponse.wait();
-      const proposalId = record.events[0].args.proposalId.toString();
-
-      const delay = await instance.votingDelay();
-      expect(delay).to.be.equals(0);
-      const period = await instance.votingPeriod();
-      expect(period).to.be.equals(12);
-      const threshold = await instance.proposalThreshold();
-      expect(threshold).to.be.equals(0);
-      const quorumReached = await instance.quorumReached(proposalId);
-      expect(quorumReached).to.be.equals(false);
-      const voteSucceeded = await instance.voteSucceeded(proposalId);
-      expect(voteSucceeded).to.be.equals(false);
-      await instance.castVote(proposalId, 1);
-      await verifyProposalVotes(instance, proposalId, {
-        abstainVotes: 0,
-        againstVotes: 0,
-        forVotes: Math.floor(Math.sqrt(19 * precision)),
-      });
-      const voteSucceeded1 = await instance.voteSucceeded(proposalId);
-      expect(voteSucceeded1).to.be.equals(true);
-      const quorumReached1 = await instance.quorumReached(proposalId);
-      expect(quorumReached1).to.be.equals(true);
       expect(quorumReached1).to.be.equals(true);
       const activeProposals =
         await godHolder.callStatic.getActiveProposalsForUser();
@@ -726,8 +650,7 @@ describe("Governor Tests", function () {
           10,
           zeroAddress,
           zeroAddress,
-          defaultQuorumThresholdValueInBsp,
-          true
+          defaultQuorumThresholdValueInBsp
         )
       ).to.revertedWith("Initializable: contract is already initialized");
     });

@@ -53,8 +53,8 @@ export default class GovernorMethods {
     //Create the transfer transaction
     console.log("transferring tokens to TokenUser");
     const transaction = await new TransferTransaction()
-      .addTokenTransfer(dex.GOD_LOCAL_TOKEN_ID, treasureId, -900000000000000)
-      .addTokenTransfer(dex.GOD_LOCAL_TOKEN_ID, id, 900000000000000)
+      .addTokenTransfer(dex.GOD_DEV_TOKEN_ID, treasureId, -900000000000000)
+      .addTokenTransfer(dex.GOD_DEV_TOKEN_ID, id, 900000000000000)
       .freezeWith(client);
 
     const signTx = await transaction.sign(treasureKey);
@@ -196,7 +196,7 @@ export default class GovernorMethods {
   };
 
   public initialize = async (contractId: string | ContractId) => {
-    const tokenId = TokenId.fromString(dex.GOD_LOCAL_TOKEN_ID);
+    const tokenId = TokenId.fromString(dex.GOD_DEV_TOKEN_ID);
     console.log(`\nInitialize contract with token  `);
     const votingDelay = 0;
     const votingPeriod = 100; //Blocks to mint
@@ -207,8 +207,7 @@ export default class GovernorMethods {
       .addUint256(votingPeriod)
       .addAddress(htsServiceAddress)
       .addAddress(godHolder.transparentProxyAddress!)
-      .addUint256(this.defaultQuorumThresholdInBsp)
-      .addBool(true);
+      .addUint256(this.defaultQuorumThresholdInBsp);
 
     const tx = await new ContractExecuteTransaction()
       .setContractId(contractId)
@@ -224,7 +223,7 @@ export default class GovernorMethods {
   };
 
   public initializeGodHolder = async () => {
-    const tokenId = TokenId.fromString(dex.GOD_LOCAL_TOKEN_ID);
+    const tokenId = TokenId.fromString(dex.GOD_DEV_TOKEN_ID);
     console.log(`\nInitialize GodHolder contract with token  `);
 
     let contractFunctionParameters = new ContractFunctionParameters()
