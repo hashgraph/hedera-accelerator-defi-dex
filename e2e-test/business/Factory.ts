@@ -145,7 +145,7 @@ export default class Factory {
 
   public getTokenBalance = async (
     tokenId: TokenId,
-    accountId: AccountId,
+    accountId: AccountId | string,
     client: Client
   ): Promise<Long> => {
     const treasureBalanceTx = await new AccountBalanceQuery()
