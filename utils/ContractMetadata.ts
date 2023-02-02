@@ -5,6 +5,8 @@ import { ContractService } from "../deployment/service/ContractService";
 export default class ContractMetadata {
   static SUPPORTED_CONTRACTS_FOR_UPGRADE = [
     "Factory",
+    "LPToken",
+    "Pair",
     "GovernorUpgrade",
     "GovernorTransferToken",
     "GovernorTextProposal",

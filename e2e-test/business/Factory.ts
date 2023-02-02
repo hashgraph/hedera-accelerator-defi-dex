@@ -157,4 +157,20 @@ export default class Factory {
 
     return responseTokens.get(tokenId)!;
   };
+
+  public upgradeLogic = async (
+    contractId: string,
+    newImplAddress: string,
+    client: Client,
+    methodName: string
+  ) => {
+    const args = new ContractFunctionParameters().addAddress(newImplAddress);
+    const txn = new ContractExecuteTransaction()
+      .setContractId(contractId)
+      .setGas(4000000)
+      .setFunction(methodName, args);
+    const txnResponse = await txn.execute(client);
+    const txnReceipt = await txnResponse.getReceipt(client);
+    console.log(`- ${methodName} txn status: ${txnReceipt.status}`);
+  };
 }

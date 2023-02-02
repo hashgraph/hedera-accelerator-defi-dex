@@ -2,15 +2,21 @@ import * as fs from "fs";
 import Web3 from "web3";
 import axios from "axios";
 export class EventConsumer {
+  private proxyAbiPath =
+    "./artifacts/contracts/common/ProxyPattern.sol/ProxyPattern.json";
+
   private baseUrl = "https://testnet.mirrornode.hedera.com";
   private abi: any;
+  private proxyAbi: any;
   private web3 = new Web3();
   private eventSignatureToNameMap = new Map<string, any>();
   private logRecords: Array<any> = new Array<any>();
 
   public constructor(abiPath: string) {
     this.abi = JSON.parse(fs.readFileSync(abiPath, "utf8")).abi;
-    this.fillSignatureMap();
+    this.proxyAbi = JSON.parse(fs.readFileSync(this.proxyAbiPath, "utf8")).abi;
+    this.fillSignatureMap(this.abi);
+    this.fillSignatureMap(this.proxyAbi);
   }
 
   public getSignatureAndEventEntries() {
@@ -83,8 +89,8 @@ export class EventConsumer {
     return next ? this.baseUrl + next : next;
   }
 
-  private fillSignatureMap() {
-    this.abi.forEach((eventAbi: any) => {
+  private fillSignatureMap(abi: any) {
+    abi.forEach((eventAbi: any) => {
       if (eventAbi.type === "event") {
         const signature = this.web3.eth.abi.encodeEventSignature(eventAbi);
         this.eventSignatureToNameMap.set(signature, eventAbi);
