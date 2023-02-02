@@ -173,6 +173,7 @@ export class PairTestSteps {
   @when(/User swap (\d*) unit of tokenA/, undefined, 30000)
   public async swapTokenA(tokenACount: number): Promise<void> {
     let precision = await pair.getPrecisionValue(contractProxyId, client);
+    const slippage = new BigNumber(0);
     const tokenAQty =
       tokenB.toSolidityAddress() != dex.HBARX_TOKEN_ADDRESS
         ? await pair.withPrecision(tokenACount, precision)
@@ -181,6 +182,7 @@ export class PairTestSteps {
     await pair.swapTokenA(
       contractProxyId,
       tokenAQty,
+      slippage,
       id,
       tokenA,
       client,
