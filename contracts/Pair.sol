@@ -9,6 +9,16 @@ import "./common/IERC20.sol";
 import "./ILPToken.sol";
 import "./IPair.sol";
 
+/// Emitted when the calculated slippage is over the slippage threshold.
+/// @param message a description of the error.
+/// @param calculatedSlippage the slippage calculated based on the requested transaction parameters.
+/// @param slippageThreshold the maximum slippage allowed for a transaction to proceed.
+error SlippageBreached(
+    string message,
+    int256 calculatedSlippage,
+    int256 slippageThreshold
+);
+
 contract Pair is IPair, Initializable {
     IBaseHTS internal tokenService;
     ILPToken internal lpTokenContract;
@@ -114,7 +124,8 @@ contract Pair is IPair, Initializable {
     function swapToken(
         address to,
         address _token,
-        int256 _deltaQty
+        int256 _deltaQty,
+        int256 _slippage
     ) external payable virtual override {
         require(
             _token == pair.tokenA.tokenAddress ||
@@ -123,19 +134,19 @@ contract Pair is IPair, Initializable {
         );
         _deltaQty = _tokenQuantity(_token, _deltaQty);
         if (_token == pair.tokenA.tokenAddress) {
-            doTokenASwap(to, _deltaQty);
+            doTokenASwap(to, _deltaQty, _slippage);
         } else {
-            doTokenBSwap(to, _deltaQty);
+            doTokenBSwap(to, _deltaQty, _slippage);
         }
     }
 
-    function doTokenASwap(address to, int256 _deltaAQty) private {
+    function doTokenASwap(
+        address to,
+        int256 _deltaAQty,
+        int256 _slippage
+    ) private {
         int256 calculatedSlippage = slippageOutGivenIn(_deltaAQty);
-        int256 localSlippage = getSlippage();
-        require(
-            calculatedSlippage <= (localSlippage),
-            "Slippage threshold breached."
-        );
+        isSlippageBreached(calculatedSlippage, _slippage);
         // deduct fee from the token A
         int256 feeTokenA = feeForToken(_deltaAQty);
         _deltaAQty = _deltaAQty - (feeTokenA / 2);
@@ -180,13 +191,13 @@ contract Pair is IPair, Initializable {
         );
     }
 
-    function doTokenBSwap(address to, int256 _deltaBQty) private {
+    function doTokenBSwap(
+        address to,
+        int256 _deltaBQty,
+        int256 _slippage
+    ) private {
         int256 calculatedSlippage = slippageInGivenOut(_deltaBQty);
-        int256 localSlippage = getSlippage();
-        require(
-            calculatedSlippage <= localSlippage,
-            "Slippage threshold breached."
-        );
+        isSlippageBreached(calculatedSlippage, _slippage);
         // deduct fee from the token B
         int256 feeTokenB = feeForToken(_deltaBQty);
         _deltaBQty -= (feeTokenB / 2);
@@ -493,7 +504,24 @@ contract Pair is IPair, Initializable {
         }
     }
 
-    function _tokenIsHBARX(address token) private returns(bool) {
+    function _tokenIsHBARX(address token) private returns (bool) {
         return token == tokenService.hbarxAddress();
+    }
+
+    function isSlippageBreached(
+        int256 calculatedSlippage,
+        int256 _slippage
+    ) private view {
+        int256 slippageThreshold = getSlippage();
+        if (_slippage != 0) {
+            slippageThreshold = _slippage;
+        }
+        if (calculatedSlippage > slippageThreshold) {
+            revert SlippageBreached({
+                message: "The calculated slippage is over the slippage threshold.",
+                calculatedSlippage: calculatedSlippage,
+                slippageThreshold: slippageThreshold
+            });
+        }
     }
 }
