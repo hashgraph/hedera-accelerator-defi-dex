@@ -221,6 +221,7 @@ export default class Pair {
   public swapTokenA = async (
     contId: string,
     tokenAQty: BigNumber,
+    slippage: BigNumber,
     treasureId: AccountId,
     tokenA: TokenId,
     client: Client,
@@ -237,6 +238,7 @@ export default class Pair {
           .addAddress(treasureId.toSolidityAddress())
           .addAddress(tokenA.toSolidityAddress())
           .addInt256(tokenAQty)
+          .addInt256(slippage)
       )
       .setPayableAmount(new Hbar(0.1))
       .freezeWith(client)

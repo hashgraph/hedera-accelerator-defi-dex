@@ -42,7 +42,8 @@ abstract contract IPair {
     function swapToken(
         address to,
         address _token,
-        int256 _deltaQty
+        int256 _deltaQty,
+        int256 _slippage
     ) external payable virtual;
 
     function getLpTokenContractAddress()
