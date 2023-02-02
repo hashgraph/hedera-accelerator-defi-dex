@@ -384,4 +384,14 @@ export default class Pair {
     console.log(`- Token name: ${response.name} symbol $${response.symbol}`);
     return { name: response.name, symbol: response.symbol };
   };
+
+  getLpTokenContractAddress = async (pairProxyId: string, client: Client) => {
+    const tx = new ContractExecuteTransaction()
+      .setContractId(pairProxyId)
+      .setGas(1000000)
+      .setFunction("getLpTokenContractAddress");
+    const txResponse = await tx.execute(client);
+    const txRecord = await txResponse.getRecord(client);
+    return txRecord.contractFunctionResult!.getAddress(0);
+  };
 }

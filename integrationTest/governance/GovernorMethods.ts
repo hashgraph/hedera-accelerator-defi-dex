@@ -79,20 +79,19 @@ export default class GovernorMethods {
     console.log(`revertGod txn status: ${txnReceipt.status}`);
   };
 
-  upgradeTo = async (proxyAddress: string, logicAddress: string) => {
-    const proxyId = ContractId.fromSolidityAddress(proxyAddress).toString();
-    await this.getCurrentImplementationFromProxy(proxyId);
+  upgradeTo = async (
+    proxyAddress: string,
+    logicAddress: string,
+    client: Client = adminClient
+  ) => {
     const args = new ContractFunctionParameters().addAddress(logicAddress);
-    const txn = await new ContractExecuteTransaction()
+    const txn = new ContractExecuteTransaction()
       .setContractId(ContractId.fromSolidityAddress(proxyAddress))
       .setGas(2000000)
-      .setFunction("upgradeTo", args)
-      .freezeWith(adminClient)
-      .sign(adminKey);
-    const txnResponse = await txn.execute(adminClient);
-    const txnReceipt = await txnResponse.getReceipt(adminClient);
+      .setFunction("upgradeTo", args);
+    const txnResponse = await txn.execute(client);
+    const txnReceipt = await txnResponse.getReceipt(client);
     console.log(`- upgradedTo txn status: ${txnReceipt.status}`);
-    await this.getCurrentImplementationFromProxy(proxyId);
   };
 
   getContractAddresses = async (contractId: string, proposalId: BigNumber) => {
