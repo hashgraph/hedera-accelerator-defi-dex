@@ -38,10 +38,10 @@ const godHolderContractId = contractService.getContractWithProxy(
 
 const setupFactory = async () => {
   console.log(`\nSetupFactory`);
-  const adminId = AccountId.fromString(process.env.ADMIN_ID!);
-  let contractFunctionParameters = new ContractFunctionParameters()
+  const dexOwnerId = clientManagement.getDexOwner().id;
+  const contractFunctionParameters = new ContractFunctionParameters()
     .addAddress(baseContract.address)
-    .addAddress(adminId.toSolidityAddress());
+    .addAddress(dexOwnerId.toSolidityAddress());
   const contractTx = await new ContractExecuteTransaction()
     .setContractId(contractId)
     .setFunction("setUpFactory", contractFunctionParameters)
