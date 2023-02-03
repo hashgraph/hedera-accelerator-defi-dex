@@ -53,7 +53,6 @@ export class PairTestSteps {
     const num = Math.floor(Math.random() * 10) + 1;
     tokenA = await Common.createToken("A" + num, "A" + num, id, key, client);
     tokenB = await Common.createToken("B" + num, "B" + num, id, key, client);
-    this.createLPTokenName();
   }
 
   @when(
@@ -274,11 +273,8 @@ export class PairTestSteps {
     30000
   )
   public async createLPTokenName(): Promise<void> {
-    const tokenADetail = await Common.getTokenInfo(tokenA.toString(), client);
-    const tokenBDetail = await Common.getTokenInfo(tokenB.toString(), client);
-    const symbols = [tokenADetail.symbol, tokenBDetail.symbol];
-    symbols.sort();
-    lpTokenSymbol = symbols[0] + "-" + symbols[1];
-    lpTokenName = lpTokenSymbol + " name";
+    const data = await Common.createLPTokenName(tokenA, tokenB);
+    lpTokenSymbol = data.lpTokenSymbol;
+    lpTokenName = data.lpTokenSymbol;
   }
 }
