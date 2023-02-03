@@ -196,15 +196,6 @@
         "transparentProxyId": "0.0.3122486"
     },
     {
-        "name": "governortransfertoken",
-        "id": "0.0.3371952",
-        "address": "0x00000000000000000000000000000000003373b0",
-        "timestamp": "2023-02-03T11:51:53.700Z",
-        "hash": "448ce5dfdc7bce6aab8477f0d9e91d63",
-        "transparentProxyAddress": "0x00000000000000000000000000000000003373b7",
-        "transparentProxyId": "0.0.3371959"
-    },
-    {
         "name": "godholder",
         "id": "0.0.3372001",
         "address": "0x00000000000000000000000000000000003373e1",
