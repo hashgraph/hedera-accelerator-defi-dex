@@ -13,6 +13,13 @@ export default class ClientManagement {
   private tokenUserId = AccountId.fromString(process.env.TOKEN_USER_ID!);
   private tokenUserKey = PrivateKey.fromString(process.env.TOKEN_USER_KEY!);
 
+  private tokenUserIdNoGODToken = AccountId.fromString(
+    process.env.TOKEN_USER_ID_WITH_NO_GOD_TOKEN!
+  );
+  private tokenUserKeyNoGODToken = PrivateKey.fromString(
+    process.env.TOKEN_USER_KEY_WITH_NO_GOD_TOKEN!
+  );
+
   private dexOwnerId = AccountId.fromString(process.env.DEX_CONTRACT_OWNER_ID!);
   private dexOwnerKey = PrivateKey.fromString(
     process.env.DEX_CONTRACT_OWNER_KEY!
@@ -28,6 +35,13 @@ export default class ClientManagement {
 
   public createOperatorClient = (): Client => {
     return this.doCreateClient(this.tokenUserId, this.tokenUserKey);
+  };
+
+  public createOperatorClientNoGODToken = (): Client => {
+    return this.doCreateClient(
+      this.tokenUserIdNoGODToken,
+      this.tokenUserKeyNoGODToken
+    );
   };
 
   public dexOwnerClient = (): Client => {
@@ -61,6 +75,13 @@ export default class ClientManagement {
     return {
       id: this.tokenUserId,
       key: this.tokenUserKey,
+    };
+  };
+
+  public getOperatorNoToken = () => {
+    return {
+      idNoGODToken: this.tokenUserIdNoGODToken,
+      keyNoGODToken: this.tokenUserKeyNoGODToken,
     };
   };
 
