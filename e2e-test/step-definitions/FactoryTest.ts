@@ -298,6 +298,7 @@ export class FactorySteps {
     tokenBQuantity: BigNumber
   ): Promise<void> {
     tokensAfter = await pair.getPairQty(client);
+
     const withPrecision = Common.withPrecision(1, precision);
     expect(
       Number(Number(tokensAfter[0].dividedBy(withPrecision)).toFixed())

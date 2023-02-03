@@ -7,9 +7,9 @@ import dex from "../../deployment/model/dex";
 import Governor from "../business/Governor";
 import { BigNumber } from "bignumber.js";
 import { Helper } from "../../utils/Helper";
+import Common from "../business/Common";
 
 const governor = new Governor();
-
 const clientManagement = new ClientManagement();
 const contractService = new ContractService();
 
@@ -242,7 +242,7 @@ export class GovernorSteps {
     30000
   )
   public async verifyTokenBalance() {
-    const updatedBalance = await Common.getTokenBalance(
+    let updatedBalance = await Common.getTokenBalance(
       treasureId,
       transferTokenId,
       client
@@ -258,6 +258,7 @@ export class GovernorSteps {
   @when(/user fetches the GOD token balance/, undefined, 30000)
   public async getGODTokenBalance() {
     balance = await Common.getTokenBalance(id, godTokenID, client);
+    console.log("god token balance --", balance);
   }
 
   @when(/user revert the god tokens/, undefined, 30000)
