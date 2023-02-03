@@ -5,6 +5,7 @@ import ClientManagement from "../../utils/ClientManagement";
 import { TokenId } from "@hashgraph/sdk";
 import dex from "../../deployment/model/dex";
 import Pair from "../business/Pair";
+import Common from "../business/Common";
 import Factory from "../business/Factory";
 import { BigNumber } from "bignumber.js";
 import { httpRequest } from "../../deployment/api/HttpsService";
@@ -66,14 +67,14 @@ export class FactorySteps {
   @when(/User create a new pair of tokens/, undefined, 60000)
   public async createNewPair(): Promise<void> {
     const num = Math.floor(Math.random() * 100) + 1;
-    tokenOne = await factory.createToken(
+    tokenOne = await Common.createToken(
       "FactoryTestOne" + num,
       "FactoryTestOne" + num,
       id,
       key,
       client
     );
-    tokenTwo = await factory.createToken(
+    tokenTwo = await Common.createToken(
       "FactoryTestTwo" + num,
       "FactoryTestTwo" + num,
       id,
@@ -124,14 +125,14 @@ export class FactorySteps {
   @when(/User create tokens with same name/, undefined, 30000)
   public async createTokenWithSameName(): Promise<void> {
     const num = Math.floor(Math.random() * 100) + 1;
-    tokenOne = await factory.createToken(
+    tokenOne = await Common.createToken(
       "FactoryTestSingleToken" + num,
       "FactoryTestSingleToken" + num,
       id,
       key,
       client
     );
-    tokenTwo = await factory.createToken(
+    tokenTwo = await Common.createToken(
       "FactoryTestSingleToken" + num,
       "FactoryTestSingleToken" + num,
       id,
@@ -150,7 +151,7 @@ export class FactorySteps {
   @when(/User create a new token/, undefined, 60000)
   public async createSingleToken(): Promise<void> {
     const num = Math.floor(Math.random() * 100) + 1;
-    tokenOne = await factory.createToken(
+    tokenOne = await Common.createToken(
       "FactoryTestSingleToken" + num,
       "FactoryTestSingleToken" + num,
       id,
@@ -221,8 +222,8 @@ export class FactorySteps {
     tokenACount: number,
     tokenBCount: number
   ): Promise<void> {
-    const tokenAQty = pair.withPrecision(tokenACount, precision);
-    const tokenBQty = pair.withPrecision(tokenBCount, precision);
+    const tokenAQty = Common.withPrecision(tokenACount, precision);
+    const tokenBQty = Common.withPrecision(tokenBCount, precision);
     tokensAfter = await pair.getPairQty(client);
     expect(tokensAfter[0]).to.eql(BigNumber.sum(tokensBefore[0], tokenAQty));
     expect(tokensAfter[1]).to.eql(BigNumber.sum(tokensBefore[1], tokenBQty));
@@ -232,7 +233,7 @@ export class FactorySteps {
   public async getLPTokensFromPool(): Promise<void> {
     const { lpTokenAddress } = await pair.getTokenPairAddress(client);
     const lpTokenId = TokenId.fromSolidityAddress(lpTokenAddress);
-    lpTokensInPool = await factory.getTokenBalance(id, lpTokenId, client);
+    lpTokensInPool = await Common.getTokenBalance(id, lpTokenId, client);
   }
 
   @when(/User gives (\d*) units of lptoken to pool/, undefined, 30000)
@@ -241,7 +242,7 @@ export class FactorySteps {
   ): Promise<void> {
     tokensBefore = await pair.getPairQty(client);
 
-    lpTokenQty = pair.withPrecision(lpTokenCount, precision);
+    lpTokenQty = Common.withPrecision(lpTokenCount, precision);
     await pair.removeLiquidity(lpTokenQty, id, key, client);
   }
 
@@ -256,7 +257,7 @@ export class FactorySteps {
   ): Promise<void> {
     tokensAfter = await pair.getPairQty(client);
 
-    const withPrecision = pair.withPrecision(1, precision);
+    const withPrecision = Common.withPrecision(1, precision);
     expect(
       Number(Number(tokensAfter[0].dividedBy(withPrecision)).toFixed())
     ).to.eql(Number(tokenAQuantity));
@@ -289,7 +290,7 @@ export class FactorySteps {
   ): Promise<void> {
     tokensAfter = await pair.getPairQty(client);
 
-    const withPrecision = pair.withPrecision(1, precision);
+    const withPrecision = Common.withPrecision(1, precision);
     expect(
       Number(Number(tokensAfter[0].dividedBy(withPrecision)).toFixed())
     ).to.eql(Number(tokenAQuantity));
@@ -300,7 +301,7 @@ export class FactorySteps {
 
   @when(/User update the slippage value to (\d*)/, undefined, 30000)
   public async setSlippageVal(slippage: number): Promise<void> {
-    const slippageWithPrecision = pair.withPrecision(slippage, precision);
+    const slippageWithPrecision = Common.withPrecision(slippage, precision);
     pair.setSlippage(slippageWithPrecision, client);
   }
 
@@ -321,13 +322,13 @@ export class FactorySteps {
 
   @when(/User gives (\d*) units of HBAR to the pool/, undefined, 30000)
   public async calculateTokenAQtyForGivenTokenBQty(tokenHBARCount: number) {
-    const tokenHBARQty = pair.withPrecision(tokenHBARCount, precision);
+    const tokenHBARQty = Common.withPrecision(tokenHBARCount, precision);
     tokenAQty = await pair.getInGivenOut(tokenHBARQty, client);
   }
 
   @then(/Expected quantity of tokenA should be (\d*)/, undefined, 30000)
   public async verifyTokenAQty(expectedTokenAQty: string) {
-    const withPrecision = pair.withPrecision(1, precision);
+    const withPrecision = Common.withPrecision(1, precision);
     expect(Number(Number(tokenAQty.dividedBy(withPrecision)).toFixed())).to.eql(
       Number(expectedTokenAQty)
     );
@@ -339,7 +340,7 @@ export class FactorySteps {
     30000
   )
   public async calculateSlippageOut(tokenACount: number) {
-    const tokenAQty = pair.withPrecision(tokenACount, precision);
+    const tokenAQty = Common.withPrecision(tokenACount, precision);
     slippageOutGivenIn = await pair.slippageOutGivenIn(tokenAQty, client);
   }
 
@@ -354,7 +355,7 @@ export class FactorySteps {
     30000
   )
   public async calculateSlippageIn(tokenHBARCount: number) {
-    const tokenBQty = pair.withPrecision(tokenHBARCount, precision);
+    const tokenBQty = Common.withPrecision(tokenHBARCount, precision);
     slippageInGivenOut = await pair.slippageInGivenOut(tokenBQty, client);
   }
 

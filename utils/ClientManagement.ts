@@ -16,6 +16,7 @@ export default class ClientManagement {
   private tokenUserIdNoGODToken = AccountId.fromString(
     process.env.TOKEN_USER_ID_WITH_NO_GOD_TOKEN!
   );
+
   private tokenUserKeyNoGODToken = PrivateKey.fromString(
     process.env.TOKEN_USER_KEY_WITH_NO_GOD_TOKEN!
   );

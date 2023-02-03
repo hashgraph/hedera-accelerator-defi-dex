@@ -8,10 +8,9 @@ import Governor from "../business/Governor";
 import { BigNumber } from "bignumber.js";
 import { Helper } from "../../utils/Helper";
 import Factory from "../business/Factory";
+import Common from "../business/Common";
 
 const governor = new Governor();
-const factory = new Factory();
-
 const clientManagement = new ClientManagement();
 const contractService = new ContractService();
 
@@ -177,11 +176,7 @@ export class GovernorSteps {
 
   @when(/user fetches token balance of the payee account/, undefined, 30000)
   public async getTokenBalance() {
-    balance = await factory.getTokenBalance(
-      transferTokenId,
-      treasureId,
-      client
-    );
+    balance = await Common.getTokenBalance(treasureId, transferTokenId, client);
   }
 
   @then(
@@ -190,9 +185,9 @@ export class GovernorSteps {
     30000
   )
   public async verifyTokenBalance() {
-    let updatedBalance = await factory.getTokenBalance(
-      transferTokenId,
+    let updatedBalance = await Common.getTokenBalance(
       treasureId,
+      transferTokenId,
       client
     );
     expect(Number(updatedBalance)).to.eql(Number(balance) + Number(tokens));
@@ -205,7 +200,7 @@ export class GovernorSteps {
 
   @when(/user fetches the GOD token balance/, undefined, 30000)
   public async getGODTokenBalance() {
-    balance = await factory.getTokenBalance(godTokenID, id, client);
+    balance = await Common.getTokenBalance(id, godTokenID, client);
     console.log("god token balance --", balance);
   }
 
