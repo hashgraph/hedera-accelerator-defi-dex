@@ -12,6 +12,7 @@ import { ContractService } from "../../deployment/service/ContractService";
 import GovernorMethods from "./GovernorMethods";
 import ClientManagement from "../../utils/ClientManagement";
 import { Helper } from "../../utils/Helper";
+import dex from "../../deployment/model/dex";
 
 const clientManagement = new ClientManagement();
 const contractService = new ContractService();
@@ -106,14 +107,12 @@ const getPair = async (
 
 async function createPairFromFactory(tokenAddress: string) {
   const GODToken = tokenAddress;
-  //await setupFactory();
-  const tokenA = TokenId.fromString("0.0.48289687");
-  await createPair(factoryContractId, GODToken, tokenA.toSolidityAddress());
+  await createPair(factoryContractId, GODToken, dex.LAB49_1_TOKEN_ADDRESS);
 
   const pairAddress = await getPair(
     factoryContractId,
     GODToken,
-    tokenA.toSolidityAddress()
+    dex.LAB49_1_TOKEN_ADDRESS
   );
 
   const response = await httpRequest(pairAddress, undefined);
@@ -159,24 +158,35 @@ async function propose(
 
 async function main() {
   console.log(`\nUsing governor proxy contract id ${contractId}`);
-  await governor.initializeGodHolder();
-  await governor.initialize(contractId);
-  const title = "Create Token Proposal - 2";
+  try {
+    await governor.initializeGodHolder();
+  } catch (error) {
+    console.error(error);
+  }
+  try {
+    await governor.initialize(contractId);
+  } catch (error) {
+    console.error(error);
+  }
+  const title = "Create Token Proposal - 1";
   const proposalId = await propose(contractId, title, "description", "link"); // title should be unique for each proposal
-  const title1 = "Create Token Proposal - 3";
+  const title1 = "Create Token Proposal - 2";
   const proposalId1 = await propose(contractId, title1, "description", "link");
 
   await governor.getProposalDetails(proposalId, contractId);
   await governor.vote(proposalId, 1, contractId, client); // 1 is for vote.
+  await governor.transferGodToken(client);
   await governor.vote(proposalId, 1, contractId, treasurerClient);
   await governor.vote(proposalId1, 1, contractId, client); // 1 is for vote.
   await governor.vote(proposalId1, 1, contractId, treasurerClient);
+  await governor.proposalVotes(proposalId, contractId);
+  await governor.proposalVotes(proposalId1, contractId);
   await governor.quorumReached(proposalId, contractId);
   await governor.voteSucceeded(proposalId, contractId);
   await governor.proposalVotes(proposalId, contractId);
   await governor.state(proposalId, contractId);
   console.log(`\nWaiting for voting period to get over.`);
-  await Helper.delay(15 * 1000); // Wait till waiting period is over. It's current deadline as per Governance.
+  await Helper.delay(25 * 1000); // Wait till waiting period is over. It's current deadline as per Governance.
   await governor.state(proposalId, contractId); // 4 means succeeded
   await governor.execute(title, contractId);
   await governor.execute(title1, contractId);

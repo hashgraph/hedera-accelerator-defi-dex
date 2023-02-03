@@ -6,6 +6,7 @@ import {
   ContractId,
   Hbar,
   TokenId,
+  TransferTransaction,
 } from "@hashgraph/sdk";
 
 import dotenv from "dotenv";
@@ -19,10 +20,11 @@ const clientManagement = new ClientManagement();
 const contractService = new ContractService();
 
 const client = clientManagement.createOperatorClient();
-const { treasureKey } = clientManagement.getTreasure();
+const { treasureId, treasureKey } = clientManagement.getTreasure();
 
 const adminClient = clientManagement.createClientAsAdmin();
 const { adminKey } = clientManagement.getAdmin();
+const { id } = clientManagement.getOperator();
 const htsServiceAddress = contractService.getContract(
   contractService.baseContractName
 ).address;
@@ -45,6 +47,23 @@ export default class GovernorMethods {
     const impAddress = txRecord.contractFunctionResult!.getAddress(0);
     console.log(`- current implementation/logic address: ${impAddress}`);
     return impAddress;
+  };
+
+  transferGodToken = async (client: Client) => {
+    //Create the transfer transaction
+    console.log("transferring tokens to TokenUser");
+    const transaction = await new TransferTransaction()
+      .addTokenTransfer(dex.GOD_DEV_TOKEN_ID, treasureId, -900000000000000)
+      .addTokenTransfer(dex.GOD_DEV_TOKEN_ID, id, 900000000000000)
+      .freezeWith(client);
+
+    const signTx = await transaction.sign(treasureKey);
+    const txResponse = await signTx.execute(client);
+    const receipt = await txResponse.getReceipt(client);
+    const transactionStatus = receipt.status;
+    console.log(
+      "The transaction consensus status " + transactionStatus.toString()
+    );
   };
 
   canClaimGod = async (client: Client) => {
@@ -177,7 +196,7 @@ export default class GovernorMethods {
   };
 
   public initialize = async (contractId: string | ContractId) => {
-    const tokenId = TokenId.fromString(dex.GOD_TOKEN_ID);
+    const tokenId = TokenId.fromString(dex.GOD_DEV_TOKEN_ID);
     console.log(`\nInitialize contract with token  `);
     const votingDelay = 0;
     const votingPeriod = 100; //Blocks to mint
@@ -204,7 +223,7 @@ export default class GovernorMethods {
   };
 
   public initializeGodHolder = async () => {
-    const tokenId = TokenId.fromString(dex.GOD_TOKEN_ID);
+    const tokenId = TokenId.fromString(dex.GOD_DEV_TOKEN_ID);
     console.log(`\nInitialize GodHolder contract with token  `);
 
     let contractFunctionParameters = new ContractFunctionParameters()
