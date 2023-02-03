@@ -246,7 +246,10 @@ const spotPrice = async (contId: string) => {
   const getSpotPrice = await new ContractExecuteTransaction()
     .setContractId(contId)
     .setGas(1000000)
-    .setFunction("getSpotPrice")
+    .setFunction(
+      "getSpotPrice",
+      new ContractFunctionParameters().addAddress(token0.toSolidityAddress())
+    )
     .freezeWith(client);
   const spotPriceTx = await getSpotPrice.execute(client);
   const response = await spotPriceTx.getRecord(client);
