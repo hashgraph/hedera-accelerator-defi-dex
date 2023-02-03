@@ -988,7 +988,7 @@ describe("All Tests", function () {
 
   describe("Pair Base Constant Product Algorithm Tests", async () => {
     it("Check spot price for tokens A", async function () {
-      const { pair } = await loadFixture(deployFixture);
+      const { pair, token1Address } = await loadFixture(deployFixture);
       await pair.addLiquidity(
         zeroAddress,
         tokenAAddress,
@@ -996,37 +996,26 @@ describe("All Tests", function () {
         100,
         50
       );
-      const value = await pair.getSpotPrice();
+      const value = await pair.getSpotPrice(token1Address);
 
       expect(value).to.be.equals(200000000);
     });
 
-    it("Check spot price for tokens B", async function () {
-      const { pair } = await loadFixture(deployFixture);
+    it("Check spot price for tokens", async function () {
+      const { pair, token1Address, token2Address } = await loadFixture(
+        deployFixture
+      );
       await pair.addLiquidity(
         zeroAddress,
-        tokenAAddress,
-        tokenBAddress,
+        token1Address,
+        token2Address,
         50,
         100
       );
-      const value = await pair.getSpotPrice();
-
-      expect(value).to.be.equals(50000000);
-    });
-
-    it("Check spot price for tokens with reverse", async function () {
-      const { pair } = await loadFixture(deployFixture);
-      await pair.addLiquidity(
-        zeroAddress,
-        tokenAAddress,
-        tokenBAddress,
-        100,
-        200
-      );
-      const value = await pair.getSpotPrice();
-
-      expect(value).to.be.equals(50000000);
+      const token2SpotPrice = await pair.getSpotPrice(token2Address);
+      expect(token2SpotPrice).to.be.equals(200000000);
+      const token1SpotPrice = await pair.getSpotPrice(token1Address);
+      expect(token1SpotPrice).to.be.equals(50000000);
     });
 
     it("check get out given In price value without precision", async function () {
@@ -1058,7 +1047,7 @@ describe("All Tests", function () {
     });
 
     it("check spot price by multiplying with precision value", async function () {
-      const { pair } = await loadFixture(deployFixture);
+      const { pair, token1Address } = await loadFixture(deployFixture);
       const precisionValue = await pair.getPrecisionValue();
       const tokenAQ = 134.0293628 * Number(precisionValue);
       const tokenBQ = 187.5599813 * Number(precisionValue);
@@ -1070,13 +1059,13 @@ describe("All Tests", function () {
         tokenAQ,
         tokenBQ
       );
-      const value = await pair.getSpotPrice();
+      const value = await pair.getSpotPrice(token1Address);
 
       expect(Number(value)).to.be.equals(Number(71459466));
     });
 
     it("check spot price for front end", async function () {
-      const { pair } = await loadFixture(deployFixture);
+      const { pair, token1Address } = await loadFixture(deployFixture);
       const precisionValue = await pair.getPrecisionValue();
       const tokenAQ = 134.0293628 * Number(precisionValue);
       const tokenBQ = 187.5599813 * Number(precisionValue);
@@ -1088,14 +1077,14 @@ describe("All Tests", function () {
         tokenAQ,
         tokenBQ
       );
-      const value = await pair.getSpotPrice();
+      const value = await pair.getSpotPrice(token1Address);
       const output = Number(value) / Number(precisionValue);
 
       expect(output).to.be.equals(0.71459466);
     });
 
     it("check spot price for big number", async function () {
-      const { pair } = await loadFixture(deployFixture);
+      const { pair, token1Address } = await loadFixture(deployFixture);
       const tokenAQ = BigNumber.from("29362813400293628");
       const tokenBQ = BigNumber.from("55998131875599813");
       await pair.addLiquidity(
@@ -1105,7 +1094,7 @@ describe("All Tests", function () {
         tokenAQ,
         tokenBQ
       );
-      const value = await pair.getSpotPrice();
+      const value = await pair.getSpotPrice(token1Address);
       expect(Number(value)).to.be.equals(Number(52435344));
     });
 

@@ -82,7 +82,7 @@ const setSlippage = async (slippage: BigNumber) => {
 };
 
 const spotPrice = async () => {
-  await pair.getSpotPrice();
+  await pair.getSpotPrice(tokenA);
 };
 
 const getVariantValue = async () => {
