@@ -145,7 +145,7 @@ export default class Factory {
 
   public getTokenBalance = async (
     tokenId: TokenId,
-    accountId: AccountId,
+    accountId: AccountId | string,
     client: Client
   ): Promise<Long> => {
     const treasureBalanceTx = await new AccountBalanceQuery()
@@ -156,5 +156,21 @@ export default class Factory {
     console.log(` Treasure Token Balance for : ${responseTokens.get(tokenId)}`);
 
     return responseTokens.get(tokenId)!;
+  };
+
+  public upgradeLogic = async (
+    contractId: string,
+    newImplAddress: string,
+    client: Client,
+    methodName: string
+  ) => {
+    const args = new ContractFunctionParameters().addAddress(newImplAddress);
+    const txn = new ContractExecuteTransaction()
+      .setContractId(contractId)
+      .setGas(4000000)
+      .setFunction(methodName, args);
+    const txnResponse = await txn.execute(client);
+    const txnReceipt = await txnResponse.getReceipt(client);
+    console.log(`- ${methodName} txn status: ${txnReceipt.status}`);
   };
 }

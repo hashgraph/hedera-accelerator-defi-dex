@@ -77,17 +77,17 @@ contract GODHolder is IGODHolder, Initializable {
     function grabTokensFromUser(
         address user
     ) external override returns (uint256 amount) {
-        if (godTokenForUsers[user] > 0) {
+        uint256 userBalance = _token.balanceOf(user);
+        if (godTokenForUsers[user] > 0 && userBalance == 0) {
             return godTokenForUsers[user];
         }
-        amount = _token.balanceOf(user);
-        godTokenForUsers[user] = amount;
+        godTokenForUsers[user] += userBalance;
         _tokenService.associateTokenPublic(address(this), address(_token));
         int256 responseCode = _tokenService.transferTokenPublic(
             address(_token),
             address(user),
             address(this),
-            int256(amount)
+            int256(userBalance)
         );
         require(
             responseCode == HederaResponseCodes.SUCCESS,

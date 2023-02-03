@@ -245,6 +245,11 @@ describe("Governor Tests", function () {
 
       await instance.castVote(proposalId, 1);
       const voteSucceeded1 = await instance.voteSucceeded(proposalId);
+      await verifyProposalVotes(instance, proposalId, {
+        abstainVotes: 0,
+        againstVotes: 0,
+        forVotes: twentyPercent - 1 * precision,
+      });
       expect(voteSucceeded1).to.be.equals(true);
       const quorumReached1 = await instance.quorumReached(proposalId);
       expect(quorumReached1).to.be.equals(true);
@@ -305,7 +310,11 @@ describe("Governor Tests", function () {
       expect(voteSucceeded1).to.be.equals(true);
       const quorumReached1 = await instance.quorumReached(proposalId);
       expect(quorumReached1).to.be.equals(true);
-
+      await verifyProposalVotes(instance, proposalId, {
+        abstainVotes: 0,
+        againstVotes: 0,
+        forVotes: twentyPercent - 1 * precision,
+      });
       expect(quorumReached1).to.be.equals(true);
       const activeProposals =
         await godHolder.callStatic.getActiveProposalsForUser();

@@ -210,10 +210,9 @@ abstract contract GovernorCountingSimpleInternal is
     ) public virtual override returns (uint256) {
         address voter = _msgSender();
         require(_getVotes(voter, 0, "") > 0, "No voting power");
-
-        uint256 weight = _castVote(proposalId, voter, support, "");
         godHolder.grabTokensFromUser(voter);
         godHolder.addProposalForVoter(voter, proposalId);
+        uint256 weight = _castVote(proposalId, voter, support, "");
         address[] storage voters = proposalVoters[proposalId];
         voters.push(voter);
         return weight;
