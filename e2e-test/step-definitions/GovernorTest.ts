@@ -7,17 +7,15 @@ import dex from "../../deployment/model/dex";
 import Governor from "../business/Governor";
 import { BigNumber } from "bignumber.js";
 import { Helper } from "../../utils/Helper";
-import Factory from "../business/Factory";
 
 const governor = new Governor();
-const factory = new Factory();
 
 const clientManagement = new ClientManagement();
 const contractService = new ContractService();
 
 const client = clientManagement.createOperatorClient();
 const clientWithNoGODToken = clientManagement.createOperatorClientNoGODToken();
-const { idNoGODToken, keyNoGODToken } = clientManagement.getOperatorNoToken();
+const { idNoGODToken } = clientManagement.getOperatorNoToken();
 const { id } = clientManagement.getOperator();
 const { treasureId, treasureKey } = clientManagement.getTreasure();
 
@@ -25,8 +23,6 @@ const contractId = contractService.getContractWithProxy(
   contractService.governorTTContractName
 ).transparentProxyId!;
 
-const adminClient = clientManagement.createClientAsAdmin();
-const { adminKey } = clientManagement.getAdmin();
 const htsServiceAddress = contractService.getContract(
   contractService.baseContractName
 ).address;
@@ -111,7 +107,7 @@ export class GovernorSteps {
     link: string,
     tokenAmount: number
   ): Promise<BigNumber> {
-    let tokenQty = tokenAmount * 100000000;
+    const tokenQty = tokenAmount * 100000000;
     tokens = new BigNumber(tokenQty);
     proposalID = await governor.propose(
       contractId,
@@ -181,8 +177,8 @@ export class GovernorSteps {
     link: string,
     tokenAmount: number
   ): Promise<void> {
-    let tokenQty = tokenAmount * 100000000;
-    let tokens = new BigNumber(tokenQty);
+    const tokenQty = tokenAmount * 100000000;
+    const tokens = new BigNumber(tokenQty);
     try {
       await governor.propose(
         contractId,
@@ -237,11 +233,7 @@ export class GovernorSteps {
 
   @when(/user fetches token balance of the payee account/, undefined, 30000)
   public async getTokenBalance() {
-    balance = await factory.getTokenBalance(
-      transferTokenId,
-      treasureId,
-      client
-    );
+    balance = await Common.getTokenBalance(treasureId, transferTokenId, client);
   }
 
   @then(
@@ -250,9 +242,9 @@ export class GovernorSteps {
     30000
   )
   public async verifyTokenBalance() {
-    let updatedBalance = await factory.getTokenBalance(
-      transferTokenId,
+    const updatedBalance = await Common.getTokenBalance(
       treasureId,
+      transferTokenId,
       client
     );
     expect(Number(updatedBalance)).to.eql(Number(balance) + Number(tokens));
@@ -265,7 +257,7 @@ export class GovernorSteps {
 
   @when(/user fetches the GOD token balance/, undefined, 30000)
   public async getGODTokenBalance() {
-    balance = await factory.getTokenBalance(godTokenID, id, client);
+    balance = await Common.getTokenBalance(id, godTokenID, client);
   }
 
   @when(/user revert the god tokens/, undefined, 30000)

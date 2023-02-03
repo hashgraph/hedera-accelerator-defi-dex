@@ -1,6 +1,6 @@
-import { AccountId, PrivateKey, Client } from "@hashgraph/sdk";
-import dotenv from "dotenv";
+import { AccountId, PrivateKey, Client, Hbar } from "@hashgraph/sdk";
 
+import dotenv from "dotenv";
 dotenv.config();
 
 export default class ClientManagement {
@@ -92,3 +92,64 @@ export default class ClientManagement {
     };
   };
 }
+
+interface ClientsInfo {
+  dexOwnerClient: Client;
+  dexOwnerId: AccountId;
+  dexOwnerKey: PrivateKey;
+
+  adminClient: Client;
+  adminId: AccountId;
+  adminKey: PrivateKey;
+
+  operatorClient: Client;
+  operatorId: AccountId;
+  operatorKey: PrivateKey;
+
+  treasureClient: Client;
+  treasureId: AccountId;
+  treasureKey: PrivateKey;
+}
+
+function initClientsInfo(): ClientsInfo {
+  const cm = new ClientManagement();
+  const adminClient = cm.createClientAsAdmin();
+  const operatorClient = cm.createOperatorClient();
+  const treasureClient = cm.createClient();
+  const dexOwnerClient = cm.dexOwnerClient();
+
+  const dexOwner = cm.getDexOwner();
+  const dexOwnerId = dexOwner.id;
+  const dexOwnerKey = dexOwner.key;
+
+  const admin = cm.getAdmin();
+  const adminId = admin.adminId;
+  const adminKey = admin.adminKey;
+
+  const operator = cm.getOperator();
+  const operatorId = operator.id;
+  const operatorKey = operator.key;
+
+  const treasure = cm.getTreasure();
+  const treasureId = treasure.treasureId;
+  const treasureKey = treasure.treasureKey;
+
+  return {
+    dexOwnerClient,
+    dexOwnerId,
+    dexOwnerKey,
+    adminClient,
+    adminId,
+    adminKey,
+    operatorClient,
+    operatorId,
+    operatorKey,
+    treasureClient,
+    treasureId,
+    treasureKey,
+  };
+}
+
+const clientsInfo = initClientsInfo();
+
+export { clientsInfo };
