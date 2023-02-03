@@ -35,8 +35,8 @@ const godHolder = contractService.getContract(
 );
 
 let defaultQuorumThresholdValue: number = 1;
-let votingDelay: number = 12;
-let votingPeriod: number = 12;
+let votingDelay: number = 1;
+let votingPeriod: number = 4;
 let proposalID: BigNumber;
 let msg: string;
 let balance: Long;
@@ -44,6 +44,22 @@ let tokens: BigNumber;
 
 const transferTokenId = TokenId.fromString(dex.TOKEN_LAB49_1);
 const godTokenID = TokenId.fromString(dex.GOD_TOKEN_ID);
+enum ProposalState {
+  Pending,
+  Active,
+  Canceled,
+  Defeated,
+  Succeeded,
+  Queued,
+  Expired,
+  Executed,
+}
+
+enum VoteType {
+  Against,
+  For,
+  Abstain,
+}
 
 @binding()
 export class GovernorSteps {
@@ -101,10 +117,12 @@ export class GovernorSteps {
     }
   }
 
-  @then(/user verify that proposal state is (\d*)/, undefined, 30000)
-  public async verifyProposaState(proposalState: string): Promise<void> {
+  @then(/user verify that proposal state is "([^"]*)"/, undefined, 30000)
+  public async verifyProposalState(proposalState: string): Promise<void> {
     const currentState = await governor.state(proposalID, contractId, client);
-    expect(Number(currentState)).to.eql(Number(proposalState));
+    expect(Number(currentState)).to.eql(
+      Number(Object.values(ProposalState).indexOf(proposalState))
+    );
   }
 
   @then(/user gets message "([^"]*)" on creating proposal/, undefined, 30000)
@@ -141,9 +159,10 @@ export class GovernorSteps {
     }
   }
 
-  @when(/user vote (\d*) to proposal/, undefined, 30000)
-  public async voteToProposal(vote: number): Promise<void> {
-    await governor.vote(proposalID, vote, contractId, client);
+  @when(/user vote "([^"]*)" proposal/, undefined, 30000)
+  public async voteToProposal(vote: string): Promise<void> {
+    const voteVal = Number(Object.values(VoteType).indexOf(vote));
+    await governor.vote(proposalID, voteVal, contractId, client);
   }
 
   @when(/user waits for (\d*) seconds/, undefined, 30000)
