@@ -203,5 +203,41 @@
         "hash": "878a651bf34a9c059fc99bf7b3a5715b",
         "transparentProxyAddress": "0x00000000000000000000000000000000003373f0",
         "transparentProxyId": "0.0.3372016"
+    },
+    {
+        "name": "factory",
+        "id": "0.0.3373798",
+        "address": "0000000000000000000000000000000000337ae6",
+        "timestamp": "2023-02-03T13:10:32.743Z",
+        "hash": "279bdc6b24006e887cc08e9979ec8636",
+        "transparentProxyAddress": "0x000000000000000000000000000000000032cb1d",
+        "transparentProxyId": "0.0.3328797"
+    },
+    {
+        "name": "governortransfertoken",
+        "id": "0.0.3373825",
+        "address": "0000000000000000000000000000000000337b01",
+        "timestamp": "2023-02-03T13:10:40.931Z",
+        "hash": "448ce5dfdc7bce6aab8477f0d9e91d63",
+        "transparentProxyAddress": "0x0000000000000000000000000000000000002367",
+        "transparentProxyId": "0.0.9063"
+    },
+    {
+        "name": "governortextproposal",
+        "id": "0.0.3373836",
+        "address": "0000000000000000000000000000000000337b0c",
+        "timestamp": "2023-02-03T13:10:47.521Z",
+        "hash": "4a69e295f26171bbb14beffa6006ccc5",
+        "transparentProxyAddress": "0x0000000000000000000000000000000000002379",
+        "transparentProxyId": "0.0.9081"
+    },
+    {
+        "name": "governortokencreate",
+        "id": "0.0.3373849",
+        "address": "0000000000000000000000000000000000337b19",
+        "timestamp": "2023-02-03T13:10:54.944Z",
+        "hash": "f5e45f2b1a3a5471562122161ab4258b",
+        "transparentProxyAddress": "0x000000000000000000000000000000000000238e",
+        "transparentProxyId": "0.0.9102"
     }
 ]
