@@ -62,12 +62,6 @@ describe("Governor Tests", function () {
     return basicDeployments(mockBaseHTS);
   }
 
-  async function deployFixtureForQuadratic() {
-    const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-    const mockBaseHTS = await MockBaseHTS.deploy(true, zeroAddress);
-    return basicDeployments(mockBaseHTS);
-  }
-
   async function basicDeployments(mockBaseHTS: any) {
     const signers = await ethers.getSigners();
     const TokenCont = await ethers.getContractFactory("ERC20Mock");

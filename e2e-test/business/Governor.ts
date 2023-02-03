@@ -33,8 +33,7 @@ export default class Governor {
       .addUint256(votingPeriod)
       .addAddress(htsServiceAddress)
       .addAddress(godHolderProxyAdd)
-      .addUint256(defaultQuorumThresholdValue)
-      .addBool(true);
+      .addUint256(defaultQuorumThresholdValue);
 
     const tx = await new ContractExecuteTransaction()
       .setContractId(contractId)
