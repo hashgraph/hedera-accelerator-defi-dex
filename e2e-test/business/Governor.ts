@@ -244,4 +244,52 @@ export default class Governor {
     );
     return status.toString() === "SUCCESS";
   };
+
+  public cancelProposal = async (
+    title: string,
+    contractId: string | ContractId,
+    client: Client,
+    treasureKey: PrivateKey
+  ) => {
+    console.log(`\nCancel proposal `);
+
+    const contractFunctionParameters =
+      new ContractFunctionParameters().addString(title);
+
+    const tx = await new ContractExecuteTransaction()
+      .setContractId(contractId)
+      .setFunction("cancelProposal", contractFunctionParameters)
+      .setGas(900000)
+      .freezeWith(client)
+      .sign(treasureKey);
+
+    const executedTx = await tx.execute(client);
+
+    const record = await executedTx.getRecord(client);
+    const receipt = await executedTx.getReceipt(client);
+
+    const status = receipt.status;
+    const proposalId = record.contractFunctionResult?.getUint256(0)!;
+    console.log(
+      `Cancel Proposal tx status ${status} with proposal id ${proposalId}`
+    );
+
+    return proposalId;
+  };
+
+  revertGod = async (client: Client, contractId: string | ContractId) => {
+    console.log(`revertGod`);
+    const args = new ContractFunctionParameters();
+    const txn = await new ContractExecuteTransaction()
+      .setContractId(contractId)
+      .setGas(9000000)
+      .setFunction("revertTokensForVoter", args)
+      .freezeWith(client);
+    const txnResponse = await txn.execute(client);
+    const txnRecord = await txnResponse.getRecord(client);
+    const txnResult = txnRecord.contractFunctionResult!.getUint256(0);
+    console.log(`revertGod txn result: ${txnResult}`);
+    const txnReceipt = await txnResponse.getReceipt(client);
+    console.log(`revertGod txn status: ${txnReceipt.status}`);
+  };
 }
