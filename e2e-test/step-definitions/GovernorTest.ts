@@ -154,8 +154,9 @@ export class GovernorSteps {
 
   @then(/user verify that proposal state is "([^"]*)"/, undefined, 30000)
   public async verifyProposalState(proposalState: string): Promise<void> {
+    let currentState;
     try {
-      const currentState = await governor.state(proposalID, contractId, client);
+      currentState = await governor.state(proposalID, contractId, client);
       expect(Number(currentState)).to.eql(
         Number(Object.values(ProposalState).indexOf(proposalState))
       );

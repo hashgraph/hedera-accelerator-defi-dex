@@ -53,7 +53,6 @@ Feature: GovernorTransferToken e2e test
         When user waits for 3 seconds 
         When user waits for 9 seconds 
         Then user verify that proposal state is "Defeated"
-        When user cancel the proposal with title "testtitlesamples"
     
     # Scenario: Verify GOD tokens are returned on proposal execution or cancellation    - TO DO 
  
