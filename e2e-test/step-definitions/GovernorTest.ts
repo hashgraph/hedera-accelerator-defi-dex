@@ -119,18 +119,26 @@ export class GovernorSteps {
 
   @then(/user verify that proposal state is "([^"]*)"/, undefined, 30000)
   public async verifyProposalState(proposalState: string): Promise<void> {
+    let currentState;
     try {
-      const currentState = await governor.state(proposalID, contractId, client);
+      currentState = await governor.state(proposalID, contractId, client);
       expect(Number(currentState)).to.eql(
         Number(Object.values(ProposalState).indexOf(proposalState))
       );
     } catch (e: any) {
-      const title = await governor.getProposalDetails(
-        proposalID,
-        contractId,
-        client
-      );
-      await governor.cancelProposal(title, contractId, client, treasureKey);
+      console.log("Something went wrong while verifying the state of proposal");
+      if (
+        Number(currentState) != 2 &&
+        Number(currentState) != 6 &&
+        Number(currentState) != 7
+      ) {
+        const title = await governor.getProposalDetails(
+          proposalID,
+          contractId,
+          client
+        );
+        await governor.cancelProposal(title, contractId, client, treasureKey);
+      }
     }
   }
 
@@ -174,6 +182,9 @@ export class GovernorSteps {
       const voteVal = Number(Object.values(VoteType).indexOf(vote));
       await governor.vote(proposalID, voteVal, contractId, client);
     } catch (e: any) {
+      console.log(
+        "Something went wrong while voting to proposal now cancelling the proposal"
+      );
       const title = await governor.getProposalDetails(
         proposalID,
         contractId,
@@ -193,6 +204,9 @@ export class GovernorSteps {
     try {
       await governor.execute(title, contractId, client, treasureKey);
     } catch (e: any) {
+      console.log(
+        "Something went wrong while executing proposal cancelling the proposal"
+      );
       const title = await governor.getProposalDetails(
         proposalID,
         contractId,
@@ -240,6 +254,9 @@ export class GovernorSteps {
     try {
       await governor.revertGod(client, godHolder.transparentProxyId!);
     } catch (e: any) {
+      console.log(
+        "Something went wrong while reverting the god token cancelling the proposal"
+      );
       const title = await governor.getProposalDetails(
         proposalID,
         contractId,

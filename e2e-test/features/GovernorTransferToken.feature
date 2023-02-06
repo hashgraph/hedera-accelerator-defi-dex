@@ -44,7 +44,7 @@ Feature: GovernorTransferToken e2e test
         When user vote "Against" proposal
         When user waits for 5 seconds 
         Then user verify that proposal state is "Defeated"
-        When user cancel the proposal with title "sampletesttitle"
+        When user revert the god tokens   
         
 
     Scenario: Verify proposal state is defeated if no body voted on it
@@ -52,7 +52,6 @@ Feature: GovernorTransferToken e2e test
         When user waits for 3 seconds 
         When user waits for 7 seconds 
         Then user verify that proposal state is "Defeated"
-        When user cancel the proposal with title "testtitlesamples"
     
     # Scenario: Verify GOD tokens are returned on proposal execution or cancellation    - TO DO 
  
