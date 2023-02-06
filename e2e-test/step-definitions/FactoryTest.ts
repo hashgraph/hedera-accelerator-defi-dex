@@ -289,11 +289,13 @@ export class FactorySteps {
   @when(/User make swap of (\d*) unit of tokenA with HBAR/, undefined, 30000)
   public async swapTokenA(tokenACount: number): Promise<void> {
     let precision = await pair.getPrecisionValue(pairContractId, client);
+    const slippage = new BigNumber(0);
     const tokenAQty = await pair.withPrecision(tokenACount, precision);
     tokensBefore = await pair.pairCurrentPosition(pairContractId, client);
     await pair.swapTokenA(
       pairContractId,
       tokenAQty,
+      slippage,
       id,
       tokenOne,
       client,

@@ -15,6 +15,7 @@ describe("All Tests", function () {
   const treasury = "0x0000000000000000000000000000000002d70207";
   let precision: BigNumber;
   const fee = BigNumber.from(1);
+  const defaultSlippageInput = BigNumber.from(0);
 
   async function deployERC20Mock() {
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
@@ -176,9 +177,15 @@ describe("All Tests", function () {
     const feeForTokenA = await pair.feeForToken(addTokenAQty);
     const addTokenAQtyAfterFee =
       Number(addTokenAQty) - Number(feeForTokenA) / 2;
-    const tx = await pair.swapToken(zeroAddress, token1Address, 0, {
-      value: ethers.utils.parseEther("0.0000000001"),
-    });
+    const tx = await pair.swapToken(
+      zeroAddress,
+      token1Address,
+      0,
+      defaultSlippageInput,
+      {
+        value: ethers.utils.parseEther("0.0000000001"),
+      }
+    );
     await tx.wait();
 
     const tokenQty = await pair.getPairQty();
@@ -208,9 +215,15 @@ describe("All Tests", function () {
     );
     var addTokenAQty = BigNumber.from(1).mul(precision);
     await expect(
-      pair.swapToken(zeroAddress, token1Address, addTokenAQty, {
-        value: ethers.utils.parseEther("0.0000000001"),
-      })
+      pair.swapToken(
+        zeroAddress,
+        token1Address,
+        addTokenAQty,
+        defaultSlippageInput,
+        {
+          value: ethers.utils.parseEther("0.0000000001"),
+        }
+      )
     ).to.revertedWith("HBARs should be passed as payble");
   });
 
@@ -338,7 +351,12 @@ describe("All Tests", function () {
     const feeForTokenA = await pair.feeForToken(addTokenAQty);
     const addTokenAQtyAfterFee =
       Number(addTokenAQty) - Number(feeForTokenA) / 2;
-    const tx = await pair.swapToken(zeroAddress, token1Address, addTokenAQty);
+    const tx = await pair.swapToken(
+      zeroAddress,
+      token1Address,
+      addTokenAQty,
+      defaultSlippageInput
+    );
     await tx.wait();
 
     const tokenQty = await pair.getPairQty();
@@ -370,7 +388,89 @@ describe("All Tests", function () {
     const feeForTokenB = await pair.feeForToken(addTokenBQty);
     const addTokenBQtyAfterFee =
       Number(addTokenBQty) - Number(feeForTokenB) / 2;
-    const tx = await pair.swapToken(zeroAddress, token2Address, addTokenBQty);
+    const tx = await pair.swapToken(
+      zeroAddress,
+      token2Address,
+      addTokenBQty,
+      defaultSlippageInput
+    );
+    await tx.wait();
+
+    const tokenQty = await pair.getPairQty();
+    expect(tokenQty[1]).to.be.equals(tokenBPoolQty.add(addTokenBQtyAfterFee));
+    // const tokenAResultantQty = Number(tokenQty[0])/Number(precision);
+    const feeForTokenA = await pair.feeForToken(tokenQty[0]);
+    const tokenAResultantQtyAfterFee =
+      Number(tokenQty[0]) - Number(feeForTokenA);
+    const tokenAResultantQty =
+      Number(tokenAResultantQtyAfterFee) / Number(precision);
+    expect(tokenAResultantQty).to.be.equals(112.91464718);
+  });
+
+  it("Swap 1 unit of token A within slippage threshold input", async function () {
+    const { pair, token1Address, token2Address } = await loadFixture(
+      deployFixture
+    );
+    const tokenAPoolQty = BigNumber.from(200).mul(precision);
+    const tokenBPoolQty = BigNumber.from(220).mul(precision);
+    const slippageInput = BigNumber.from(5).mul(precision.div(1000));
+    await pair.addLiquidity(
+      zeroAddress,
+      token1Address,
+      token2Address,
+      tokenAPoolQty,
+      tokenBPoolQty
+    );
+    const tokenBeforeQty = await pair.getPairQty();
+    expect(Number(tokenBeforeQty[0])).to.be.equals(tokenAPoolQty);
+    var addTokenAQty = BigNumber.from(1).mul(precision);
+    const feeForTokenA = await pair.feeForToken(addTokenAQty);
+    const addTokenAQtyAfterFee =
+      Number(addTokenAQty) - Number(feeForTokenA) / 2;
+    const tx = await pair.swapToken(
+      zeroAddress,
+      token1Address,
+      addTokenAQty,
+      slippageInput
+    );
+    await tx.wait();
+
+    const tokenQty = await pair.getPairQty();
+    expect(tokenQty[0]).to.be.equals(tokenAPoolQty.add(addTokenAQtyAfterFee));
+    const feeForTokenB = await pair.feeForToken(tokenQty[1]);
+    const tokenBResultantQtyAfterFee =
+      Number(tokenQty[1]) - Number(feeForTokenB);
+    const tokenBResultantQty =
+      Number(tokenBResultantQtyAfterFee) / Number(precision);
+    expect(tokenBResultantQty).to.be.equals(217.81637026);
+  });
+
+  it("Swap 1 units of token B within  slippage threshold input", async function () {
+    const { pair, token1Address, token2Address } = await loadFixture(
+      deployFixture
+    );
+    const tokenAPoolQty = BigNumber.from(114).mul(precision);
+    const tokenBPoolQty = BigNumber.from(220).mul(precision);
+    const slippageInput = BigNumber.from(5).mul(precision.div(1000));
+    await pair.addLiquidity(
+      zeroAddress,
+      token1Address,
+      token2Address,
+      tokenAPoolQty,
+      tokenBPoolQty
+    );
+    const tokenBeforeQty = await pair.getPairQty();
+    expect(Number(tokenBeforeQty[1])).to.be.equals(tokenBPoolQty);
+    const addTokenBQty = BigNumber.from(1).mul(precision);
+    const feeForTokenB = await pair.feeForToken(addTokenBQty);
+    const addTokenBQtyAfterFee =
+      Number(addTokenBQty) - Number(feeForTokenB) / 2;
+    const tx = await pair.swapToken(
+      zeroAddress,
+      token2Address,
+      addTokenBQty,
+      slippageInput
+    );
     await tx.wait();
 
     const tokenQty = await pair.getPairQty();
@@ -401,8 +501,19 @@ describe("All Tests", function () {
     expect(Number(tokenBeforeQty[0])).to.be.equals(tokenAPoolQty);
     const addTokenAQty = BigNumber.from(100).mul(precision);
     await expect(
-      pair.swapToken(zeroAddress, token1Address, addTokenAQty)
-    ).to.revertedWith("Slippage threshold breached.");
+      pair.swapToken(
+        zeroAddress,
+        token1Address,
+        addTokenAQty,
+        defaultSlippageInput
+      )
+    )
+      .to.be.revertedWithCustomError(pair, "SlippageBreached")
+      .withArgs(
+        "The calculated slippage is over the slippage threshold.",
+        33333333,
+        500000
+      );
   });
 
   it("Swap 100 units of token B - breaching slippage  ", async function () {
@@ -422,8 +533,75 @@ describe("All Tests", function () {
     expect(Number(tokenBeforeQty[1])).to.be.equals(tokenBPoolQty);
     const addTokenBQty = BigNumber.from(100).mul(precision);
     await expect(
-      pair.swapToken(zeroAddress, token2Address, addTokenBQty)
-    ).to.revertedWith("Slippage threshold breached.");
+      pair.swapToken(
+        zeroAddress,
+        token2Address,
+        addTokenBQty,
+        defaultSlippageInput
+      )
+    )
+      .to.be.revertedWithCustomError(pair, "SlippageBreached")
+      .withArgs(
+        "The calculated slippage is over the slippage threshold.",
+        83333336,
+        500000
+      );
+  });
+
+  it("Swap 100 units of token A - breaching user input slippage  ", async function () {
+    const { pair, token1Address, token2Address } = await loadFixture(
+      deployFixture
+    );
+    const tokenAPoolQty = BigNumber.from(200).mul(precision);
+    const tokenBPoolQty = BigNumber.from(220).mul(precision);
+    const slippageInput = BigNumber.from(1).mul(precision.div(1000));
+    await pair.addLiquidity(
+      zeroAddress,
+      token1Address,
+      token2Address,
+      tokenAPoolQty,
+      tokenBPoolQty
+    );
+    const tokenBeforeQty = await pair.getPairQty();
+    expect(Number(tokenBeforeQty[0])).to.be.equals(tokenAPoolQty);
+    const addTokenAQty = BigNumber.from(100).mul(precision);
+    await expect(
+      pair.swapToken(zeroAddress, token1Address, addTokenAQty, slippageInput)
+    )
+      .to.be.revertedWithCustomError(pair, "SlippageBreached")
+      .withArgs(
+        "The calculated slippage is over the slippage threshold.",
+        33333333,
+        100000
+      );
+  });
+
+  it("Swap 100 units of token B - breaching user input slippage ", async function () {
+    const { pair, token1Address, token2Address } = await loadFixture(
+      deployFixture
+    );
+    const tokenAPoolQty = BigNumber.from(114).mul(precision);
+    const tokenBPoolQty = BigNumber.from(220).mul(precision);
+    const slippageInput = BigNumber.from(1).mul(precision.div(1000));
+    await pair.addLiquidity(
+      zeroAddress,
+      token1Address,
+      token2Address,
+      tokenAPoolQty,
+      tokenBPoolQty
+    );
+    const tokenBeforeQty = await pair.getPairQty();
+    expect(Number(tokenBeforeQty[1])).to.be.equals(tokenBPoolQty);
+    const addTokenBQty = BigNumber.from(100).mul(precision);
+    await expect(
+      pair.swapToken(zeroAddress, token2Address, addTokenBQty, slippageInput)
+    )
+      .to.be.revertedWithCustomError(pair, "SlippageBreached")
+      .withArgs(
+        "The calculated slippage is over the slippage threshold.",
+        83333336,
+        100000
+      );
   });
 
   it("Remove liquidity to the pool by removing 5 units of lpToken  ", async function () {
@@ -498,7 +676,7 @@ describe("All Tests", function () {
       const tokenBeforeQty = await pair.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
       await expect(
-        pair.swapToken(zeroAddress, zeroAddress, 30)
+        pair.swapToken(zeroAddress, zeroAddress, 30, defaultSlippageInput)
       ).to.revertedWith("Pls pass correct token to swap.");
     });
 
@@ -507,11 +685,11 @@ describe("All Tests", function () {
       const tokenBeforeQty = await pair.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
       await expect(
-        pair.swapToken(zeroAddress, zeroAddress, 30)
+        pair.swapToken(zeroAddress, zeroAddress, 30, defaultSlippageInput)
       ).to.revertedWith("Pls pass correct token to swap.");
     });
 
-    //----------------------------------------------------------------------
+    // ----------------------------------------------------------------------
     it("Swap Token A with Fail A transfer", async function () {
       const { pair, mockBaseHTS, token1Address, token2Address } =
         await loadFixture(deployFixture);
@@ -524,13 +702,13 @@ describe("All Tests", function () {
       );
       await mockBaseHTS.setPassTransactionCount(0);
       await expect(
-        pair.swapToken(zeroAddress, token1Address, 30)
+        pair.swapToken(zeroAddress, token1Address, 30, defaultSlippageInput)
       ).to.revertedWith(
         "swapTokenA: Transferring token A to contract failed with status code"
       );
     });
 
-    //----------------------------------------------------------------------
+    // ----------------------------------------------------------------------
 
     it("Swap Token A with Fail B transfer", async function () {
       const { pair, token1Address, token2Address, tokenCont1 } =
@@ -548,13 +726,18 @@ describe("All Tests", function () {
       expect(tokenBeforeQty[0]).to.be.equals(totalQtyA);
       await tokenCont1.setTransaferFailed(true);
       await expect(
-        pair.swapToken(zeroAddress, token1Address, precision.mul(1))
+        pair.swapToken(
+          zeroAddress,
+          token1Address,
+          precision.mul(1),
+          defaultSlippageInput
+        )
       ).to.revertedWith(
         "swapTokenA: Transferring token B to user failed with status code"
       );
     });
 
-    //----------------------------------------------------------------------
+    // ----------------------------------------------------------------------
     it("Swap Token B with Fail B transfer", async function () {
       const { pair, mockBaseHTS, token1Address, token2Address } =
         await loadFixture(deployFixture);
@@ -570,7 +753,12 @@ describe("All Tests", function () {
       expect(Number(tokenBeforeQty[0])).to.be.equals(precision.mul(1000));
       mockBaseHTS.setPassTransactionCount(0);
       await expect(
-        pair.swapToken(zeroAddress, token2Address, precision.mul(1))
+        pair.swapToken(
+          zeroAddress,
+          token2Address,
+          precision.mul(1),
+          defaultSlippageInput
+        )
       ).to.revertedWith(
         "swapTokenB: Transferring token B to contract failed with status code"
       );
@@ -591,13 +779,18 @@ describe("All Tests", function () {
       expect(Number(tokenBeforeQty[0])).to.be.equals(precision.mul(1000));
       await tokenCont.setTransaferFailed(true);
       await expect(
-        pair.swapToken(zeroAddress, token2Address, precision.mul(1))
+        pair.swapToken(
+          zeroAddress,
+          token2Address,
+          precision.mul(1),
+          defaultSlippageInput
+        )
       ).to.revertedWith(
         "swapTokenB: Transferring token A to user failed with status code"
       );
     });
 
-    //----------------------------------------------------------------------
+    // ----------------------------------------------------------------------
     it("Add liquidity Fail A Transfer", async function () {
       const { pair, mockBaseHTS } = await loadFixture(deployFixture);
       mockBaseHTS.setPassTransactionCount(0);
@@ -622,7 +815,7 @@ describe("All Tests", function () {
       );
     });
 
-    //----------------------------------------------------------------------
+    // ----------------------------------------------------------------------
     it("verify remove liquidity should failed when user don't have enough balance ", async function () {
       const { pair } = await loadFixture(deployFixture);
       await pair.addLiquidity(

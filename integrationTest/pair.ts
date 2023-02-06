@@ -195,6 +195,7 @@ const swapTokenA = async (contId: string) => {
         .addAddress(treasureId.toSolidityAddress())
         .addAddress(tokenA.toSolidityAddress())
         .addInt256(tokenA == tokenHBARX ? new BigNumber(0) : tokenAQty)
+        .addInt256(new BigNumber(0))
     )
     .setPayableAmount(tokenA == tokenHBARX ? new Hbar(0.01) : new Hbar(0))
     .freezeWith(client)
