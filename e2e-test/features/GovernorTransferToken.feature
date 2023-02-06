@@ -5,10 +5,12 @@ Feature: GovernorTransferToken e2e test
 
     Scenario: Verify user can create a proposal for transferring token
         Given user have initialized the governor transfer token contract
+        When user initialize the god holder contract
         When user create a new proposal with title "testtitle" description "testdescription" link "testlink" and token amount 1
         Then user verify that proposal state is "Pending"
         When user waits for 3 seconds         
         Then user verify that proposal state is "Active"
+        When user cancel the proposal with title "testtitle"
 
     Scenario: Verify user can not create proposal with same title 
         When user create a new proposal with title "testtitle" description "testdescription" link "testlink" and token amount 1
@@ -22,13 +24,14 @@ Feature: GovernorTransferToken e2e test
         When user fetches token balance of the payee account
         When user create a new proposal with title "sampletitle" description "testdescription" link "testlink" and token amount 1
         When user waits for 3 seconds 
-        When user vote "For" proposal
+        When user vote "For" proposal  
         When user waits for 5 seconds 
         Then user verify that proposal state is "Succeeded"
         When user execute the proposal with title "sampletitle"
         Then user verify that proposal state is "Executed"
-        Then user verify that token is transferred to payee account
-
+        Then user verify that token is transferred to payee account  
+        When user revert the god tokens     
+        
     Scenario: Verify canceling proposal changes its state to cancelled
         When user create a new proposal with title "sampletest" description "testdescription" link "testlink" and token amount 1
         When user waits for 3 seconds 
@@ -41,6 +44,7 @@ Feature: GovernorTransferToken e2e test
         When user vote "Against" proposal
         When user waits for 5 seconds 
         Then user verify that proposal state is "Defeated"
+        When user cancel the proposal with title "sampletesttitle"
         
 
     Scenario: Verify proposal state is defeated if no body voted on it
@@ -48,6 +52,7 @@ Feature: GovernorTransferToken e2e test
         When user waits for 3 seconds 
         When user waits for 7 seconds 
         Then user verify that proposal state is "Defeated"
+        When user cancel the proposal with title "testtitlesamples"
     
     # Scenario: Verify GOD tokens are returned on proposal execution or cancellation    - TO DO 
  

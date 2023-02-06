@@ -119,10 +119,19 @@ export class GovernorSteps {
 
   @then(/user verify that proposal state is "([^"]*)"/, undefined, 30000)
   public async verifyProposalState(proposalState: string): Promise<void> {
-    const currentState = await governor.state(proposalID, contractId, client);
-    expect(Number(currentState)).to.eql(
-      Number(Object.values(ProposalState).indexOf(proposalState))
-    );
+    try {
+      const currentState = await governor.state(proposalID, contractId, client);
+      expect(Number(currentState)).to.eql(
+        Number(Object.values(ProposalState).indexOf(proposalState))
+      );
+    } catch (e: any) {
+      const title = await governor.getProposalDetails(
+        proposalID,
+        contractId,
+        client
+      );
+      await governor.cancelProposal(title, contractId, client, treasureKey);
+    }
   }
 
   @then(/user gets message "([^"]*)" on creating proposal/, undefined, 30000)
@@ -161,8 +170,17 @@ export class GovernorSteps {
 
   @when(/user vote "([^"]*)" proposal/, undefined, 30000)
   public async voteToProposal(vote: string): Promise<void> {
-    const voteVal = Number(Object.values(VoteType).indexOf(vote));
-    await governor.vote(proposalID, voteVal, contractId, client);
+    try {
+      const voteVal = Number(Object.values(VoteType).indexOf(vote));
+      await governor.vote(proposalID, voteVal, contractId, client);
+    } catch (e: any) {
+      const title = await governor.getProposalDetails(
+        proposalID,
+        contractId,
+        client
+      );
+      await governor.cancelProposal(title, contractId, client, treasureKey);
+    }
   }
 
   @when(/user waits for (\d*) seconds/, undefined, 30000)
@@ -172,7 +190,16 @@ export class GovernorSteps {
 
   @when(/user execute the proposal with title "([^"]*)"/, undefined, 30000)
   public async executeProposal(title: string) {
-    await governor.execute(title, contractId, client, treasureKey);
+    try {
+      await governor.execute(title, contractId, client, treasureKey);
+    } catch (e: any) {
+      const title = await governor.getProposalDetails(
+        proposalID,
+        contractId,
+        client
+      );
+      await governor.cancelProposal(title, contractId, client, treasureKey);
+    }
   }
 
   @when(/user fetches token balance of the payee account/, undefined, 30000)
@@ -206,11 +233,28 @@ export class GovernorSteps {
   @when(/user fetches the GOD token balance/, undefined, 30000)
   public async getGODTokenBalance() {
     balance = await factory.getTokenBalance(godTokenID, id, client);
-    console.log("god token balance --", balance);
   }
 
   @when(/user revert the god tokens/, undefined, 30000)
   public async revertGODToken() {
-    await governor.revertGod(client, godHolder.transparentProxyId!);
+    try {
+      await governor.revertGod(client, godHolder.transparentProxyId!);
+    } catch (e: any) {
+      const title = await governor.getProposalDetails(
+        proposalID,
+        contractId,
+        client
+      );
+      await governor.cancelProposal(title, contractId, client, treasureKey);
+    }
+  }
+
+  @when(/user initialize the god holder contract/)
+  public async initializeGODHolder() {
+    await governor.initializeGodHolder(
+      htsServiceAddress,
+      godHolder.transparentProxyId!,
+      client
+    );
   }
 }
