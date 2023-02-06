@@ -20,23 +20,19 @@ export const METHOD_PAIR_IMPL = "upgradePairImplementation";
 export const METHOD_LP_IMPL = "upgradeLpTokenImplementation";
 
 export default class Factory extends Base {
-  private contractId: string;
-
-  constructor(_contractId: string) {
-    super();
-    this.contractId = _contractId;
-  }
-
   setupFactory = async (
-    htsAddress: string,
-    adminAddress: string,
+    adminAddress: string = clientsInfo.dexOwnerId.toSolidityAddress(),
     client: Client = clientsInfo.operatorClient
   ) => {
-    const args = new ContractFunctionParameters()
-      .addAddress(htsAddress)
-      .addAddress(adminAddress);
-    await this.execute(this.contractId, SETUP_FACTORY, client, args);
-    console.log(`- Factory#${SETUP_FACTORY}(): done\n`);
+    try {
+      const args = new ContractFunctionParameters()
+        .addAddress(this.htsAddress)
+        .addAddress(adminAddress);
+      await this.execute(SETUP_FACTORY, client, args);
+      console.log(`- Factory#${SETUP_FACTORY}(): done\n`);
+    } catch (error) {
+      console.error(`- Factory#${SETUP_FACTORY}(): error`, error, "\n");
+    }
   };
 
   createPair = async (
@@ -53,7 +49,6 @@ export default class Factory extends Base {
       .addAddress(feeCollectionAccountId.toSolidityAddress())
       .addInt256(fee);
     const { result } = await this.execute(
-      this.contractId,
       CREATE_PAIR,
       client,
       args,
@@ -75,12 +70,7 @@ export default class Factory extends Base {
     const args = new ContractFunctionParameters()
       .addAddress(token1.toSolidityAddress())
       .addAddress(token2.toSolidityAddress());
-    const { result } = await this.execute(
-      this.contractId,
-      GET_PAIR,
-      client,
-      args
-    );
+    const { result } = await this.execute(GET_PAIR, client, args);
     const address = result.getAddress(0);
     console.log(`- Factory#${GET_PAIR}(): pair = ${address}\n`);
     return address;
@@ -89,7 +79,7 @@ export default class Factory extends Base {
   getPairs = async (
     client: Client = clientsInfo.operatorClient
   ): Promise<string[]> => {
-    const { result } = await this.execute(this.contractId, GET_PAIRS, client);
+    const { result } = await this.execute(GET_PAIRS, client);
     const addresses = Helper.getAddressArray(result);
     console.log(
       `- Factory#${GET_PAIRS}(): count = ${addresses.length}, pairs = [${addresses}]\n`
@@ -99,12 +89,7 @@ export default class Factory extends Base {
 
   upgradeLogic = async (implAddress: string, functionName: string) => {
     const args = new ContractFunctionParameters().addAddress(implAddress);
-    this.execute(
-      this.contractId,
-      functionName,
-      clientsInfo.dexOwnerClient,
-      args
-    );
+    this.execute(functionName, clientsInfo.dexOwnerClient, args);
     console.log(`- Factory${functionName}(): done\n`);
   };
 

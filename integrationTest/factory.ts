@@ -15,22 +15,12 @@ const tokenGOD = TokenId.fromString(dex.GOD_TOKEN_ID);
 const tokenHBARX = TokenId.fromString(dex.HBARX_TOKEN_ID);
 
 const csDev = new ContractService();
-const htsAddress = csDev.getContract(csDev.baseContractName).address;
 const factoryContractId = csDev.getContractWithProxy(csDev.factoryContractName)
   .transparentProxyId!;
 
 let pair: Pair;
 let precision = BigNumber(0);
 const factory = new Factory(factoryContractId);
-
-const setupFactory = async () => {
-  try {
-    const adminAddress = clientsInfo.dexOwnerId.toSolidityAddress();
-    await factory.setupFactory(htsAddress, adminAddress);
-  } catch (error) {
-    console.error(error);
-  }
-};
 
 const getPrecisionValue = async () => {
   precision = await pair.getPrecisionValue();
@@ -89,7 +79,7 @@ const swapToken = async (token: TokenId) => {
 };
 
 async function main() {
-  await setupFactory();
+  await factory.setupFactory();
   await testForSinglePair(tokenB, tokenHBARX);
   await testForSinglePair(tokenB, tokenC);
   await testForSinglePair(tokenA, tokenGOD);

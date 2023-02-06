@@ -1,3 +1,6 @@
+import { BigNumber } from "bignumber.js";
+import { clientsInfo } from "../../utils/ClientManagement";
+import { ContractService } from "../../deployment/service/ContractService";
 import {
   Client,
   PrivateKey,
@@ -5,11 +8,38 @@ import {
   ContractExecuteTransaction,
   ContractFunctionParameters,
 } from "@hashgraph/sdk";
-import { BigNumber } from "bignumber.js";
 
-export default abstract class Base {
-  protected execute = async (
-    contractId: string,
+export default class Base {
+  private csDev: ContractService = new ContractService();
+  protected htsAddress: string;
+  contractId: string;
+
+  constructor(_contractId: string) {
+    this.htsAddress = this.getBaseHTSContractAddress();
+    this.contractId = _contractId;
+    console.log(
+      `- Base#constructor(): called with contract-id = ${_contractId}\n`
+    );
+  }
+
+  getCurrentImplementation = async (
+    adminKey: PrivateKey = clientsInfo.adminKey,
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    const { result } = await this.execute(
+      "implementation",
+      client,
+      undefined,
+      adminKey
+    );
+    const impAddress = result.getAddress(0);
+    console.log(
+      `- Base#implementation(): proxyId = ${this.contractId}, implementation =  ${impAddress}\n`
+    );
+    return impAddress;
+  };
+
+  execute = async (
     functionName: string,
     client: Client,
     functionParams: ContractFunctionParameters | undefined = undefined,
@@ -17,7 +47,7 @@ export default abstract class Base {
     amount: BigNumber | number = 0
   ) => {
     const txn = new ContractExecuteTransaction()
-      .setContractId(contractId)
+      .setContractId(this.contractId)
       .setGas(9999999)
       .setFunction(functionName, functionParams)
       .setPayableAmount(amount);
@@ -47,4 +77,8 @@ export default abstract class Base {
     }
     return txn;
   };
+
+  private getBaseHTSContractAddress(): string {
+    return this.csDev.getContract(this.csDev.baseContractName).address;
+  }
 }

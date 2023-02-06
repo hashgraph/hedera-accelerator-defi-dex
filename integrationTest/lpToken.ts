@@ -4,7 +4,6 @@ import { ContractService } from "../deployment/service/ContractService";
 import { clientsInfo } from "../utils/ClientManagement";
 
 const csDev = new ContractService();
-const htsAddress = csDev.getContract(csDev.baseContractName).address;
 const lpContracts = [csDev.getContractWithProxy(csDev.lpTokenContractName)];
 
 const precision = 1e8;
@@ -12,7 +11,7 @@ let lpToken: LpToken;
 
 const initialize = async (tokenName: string, tokenSymbol: string) => {
   try {
-    await lpToken.initialize(htsAddress, tokenName, tokenSymbol);
+    await lpToken.initialize(tokenName, tokenSymbol);
   } catch (error) {
     console.error(error);
   }

@@ -1,72 +1,30 @@
-import {
-  ContractExecuteTransaction,
-  ContractFunctionParameters,
-  ContractId,
-} from "@hashgraph/sdk";
-
-import GovernorMethods from "./GovernorMethods";
-import ClientManagement from "../../utils/ClientManagement";
+import Governor from "../../e2e-test/business/Governor";
+import GodHolder from "../../e2e-test/business/GodHolder";
 import { ContractService } from "../../deployment/service/ContractService";
-import { Helper } from "../../utils/Helper";
 
-const governor = new GovernorMethods();
-const clientManagement = new ClientManagement();
-const contractService = new ContractService();
+const csDev = new ContractService();
+const godHolderContract = csDev.getContractWithProxy(csDev.godHolderContract);
+const governorTextContract = csDev.getContractWithProxy(
+  csDev.governorTextContractName
+);
 
-const { treasureKey } = clientManagement.getTreasure();
-
-const client = clientManagement.createOperatorClient();
-
-const contractId = contractService.getContractWithProxy(
-  contractService.governorTextContractName
-).transparentProxyId!;
-
-async function propose(
-  contractId: string | ContractId,
-  title: string,
-  description: string,
-  link: string
-) {
-  console.log(`\nCreating proposal `);
-  const args = new ContractFunctionParameters()
-    .addString(title)
-    .addString(description)
-    .addString(link);
-
-  const tx = await new ContractExecuteTransaction()
-    .setContractId(contractId)
-    .setFunction("createProposal", args)
-    .setGas(9000000)
-    .freezeWith(client)
-    .sign(treasureKey);
-
-  const executedTx = await tx.execute(client);
-
-  const record = await executedTx.getRecord(client);
-  const receipt = await executedTx.getReceipt(client);
-
-  const status = receipt.status;
-  const proposalId = record.contractFunctionResult?.getUint256(0)!;
-  console.log(`Proposal tx status ${status} with proposal id ${proposalId}`);
-
-  return proposalId;
-}
+const governor = new Governor(governorTextContract.transparentProxyId!);
+const godHolder = new GodHolder(godHolderContract.transparentProxyId!);
 
 async function main() {
-  console.log(`\nUsing governor proxy contract id ${contractId}`);
-  await governor.initialize(contractId);
-  const title = "Text Proposal - 2";
-  const proposalId = await propose(contractId, title, "description", "link"); // title should be unique for each proposal
-  await governor.getProposalDetails(proposalId, contractId);
-  await governor.vote(proposalId, 1, contractId, client); // 1 is for vote.
-  await governor.quorumReached(proposalId, contractId);
-  await governor.voteSucceeded(proposalId, contractId);
-  await governor.proposalVotes(proposalId, contractId);
-  await governor.state(proposalId, contractId);
-  console.log(`\nWaiting for voting period to get over.`);
-  await Helper.delay(15 * 1000); // Wait till waiting period is over. It's current deadline as per Governance.
-  await governor.state(proposalId, contractId); // 4 means succeeded
-  await governor.execute(title, contractId);
+  const title = "Text Proposal - 1";
+  await governor.initialize(godHolder);
+  await godHolder.checkAndClaimedGodTokens();
+  const proposalId = await governor.createTextProposal(title);
+  await governor.getProposalDetails(proposalId);
+  await governor.forVote(proposalId);
+  await governor.isQuorumReached(proposalId);
+  await governor.isVoteSucceeded(proposalId);
+  await governor.proposalVotes(proposalId);
+  await governor.state(proposalId);
+  await governor.delay(15 * 1000);
+  await governor.state(proposalId); // 4 means succeeded
+  await governor.executeProposal(title);
   console.log(`\nDone`);
 }
 
