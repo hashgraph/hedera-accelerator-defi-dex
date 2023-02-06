@@ -1,7 +1,7 @@
 ## Deploy New contracts if logic is changed
 
 ### Note
-    Whenever a new PR merges to Develop, `Automatically deploy on testnet if contract changed` Action gets triggered, which creates Proposals for all the Changes Smart Contracts. If it contains changes in governorupgrade in addition to the other Smart Contracts, we are to follow below steps 1 more time manually.
+    Whenever a new PR merges to Develop, `Automatically deploy on testnet if contract changed` Action gets triggered, which creates Proposals for all the changed Smart Contracts. If it contains changes in governorupgrade in addition to the other Smart Contracts, we are to follow below steps 1 more time manually.
 
 1. If a New PR is merged in Develop, GoTo step 3, else if you want to manually run work flow go to step 2.
 
