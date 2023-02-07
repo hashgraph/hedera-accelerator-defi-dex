@@ -82,12 +82,15 @@ export default class Common {
 
   static getTokenBalance = async (
     accountId: AccountId,
-    token: TokenId,
+    tokenId: TokenId,
     client: Client = clientsInfo.operatorClient
   ) => {
-    console.log(`- Common#getTokenBalance(): account-id = ${accountId}\n`);
     const response = await this.getAccountBalanceInternally(accountId, client);
-    return response.tokens?.get(token) ?? new Long(0);
+    const tokenBalance = response.tokens?.get(tokenId) ?? new Long(0);
+    console.log(
+      `- Common#getTokenBalance(): account-id = ${accountId}, TokenId = ${tokenId}, Balance = ${tokenBalance}\n`
+    );
+    return tokenBalance;
   };
 
   static getTokenInfo = async (
