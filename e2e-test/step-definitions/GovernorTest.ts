@@ -87,11 +87,12 @@ export class GovernorSteps {
   }
 
   @when(
-    /user create a new proposal with title "([^"]*)" description "([^"]*)" link "([^"]*)" and token amount (\d*)/,
+    /user create a new proposal with duplicate title "([^"]*)" where title "([^"]*)" description "([^"]*)" link "([^"]*)" and token amount (\d*)/,
     undefined,
     30000
   )
   public async createProposal(
+    duplicateTitle: string,
     title: string,
     description: string,
     link: string,
@@ -113,32 +114,23 @@ export class GovernorSteps {
         tokens
       );
     } catch (e: any) {
+      if (duplicateTitle === "false") throw e;
       msg = e.message;
     }
   }
 
   @then(/user verify that proposal state is "([^"]*)"/, undefined, 30000)
   public async verifyProposalState(proposalState: string): Promise<void> {
-    let currentState;
     try {
-      currentState = await governor.state(proposalID, contractId, client);
+      const currentState = await governor.state(proposalID, contractId, client);
       expect(Number(currentState)).to.eql(
         Number(Object.values(ProposalState).indexOf(proposalState))
       );
     } catch (e: any) {
       console.log("Something went wrong while verifying the state of proposal");
-      if (
-        Number(currentState) != 2 &&
-        Number(currentState) != 6 &&
-        Number(currentState) != 7
-      ) {
-        const title = await governor.getProposalDetails(
-          proposalID,
-          contractId,
-          client
-        );
-        await governor.cancelProposal(title, contractId, client, treasureKey);
-      }
+      console.log(e);
+      await this.cancelProposalInternally();
+      throw e;
     }
   }
 
@@ -185,12 +177,9 @@ export class GovernorSteps {
       console.log(
         "Something went wrong while voting to proposal now cancelling the proposal"
       );
-      const title = await governor.getProposalDetails(
-        proposalID,
-        contractId,
-        client
-      );
-      await governor.cancelProposal(title, contractId, client, treasureKey);
+      console.log(e);
+      await this.cancelProposalInternally();
+      throw e;
     }
   }
 
@@ -207,12 +196,9 @@ export class GovernorSteps {
       console.log(
         "Something went wrong while executing proposal cancelling the proposal"
       );
-      const title = await governor.getProposalDetails(
-        proposalID,
-        contractId,
-        client
-      );
-      await governor.cancelProposal(title, contractId, client, treasureKey);
+      console.log(e);
+      await this.cancelProposalInternally();
+      throw e;
     }
   }
 
@@ -257,12 +243,7 @@ export class GovernorSteps {
       console.log(
         "Something went wrong while reverting the god token cancelling the proposal"
       );
-      const title = await governor.getProposalDetails(
-        proposalID,
-        contractId,
-        client
-      );
-      await governor.cancelProposal(title, contractId, client, treasureKey);
+      console.log(e);
     }
   }
 
@@ -273,5 +254,18 @@ export class GovernorSteps {
       godHolder.transparentProxyId!,
       client
     );
+  }
+
+  private async cancelProposalInternally() {
+    try {
+      const title = await governor.getProposalDetails(
+        proposalID,
+        contractId,
+        client
+      );
+      await governor.cancelProposal(title, contractId, client, treasureKey);
+    } catch (e: any) {
+      console.log("Failed while cleaning up ");
+    }
   }
 }
