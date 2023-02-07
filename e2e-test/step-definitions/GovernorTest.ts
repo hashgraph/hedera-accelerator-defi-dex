@@ -264,6 +264,7 @@ export class GovernorSteps {
         client
       );
       await governor.cancelProposal(title, contractId, client, treasureKey);
+      await this.revertGODToken();
     } catch (e: any) {
       console.log("Failed while cleaning up ");
     }
