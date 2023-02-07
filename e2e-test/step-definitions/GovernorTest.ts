@@ -29,7 +29,7 @@ const governor = new Governor(tokenTransferProxyId);
 const godHolder = new GodHolder(godHolderProxyId);
 
 const DEFAULT_QUORUM_THRESHOLD_IN_BSP = 1;
-const DEFAULT_VOTING_DELAY = 1;
+const DEFAULT_VOTING_DELAY = 2;
 const DEFAULT_VOTING_PERIOD = 4;
 
 let proposalID: string;
