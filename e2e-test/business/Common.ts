@@ -1,19 +1,43 @@
+import Base from "./Base";
 import Long from "long";
+import dex from "../../deployment/model/dex";
 import {
   Client,
   TokenId,
   TokenType,
   AccountId,
+  ContractId,
   PrivateKey,
   TokenInfoQuery,
   TokenSupplyType,
   AccountBalanceQuery,
+  TransferTransaction,
   TokenCreateTransaction,
+  ContractFunctionParameters,
 } from "@hashgraph/sdk";
 import { BigNumber } from "bignumber.js";
 import { clientsInfo } from "../../utils/ClientManagement";
 
 export default class Common {
+  static upgradeTo = async (
+    proxyAddress: string,
+    logicAddress: string,
+    adminKey: PrivateKey = clientsInfo.adminKey,
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    const proxyContractId = ContractId.fromSolidityAddress(proxyAddress);
+    const args = new ContractFunctionParameters().addAddress(logicAddress);
+    await new Base(proxyContractId.toString()).execute(
+      "upgradeTo",
+      client,
+      args,
+      adminKey
+    );
+    console.log(
+      `- Common#upgradeTo(): proxyId = ${proxyContractId.toString()}, new-implementation =  ${logicAddress}\n`
+    );
+  };
+
   static async createLPTokenName(
     tokenA: TokenId | string,
     tokenB: TokenId | string
@@ -104,6 +128,27 @@ export default class Common {
       `- Common#getTokenInfo(): TokenId = ${tokenId}, name = ${response.name}, symbol = ${response.symbol}\n`
     );
     return { name: response.name, symbol: response.symbol };
+  };
+
+  static transferTokens = async (
+    receiverAccountId: AccountId,
+    senderAccountId: AccountId = clientsInfo.operatorId,
+    senderPrivateKey: PrivateKey = clientsInfo.operatorKey,
+    tokenId: string | TokenId = dex.GOD_TOKEN_ID,
+    tokenQty: number = 9000000 * 1e8,
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    const txn = await new TransferTransaction()
+      .addTokenTransfer(tokenId, senderAccountId, -tokenQty)
+      .addTokenTransfer(tokenId, receiverAccountId, tokenQty)
+      .freezeWith(client)
+      .sign(senderPrivateKey);
+    const txnResponse = await txn.execute(client);
+    const txnReceipt = await txnResponse.getReceipt(client);
+    const status = txnReceipt.status;
+    console.log(
+      `- Common#transferTokens(): TokenId = ${tokenId}, TokenQty = ${tokenQty}, sender = ${senderAccountId}, receiver = ${receiverAccountId}, status = ${status}`
+    );
   };
 
   private static getAccountBalanceInternally = async (

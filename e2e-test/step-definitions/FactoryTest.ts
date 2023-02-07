@@ -60,7 +60,7 @@ export class FactorySteps {
     console.log("TOKEN_USER_ID : ", id);
     console.log("TREASURE_ID :", treasureId);
     try {
-      await factory.setupFactory(baseContractAddress, adminAddress, client);
+      await factory.setupFactory();
     } catch (error) {}
   }
 

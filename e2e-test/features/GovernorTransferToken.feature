@@ -5,7 +5,6 @@ Feature: GovernorTransferToken e2e test
 
     Scenario: Verify user can create a proposal for transferring token
         Given user have initialized the governor transfer token contract
-        When user initialize the god holder contract
         When user create a new proposal with unique title "testtitle" description "testdescription" link "testlink" and token amount 1
         Then user verify that proposal state is "Pending"
         When user waits for 5 seconds         

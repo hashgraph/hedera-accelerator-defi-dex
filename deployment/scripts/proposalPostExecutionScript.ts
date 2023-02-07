@@ -1,25 +1,22 @@
 import { DeployedContract } from "../model/contract";
 import { ContractService } from "../service/ContractService";
-import { BigNumber } from "bignumber.js";
 import { ContractId } from "@hashgraph/sdk";
 import {
   METHOD_LP_IMPL,
   METHOD_PAIR_IMPL,
 } from "../../e2e-test/business/Factory";
 import ContractMetadata from "../../utils/ContractMetadata";
-import GovernorMethods from "../../integrationTest/governance/GovernorMethods";
+import Governor from "../../e2e-test/business/Governor";
 import Factory from "../../e2e-test/business/Factory";
-import ClientManagement from "../../utils/ClientManagement";
+import { clientsInfo } from "../../utils/ClientManagement";
+import Common from "../../e2e-test/business/Common";
 
-const governor = new GovernorMethods();
 const contractService = new ContractService();
 const contractMetadata = new ContractMetadata();
 const contractUATService = new ContractService(
   ContractService.UAT_CONTRACTS_PATH
 );
 
-const clientManagement = new ClientManagement();
-const dexOwnerClient = clientManagement.dexOwnerClient();
 const factory = new Factory(getFactoryProxyId()!);
 
 function getFactoryProxyId() {
@@ -28,8 +25,10 @@ function getFactoryProxyId() {
   return factory.transparentProxyId;
 }
 
-async function updateProxy(contractId: string, proposalId: BigNumber) {
-  const response = await governor.getContractAddresses(contractId, proposalId);
+async function updateProxy(contractId: string, proposalId: string) {
+  const governor = new Governor(contractId);
+  const response =
+    await governor.getContractAddressesFromGovernorUpgradeContract(proposalId);
   const proxyId = response.proxyId;
   const logicId = response.logicId;
   const proxyUATContract = contractUATService.getContractWithProxyById(
@@ -77,7 +76,8 @@ async function upgradeProxy(
   const pairs = await factory.getPairs();
   for (const pair of pairs) {
     const proxyAddress = await factory.resolveProxyAddress(functionName, pair);
-    await governor.upgradeTo(proxyAddress, logicAddress, dexOwnerClient);
+    const ownerKey = clientsInfo.dexOwnerKey;
+    await Common.upgradeTo(proxyAddress, logicAddress, ownerKey);
   }
   await factory.upgradeLogic(logicAddress, functionName);
   await updateDirectProxy(proxyId, logicId, oldVersionContract);
@@ -94,7 +94,7 @@ async function updateDirectProxy(
   logicId: ContractId,
   oldVersionContract: DeployedContract
 ) {
-  await governor.upgradeTo(
+  await Common.upgradeTo(
     proxyId.toSolidityAddress(),
     logicId.toSolidityAddress()
   );
@@ -112,6 +112,9 @@ async function updateDirectProxy(
 
 export async function main(contract: DeployedContract, proposal: any) {
   if (contract.name === contractService.governorUpgradeContract) {
-    await updateProxy(contract.transparentProxyId!, proposal.proposalId);
+    await updateProxy(
+      contract.transparentProxyId!,
+      proposal.proposalId.toFixed()
+    );
   }
 }

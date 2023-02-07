@@ -32,15 +32,7 @@ const SLIPPAGE_IN_GIVEN_OUT = "slippageInGivenOut";
 const SLIPPAGE_OUT_GIVEN_IN = "slippageOutGivenIn";
 
 export default class Pair extends Base {
-  contractId: string;
-
-  constructor(_contractId: string) {
-    super();
-    this.contractId = _contractId;
-  }
-
   public initialize = async (
-    htsAddress: string,
     lpTokenContractAddress: string,
     feeCollectionAccountId: AccountId,
     tokensOwnerKey: PrivateKey,
@@ -49,41 +41,27 @@ export default class Pair extends Base {
     client: Client = clientsInfo.operatorClient
   ) => {
     const args = new ContractFunctionParameters()
-      .addAddress(htsAddress)
+      .addAddress(this.htsAddress)
       .addAddress(lpTokenContractAddress)
       .addAddress(tokenA.toSolidityAddress())
       .addAddress(tokenB.toSolidityAddress())
       .addAddress(feeCollectionAccountId.toSolidityAddress())
       .addInt256(new BigNumber(10));
-    await this.execute(
-      this.contractId,
-      INITIALIZE,
-      client,
-      args,
-      tokensOwnerKey
-    );
+    await this.execute(INITIALIZE, client, args, tokensOwnerKey);
     console.log(`- Pair#${INITIALIZE}(): done\n`);
   };
 
   public getLpContractAddress = async (
     client: Client = clientsInfo.operatorClient
   ) => {
-    const { result } = await this.execute(
-      this.contractId,
-      LP_CONTRACT_ADDRESS,
-      client
-    );
+    const { result } = await this.execute(LP_CONTRACT_ADDRESS, client);
     const address = result.getAddress(0);
     console.log(`- Pair#${LP_CONTRACT_ADDRESS}(): address = ${address}\n`);
     return address;
   };
 
   public getPairQty = async (client: Client = clientsInfo.operatorClient) => {
-    const { result } = await this.execute(
-      this.contractId,
-      GET_PAIR_QTY,
-      client
-    );
+    const { result } = await this.execute(GET_PAIR_QTY, client);
     const tokenQty = result.getInt256(0);
     const tokenBQty = result.getInt256(1);
     console.log(
@@ -95,11 +73,7 @@ export default class Pair extends Base {
   public getPrecisionValue = async (
     client: Client = clientsInfo.operatorClient
   ) => {
-    const { result } = await this.execute(
-      this.contractId,
-      PRECISION_VALUE,
-      client
-    );
+    const { result } = await this.execute(PRECISION_VALUE, client);
     const precision = result.getInt256(0);
     console.log(`- Pair#${PRECISION_VALUE}(): precision = ${precision}\n`);
     return precision;
@@ -110,16 +84,12 @@ export default class Pair extends Base {
     client: Client = clientsInfo.operatorClient
   ) => {
     const args = new ContractFunctionParameters().addInt256(slippage);
-    await this.execute(this.contractId, SET_SLIPPAGE, client, args);
+    await this.execute(SET_SLIPPAGE, client, args);
     console.log(`- Pair#${SET_SLIPPAGE}(): done\n`);
   };
 
   public getSpotPrice = async (client: Client = clientsInfo.operatorClient) => {
-    const { result } = await this.execute(
-      this.contractId,
-      GET_SPOT_PRICE,
-      client
-    );
+    const { result } = await this.execute(GET_SPOT_PRICE, client);
     const price = result.getInt256(0);
     console.log(`- Pair#${GET_SPOT_PRICE}(): TokenA spot price = ${price}\n`);
     return price;
@@ -128,11 +98,7 @@ export default class Pair extends Base {
   public getVariantValue = async (
     client: Client = clientsInfo.operatorClient
   ) => {
-    const { result } = await this.execute(
-      this.contractId,
-      VARIANT_VALUE,
-      client
-    );
+    const { result } = await this.execute(VARIANT_VALUE, client);
     const price = result.getInt256(0);
     console.log(`- Pair#${VARIANT_VALUE}(): k = ${price}\n`);
     return price;
@@ -143,12 +109,7 @@ export default class Pair extends Base {
     client: Client = clientsInfo.operatorClient
   ) => {
     const args = new ContractFunctionParameters().addInt256(tokenQty);
-    const { result } = await this.execute(
-      this.contractId,
-      GET_OUT_GIVEN_IN,
-      client,
-      args
-    );
+    const { result } = await this.execute(GET_OUT_GIVEN_IN, client, args);
     const tokenBQty = result.getInt256(0);
     console.log(
       `- Pair#${GET_OUT_GIVEN_IN}(): For tokenQty ${tokenQty} the getOutGivenIn tokenBQty is ${tokenBQty}\n`
@@ -161,12 +122,7 @@ export default class Pair extends Base {
     client: Client = clientsInfo.operatorClient
   ) => {
     const args = new ContractFunctionParameters().addInt256(tokenBQty);
-    const { result } = await this.execute(
-      this.contractId,
-      GET_IN_GIVEN_OUT,
-      client,
-      args
-    );
+    const { result } = await this.execute(GET_IN_GIVEN_OUT, client, args);
     const tokenQty = result.getInt256(0);
     console.log(
       `- Pair#${GET_IN_GIVEN_OUT}(): For tokenBQty ${tokenBQty} the getInGivenOut tokenQty is ${tokenQty}\n`
@@ -179,12 +135,7 @@ export default class Pair extends Base {
     client: Client = clientsInfo.operatorClient
   ) => {
     const args = new ContractFunctionParameters().addInt256(tokenQty);
-    const { result } = await this.execute(
-      this.contractId,
-      SLIPPAGE_OUT_GIVEN_IN,
-      client,
-      args
-    );
+    const { result } = await this.execute(SLIPPAGE_OUT_GIVEN_IN, client, args);
     const tokenBQty = result.getInt256(0);
     console.log(
       `- Pair#${SLIPPAGE_OUT_GIVEN_IN}(): for tokenQty = ${tokenQty} the slippageOutGivenIn tokenBQty = ${tokenBQty}\n`
@@ -197,12 +148,7 @@ export default class Pair extends Base {
     client: Client = clientsInfo.operatorClient
   ) => {
     const args = new ContractFunctionParameters().addInt256(tokenBQty);
-    const { result } = await this.execute(
-      this.contractId,
-      SLIPPAGE_IN_GIVEN_OUT,
-      client,
-      args
-    );
+    const { result } = await this.execute(SLIPPAGE_IN_GIVEN_OUT, client, args);
     const tokenQty = result.getInt256(0);
     console.log(
       `- Pair#${SLIPPAGE_IN_GIVEN_OUT}(): for tokenBQty = ${tokenBQty} the slippageInGivenOut tokenQty = ${tokenQty}\n`
@@ -213,11 +159,7 @@ export default class Pair extends Base {
   public getTokenPairAddress = async (
     client: Client = clientsInfo.operatorClient
   ) => {
-    const { result } = await this.execute(
-      this.contractId,
-      GET_TOKEN_PAIR_ADDRESS,
-      client
-    );
+    const { result } = await this.execute(GET_TOKEN_PAIR_ADDRESS, client);
     const tokenAAddress = result.getAddress(0);
     const tokenBAddress = result.getAddress(1);
     const lpTokenAddress = result.getAddress(2);
@@ -247,14 +189,7 @@ export default class Pair extends Base {
       .addAddress(tokenB.toSolidityAddress())
       .addInt256(tokenAQty1)
       .addInt256(tokenBQty1);
-    await this.execute(
-      this.contractId,
-      ADD_LIQUIDITY,
-      client,
-      args,
-      tokenOwnerKey,
-      hBars
-    );
+    await this.execute(ADD_LIQUIDITY, client, args, tokenOwnerKey, hBars);
     console.log(
       `- Pair#${ADD_LIQUIDITY}(): HBars = ${hBars}, TokenId = ${tokenA}, Qty = ${tokenAQty1}, TokenId = ${tokenB}, Qty = ${tokenBQty1}\n`
     );
@@ -269,13 +204,7 @@ export default class Pair extends Base {
     const args = new ContractFunctionParameters()
       .addAddress(tokenReceiverId.toSolidityAddress())
       .addInt256(lpTokenQty);
-    await this.execute(
-      this.contractId,
-      REMOVE_LIQUIDITY,
-      client,
-      args,
-      tokenReceiverKey
-    );
+    await this.execute(REMOVE_LIQUIDITY, client, args, tokenReceiverKey);
     console.log(`- Pair#${REMOVE_LIQUIDITY}(): LpTokenQty = ${lpTokenQty}\n`);
   };
 
@@ -295,14 +224,7 @@ export default class Pair extends Base {
       .addAddress(token.toSolidityAddress())
       .addInt256(tokenQtyA)
       .addInt256(slippage);
-    await this.execute(
-      this.contractId,
-      SWAP_TOKEN,
-      client,
-      args,
-      tokenOwnerKey,
-      hBars
-    );
+    await this.execute(SWAP_TOKEN, client, args, tokenOwnerKey, hBars);
     console.log(
       `- Pair#${SWAP_TOKEN}(): hBars = ${hBars}, TokenId = ${token}, Qty = ${tokenQtyA}\n`
     );

@@ -15,7 +15,6 @@ const token2 = TokenId.fromString(dex.TOKEN_LAB49_3);
 const tokenHBARX = TokenId.fromString(dex.HBARX_TOKEN_ID);
 
 const csDev = new ContractService();
-const htsAddress = csDev.getContract(csDev.baseContractName).address;
 
 const lpTokenContracts = [
   csDev.getContractWithProxyAtIndex(csDev.lpTokenContractName, 0),
@@ -39,7 +38,7 @@ const initializeLPTokenContract = async () => {
       tokenA,
       tokenB
     );
-    await lpToken.initialize(htsAddress, lpTokenName, lpTokenSymbol);
+    await lpToken.initialize(lpTokenName, lpTokenSymbol);
   } catch (error) {
     console.error(error);
   }
@@ -50,7 +49,6 @@ const initializePairContract = async () => {
     const lpContractId = ContractId.fromString(lpToken.contractId);
     const lpContractAddress = lpContractId.toSolidityAddress();
     await pair.initialize(
-      htsAddress,
       lpContractAddress,
       clientsInfo.operatorId,
       clientsInfo.treasureKey,
