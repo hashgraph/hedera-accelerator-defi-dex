@@ -23,7 +23,7 @@ Feature: GovernorTransferToken e2e test
     Scenario: Verify proposal complete journey
         When user fetches token balance of the payee account
         When user create a new proposal with unique title "sampletitle" description "testdescription" link "testlink" and token amount 1
-        When user waits for 3 seconds 
+        When user waits for 5 seconds 
         When user vote "For" proposal  
         When user waits for 5 seconds 
         Then user verify that proposal state is "Succeeded"
@@ -40,9 +40,9 @@ Feature: GovernorTransferToken e2e test
 
     Scenario: Verify proposal state is defeated if required votes are not in favour
         When user create a new proposal with unique title "sampletesttitle" description "testdescription" link "testlink" and token amount 1
-        When user waits for 3 seconds 
+        When user waits for 5 seconds 
         When user vote "Against" proposal
-        When user waits for 9 seconds 
+        When user waits for 10 seconds 
         Then user verify that proposal state is "Defeated"
         When user cancel the proposal with title "sampletesttitle"
         When user revert the god tokens   
@@ -51,7 +51,7 @@ Feature: GovernorTransferToken e2e test
     Scenario: Verify proposal state is defeated if no body voted on it
         When user create a new proposal with unique title "testtitlesamples" description "testdescription" link "testlink" and token amount 1
         When user waits for 3 seconds 
-        When user waits for 9 seconds 
+        When user waits for 10 seconds 
         Then user verify that proposal state is "Defeated"
         When user cancel the proposal with title "testtitlesamples"
     
