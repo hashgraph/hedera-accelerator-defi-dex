@@ -248,5 +248,12 @@
         "hash": "1bcd3345661a9648832a092721fb28d6",
         "transparentProxyAddress": "0x0000000000000000000000000000000000002359",
         "transparentProxyId": "0.0.9049"
+    },
+    {
+        "name": "pair",
+        "id": "0.0.3403487",
+        "address": "0x000000000000000000000000000000000033eedf",
+        "timestamp": "2023-02-07T20:33:54.966Z",
+        "hash": "fd102354e5cb5ad1480bf4213b4b85d9"
     }
 ]
