@@ -7,7 +7,7 @@
 
 2. Go to [GitHub action page](https://github.com/hashgraph/hedera-accelerator-defi-dex/actions/workflows/upgrade-proxy.yml) 
 
-3. Run this workflow `Automatically deploy on testnet if contract changed`.
+3. Run the workflow if not already running as PR merge to develop branch will trigger this run `Automatically deploy on testnet if contract changed`.
     This Action compares all previously deployed Contracts with latest implementation, and creates Upgrade proposal if finds any change.
 
 4. Monitor the `Automatically deploy on testnet if contract changed` workflow to successfully complete.
