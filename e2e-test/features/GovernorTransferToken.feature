@@ -42,7 +42,7 @@ Feature: GovernorTransferToken e2e test
         When user create a new proposal with duplicate title "false" where title "sampletesttitle" description "testdescription" link "testlink" and token amount 1
         When user waits for 3 seconds 
         When user vote "Against" proposal
-        When user waits for 5 seconds 
+        When user waits for 9 seconds 
         Then user verify that proposal state is "Defeated"
         When user cancel the proposal with title "sampletesttitle"
         When user revert the god tokens   
@@ -51,7 +51,7 @@ Feature: GovernorTransferToken e2e test
     Scenario: Verify proposal state is defeated if no body voted on it
         When user create a new proposal with duplicate title "false" where title "testtitlesamples" description "testdescription" link "testlink" and token amount 1
         When user waits for 3 seconds 
-        When user waits for 7 seconds 
+        When user waits for 9 seconds 
         Then user verify that proposal state is "Defeated"
         When user cancel the proposal with title "testtitlesamples"
     
