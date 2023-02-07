@@ -35,7 +35,7 @@ const godHolder = contractService.getContract(
 );
 
 let defaultQuorumThresholdValue: number = 1;
-let votingDelay: number = 1;
+let votingDelay: number = 2;
 let votingPeriod: number = 4;
 let proposalID: BigNumber;
 let msg: string;
@@ -87,34 +87,67 @@ export class GovernorSteps {
   }
 
   @when(
-    /user create a new proposal with duplicate title "([^"]*)" where title "([^"]*)" description "([^"]*)" link "([^"]*)" and token amount (\d*)/,
+    /user create a new proposal with unique title "([^"]*)" description "([^"]*)" link "([^"]*)" and token amount (\d*)/,
     undefined,
     30000
   )
   public async createProposal(
-    duplicateTitle: string,
     title: string,
     description: string,
     link: string,
     tokenAmount: number
   ): Promise<void> {
+    proposalID = await this.createProposalInternal(
+      title,
+      description,
+      link,
+      tokenAmount
+    );
+  }
+
+  private async createProposalInternal(
+    title: string,
+    description: string,
+    link: string,
+    tokenAmount: number
+  ): Promise<BigNumber> {
     let tokenQty = tokenAmount * 100000000;
     tokens = new BigNumber(tokenQty);
+    proposalID = await governor.propose(
+      contractId,
+      title,
+      description,
+      link,
+      id.toSolidityAddress(),
+      treasureId.toSolidityAddress(),
+      transferTokenId.toSolidityAddress(),
+      client,
+      treasureKey,
+      tokens
+    );
+
+    return proposalID;
+  }
+
+  @when(
+    /user create a new proposal with duplicate title "([^"]*)" description "([^"]*)" link "([^"]*)" and token amount (\d*)/,
+    undefined,
+    30000
+  )
+  public async createProposalWithDuplicateTitle(
+    title: string,
+    description: string,
+    link: string,
+    tokenAmount: number
+  ): Promise<void> {
     try {
-      proposalID = await governor.propose(
-        contractId,
+      proposalID = await this.createProposalInternal(
         title,
         description,
         link,
-        id.toSolidityAddress(),
-        treasureId.toSolidityAddress(),
-        transferTokenId.toSolidityAddress(),
-        client,
-        treasureKey,
-        tokens
+        tokenAmount
       );
     } catch (e: any) {
-      if (duplicateTitle === "false") throw e;
       msg = e.message;
     }
   }
