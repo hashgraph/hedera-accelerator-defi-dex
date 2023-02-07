@@ -155,6 +155,14 @@ export default class Governor extends Base {
     client: Client = clientsInfo.operatorClient
   ) => await this.vote(proposalId, 2, client);
 
+  vote = async (proposalId: string, support: number, client: Client) => {
+    const args = this.createParams(proposalId).addUint8(support);
+    await this.execute(CAST_VOTE, client, args);
+    console.log(
+      `- Governor#${CAST_VOTE}(): proposal-id = ${proposalId}, support = ${support}\n`
+    );
+  };
+
   isQuorumReached = async (
     proposalId: string,
     client: Client = clientsInfo.operatorClient
@@ -331,18 +339,6 @@ export default class Governor extends Base {
   private createParams(proposalId: string) {
     return new ContractFunctionParameters().addUint256(BigNumber(proposalId));
   }
-
-  private vote = async (
-    proposalId: string,
-    support: number,
-    client: Client
-  ) => {
-    const args = this.createParams(proposalId).addUint8(support);
-    await this.execute(CAST_VOTE, client, args);
-    console.log(
-      `- Governor#${CAST_VOTE}(): proposal-id = ${proposalId}, support = ${support}\n`
-    );
-  };
 
   private initializeInternally = async (
     godHolderProxyAddress: string,

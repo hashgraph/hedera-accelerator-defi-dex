@@ -1,48 +1,44 @@
-import { binding, given, then, when } from "cucumber-tsflow";
-import { expect } from "chai";
-import { ContractService } from "../../deployment/service/ContractService";
-import ClientManagement from "../../utils/ClientManagement";
-import { TokenId } from "@hashgraph/sdk";
 import dex from "../../deployment/model/dex";
-import Governor from "../business/Governor";
-import { BigNumber } from "bignumber.js";
-import { Helper } from "../../utils/Helper";
-import Factory from "../business/Factory";
+import Long from "long";
 import Common from "../business/Common";
+import Governor from "../business/Governor";
+import GodHolder from "../business/GodHolder";
+import ClientManagement from "../../utils/ClientManagement";
 
-const governor = new Governor();
+import { expect } from "chai";
+import { binding, given, then, when } from "cucumber-tsflow";
+import { TokenId } from "@hashgraph/sdk";
+import { BigNumber } from "bignumber.js";
+import { clientsInfo } from "../../utils/ClientManagement";
+import { ContractService } from "../../deployment/service/ContractService";
+
 const clientManagement = new ClientManagement();
-const contractService = new ContractService();
+const csDev = new ContractService();
 
-const client = clientManagement.createOperatorClient();
 const clientWithNoGODToken = clientManagement.createOperatorClientNoGODToken();
-const { idNoGODToken, keyNoGODToken } = clientManagement.getOperatorNoToken();
-const { id } = clientManagement.getOperator();
-const { treasureId, treasureKey } = clientManagement.getTreasure();
+const { idNoGODToken } = clientManagement.getOperatorNoToken();
 
-const contractId = contractService.getContractWithProxy(
-  contractService.governorTTContractName
+const tokenTransferProxyId = csDev.getContractWithProxy(
+  csDev.governorTTContractName
 ).transparentProxyId!;
 
-const adminClient = clientManagement.createClientAsAdmin();
-const { adminKey } = clientManagement.getAdmin();
-const htsServiceAddress = contractService.getContract(
-  contractService.baseContractName
-).address;
-const godHolder = contractService.getContract(
-  contractService.godHolderContract
-);
+const godHolderProxyId = csDev.getContract(csDev.godHolderContract)
+  .transparentProxyId!;
 
-let defaultQuorumThresholdValue: number = 1;
-let votingDelay: number = 1;
-let votingPeriod: number = 4;
-let proposalID: BigNumber;
+const governor = new Governor(tokenTransferProxyId);
+const godHolder = new GodHolder(godHolderProxyId);
+
+const DEFAULT_QUORUM_THRESHOLD_IN_BSP = 1;
+const DEFAULT_VOTING_DELAY = 1;
+const DEFAULT_VOTING_PERIOD = 4;
+
+let proposalId: string;
 let msg: string;
 let balance: Long;
 let tokens: BigNumber;
 
-const transferTokenId = TokenId.fromString(dex.TOKEN_LAB49_1);
-const godTokenID = TokenId.fromString(dex.GOD_TOKEN_ID);
+const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
+const TRANSFER_TOKEN_ID = TokenId.fromString(dex.TOKEN_LAB49_1);
 enum ProposalState {
   Pending,
   Active,
@@ -71,17 +67,16 @@ export class GovernorSteps {
     console.log(
       "*******************Starting governor transfer token test with following credentials*******************"
     );
-    console.log("contractId : ", contractId);
-    console.log("TOKEN_USER_ID : ", id);
-    console.log("treasureId :", treasureId);
+    console.log("contractId :", tokenTransferProxyId);
+    console.log("operatorId :", clientsInfo.operatorId.toString());
+    console.log("treasureId :", clientsInfo.treasureId.toString());
+
     await governor.initialize(
-      contractId,
-      htsServiceAddress,
-      godHolder.transparentProxyAddress!,
-      defaultQuorumThresholdValue,
-      client,
-      votingDelay,
-      votingPeriod
+      godHolder,
+      clientsInfo.operatorClient,
+      DEFAULT_QUORUM_THRESHOLD_IN_BSP,
+      DEFAULT_VOTING_DELAY,
+      DEFAULT_VOTING_PERIOD
     );
   }
 
@@ -96,20 +91,18 @@ export class GovernorSteps {
     link: string,
     tokenAmount: number
   ): Promise<void> {
-    let tokenQty = tokenAmount * 100000000;
+    const tokenQty = tokenAmount * 1e8;
     tokens = new BigNumber(tokenQty);
     try {
-      proposalID = await governor.propose(
-        contractId,
+      proposalId = await governor.createTokenTransferProposal(
         title,
+        clientsInfo.operatorId.toSolidityAddress(),
+        clientsInfo.treasureId.toSolidityAddress(),
+        TRANSFER_TOKEN_ID.toSolidityAddress(),
+        tokenQty,
+        clientsInfo.operatorClient,
         description,
-        link,
-        id.toSolidityAddress(),
-        treasureId.toSolidityAddress(),
-        transferTokenId.toSolidityAddress(),
-        client,
-        treasureKey,
-        tokens
+        link
       );
     } catch (e: any) {
       msg = e.message;
@@ -118,7 +111,7 @@ export class GovernorSteps {
 
   @then(/user verify that proposal state is "([^"]*)"/, undefined, 30000)
   public async verifyProposalState(proposalState: string): Promise<void> {
-    const currentState = await governor.state(proposalID, contractId, client);
+    const currentState = await governor.state(proposalId);
     expect(Number(currentState)).to.eql(
       Number(Object.values(ProposalState).indexOf(proposalState))
     );
@@ -138,20 +131,17 @@ export class GovernorSteps {
     link: string,
     tokenAmount: number
   ): Promise<void> {
-    let tokenQty = tokenAmount * 100000000;
-    let tokens = new BigNumber(tokenQty);
+    const tokenQty = tokenAmount * 100000000;
     try {
-      await governor.propose(
-        contractId,
+      await governor.createTokenTransferProposal(
         title,
-        description,
-        link,
         idNoGODToken.toSolidityAddress(),
-        treasureId.toSolidityAddress(),
-        transferTokenId.toSolidityAddress(),
+        clientsInfo.treasureId.toSolidityAddress(),
+        TRANSFER_TOKEN_ID.toSolidityAddress(),
+        tokenQty,
         clientWithNoGODToken,
-        treasureKey,
-        tokens
+        description,
+        link
       );
     } catch (e: any) {
       msg = e.message;
@@ -161,22 +151,30 @@ export class GovernorSteps {
   @when(/user vote "([^"]*)" proposal/, undefined, 30000)
   public async voteToProposal(vote: string): Promise<void> {
     const voteVal = Number(Object.values(VoteType).indexOf(vote));
-    await governor.vote(proposalID, voteVal, contractId, client);
+    await governor.vote(proposalId, voteVal, clientsInfo.operatorClient);
   }
 
   @when(/user waits for (\d*) seconds/, undefined, 30000)
   public async wait(ms: number): Promise<void> {
-    await Helper.delay(ms * 1000);
+    await governor.delay(ms);
   }
 
   @when(/user execute the proposal with title "([^"]*)"/, undefined, 30000)
   public async executeProposal(title: string) {
-    await governor.execute(title, contractId, client, treasureKey);
+    await governor.executeProposal(
+      title,
+      clientsInfo.operatorKey,
+      clientsInfo.operatorClient
+    );
   }
 
   @when(/user fetches token balance of the payee account/, undefined, 30000)
   public async getTokenBalance() {
-    balance = await Common.getTokenBalance(treasureId, transferTokenId, client);
+    balance = await Common.getTokenBalance(
+      clientsInfo.treasureId,
+      TRANSFER_TOKEN_ID,
+      clientsInfo.operatorClient
+    );
   }
 
   @then(
@@ -185,27 +183,31 @@ export class GovernorSteps {
     30000
   )
   public async verifyTokenBalance() {
-    let updatedBalance = await Common.getTokenBalance(
-      treasureId,
-      transferTokenId,
-      client
+    const updatedBalance = await Common.getTokenBalance(
+      clientsInfo.treasureId,
+      TRANSFER_TOKEN_ID,
+      clientsInfo.operatorClient
     );
     expect(Number(updatedBalance)).to.eql(Number(balance) + Number(tokens));
   }
 
   @when(/user cancel the proposal with title "([^"]*)"/, undefined, 30000)
   public async cancelProposal(title: string) {
-    await governor.cancelProposal(title, contractId, client, treasureKey);
+    await governor.cancelProposal(title, clientsInfo.operatorClient);
   }
 
   @when(/user fetches the GOD token balance/, undefined, 30000)
   public async getGODTokenBalance() {
-    balance = await Common.getTokenBalance(id, godTokenID, client);
+    balance = await Common.getTokenBalance(
+      clientsInfo.operatorId,
+      GOD_TOKEN_ID,
+      clientsInfo.operatorClient
+    );
     console.log("god token balance --", balance);
   }
 
   @when(/user revert the god tokens/, undefined, 30000)
   public async revertGODToken() {
-    await governor.revertGod(client, godHolder.transparentProxyId!);
+    await godHolder.revertTokensForVoter(clientsInfo.operatorClient);
   }
 }

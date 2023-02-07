@@ -14,7 +14,6 @@ const godHolder = new GodHolder(godHolderContract.transparentProxyId!);
 async function main() {
   const title = "Text Proposal - 1";
   await governor.initialize(godHolder);
-  await godHolder.checkAndClaimedGodTokens();
   const proposalId = await governor.createTextProposal(title);
   await governor.getProposalDetails(proposalId);
   await governor.forVote(proposalId);

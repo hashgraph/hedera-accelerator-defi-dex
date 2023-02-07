@@ -20,9 +20,6 @@ const pairContract = contractService.getContractWithProxy(
 const { treasureId, treasureKey } = clientManagement.getTreasure();
 const { id, key } = clientManagement.getOperator();
 const client = clientManagement.createOperatorClient();
-const htsServiceAddress = contractService.getContract(
-  contractService.baseContractName
-).address;
 
 const pair = new Pair(pairContract.transparentProxyId!);
 const lpToken = new LpToken(lpTokenContract.transparentProxyId!);
@@ -223,12 +220,7 @@ export class PairTestSteps {
 
   @when(/User initialize lptoken contract/, undefined, 30000)
   public async initializeLPTokenContract(): Promise<void> {
-    await lpToken.initialize(
-      htsServiceAddress,
-      lpTokenName,
-      lpTokenSymbol,
-      client
-    );
+    await lpToken.initialize(lpTokenName, lpTokenSymbol, client);
   }
 
   @when(/User initialize pair contract/, undefined, 30000)
@@ -241,7 +233,6 @@ export class PairTestSteps {
       lpTokenContract.transparentProxyAddress
     );
     await pair.initialize(
-      htsServiceAddress,
       lpTokenContract.transparentProxyAddress!,
       treasureId,
       treasureKey,
