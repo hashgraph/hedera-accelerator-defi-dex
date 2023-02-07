@@ -92,6 +92,7 @@ export class GovernorSteps {
     30000
   )
   public async createProposal(
+    duplicateTitle: string,
     title: string,
     description: string,
     link: string,
@@ -148,15 +149,15 @@ export class GovernorSteps {
         tokenAmount
       );
     } catch (e: any) {
+      if (duplicateTitle === "false") throw e;
       msg = e.message;
     }
   }
 
   @then(/user verify that proposal state is "([^"]*)"/, undefined, 30000)
   public async verifyProposalState(proposalState: string): Promise<void> {
-    let currentState;
     try {
-      currentState = await governor.state(proposalID, contractId, client);
+      const currentState = await governor.state(proposalID, contractId, client);
       expect(Number(currentState)).to.eql(
         Number(Object.values(ProposalState).indexOf(proposalState))
       );
