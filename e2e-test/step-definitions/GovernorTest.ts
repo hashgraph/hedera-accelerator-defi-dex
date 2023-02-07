@@ -92,7 +92,6 @@ export class GovernorSteps {
     30000
   )
   public async createProposal(
-    duplicateTitle: string,
     title: string,
     description: string,
     link: string,
@@ -149,7 +148,6 @@ export class GovernorSteps {
         tokenAmount
       );
     } catch (e: any) {
-      if (duplicateTitle === "false") throw e;
       msg = e.message;
     }
   }
