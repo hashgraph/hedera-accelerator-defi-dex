@@ -35,7 +35,7 @@ const godHolder = contractService.getContract(
 );
 
 let defaultQuorumThresholdValue: number = 1;
-let votingDelay: number = 1;
+let votingDelay: number = 2;
 let votingPeriod: number = 4;
 let proposalID: BigNumber;
 let msg: string;
@@ -87,7 +87,7 @@ export class GovernorSteps {
   }
 
   @when(
-    /user create a new proposal with title "([^"]*)" description "([^"]*)" link "([^"]*)" and token amount (\d*)/,
+    /user create a new proposal with unique title "([^"]*)" description "([^"]*)" link "([^"]*)" and token amount (\d*)/,
     undefined,
     30000
   )
@@ -97,20 +97,55 @@ export class GovernorSteps {
     link: string,
     tokenAmount: number
   ): Promise<void> {
+    proposalID = await this.createProposalInternal(
+      title,
+      description,
+      link,
+      tokenAmount
+    );
+  }
+
+  private async createProposalInternal(
+    title: string,
+    description: string,
+    link: string,
+    tokenAmount: number
+  ): Promise<BigNumber> {
     let tokenQty = tokenAmount * 100000000;
     tokens = new BigNumber(tokenQty);
+    proposalID = await governor.propose(
+      contractId,
+      title,
+      description,
+      link,
+      id.toSolidityAddress(),
+      treasureId.toSolidityAddress(),
+      transferTokenId.toSolidityAddress(),
+      client,
+      treasureKey,
+      tokens
+    );
+
+    return proposalID;
+  }
+
+  @when(
+    /user create a new proposal with duplicate title "([^"]*)" description "([^"]*)" link "([^"]*)" and token amount (\d*)/,
+    undefined,
+    30000
+  )
+  public async createProposalWithDuplicateTitle(
+    title: string,
+    description: string,
+    link: string,
+    tokenAmount: number
+  ): Promise<void> {
     try {
-      proposalID = await governor.propose(
-        contractId,
+      proposalID = await this.createProposalInternal(
         title,
         description,
         link,
-        id.toSolidityAddress(),
-        treasureId.toSolidityAddress(),
-        transferTokenId.toSolidityAddress(),
-        client,
-        treasureKey,
-        tokens
+        tokenAmount
       );
     } catch (e: any) {
       msg = e.message;
@@ -119,10 +154,17 @@ export class GovernorSteps {
 
   @then(/user verify that proposal state is "([^"]*)"/, undefined, 30000)
   public async verifyProposalState(proposalState: string): Promise<void> {
-    const currentState = await governor.state(proposalID, contractId, client);
-    expect(Number(currentState)).to.eql(
-      Number(Object.values(ProposalState).indexOf(proposalState))
-    );
+    try {
+      const currentState = await governor.state(proposalID, contractId, client);
+      expect(Number(currentState)).to.eql(
+        Number(Object.values(ProposalState).indexOf(proposalState))
+      );
+    } catch (e: any) {
+      console.log("Something went wrong while verifying the state of proposal");
+      console.log(e);
+      await this.cancelProposalInternally();
+      throw e;
+    }
   }
 
   @then(/user gets message "([^"]*)" on creating proposal/, undefined, 30000)
@@ -161,8 +203,17 @@ export class GovernorSteps {
 
   @when(/user vote "([^"]*)" proposal/, undefined, 30000)
   public async voteToProposal(vote: string): Promise<void> {
-    const voteVal = Number(Object.values(VoteType).indexOf(vote));
-    await governor.vote(proposalID, voteVal, contractId, client);
+    try {
+      const voteVal = Number(Object.values(VoteType).indexOf(vote));
+      await governor.vote(proposalID, voteVal, contractId, client);
+    } catch (e: any) {
+      console.log(
+        "Something went wrong while voting to proposal now cancelling the proposal"
+      );
+      console.log(e);
+      await this.cancelProposalInternally();
+      throw e;
+    }
   }
 
   @when(/user waits for (\d*) seconds/, undefined, 30000)
@@ -172,7 +223,16 @@ export class GovernorSteps {
 
   @when(/user execute the proposal with title "([^"]*)"/, undefined, 30000)
   public async executeProposal(title: string) {
-    await governor.execute(title, contractId, client, treasureKey);
+    try {
+      await governor.execute(title, contractId, client, treasureKey);
+    } catch (e: any) {
+      console.log(
+        "Something went wrong while executing proposal cancelling the proposal"
+      );
+      console.log(e);
+      await this.cancelProposalInternally();
+      throw e;
+    }
   }
 
   @when(/user fetches token balance of the payee account/, undefined, 30000)
@@ -206,11 +266,40 @@ export class GovernorSteps {
   @when(/user fetches the GOD token balance/, undefined, 30000)
   public async getGODTokenBalance() {
     balance = await factory.getTokenBalance(godTokenID, id, client);
-    console.log("god token balance --", balance);
   }
 
   @when(/user revert the god tokens/, undefined, 30000)
   public async revertGODToken() {
-    await governor.revertGod(client, godHolder.transparentProxyId!);
+    try {
+      await governor.revertGod(client, godHolder.transparentProxyId!);
+    } catch (e: any) {
+      console.log(
+        "Something went wrong while reverting the god token cancelling the proposal"
+      );
+      console.log(e);
+    }
+  }
+
+  @when(/user initialize the god holder contract/)
+  public async initializeGODHolder() {
+    await governor.initializeGodHolder(
+      htsServiceAddress,
+      godHolder.transparentProxyId!,
+      client
+    );
+  }
+
+  private async cancelProposalInternally() {
+    try {
+      const title = await governor.getProposalDetails(
+        proposalID,
+        contractId,
+        client
+      );
+      await governor.cancelProposal(title, contractId, client, treasureKey);
+      await this.revertGODToken();
+    } catch (e: any) {
+      console.log("Failed while cleaning up ");
+    }
   }
 }

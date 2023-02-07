@@ -292,4 +292,53 @@ export default class Governor {
     const txnReceipt = await txnResponse.getReceipt(client);
     console.log(`revertGod txn status: ${txnReceipt.status}`);
   };
+
+  public initializeGodHolder = async (
+    htsServiceAddress: string,
+    contractId: string | ContractId,
+    client: Client
+  ) => {
+    const tokenId = TokenId.fromString(dex.GOD_TOKEN_ID);
+    console.log(`\nInitialize GodHolder contract with token  `);
+
+    let contractFunctionParameters = new ContractFunctionParameters()
+      .addAddress(htsServiceAddress)
+      .addAddress(tokenId.toSolidityAddress());
+
+    const tx = await new ContractExecuteTransaction()
+      .setContractId(contractId)
+      .setFunction("initialize", contractFunctionParameters)
+      .setGas(900000)
+      .execute(client);
+
+    const receipt = await tx.getReceipt(client);
+
+    console.log(
+      `Initialize GodHolder contract with token done with status - ${receipt.status}`
+    );
+  };
+
+  public getProposalDetails = async (
+    proposalId: BigNumber,
+    contractId: string | ContractId,
+    client: Client
+  ): Promise<string> => {
+    console.log(`\nGetting proposal details`);
+    const args = new ContractFunctionParameters().addUint256(proposalId);
+    const tx = await new ContractExecuteTransaction()
+      .setContractId(contractId)
+      .setFunction("getProposalDetails", args)
+      .setGas(500000)
+      .execute(client);
+    const txReceipt = await tx.getReceipt(client);
+    const txRecord = await tx.getRecord(client);
+    const title = txRecord.contractFunctionResult!.getString(1);
+    const description = txRecord.contractFunctionResult!.getString(2);
+    const link = txRecord.contractFunctionResult!.getString(3);
+    console.log(
+      `Proposal details tx status ${txReceipt.status} with proposal id = ${proposalId}, title = ${title}, description = ${description} & link = ${link}`
+    );
+
+    return title;
+  };
 }

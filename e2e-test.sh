@@ -42,7 +42,7 @@ echo CONTRACT_NAME=$CONTRACT_NAME >> .env;
 echo DEX_CONTRACT_OWNER_ID=$DEX_CONTRACT_OWNER_ID >> .env;
 echo DEX_CONTRACT_OWNER_KEY=$DEX_CONTRACT_OWNER_KEY >> .env;
 
-declare -a arr=("LPToken" "Pair" "Factory" "GovernorTransferToken")
+declare -a arr=("LPToken" "Pair" "Factory" "GovernorTransferToken" "GODHolder")
 for i in "${arr[@]}"
 do
     echo "Starting deployment for CONTRACT_NAME  " $i
