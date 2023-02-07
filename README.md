@@ -51,6 +51,10 @@ once above command executes, a prompt in terminal displays options to execute re
 ## [Contract Upgrade Strategy](./UPGRADE.md)
 -----
 
+## Deploy changed Contracts on testnet
+ Follow these steps after a new Pull-Request merges in Develop Branch.
+## [Contracts Update Steps](./DEPLOYLOGICS.md)
+
 
 ## `Linter` -
 * All *.sol files should be formatted with - NomicFoundation.hardhat-solidity
