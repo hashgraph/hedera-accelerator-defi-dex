@@ -32,7 +32,9 @@ export default class Factory extends Base {
       console.log(`- Factory#${SETUP_FACTORY}(): done\n`);
     } catch (error) {
       console.error(`- Factory#${SETUP_FACTORY}(): error`, error, "\n");
+      return false;
     }
+    return true;
   };
 
   createPair = async (
