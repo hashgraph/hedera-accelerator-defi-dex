@@ -45,15 +45,6 @@
         "transparentProxyId": "0.0.9141"
     },
     {
-        "name": "factory",
-        "id": "0.0.3373798",
-        "address": "0000000000000000000000000000000000337ae6",
-        "timestamp": "2023-02-03T13:10:32.743Z",
-        "hash": "279bdc6b24006e887cc08e9979ec8636",
-        "transparentProxyAddress": "0x000000000000000000000000000000000032cb1d",
-        "transparentProxyId": "0.0.3328797"
-    },
-    {
         "name": "governortransfertoken",
         "id": "0.0.3373825",
         "address": "0000000000000000000000000000000000337b01",
@@ -88,5 +79,14 @@
         "hash": "1bcd3345661a9648832a092721fb28d6",
         "transparentProxyAddress": "0x0000000000000000000000000000000000002359",
         "transparentProxyId": "0.0.9049"
+    },
+    {
+        "name": "factory",
+        "id": "0.0.3404088",
+        "address": "000000000000000000000000000000000033f138",
+        "timestamp": "2023-02-08T02:03:07.045Z",
+        "hash": "6da23e6aa07b521fb8630769ebe02d8e",
+        "transparentProxyAddress": "0x000000000000000000000000000000000032cb1d",
+        "transparentProxyId": "0.0.3328797"
     }
 ]
