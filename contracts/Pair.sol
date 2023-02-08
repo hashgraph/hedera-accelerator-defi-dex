@@ -439,11 +439,20 @@ contract Pair is IPair, Initializable {
 
     function _checkIfContractHaveRequiredHBARBalance(
         int256 tokenQty
-    ) private view {
+    ) private {
         require(
-            address(this).balance >= uint256(tokenQty),
+            _contractHBARBalance() >= uint256(tokenQty),
             "Contract does not have sufficient Hbars"
         );
+    }
+
+    function _contractHBARBalance() private returns (uint256) {
+        return
+            uint256(
+                pair.tokenA.tokenAddress == tokenService.hbarxAddress()
+                    ? pair.tokenA.tokenQty
+                    : pair.tokenB.tokenQty
+            );
     }
 
     function _checkIfCallerSentCorrectHBARs(int256 tokenQty) private view {
