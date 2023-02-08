@@ -1,28 +1,23 @@
 import { DeployedContract } from "../model/contract";
 import { ContractService } from "../service/ContractService";
-import { BigNumber } from "bignumber.js";
 import { ContractId } from "@hashgraph/sdk";
+import {
+  METHOD_LP_IMPL,
+  METHOD_PAIR_IMPL,
+} from "../../e2e-test/business/Factory";
 import ContractMetadata from "../../utils/ContractMetadata";
-import GovernorMethods from "../../integrationTest/governance/GovernorMethods";
+import Governor from "../../e2e-test/business/Governor";
 import Factory from "../../e2e-test/business/Factory";
-import Pair from "../../e2e-test/business/Pair";
-import ClientManagement from "../../utils/ClientManagement";
+import { clientsInfo } from "../../utils/ClientManagement";
+import Common from "../../e2e-test/business/Common";
 
-const METHOD_PAIR_IMPL = "upgradePairImplementation";
-const METHOD_LP_IMPL = "upgradeLpTokenImplementation";
-
-const pair = new Pair();
-const factory = new Factory();
-const governor = new GovernorMethods();
 const contractService = new ContractService();
 const contractMetadata = new ContractMetadata();
 const contractUATService = new ContractService(
   ContractService.UAT_CONTRACTS_PATH
 );
 
-const clientManagement = new ClientManagement();
-const operatorClient = clientManagement.createOperatorClient();
-const dexOwnerClient = clientManagement.dexOwnerClient();
+const factory = new Factory(getFactoryProxyId()!);
 
 function getFactoryProxyId() {
   const name = contractUATService.factoryContractName;
@@ -30,22 +25,10 @@ function getFactoryProxyId() {
   return factory.transparentProxyId;
 }
 
-const resolveProxyAddress = async (
-  functionName: string,
-  proxyAddress: string
-) => {
-  if (functionName === METHOD_PAIR_IMPL) {
-    return proxyAddress;
-  }
-  if (functionName === METHOD_LP_IMPL) {
-    const cId = ContractId.fromSolidityAddress(proxyAddress);
-    return await pair.getLpTokenContractAddress(cId.toString(), operatorClient);
-  }
-  throw Error(`Invalid function name passed: ${functionName}`);
-};
-
-async function updateProxy(contractId: string, proposalId: BigNumber) {
-  const response = await governor.getContractAddresses(contractId, proposalId);
+async function updateProxy(contractId: string, proposalId: string) {
+  const governor = new Governor(contractId);
+  const response =
+    await governor.getContractAddressesFromGovernorUpgradeContract(proposalId);
   const proxyId = response.proxyId;
   const logicId = response.logicId;
   const proxyUATContract = contractUATService.getContractWithProxyById(
@@ -90,18 +73,13 @@ async function upgradeProxy(
 ) {
   console.log("Running upgrade for : " + functionName);
   const logicAddress = logicId.toSolidityAddress();
-  const factoryContractId = getFactoryProxyId()!;
-  const pairs = await factory.getAllPairs(factoryContractId, operatorClient);
+  const pairs = await factory.getPairs();
   for (const pair of pairs) {
-    const proxyAddress = await resolveProxyAddress(functionName, pair);
-    await governor.upgradeTo(proxyAddress, logicAddress, dexOwnerClient);
+    const proxyAddress = await factory.resolveProxyAddress(functionName, pair);
+    const ownerKey = clientsInfo.dexOwnerKey;
+    await Common.upgradeTo(proxyAddress, logicAddress, ownerKey);
   }
-  await factory.upgradeLogic(
-    factoryContractId,
-    logicAddress,
-    dexOwnerClient,
-    functionName
-  );
+  await factory.upgradeLogic(logicAddress, functionName);
   await updateDirectProxy(proxyId, logicId, oldVersionContract);
 }
 
@@ -116,7 +94,7 @@ async function updateDirectProxy(
   logicId: ContractId,
   oldVersionContract: DeployedContract
 ) {
-  await governor.upgradeTo(
+  await Common.upgradeTo(
     proxyId.toSolidityAddress(),
     logicId.toSolidityAddress()
   );
@@ -134,6 +112,9 @@ async function updateDirectProxy(
 
 export async function main(contract: DeployedContract, proposal: any) {
   if (contract.name === contractService.governorUpgradeContract) {
-    await updateProxy(contract.transparentProxyId!, proposal.proposalId);
+    await updateProxy(
+      contract.transparentProxyId!,
+      proposal.proposalId.toFixed()
+    );
   }
 }
