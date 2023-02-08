@@ -147,31 +147,33 @@ contract Pair is IPair, Initializable {
     ) private {
         int256 calculatedSlippage = slippageOutGivenIn(_deltaAQty);
         isSlippageBreached(calculatedSlippage, _slippage);
-        // deduct fee from the token A
+        // Token A Calculation
         int256 feeTokenA = feeForToken(_deltaAQty);
-        _deltaAQty = _deltaAQty - (feeTokenA / 2);
+        int256 _tokenATreasureFee = feeTokenA / 2;
+        int256 _amountToTransferFromUserToContract = _deltaAQty -
+            _tokenATreasureFee;
+        pair.tokenA.tokenQty += _amountToTransferFromUserToContract;
 
-        int256 deltaBQty = getOutGivenIn(_deltaAQty);
-        pair.tokenA.tokenQty += _deltaAQty;
-        int256 feeTokenB = feeForToken(deltaBQty);
-        // deduct fee from the token B
-        deltaBQty = deltaBQty - (feeTokenB / 2);
+        //Token B Calculation
+        int256 swapBValue = getOutGivenIn(_amountToTransferFromUserToContract);
+        int256 feeTokenB = feeForToken(swapBValue);
+        int256 _actualSwapBValue = swapBValue - feeTokenB;
+        int256 _tokenBTreasureFee = feeTokenB / 2;
+        pair.tokenB.tokenQty -= (_actualSwapBValue + _tokenBTreasureFee);
         transferTokenInternally(
             to,
             address(this),
             pair.tokenA.tokenAddress,
-            _deltaAQty,
+            _amountToTransferFromUserToContract,
             "swapTokenA: Transferring token A to contract failed with status code"
         );
-
-        pair.tokenB.tokenQty -= deltaBQty;
 
         _associateToken(to, pair.tokenB.tokenAddress);
         transferTokenInternally(
             address(this),
             to,
             pair.tokenB.tokenAddress,
-            deltaBQty,
+            _actualSwapBValue,
             "swapTokenA: Transferring token B to user failed with status code"
         );
         // fee transfer
@@ -186,7 +188,7 @@ contract Pair is IPair, Initializable {
             address(this),
             treasury,
             pair.tokenB.tokenAddress,
-            feeTokenB / 2,
+            _tokenBTreasureFee,
             "swapTokenAFee: Transferring fee as token B to treasuary failed with status code"
         );
     }
@@ -198,29 +200,35 @@ contract Pair is IPair, Initializable {
     ) private {
         int256 calculatedSlippage = slippageInGivenOut(_deltaBQty);
         isSlippageBreached(calculatedSlippage, _slippage);
-        // deduct fee from the token B
+
+        // Token B Calculation
         int256 feeTokenB = feeForToken(_deltaBQty);
-        _deltaBQty -= (feeTokenB / 2);
-        int256 deltaAQty = getInGivenOut(_deltaBQty);
-        pair.tokenB.tokenQty += _deltaBQty;
-        int256 feeTokenA = feeForToken(deltaAQty);
-        // deduct fee from the token A
-        deltaAQty -= (feeTokenA / 2);
+        int256 _tokenBTreasureFee = feeTokenB / 2;
+        int256 _amountToTransferFromUserToContract = _deltaBQty -
+            _tokenBTreasureFee;
+        pair.tokenB.tokenQty += _amountToTransferFromUserToContract;
+
+        //Token A Calculation
+        int256 swapAValue = getInGivenOut(_amountToTransferFromUserToContract);
+        int256 feeTokenA = feeForToken(swapAValue);
+        int256 _actualSwapAValue = swapAValue - feeTokenA;
+        int256 _tokenATreasureFee = feeTokenA / 2;
+        pair.tokenA.tokenQty -= (_actualSwapAValue + _tokenATreasureFee);
+        
         transferTokenInternally(
             to,
             address(this),
             pair.tokenB.tokenAddress,
-            _deltaBQty,
+            _amountToTransferFromUserToContract,
             "swapTokenB: Transferring token B to contract failed with status code"
         );
 
-        pair.tokenA.tokenQty -= deltaAQty;
         _associateToken(to, pair.tokenA.tokenAddress);
         transferTokenInternally(
             address(this),
             to,
             pair.tokenA.tokenAddress,
-            deltaAQty,
+            _actualSwapAValue,
             "swapTokenB: Transferring token A to user failed with status code"
         );
 
@@ -236,7 +244,7 @@ contract Pair is IPair, Initializable {
             address(this),
             treasury,
             pair.tokenA.tokenAddress,
-            feeTokenA / 2,
+            _tokenATreasureFee,
             "swapTokenBFee: Transferring fee as token A to treasuary failed with status code"
         );
     }
