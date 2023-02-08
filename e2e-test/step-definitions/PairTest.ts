@@ -171,7 +171,7 @@ export class PairTestSteps {
 
   @when(/User fetch spot price for tokenA/, undefined, 30000)
   public async fetchSpotPriceForTokenA() {
-    sportPriceTokenA = await pair.getSpotPrice(client);
+    sportPriceTokenA = await pair.getSpotPrice(tokenA, client);
   }
 
   @then(/Expected spot price for tokenA should be (\d*)/, undefined, 30000)
