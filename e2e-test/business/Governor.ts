@@ -359,4 +359,36 @@ export default class Governor extends Base {
     await this.execute(INITIALIZE, client, args);
     console.log(`- Governor#${INITIALIZE}(): done\n`);
   };
+
+  public getStateWithTimeOut = async (
+    proposalId: string,
+    requiredState: number,
+    maxWaitInSec: number,
+    delayInMS: number = 1000,
+    client: Client = clientsInfo.operatorClient
+  ): Promise<void> => {
+    const waitTimeInternal = maxWaitInSec;
+    while (maxWaitInSec > 0) {
+      try {
+        const currentState = await this.state(proposalId, client);
+        if (Number(currentState) >= requiredState) {
+          console.log(
+            `- Governor#getStateWithTimeOut(): requested state matched = ${
+              Number(currentState) == requiredState
+            }, took = ${waitTimeInternal - maxWaitInSec} seconds\n`
+          );
+          break;
+        }
+      } catch (e: any) {
+        console.log(
+          `- Governor#getStateWithTimeOut(): Failed, seconds = ${maxWaitInSec} `,
+          e
+        );
+      }
+      await Helper.delay(delayInMS);
+      maxWaitInSec -= delayInMS / 1000;
+      console.log(`Waiting for ${maxWaitInSec} more seconds`);
+    }
+    console.log(`- getStateWithTimeOut(): done\n`);
+  };
 }

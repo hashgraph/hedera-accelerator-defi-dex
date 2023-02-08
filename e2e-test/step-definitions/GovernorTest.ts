@@ -298,4 +298,14 @@ export class GovernorSteps {
       console.log("Failed while cleaning up");
     }
   }
+
+  @when(
+    /user wait for proposal state to be "([^"]*)" for max (\d*) seconds/,
+    undefined,
+    30000
+  )
+  public async userWaitForState(state: string, seconds: number) {
+    const requiredState = Number(Object.values(ProposalState).indexOf(state));
+    await governor.getStateWithTimeOut(proposalID, requiredState, seconds);
+  }
 }
