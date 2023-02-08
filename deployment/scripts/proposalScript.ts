@@ -1,5 +1,5 @@
 import { main as eventReader } from "./eventReader";
-import GovernorMethods from "../../integrationTest/governance/GovernorMethods";
+import Governor from "../../e2e-test/business/Governor";
 import { ContractService } from "../service/ContractService";
 import { DeployedContract } from "../model/contract";
 import { main as onPostExecute } from "./proposalPostExecutionScript";
@@ -7,13 +7,12 @@ import { main as onPostExecute } from "./proposalPostExecutionScript";
 import dotenv from "dotenv";
 dotenv.config();
 
-const governor = new GovernorMethods();
 const contractService = new ContractService();
-let contractId: string | undefined;
 let contract: DeployedContract;
+let governor: Governor;
 
 export async function main() {
-  contractId = process.env.PROPOSAL_CONTRACT_ID;
+  const contractId = process.env.PROPOSAL_CONTRACT_ID;
   if (!contractId) {
     throw Error("Proposal contract id missing.");
   }
@@ -21,6 +20,7 @@ export async function main() {
   if (!contract) {
     throw Error("Failed to get contract details.");
   }
+  governor = new Governor(contractId);
   const events = await eventReader(contractId);
   const executedProposals = events.get("ProposalExecuted") ?? [];
   const cancelledProposals = events.get("ProposalCanceled") ?? [];
@@ -52,7 +52,7 @@ async function executeProposals(proposals: any[]) {
       const { proposalId, description } = proposal;
       console.log("\n--- Proposal execution started:", proposalId);
       (await isProposalActive(proposalId)) &&
-        (await governor.execute(description, contractId!)) &&
+        (await governor.executeProposal(description)) &&
         (await onPostExecute(contract, proposal));
       console.log("--- Proposal execution succeeded:", proposalId);
     } catch (e) {
@@ -62,8 +62,8 @@ async function executeProposals(proposals: any[]) {
   console.log("- Proposals execution ended.\n");
 }
 
-async function isProposalActive(proposalId: any) {
-  return Number(await governor.state(proposalId, contractId!)) === 4;
+async function isProposalActive(proposalId: string) {
+  return Number(await governor.state(proposalId)) === 4;
 }
 
 main()

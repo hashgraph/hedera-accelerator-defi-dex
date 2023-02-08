@@ -4,11 +4,12 @@ import { main as deployContract } from "./scripts/logic";
 import { ContractService } from "./service/ContractService";
 import { Helper } from "../utils/Helper";
 import ContractMetadata from "../utils/ContractMetadata";
-import GovernorMethods from "../integrationTest/governance/GovernorMethods";
+import Governor from "../e2e-test/business/Governor";
+import { clientsInfo } from "../utils/ClientManagement";
 import Web3 from "web3";
 
 const web3 = new Web3();
-const governorMethods = new GovernorMethods();
+
 const contractMetadata = new ContractMetadata();
 const contractDevService = new ContractService();
 const contractUATService = new ContractService(
@@ -18,6 +19,8 @@ const gitLastCommitMessage = Helper.getGitLastCommitMessage();
 const upgradeGovernor = contractDevService.getContract(
   contractDevService.governorUpgradeContract
 );
+
+const governor = new Governor(upgradeGovernor.transparentProxyId!);
 
 async function main() {
   const contractsToDeploy = contractMetadata.getAllChangedContractNames();
@@ -35,21 +38,18 @@ async function createProposal(
   newVersionContractId: string
 ) {
   const uniqueId = web3.utils.randomHex(20);
-  const result = await governorMethods.createContractUpgradeProposal(
-    ContractId.fromString(upgradeGovernor.transparentProxyId!),
+  const desc = `Contract Name - ${
+    oldVersion.name
+  }, New Logic Id =  ${newVersionContractId}, Old Logic Id = ${oldVersion.id!}, Proxy Id = ${oldVersion.transparentProxyId!}`;
+
+  const result = await governor.createContractUpgradeProposal(
     ContractId.fromString(oldVersion.transparentProxyId!),
     ContractId.fromString(newVersionContractId!),
     `${gitLastCommitMessage} (${uniqueId})`,
-    `Contract Name - ${
-      oldVersion.name
-    }, New Logic Id =  ${newVersionContractId}, Old Logic Id = ${oldVersion.id!}, Proxy Id = ${oldVersion.transparentProxyId!}`,
-    "https://defi-ui.hedera.com"
+    clientsInfo.operatorClient,
+    desc
   );
-  console.log(
-    "Proposal creation status :",
-    result.success,
-    result.proposalId.toFixed()
-  );
+  console.log("Proposal creation status :", result.success, result.proposalId);
   return result.success;
 }
 
