@@ -41,7 +41,7 @@ contract ERC20Mock is IERC20 {
     }
 
     function balanceOf(address user) external view override returns (uint256) {
-       return userBalances[user];
+        return userBalances[user];
     }
 
     function setTotal(uint256 _total) external {
@@ -72,7 +72,10 @@ contract ERC20Mock is IERC20 {
             if (isFailTransferAfterCountEnabled) {
                 failTransferAfterCount -= 1;
             }
-            userBalances[to] += amount;
+            if (userBalances[msg.sender] >= amount) {
+                userBalances[msg.sender] -= amount;
+                userBalances[to] += amount;
+            }
             return true;
         }
     }

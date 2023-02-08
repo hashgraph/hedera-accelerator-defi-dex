@@ -88,8 +88,13 @@ export default class Pair extends Base {
     console.log(`- Pair#${SET_SLIPPAGE}(): done\n`);
   };
 
-  public getSpotPrice = async (token: TokenId, client: Client = clientsInfo.operatorClient) => {
-    const args = new ContractFunctionParameters().addAddress(token.toSolidityAddress());
+  public getSpotPrice = async (
+    token: TokenId,
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    const args = new ContractFunctionParameters().addAddress(
+      token.toSolidityAddress()
+    );
     const { result } = await this.execute(GET_SPOT_PRICE, client, args);
     const price = result.getInt256(0);
     console.log(`- Pair#${GET_SPOT_PRICE}(): TokenA spot price = ${price}\n`);
