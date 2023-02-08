@@ -48,7 +48,7 @@ export default class Base {
   ) => {
     const txn = new ContractExecuteTransaction()
       .setContractId(this.contractId)
-      .setGas(9550000)
+      .setGas(9500000)
       .setFunction(functionName, functionParams)
       .setPayableAmount(amount);
     const txnToExecute = await this.signTxnIfNeeded(txn, keys, client);
