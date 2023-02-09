@@ -28,7 +28,7 @@ export default class Factory extends Base {
       const args = new ContractFunctionParameters()
         .addAddress(this.htsAddress)
         .addAddress(adminAddress);
-      await this.execute(SETUP_FACTORY, client, args);
+      await this.execute(9000000, SETUP_FACTORY, client, args, undefined);
       console.log(`- Factory#${SETUP_FACTORY}(): done\n`);
     } catch (error) {
       console.error(`- Factory#${SETUP_FACTORY}(): error`, error, "\n");
@@ -51,6 +51,7 @@ export default class Factory extends Base {
       .addAddress(feeCollectionAccountId.toSolidityAddress())
       .addInt256(fee);
     const { result } = await this.execute(
+      9000000,
       CREATE_PAIR,
       client,
       args,
@@ -72,7 +73,13 @@ export default class Factory extends Base {
     const args = new ContractFunctionParameters()
       .addAddress(token1.toSolidityAddress())
       .addAddress(token2.toSolidityAddress());
-    const { result } = await this.execute(GET_PAIR, client, args);
+    const { result } = await this.execute(
+      9999999,
+      GET_PAIR,
+      client,
+      args,
+      undefined
+    );
     const address = result.getAddress(0);
     console.log(`- Factory#${GET_PAIR}(): pair = ${address}\n`);
     return address;
@@ -81,7 +88,13 @@ export default class Factory extends Base {
   getPairs = async (
     client: Client = clientsInfo.operatorClient
   ): Promise<string[]> => {
-    const { result } = await this.execute(GET_PAIRS, client);
+    const { result } = await this.execute(
+      9999999,
+      GET_PAIRS,
+      client,
+      undefined,
+      undefined
+    );
     const addresses = Helper.getAddressArray(result);
     console.log(
       `- Factory#${GET_PAIRS}(): count = ${addresses.length}, pairs = [${addresses}]\n`
@@ -91,7 +104,7 @@ export default class Factory extends Base {
 
   upgradeLogic = async (implAddress: string, functionName: string) => {
     const args = new ContractFunctionParameters().addAddress(implAddress);
-    this.execute(functionName, clientsInfo.dexOwnerClient, args);
+    this.execute(4000000, functionName, clientsInfo.dexOwnerClient, args);
     console.log(`- Factory${functionName}(): done\n`);
   };
 
