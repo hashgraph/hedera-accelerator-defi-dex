@@ -16,6 +16,8 @@ const GET_PAIR = "getPair";
 const GET_PAIRS = "getPairs";
 const CREATE_PAIR = "createPair";
 const SETUP_FACTORY = "setUpFactory";
+const GET_TRANSACTIONS_FEE = "getTransactionsFee";
+const SET_TRANSACTIONS_FEE = "setTransactionFee";
 export const METHOD_PAIR_IMPL = "upgradePairImplementation";
 export const METHOD_LP_IMPL = "upgradeLpTokenImplementation";
 
@@ -100,6 +102,32 @@ export default class Factory extends Base {
       `- Factory#${GET_PAIRS}(): count = ${addresses.length}, pairs = [${addresses}]\n`
     );
     return addresses;
+  };
+
+  setTransactionFee = async (
+    key: BigNumber,
+    value: BigNumber,
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    const args = new ContractFunctionParameters()
+      .addUint256(key)
+      .addUint256(value);
+    await this.execute(50000, SET_TRANSACTIONS_FEE, client, args);
+    console.log(
+      `- Factory#${SET_TRANSACTIONS_FEE}(): key = ${key.toFixed()}, value = ${value.toFixed()} done\n`
+    );
+  };
+
+  getTransactionsFee = async (client: Client = clientsInfo.operatorClient) => {
+    const { result } = await this.execute(50000, GET_TRANSACTIONS_FEE, client);
+    const items = Helper.getUint256Array(result);
+    const fees = Helper.convertToFeeObjectArray(items);
+    console.log(
+      `- Factory#${GET_TRANSACTIONS_FEE}(): count = ${
+        fees.length
+      }, fees = ${JSON.stringify(fees)}\n`
+    );
+    return items;
   };
 
   upgradeLogic = async (implAddress: string, functionName: string) => {

@@ -6,8 +6,10 @@ import "./ILPToken.sol";
 import "./common/IERC20.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableMapUpgradeable.sol";
 
 contract Factory is Initializable {
+    using EnumerableMapUpgradeable for EnumerableMapUpgradeable.UintToUintMap;
     event PairCreated(address indexed pairAddress);
     event LogicUpdated(
         address indexed oldImplementation,
@@ -27,6 +29,8 @@ contract Factory is Initializable {
     address private pairLogic;
     address private lpLogic;
 
+    EnumerableMapUpgradeable.UintToUintMap private feeMap;
+
     modifier ifAdmin() {
         require(msg.sender == admin, "Factory: auth failed");
         _;
@@ -42,6 +46,7 @@ contract Factory is Initializable {
         emit LogicUpdated(address(0), pairLogic, PAIR);
         lpLogic = address(new LPToken());
         emit LogicUpdated(address(0), lpLogic, LP_TOKEN);
+        populateFeeMap();
     }
 
     function hbarxAddress() external returns (address) {
@@ -79,6 +84,30 @@ contract Factory is Initializable {
             pairs[_token0][_token1] = pair;
             allPairs.push(pair);
             emit PairCreated(pair);
+        }
+    }
+
+    function populateFeeMap() private {
+        setTransactionFee(1, 5);
+        setTransactionFee(2, 30);
+        setTransactionFee(3, 10);
+    }
+
+    function setTransactionFee(uint256 key, uint256 value) public {
+        feeMap.set(key, value);
+    }
+
+    function getTransactionsFee()
+        external
+        view
+        returns (uint256[] memory feeItems)
+    {
+        uint256 count = feeMap.length();
+        feeItems = new uint256[](count * 2);
+        for (uint i = 0; i < count; i++) {
+            (uint256 key, uint256 value) = feeMap.at(i);
+            feeItems[i * 2] = key;
+            feeItems[i * 2 + 1] = value;
         }
     }
 

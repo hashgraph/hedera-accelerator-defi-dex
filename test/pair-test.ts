@@ -4,6 +4,7 @@ import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { ethers, upgrades } from "hardhat";
 import { BigNumber } from "ethers";
+import { Helper } from "../utils/Helper";
 
 describe("All Tests", function () {
   const tokenBAddress = "0x0000000000000000000000000000000000010001";
@@ -296,6 +297,26 @@ describe("All Tests", function () {
       await factory.createPair(token1Address, token2Address, treasury, fee);
       const pair = await factory.getPair(token1Address, token2Address);
       expect(pair).to.be.not.equal(zeroAddress);
+    });
+
+    it("Verifying transaction fees map operations", async function () {
+      const { factory, mockBaseHTS, signers, token1Address, token2Address } =
+        await loadFixture(deployFixture);
+      await factory.setUpFactory(mockBaseHTS.address, signers[0].address);
+      const fees1 = Helper.convertToFeeObjectArray(
+        await factory.getTransactionsFee()
+      );
+
+      expect(fees1.length).to.be.equals(3); //  we putting 3 items from setupFactory inside contract for key (1,2,3)
+      await factory.setTransactionFee(10, 100);
+      await factory.setTransactionFee(11, 190);
+      await factory.setTransactionFee(11, 200);
+
+      const fees2 = Helper.convertToFeeObjectArray(
+        await factory.getTransactionsFee()
+      );
+      console.log("final items -> ", JSON.stringify(fees2));
+      expect(fees2.length).to.be.equals(5);
     });
   });
 

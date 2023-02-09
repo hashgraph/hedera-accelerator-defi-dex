@@ -81,6 +81,8 @@ const swapToken = async (token: TokenId) => {
 
 async function main() {
   await factory.setupFactory();
+  await factory.getTransactionsFee();
+  await factory.setTransactionFee(BigNumber(1), BigNumber(5));
   await testForSinglePair(tokenB, tokenHBARX);
   await testForSinglePair(tokenB, tokenC);
   await testForSinglePair(tokenA, tokenGOD);

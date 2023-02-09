@@ -67,7 +67,7 @@ export class ContractService {
 
     const contractsWithNewContract = [...contracts, newContract];
 
-    const data = JSON.stringify(contractsWithNewContract, null, 4);
+    const data = JSON.stringify(contractsWithNewContract, null, 2);
 
     console.log(`Contract details ${data}`);
 
@@ -99,7 +99,7 @@ export class ContractService {
 
     const contractsWithNewContract = [...contracts, newContract];
 
-    const data = JSON.stringify(contractsWithNewContract, null, 4);
+    const data = JSON.stringify(contractsWithNewContract, null, 2);
 
     console.log(`Contract details ${data}`);
 
@@ -121,7 +121,7 @@ export class ContractService {
 
     const updatedContracts = [...allOtherContracts, updatedContract];
 
-    const data = JSON.stringify(updatedContracts, null, 4);
+    const data = JSON.stringify(updatedContracts, null, 2);
 
     console.log(`Contract record updated ${data}`);
 
@@ -190,7 +190,7 @@ export class ContractService {
   public addDeployed = (contract: DeployedContract) => {
     const contracts: [DeployedContract] = this.readFileContent();
     contracts.push(contract);
-    const data = JSON.stringify(contracts, null, 4);
+    const data = JSON.stringify(contracts, null, 2);
     fs.writeFileSync(this.contractRecordFile, data);
   };
 
@@ -198,14 +198,14 @@ export class ContractService {
     const contracts: [DeployedContract] = this.readFileContent();
     const items = contracts.filter((item) => item.name !== contract.name);
     items.push(contract);
-    const data = JSON.stringify(items, null, 4);
+    const data = JSON.stringify(items, null, 2);
     fs.writeFileSync(this.contractRecordFile, data);
   };
 
   public remove = (id: string) => {
     const contracts: [DeployedContract] = this.readFileContent();
     const items = contracts.filter((item) => item.id !== id);
-    const data = JSON.stringify(items, null, 4);
+    const data = JSON.stringify(items, null, 2);
     fs.writeFileSync(this.contractRecordFile, data);
   };
 }
