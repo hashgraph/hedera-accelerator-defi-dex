@@ -213,11 +213,6 @@ export class GovernorSteps {
     }
   }
 
-  @when(/user waits for (\d*) seconds/, undefined, 30000)
-  public async wait(ms: number): Promise<void> {
-    await governor.delay(ms);
-  }
-
   @when(/user execute the proposal with title "([^"]*)"/, undefined, 30000)
   public async executeProposal(title: string) {
     try {
