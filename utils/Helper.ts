@@ -55,10 +55,13 @@ export class Helper {
   };
 
   static convertToFeeObjectArray = (items: BigNumber[]) => {
+    if (items.length % 2 !== 0) {
+      throw Error(`Helper: Invalid items size = ${items.length}`);
+    }
     const details: any = [];
-    for (let i = 0; i < items.length / 2; i++) {
-      const key = Number(items[i * 2]);
-      const value = Number(items[i * 2 + 1]);
+    for (let i = 0; i < items.length; i += 2) {
+      const key = Number(items[i]);
+      const value = Number(items[i + 1]);
       details.push({ key, value });
     }
     return details;
