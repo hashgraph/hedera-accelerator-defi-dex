@@ -45,8 +45,8 @@ export class PairTestSteps {
     console.log(
       "*******************Starting pair test with following credentials*******************"
     );
-    console.log("TOKEN_USER_ID : ", id);
-    console.log("treasureId :", treasureId);
+    console.log("TOKEN_USER_ID : ", id.toString());
+    console.log("treasureId :", treasureId.toString());
     const num = Math.floor(Math.random() * 10) + 1;
     tokenA = await Common.createToken("A" + num, "A" + num, id, key, client);
     tokenB = await Common.createToken("B" + num, "B" + num, id, key, client);
