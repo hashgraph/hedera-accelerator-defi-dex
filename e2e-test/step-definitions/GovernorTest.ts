@@ -286,6 +286,21 @@ export class GovernorSteps {
     }
   }
 
+  @when(
+    /user wait for proposal state to be "([^"]*)" for max (\d*) seconds/,
+    undefined,
+    30000
+  )
+  public async userWaitForState(state: string, seconds: number) {
+    const requiredState = Number(Object.values(ProposalState).indexOf(state));
+    await governor.getStateWithTimeout(
+      proposalID,
+      requiredState,
+      seconds * 1000,
+      1000
+    );
+  }
+
   private async cancelProposalInternally() {
     try {
       const details = await governor.getProposalDetails(

@@ -19,7 +19,9 @@ import {
 const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
 const DEFAULT_QUORUM_THRESHOLD_IN_BSP = 500;
 const DEFAULT_VOTING_DELAY = 0; // blocks
-const DEFAULT_VOTING_PERIOD = 12; // blocks
+const DEFAULT_VOTING_PERIOD = 100; // blocks means 3 minutes as per test
+const DEFAULT_MAX_WAITING_TIME = DEFAULT_VOTING_PERIOD * 12 * 1000;
+const EACH_ITERATION_DELAY = DEFAULT_VOTING_PERIOD * 0.3 * 1000;
 const DEFAULT_DESCRIPTION = "description";
 const DEFAULT_LINK = "https://defi-ui.hedera.com/governance";
 
@@ -228,10 +230,8 @@ export default class Governor extends Base {
     return state;
   };
 
-  delay = async (s: number) => {
-    const secToMs = s * 1000;
-    console.log(`- Governor#$wait(): ms = ${secToMs}\n`);
-    await Helper.delay(secToMs);
+  delay = async (proposalId: string, requiredState: number = 4) => {
+    await this.getStateWithTimeout(proposalId, requiredState);
   };
 
   executeProposal = async (
@@ -395,5 +395,39 @@ export default class Governor extends Base {
       .addUint256(defaultQuorumThresholdValue);
     await this.execute(900000, INITIALIZE, client, args);
     console.log(`- Governor#${INITIALIZE}(): done\n`);
+  };
+
+  public getStateWithTimeout = async (
+    proposalId: string,
+    requiredState: number,
+    maxWaitInMs: number = DEFAULT_MAX_WAITING_TIME,
+    eachIterationDelayInMS: number = EACH_ITERATION_DELAY,
+    client: Client = clientsInfo.operatorClient
+  ): Promise<void> => {
+    console.log(
+      `- Governor#getStateWithTimeout(): called with maxWaitInMs = ${maxWaitInMs}, eachIterationDelayInMS = ${eachIterationDelayInMS}, requiredState = ${requiredState}, proposal-id = ${proposalId}\n`
+    );
+    const maxWaitInMsInternally = maxWaitInMs;
+    while (maxWaitInMs > 0) {
+      try {
+        const currentState = Number(await this.state(proposalId, client));
+        if (currentState >= requiredState) {
+          console.log(
+            `- Governor#getStateWithTimeout(): requiredState = ${requiredState}, currentState = ${currentState}, both matched = ${
+              currentState === requiredState
+            } and waiting time = ${maxWaitInMsInternally - maxWaitInMs} ms\n`
+          );
+          break;
+        }
+      } catch (e: any) {
+        console.log(
+          `- Governor#getStateWithTimeout(): failed and ms left = ${maxWaitInMs}`,
+          e
+        );
+      }
+      await Helper.delay(eachIterationDelayInMS);
+      maxWaitInMs -= eachIterationDelayInMS;
+    }
+    console.log(`- Governor#getStateWithTimeout(): done\n`);
   };
 }
