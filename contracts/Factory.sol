@@ -22,7 +22,7 @@ contract Factory is Initializable {
     IBaseHTS private service;
 
     address[] private allPairs;
-    mapping(address => mapping(address => address)) private pairs;
+    mapping(address => mapping(address => mapping(int256 => address))) private pairs;
 
     address private pairLogic;
     address private lpLogic;
@@ -50,10 +50,11 @@ contract Factory is Initializable {
 
     function getPair(
         address _tokenA,
-        address _tokenB
+        address _tokenB,
+        int256 _fee
     ) external view returns (address) {
         (address token0, address token1) = sortTokens(_tokenA, _tokenB);
-        return pairs[token0][token1];
+        return pairs[token0][token1][_fee];
     }
 
     function getPairs() external view returns (address[] memory) {
@@ -67,7 +68,7 @@ contract Factory is Initializable {
         int256 _fee
     ) external payable returns (address pair) {
         (address _token0, address _token1) = sortTokens(_tokenA, _tokenB);
-        pair = pairs[_token0][_token1];
+        pair = pairs[_token0][_token1][_fee];
         if (pair == address(0)) {
             IPair iPair = _createPairContractInternally(
                 _token0,
@@ -76,7 +77,7 @@ contract Factory is Initializable {
                 _fee
             );
             pair = address(iPair);
-            pairs[_token0][_token1] = pair;
+            pairs[_token0][_token1][_fee] = pair;
             allPairs.push(pair);
             emit PairCreated(pair);
         }

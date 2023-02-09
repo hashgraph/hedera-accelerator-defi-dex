@@ -375,12 +375,13 @@ contract Pair is IPair, Initializable {
     function getTokenPairAddress()
         public
         view
-        returns (address, address, address)
+        returns (address, address, address, int256)
     {
         return (
             pair.tokenA.tokenAddress,
             pair.tokenB.tokenAddress,
-            lpTokenContract.getLpTokenAddress()
+            lpTokenContract.getLpTokenAddress(),
+            fee
         );
     }
 

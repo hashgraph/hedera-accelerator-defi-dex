@@ -15,6 +15,7 @@ describe("All Tests", function () {
   const treasury = "0x0000000000000000000000000000000002d70207";
   let precision: BigNumber;
   const fee = BigNumber.from(1);
+  const fee2 = BigNumber.from(2);
   const defaultSlippageInput = BigNumber.from(0);
 
   async function deployERC20Mock() {
@@ -283,17 +284,30 @@ describe("All Tests", function () {
   });
 
   describe("Factory Contract positive Tests", async () => {
-    it("Check createPair method", async function () {
+    it("Check createPair method, Same Tokens and same fees", async function () {
       const { factory, mockBaseHTS, signers, token1Address, token2Address } =
         await loadFixture(deployFixture);
       await factory.setUpFactory(mockBaseHTS.address, signers[0].address);
       await factory.createPair(token1Address, token2Address, treasury, fee);
-      const pair1 = await factory.getPair(token1Address, token2Address);
+      const pair1 = await factory.getPair(token1Address, token2Address, fee);
       await factory.createPair(token1Address, token2Address, treasury, fee);
-      const pair2 = await factory.getPair(token1Address, token2Address);
+      const pair2 = await factory.getPair(token1Address, token2Address, fee);
       expect(pair1).to.be.equals(pair2);
       const pairs = await factory.getPairs();
       expect(pairs[0]).to.be.equals(pair1);
+    });
+
+    it("Check createPair method, Same Tokens and different fees", async function () {
+      const { factory, mockBaseHTS, signers, token1Address, token2Address } =
+        await loadFixture(deployFixture);
+      await factory.setUpFactory(mockBaseHTS.address, signers[0].address);
+      await factory.createPair(token1Address, token2Address, treasury, fee);
+      const pair1 = await factory.getPair(token1Address, token2Address, fee);
+      await factory.createPair(token1Address, token2Address, treasury, fee2);
+      const pair2 = await factory.getPair(token1Address, token2Address, fee2);
+      expect(pair1).to.not.be.equals(pair2);
+      const pairs = await factory.getPairs();
+      expect(pairs[0]).to.not.be.equals(pairs[1]);
     });
 
     it("verify factory initization should be failed for subsequent initization call", async function () {
@@ -349,7 +363,7 @@ describe("All Tests", function () {
         await loadFixture(deployFixture);
       await factory.setUpFactory(mockBaseHTS.address, signers[0].address);
       await factory.createPair(token1Address, token2Address, treasury, fee);
-      const pair = await factory.getPair(token1Address, token2Address);
+      const pair = await factory.getPair(token1Address, token2Address, fee);
       expect(pair).to.be.not.equal(zeroAddress);
     });
   });
@@ -1298,6 +1312,7 @@ describe("All Tests", function () {
       expect(value[0]).to.be.equals(token1Address);
       expect(value[1]).to.be.equals(token2Address);
       expect(value[2]).to.not.be.equals(newZeroAddress);
+      expect(value[3]).to.be.equals(fee);
     });
   });
 

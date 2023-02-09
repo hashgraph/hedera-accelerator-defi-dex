@@ -68,6 +68,7 @@ export default class Factory extends Base {
   getPair = async (
     token1: TokenId,
     token2: TokenId,
+    fee: number,
     client: Client = clientsInfo.operatorClient
   ) => {
     const args = new ContractFunctionParameters()
