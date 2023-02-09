@@ -14,7 +14,7 @@ export default class Governor extends Base {
       .addAddress(this.htsAddress)
       .addAddress(GOD_TOKEN_ID.toSolidityAddress());
 
-    await this.execute(INITIALIZE, client, args);
+    await this.execute(900000, INITIALIZE, client, args);
     console.log(`- GodHolder#${INITIALIZE}(): done\n`);
   };
 
@@ -28,7 +28,13 @@ export default class Governor extends Base {
   };
 
   canUserClaimGodTokens = async (client: Client) => {
-    const { result } = await this.execute(CAN_USER_CLAIM_GOD_TOKEN, client);
+    const { result } = await this.execute(
+      9000000,
+      CAN_USER_CLAIM_GOD_TOKEN,
+      client,
+      undefined,
+      undefined
+    );
     const canUserClaimGodTokens = result.getBool(0);
     console.log(
       `- GodHolder#${CAN_USER_CLAIM_GOD_TOKEN}(): canUserClaimGodTokens = ${canUserClaimGodTokens}\n`
@@ -37,7 +43,13 @@ export default class Governor extends Base {
   };
 
   revertTokensForVoter = async (client: Client) => {
-    const { result } = await this.execute(REVERT_TOKENS_FOR_VOTER, client);
+    const { result } = await this.execute(
+      9000000,
+      REVERT_TOKENS_FOR_VOTER,
+      client,
+      undefined,
+      undefined
+    );
     const responseCode = result.getUint256(0);
     console.log(
       `- GodHolder#${REVERT_TOKENS_FOR_VOTER}(): response-code = ${responseCode}\n`

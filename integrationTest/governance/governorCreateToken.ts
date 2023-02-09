@@ -69,13 +69,8 @@ async function main() {
   await governor.isVoteSucceeded(proposalId);
   await governor.isVoteSucceeded(proposalId1);
 
-  await governor.state(proposalId);
-  await governor.state(proposalId1);
-
-  await governor.delay(25 * 1000);
-
-  await governor.state(proposalId);
-  await governor.state(proposalId1);
+  await governor.delay(proposalId);
+  await governor.delay(proposalId1);
 
   await governor.executeProposal(title, clientsInfo.treasureKey);
   await governor.executeProposal(title1, clientsInfo.treasureKey);

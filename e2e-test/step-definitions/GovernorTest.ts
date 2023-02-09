@@ -213,11 +213,6 @@ export class GovernorSteps {
     }
   }
 
-  @when(/user waits for (\d*) seconds/, undefined, 30000)
-  public async wait(ms: number): Promise<void> {
-    await governor.delay(ms);
-  }
-
   @when(/user execute the proposal with title "([^"]*)"/, undefined, 30000)
   public async executeProposal(title: string) {
     try {
@@ -284,6 +279,21 @@ export class GovernorSteps {
       );
       console.log(e);
     }
+  }
+
+  @when(
+    /user wait for proposal state to be "([^"]*)" for max (\d*) seconds/,
+    undefined,
+    30000
+  )
+  public async userWaitForState(state: string, seconds: number) {
+    const requiredState = Number(Object.values(ProposalState).indexOf(state));
+    await governor.getStateWithTimeout(
+      proposalID,
+      requiredState,
+      seconds * 1000,
+      1000
+    );
   }
 
   private async cancelProposalInternally() {

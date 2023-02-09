@@ -12,7 +12,7 @@ const governor = new Governor(governorTextContract.transparentProxyId!);
 const godHolder = new GodHolder(godHolderContract.transparentProxyId!);
 
 async function main() {
-  const title = "Text Proposal - 1";
+  const title = "Text Proposal - 2";
   await governor.initialize(godHolder);
   const proposalId = await governor.createTextProposal(title);
   await governor.getProposalDetails(proposalId);
@@ -20,9 +20,7 @@ async function main() {
   await governor.isQuorumReached(proposalId);
   await governor.isVoteSucceeded(proposalId);
   await governor.proposalVotes(proposalId);
-  await governor.state(proposalId);
-  await governor.delay(15 * 1000);
-  await governor.state(proposalId); // 4 means succeeded
+  await governor.delay(proposalId);
   await governor.executeProposal(title);
   console.log(`\nDone`);
 }
