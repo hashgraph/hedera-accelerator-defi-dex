@@ -1,59 +1,40 @@
-import { ContractId } from "@hashgraph/sdk";
-
-import GovernorMethods from "./GovernorMethods";
+import Governor from "../../e2e-test/business/Governor";
+import GodHolder from "../../e2e-test/business/GodHolder";
 import { ContractService } from "../../deployment/service/ContractService";
-import { Helper } from "../../utils/Helper";
-import ClientManagement from "../../utils/ClientManagement";
+import { ContractId } from "@hashgraph/sdk";
+import Common from "../../e2e-test/business/Common";
 
-const contractService = new ContractService();
-const governor = new GovernorMethods();
-
-const contractId = contractService.getContractWithProxy(
-  contractService.governorUpgradeContract
-).transparentProxyId!;
-
-const upgradeContractId = ContractId.fromString(
-  contractService.getContract(contractService.factoryContractName).id!
+const csDev = new ContractService();
+const godHolderContract = csDev.getContractWithProxy(csDev.godHolderContract);
+const governorUpgradeContract = csDev.getContractWithProxy(
+  csDev.governorUpgradeContract
 );
 
-const transparentContractId = ContractId.fromString(
-  contractService.getContractWithProxy(contractService.factoryContractName)
-    .transparentProxyId!
-);
+const factoryLogicId = csDev.getContract(csDev.factoryContractName).id!;
+const factoryProxyId = csDev.getContractWithProxy(csDev.factoryContractName)
+  .transparentProxyId!;
 
-const clientManagement = new ClientManagement();
-const client = clientManagement.createOperatorClient();
+const governor = new Governor(governorUpgradeContract.transparentProxyId!);
+const godHolder = new GodHolder(godHolderContract.transparentProxyId!);
 
 async function main() {
-  console.log(`\nUsing governor proxy contract id ${contractId}`);
-  await governor.initialize(contractId);
   const title = "Upgrade Proposal - 2"; // title should be unique for each proposal
-  const { proposalId, success: status } =
-    await governor.createContractUpgradeProposal(
-      ContractId.fromString(contractId),
-      transparentContractId,
-      upgradeContractId,
-      title,
-      "description",
-      "link"
-    );
-  console.log(`Proposal tx status ${status} with proposal id ${proposalId}`);
-  await governor.getProposalDetails(proposalId, contractId);
-  await governor.vote(proposalId, 1, contractId, client); // 1 is for vote.
-  await governor.quorumReached(proposalId, contractId);
-  await governor.voteSucceeded(proposalId, contractId);
-  await governor.proposalVotes(proposalId, contractId);
-  await governor.state(proposalId, contractId);
-  console.log(`\nWaiting for voting period to get over.`);
-  await Helper.delay(15 * 1000); // Wait till waiting period is over. It's current deadline as per Governance.
-  await governor.state(proposalId, contractId); // 4 means succeeded
-  await governor.execute(title, contractId);
-  const { proxyAddress, logicAddress } = await governor.getContractAddresses(
-    contractId.toString(),
-    proposalId
+  await governor.initialize(godHolder);
+  const { proposalId } = await governor.createContractUpgradeProposal(
+    ContractId.fromString(factoryProxyId),
+    ContractId.fromString(factoryLogicId),
+    title
   );
-  await governor.upgradeTo(proxyAddress, logicAddress);
-  console.log(`\nDone`);
+  await governor.getProposalDetails(proposalId);
+  await governor.forVote(proposalId);
+  await governor.isQuorumReached(proposalId);
+  await governor.isVoteSucceeded(proposalId);
+  await governor.proposalVotes(proposalId);
+  await governor.delay(proposalId);
+  await governor.executeProposal(title);
+  const { proxyAddress, logicAddress } =
+    await governor.getContractAddressesFromGovernorUpgradeContract(proposalId);
+  await Common.upgradeTo(proxyAddress, logicAddress);
 }
 
 main()

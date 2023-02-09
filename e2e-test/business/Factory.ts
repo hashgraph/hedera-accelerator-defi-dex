@@ -1,176 +1,121 @@
+import Base from "./Base";
+import Pair from "./Pair";
 import { BigNumber } from "bignumber.js";
+import { Helper } from "../../utils/Helper";
+import { clientsInfo } from "../../utils/ClientManagement";
 import {
-  ContractExecuteTransaction,
   ContractFunctionParameters,
   TokenId,
-  Hbar,
   PrivateKey,
   Client,
   AccountId,
-  AccountBalanceQuery,
+  ContractId,
 } from "@hashgraph/sdk";
-import { Helper } from "../../utils/Helper";
 
-export default class Factory {
-  public withPrecision = (value: number, precision: number): BigNumber => {
-    return new BigNumber(value).multipliedBy(precision);
+const GET_PAIR = "getPair";
+const GET_PAIRS = "getPairs";
+const CREATE_PAIR = "createPair";
+const SETUP_FACTORY = "setUpFactory";
+export const METHOD_PAIR_IMPL = "upgradePairImplementation";
+export const METHOD_LP_IMPL = "upgradeLpTokenImplementation";
+
+export default class Factory extends Base {
+  setupFactory = async (
+    adminAddress: string = clientsInfo.dexOwnerId.toSolidityAddress(),
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    try {
+      const args = new ContractFunctionParameters()
+        .addAddress(this.htsAddress)
+        .addAddress(adminAddress);
+      await this.execute(9000000, SETUP_FACTORY, client, args, undefined);
+      console.log(`- Factory#${SETUP_FACTORY}(): done\n`);
+    } catch (error) {
+      console.error(`- Factory#${SETUP_FACTORY}(): error`, error, "\n");
+      return false;
+    }
+    return true;
   };
 
-  public setupFactory = async (
-    baseContractAddress: string,
-    contractId: string,
-    client: Client
+  createPair = async (
+    token1: TokenId,
+    token2: TokenId,
+    feeCollectionAccountId: AccountId,
+    tokensOwnerKey: PrivateKey,
+    client: Client = clientsInfo.operatorClient,
+    fee: BigNumber = new BigNumber(10)
   ) => {
-    console.log(`\nSetupFactory`);
-    const adminId = AccountId.fromString(process.env.ADMIN_ID!);
-    let contractFunctionParameters = new ContractFunctionParameters()
-      .addAddress(baseContractAddress)
-      .addAddress(adminId.toSolidityAddress());
-    const contractTx = await new ContractExecuteTransaction()
-      .setContractId(contractId)
-      .setFunction("setUpFactory", contractFunctionParameters)
-      .setGas(9900000)
-      .execute(client);
-    const receipt = await contractTx.getReceipt(client);
-    const response = await contractTx.getRecord(client);
-    const status = receipt.status;
-    console.log(
-      `\nSetupFactory Result ${status} code: ${response.contractFunctionResult!.getAddress()}`
+    const args = new ContractFunctionParameters()
+      .addAddress(token1.toSolidityAddress())
+      .addAddress(token2.toSolidityAddress())
+      .addAddress(feeCollectionAccountId.toSolidityAddress())
+      .addInt256(fee);
+    const { result } = await this.execute(
+      9000000,
+      CREATE_PAIR,
+      client,
+      args,
+      tokensOwnerKey,
+      100
     );
+    const address = result.getAddress(0);
+    console.log(
+      `- Factory#${CREATE_PAIR}(): TokenId = ${token1}, TokenId = ${token2}, fee = ${fee} and resulted pair = ${address}\n`
+    );
+    return address;
   };
 
-  public createPair = async (
-    contractId: string,
-    token0: TokenId,
+  getPair = async (
     token1: TokenId,
-    treasureId: AccountId,
-    treasureKey: PrivateKey,
-    client: Client
+    token2: TokenId,
+    client: Client = clientsInfo.operatorClient
   ) => {
-    const createPairTx = await new ContractExecuteTransaction()
-      .setContractId(contractId)
-      .setGas(9999000)
-      .setFunction(
-        "createPair",
-        new ContractFunctionParameters()
-          .addAddress(token0.toSolidityAddress())
-          .addAddress(token1.toSolidityAddress())
-          .addAddress(treasureId.toSolidityAddress())
-          .addInt256(new BigNumber(10))
-      )
-      .setMaxTransactionFee(new Hbar(100))
-      .setPayableAmount(new Hbar(100))
-      .freezeWith(client)
-      .sign(treasureKey);
-
-    const createPairTxRes = await createPairTx.execute(client);
-    const receipt = await createPairTxRes.getReceipt(client);
-    const record = await createPairTxRes.getRecord(client);
-    const contractAddress = record.contractFunctionResult!.getAddress(0);
-    console.log(`CreatePair address: ${contractAddress}`);
-    console.log(`CreatePair status: ${receipt.status}`);
-    return contractAddress;
+    const args = new ContractFunctionParameters()
+      .addAddress(token1.toSolidityAddress())
+      .addAddress(token2.toSolidityAddress());
+    const { result } = await this.execute(
+      9999999,
+      GET_PAIR,
+      client,
+      args,
+      undefined
+    );
+    const address = result.getAddress(0);
+    console.log(`- Factory#${GET_PAIR}(): pair = ${address}\n`);
+    return address;
   };
 
-  public getPair = async (
-    contractId: string,
-    token0: TokenId,
-    token1: TokenId,
-    client: Client
-  ): Promise<string> => {
-    console.log(`get Pair`);
-    const getPairTx = await new ContractExecuteTransaction()
-      .setContractId(contractId)
-      .setGas(9999999)
-      .setFunction(
-        "getPair",
-        new ContractFunctionParameters()
-          .addAddress(token0.toSolidityAddress())
-          .addAddress(token1.toSolidityAddress())
-      )
-      .freezeWith(client);
-    const executedTx = await getPairTx.execute(client);
-    const response = await executedTx.getRecord(client);
-    console.log(`getPair: ${response.contractFunctionResult!.getAddress(0)}`);
-    const receiptRx = await executedTx.getReceipt(client);
-    console.log(`getPair: ${receiptRx.status}`);
-    return response.contractFunctionResult!.getAddress(0);
-  };
-
-  public getAllPairs = async (
-    contractId: string,
-    client: Client
+  getPairs = async (
+    client: Client = clientsInfo.operatorClient
   ): Promise<string[]> => {
-    console.log(`getting AllPairs`);
-    const getAllPairsTx = await new ContractExecuteTransaction()
-      .setContractId(contractId)
-      .setGas(9999999)
-      .setFunction("getPairs")
-      .freezeWith(client);
-
-    const executedTx = await getAllPairsTx.execute(client);
-    const response = await executedTx.getRecord(client);
-
+    const { result } = await this.execute(
+      9999999,
+      GET_PAIRS,
+      client,
+      undefined,
+      undefined
+    );
+    const addresses = Helper.getAddressArray(result);
     console.log(
-      `getPairs Count: ${response.contractFunctionResult!.getUint256(1)}`
+      `- Factory#${GET_PAIRS}(): count = ${addresses.length}, pairs = [${addresses}]\n`
     );
-    const modifiedArray = Helper.getAddressArray(
-      response.contractFunctionResult!
-    );
-    console.log(`get all pair Address: ${modifiedArray}`);
-
-    const receipt = await executedTx.getReceipt(client);
-    console.log(`getPairs: ${receipt.status}`);
-    return modifiedArray;
+    return addresses;
   };
 
-  public getTokenPairAddress = async (
-    contId: string,
-    client: Client,
-    treasureKey: PrivateKey
-  ): Promise<string> => {
-    const getTokensTxReq = await new ContractExecuteTransaction()
-      .setContractId(contId)
-      .setGas(2000000)
-      .setFunction("getTokenPairAddress")
-      .freezeWith(client)
-      .sign(treasureKey);
-    const getTokensTx = await getTokensTxReq.execute(client);
-    const record = await getTokensTx.getRecord(client);
-    const firstTokenAddress = record.contractFunctionResult!.getAddress(0);
-    const secondTokenAddress = record.contractFunctionResult!.getAddress(1);
-    const lpTokenAddress = record.contractFunctionResult!.getAddress(2);
-    return lpTokenAddress;
+  upgradeLogic = async (implAddress: string, functionName: string) => {
+    const args = new ContractFunctionParameters().addAddress(implAddress);
+    this.execute(4000000, functionName, clientsInfo.dexOwnerClient, args);
+    console.log(`- Factory${functionName}(): done\n`);
   };
 
-  public getTokenBalance = async (
-    tokenId: TokenId,
-    accountId: AccountId | string,
-    client: Client
-  ): Promise<Long> => {
-    const treasureBalanceTx = await new AccountBalanceQuery()
-      .setAccountId(accountId)
-      .execute(client);
-    const responseTokens = treasureBalanceTx.tokens ?? new Map<TokenId, Long>();
-
-    console.log(` Treasure Token Balance for : ${responseTokens.get(tokenId)}`);
-
-    return responseTokens.get(tokenId)!;
-  };
-
-  public upgradeLogic = async (
-    contractId: string,
-    newImplAddress: string,
-    client: Client,
-    methodName: string
-  ) => {
-    const args = new ContractFunctionParameters().addAddress(newImplAddress);
-    const txn = new ContractExecuteTransaction()
-      .setContractId(contractId)
-      .setGas(4000000)
-      .setFunction(methodName, args);
-    const txnResponse = await txn.execute(client);
-    const txnReceipt = await txnResponse.getReceipt(client);
-    console.log(`- ${methodName} txn status: ${txnReceipt.status}`);
+  resolveProxyAddress = async (functionName: string, proxyAddress: string) => {
+    if (functionName === METHOD_PAIR_IMPL) {
+      return proxyAddress;
+    }
+    if (functionName === METHOD_LP_IMPL) {
+      const cId = ContractId.fromSolidityAddress(proxyAddress).toString();
+      return await new Pair(cId).getLpContractAddress();
+    }
+    throw Error(`Invalid function name passed: ${functionName}`);
   };
 }

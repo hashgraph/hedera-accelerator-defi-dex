@@ -245,11 +245,12 @@ contract Pair is IPair, Initializable {
         return (pair.tokenA.tokenQty, pair.tokenB.tokenQty);
     }
 
-    function getSpotPrice() public view returns (int256) {
+    function getSpotPrice(address token) public view returns (int256) {
         int256 precision = getPrecisionValue();
-        int256 tokenAQ = pair.tokenA.tokenQty;
-        int256 tokenBQ = pair.tokenB.tokenQty;
-        int256 value = (tokenAQ * precision) / tokenBQ;
+        int256 spotTokenQty = token == pair.tokenA.tokenAddress ? pair.tokenA.tokenQty : pair.tokenB.tokenQty;
+        int256 otherTokenQty = token == pair.tokenA.tokenAddress ? pair.tokenB.tokenQty : pair.tokenA.tokenQty;
+        int256 value = (spotTokenQty * precision) / otherTokenQty;
+
         return value;
     }
 
@@ -439,11 +440,20 @@ contract Pair is IPair, Initializable {
 
     function _checkIfContractHaveRequiredHBARBalance(
         int256 tokenQty
-    ) private view {
+    ) private {
         require(
-            address(this).balance >= uint256(tokenQty),
+            _contractHBARBalance() >= uint256(tokenQty),
             "Contract does not have sufficient Hbars"
         );
+    }
+
+    function _contractHBARBalance() private returns (uint256) {
+        return
+            uint256(
+                pair.tokenA.tokenAddress == tokenService.hbarxAddress()
+                    ? pair.tokenA.tokenQty
+                    : pair.tokenB.tokenQty
+            );
     }
 
     function _checkIfCallerSentCorrectHBARs(int256 tokenQty) private view {
