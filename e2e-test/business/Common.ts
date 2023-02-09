@@ -28,6 +28,7 @@ export default class Common {
     const proxyContractId = ContractId.fromSolidityAddress(proxyAddress);
     const args = new ContractFunctionParameters().addAddress(logicAddress);
     await new Base(proxyContractId.toString()).execute(
+      4000000,
       "upgradeTo",
       client,
       args,
