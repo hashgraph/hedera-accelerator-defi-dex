@@ -35,14 +35,16 @@ const getTokensInfo = async (token0: TokenId, token1: TokenId) => {
   await Common.getTokenInfo(token1);
 };
 
-const createPair = async (token0: TokenId, token1: TokenId) => {
+const createPair = async (token0: TokenId, token1: TokenId, fee: BigNumber) => {
   const feeCollectionAccountId = clientsInfo.operatorId;
   const tokensOwnerKey = clientsInfo.treasureKey;
   return await factory.createPair(
     token0,
     token1,
     feeCollectionAccountId,
-    tokensOwnerKey
+    tokensOwnerKey,
+    clientsInfo.operatorClient,
+    fee
   );
 };
 
@@ -81,15 +83,20 @@ const swapToken = async (token: TokenId) => {
 
 async function main() {
   await factory.setupFactory();
-  await testForSinglePair(tokenB, tokenHBARX);
+  await testForSinglePair(tokenB, tokenHBARX, new BigNumber(10));
+  await testForSinglePair(tokenB, tokenHBARX, new BigNumber(15));
   await testForSinglePair(tokenB, tokenC);
   await testForSinglePair(tokenA, tokenGOD);
   await factory.getPairs();
 }
 
-async function testForSinglePair(token0: TokenId, token1: TokenId) {
+async function testForSinglePair(
+  token0: TokenId,
+  token1: TokenId,
+  fee: BigNumber = new BigNumber(10)
+) {
   await getTokensInfo(token0, token1);
-  const pairContractAddress = await createPair(token0, token1);
+  const pairContractAddress = await createPair(token0, token1, fee);
   const pairContractId =
     ContractId.fromSolidityAddress(pairContractAddress).toString();
   pair = new Pair(pairContractId);
