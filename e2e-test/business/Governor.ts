@@ -411,7 +411,7 @@ export default class Governor extends Base {
     while (maxWaitInMs > 0) {
       try {
         const currentState = Number(await this.state(proposalId, client));
-        if (currentState >= requiredState) {
+        if (currentState === requiredState) {
           console.log(
             `- Governor#getStateWithTimeout(): succeeded where total waiting time = ${
               maxWaitInMsInternally - maxWaitInMs
