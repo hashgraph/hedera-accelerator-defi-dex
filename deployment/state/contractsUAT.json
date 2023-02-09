@@ -82,11 +82,11 @@
   },
   {
     "name": "factory",
-    "id": "0.0.3404088",
-    "address": "000000000000000000000000000000000033f138",
-    "timestamp": "2023-02-08T02:03:07.045Z",
-    "hash": "6da23e6aa07b521fb8630769ebe02d8e",
-    "transparentProxyAddress": "0x000000000000000000000000000000000032cb1d",
-    "transparentProxyId": "0.0.3328797"
+    "id": "0.0.3420808",
+    "address": "0x0000000000000000000000000000000000343288",
+    "timestamp": "2023-02-09T14:16:48.415Z",
+    "hash": "c1109b8291ebf1d39471cbdedc0ba2a1",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000343291",
+    "transparentProxyId": "0.0.3420817"
   }
 ]
