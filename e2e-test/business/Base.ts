@@ -27,6 +27,7 @@ export default class Base {
     client: Client = clientsInfo.operatorClient
   ) => {
     const { result } = await this.execute(
+      2000000,
       "implementation",
       client,
       undefined,
@@ -40,6 +41,7 @@ export default class Base {
   };
 
   execute = async (
+    gas: number,
     functionName: string,
     client: Client,
     functionParams: ContractFunctionParameters | undefined = undefined,
@@ -48,7 +50,7 @@ export default class Base {
   ) => {
     const txn = new ContractExecuteTransaction()
       .setContractId(this.contractId)
-      .setGas(9999999)
+      .setGas(gas)
       .setFunction(functionName, functionParams)
       .setPayableAmount(amount);
     const txnToExecute = await this.signTxnIfNeeded(txn, keys, client);

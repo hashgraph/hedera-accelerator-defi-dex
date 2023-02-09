@@ -25,19 +25,31 @@ export default class LpToken extends Base {
       .addAddress(this.htsAddress)
       .addString(tokenSymbol)
       .addString(tokenName);
-    await this.execute(INITIALIZE, client, args, undefined, 60);
+    await this.execute(500000, INITIALIZE, client, args, undefined, 60);
     console.log(`- LpToken#${INITIALIZE}(): done\n`);
   };
 
   getLpTokenAddress = async (client: Client = clientsInfo.operatorClient) => {
-    const { result } = await this.execute(GET_LP_TOKEN_ADDRESS, client);
+    const { result } = await this.execute(
+      1000000,
+      GET_LP_TOKEN_ADDRESS,
+      client,
+      undefined,
+      undefined
+    );
     const address = result.getAddress(0);
     console.log(`- LpToken#${GET_LP_TOKEN_ADDRESS}(): address = ${address}\n`);
     return address;
   };
 
   getAllLPTokenCount = async (client: Client = clientsInfo.operatorClient) => {
-    const { result } = await this.execute(GET_LP_TOKEN_COUNT, client);
+    const { result } = await this.execute(
+      2000000,
+      GET_LP_TOKEN_COUNT,
+      client,
+      undefined,
+      undefined
+    );
     const count = result.getInt256(0);
     console.log(`- LpToken#${GET_LP_TOKEN_COUNT}(): count = ${count}\n`);
     return count;
@@ -54,7 +66,13 @@ export default class LpToken extends Base {
       .addInt256(tokenAQty)
       .addInt256(tokenBQty)
       .addAddress(receiverAccountId.toSolidityAddress());
-    await this.execute(ALLOT_LP_TOKEN, client, args, receiverPrivateKey);
+    await this.execute(
+      900000,
+      ALLOT_LP_TOKEN,
+      client,
+      args,
+      receiverPrivateKey
+    );
     const number = Number(tokenAQty.multipliedBy(tokenBQty));
     const sqrt = Math.sqrt(number);
     console.log(
@@ -71,7 +89,13 @@ export default class LpToken extends Base {
     const args = new ContractFunctionParameters()
       .addInt256(lpTokenQty)
       .addAddress(senderAccountId.toSolidityAddress());
-    await this.execute(REMOVE_LP_TOKEN, client, args, senderPrivateKey);
+    await this.execute(
+      3000000,
+      REMOVE_LP_TOKEN,
+      client,
+      args,
+      senderPrivateKey
+    );
     console.log(`- LpToken#${REMOVE_LP_TOKEN}(): qty = ${lpTokenQty}\n`);
   };
 
@@ -82,7 +106,13 @@ export default class LpToken extends Base {
     const args = new ContractFunctionParameters().addAddress(
       userAccountId.toSolidityAddress()
     );
-    const { result } = await this.execute(LP_TOKEN_FOR_USER, client, args);
+    const { result } = await this.execute(
+      2000000,
+      LP_TOKEN_FOR_USER,
+      client,
+      args,
+      undefined
+    );
     const count = result.getInt256(0);
     console.log(`- LpToken#${LP_TOKEN_FOR_USER}(): count = ${count}\n`);
   };
