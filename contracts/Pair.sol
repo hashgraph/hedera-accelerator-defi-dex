@@ -147,28 +147,46 @@ contract Pair is IPair, Initializable {
     ) private {
         int256 calculatedSlippage = slippageOutGivenIn(_deltaAQty);
         isSlippageBreached(calculatedSlippage, _slippage);
+
         // Token A Calculation
-        int256 feeTokenA = feeForToken(_deltaAQty);
-        int256 _tokenATreasureFee = feeTokenA / 2;
-        int256 _amountToTransferFromUserToContract = _deltaAQty -
-            _tokenATreasureFee;
-        pair.tokenA.tokenQty += _amountToTransferFromUserToContract;
+        (
+            int256 _tokenATreasureFee,
+            int256 _deltaAQtyAfterAdjustingFee,
+            int256 _tokenASwapQtyPlusContractTokenShare
+        ) = _calculateSwapTokenAQuantities(_deltaAQty);
+
+        int256 swapBValue = getOutGivenIn(_deltaAQtyAfterAdjustingFee);
 
         //Token B Calculation
-        int256 swapBValue = getOutGivenIn(_amountToTransferFromUserToContract);
-        int256 feeTokenB = feeForToken(swapBValue);
-        int256 _actualSwapBValue = swapBValue - feeTokenB;
-        int256 _tokenBTreasureFee = feeTokenB / 2;
-        pair.tokenB.tokenQty -= (_actualSwapBValue + _tokenBTreasureFee);
+        (
+            int256 _actualSwapBValue,
+            int256 _tokenBTreasureFee
+        ) = _calculateSwapTokenBQuantities(swapBValue);
+
+        pair.tokenA.tokenQty += _tokenASwapQtyPlusContractTokenShare;
+        //Token A transfer
         transferTokenInternally(
             to,
             address(this),
             pair.tokenA.tokenAddress,
-            _amountToTransferFromUserToContract,
+            _tokenASwapQtyPlusContractTokenShare,
             "swapTokenA: Transferring token A to contract failed with status code"
         );
 
+        // token A fee transfer
+        transferTokenInternally(
+            to,
+            treasury,
+            pair.tokenA.tokenAddress,
+            _tokenATreasureFee,
+            "swapTokenAFee: Transferring fee as token A to treasuary failed with status code"
+        );
+
+        pair.tokenB.tokenQty -= _actualSwapBValue + _tokenBTreasureFee;
+
+        //Token B transfer
         _associateToken(to, pair.tokenB.tokenAddress);
+
         transferTokenInternally(
             address(this),
             to,
@@ -176,20 +194,14 @@ contract Pair is IPair, Initializable {
             _actualSwapBValue,
             "swapTokenA: Transferring token B to user failed with status code"
         );
-        // fee transfer
-        transferTokenInternally(
-            to,
-            treasury,
-            pair.tokenA.tokenAddress,
-            feeTokenA / 2,
-            "swapTokenAFee: Transferring fee as token A to treasuary failed with status code"
-        );
+
+        //token B fee transfer
         transferTokenInternally(
             address(this),
             treasury,
             pair.tokenB.tokenAddress,
             _tokenBTreasureFee,
-            "swapTokenAFee: Transferring fee as token B to treasuary failed with status code"
+            "swapTokenBFee: Transferring fee as token B to treasuary failed with status code"
         );
     }
 
@@ -200,30 +212,46 @@ contract Pair is IPair, Initializable {
     ) private {
         int256 calculatedSlippage = slippageInGivenOut(_deltaBQty);
         isSlippageBreached(calculatedSlippage, _slippage);
+        // Token A Calculation
+        (
+            int256 _tokenBTreasureFee,
+            int256 _deltaBQtyAfterAdjustingFee,
+            int256 _tokenBSwapQtyPlusContractTokenShare
+        ) = _calculateSwapTokenAQuantities(_deltaBQty);
 
-        // Token B Calculation
-        int256 feeTokenB = feeForToken(_deltaBQty);
-        int256 _tokenBTreasureFee = feeTokenB / 2;
-        int256 _amountToTransferFromUserToContract = _deltaBQty -
-            _tokenBTreasureFee;
-        pair.tokenB.tokenQty += _amountToTransferFromUserToContract;
+        int256 swapAValue = getInGivenOut(_deltaBQtyAfterAdjustingFee);
 
-        //Token A Calculation
-        int256 swapAValue = getInGivenOut(_amountToTransferFromUserToContract);
-        int256 feeTokenA = feeForToken(swapAValue);
-        int256 _actualSwapAValue = swapAValue - feeTokenA;
-        int256 _tokenATreasureFee = feeTokenA / 2;
-        pair.tokenA.tokenQty -= (_actualSwapAValue + _tokenATreasureFee);
-        
+        //Token B Calculation
+        (
+            int256 _actualSwapAValue,
+            int256 _tokenATreasureFee
+        ) = _calculateSwapTokenBQuantities(swapAValue);
+
+        pair.tokenB.tokenQty += _tokenBSwapQtyPlusContractTokenShare;
+
+        //Token A transfer
         transferTokenInternally(
             to,
             address(this),
             pair.tokenB.tokenAddress,
-            _amountToTransferFromUserToContract,
+            _tokenBSwapQtyPlusContractTokenShare,
             "swapTokenB: Transferring token B to contract failed with status code"
         );
 
+        // token A fee transfer
+        transferTokenInternally(
+            to,
+            treasury,
+            pair.tokenB.tokenAddress,
+            _tokenBTreasureFee,
+            "swapTokenBFee: Transferring fee as token B to treasuary failed with status code"
+        );
+
+        pair.tokenA.tokenQty -= _actualSwapAValue + _tokenATreasureFee;
+
+        //Token B transfer
         _associateToken(to, pair.tokenA.tokenAddress);
+
         transferTokenInternally(
             address(this),
             to,
@@ -232,14 +260,7 @@ contract Pair is IPair, Initializable {
             "swapTokenB: Transferring token A to user failed with status code"
         );
 
-        // fee transfer
-        transferTokenInternally(
-            to,
-            treasury,
-            pair.tokenB.tokenAddress,
-            feeTokenB / 2,
-            "swapTokenBFee: Transferring fee as token B to treasuary failed with status code"
-        );
+        //token B fee transfer
         transferTokenInternally(
             address(this),
             treasury,
@@ -255,8 +276,12 @@ contract Pair is IPair, Initializable {
 
     function getSpotPrice(address token) public view returns (int256) {
         int256 precision = getPrecisionValue();
-        int256 spotTokenQty = token == pair.tokenA.tokenAddress ? pair.tokenA.tokenQty : pair.tokenB.tokenQty;
-        int256 otherTokenQty = token == pair.tokenA.tokenAddress ? pair.tokenB.tokenQty : pair.tokenA.tokenQty;
+        int256 spotTokenQty = token == pair.tokenA.tokenAddress
+            ? pair.tokenA.tokenQty
+            : pair.tokenB.tokenQty;
+        int256 otherTokenQty = token == pair.tokenA.tokenAddress
+            ? pair.tokenB.tokenQty
+            : pair.tokenA.tokenQty;
         int256 value = (spotTokenQty * precision) / otherTokenQty;
 
         return value;
@@ -281,7 +306,7 @@ contract Pair is IPair, Initializable {
     }
 
     function getPrecisionValue() public pure returns (int256) {
-        return 100000000;
+        return 100_000_000;
     }
 
     function getOutGivenIn(int256 amountTokenA) public view returns (int256) {
@@ -372,6 +397,34 @@ contract Pair is IPair, Initializable {
         return tokenQ;
     }
 
+    function _calculateSwapTokenAQuantities(
+        int256 senderSwapQty
+    ) private view returns (int256, int256, int256) {
+        // Token A Calculation
+        int256 feeTokenA = feeForToken(senderSwapQty);
+        int256 _tokenATreasureFee = feeTokenA / 2; //50% goes to treaasurer
+        int256 tokenAContractShare = feeTokenA / 2; //50% goes to contract
+
+        int256 _deltaAQtyAfterAdjustingFee = senderSwapQty - feeTokenA;
+        int256 _tokenASwapQtyPlusContractTokenShare = _deltaAQtyAfterAdjustingFee +
+                tokenAContractShare;
+
+        return (
+            _tokenATreasureFee,
+            _deltaAQtyAfterAdjustingFee,
+            _tokenASwapQtyPlusContractTokenShare
+        );
+    }
+
+    function _calculateSwapTokenBQuantities(
+        int256 swapBValue
+    ) private view returns (int256, int256) {
+        int256 feeTokenB = feeForToken(swapBValue);
+        int256 _actualSwapBValue = swapBValue - feeTokenB;
+        int256 _tokenBTreasureFee = feeTokenB / 2;
+        return (_actualSwapBValue, _tokenBTreasureFee);
+    }
+
     function transferTokensInternally(
         address sender,
         address reciever,
@@ -446,9 +499,7 @@ contract Pair is IPair, Initializable {
         return reciever == address(this);
     }
 
-    function _checkIfContractHaveRequiredHBARBalance(
-        int256 tokenQty
-    ) private {
+    function _checkIfContractHaveRequiredHBARBalance(int256 tokenQty) private {
         require(
             _contractHBARBalance() >= uint256(tokenQty),
             "Contract does not have sufficient Hbars"
