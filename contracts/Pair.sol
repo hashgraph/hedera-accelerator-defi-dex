@@ -402,7 +402,7 @@ contract Pair is IPair, Initializable {
     ) private view returns (int256, int256, int256) {
         // Token A Calculation
         int256 tokenFee = feeForToken(senderSwapQty);
-        int256 _tokenTreasureFee = tokenFee / 2; //50% goes to treaasurer
+        int256 _tokenTreasureFee = tokenFee / 2; //50% goes to treasurer
         int256 tokenContractShare = tokenFee / 2; //50% goes to contract
 
         int256 _deltaQtyAfterAdjustingFee = senderSwapQty - tokenFee;
