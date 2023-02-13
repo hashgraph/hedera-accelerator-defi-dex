@@ -2,7 +2,7 @@ import Base from "./Base";
 import { Helper } from "../../utils/Helper";
 import { BigNumber } from "bignumber.js";
 import { clientsInfo } from "../../utils/ClientManagement";
-import { Client, ContractFunctionParameters } from "@hashgraph/sdk";
+import { Client, PrivateKey, ContractFunctionParameters } from "@hashgraph/sdk";
 
 const INITIALIZE = "initialize";
 const GET_TRANSACTIONS_FEE = "getTransactionsFee";
@@ -23,12 +23,13 @@ export default class Configuration extends Base {
   setTransactionFee = async (
     key: BigNumber,
     value: BigNumber,
+    ownerKey: PrivateKey,
     client: Client = clientsInfo.operatorClient
   ) => {
     const args = new ContractFunctionParameters()
       .addUint256(key)
       .addUint256(value);
-    await this.execute(400000, SET_TRANSACTIONS_FEE, client, args);
+    await this.execute(400000, SET_TRANSACTIONS_FEE, client, args, ownerKey);
     console.log(
       `- Configuration#${SET_TRANSACTIONS_FEE}(): key = ${key.toFixed()}, value = ${value.toFixed()} done\n`
     );

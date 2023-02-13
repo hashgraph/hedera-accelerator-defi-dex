@@ -1,4 +1,5 @@
 import { BigNumber } from "bignumber.js";
+import { clientsInfo } from "../utils/ClientManagement";
 import { ContractService } from "../deployment/service/ContractService";
 
 import Configuration from "../e2e-test/business/Configuration";
@@ -12,7 +13,11 @@ const configuration = new Configuration(configurationContractId);
 async function main() {
   await configuration.initialize();
   await configuration.getTransactionsFee();
-  await configuration.setTransactionFee(BigNumber(1), BigNumber(5));
+  await configuration.setTransactionFee(
+    BigNumber(1),
+    BigNumber(5),
+    clientsInfo.operatorKey
+  );
   await configuration.getTransactionsFee();
 }
 

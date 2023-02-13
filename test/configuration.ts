@@ -17,16 +17,16 @@ describe("Configuration contract tests", function () {
       await configurationInstance.getTransactionsFee()
     );
 
-    expect(initialFees.length).to.been.equals(3);
+    expect(initialFees.length).to.be.equals(3);
 
-    expect(initialFees[0].key).to.been.equals(1);
-    expect(initialFees[0].value).to.been.equals(5);
+    expect(initialFees[0].key).to.be.equals(1);
+    expect(initialFees[0].value).to.be.equals(5);
 
-    expect(initialFees[1].key).to.been.equals(2);
-    expect(initialFees[1].value).to.been.equals(30);
+    expect(initialFees[1].key).to.be.equals(2);
+    expect(initialFees[1].value).to.be.equals(30);
 
-    expect(initialFees[2].key).to.been.equals(3);
-    expect(initialFees[2].value).to.been.equals(10);
+    expect(initialFees[2].key).to.be.equals(3);
+    expect(initialFees[2].value).to.be.equals(10);
   });
 
   it("Verify Configuration contract revert for multiple initialization", async function () {
@@ -43,8 +43,8 @@ describe("Configuration contract tests", function () {
       await configurationInstance.getTransactionsFee()
     );
 
-    expect(initialFees[0].key).to.been.equals(1);
-    expect(initialFees[0].value).to.been.equals(10);
+    expect(initialFees[0].key).to.be.equals(1);
+    expect(initialFees[0].value).to.be.equals(10);
   });
 
   it("Verify setTransactionFee should increase the map size for new key", async function () {
@@ -52,17 +52,17 @@ describe("Configuration contract tests", function () {
     const initialFees = Helper.convertToFeeObjectArray(
       await configurationInstance.getTransactionsFee()
     );
-    expect(initialFees.length).to.been.equals(3);
+    expect(initialFees.length).to.be.equals(3);
 
     await configurationInstance.setTransactionFee(10, 10);
 
     const updatedFees = Helper.convertToFeeObjectArray(
       await configurationInstance.getTransactionsFee()
     );
-    expect(updatedFees.length).to.been.equals(4);
+    expect(updatedFees.length).to.be.equals(4);
 
-    expect(updatedFees[3].key).to.been.equals(10);
-    expect(updatedFees[3].value).to.been.equals(10);
+    expect(updatedFees[3].key).to.be.equals(10);
+    expect(updatedFees[3].value).to.be.equals(10);
   });
 
   it("Verify setTransactionFee should be reverted if caller is not owner", async function () {
