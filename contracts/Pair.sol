@@ -153,7 +153,7 @@ contract Pair is IPair, Initializable {
             int256 _tokenATreasureFee,
             int256 _deltaAQtyAfterAdjustingFee,
             int256 _tokenASwapQtyPlusContractTokenShare
-        ) = _calculateSwapTokenAQuantities(_deltaAQty);
+        ) = _calculateIncomingTokenQuantities(_deltaAQty);
 
         int256 swapBValue = getOutGivenIn(_deltaAQtyAfterAdjustingFee);
 
@@ -161,7 +161,7 @@ contract Pair is IPair, Initializable {
         (
             int256 _actualSwapBValue,
             int256 _tokenBTreasureFee
-        ) = _calculateSwapTokenBQuantities(swapBValue);
+        ) = _calculateOutgoingTokenQuantities(swapBValue);
 
         pair.tokenA.tokenQty += _tokenASwapQtyPlusContractTokenShare;
         //Token A transfer
@@ -217,7 +217,7 @@ contract Pair is IPair, Initializable {
             int256 _tokenBTreasureFee,
             int256 _deltaBQtyAfterAdjustingFee,
             int256 _tokenBSwapQtyPlusContractTokenShare
-        ) = _calculateSwapTokenAQuantities(_deltaBQty);
+        ) = _calculateIncomingTokenQuantities(_deltaBQty);
 
         int256 swapAValue = getInGivenOut(_deltaBQtyAfterAdjustingFee);
 
@@ -225,7 +225,7 @@ contract Pair is IPair, Initializable {
         (
             int256 _actualSwapAValue,
             int256 _tokenATreasureFee
-        ) = _calculateSwapTokenBQuantities(swapAValue);
+        ) = _calculateOutgoingTokenQuantities(swapAValue);
 
         pair.tokenB.tokenQty += _tokenBSwapQtyPlusContractTokenShare;
 
@@ -397,32 +397,32 @@ contract Pair is IPair, Initializable {
         return tokenQ;
     }
 
-    function _calculateSwapTokenAQuantities(
+    function _calculateIncomingTokenQuantities(
         int256 senderSwapQty
     ) private view returns (int256, int256, int256) {
         // Token A Calculation
-        int256 feeTokenA = feeForToken(senderSwapQty);
-        int256 _tokenATreasureFee = feeTokenA / 2; //50% goes to treaasurer
-        int256 tokenAContractShare = feeTokenA / 2; //50% goes to contract
+        int256 tokenFee = feeForToken(senderSwapQty);
+        int256 _tokenTreasureFee = tokenFee / 2; //50% goes to treaasurer
+        int256 tokenContractShare = tokenFee / 2; //50% goes to contract
 
-        int256 _deltaAQtyAfterAdjustingFee = senderSwapQty - feeTokenA;
-        int256 _tokenASwapQtyPlusContractTokenShare = _deltaAQtyAfterAdjustingFee +
-                tokenAContractShare;
+        int256 _deltaQtyAfterAdjustingFee = senderSwapQty - tokenFee;
+        int256 _tokenASwapQtyPlusContractTokenShare = _deltaQtyAfterAdjustingFee +
+                tokenContractShare;
 
         return (
-            _tokenATreasureFee,
-            _deltaAQtyAfterAdjustingFee,
+            _tokenTreasureFee,
+            _deltaQtyAfterAdjustingFee,
             _tokenASwapQtyPlusContractTokenShare
         );
     }
 
-    function _calculateSwapTokenBQuantities(
-        int256 swapBValue
+    function _calculateOutgoingTokenQuantities(
+        int256 swappedValue
     ) private view returns (int256, int256) {
-        int256 feeTokenB = feeForToken(swapBValue);
-        int256 _actualSwapBValue = swapBValue - feeTokenB;
-        int256 _tokenBTreasureFee = feeTokenB / 2;
-        return (_actualSwapBValue, _tokenBTreasureFee);
+        int256 tokenFee = feeForToken(swappedValue);
+        int256 _actualSwappedValue = swappedValue - tokenFee;
+        int256 _tokenTreasureFee = tokenFee / 2;
+        return (_actualSwappedValue, _tokenTreasureFee);
     }
 
     function transferTokensInternally(
