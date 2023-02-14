@@ -35,6 +35,7 @@ async function updateProxy(contractId: string, proposalId: string) {
     response.proxyIdString
   );
   switch (proxyUATContract.name) {
+    case contractService.configuration:
     case contractService.factoryContractName:
     case contractService.splitterContractName:
     case contractService.governorContractName:
