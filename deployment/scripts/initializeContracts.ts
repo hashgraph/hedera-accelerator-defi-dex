@@ -2,6 +2,7 @@ import dex from "../model/dex";
 import Factory from "../../e2e-test/business/Factory";
 import Governor from "../../e2e-test/business/Governor";
 import GodHolder from "../../e2e-test/business/GodHolder";
+import Configuration from "../../e2e-test/business/Configuration";
 
 import { TokenId } from "@hashgraph/sdk";
 import { clientsInfo } from "../../utils/ClientManagement";
@@ -20,8 +21,12 @@ const factoryContractId = csDev.getContractWithProxy(csDev.factoryContractName)
 const godHolderContractId = csDev.getContractWithProxy(csDev.godHolderContract)
   .transparentProxyId!;
 
+const configurationContractId = csDev.getContractWithProxy(csDev.configuration)
+  .transparentProxyId!;
+
 const factory = new Factory(factoryContractId);
 const godHolder = new GodHolder(godHolderContractId);
+const configuration = new Configuration(configurationContractId);
 
 const createPair = async (token0: TokenId, token1: TokenId) => {
   const feeCollectionAccountId = clientsInfo.operatorId;
@@ -35,6 +40,8 @@ const createPair = async (token0: TokenId, token1: TokenId) => {
 };
 
 async function main() {
+  await configuration.initialize();
+
   await factory.setupFactory();
 
   try {

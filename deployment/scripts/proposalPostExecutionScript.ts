@@ -35,6 +35,7 @@ async function updateProxy(contractId: string, proposalId: string) {
     response.proxyIdString
   );
   switch (proxyUATContract.name) {
+    case contractService.configuration:
     case contractService.factoryContractName:
     case contractService.splitterContractName:
     case contractService.governorContractName:
@@ -112,9 +113,6 @@ async function updateDirectProxy(
 
 export async function main(contract: DeployedContract, proposal: any) {
   if (contract.name === contractService.governorUpgradeContract) {
-    await updateProxy(
-      contract.transparentProxyId!,
-      proposal.proposalId.toFixed()
-    );
+    await updateProxy(contract.transparentProxyId!, proposal.proposalId);
   }
 }

@@ -3,6 +3,7 @@ import platformPath from "path";
 import { ContractFunctionResult } from "@hashgraph/sdk";
 import inquirer from "inquirer";
 import { execSync } from "child_process";
+import { BigNumber } from "bignumber.js";
 
 export class Helper {
   static extractFileName(path: string): string {
@@ -42,6 +43,28 @@ export class Helper {
       result.push(contractFunctionResult.getAddress(i + 2));
     }
     return result;
+  };
+
+  static getUint256Array = (contractFunctionResult: ContractFunctionResult) => {
+    const tokenCount = contractFunctionResult.getUint256(1);
+    const result: BigNumber[] = [];
+    for (let i = 0; i < Number(tokenCount); i++) {
+      result.push(contractFunctionResult.getUint256(i + 2));
+    }
+    return result;
+  };
+
+  static convertToFeeObjectArray = (items: BigNumber[]) => {
+    if (items.length % 2 !== 0) {
+      throw Error(`Helper: Invalid items size = ${items.length}`);
+    }
+    const details: any = [];
+    for (let i = 0; i < items.length; i += 2) {
+      const key = Number(items[i]);
+      const value = Number(items[i + 1]);
+      details.push({ key, value });
+    }
+    return details;
   };
 
   async prompt(inputs: string[], userMessage: string) {

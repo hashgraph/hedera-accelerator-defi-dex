@@ -5,7 +5,7 @@
     "codecoverage": "npx hardhat coverage",
     "deploy": "npx hardhat run ./deployment/swapContract.ts",
     "prepare": "husky install",
-    "code-format": "prettier --write \"**/*.ts\"",
+    "code-format": "prettier --write \"**/*.ts\" \"**/*.json\"",
     "test": "./node_modules/.bin/cucumber-js -p default",
     "e2e-test": "node trigger-test.js"
   },
