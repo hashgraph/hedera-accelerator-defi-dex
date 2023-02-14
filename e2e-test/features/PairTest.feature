@@ -24,7 +24,7 @@ Feature: Pair contract e2e test
     Scenario: Verify sport price for tokenA 
         Given tokenA and tokenB are present in pool
         When User fetch spot price for tokenA
-        Then Expected spot price for tokenA should be 92163026
+        Then Expected spot price for tokenA should be 92161017
 
     Scenario: Verify tokenA quantity for the given tokenB quantity
         Given tokenA and tokenB are present in pool
@@ -39,6 +39,6 @@ Feature: Pair contract e2e test
      Scenario: Verify slippage in value for given out tokenB quantity
         Given tokenA and tokenB are present in pool
         When User gives 10 units of tokenB for calculating slippage in
-        Then Expected slippage in value should be 4678776    
+        Then Expected slippage in value should be 4678670    
         
       
