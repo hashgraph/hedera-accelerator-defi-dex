@@ -38,13 +38,19 @@ describe("Configuration contract tests", function () {
 
   it("Verify setTransactionFee should update the new data for existing key", async function () {
     const { configurationInstance } = await loadFixture(deployFixture);
-    await configurationInstance.setTransactionFee(1, 10);
     const initialFees = Helper.convertToFeeObjectArray(
       await configurationInstance.getTransactionsFee()
     );
-
     expect(initialFees[0].key).to.be.equals(1);
-    expect(initialFees[0].value).to.be.equals(10);
+    expect(initialFees[0].value).to.be.equals(5);
+
+    await configurationInstance.setTransactionFee(1, 10);
+
+    const updatedFees = Helper.convertToFeeObjectArray(
+      await configurationInstance.getTransactionsFee()
+    );
+    expect(updatedFees[0].key).to.be.equals(1);
+    expect(updatedFees[0].value).to.be.equals(10);
   });
 
   it("Verify setTransactionFee should increase the map size for new key", async function () {
