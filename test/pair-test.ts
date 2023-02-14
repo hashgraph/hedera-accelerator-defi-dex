@@ -287,12 +287,22 @@ describe("All Tests", function () {
     it("Check createPair method, Same Tokens and same fees", async function () {
       const { factory, mockBaseHTS, signers, token1Address, token2Address } =
         await loadFixture(deployFixture);
+      // Given
       await factory.setUpFactory(mockBaseHTS.address, signers[0].address);
+
+      // When
+      // we call createPair with same token pair and fees multiple time,
+      // and fetch pair after creating
       await factory.createPair(token1Address, token2Address, treasury, fee);
       const pair1 = await factory.getPair(token1Address, token2Address, fee);
       await factory.createPair(token1Address, token2Address, treasury, fee);
       const pair2 = await factory.getPair(token1Address, token2Address, fee);
+
+      // Then
+      // The fetched Pair after each creation should be same
       expect(pair1).to.be.equals(pair2);
+
+      // as we created only 1 Token Pair, the first pair in allPairs list should be the fetched pair.
       const pairs = await factory.getPairs();
       expect(pairs[0]).to.be.equals(pair1);
     });
@@ -300,13 +310,22 @@ describe("All Tests", function () {
     it("Check createPair method, Same Tokens and different fees", async function () {
       const { factory, mockBaseHTS, signers, token1Address, token2Address } =
         await loadFixture(deployFixture);
+      // Given
       await factory.setUpFactory(mockBaseHTS.address, signers[0].address);
+
+      // When
+      // we call createPair with same token pair and different fees multiple time,
+      // and fetch pair after creating
       await factory.createPair(token1Address, token2Address, treasury, fee);
       const pair1 = await factory.getPair(token1Address, token2Address, fee);
       await factory.createPair(token1Address, token2Address, treasury, fee2);
       const pair2 = await factory.getPair(token1Address, token2Address, fee2);
+
+      // Then
+      // The fetched Pair after each creation should not be same
       expect(pair1).to.not.be.equals(pair2);
       const pairs = await factory.getPairs();
+      // as we created 2 Token Pairs, first and second pairs in allPairs list should not be the same.
       expect(pairs[0]).to.not.be.equals(pairs[1]);
     });
 
