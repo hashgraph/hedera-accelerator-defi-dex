@@ -9,15 +9,6 @@
     "transparentProxyId": "0.0.9015"
   },
   {
-    "name": "pair",
-    "id": "0.0.9021",
-    "address": "0x000000000000000000000000000000000000233d",
-    "timestamp": "2023-01-27T10:24:13.670Z",
-    "hash": "de94d5c59f96ac24151040a9da23da4e",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000002346",
-    "transparentProxyId": "0.0.9030"
-  },
-  {
     "name": "splitter",
     "id": "0.0.9110",
     "address": "0x0000000000000000000000000000000000002396",
@@ -81,15 +72,6 @@
     "transparentProxyId": "0.0.9049"
   },
   {
-    "name": "factory",
-    "id": "0.0.3474855",
-    "address": "0x00000000000000000000000000000000003505a7",
-    "timestamp": "2023-02-14T08:52:41.050Z",
-    "hash": "04d4907b7b225ab12be31d5b47628dbe",
-    "transparentProxyAddress": "0x00000000000000000000000000000000003505aa",
-    "transparentProxyId": "0.0.3474858"
-  },
-  {
     "name": "configuration",
     "id": "0.0.3474773",
     "address": "0000000000000000000000000000000000350555",
@@ -97,5 +79,23 @@
     "hash": "8d7d0b8fb14e6da453d0e982b8746dc7",
     "transparentProxyAddress": "0x0000000000000000000000000000000000344158",
     "transparentProxyId": "0.0.3424600"
+  },
+  {
+    "name": "factory",
+    "id": "0.0.3478708",
+    "address": "00000000000000000000000000000000003514b4",
+    "timestamp": "2023-02-14T14:12:54.264Z",
+    "hash": "f2da123108ce0de47c5458ed2916ce3e",
+    "transparentProxyAddress": "0x00000000000000000000000000000000003505aa",
+    "transparentProxyId": "0.0.3474858"
+  },
+  {
+    "name": "pair",
+    "id": "0.0.3478719",
+    "address": "00000000000000000000000000000000003514bf",
+    "timestamp": "2023-02-14T14:13:06.984Z",
+    "hash": "ca2f4ade1e242a0b1c1e93d4e6ab05bb",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000002346",
+    "transparentProxyId": "0.0.9030"
   }
 ]
