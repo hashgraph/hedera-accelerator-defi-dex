@@ -113,9 +113,6 @@ async function updateDirectProxy(
 
 export async function main(contract: DeployedContract, proposal: any) {
   if (contract.name === contractService.governorUpgradeContract) {
-    await updateProxy(
-      contract.transparentProxyId!,
-      proposal.proposalId.toFixed()
-    );
+    await updateProxy(contract.transparentProxyId!, proposal.proposalId);
   }
 }
