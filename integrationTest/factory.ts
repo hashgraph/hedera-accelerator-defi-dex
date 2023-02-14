@@ -37,27 +37,27 @@ const getTokensInfo = async (token0: TokenId, token1: TokenId) => {
 
 const createPair = async (token0: TokenId, token1: TokenId, fee: BigNumber) => {
   const feeCollectionAccountId = clientsInfo.operatorId;
-  const tokensOwnerKey = clientsInfo.treasureKey;
+
   return await factory.createPair(
     token0,
     token1,
     feeCollectionAccountId,
-    tokensOwnerKey,
-    clientsInfo.operatorClient,
+    clientsInfo.uiUserKey,
+    clientsInfo.uiUserClient,
     fee
   );
 };
 
 const addLiquidity = async (token0: TokenId, token1: TokenId) => {
   await pair.addLiquidity(
-    clientsInfo.treasureId,
-    clientsInfo.treasureKey,
+    clientsInfo.uiUserId,
+    clientsInfo.uiUserKey,
     token0,
     2.1,
     token1,
     2.3,
     precision,
-    clientsInfo.treasureClient
+    clientsInfo.uiUserClient
   );
 };
 
@@ -65,8 +65,9 @@ const removeLiquidity = async () => {
   const lpTokenQty = Common.withPrecision(0.05, precision);
   await pair.removeLiquidity(
     lpTokenQty,
-    clientsInfo.treasureId,
-    clientsInfo.treasureKey
+    clientsInfo.uiUserId,
+    clientsInfo.uiUserKey,
+    clientsInfo.uiUserClient
   );
 };
 
@@ -82,10 +83,14 @@ const swapToken = async (token: TokenId) => {
 };
 
 async function main() {
-  await factory.setupFactory();
-  await testForSinglePair(tokenB, tokenHBARX, new BigNumber(10));
-  await testForSinglePair(tokenB, tokenHBARX, new BigNumber(15));
-  await testForSinglePair(tokenB, tokenC);
+  try {
+    await factory.setupFactory();
+  } catch (error) {
+    console.log(error);
+  }
+  await testForSinglePair(tokenB, tokenHBARX);
+  await testForSinglePair(tokenA, tokenC);
+  await testForSinglePair(tokenA, tokenB);
   await testForSinglePair(tokenA, tokenGOD);
   await factory.getPairs();
 }
@@ -93,7 +98,7 @@ async function main() {
 async function testForSinglePair(
   token0: TokenId,
   token1: TokenId,
-  fee: BigNumber = new BigNumber(10)
+  fee: BigNumber = new BigNumber(15)
 ) {
   await getTokensInfo(token0, token1);
   const pairContractAddress = await createPair(token0, token1, fee);

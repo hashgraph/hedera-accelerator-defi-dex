@@ -570,7 +570,14 @@ contract Pair is IPair, Initializable {
 
     function _associateToken(address account, address token) private {
         if (!_tokenIsHBARX(token)) {
-            tokenService.associateTokenPublic(account, token);
+            (bool success, ) = address(tokenService).delegatecall(
+                abi.encodeWithSelector(
+                    IBaseHTS.associateTokenPublic.selector,
+                    account,
+                    token
+                )
+            );
+            require(success, "Pair: Association failed.");
         }
     }
 

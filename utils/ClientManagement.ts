@@ -13,6 +13,9 @@ export default class ClientManagement {
   private tokenUserId = AccountId.fromString(process.env.TOKEN_USER_ID!);
   private tokenUserKey = PrivateKey.fromString(process.env.TOKEN_USER_KEY!);
 
+  private uiUserId = AccountId.fromString(process.env.UI_USER_ID!);
+  private uiUserKey = PrivateKey.fromString(process.env.UI_USER_KEY!);
+
   private tokenUserIdNoGODToken = AccountId.fromString(
     process.env.TOKEN_USER_ID_WITH_NO_GOD_TOKEN!
   );
@@ -25,6 +28,10 @@ export default class ClientManagement {
   private dexOwnerKey = PrivateKey.fromString(
     process.env.DEX_CONTRACT_OWNER_KEY!
   );
+
+  public createUIUserClient = (): Client => {
+    return this.doCreateClient(this.uiUserId, this.uiUserKey);
+  };
 
   public createClientAsAdmin = (): Client => {
     return this.doCreateClient(this.accountId, this.accountKey);
@@ -92,6 +99,13 @@ export default class ClientManagement {
       key: this.dexOwnerKey,
     };
   };
+
+  public getUIUser = () => {
+    return {
+      uiUserId: this.uiUserId,
+      uiUserKey: this.uiUserKey,
+    };
+  };
 }
 
 interface ClientsInfo {
@@ -110,6 +124,10 @@ interface ClientsInfo {
   treasureClient: Client;
   treasureId: AccountId;
   treasureKey: PrivateKey;
+
+  uiUserClient: Client;
+  uiUserId: AccountId;
+  uiUserKey: PrivateKey;
 }
 
 function initClientsInfo(): ClientsInfo {
@@ -118,6 +136,11 @@ function initClientsInfo(): ClientsInfo {
   const operatorClient = cm.createOperatorClient();
   const treasureClient = cm.createClient();
   const dexOwnerClient = cm.dexOwnerClient();
+  const uiUserClient = cm.createUIUserClient();
+
+  const uiUser = cm.getUIUser();
+  const uiUserId = uiUser.uiUserId;
+  const uiUserKey = uiUser.uiUserKey;
 
   const dexOwner = cm.getDexOwner();
   const dexOwnerId = dexOwner.id;
@@ -148,6 +171,9 @@ function initClientsInfo(): ClientsInfo {
     treasureClient,
     treasureId,
     treasureKey,
+    uiUserClient,
+    uiUserId,
+    uiUserKey,
   };
 }
 
