@@ -8,9 +8,10 @@ dotenv.config();
 const contractService = new ContractService();
 
 export async function main(_contractName: string) {
-  const contractName = (
-    _contractName ?? process.env.CONTRACT_NAME!
-  ).toLowerCase();
+  if (_contractName === undefined || _contractName === "") {
+    _contractName = process.env.CONTRACT_NAME!;
+  }
+  const contractName = _contractName.toLowerCase();
   console.log(`contractName: ${contractName}`);
   const contractBeingDeployed: DeployedContract =
     contractService.getContract(contractName);

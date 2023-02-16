@@ -10,10 +10,11 @@ const deployment = new Deployment();
 const contractMetadata = new ContractMetadata();
 
 export async function main(_contractName: string) {
-  const contractName = (
-    _contractName ?? process.env.CONTRACT_NAME!
-  ).toLowerCase();
-
+  if (_contractName === undefined || _contractName === "") {
+    _contractName = process.env.CONTRACT_NAME!;
+  }
+  const contractName = _contractName.toLowerCase();
+  console.log(`contract name value ${contractName}`);
   const filePath = contractMetadata.getFilePath(contractName);
   console.log(
     `Deploying (${contractName}) contract, where file path is (${filePath})`

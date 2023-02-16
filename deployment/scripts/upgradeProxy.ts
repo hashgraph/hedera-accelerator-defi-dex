@@ -73,9 +73,11 @@ const upgradeTo = async (newImplementation: string) => {
 };
 
 export async function main(_contractName: string) {
-  const contractName = (
-    _contractName ?? process.env.CONTRACT_NAME!
-  ).toLowerCase();
+  if (_contractName === undefined || _contractName === "") {
+    _contractName = process.env.CONTRACT_NAME!;
+  }
+  const contractName = _contractName.toLowerCase();
+  console.log(`contract name value in upgradeProxy${contractName}`);
   const contractProxy = contractService.getContractWithProxy(contractName);
   contractId = contractProxy.transparentProxyId!;
   const contractGettingUpgraded = contractService.getContract(contractName);
