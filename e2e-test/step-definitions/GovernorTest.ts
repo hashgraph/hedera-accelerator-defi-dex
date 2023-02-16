@@ -3,13 +3,13 @@ import Long from "long";
 import Common from "../business/Common";
 import Governor from "../business/Governor";
 import GodHolder from "../business/GodHolder";
-import ClientManagement from "../../Utils/ClientManagement";
+import ClientManagement from "../../utils/ClientManagement";
 
 import { expect } from "chai";
 import { binding, given, then, when } from "cucumber-tsflow";
 import { TokenId } from "@hashgraph/sdk";
 import { BigNumber } from "bignumber.js";
-import { clientsInfo } from "../../Utils/ClientManagement";
+import { clientsInfo } from "../../utils/ClientManagement";
 import { ContractService } from "../../deployment/service/ContractService";
 
 const clientManagement = new ClientManagement();
