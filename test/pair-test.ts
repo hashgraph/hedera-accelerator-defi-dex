@@ -44,27 +44,32 @@ describe("All Tests", function () {
     const tokenCont2 = await deployERC20Mock();
     const token3Address = tokenCont2.address;
     const LpTokenCont = await ethers.getContractFactory("MockLPToken");
-    const lpTokenCont = await upgrades.deployProxy(LpTokenCont, [
-      mockBaseHTS.address,
-      "tokenName",
-      "tokenSymbol",
-    ]);
+    const lpTokenCont = await upgrades.deployProxy(
+      LpTokenCont,
+      [mockBaseHTS.address, "tokenName", "tokenSymbol"],
+      { unsafeAllow: ["delegatecall"] }
+    );
+
     await lpTokenCont.deployed();
     const lpToken = await deployERC20Mock();
     if (isLpTokenRequired) {
       await lpTokenCont.setLPToken(lpToken.address);
-      lpToken.setUserBalance(lpTokenCont.address, 100);
+      await lpToken.setUserBalance(lpTokenCont.address, 100);
     }
 
     const Pair = await ethers.getContractFactory("Pair");
-    const pair = await upgrades.deployProxy(Pair, [
-      mockBaseHTS.address,
-      lpTokenCont.address,
-      token1Address,
-      token2Address,
-      treasury,
-      fee,
-    ]);
+    const pair = await upgrades.deployProxy(
+      Pair,
+      [
+        mockBaseHTS.address,
+        lpTokenCont.address,
+        token1Address,
+        token2Address,
+        treasury,
+        fee,
+      ],
+      { unsafeAllow: ["delegatecall"] }
+    );
     await pair.deployed();
 
     precision = await pair.getPrecisionValue();
