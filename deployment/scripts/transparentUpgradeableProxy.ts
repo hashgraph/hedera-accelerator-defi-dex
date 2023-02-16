@@ -7,7 +7,7 @@ dotenv.config();
 
 const contractService = new ContractService();
 
-export async function main(_contractName: string? = null) {
+export async function main(_contractName: string) {
   const contractName = (
     _contractName ?? process.env.CONTRACT_NAME!
   ).toLowerCase();
@@ -38,7 +38,7 @@ export async function main(_contractName: string? = null) {
   contractService.updateContractRecord(updatedContract, contractBeingDeployed);
 }
 if (require.main === module) {
-  main()
+  main("")
     .then(() => process.exit(0))
     .catch((error) => {
       console.error(error);
