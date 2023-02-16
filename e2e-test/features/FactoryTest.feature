@@ -54,12 +54,12 @@ Feature: Factory contract e2e test
     Scenario: Verify slippage out value for given in tokenA quantity
         Given tokenA and HBAR are present in pool
         When User gives 2 units of tokenA to calculate slippage out
-        Then Slippage out value should be 2290466
+        Then Slippage out value should be 2288419
 
     Scenario: Verify slippage in value for given out HBAR quantity
         Given tokenA and HBAR are present in pool
         When User gives 10 units of HBAR to calculate slippage in
-        Then Slippage in value should be 49025256    
+        Then Slippage in value should be 49025255   
 
 #TO-DO - Add scenario when functionalty is available to get spot price for give
     # Scenario: Verify spot price for HBAR

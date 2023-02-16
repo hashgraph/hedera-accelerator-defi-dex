@@ -14,6 +14,7 @@ import {
   PrivateKey,
   ContractId,
   ContractFunctionParameters,
+  ContractExecuteTransaction,
 } from "@hashgraph/sdk";
 
 const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
@@ -40,6 +41,23 @@ const PROPOSAL_DETAILS = "getProposalDetails";
 
 const GET_CONTRACT_ADDRESSES = "getContractAddresses";
 const GET_TOKEN_ADDRESSES = "getTokenAddress";
+
+enum ProposalState {
+  Pending,
+  Active,
+  Canceled,
+  Defeated,
+  Succeeded,
+  Queued,
+  Expired,
+  Executed,
+}
+
+enum VoteType {
+  Against,
+  For,
+  Abstain,
+}
 
 export default class Governor extends Base {
   async initialize(
@@ -429,5 +447,60 @@ export default class Governor extends Base {
       maxWaitInMs -= eachIterationDelayInMS;
     }
     console.log(`- Governor#getStateWithTimeout(): done\n`);
+  };
+
+  getContractAddresses = async (
+    contractId: string,
+    proposalId: BigNumber,
+    client: Client
+  ) => {
+    const args = new ContractFunctionParameters().addUint256(proposalId);
+    const txnResponse = await new ContractExecuteTransaction()
+      .setContractId(contractId)
+      .setGas(500000)
+      .setFunction("getContractAddresses", args)
+      .execute(client);
+    const record = await txnResponse.getRecord(client);
+    const proxyAddress = record.contractFunctionResult!.getAddress(0);
+    const logicAddress = record.contractFunctionResult!.getAddress(1);
+    const proxyId = ContractId.fromSolidityAddress(proxyAddress);
+    const logicId = ContractId.fromSolidityAddress(logicAddress);
+    const proxyIdString = proxyId.toString();
+    const logicIdString = logicId.toString();
+    const response = {
+      proxyId,
+      proxyIdString,
+      proxyAddress,
+      logicId,
+      logicIdString,
+      logicAddress,
+    };
+    console.log(
+      `- read proxy and new implementation/logic addresses from proposal: ${proxyAddress}, ${logicAddress}`
+    );
+    return response;
+  };
+
+  upgradeTo = async (
+    proxyAddress: string,
+    logicAddress: string,
+    adminClient: Client
+  ) => {
+    const args = new ContractFunctionParameters().addAddress(logicAddress);
+    const txn = new ContractExecuteTransaction()
+      .setContractId(ContractId.fromSolidityAddress(proxyAddress))
+      .setGas(2000000)
+      .setFunction("upgradeTo", args);
+    const txnResponse = await txn.execute(adminClient);
+    const txnReceipt = await txnResponse.getReceipt(adminClient);
+    console.log(`- upgradedTo txn status: ${txnReceipt.status}`);
+  };
+
+  getProposalNumericState = async (proposalState: string) => {
+    return Object.values(ProposalState).indexOf(proposalState);
+  };
+
+  getProposalVoteNumeric = async (vote: string): Promise<number> => {
+    return Object.values(VoteType).indexOf(vote);
   };
 }
