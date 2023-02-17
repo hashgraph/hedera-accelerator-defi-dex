@@ -24,7 +24,7 @@ export default class Base {
 
   getCurrentImplementation = async (
     adminKey: PrivateKey = clientsInfo.adminKey,
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.adminClient
   ) => {
     const { result } = await this.execute(
       2000000,

@@ -39,27 +39,11 @@ let tokens: BigNumber;
 
 const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
 const TRANSFER_TOKEN_ID = TokenId.fromString(dex.TOKEN_LAB49_1);
-enum ProposalState {
-  Pending,
-  Active,
-  Canceled,
-  Defeated,
-  Succeeded,
-  Queued,
-  Expired,
-  Executed,
-}
-
-enum VoteType {
-  Against,
-  For,
-  Abstain,
-}
 
 @binding()
 export class GovernorSteps {
   @given(
-    /user have initialized the governor transfer token contract/,
+    /User have initialized the governor transfer token contract/,
     undefined,
     30000
   )
@@ -81,7 +65,7 @@ export class GovernorSteps {
   }
 
   @when(
-    /user create a new proposal with unique title "([^"]*)" description "([^"]*)" link "([^"]*)" and token amount (\d*)/,
+    /User create a new proposal with unique title "([^"]*)" description "([^"]*)" link "([^"]*)" and token amount (\d*)/,
     undefined,
     30000
   )
@@ -122,7 +106,7 @@ export class GovernorSteps {
   }
 
   @when(
-    /user create a new proposal with duplicate title "([^"]*)" description "([^"]*)" link "([^"]*)" and token amount (\d*)/,
+    /User create a new proposal with duplicate title "([^"]*)" description "([^"]*)" link "([^"]*)" and token amount (\d*)/,
     undefined,
     30000
   )
@@ -149,16 +133,17 @@ export class GovernorSteps {
     }
   }
 
-  @then(/user verify that proposal state is "([^"]*)"/, undefined, 30000)
+  @then(/User verify that proposal state is "([^"]*)"/, undefined, 30000)
   public async verifyProposalState(proposalState: string): Promise<void> {
     try {
       const currentState = await governor.state(
         proposalID,
         clientsInfo.operatorClient
       );
-      expect(Number(currentState)).to.eql(
-        Number(Object.values(ProposalState).indexOf(proposalState))
+      const proposalStateNumeric = await governor.getProposalNumericState(
+        proposalState
       );
+      expect(Number(currentState)).to.eql(proposalStateNumeric);
     } catch (e: any) {
       console.log("Something went wrong while verifying the state of proposal");
       console.log(e);
@@ -167,13 +152,13 @@ export class GovernorSteps {
     }
   }
 
-  @then(/user gets message "([^"]*)" on creating proposal/, undefined, 30000)
+  @then(/User gets message "([^"]*)" on creating proposal/, undefined, 30000)
   public async verifyErrorMsg(message: string): Promise<void> {
     expect(msg).contains(message);
   }
 
   @when(
-    /user with no GOD token create a new proposal with title "([^"]*)" description "([^"]*)" link "([^"]*)" and token amount (\d*)/
+    /User with no GOD token create a new proposal with title "([^"]*)" description "([^"]*)" link "([^"]*)" and token amount (\d*)/
   )
   public async createProposalWithNoGODToken(
     title: string,
@@ -198,10 +183,10 @@ export class GovernorSteps {
     }
   }
 
-  @when(/user vote "([^"]*)" proposal/, undefined, 30000)
+  @when(/User vote "([^"]*)" proposal/, undefined, 30000)
   public async voteToProposal(vote: string): Promise<void> {
     try {
-      const voteVal = Number(Object.values(VoteType).indexOf(vote));
+      const voteVal = await governor.getProposalVoteNumeric(vote);
       await governor.vote(proposalID, voteVal, clientsInfo.operatorClient);
     } catch (e: any) {
       console.log(
@@ -213,7 +198,7 @@ export class GovernorSteps {
     }
   }
 
-  @when(/user execute the proposal with title "([^"]*)"/, undefined, 30000)
+  @when(/User execute the proposal with title "([^"]*)"/, undefined, 30000)
   public async executeProposal(title: string) {
     try {
       await governor.executeProposal(
@@ -231,7 +216,7 @@ export class GovernorSteps {
     }
   }
 
-  @when(/user fetches token balance of the payee account/, undefined, 30000)
+  @when(/User fetches token balance of the payee account/, undefined, 30000)
   public async getTokenBalance() {
     balance = await Common.getTokenBalance(
       clientsInfo.treasureId,
@@ -241,7 +226,7 @@ export class GovernorSteps {
   }
 
   @then(
-    /user verify that token is transferred to payee account/,
+    /User verify that token is transferred to payee account/,
     undefined,
     30000
   )
@@ -254,12 +239,12 @@ export class GovernorSteps {
     expect(Number(updatedBalance)).to.eql(Number(balance) + Number(tokens));
   }
 
-  @when(/user cancel the proposal with title "([^"]*)"/, undefined, 30000)
+  @when(/User cancel the proposal with title "([^"]*)"/, undefined, 30000)
   public async cancelProposal(title: string) {
     await governor.cancelProposal(title, clientsInfo.operatorClient);
   }
 
-  @when(/user fetches the GOD token balance/, undefined, 30000)
+  @when(/User fetches the GOD token balance/, undefined, 30000)
   public async getGODTokenBalance() {
     balance = await Common.getTokenBalance(
       clientsInfo.operatorId,
@@ -269,7 +254,7 @@ export class GovernorSteps {
     console.log("god token balance --", balance);
   }
 
-  @when(/user revert the god tokens/, undefined, 30000)
+  @when(/User revert the god tokens/, undefined, 30000)
   public async revertGODToken() {
     try {
       await godHolder.revertTokensForVoter(clientsInfo.operatorClient);
@@ -282,12 +267,12 @@ export class GovernorSteps {
   }
 
   @when(
-    /user wait for proposal state to be "([^"]*)" for max (\d*) seconds/,
+    /User wait for proposal state to be "([^"]*)" for max (\d*) seconds/,
     undefined,
     30000
   )
   public async userWaitForState(state: string, seconds: number) {
-    const requiredState = Number(Object.values(ProposalState).indexOf(state));
+    const requiredState = await governor.getProposalNumericState(state);
     await governor.getStateWithTimeout(
       proposalID,
       requiredState,
