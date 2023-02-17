@@ -9,11 +9,12 @@ dotenv.config();
 const deployment = new Deployment();
 const contractMetadata = new ContractMetadata();
 
-export async function main(_contractName: string? = null) {
-  const contractName = (
-    _contractName ?? process.env.CONTRACT_NAME!
-  ).toLowerCase();
-
+export async function main(_contractName: string) {
+  if (_contractName === undefined || _contractName === "") {
+    _contractName = process.env.CONTRACT_NAME!;
+  }
+  const contractName = _contractName.toLowerCase();
+  console.log(`contract name value ${contractName}`);
   const filePath = contractMetadata.getFilePath(contractName);
   console.log(
     `Deploying (${contractName}) contract, where file path is (${filePath})`
@@ -31,7 +32,7 @@ export async function main(_contractName: string? = null) {
 }
 
 if (require.main === module) {
-  main()
+  main("")
     .then(() => process.exit(0))
     .catch((error) => {
       console.error(error);

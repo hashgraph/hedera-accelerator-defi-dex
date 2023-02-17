@@ -72,10 +72,12 @@ const upgradeTo = async (newImplementation: string) => {
   console.log(`upgradedTo: ${transferTokenRx.status}`);
 };
 
-export async function main(_contractName: string? = null) {
-  const contractName = (
-    _contractName ?? process.env.CONTRACT_NAME!
-  ).toLowerCase();
+export async function main(_contractName: string) {
+  if (_contractName === undefined || _contractName === "") {
+    _contractName = process.env.CONTRACT_NAME!;
+  }
+  const contractName = _contractName.toLowerCase();
+  console.log(`contract name value in upgradeProxy${contractName}`);
   const contractProxy = contractService.getContractWithProxy(contractName);
   contractId = contractProxy.transparentProxyId!;
   const contractGettingUpgraded = contractService.getContract(contractName);
@@ -96,7 +98,7 @@ export async function main(_contractName: string? = null) {
 }
 
 if (require.main === module) {
-  main()
+  main("")
     .then(() => process.exit(0))
     .catch((error) => {
       console.error(error);

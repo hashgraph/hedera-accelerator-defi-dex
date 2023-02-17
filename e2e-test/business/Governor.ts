@@ -14,6 +14,7 @@ import {
   PrivateKey,
   ContractId,
   ContractFunctionParameters,
+  ContractExecuteTransaction,
 } from "@hashgraph/sdk";
 
 const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
@@ -40,6 +41,23 @@ const PROPOSAL_DETAILS = "getProposalDetails";
 
 const GET_CONTRACT_ADDRESSES = "getContractAddresses";
 const GET_TOKEN_ADDRESSES = "getTokenAddress";
+
+enum ProposalState {
+  Pending,
+  Active,
+  Canceled,
+  Defeated,
+  Succeeded,
+  Queued,
+  Expired,
+  Executed,
+}
+
+enum VoteType {
+  Against,
+  For,
+  Abstain,
+}
 
 export default class Governor extends Base {
   async initialize(
@@ -429,5 +447,13 @@ export default class Governor extends Base {
       maxWaitInMs -= eachIterationDelayInMS;
     }
     console.log(`- Governor#getStateWithTimeout(): done\n`);
+  };
+
+  getProposalNumericState = async (proposalState: string) => {
+    return Object.values(ProposalState).indexOf(proposalState);
+  };
+
+  getProposalVoteNumeric = async (vote: string): Promise<number> => {
+    return Object.values(VoteType).indexOf(vote);
   };
 }
