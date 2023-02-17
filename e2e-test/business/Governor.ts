@@ -449,53 +449,6 @@ export default class Governor extends Base {
     console.log(`- Governor#getStateWithTimeout(): done\n`);
   };
 
-  getContractAddresses = async (
-    contractId: string,
-    proposalId: BigNumber,
-    client: Client
-  ) => {
-    const args = new ContractFunctionParameters().addUint256(proposalId);
-    const txnResponse = await new ContractExecuteTransaction()
-      .setContractId(contractId)
-      .setGas(500000)
-      .setFunction("getContractAddresses", args)
-      .execute(client);
-    const record = await txnResponse.getRecord(client);
-    const proxyAddress = record.contractFunctionResult!.getAddress(0);
-    const logicAddress = record.contractFunctionResult!.getAddress(1);
-    const proxyId = ContractId.fromSolidityAddress(proxyAddress);
-    const logicId = ContractId.fromSolidityAddress(logicAddress);
-    const proxyIdString = proxyId.toString();
-    const logicIdString = logicId.toString();
-    const response = {
-      proxyId,
-      proxyIdString,
-      proxyAddress,
-      logicId,
-      logicIdString,
-      logicAddress,
-    };
-    console.log(
-      `- read proxy and new implementation/logic addresses from proposal: ${proxyAddress}, ${logicAddress}`
-    );
-    return response;
-  };
-
-  upgradeTo = async (
-    proxyAddress: string,
-    logicAddress: string,
-    adminClient: Client
-  ) => {
-    const args = new ContractFunctionParameters().addAddress(logicAddress);
-    const txn = new ContractExecuteTransaction()
-      .setContractId(ContractId.fromSolidityAddress(proxyAddress))
-      .setGas(2000000)
-      .setFunction("upgradeTo", args);
-    const txnResponse = await txn.execute(adminClient);
-    const txnReceipt = await txnResponse.getReceipt(adminClient);
-    console.log(`- upgradedTo txn status: ${txnReceipt.status}`);
-  };
-
   getProposalNumericState = async (proposalState: string) => {
     return Object.values(ProposalState).indexOf(proposalState);
   };
