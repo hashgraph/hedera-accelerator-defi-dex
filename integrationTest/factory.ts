@@ -1,7 +1,7 @@
 import { BigNumber } from "bignumber.js";
 import { clientsInfo } from "../utils/ClientManagement";
 import { ContractService } from "../deployment/service/ContractService";
-import { ContractId, TokenId } from "@hashgraph/sdk";
+import { ContractId, TokenId, AccountId } from "@hashgraph/sdk";
 
 import dex from "../deployment/model/dex";
 import Pair from "../e2e-test/business/Pair";
@@ -26,8 +26,12 @@ const getPrecisionValue = async () => {
   precision = await pair.getPrecisionValue();
 };
 
-const getTreasureBalance = async (tokens: TokenId[]) => {
-  await Common.getAccountBalance(clientsInfo.treasureId, tokens);
+const getTreasureBalance = async (
+  account: AccountId | ContractId,
+  tokens: TokenId[]
+) => {
+  await Common.getAccountBalance(account, tokens);
+  await pair.getPairQty();
 };
 
 const getTokensInfo = async (token0: TokenId, token1: TokenId) => {
@@ -94,13 +98,16 @@ async function testForSinglePair(token0: TokenId, token1: TokenId) {
     ContractId.fromSolidityAddress(pairContractAddress).toString();
   pair = new Pair(pairContractId);
   await getPrecisionValue();
-  await getTreasureBalance([token0, token1]);
+  await getTreasureBalance(pairContractId, [token0, token1]);
   await addLiquidity(token0, token1);
-  await getTreasureBalance([token0, token1]);
+  await getTreasureBalance(pairContractId, [token0, token1]);
   await removeLiquidity();
-  await getTreasureBalance([token0, token1]);
+  await pair.setSlippage(Common.withPrecision(1, precision));
+  await getTreasureBalance(pairContractId, [token0, token1]);
   await swapToken(token0);
+  await getTreasureBalance(pairContractId, [token0, token1]);
   await swapToken(token1);
+  await getTreasureBalance(pairContractId, [token0, token1]);
 }
 
 main()

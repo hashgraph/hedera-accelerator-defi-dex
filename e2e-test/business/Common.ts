@@ -87,7 +87,7 @@ export default class Common {
   };
 
   static getAccountBalance = async (
-    accountId: AccountId | string,
+    accountId: AccountId | ContractId | string,
     tokens: TokenId[] | undefined,
     client: Client = clientsInfo.operatorClient
   ) => {
@@ -153,11 +153,15 @@ export default class Common {
   };
 
   private static getAccountBalanceInternally = async (
-    accountId: AccountId | string,
+    id: AccountId | ContractId,
     client: Client
   ) => {
-    return await new AccountBalanceQuery()
-      .setAccountId(accountId)
-      .execute(client);
+    const balanceQuery = new AccountBalanceQuery();
+    if (id instanceof AccountId) {
+      balanceQuery.setAccountId(id);
+    } else {
+      balanceQuery.setContractId(id);
+    }
+    return await balanceQuery.execute(client);
   };
 }

@@ -19,6 +19,14 @@ error SlippageBreached(
     int256 slippageThreshold
 );
 
+error WrongPairPassed(
+    string message,
+    address passedTokenA,
+    address passedTokenB,
+    address expectedTokenA,
+    address expectedTokenB
+);
+
 contract Pair is IPair, Initializable {
     IBaseHTS internal tokenService;
     ILPToken internal lpTokenContract;
@@ -78,8 +86,28 @@ contract Pair is IPair, Initializable {
             "Add liquidity: Transfering token A to contract failed with status code",
             "Add liquidity: Transfering token B to contract failed with status code"
         );
-        pair.tokenA.tokenQty += _tokenAQty;
-        pair.tokenB.tokenQty += _tokenBQty;
+        if (
+            _tokenA == pair.tokenA.tokenAddress &&
+            _tokenB == pair.tokenB.tokenAddress
+        ) {
+            pair.tokenA.tokenQty += _tokenAQty;
+            pair.tokenB.tokenQty += _tokenBQty;
+        } else if (
+            _tokenA == pair.tokenB.tokenAddress &&
+            _tokenB == pair.tokenA.tokenAddress
+        ) {
+            pair.tokenB.tokenQty += _tokenAQty;
+            pair.tokenA.tokenQty += _tokenBQty;
+        } else {
+            revert WrongPairPassed({
+                message: "Wrong token pair passed",
+                passedTokenA: _tokenA,
+                passedTokenB: _tokenB,
+                expectedTokenA: pair.tokenA.tokenAddress,
+                expectedTokenB: pair.tokenB.tokenAddress
+            });
+        }
+
         lpTokenContract.allotLPTokenFor(_tokenAQty, _tokenBQty, fromAccount);
     }
 
