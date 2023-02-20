@@ -83,11 +83,7 @@ const swapToken = async (token: TokenId) => {
 };
 
 async function main() {
-  try {
-    await factory.setupFactory();
-  } catch (error) {
-    console.log(error);
-  }
+  await factory.setupFactory();
   await testForSinglePair(tokenB, tokenHBARX);
   await testForSinglePair(tokenA, tokenC);
   await testForSinglePair(tokenA, tokenB);
