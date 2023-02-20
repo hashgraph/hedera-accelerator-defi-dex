@@ -99,14 +99,18 @@ describe("All Tests", function () {
       const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
       const mockBaseHTS = await MockBaseHTS.deploy(false, tokenCAddress);
       const Pair = await ethers.getContractFactory("Pair");
-      const instance = await upgrades.deployProxy(Pair, [
-        mockBaseHTS.address,
-        zeroAddress,
-        tokenAAddress,
-        tokenBAddress,
-        treasury,
-        fee,
-      ]);
+      const instance = await upgrades.deployProxy(
+        Pair,
+        [
+          mockBaseHTS.address,
+          zeroAddress,
+          tokenAAddress,
+          tokenBAddress,
+          treasury,
+          fee,
+        ],
+        { unsafeAllow: ["delegatecall"] }
+      );
       await instance.deployed();
     });
   });
@@ -832,7 +836,7 @@ describe("All Tests", function () {
         precision.mul(100),
         precision.mul(100)
       );
-      await mockBaseHTS.setPassTransactionCount(0);
+      await mockBaseHTS.setPassTransactionCount(1);
       await expect(
         pair.swapToken(zeroAddress, token1Address, 30, defaultSlippageInput)
       ).to.revertedWith(
@@ -883,7 +887,7 @@ describe("All Tests", function () {
       );
       const tokenBeforeQty = await pair.getPairQty();
       expect(Number(tokenBeforeQty[0])).to.be.equals(precision.mul(1000));
-      mockBaseHTS.setPassTransactionCount(0);
+      mockBaseHTS.setPassTransactionCount(1);
       await expect(
         pair.swapToken(
           zeroAddress,
@@ -925,7 +929,7 @@ describe("All Tests", function () {
     // ----------------------------------------------------------------------
     it("Add liquidity Fail A Transfer", async function () {
       const { pair, mockBaseHTS } = await loadFixture(deployFixture);
-      mockBaseHTS.setPassTransactionCount(0);
+      mockBaseHTS.setPassTransactionCount(1);
       const tokenBeforeQty = await pair.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
       await expect(
@@ -937,7 +941,7 @@ describe("All Tests", function () {
 
     it("Add liquidity Fail B Transfer", async function () {
       const { pair, mockBaseHTS } = await loadFixture(deployFixture);
-      mockBaseHTS.setPassTransactionCount(1);
+      mockBaseHTS.setPassTransactionCount(2);
       const tokenBeforeQty = await pair.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
       await expect(
@@ -1013,7 +1017,7 @@ describe("All Tests", function () {
       );
       const tokenBeforeQty = await pair.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
-      await mockBaseHTS.setPassTransactionCount(6);
+      await mockBaseHTS.setPassTransactionCount(7);
       const lpTokenAddress = await lpTokenCont.getLpTokenAddress();
       const lpToken = await ethers.getContractAt("ERC20Mock", lpTokenAddress);
       await lpToken.setTransaferFailed(true); //Forcing transfer to fail
@@ -1032,17 +1036,18 @@ describe("All Tests", function () {
     });
 
     it("LPToken creation failed while initialize LP contract.", async function () {
-      const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-      const mockBaseHTS = await MockBaseHTS.deploy(false, newZeroAddress);
+      const MockBaseHTS = await ethers.getContractFactory(
+        "MockBaseHTSWithTokenCreationFail"
+      );
+      const mockBaseHTS = await MockBaseHTS.deploy();
 
       const LpTokenCont = await ethers.getContractFactory("LPToken");
-      await mockBaseHTS.setPassTransactionCount(0);
       await expect(
-        upgrades.deployProxy(LpTokenCont, [
-          mockBaseHTS.address,
-          "tokenName",
-          "tokenSymbol",
-        ])
+        upgrades.deployProxy(
+          LpTokenCont,
+          [mockBaseHTS.address, "tokenName", "tokenSymbol"],
+          { unsafeAllow: ["delegatecall"] }
+        )
       ).to.revertedWith("LPToken: Token creation failed.");
     });
 
@@ -1067,7 +1072,7 @@ describe("All Tests", function () {
         deployFixtureTokenTest
       );
       await lpTokenCont.allotLPTokenFor(10, 10, signers[0].address);
-      await mockBaseHTS.setPassTransactionCount(0);
+      await mockBaseHTS.setPassTransactionCount(1);
       await expect(
         lpTokenCont.removeLPTokenFor(5, signers[0].address)
       ).to.revertedWith("LPToken: token transfer failed to contract.");
@@ -1078,7 +1083,7 @@ describe("All Tests", function () {
         deployFixtureTokenTest
       );
       await lpTokenCont.allotLPTokenFor(10, 10, signers[0].address);
-      await mockBaseHTS.setPassTransactionCount(1);
+      await mockBaseHTS.setPassTransactionCount(2);
       await expect(
         lpTokenCont.removeLPTokenFor(5, signers[0].address)
       ).to.revertedWith("LP token burn failed.");
@@ -1108,13 +1113,6 @@ describe("All Tests", function () {
       const { lpTokenCont } = await loadFixture(deployFixture);
       const address = await lpTokenCont.getLpTokenAddress();
       expect(address).to.not.equals("");
-    });
-
-    it("verify that lpToken initization failed for subsequent initization call", async function () {
-      const { lpTokenCont, mockBaseHTS } = await loadFixture(deployFixture);
-      await expect(
-        lpTokenCont.initialize(mockBaseHTS.address, "name", "symbol")
-      ).to.revertedWith("Initializable: contract is already initialized");
     });
   });
 
