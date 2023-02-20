@@ -153,7 +153,7 @@ export default class Common {
   };
 
   private static getAccountBalanceInternally = async (
-    id: AccountId | ContractId,
+    id: AccountId | ContractId | string,
     client: Client
   ) => {
     const balanceQuery = new AccountBalanceQuery();
