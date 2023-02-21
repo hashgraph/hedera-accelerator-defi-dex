@@ -32,6 +32,8 @@ echo TOKEN_USER_ID=$TOKEN_USER_ID >> .env;
 echo TOKEN_USER_KEY=$TOKEN_USER_KEY >> .env;
 echo DEX_CONTRACT_OWNER_ID=$DEX_CONTRACT_OWNER_ID >> .env;
 echo DEX_CONTRACT_OWNER_KEY=$DEX_CONTRACT_OWNER_KEY >> .env;
+echo UI_USER_ID=$UI_USER_ID >> .env;
+echo UI_USER_KEY=$UI_USER_KEY >> .env;
 
 echo "Running contract deployment ........ ";
 npx hardhat run ./deployment/checkAndDeploy.ts;

@@ -41,6 +41,8 @@ echo TOKEN_USER_KEY=$TOKEN_USER_KEY >> .env;
 echo CONTRACT_NAME=$CONTRACT_NAME >> .env;
 echo DEX_CONTRACT_OWNER_ID=$DEX_CONTRACT_OWNER_ID >> .env;
 echo DEX_CONTRACT_OWNER_KEY=$DEX_CONTRACT_OWNER_KEY >> .env;
+echo UI_USER_ID=$UI_USER_ID >> .env;
+echo UI_USER_KEY=$UI_USER_KEY >> .env;
 
 declare -a arr=("LPToken" "Pair" "Factory" "GovernorTransferToken" "GODHolder" "GovernorUpgrade")
 for i in "${arr[@]}"
