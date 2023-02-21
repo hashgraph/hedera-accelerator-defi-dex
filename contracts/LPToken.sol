@@ -135,9 +135,7 @@ contract LPToken is ILPToken, Initializable {
         myToken.expiry = expiry;
         myToken.tokenKeys = keys;
 
-        (bool success, bytes memory result) = address(tokenService).call{
-            value: msg.value
-        }(
+        (bool success, bytes memory result) = address(tokenService).delegatecall(
             abi.encodeWithSelector(
                 IBaseHTS.createFungibleTokenPublic.selector,
                 myToken,

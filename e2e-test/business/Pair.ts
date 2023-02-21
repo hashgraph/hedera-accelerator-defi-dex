@@ -200,11 +200,13 @@ export default class Pair extends Base {
     const tokenAAddress = result.getAddress(0);
     const tokenBAddress = result.getAddress(1);
     const lpTokenAddress = result.getAddress(2);
+    const fee = result.getInt256(3);
     console.log(`- Pair#${GET_TOKEN_PAIR_ADDRESS}():`);
     console.log(` - A Token Address = ${tokenAAddress}`);
     console.log(` - B Token Address = ${tokenBAddress}`);
     console.log(` - Lp Token Address = ${lpTokenAddress}\n`);
-    return { tokenAAddress, tokenBAddress, lpTokenAddress };
+    console.log(` - Fee Value = ${fee}\n`);
+    return { tokenAAddress, tokenBAddress, lpTokenAddress, fee };
   };
 
   public addLiquidity = async (

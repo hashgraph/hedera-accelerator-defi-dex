@@ -8,22 +8,33 @@ import "./ERC20Mock.sol";
 import "hardhat/console.sol";
 
 contract MockBaseHTS is IBaseHTS {
-    bool internal tokenTest;
-    bool private revertCreateToken;
-    int256 private passTransactionCount = 100;
     address private hbarx;
+    bytes32 revertCreateTokenSlot = keccak256("revertCreateTokenSlot");
+    bytes32 passTransactionCountSlot = keccak256("passTransactionCountSlot");
+    bytes32 tokenTestSlot = keccak256("tokenTestSlot");
 
     constructor(bool _tokenTest, address _hbarx) {
-        tokenTest = _tokenTest;
+        StorageSlot.Uint256Slot storage passTransactionCount = StorageSlot
+            .getUint256Slot(passTransactionCountSlot);
+        passTransactionCount.value = uint256(100);
+
+        StorageSlot.BooleanSlot storage isTokenTest = StorageSlot
+            .getBooleanSlot(tokenTestSlot);
+        isTokenTest.value = _tokenTest;
+
         hbarx = _hbarx;
     }
 
     function setPassTransactionCount(int256 _passTransactionCount) public {
-        passTransactionCount = _passTransactionCount;
+        StorageSlot.Uint256Slot storage passTransactionCount = StorageSlot
+            .getUint256Slot(passTransactionCountSlot);
+        passTransactionCount.value = uint256(_passTransactionCount);
     }
 
     function setRevertCreateToken(bool _revertCreateToken) public {
-        revertCreateToken = _revertCreateToken;
+        StorageSlot.Uint256Slot storage revertCreateToken = StorageSlot
+            .getUint256Slot(revertCreateTokenSlot);
+        revertCreateToken.value = (_revertCreateToken == true) ? 1 : 0;
     }
 
     function transferTokenPublic(
@@ -32,7 +43,7 @@ contract MockBaseHTS is IBaseHTS {
         address to,
         int256 amount
     ) external override returns (int256) {
-        if (tokenTest) {
+        if (StorageSlot.getBooleanSlot(tokenTestSlot).value) {
             ERC20Mock(token).transfer(from, to, uint(amount));
         }
         return getResponseCode();
@@ -76,7 +87,11 @@ contract MockBaseHTS is IBaseHTS {
         override
         returns (int256 responseCode, address tokenAddress)
     {
-        if (revertCreateToken) {
+        uint revertCreateToken = StorageSlot
+            .getUint256Slot(revertCreateTokenSlot)
+            .value;
+
+        if (revertCreateToken == 1) {
             revert();
         }
         responseCode = getResponseCode();
@@ -89,10 +104,18 @@ contract MockBaseHTS is IBaseHTS {
     }
 
     function getResponseCode() private returns (int) {
-        if (passTransactionCount > 0) {
-            passTransactionCount -= 1;
+        uint256 _passTransactionCount = StorageSlot
+            .getUint256Slot(passTransactionCountSlot)
+            .value;
+
+        if (_passTransactionCount > 1) {
+            _passTransactionCount -= 1;
+            StorageSlot
+                .getUint256Slot(passTransactionCountSlot)
+                .value = _passTransactionCount;
             return int(22);
         }
+
         return int(23);
     }
 
@@ -104,5 +127,71 @@ contract MockBaseHTS is IBaseHTS {
         address payable
     ) external payable override returns (bool) {
         return getResponseCode() == int(22) ? true : false;
+    }
+}
+
+library StorageSlot {
+    struct AddressSlot {
+        address value;
+    }
+
+    struct BooleanSlot {
+        bool value;
+    }
+
+    struct Bytes32Slot {
+        bytes32 value;
+    }
+
+    struct Uint256Slot {
+        uint256 value;
+    }
+
+    /**
+     * @dev Returns an `AddressSlot` with member `value` located at `slot`.
+     */
+    function getAddressSlot(
+        bytes32 slot
+    ) internal pure returns (AddressSlot storage r) {
+        /// @solidity memory-safe-assembly
+        assembly {
+            r.slot := slot
+        }
+    }
+
+    /**
+     * @dev Returns an `BooleanSlot` with member `value` located at `slot`.
+     */
+    function getBooleanSlot(
+        bytes32 slot
+    ) internal pure returns (BooleanSlot storage r) {
+        /// @solidity memory-safe-assembly
+        assembly {
+            r.slot := slot
+        }
+    }
+
+    /**
+     * @dev Returns an `Bytes32Slot` with member `value` located at `slot`.
+     */
+    function getBytes32Slot(
+        bytes32 slot
+    ) internal pure returns (Bytes32Slot storage r) {
+        /// @solidity memory-safe-assembly
+        assembly {
+            r.slot := slot
+        }
+    }
+
+    /**
+     * @dev Returns an `Uint256Slot` with member `value` located at `slot`.
+     */
+    function getUint256Slot(
+        bytes32 slot
+    ) internal pure returns (Uint256Slot storage r) {
+        /// @solidity memory-safe-assembly
+        assembly {
+            r.slot := slot
+        }
     }
 }

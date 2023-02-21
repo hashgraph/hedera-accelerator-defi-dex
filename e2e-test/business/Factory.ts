@@ -68,11 +68,13 @@ export default class Factory extends Base {
   getPair = async (
     token1: TokenId,
     token2: TokenId,
+    fee: BigNumber = new BigNumber(10),
     client: Client = clientsInfo.operatorClient
   ) => {
     const args = new ContractFunctionParameters()
       .addAddress(token1.toSolidityAddress())
-      .addAddress(token2.toSolidityAddress());
+      .addAddress(token2.toSolidityAddress())
+      .addInt256(fee);
     const { result } = await this.execute(
       9999999,
       GET_PAIR,
