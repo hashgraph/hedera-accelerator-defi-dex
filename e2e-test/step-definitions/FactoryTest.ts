@@ -33,6 +33,7 @@ let actualPairAddress: string;
 let pairCountBefore: string[];
 let pairCountAfter: string[];
 const tokenHBARX = TokenId.fromString(dex.HBARX_TOKEN_ID);
+const fees = new BigNumber(10);
 let tokenAHBARPairAddress: string;
 let tokensBefore: BigNumber[];
 let tokensAfter: BigNumber[];
@@ -96,7 +97,12 @@ export class FactorySteps {
     30000
   )
   public async getPair(): Promise<void> {
-    expectedPairAddress = await factory.getPair(tokenOne, tokenTwo, client);
+    expectedPairAddress = await factory.getPair(
+      tokenOne,
+      tokenTwo,
+      fees,
+      client
+    );
     expect(actualPairAddress).to.eql(expectedPairAddress);
   }
 
@@ -183,7 +189,12 @@ export class FactorySteps {
       client
     );
 
-    const pairAddress = await factory.getPair(tokenOne, tokenHBARX, client);
+    const pairAddress = await factory.getPair(
+      tokenOne,
+      tokenHBARX,
+      fees,
+      client
+    );
     await Helper.delay(15000);
     const response = await httpRequest(pairAddress, undefined);
     pair = new Pair(response.contract_id);

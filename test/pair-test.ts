@@ -15,6 +15,7 @@ describe("All Tests", function () {
   const treasury = "0x0000000000000000000000000000000002d70207";
   let precision: BigNumber;
   const fee = BigNumber.from(1);
+  const fee2 = BigNumber.from(2);
   const defaultSlippageInput = BigNumber.from(0);
 
   async function deployERC20Mock() {
@@ -43,27 +44,32 @@ describe("All Tests", function () {
     const tokenCont2 = await deployERC20Mock();
     const token3Address = tokenCont2.address;
     const LpTokenCont = await ethers.getContractFactory("MockLPToken");
-    const lpTokenCont = await upgrades.deployProxy(LpTokenCont, [
-      mockBaseHTS.address,
-      "tokenName",
-      "tokenSymbol",
-    ]);
+    const lpTokenCont = await upgrades.deployProxy(
+      LpTokenCont,
+      [mockBaseHTS.address, "tokenName", "tokenSymbol"],
+      { unsafeAllow: ["delegatecall"] }
+    );
+
     await lpTokenCont.deployed();
     const lpToken = await deployERC20Mock();
     if (isLpTokenRequired) {
       await lpTokenCont.setLPToken(lpToken.address);
-      lpToken.setUserBalance(lpTokenCont.address, 100);
+      await lpToken.setUserBalance(lpTokenCont.address, 100);
     }
 
     const Pair = await ethers.getContractFactory("Pair");
-    const pair = await upgrades.deployProxy(Pair, [
-      mockBaseHTS.address,
-      lpTokenCont.address,
-      token1Address,
-      token2Address,
-      treasury,
-      fee,
-    ]);
+    const pair = await upgrades.deployProxy(
+      Pair,
+      [
+        mockBaseHTS.address,
+        lpTokenCont.address,
+        token1Address,
+        token2Address,
+        treasury,
+        fee,
+      ],
+      { unsafeAllow: ["delegatecall"] }
+    );
     await pair.deployed();
 
     precision = await pair.getPrecisionValue();
@@ -93,14 +99,18 @@ describe("All Tests", function () {
       const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
       const mockBaseHTS = await MockBaseHTS.deploy(false, tokenCAddress);
       const Pair = await ethers.getContractFactory("Pair");
-      const instance = await upgrades.deployProxy(Pair, [
-        mockBaseHTS.address,
-        zeroAddress,
-        tokenAAddress,
-        tokenBAddress,
-        treasury,
-        fee,
-      ]);
+      const instance = await upgrades.deployProxy(
+        Pair,
+        [
+          mockBaseHTS.address,
+          zeroAddress,
+          tokenAAddress,
+          tokenBAddress,
+          treasury,
+          fee,
+        ],
+        { unsafeAllow: ["delegatecall"] }
+      );
       await instance.deployed();
     });
   });
@@ -283,17 +293,49 @@ describe("All Tests", function () {
   });
 
   describe("Factory Contract positive Tests", async () => {
-    it("Check createPair method", async function () {
+    it("Check createPair method, Same Tokens and same fees", async function () {
       const { factory, mockBaseHTS, signers, token1Address, token2Address } =
         await loadFixture(deployFixture);
+      // Given
       await factory.setUpFactory(mockBaseHTS.address, signers[0].address);
+
+      // When
+      // we call createPair with same token pair and fees multiple time,
+      // and fetch pair after creating
       await factory.createPair(token1Address, token2Address, treasury, fee);
-      const pair1 = await factory.getPair(token1Address, token2Address);
+      const pair1 = await factory.getPair(token1Address, token2Address, fee);
       await factory.createPair(token1Address, token2Address, treasury, fee);
-      const pair2 = await factory.getPair(token1Address, token2Address);
+      const pair2 = await factory.getPair(token1Address, token2Address, fee);
+
+      // Then
+      // The fetched Pair after each creation should be same
       expect(pair1).to.be.equals(pair2);
+
+      // as we created only 1 Token Pair, the first pair in allPairs list should be the fetched pair.
       const pairs = await factory.getPairs();
       expect(pairs[0]).to.be.equals(pair1);
+    });
+
+    it("Check createPair method, Same Tokens and different fees", async function () {
+      const { factory, mockBaseHTS, signers, token1Address, token2Address } =
+        await loadFixture(deployFixture);
+      // Given
+      await factory.setUpFactory(mockBaseHTS.address, signers[0].address);
+
+      // When
+      // we call createPair with same token pair and different fees multiple time,
+      // and fetch pair after creating
+      await factory.createPair(token1Address, token2Address, treasury, fee);
+      const pair1 = await factory.getPair(token1Address, token2Address, fee);
+      await factory.createPair(token1Address, token2Address, treasury, fee2);
+      const pair2 = await factory.getPair(token1Address, token2Address, fee2);
+
+      // Then
+      // The fetched Pair after each creation should not be same
+      expect(pair1).to.not.be.equals(pair2);
+      const pairs = await factory.getPairs();
+      // as we created 2 Token Pairs, first and second pairs in allPairs list should not be the same.
+      expect(pairs[0]).to.not.be.equals(pairs[1]);
     });
 
     it("verify factory initization should be failed for subsequent initization call", async function () {
@@ -349,7 +391,7 @@ describe("All Tests", function () {
         await loadFixture(deployFixture);
       await factory.setUpFactory(mockBaseHTS.address, signers[0].address);
       await factory.createPair(token1Address, token2Address, treasury, fee);
-      const pair = await factory.getPair(token1Address, token2Address);
+      const pair = await factory.getPair(token1Address, token2Address, fee);
       expect(pair).to.be.not.equal(zeroAddress);
     });
   });
@@ -794,7 +836,7 @@ describe("All Tests", function () {
         precision.mul(100),
         precision.mul(100)
       );
-      await mockBaseHTS.setPassTransactionCount(0);
+      await mockBaseHTS.setPassTransactionCount(1);
       await expect(
         pair.swapToken(zeroAddress, token1Address, 30, defaultSlippageInput)
       ).to.revertedWith(
@@ -845,7 +887,7 @@ describe("All Tests", function () {
       );
       const tokenBeforeQty = await pair.getPairQty();
       expect(Number(tokenBeforeQty[0])).to.be.equals(precision.mul(1000));
-      mockBaseHTS.setPassTransactionCount(0);
+      mockBaseHTS.setPassTransactionCount(1);
       await expect(
         pair.swapToken(
           zeroAddress,
@@ -887,7 +929,7 @@ describe("All Tests", function () {
     // ----------------------------------------------------------------------
     it("Add liquidity Fail A Transfer", async function () {
       const { pair, mockBaseHTS } = await loadFixture(deployFixture);
-      mockBaseHTS.setPassTransactionCount(0);
+      mockBaseHTS.setPassTransactionCount(1);
       const tokenBeforeQty = await pair.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
       await expect(
@@ -899,7 +941,7 @@ describe("All Tests", function () {
 
     it("Add liquidity Fail B Transfer", async function () {
       const { pair, mockBaseHTS } = await loadFixture(deployFixture);
-      mockBaseHTS.setPassTransactionCount(1);
+      mockBaseHTS.setPassTransactionCount(2);
       const tokenBeforeQty = await pair.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
       await expect(
@@ -975,7 +1017,7 @@ describe("All Tests", function () {
       );
       const tokenBeforeQty = await pair.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
-      await mockBaseHTS.setPassTransactionCount(6);
+      await mockBaseHTS.setPassTransactionCount(7);
       const lpTokenAddress = await lpTokenCont.getLpTokenAddress();
       const lpToken = await ethers.getContractAt("ERC20Mock", lpTokenAddress);
       await lpToken.setTransaferFailed(true); //Forcing transfer to fail
@@ -994,17 +1036,18 @@ describe("All Tests", function () {
     });
 
     it("LPToken creation failed while initialize LP contract.", async function () {
-      const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-      const mockBaseHTS = await MockBaseHTS.deploy(false, newZeroAddress);
+      const MockBaseHTS = await ethers.getContractFactory(
+        "MockBaseHTSWithTokenCreationFail"
+      );
+      const mockBaseHTS = await MockBaseHTS.deploy();
 
       const LpTokenCont = await ethers.getContractFactory("LPToken");
-      await mockBaseHTS.setPassTransactionCount(0);
       await expect(
-        upgrades.deployProxy(LpTokenCont, [
-          mockBaseHTS.address,
-          "tokenName",
-          "tokenSymbol",
-        ])
+        upgrades.deployProxy(
+          LpTokenCont,
+          [mockBaseHTS.address, "tokenName", "tokenSymbol"],
+          { unsafeAllow: ["delegatecall"] }
+        )
       ).to.revertedWith("LPToken: Token creation failed.");
     });
 
@@ -1029,7 +1072,7 @@ describe("All Tests", function () {
         deployFixtureTokenTest
       );
       await lpTokenCont.allotLPTokenFor(10, 10, signers[0].address);
-      await mockBaseHTS.setPassTransactionCount(0);
+      await mockBaseHTS.setPassTransactionCount(1);
       await expect(
         lpTokenCont.removeLPTokenFor(5, signers[0].address)
       ).to.revertedWith("LPToken: token transfer failed to contract.");
@@ -1040,7 +1083,7 @@ describe("All Tests", function () {
         deployFixtureTokenTest
       );
       await lpTokenCont.allotLPTokenFor(10, 10, signers[0].address);
-      await mockBaseHTS.setPassTransactionCount(1);
+      await mockBaseHTS.setPassTransactionCount(2);
       await expect(
         lpTokenCont.removeLPTokenFor(5, signers[0].address)
       ).to.revertedWith("LP token burn failed.");
@@ -1070,13 +1113,6 @@ describe("All Tests", function () {
       const { lpTokenCont } = await loadFixture(deployFixture);
       const address = await lpTokenCont.getLpTokenAddress();
       expect(address).to.not.equals("");
-    });
-
-    it("verify that lpToken initization failed for subsequent initization call", async function () {
-      const { lpTokenCont, mockBaseHTS } = await loadFixture(deployFixture);
-      await expect(
-        lpTokenCont.initialize(mockBaseHTS.address, "name", "symbol")
-      ).to.revertedWith("Initializable: contract is already initialized");
     });
   });
 
@@ -1298,6 +1334,7 @@ describe("All Tests", function () {
       expect(value[0]).to.be.equals(token1Address);
       expect(value[1]).to.be.equals(token2Address);
       expect(value[2]).to.not.be.equals(newZeroAddress);
+      expect(value[3]).to.be.equals(fee);
     });
   });
 

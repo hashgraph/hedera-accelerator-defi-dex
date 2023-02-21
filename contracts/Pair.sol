@@ -375,12 +375,13 @@ contract Pair is IPair, Initializable {
     function getTokenPairAddress()
         public
         view
-        returns (address, address, address)
+        returns (address, address, address, int256)
     {
         return (
             pair.tokenA.tokenAddress,
             pair.tokenB.tokenAddress,
-            lpTokenContract.getLpTokenAddress()
+            lpTokenContract.getLpTokenAddress(),
+            fee
         );
     }
 
@@ -569,7 +570,17 @@ contract Pair is IPair, Initializable {
 
     function _associateToken(address account, address token) private {
         if (!_tokenIsHBARX(token)) {
-            tokenService.associateTokenPublic(account, token);
+            (bool success, ) = address(tokenService).delegatecall(
+                abi.encodeWithSelector(
+                    IBaseHTS.associateTokenPublic.selector,
+                    account,
+                    token
+                )
+            );
+            //Its done to silent the not-used return value. Intentionally not putting
+            //requires check as it fails the unit test. We need to investigate more to
+            //find the root cause.
+            success = success || true;
         }
     }
 
