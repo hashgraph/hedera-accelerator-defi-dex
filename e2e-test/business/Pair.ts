@@ -206,7 +206,7 @@ export default class Pair extends Base {
     console.log(` - B Token Address = ${tokenBAddress}`);
     console.log(` - Lp Token Address = ${lpTokenAddress}\n`);
     console.log(` - Fee Value = ${fee}\n`);
-    return { tokenAAddress, tokenBAddress, lpTokenAddress };
+    return { tokenAAddress, tokenBAddress, lpTokenAddress, fee };
   };
 
   public addLiquidity = async (
