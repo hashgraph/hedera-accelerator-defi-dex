@@ -31,6 +31,8 @@ echo TOKEN_USER_KEY=$TOKEN_USER_KEY >> .env;
 echo DEX_CONTRACT_OWNER_ID=$DEX_CONTRACT_OWNER_ID >> .env;
 echo DEX_CONTRACT_OWNER_KEY=$DEX_CONTRACT_OWNER_KEY >> .env;
 echo PROPOSAL_CONTRACT_ID=$PROPOSAL_CONTRACT_ID >> .env;
+echo UI_USER_ID=$UI_USER_ID >> .env;
+echo UI_USER_KEY=$UI_USER_KEY >> .env;
 
 echo "Running propsal execution ........ ";
 npx hardhat run ./deployment/scripts/proposalScript.ts;
