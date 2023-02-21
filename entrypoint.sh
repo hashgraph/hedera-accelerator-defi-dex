@@ -47,6 +47,8 @@ echo DEX_CONTRACT_OWNER_ID=$DEX_CONTRACT_OWNER_ID >> .env;
 echo DEX_CONTRACT_OWNER_KEY=$DEX_CONTRACT_OWNER_KEY >> .env;
 echo TOKEN_USER_ID_WITH_NO_GOD_TOKEN=$TOKEN_USER_ID_WITH_NO_GOD_TOKEN >> .env
 echo TOKEN_USER_KEY_WITH_NO_GOD_TOKEN=$TOKEN_USER_KEY_WITH_NO_GOD_TOKEN >> .env
+echo UI_USER_ID=$UI_USER_ID >> .env;
+echo UI_USER_KEY=$UI_USER_KEY >> .env;
 
 if [ "$CONTRACT_TYPE" = "Logic" ]; then 
     echo "Running contract deployment ........ " $CONTRACT_NAME;
