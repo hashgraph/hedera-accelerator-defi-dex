@@ -2,7 +2,7 @@ import { binding, given, then, when } from "cucumber-tsflow";
 import { expect } from "chai";
 import { ContractService } from "../../deployment/service/ContractService";
 import ClientManagement from "../../utils/ClientManagement";
-import { TokenId } from "@hashgraph/sdk";
+import { TokenId, ContractId } from "@hashgraph/sdk";
 import { BigNumber } from "bignumber.js";
 import Pair from "../business/Pair";
 import LpToken from "../business/LpToken";
@@ -23,6 +23,7 @@ const client = clientManagement.createOperatorClient();
 
 const pair = new Pair(pairContract.transparentProxyId!);
 const lpToken = new LpToken(lpTokenContract.transparentProxyId!);
+let tokenNameIdMap = new Map();
 
 let tokenA: TokenId;
 let tokenB: TokenId;
@@ -31,29 +32,51 @@ let tokensBefore: BigNumber[];
 let tokensAfter: BigNumber[];
 let lpTokensInPool: BigNumber;
 let lpTokenQty: BigNumber;
-let sportPriceTokenA: BigNumber;
+let sportPriceOfToken: BigNumber;
 let varaintVal: BigNumber;
 let tokenAQty: BigNumber;
 let slippageOutGivenIn: BigNumber;
 let slippageInGivenOut: BigNumber;
 let lpTokenSymbol: string;
 let lpTokenName: string;
+let precision: BigNumber;
 @binding()
 export class PairTestSteps {
-  @given(/User create two new tokens/, undefined, 30000)
-  public async createTokenPairAndInitializeThem(): Promise<void> {
+  @given(
+    /User create two new tokens with name "([^"]*)" and "([^"]*)"/,
+    undefined,
+    30000
+  )
+  public async createTokenPairAndInitializeThem(
+    firstTokenName: string,
+    secondTokenName: string
+  ): Promise<void> {
     console.log(
       "*******************Starting pair test with following credentials*******************"
     );
     console.log("TOKEN_USER_ID : ", id.toString());
     console.log("treasureId :", treasureId.toString());
-    const num = Math.floor(Math.random() * 10) + 1;
-    tokenA = await Common.createToken("A" + num, "A" + num, id, key, client);
-    tokenB = await Common.createToken("B" + num, "B" + num, id, key, client);
+    tokenA = await Common.createToken(
+      firstTokenName,
+      firstTokenName,
+      id,
+      key,
+      client
+    );
+    tokenB = await Common.createToken(
+      secondTokenName,
+      secondTokenName,
+      id,
+      key,
+      client
+    );
+    tokenNameIdMap.set(firstTokenName, tokenA);
+    tokenNameIdMap.set(secondTokenName, tokenB);
+    precision = await pair.getPrecisionValue(client);
   }
 
   @when(
-    /User adds (\d*) units of tokenA and (\d*) units of tokenB/,
+    /User adds (\d*) units of PairToken1 and (\d*) units of PairToken2/,
     undefined,
     30000
   )
@@ -62,7 +85,7 @@ export class PairTestSteps {
     tokenBCount: number
   ): Promise<void> {
     tokensBefore = await pair.getPairQty(client);
-    const precision = await pair.getPrecisionValue(client);
+
     await pair.addLiquidity(
       id,
       key,
@@ -76,7 +99,7 @@ export class PairTestSteps {
   }
 
   @then(
-    /tokenA and tokenB balances in the pool are (\d*) units and (\d*) units respectively/,
+    /PairToken1 and PairToken2 balances in the pool are (\d*) units and (\d*) units respectively/,
     undefined,
     30000
   )
@@ -84,7 +107,6 @@ export class PairTestSteps {
     tokenACount: number,
     tokenBCount: number
   ): Promise<void> {
-    const precision = await pair.getPrecisionValue(client);
     const tokenAQty = Common.withPrecision(tokenACount, precision);
     const tokenBQty = Common.withPrecision(tokenBCount, precision);
     tokensAfter = await pair.getPairQty(client);
@@ -102,13 +124,12 @@ export class PairTestSteps {
     lpTokenCount: number
   ): Promise<void> {
     tokensBefore = await pair.getPairQty(client);
-    const precision = await pair.getPrecisionValue(client);
     lpTokenQty = Common.withPrecision(lpTokenCount, precision);
     await pair.removeLiquidity(lpTokenQty, id, key, client);
   }
 
   @then(
-    /User verifies (\d*) units of tokenA and (\d*) units of tokenB are left in pool/,
+    /User verifies (\d*) units of PairToken1 and (\d*) units of PairToken2 are left in pool/,
     undefined,
     30000
   )
@@ -117,7 +138,6 @@ export class PairTestSteps {
     tokenBQuantity: Number
   ): Promise<void> {
     tokensAfter = await pair.getPairQty(client);
-    const precision = await pair.getPrecisionValue(client);
     const withPrecision = Common.withPrecision(1, precision);
     expect(
       Number(Number(tokensAfter[0].dividedBy(withPrecision)).toFixed())
@@ -127,20 +147,23 @@ export class PairTestSteps {
     ).to.eql(Number(tokenBQuantity));
   }
 
-  @given(/tokenA and tokenB are present in pool/, undefined, 30000)
+  @given(/PairToken1 and PairToken2 are present in pool/, undefined, 30000)
   public async tokensArePresent(): Promise<void> {
     const tokensQty = await pair.getPairQty(client);
     expect(Number(tokensQty[0])).to.greaterThan(0);
     expect(Number(tokensQty[1])).to.greaterThan(0);
   }
 
-  @when(/User swap (\d*) unit of tokenA/, undefined, 30000)
-  public async swapTokenA(tokenACount: number): Promise<void> {
-    const precision = await pair.getPrecisionValue(client);
+  @when(/User swap (\d*) unit of token "([^"]*)"/, undefined, 30000)
+  public async swapTokenA(
+    tokenCount: number,
+    tokenName: string
+  ): Promise<void> {
+    const tokenId = tokenNameIdMap.get(tokenName);
     const slippage = new BigNumber(0);
     await pair.swapToken(
-      tokenA,
-      tokenACount,
+      tokenId,
+      tokenCount,
       id,
       key,
       precision,
@@ -150,7 +173,7 @@ export class PairTestSteps {
   }
 
   @then(
-    /increased tokenA quantity is (\d*) and decreased tokenB quantity is (\d*) in pool/,
+    /PairToken1 quantity is (\d*) and PairToken2 quantity is (\d*) in pool/,
     undefined,
     30000
   )
@@ -159,7 +182,6 @@ export class PairTestSteps {
     tokenBQuantity: BigNumber
   ): Promise<void> {
     tokensAfter = await pair.getPairQty(client);
-    const precision = await pair.getPrecisionValue(client);
     const withPrecision = Common.withPrecision(1, precision);
     expect(
       Number(Number(tokensAfter[0].dividedBy(withPrecision)).toFixed())
@@ -169,26 +191,25 @@ export class PairTestSteps {
     ).to.eql(Number(tokenBQuantity));
   }
 
-  @when(/User fetch spot price for tokenA/, undefined, 30000)
-  public async fetchSpotPriceForTokenA() {
-    sportPriceTokenA = await pair.getSpotPrice(tokenA, client);
+  @when(/User fetch spot price for "([^"]*)"/, undefined, 30000)
+  public async fetchSpotPriceForTokenA(tokenName: string) {
+    const tokenId = tokenNameIdMap.get(tokenName);
+    sportPriceOfToken = await pair.getSpotPrice(tokenId, client);
   }
 
-  @then(/Expected spot price for tokenA should be (\d*)/, undefined, 30000)
+  @then(/Expected spot price for PairToken1 should be (\d*)/, undefined, 30000)
   public async verifySportPriceISNotZero(expectedSpotPrice: string) {
-    expect(Number(sportPriceTokenA)).to.eql(Number(expectedSpotPrice));
+    expect(Number(sportPriceOfToken)).to.eql(Number(expectedSpotPrice));
   }
 
-  @when(/User gives (\d*) units of tokenB to the pool/, undefined, 30000)
+  @when(/User gives (\d*) units of PairToken2 to the pool/, undefined, 30000)
   public async calculateTokenAQtyForGivenTokenBQty(tokenBCount: number) {
-    const precision = await pair.getPrecisionValue(client);
     const tokenBQty = Common.withPrecision(tokenBCount, precision);
     tokenAQty = await pair.getInGivenOut(tokenBQty, client);
   }
 
-  @then(/Expected tokenA quantity should be (\d*)/, undefined, 30000)
+  @then(/Expected PairToken1 quantity should be (\d*)/, undefined, 30000)
   public async verifyTokenAQty(expectedTokenAQty: string) {
-    const precision = await pair.getPrecisionValue(client);
     const withPrecision = Common.withPrecision(1, precision);
     expect(Number(Number(tokenAQty.dividedBy(withPrecision)).toFixed())).to.eql(
       Number(expectedTokenAQty)
@@ -196,12 +217,11 @@ export class PairTestSteps {
   }
 
   @when(
-    /User gives (\d*) units of tokenA for calculating slippage out/,
+    /User gives (\d*) units of PairToken1 for calculating slippage out/,
     undefined,
     30000
   )
   public async calculateSlippageOut(tokenACount: number) {
-    const precision = await pair.getPrecisionValue(client);
     const tokenAQty = Common.withPrecision(tokenACount, precision);
     slippageOutGivenIn = await pair.slippageOutGivenIn(tokenAQty, client);
   }
@@ -212,12 +232,11 @@ export class PairTestSteps {
   }
 
   @when(
-    /User gives (\d*) units of tokenB for calculating slippage in/,
+    /User gives (\d*) units of PairToken2 for calculating slippage in/,
     undefined,
     30000
   )
   public async calculateSlippageIn(tokenBCount: number) {
-    const precision = await pair.getPrecisionValue(client);
     const tokenBQty = await Common.withPrecision(tokenBCount, precision);
     slippageInGivenOut = await pair.slippageInGivenOut(tokenBQty, client);
   }
@@ -236,7 +255,7 @@ export class PairTestSteps {
   public async initializePairOfTokens(): Promise<void> {
     console.log("Initializing pair contract with following");
     console.log("contractId : ", pair.contractId);
-    console.log("treasureId : ", treasureId);
+    console.log("treasureId : ", treasureId.toString());
     console.log(
       "lpTokenContract.transparentProxyAddress : ",
       lpTokenContract.transparentProxyAddress
@@ -253,7 +272,6 @@ export class PairTestSteps {
 
   @when(/User set (\d*) as the slippage value/, undefined, 30000)
   public async setSlippageVal(slippage: number): Promise<void> {
-    const precision = await pair.getPrecisionValue(client);
     const slippageWithPrecision = Common.withPrecision(slippage, precision);
     pair.setSlippage(slippageWithPrecision, client);
   }
@@ -267,5 +285,28 @@ export class PairTestSteps {
     const data = await Common.createLPTokenName(tokenA, tokenB);
     lpTokenSymbol = data.lpTokenSymbol;
     lpTokenName = data.lpTokenSymbol;
+  }
+
+  @then(
+    /User verify balance of "([^"]*)" token with contract is (\d*)/,
+    undefined,
+    30000
+  )
+  public async verifyTokenBalanceFromContract(
+    tokenName: string,
+    tokenQty: number
+  ) {
+    const tokenId = tokenNameIdMap.get(tokenName);
+    const tokenBalance = Number(
+      await Common.getTokenBalance(
+        ContractId.fromString(pair.contractId),
+        tokenId,
+        client
+      )
+    );
+    const withPrecision = Number(Common.withPrecision(1, precision));
+    expect(Number(Number(tokenBalance / withPrecision).toFixed())).to.eql(
+      Number(tokenQty)
+    );
   }
 }

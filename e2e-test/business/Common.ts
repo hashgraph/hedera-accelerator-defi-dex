@@ -87,12 +87,12 @@ export default class Common {
   };
 
   static getAccountBalance = async (
-    accountId: AccountId | string,
+    accountId: AccountId | ContractId,
     tokens: TokenId[] | undefined,
     client: Client = clientsInfo.operatorClient
   ) => {
     console.log(`- Common#getAccountBalance(): account-id = ${accountId}`);
-    const response = await this.getAccountBalanceInternally(accountId, client);
+    const response = await this.getBalanceInternally(accountId, client);
     const accountTokens = response.tokens;
     console.log(` - HBars = ${response.hbars}`);
     if (accountTokens && tokens) {
@@ -101,19 +101,18 @@ export default class Common {
         console.log(` - TokenId = ${token.toString()}, Balance = ${balance}`);
       }
     }
-    console.log("");
-    return response.hbars;
+    return response.hbars._valueInTinybar;
   };
 
   static getTokenBalance = async (
-    accountId: AccountId,
+    id: AccountId | ContractId,
     tokenId: TokenId,
     client: Client = clientsInfo.operatorClient
   ) => {
-    const response = await this.getAccountBalanceInternally(accountId, client);
+    const response = await this.getBalanceInternally(id, client);
     const tokenBalance = response.tokens?.get(tokenId) ?? new Long(0);
     console.log(
-      `- Common#getTokenBalance(): account-id = ${accountId}, TokenId = ${tokenId}, Balance = ${tokenBalance}\n`
+      `- Common#getTokenBalance(): id = ${id}, TokenId = ${tokenId}, Balance = ${tokenBalance}\n`
     );
     return tokenBalance;
   };
@@ -152,12 +151,16 @@ export default class Common {
     );
   };
 
-  private static getAccountBalanceInternally = async (
-    accountId: AccountId | string,
+  private static getBalanceInternally = async (
+    id: AccountId | ContractId,
     client: Client
   ) => {
-    return await new AccountBalanceQuery()
-      .setAccountId(accountId)
-      .execute(client);
+    const balanceQuery = new AccountBalanceQuery();
+    if (id instanceof AccountId) {
+      balanceQuery.setAccountId(id);
+    } else {
+      balanceQuery.setContractId(id);
+    }
+    return await balanceQuery.execute(client);
   };
 }

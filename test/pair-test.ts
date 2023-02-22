@@ -137,11 +137,13 @@ describe("All Tests", function () {
   }
 
   it("Add liquidity to the pool by adding 50 units of HBAR and 50 units of token B  ", async function () {
-    const { pair } = await loadFixture(deployFixture);
+    const { pair, token1Address, token2Address } = await loadFixture(
+      deployFixture
+    );
     const tx = await pair.addLiquidity(
       zeroAddress,
-      tokenAAddress,
-      tokenBAddress,
+      token1Address,
+      token2Address,
       precision.mul(50),
       precision.mul(50)
     );
@@ -152,11 +154,13 @@ describe("All Tests", function () {
   });
 
   it("Add liquidity for HBAR", async function () {
-    const { pair } = await loadFixture(deployFixture);
+    const { pair, token1Address, token2Address } = await loadFixture(
+      deployFixtureHBARX
+    );
     const tx = await pair.addLiquidity(
       zeroAddress,
-      tokenAAddress,
-      tokenCAddress,
+      token2Address,
+      token1Address,
       precision.mul(50),
       0,
       {
@@ -778,11 +782,13 @@ describe("All Tests", function () {
   });
 
   it("Add liquidity to the pool by adding 50 units of token and 50 units of token B  ", async function () {
-    const { pair } = await loadFixture(deployFixture);
+    const { pair, token1Address, token2Address } = await loadFixture(
+      deployFixture
+    );
     const tx = await pair.addLiquidity(
       zeroAddress,
-      tokenAAddress,
-      tokenBAddress,
+      token1Address,
+      token2Address,
       precision.mul(50),
       precision.mul(50)
     );
@@ -794,11 +800,13 @@ describe("All Tests", function () {
 
   describe("When HTS gives failure response", async () => {
     it("Contract gives 100 as qty for tokens ", async function () {
-      const { pair } = await loadFixture(deployFixture);
+      const { pair, token2Address, token1Address } = await loadFixture(
+        deployFixture
+      );
       await pair.addLiquidity(
         zeroAddress,
-        tokenAAddress,
-        tokenBAddress,
+        token2Address,
+        token1Address,
         precision.mul(100),
         precision.mul(100)
       );
@@ -953,11 +961,13 @@ describe("All Tests", function () {
 
     // ----------------------------------------------------------------------
     it("verify remove liquidity should failed when user don't have enough balance ", async function () {
-      const { pair } = await loadFixture(deployFixture);
+      const { pair, token2Address, token1Address } = await loadFixture(
+        deployFixture
+      );
       await pair.addLiquidity(
         zeroAddress,
-        tokenAAddress,
-        tokenBAddress,
+        token2Address,
+        token1Address,
         10,
         10
       );
@@ -1002,19 +1012,19 @@ describe("All Tests", function () {
     });
 
     it("Add liquidity Fail Minting", async function () {
-      const { pair, mockBaseHTS } = await loadFixture(deployFixture);
+      const { pair, token1Address, token2Address, mockBaseHTS } =
+        await loadFixture(deployFixture);
       const tokenBeforeQty = await pair.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
       await mockBaseHTS.setPassTransactionCount(3);
       await expect(
-        pair.addLiquidity(zeroAddress, tokenAAddress, tokenBAddress, 30, 30)
+        pair.addLiquidity(zeroAddress, token1Address, token2Address, 30, 30)
       ).to.revertedWith("LP token minting failed.");
     });
 
     it("Add liquidity Transfer LPToken Fail", async function () {
-      const { pair, mockBaseHTS, lpTokenCont } = await loadFixture(
-        deployFixture
-      );
+      const { pair, token1Address, token2Address, mockBaseHTS, lpTokenCont } =
+        await loadFixture(deployFixture);
       const tokenBeforeQty = await pair.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
       await mockBaseHTS.setPassTransactionCount(7);
@@ -1022,7 +1032,7 @@ describe("All Tests", function () {
       const lpToken = await ethers.getContractAt("ERC20Mock", lpTokenAddress);
       await lpToken.setTransaferFailed(true); //Forcing transfer to fail
       await expect(
-        pair.addLiquidity(zeroAddress, tokenAAddress, tokenBAddress, 30, 30)
+        pair.addLiquidity(zeroAddress, token1Address, token2Address, 30, 30)
       ).to.revertedWith("LPToken: token transfer failed from contract.");
     });
 
@@ -1135,11 +1145,13 @@ describe("All Tests", function () {
     });
 
     it("check get out given In price value without precision", async function () {
-      const { pair } = await loadFixture(deployFixture);
+      const { pair, token2Address, token1Address } = await loadFixture(
+        deployFixture
+      );
       await pair.addLiquidity(
         zeroAddress,
-        tokenAAddress,
-        tokenBAddress,
+        token1Address,
+        token2Address,
         24,
         16
       );
@@ -1149,11 +1161,13 @@ describe("All Tests", function () {
     });
 
     it("check get in given out price value without precision", async function () {
-      const { pair } = await loadFixture(deployFixture);
+      const { pair, token1Address, token2Address } = await loadFixture(
+        deployFixture
+      );
       await pair.addLiquidity(
         zeroAddress,
-        tokenAAddress,
-        tokenBAddress,
+        token1Address,
+        token2Address,
         24,
         16
       );
@@ -1217,7 +1231,7 @@ describe("All Tests", function () {
       await pair.addLiquidity(
         zeroAddress,
         token1Address,
-        token1Address,
+        token2Address,
         tokenAQ,
         tokenBQ
       );
@@ -1235,14 +1249,16 @@ describe("All Tests", function () {
     });
 
     it("check getOutGivenIn for big number with precision", async function () {
-      const { pair } = await loadFixture(deployFixture);
+      const { pair, token1Address, token2Address } = await loadFixture(
+        deployFixture
+      );
       const precision = await pair.getPrecisionValue();
       const tokenAQ = BigNumber.from(24).mul(precision);
       const tokenBQ = BigNumber.from(16).mul(precision);
       await pair.addLiquidity(
         zeroAddress,
-        tokenAAddress,
-        tokenBAddress,
+        token1Address,
+        token2Address,
         tokenAQ,
         tokenBQ,
         {
@@ -1256,13 +1272,15 @@ describe("All Tests", function () {
     });
 
     it("check getInGivenOut for big number with precision", async function () {
-      const { pair } = await loadFixture(deployFixture);
+      const { pair, token1Address, token2Address } = await loadFixture(
+        deployFixture
+      );
       const tokenAQ = BigNumber.from("114").mul(precision);
       const tokenBQ = BigNumber.from("220").mul(precision);
       await pair.addLiquidity(
         zeroAddress,
-        tokenAAddress,
-        tokenBAddress,
+        token1Address,
+        token2Address,
         tokenAQ,
         tokenBQ
       );
@@ -1291,13 +1309,15 @@ describe("All Tests", function () {
     });
 
     it("Verify slippageOutGivenIn ", async function () {
-      const { pair } = await loadFixture(deployFixture);
+      const { pair, token1Address, token2Address } = await loadFixture(
+        deployFixture
+      );
       const tokenAPoolQty = BigNumber.from(114).mul(precision);
       const tokenBPoolQty = BigNumber.from(220).mul(precision);
       await pair.addLiquidity(
         zeroAddress,
-        tokenAAddress,
-        tokenBAddress,
+        token1Address,
+        token2Address,
         tokenAPoolQty,
         tokenBPoolQty
       );
@@ -1308,13 +1328,15 @@ describe("All Tests", function () {
     });
 
     it("Verify slippageInGivenOut ", async function () {
-      const { pair } = await loadFixture(deployFixture);
+      const { pair, token1Address, token2Address } = await loadFixture(
+        deployFixture
+      );
       const tokenAPoolQty = BigNumber.from(114).mul(precision);
       const tokenBPoolQty = BigNumber.from(220).mul(precision);
       await pair.addLiquidity(
         zeroAddress,
-        tokenAAddress,
-        tokenBAddress,
+        token1Address,
+        token2Address,
         tokenAPoolQty,
         tokenBPoolQty
       );
@@ -1347,12 +1369,14 @@ describe("All Tests", function () {
     });
 
     it("get token quantity from fee", async function () {
-      const { pair } = await loadFixture(deployFixture);
+      const { pair, token1Address, token2Address } = await loadFixture(
+        deployFixture
+      );
       const tokenAPoolQty = BigNumber.from(10).mul(precision);
       await pair.addLiquidity(
         zeroAddress,
-        tokenAAddress,
-        tokenBAddress,
+        token1Address,
+        token2Address,
         tokenAPoolQty,
         10
       );
