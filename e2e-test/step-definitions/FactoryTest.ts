@@ -100,7 +100,7 @@ export class FactorySteps {
     );
     tokenNameIdMap.set(firstToken, tokenOne);
     tokenNameIdMap.set(secondToken, tokenTwo);
-    const pairAddress = await factory.getPair(tokenOne, tokenTwo, client);
+    const pairAddress = await factory.getPair(tokenOne, tokenTwo);
     pairContractId = await this.fetchContractID(pairAddress);
   }
 
@@ -185,7 +185,7 @@ export class FactorySteps {
     );
     tokenNameIdMap.set(tokenName, tokenOne);
     tokenNameIdMap.set("HBAR", tokenHBARX);
-    const pairAddress = await factory.getPair(tokenOne, tokenHBARX, client);
+    const pairAddress = await factory.getPair(tokenOne, tokenHBARX);
     pairContractId = await this.fetchContractID(pairAddress);
     pair = new Pair(pairContractId);
     precision = await pair.getPrecisionValue(client);
