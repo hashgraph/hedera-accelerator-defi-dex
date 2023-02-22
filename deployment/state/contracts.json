@@ -347,5 +347,41 @@
     "hash": "2aa0ae048dc8f7830b648fc9811bde1f",
     "transparentProxyAddress": "0x000000000000000000000000000000000035e97b",
     "transparentProxyId": "0.0.3533179"
+  },
+  {
+    "name": "godholder",
+    "id": "0.0.3543095",
+    "address": "0x0000000000000000000000000000000000361037",
+    "timestamp": "2023-02-22T11:39:08.074Z",
+    "hash": "45d9ec055f4ef28fd0cdffc630893536",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000361039",
+    "transparentProxyId": "0.0.3543097"
+  },
+  {
+    "name": "godtokenfactory",
+    "id": "0.0.3543099",
+    "address": "0x000000000000000000000000000000000036103b",
+    "timestamp": "2023-02-22T11:39:46.569Z",
+    "hash": "cc0875467eca35f824c35aa58bc129b7",
+    "transparentProxyAddress": "0x000000000000000000000000000000000036103d",
+    "transparentProxyId": "0.0.3543101"
+  },
+  {
+    "name": "godholder",
+    "id": "0.0.3543110",
+    "address": "0x0000000000000000000000000000000000361046",
+    "timestamp": "2023-02-22T11:42:24.466Z",
+    "hash": "45d9ec055f4ef28fd0cdffc630893536",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000361048",
+    "transparentProxyId": "0.0.3543112"
+  },
+  {
+    "name": "godholder",
+    "id": "0.0.3543120",
+    "address": "0x0000000000000000000000000000000000361050",
+    "timestamp": "2023-02-22T11:44:38.902Z",
+    "hash": "45d9ec055f4ef28fd0cdffc630893536",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000361053",
+    "transparentProxyId": "0.0.3543123"
   }
 ]

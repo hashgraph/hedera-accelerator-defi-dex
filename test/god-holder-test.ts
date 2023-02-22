@@ -18,6 +18,14 @@ describe("GODHolder Tests", function () {
     });
   });
 
+  describe("GODTokenHolderFactory Upgradeable", function () {
+    it("Verify if the GODTokenFactory contract is upgradeable safe ", async function () {
+      const Governor = await ethers.getContractFactory("GODTokenHolderFactory");
+      const instance = await upgrades.deployProxy(Governor);
+      await instance.deployed();
+    });
+  });
+
   async function deployFixture() {
     const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
     const mockBaseHTS = await MockBaseHTS.deploy(true, zeroAddress);
@@ -41,11 +49,19 @@ describe("GODHolder Tests", function () {
       tokenCont.address,
     ]);
 
+    const GODTokenHolderFactory = await ethers.getContractFactory(
+      "GODTokenHolderFactory"
+    );
+    const godTokenHolderFactory = await upgrades.deployProxy(
+      GODTokenHolderFactory
+    );
+
     return {
       tokenCont,
       mockBaseHTS,
       signers,
       godHolder,
+      godTokenHolderFactory,
     };
   }
 
@@ -104,5 +120,80 @@ describe("GODHolder Tests", function () {
     await expect(godHolder.revertTokensForVoter()).to.revertedWith(
       "GODHolder: token transfer failed from contract."
     );
+  });
+
+  it("Given a GODHolder when factory is asked to create holder then address should be populated", async () => {
+    const { godHolder, godTokenHolderFactory, tokenCont } = await loadFixture(
+      deployFixture
+    );
+    await godTokenHolderFactory.createGODHolder(godHolder.address);
+    const holder = await godTokenHolderFactory.getGODTokenHolder(
+      tokenCont.address
+    );
+    expect(holder).to.be.equal(godHolder.address);
+  });
+
+  it("Given a GODHolder exist in factory when factory is asked to create another one with different token then address should be populated", async () => {
+    const { godHolder, godTokenHolderFactory, tokenCont, mockBaseHTS } =
+      await loadFixture(deployFixture);
+
+    const TokenCont = await ethers.getContractFactory("ERC20Mock");
+    const newToken = await TokenCont.deploy(
+      "tokenName1",
+      "tokenSymbol1",
+      total,
+      0
+    );
+
+    const GODHolder = await ethers.getContractFactory("GODHolder");
+    const newGodHolder = await upgrades.deployProxy(GODHolder, [
+      mockBaseHTS.address,
+      newToken.address,
+    ]);
+
+    await godTokenHolderFactory.createGODHolder(godHolder.address);
+    await godTokenHolderFactory.createGODHolder(newGodHolder.address);
+
+    const holder = await godTokenHolderFactory.getGODTokenHolder(
+      tokenCont.address
+    );
+    const newHolder = await godTokenHolderFactory.getGODTokenHolder(
+      newToken.address
+    );
+
+    expect(holder).to.be.equal(godHolder.address);
+    expect(newHolder).to.be.equal(newGodHolder.address);
+  });
+
+  it("Given a GODHolder exist in factory when factory is asked to create another one with same token then it should fail", async () => {
+    const {
+      godHolder,
+      godTokenHolderFactory,
+      tokenCont: sameToken,
+      mockBaseHTS,
+    } = await loadFixture(deployFixture);
+
+    await godTokenHolderFactory.createGODHolder(godHolder.address);
+    const holder = await godTokenHolderFactory.getGODTokenHolder(
+      sameToken.address
+    );
+    expect(holder).to.be.equal(godHolder.address);
+
+    const GODHolder = await ethers.getContractFactory("GODHolder");
+    const newGodHolder = await upgrades.deployProxy(GODHolder, [
+      mockBaseHTS.address,
+      sameToken.address,
+    ]);
+
+    await expect(godTokenHolderFactory.createGODHolder(newGodHolder.address))
+      .to.be.revertedWithCustomError(
+        godTokenHolderFactory,
+        "GODHolderAlreadyExist"
+      )
+      .withArgs(
+        sameToken.address,
+        godHolder.address,
+        "GODHolder already exist for this token."
+      );
   });
 });

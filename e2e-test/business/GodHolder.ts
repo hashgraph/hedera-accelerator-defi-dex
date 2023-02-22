@@ -18,6 +18,15 @@ export default class Governor extends Base {
     console.log(`- GodHolder#${INITIALIZE}(): done\n`);
   };
 
+  initializeWithToken = async (client: Client, tokenAddress: string) => {
+    const args = new ContractFunctionParameters()
+      .addAddress(this.htsAddress)
+      .addAddress(tokenAddress);
+
+    await this.execute(900000, INITIALIZE, client, args);
+    console.log(`- GodHolder#${INITIALIZE}(): done\n`);
+  };
+
   checkAndClaimedGodTokens = async (
     client: Client = clientsInfo.operatorClient
   ) => {

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.4;
+import "../common/IERC20.sol";
 
 interface IGODHolder {
     function revertTokensForVoter() external returns (int32);
@@ -17,4 +18,6 @@ interface IGODHolder {
         address[] memory voters,
         uint256 proposalId
     ) external returns (int32);
+
+    function getGODToken() view external returns(IERC20);
 }
