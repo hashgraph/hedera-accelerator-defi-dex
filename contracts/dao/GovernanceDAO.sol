@@ -2,23 +2,19 @@
 pragma solidity ^0.8.0;
 
 import "./BaseDAO.sol";
-import "./IGovernorTokenDAO.sol";
+import "./IGovernanceDAO.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-contract GovernorTokenDAO is BaseDAO, IGovernorTokenDAO {
-    address private governorTokenTransferAddress;
+contract GovernanceDAO is BaseDAO, IGovernanceDAO {
+    address private governorTokenTransferContractAddress;
 
-    function initilize(
-        address _htsAddress,
-        address _godHolderAddress,
-        address _tokenAddress,
+    function initialize(
         address _admin,
         string calldata _name,
-        uint256 _quorumThreshold,
-        uint256 _votingDelay,
-        uint256 _votingPeriod
+        address _governorTokenTransferContractAddress
     ) external override initializer {
         __BaseDAO_init(_admin, _name);
+        governorTokenTransferContractAddress = _governorTokenTransferContractAddress;
     }
 
     function getGovernorTokenTransferContractAddress()
@@ -27,6 +23,6 @@ contract GovernorTokenDAO is BaseDAO, IGovernorTokenDAO {
         override
         returns (address)
     {
-        return governorTokenTransferAddress;
+        return governorTokenTransferContractAddress;
     }
 }

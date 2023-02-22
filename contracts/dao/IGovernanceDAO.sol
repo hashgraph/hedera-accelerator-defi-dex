@@ -1,16 +1,11 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-interface IGovernorTokenDAO {
-    function initilize(
-        address _htsAddress,
-        address _godHolderAddress,
-        address _tokenAddress,
+interface IGovernanceDAO {
+    function initialize(
         address _admin,
         string calldata _name,
-        uint256 _quorumThreshold,
-        uint256 _votingDelay,
-        uint256 _votingPeriod
+        address _governorTokenTransferContractAddress
     ) external;
 
     function getGovernorTokenTransferContractAddress()
