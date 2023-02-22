@@ -11,9 +11,11 @@ import "../common/IERC20.sol";
 import "../common/IBaseHTS.sol";
 import "../common/hedera/HederaResponseCodes.sol";
 import "./GODHolder.sol";
+import "./IGovernorBase.sol";
 
 abstract contract GovernorCountingSimpleInternal is
     Initializable,
+    IGovernorBase,
     GovernorUpgradeable,
     GovernorSettingsUpgradeable,
     GovernorCountingSimpleUpgradeable
