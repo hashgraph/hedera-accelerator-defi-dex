@@ -110,7 +110,7 @@ export default class Common {
     client: Client = clientsInfo.operatorClient
   ) => {
     const response = await this.getBalanceInternally(id, client);
-    const tokenBalance = response.tokens?.get(tokenId) ?? new Long(0); // response.balance()
+    const tokenBalance = response.tokens?.get(tokenId) ?? new Long(0);
     console.log(
       `- Common#getTokenBalance(): id = ${id}, TokenId = ${tokenId}, Balance = ${tokenBalance}\n`
     );

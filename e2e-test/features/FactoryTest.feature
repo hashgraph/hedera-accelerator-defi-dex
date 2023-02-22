@@ -3,7 +3,7 @@ Feature: Factory contract e2e test
 
     This feature file contains e2e test for factory contract
 
-    Scenario: Verify address of pair of is same to address recieved after pair creation
+    Scenario: Verify address of pair is same to address recieved after pair creation
         Given User have setup the factory
         When User create a new pair of tokens with name "FactoryTest1" and "FactoryTest2"
         Then User verify address of pair is same to address received after pair creation
@@ -29,56 +29,56 @@ Feature: Factory contract e2e test
 
      Scenario: Verify Factory9 token and HBAR balance before and after adding liquidity
         When User create pair of "Factory9" and HBAR              
-        When User adds 90 units of "Factory9" and 30 units of "HBAR" token      
-        Then HBAR and Factory9 balances in the pool are 30 units and 90 units respectively    
-        Then User verifies balance of "HBAR" token from contract is 30    
-        Then User verifies balance of "Factory9" token from contract is 90   
+        When User adds 300 units of "Factory9" and 150 units of "HBAR" token      
+        Then HBAR and Factory9 balances in the pool are 150 units and 300 units respectively    
+        Then User verifies balance of "HBAR" token from contract is 150    
+        Then User verifies balance of "Factory9" token from contract is 300   
         
 
      Scenario: Verify token balance after removing liquidity for HBAR and some other token
         Given User fetches the count of lptokens from pool
-        When User gives 1 units of lptoken to pool
-        Then User verifies 29 units of HBAR and 88 units of Factory9 are left in pool
-        Then User verifies balance of "HBAR" token from contract is 29    
-        Then User verifies balance of "Factory9" token from contract is 88 
+        When User gives 5 units of lptoken to pool
+        Then User verifies 146 units of HBAR and 293 units of Factory9 are left in pool
+        Then User verifies balance of "HBAR" token from contract is 146    
+        Then User verifies balance of "Factory9" token from contract is 293
     
     Scenario: Verify user is able to perform swap of Factory9 token with HBAR
-        Given Factory9 and HBAR are present in pool
+        Given Factory9 and HBAR are present in pool with quantity 293 units and 146 units respectively
         When User update the slippage value to 1 
-        Then HBAR token quantity is 29 and Factory9 quantity is 88 in pool  
-        When User make swap of 1 unit of "Factory9" token with another token in pair
-        Then HBAR token quantity is 29 and Factory9 quantity is 89 in pool    
-        Then User verifies balance of "HBAR" token from contract is 29    
-        Then User verifies balance of "Factory9" token from contract is 89
+        Then HBAR token quantity is 146 and Factory9 quantity is 293 in pool  
+        When User make swap of 10 unit of "Factory9" token with another token in pair
+        Then HBAR token quantity is 142 and Factory9 quantity is 303 in pool    
+        Then User verifies balance of "HBAR" token from contract is 142    
+        Then User verifies balance of "Factory9" token from contract is 303
     
     Scenario: Verify user is able to perform swap of HBAR with Factory9 Token
-        Given Factory9 and HBAR are present in pool
+        Given Factory9 and HBAR are present in pool with quantity 303 units and 142 units respectively
         When User update the slippage value to 1 
-        When User make swap of 1 unit of "HBAR" token with another token in pair
-        Then HBAR token quantity is 30 and Factory9 quantity is 86 in pool   
-        Then User verifies balance of "HBAR" token from contract is 30    
-        Then User verifies balance of "Factory9" token from contract is 86 
+        When User make swap of 10 unit of "HBAR" token with another token in pair
+        Then HBAR token quantity is 151 and Factory9 quantity is 284 in pool   
+        Then User verifies balance of "HBAR" token from contract is 151    
+        Then User verifies balance of "Factory9" token from contract is 284 
     
     Scenario: Verify user can not create pair with same token
         Then User gets message "CONTRACT_REVERT_EXECUTED" on creating pair with two HBAR tokens
     
      Scenario: Verify Factory9 token quantity for the given HBAR quantity
-        Given Factory9 and HBAR are present in pool
+        Given Factory9 and HBAR are present in pool with quantity 284 units and 151 units respectively
         When User gives 10 units of HBAR to the pool
-        Then Expected quantity of Factory9 token should be 4
+        Then Expected quantity of Factory9 token should be 6
 
     Scenario: Verify slippage out value for given in Factory9 token quantity
-        Given Factory9 and HBAR are present in pool
-        When User gives 2 units of Factory9 to calculate slippage out
-        Then Slippage out value should be 6233337
+        Given Factory9 and HBAR are present in pool with quantity 284 units and 151 units respectively
+        When User gives 10 units of Factory9 to calculate slippage out
+        Then Slippage out value should be 6194712
 
     Scenario: Verify slippage in value for given out HBAR quantity
-        Given Factory9 and HBAR are present in pool
+        Given Factory9 and HBAR are present in pool with quantity 284 units and 151 units respectively
         When User gives 10 units of HBAR to calculate slippage in
-        Then Slippage in value should be 13073072    
+        Then Slippage in value should be 3647851    
 
-#TO-DO - Add scenario when functionalty is available to get spot price for give
-    # Scenario: Verify spot price for HBAR
+# #TO-DO - Add scenario when functionalty is available to get spot price for give
+#     # Scenario: Verify spot price for HBAR
     
     
 

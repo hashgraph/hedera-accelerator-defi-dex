@@ -275,11 +275,20 @@ export class FactorySteps {
     ).to.eql(Number(tokenBQuantity));
   }
 
-  @given(/Factory9 and HBAR are present in pool/, undefined, 30000)
-  public async tokensArePresent() {
+  @given(
+    /Factory9 and HBAR are present in pool with quantity (\d*) units and (\d*) units respectively/,
+    undefined,
+    30000
+  )
+  public async tokensArePresent(tokenOneQty: number, tokenTwoQty: number) {
     const tokensQty = await pair.getPairQty(client);
-    expect(Number(tokensQty[0])).to.greaterThan(0);
-    expect(Number(tokensQty[1])).to.greaterThan(0);
+    const withPrecision = Common.withPrecision(1, precision);
+    expect(Number(tokensQty[1].dividedBy(withPrecision)).toFixed()).to.eql(
+      tokenOneQty
+    );
+    expect(Number(tokensQty[0].dividedBy(withPrecision)).toFixed()).to.eql(
+      tokenTwoQty
+    );
   }
 
   @when(
