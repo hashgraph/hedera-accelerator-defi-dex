@@ -22,7 +22,7 @@ export class ContractService {
   ];
   public godHolderContract = "godholder";
   public configuration = "configuration";
-  public godTokenHolderFactory = "GODTokenHolderFactory";
+  public godTokenHolderFactory = "godtokenholderfactory";
 
   private contractRecordFile = "./deployment/state/contracts.json";
   static DEV_CONTRACTS_PATH = "./deployment/state/contracts.json";
