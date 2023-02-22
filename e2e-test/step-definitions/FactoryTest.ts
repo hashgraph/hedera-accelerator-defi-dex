@@ -2,7 +2,7 @@ import { binding, given, then, when } from "cucumber-tsflow";
 import { expect } from "chai";
 import { ContractService } from "../../deployment/service/ContractService";
 import ClientManagement from "../../utils/ClientManagement";
-import { TokenId } from "@hashgraph/sdk";
+import { ContractId, TokenId } from "@hashgraph/sdk";
 import dex from "../../deployment/model/dex";
 import Pair from "../business/Pair";
 import Common from "../business/Common";
@@ -44,6 +44,8 @@ let tokenAQty: BigNumber;
 let slippageOutGivenIn: BigNumber;
 let slippageInGivenOut: BigNumber;
 let precision: BigNumber;
+let pairContractId: any;
+let tokenNameIdMap = new Map();
 
 @binding()
 export class FactorySteps {
@@ -65,19 +67,26 @@ export class FactorySteps {
     } catch (error) {}
   }
 
-  @when(/User create a new pair of tokens/, undefined, 60000)
-  public async createNewPair(): Promise<void> {
-    const num = Math.floor(Math.random() * 100) + 1;
+  @when(
+    /User create a new pair of tokens with name "([^"]*)" and "([^"]*)"/,
+    undefined,
+    60000
+  )
+  public async createNewPair(
+    firstToken: string,
+    secondToken: string
+  ): Promise<void> {
+    // const num = Math.floor(Math.random() * 100) + 1;
     tokenOne = await Common.createToken(
-      "FactoryTestOne" + num,
-      "FactoryTestOne" + num,
+      firstToken,
+      firstToken,
       id,
       key,
       client
     );
     tokenTwo = await Common.createToken(
-      "FactoryTestTwo" + num,
-      "FactoryTestTwo" + num,
+      secondToken,
+      secondToken,
       id,
       key,
       client
@@ -89,6 +98,10 @@ export class FactorySteps {
       key,
       client
     );
+    tokenNameIdMap.set(firstToken, tokenOne);
+    tokenNameIdMap.set(secondToken, tokenTwo);
+    const pairAddress = await factory.getPair(tokenOne, tokenTwo);
+    pairContractId = await this.fetchContractID(pairAddress);
   }
 
   @then(
@@ -128,23 +141,10 @@ export class FactorySteps {
     );
   }
 
-  @when(/User create tokens with same name/, undefined, 30000)
-  public async createTokenWithSameName(): Promise<void> {
-    const num = Math.floor(Math.random() * 100) + 1;
-    tokenOne = await Common.createToken(
-      "FactoryTestSingleToken" + num,
-      "FactoryTestSingleToken" + num,
-      id,
-      key,
-      client
-    );
-    tokenTwo = await Common.createToken(
-      "FactoryTestSingleToken" + num,
-      "FactoryTestSingleToken" + num,
-      id,
-      key,
-      client
-    );
+  @when(/User create tokens with same name "([^"]*)"/, undefined, 30000)
+  public async createTokenWithSameName(tokenName: string): Promise<void> {
+    tokenOne = await Common.createToken(tokenName, tokenName, id, key, client);
+    tokenTwo = await Common.createToken(tokenName, tokenName, id, key, client);
   }
 
   @then(/User verifies their address are different/, undefined, 30000)
@@ -154,16 +154,10 @@ export class FactorySteps {
     );
   }
 
-  @when(/User create a new token/, undefined, 60000)
-  public async createSingleToken(): Promise<void> {
-    const num = Math.floor(Math.random() * 100) + 1;
-    tokenOne = await Common.createToken(
-      "FactoryTestSingleToken" + num,
-      "FactoryTestSingleToken" + num,
-      id,
-      key,
-      client
-    );
+  @when(/User create a new token with name "([^"]*)"/, undefined, 60000)
+  public async createSingleToken(tokenName: string): Promise<void> {
+    tokenOne = await Common.createToken(tokenName, tokenName, id, key, client);
+    tokenNameIdMap.set(tokenName, tokenOne);
   }
 
   @then(
@@ -179,8 +173,9 @@ export class FactorySteps {
     }
   }
 
-  @when(/User create pair of tokenA and HBAR/, undefined, 30000)
-  public async createPairOfTokenAWithHBAR(): Promise<void> {
+  @when(/User create pair of "([^"]*)" and HBAR/, undefined, 30000)
+  public async createPairOfTokenAWithHBAR(tokenName: string): Promise<void> {
+    tokenOne = await Common.createToken(tokenName, tokenName, id, key, client);
     tokenAHBARPairAddress = await factory.createPair(
       tokenOne,
       tokenHBARX,
@@ -188,29 +183,32 @@ export class FactorySteps {
       treasureKey,
       client
     );
-
-    const pairAddress = await factory.getPair(
-      tokenOne,
-      tokenHBARX,
-      fees,
-      client
-    );
-    await Helper.delay(15000);
-    const response = await httpRequest(pairAddress, undefined);
-    pair = new Pair(response.contract_id);
+    tokenNameIdMap.set(tokenName, tokenOne);
+    tokenNameIdMap.set("HBAR", tokenHBARX);
+    const pairAddress = await factory.getPair(tokenOne, tokenHBARX);
+    pairContractId = await this.fetchContractID(pairAddress);
+    pair = new Pair(pairContractId);
     precision = await pair.getPrecisionValue(client);
   }
 
   @when(
-    /User adds (\d*) units of first token and (\d*) units of HBAR token/,
+    /User adds (\d*) units of "([^"]*)" and (\d*) units of "([^"]*)" token/,
     undefined,
     30000
   )
   public async addLiquidityInPool(
     tokenACount: number,
-    tokenBCount: number
+    firstTokenName: string,
+    tokenBCount: number,
+    secondTokenName: string
   ): Promise<void> {
-    tokensBefore = await pair.getPairQty(client);
+    tokenOne = tokenNameIdMap.get(firstTokenName);
+    const tokensBeforeFetched = await pair.getPairQty(client);
+    const pairAdd = await pair.getTokenPairAddress();
+    tokensBefore =
+      pairAdd.tokenAAddress == tokenOne.toSolidityAddress()
+        ? tokensBeforeFetched
+        : tokensBeforeFetched.reverse();
 
     await pair.addLiquidity(
       id,
@@ -225,7 +223,7 @@ export class FactorySteps {
   }
 
   @then(
-    /first token and HBAR balances in the pool are (\d*) units and (\d*) units respectively/,
+    /HBAR and Factory9 balances in the pool are (\d*) units and (\d*) units respectively/,
     undefined,
     30000
   )
@@ -236,6 +234,7 @@ export class FactorySteps {
     const tokenAQty = Common.withPrecision(tokenACount, precision);
     const tokenBQty = Common.withPrecision(tokenBCount, precision);
     tokensAfter = await pair.getPairQty(client);
+
     expect(tokensAfter[0]).to.eql(BigNumber.sum(tokensBefore[0], tokenAQty));
     expect(tokensAfter[1]).to.eql(BigNumber.sum(tokensBefore[1], tokenBQty));
   }
@@ -258,7 +257,7 @@ export class FactorySteps {
   }
 
   @then(
-    /User verifies (\d*) units of tokenA and (\d*) units of HBAR are left in pool/,
+    /User verifies (\d*) units of HBAR and (\d*) units of Factory9 are left in pool/,
     undefined,
     30000
   )
@@ -267,7 +266,6 @@ export class FactorySteps {
     tokenBQuantity: Number
   ): Promise<void> {
     tokensAfter = await pair.getPairQty(client);
-
     const withPrecision = Common.withPrecision(1, precision);
     expect(
       Number(Number(tokensAfter[0].dividedBy(withPrecision)).toFixed())
@@ -277,20 +275,34 @@ export class FactorySteps {
     ).to.eql(Number(tokenBQuantity));
   }
 
-  @given(/tokenA and HBAR are present in pool/, undefined, 30000)
-  public async tokensArePresent(): Promise<void> {
+  @given(
+    /Factory9 and HBAR are present in pool with quantity (\d*) units and (\d*) units respectively/,
+    undefined,
+    30000
+  )
+  public async tokensArePresent(tokenOneQty: number, tokenTwoQty: number) {
     const tokensQty = await pair.getPairQty(client);
-    expect(Number(tokensQty[0])).to.greaterThan(0);
-    expect(Number(tokensQty[1])).to.greaterThan(0);
+    const withPrecision = Common.withPrecision(1, precision);
+    expect(Number(tokensQty[1].dividedBy(withPrecision)).toFixed()).to.eql(
+      tokenOneQty
+    );
+    expect(Number(tokensQty[0].dividedBy(withPrecision)).toFixed()).to.eql(
+      tokenTwoQty
+    );
   }
 
-  @when(/User make swap of (\d*) unit of tokenA with HBAR/, undefined, 30000)
-  public async swapTokenA(tokenACount: number): Promise<void> {
+  @when(
+    /User make swap of (\d*) unit of "([^"]*)" token with another token in pair/,
+    undefined,
+    30000
+  )
+  public async swapToken(tokenCount: number, tokenName: string): Promise<void> {
     tokensBefore = await pair.getPairQty(client);
+    const tokenToSwap = tokenNameIdMap.get(tokenName);
     const slippage = new BigNumber(0);
     await pair.swapToken(
-      tokenOne,
-      tokenACount,
+      tokenToSwap,
+      tokenCount,
       id,
       key,
       precision,
@@ -300,7 +312,7 @@ export class FactorySteps {
   }
 
   @then(
-    /tokenA quantity is (\d*) and HBAR quantity is (\d*) in pool/,
+    /HBAR token quantity is (\d*) and Factory9 quantity is (\d*) in pool/,
     undefined,
     30000
   )
@@ -346,7 +358,7 @@ export class FactorySteps {
     tokenAQty = await pair.getInGivenOut(tokenHBARQty, client);
   }
 
-  @then(/Expected quantity of tokenA should be (\d*)/, undefined, 30000)
+  @then(/Expected quantity of Factory9 token should be (\d*)/, undefined, 30000)
   public async verifyTokenAQty(expectedTokenAQty: string) {
     const withPrecision = Common.withPrecision(1, precision);
     expect(Number(Number(tokenAQty.dividedBy(withPrecision)).toFixed())).to.eql(
@@ -355,7 +367,7 @@ export class FactorySteps {
   }
 
   @when(
-    /User gives (\d*) units of tokenA to calculate slippage out/,
+    /User gives (\d*) units of Factory9 to calculate slippage out/,
     undefined,
     30000
   )
@@ -382,5 +394,41 @@ export class FactorySteps {
   @then(/Slippage in value should be (\d*)/, undefined, 30000)
   public async verifySlippageIn(expectedSlippageIn: string) {
     expect(Number(slippageInGivenOut)).to.eql(Number(expectedSlippageIn));
+  }
+
+  @then(
+    /User verifies balance of "([^"]*)" token from contract is (\d*)/,
+    undefined,
+    30000
+  )
+  public async fetchTokenBalanceFromContract(
+    tokenName: string,
+    tokenQty: number
+  ) {
+    const tokenId = tokenNameIdMap.get(tokenName);
+    let tokenBalance: number;
+    if (tokenName === "HBAR") {
+      tokenBalance = Number(
+        await Common.getAccountBalance(pairContractId, [tokenId], client)
+      );
+    } else {
+      tokenBalance = Number(
+        await Common.getTokenBalance(pairContractId, tokenId, client)
+      );
+    }
+    const withPrecision = Number(Common.withPrecision(1, precision));
+    console.log("pairContractID -", pairContractId.toString());
+    console.log(
+      `token name is - ${tokenName} tokenId is - ${tokenId} and tokenBalance is - ${tokenBalance}`
+    );
+    expect(Number(Number(tokenBalance / withPrecision).toFixed())).to.eql(
+      Number(tokenQty)
+    );
+  }
+
+  private async fetchContractID(pairAddress: string): Promise<ContractId> {
+    await Helper.delay(15000);
+    const response = await httpRequest(pairAddress, undefined);
+    return response.contract_id;
   }
 }
