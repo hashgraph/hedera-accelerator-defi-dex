@@ -1,24 +1,20 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
-
-import "./BaseDAO.sol";
 import "./IGovernorTokenDAO.sol";
-import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import "./BaseDAO.sol";
 
-contract GovernorTokenDAO is BaseDAO, IGovernorTokenDAO {
-    address private governorTokenTransferAddress;
+contract GovernorTokenDAO is IGovernorTokenDAO, BaseDAO {
+    IGovernorTransferToken private governorTokenTransferAddress;
+    uint256[] private _proposals;
 
     function initilize(
-        address _htsAddress,
-        address _godHolderAddress,
-        address _tokenAddress,
-        address _admin,
-        string calldata _name,
-        uint256 _quorumThreshold,
-        uint256 _votingDelay,
-        uint256 _votingPeriod
+        address admin,
+        string calldata name,
+        string calldata logoUrl,
+        IGovernorTransferToken governor
     ) external override initializer {
-        __BaseDAO_init(_admin, _name);
+        governorTokenTransferAddress = governor;
+        __BaseDAO_init(admin, name, logoUrl);
     }
 
     function getGovernorTokenTransferContractAddress()
@@ -27,6 +23,37 @@ contract GovernorTokenDAO is BaseDAO, IGovernorTokenDAO {
         override
         returns (address)
     {
-        return governorTokenTransferAddress;
+        return address(governorTokenTransferAddress);
+    }
+
+    function getAllProposals()
+        external
+        override
+        onlyOwner
+        returns (uint256[] memory)
+    {
+        return _proposals;
+    }
+
+    function createProposal(
+        string memory title,
+        string memory description,
+        string memory linkToDiscussion,
+        address transferFromAccount,
+        address transferToAccount,
+        address tokenToTransfer,
+        int256 transferTokenAmount
+    ) external override onlyOwner returns (uint256) {
+        uint256 proposalId = governorTokenTransferAddress.createProposal(
+            title,
+            description,
+            linkToDiscussion,
+            transferFromAccount,
+            transferToAccount,
+            tokenToTransfer,
+            transferTokenAmount
+        );
+        _proposals.push(proposalId);
+        return proposalId;
     }
 }

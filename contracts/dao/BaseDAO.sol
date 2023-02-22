@@ -10,41 +10,47 @@ struct Social {
 }
 
 abstract contract BaseDAO is OwnableUpgradeable {
-    address private admin;
-    string private name;
+    error AuthenticationError(string message, address sender);
 
-    address[] private members;
-
-    Social[] private webLinks;
+    address internal _admin;
+    string internal _name;
+    address[] internal _members;
+    Social[] internal _webLinks;
+    string internal _logoUrl;
 
     function __BaseDAO_init(
-        address _admin,
-        string calldata _name
+        address admin,
+        string calldata name,
+        string calldata logoUrl
     ) public onlyInitializing {
-        admin = _admin;
-        name = _name;
+        _admin = admin;
+        _name = name;
+        _logoUrl = logoUrl;
         _transferOwnership(admin);
     }
 
     function addMember(address _member) external onlyOwner {
-        members.push(_member);
+        _members.push(_member);
     }
 
     function addWebLink(uint8 _key, string calldata _value) external onlyOwner {
         require(_key > 0, "BaseDAO: invalid key passed");
         require(bytes(_value).length > 0, "BaseDAO: invalid value passed");
-        webLinks.push(Social(_key, _value));
+        _webLinks.push(Social(_key, _value));
     }
 
     function getMembers() external view returns (address[] memory) {
-        return members;
+        return _members;
     }
 
-    function _createProxy(
-        address _logic,
-        address _admin
-    ) internal returns (address) {
-        bytes memory _data;
-        return address(new TransparentUpgradeableProxy(_logic, _admin, _data));
+    function getDaoDetail()
+        public
+        returns (
+            string memory name,
+            string memory logoUrl,
+            Social[] memory webLinks
+        )
+    {
+        return (_name, _logoUrl, _webLinks);
     }
 }
