@@ -13,6 +13,7 @@ export default class ContractMetadata {
     "GovernorTokenCreate",
     "Splitter",
     "Configuration",
+    "GODTokenHolderFactory",
   ];
 
   static SUPPORTED_CONTRACTS_FOR_DEPLOYMENT = [
@@ -28,6 +29,7 @@ export default class ContractMetadata {
     "Vault",
     "GODHolder",
     "Configuration",
+    "GODTokenHolderFactory",
   ];
 
   static SUPPORTED_PROXY_OPTIONS = ["create", "update"];
