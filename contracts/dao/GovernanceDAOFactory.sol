@@ -6,7 +6,7 @@ import "../common/IERC20.sol";
 
 import "../dao/IGovernorTokenDAO.sol";
 
-import "../governance/IGODHolder.sol";
+import "../governance/IGODTokenHolderFactory.sol";
 import "../governance/IGovernorTransferToken.sol";
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -31,21 +31,21 @@ contract GovernanceDAOFactory is OwnableUpgradeable {
     address[] private daos;
 
     address private doaLogic;
-    address private tokenHolderLogic;
+    IGODTokenHolderFactory private godTokenHolderFactory;
     address private tokenTransferLogic;
 
     function initialize(
         address _proxyAdmin,
         address _baseHTS,
         address _daoLogic,
-        address _tokenHolderLogic,
+        IGODTokenHolderFactory _godTokenHolderFactory,
         address _tokenTransferLogic
     ) external initializer {
         __Ownable_init();
         proxyAdmin = _proxyAdmin;
         baseHTS = _baseHTS;
         doaLogic = _daoLogic;
-        tokenHolderLogic = _tokenHolderLogic;
+        godTokenHolderFactory = _godTokenHolderFactory;
         tokenTransferLogic = _tokenTransferLogic;
     }
 
@@ -53,15 +53,17 @@ contract GovernanceDAOFactory is OwnableUpgradeable {
         address _admin,
         string calldata _name,
         string calldata _logoUrl,
-        address _tokenAddress,
+        IERC20 _tokenAddress,
         uint256 _quorumThreshold,
         uint256 _votingDelay,
         uint256 _votingPeriod,
         bool _isPrivate
     ) external returns (address) {
-        IGODHolder iGODHolder = _createGodHolder(_tokenAddress);
+        IGODHolder iGODHolder = godTokenHolderFactory.getGODTokenHolder(
+            _tokenAddress
+        );
         IGovernorTransferToken tokenTransfer = _createTokenTransfer(
-            _tokenAddress,
+            address(_tokenAddress),
             _quorumThreshold,
             _votingDelay,
             _votingPeriod,
@@ -81,13 +83,6 @@ contract GovernanceDAOFactory is OwnableUpgradeable {
             emit PublicDaoCreated(createdDAOAddress, _name, admin);
         }
         return createdDAOAddress;
-    }
-
-    function _createGodHolder(
-        address _tokenAddress
-    ) private returns (IGODHolder iGODHolder) {
-        iGODHolder = IGODHolder(_createProxy(tokenHolderLogic));
-        iGODHolder.initialize(IBaseHTS(baseHTS), IERC20(_tokenAddress));
     }
 
     function _createTokenTransfer(
