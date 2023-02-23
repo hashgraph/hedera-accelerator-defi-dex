@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 struct Social {
     uint8 key;
@@ -53,4 +52,5 @@ abstract contract BaseDAO is OwnableUpgradeable {
     {
         return (_name, _logoUrl, _webLinks);
     }
+
 }

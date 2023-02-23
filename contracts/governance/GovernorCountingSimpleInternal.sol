@@ -5,7 +5,6 @@ import "@openzeppelin/contracts-upgradeable/governance/GovernorUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/governance/IGovernorUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorSettingsUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorCountingSimpleUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesQuorumFractionUpgradeable.sol";
 import "../common/IERC20.sol";
 import "../common/IBaseHTS.sol";
@@ -51,7 +50,7 @@ abstract contract GovernorCountingSimpleInternal is
         IBaseHTS _tokenService,
         IGODHolder _godHolder,
         uint256 _quorumThresholdInBsp
-    ) public initializer {
+    ) external initializer {
         tokenService = _tokenService;
         godHolder = _godHolder;
         token = _token;

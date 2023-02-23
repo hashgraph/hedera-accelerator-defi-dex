@@ -3,11 +3,11 @@ pragma solidity ^0.8.0;
 import "../governance/IGovernorTransferToken.sol";
 
 interface IGovernorTokenDAO {
-    function initilize(
+    function initialize(
         address admin,
         string calldata name,
         string calldata logoUrl,
-        IGovernorTransferToken governor
+        IGovernorTransferToken _governorTokenTransferContractAddress
     ) external;
 
     function getGovernorTokenTransferContractAddress()

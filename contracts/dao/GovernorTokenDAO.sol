@@ -4,16 +4,16 @@ import "./IGovernorTokenDAO.sol";
 import "./BaseDAO.sol";
 
 contract GovernorTokenDAO is IGovernorTokenDAO, BaseDAO {
-    IGovernorTransferToken private governorTokenTransferAddress;
+    IGovernorTransferToken private _governorTokenTransferAddress;
     uint256[] private _proposals;
 
-    function initilize(
+    function initialize(
         address admin,
         string calldata name,
         string calldata logoUrl,
-        IGovernorTransferToken governor
+        IGovernorTransferToken governorTokenTransferContractAddress
     ) external override initializer {
-        governorTokenTransferAddress = governor;
+        _governorTokenTransferAddress = governorTokenTransferContractAddress;
         __BaseDAO_init(admin, name, logoUrl);
     }
 
@@ -23,7 +23,7 @@ contract GovernorTokenDAO is IGovernorTokenDAO, BaseDAO {
         override
         returns (address)
     {
-        return address(governorTokenTransferAddress);
+        return address(_governorTokenTransferAddress);
     }
 
     function getAllProposals()
@@ -44,7 +44,7 @@ contract GovernorTokenDAO is IGovernorTokenDAO, BaseDAO {
         address tokenToTransfer,
         int256 transferTokenAmount
     ) external override onlyOwner returns (uint256) {
-        uint256 proposalId = governorTokenTransferAddress.createProposal(
+        uint256 proposalId = _governorTokenTransferAddress.createProposal(
             title,
             description,
             linkToDiscussion,
