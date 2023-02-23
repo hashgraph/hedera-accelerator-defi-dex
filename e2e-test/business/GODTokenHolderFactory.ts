@@ -1,17 +1,17 @@
 import Base from "./Base";
 import { Client, ContractFunctionParameters } from "@hashgraph/sdk";
 
-const CREATE_GOD_HOLDER = "createGODHolder";
+const ADD_GOD_HOLDER = "addGODHolder";
 const GET_GOD_TOKEN_HOLDER = "getGODTokenHolder";
 
 export default class GODTokenHolderFactory extends Base {
-  createGODHolder = async (godHolderAddress: string, client: Client) => {
+  addGODHolder = async (godHolderAddress: string, client: Client) => {
     const args = new ContractFunctionParameters().addAddress(godHolderAddress);
 
-    await this.execute(2000000, CREATE_GOD_HOLDER, client, args, undefined);
+    await this.execute(2000000, ADD_GOD_HOLDER, client, args, undefined);
 
     console.log(
-      `- GODTokenFactory#${CREATE_GOD_HOLDER} done for token ${godHolderAddress} \n`
+      `- GODTokenFactory#${ADD_GOD_HOLDER} done for token ${godHolderAddress} \n`
     );
   };
 

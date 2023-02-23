@@ -25,7 +25,7 @@ async function main() {
     clientsInfo.operatorClient,
     TOKEN_ID.toSolidityAddress()
   );
-  await godTokenFactory.createGODHolder(
+  await godTokenFactory.addGODHolder(
     godHolderProxy.transparentProxyAddress!,
     clientsInfo.operatorClient
   );

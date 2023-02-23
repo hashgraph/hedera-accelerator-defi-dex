@@ -15,7 +15,7 @@ contract GODTokenHolderFactory {
     mapping(IERC20 => IGODHolder) godTokenToHolderContractMap;
     IGODHolder[] allGODHolders;
 
-    function createGODHolder(IGODHolder _godHolder) public {
+    function addGODHolder(IGODHolder _godHolder) public {
         IERC20 _token = _godHolder.getGODToken();
         IGODHolder godHolder = godTokenToHolderContractMap[_token];
 

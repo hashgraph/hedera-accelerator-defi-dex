@@ -126,7 +126,7 @@ describe("GODHolder Tests", function () {
     const { godHolder, godTokenHolderFactory, tokenCont } = await loadFixture(
       deployFixture
     );
-    await godTokenHolderFactory.createGODHolder(godHolder.address);
+    await godTokenHolderFactory.addGODHolder(godHolder.address);
     const holder = await godTokenHolderFactory.getGODTokenHolder(
       tokenCont.address
     );
@@ -151,8 +151,8 @@ describe("GODHolder Tests", function () {
       newToken.address,
     ]);
 
-    await godTokenHolderFactory.createGODHolder(godHolder.address);
-    await godTokenHolderFactory.createGODHolder(newGodHolder.address);
+    await godTokenHolderFactory.addGODHolder(godHolder.address);
+    await godTokenHolderFactory.addGODHolder(newGodHolder.address);
 
     const holder = await godTokenHolderFactory.getGODTokenHolder(
       tokenCont.address
@@ -173,7 +173,7 @@ describe("GODHolder Tests", function () {
       mockBaseHTS,
     } = await loadFixture(deployFixture);
 
-    await godTokenHolderFactory.createGODHolder(godHolder.address);
+    await godTokenHolderFactory.addGODHolder(godHolder.address);
     const holder = await godTokenHolderFactory.getGODTokenHolder(
       sameToken.address
     );
@@ -185,7 +185,7 @@ describe("GODHolder Tests", function () {
       sameToken.address,
     ]);
 
-    await expect(godTokenHolderFactory.createGODHolder(newGodHolder.address))
+    await expect(godTokenHolderFactory.addGODHolder(newGodHolder.address))
       .to.be.revertedWithCustomError(
         godTokenHolderFactory,
         "GODHolderAlreadyExist"
