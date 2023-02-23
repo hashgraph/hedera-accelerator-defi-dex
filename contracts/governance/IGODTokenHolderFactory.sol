@@ -11,10 +11,7 @@ interface IGODTokenHolderFactory {
         string name
     );
 
-    event GODHolderCreated(
-        address token,
-        address godHolder
-    );
+    event GODHolderCreated(address token, address godHolder);
 
     function initialize(
         IBaseHTS _tokenService,
