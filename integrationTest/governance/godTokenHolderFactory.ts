@@ -1,5 +1,5 @@
 import dex from "../../deployment/model/dex";
-import GodTokenFactory from "../../e2e-test/business/GODTokenHolderFactory";
+import GODTokenHolderFactory from "../../e2e-test/business/GODTokenHolderFactory";
 import GodHolder from "../../e2e-test/business/GodHolder";
 
 import { TokenId } from "@hashgraph/sdk";
@@ -8,32 +8,30 @@ import { ContractService } from "../../deployment/service/ContractService";
 
 const csDev = new ContractService();
 
-const godHolderProxy = csDev.getContractWithProxy(csDev.godHolderContract);
+const godHolderLogic = csDev.getContract(csDev.godHolderContract);
 
 const godTokenHolderFactoryProxyId = csDev.getContractWithProxy(
   csDev.godTokenHolderFactory
 ).transparentProxyId!;
 
-const godHolder = new GodHolder(godHolderProxy.transparentProxyId!);
-const godTokenFactory = new GodTokenFactory(godTokenHolderFactoryProxyId);
+const godTokenHolderFactory = new GODTokenHolderFactory(
+  godTokenHolderFactoryProxyId
+);
 
 const TOKEN_ID = TokenId.fromString(dex.TOKEN_LAB49_1);
 const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
 
 async function main() {
-  await godHolder.initializeWithToken(
-    clientsInfo.operatorClient,
-    TOKEN_ID.toSolidityAddress()
-  );
-  await godTokenFactory.addGODHolder(
-    godHolderProxy.transparentProxyAddress!,
+  await godTokenHolderFactory.initialize(
+    godHolderLogic.address,
+    clientsInfo.adminId.toSolidityAddress(),
     clientsInfo.operatorClient
   );
-  await godTokenFactory.getGodTokenHolder(
+  await godTokenHolderFactory.getGodTokenHolder(
     GOD_TOKEN_ID.toSolidityAddress(),
     clientsInfo.operatorClient
   );
-  await godTokenFactory.getGodTokenHolder(
+  await godTokenHolderFactory.getGodTokenHolder(
     TOKEN_ID.toSolidityAddress(),
     clientsInfo.operatorClient
   );

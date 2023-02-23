@@ -349,21 +349,19 @@
     "transparentProxyId": "0.0.3533179"
   },
   {
-    "name": "godtokenholderfactory",
-    "id": "0.0.3545750",
-    "address": "0x0000000000000000000000000000000000361a96",
-    "timestamp": "2023-02-22T13:42:49.273Z",
-    "hash": "246c68d5091bd2e036331674453db1eb",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000361a9e",
-    "transparentProxyId": "0.0.3545758"
+    "name": "godholder",
+    "id": "0.0.3553034",
+    "address": "0x000000000000000000000000000000000036370a",
+    "timestamp": "2023-02-23T11:09:52.954Z",
+    "hash": "ce0f2f22cca547ac6cd063f76041c515"
   },
   {
-    "name": "godholder",
-    "id": "0.0.3545768",
-    "address": "0x0000000000000000000000000000000000361aa8",
-    "timestamp": "2023-02-22T13:43:39.597Z",
-    "hash": "45d9ec055f4ef28fd0cdffc630893536",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000361ab6",
-    "transparentProxyId": "0.0.3545782"
+    "name": "godtokenholderfactory",
+    "id": "0.0.3553038",
+    "address": "0x000000000000000000000000000000000036370e",
+    "timestamp": "2023-02-23T11:11:03.422Z",
+    "hash": "01803c731130de25a0ff125ce5156876",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000363712",
+    "transparentProxyId": "0.0.3553042"
   }
 ]

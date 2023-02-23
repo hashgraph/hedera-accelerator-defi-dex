@@ -1,18 +1,22 @@
 import Base from "./Base";
 import { Client, ContractFunctionParameters } from "@hashgraph/sdk";
 
-const ADD_GOD_HOLDER = "addGODHolder";
 const GET_GOD_TOKEN_HOLDER = "getGODTokenHolder";
+const INITIALIZE = "initialize";
 
 export default class GODTokenHolderFactory extends Base {
-  addGODHolder = async (godHolderAddress: string, client: Client) => {
-    const args = new ContractFunctionParameters().addAddress(godHolderAddress);
+  initialize = async (
+    godHolderLogic: string,
+    admin: string,
+    client: Client
+  ) => {
+    const args = new ContractFunctionParameters()
+      .addAddress(this.htsAddress)
+      .addAddress(godHolderLogic)
+      .addAddress(admin);
+    await this.execute(2000000, INITIALIZE, client, args, undefined);
 
-    await this.execute(2000000, ADD_GOD_HOLDER, client, args, undefined);
-
-    console.log(
-      `- GODTokenFactory#${ADD_GOD_HOLDER} done for token ${godHolderAddress} \n`
-    );
+    console.log(`- GODTokenHolderFactory#${INITIALIZE} done. \n`);
   };
 
   getGodTokenHolder = async (tokenAddress: string, client: Client) => {
@@ -27,7 +31,7 @@ export default class GODTokenHolderFactory extends Base {
     );
 
     console.log(
-      `- GODTokenFactory#${GET_GOD_TOKEN_HOLDER} GOD token holder address ${result.getAddress(
+      `- GODTokenFactory#${GET_GOD_TOKEN_HOLDER} Token ${tokenAddress} has GOD token holder address ${result.getAddress(
         0
       )} \n`
     );
