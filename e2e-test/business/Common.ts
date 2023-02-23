@@ -14,6 +14,8 @@ import {
   TransferTransaction,
   TokenCreateTransaction,
   ContractFunctionParameters,
+  TokenDeleteTransaction,
+  TokenMintTransaction,
 } from "@hashgraph/sdk";
 import { BigNumber } from "bignumber.js";
 import { clientsInfo } from "../../utils/ClientManagement";
@@ -125,7 +127,7 @@ export default class Common {
       .setTokenId(tokenId)
       .execute(client);
     console.log(
-      `- Common#getTokenInfo(): TokenId = ${tokenId}, name = ${response.name}, symbol = ${response.symbol}\n`
+      `- Common#getTokenInfo(): TokenId = ${tokenId}, name = ${response.name}, symbol = ${response.symbol},  totalSupply= ${response.totalSupply}\n`
     );
     return { name: response.name, symbol: response.symbol };
   };
@@ -162,5 +164,41 @@ export default class Common {
       balanceQuery.setContractId(id);
     }
     return await balanceQuery.execute(client);
+  };
+
+  static deleteToken = async (
+    tokenId: string | TokenId,
+    client: Client = clientsInfo.operatorClient,
+    adminKey: PrivateKey = clientsInfo.operatorKey
+  ) => {
+    const transaction = new TokenDeleteTransaction()
+      .setTokenId(tokenId)
+      .freezeWith(client);
+    const signTx = await transaction.sign(adminKey);
+    const txResponse = await signTx.execute(client);
+    const receipt = await txResponse.getReceipt(client);
+    const transactionStatus = receipt.status;
+    console.log(
+      `Common#deleteToken(): TokenId = ${tokenId}, transaction status is: ${transactionStatus.toString()}`
+    );
+  };
+
+  static mintToken = async (
+    tokenId: TokenId,
+    mintAmt: number,
+    supplyKey: PrivateKey = clientsInfo.operatorKey,
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    const transaction = new TokenMintTransaction()
+      .setTokenId(tokenId)
+      .setAmount(mintAmt)
+      .freezeWith(client);
+    const signTx = await transaction.sign(supplyKey);
+    const txResponse = await signTx.execute(client);
+    const receipt = await txResponse.getReceipt(client);
+    const transactionStatus = receipt.status;
+    console.log(
+      `Common#mintToken(): TokenId = ${tokenId},  mintAmt = ${mintAmt}, transaction status is: ${transactionStatus.toString()}`
+    );
   };
 }
