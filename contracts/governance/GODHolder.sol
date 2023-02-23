@@ -20,6 +20,10 @@ contract GODHolder is IGODHolder, Initializable {
         _token = token;
     }
 
+    function getGODToken() view public returns(IERC20) {
+        return _token;
+    }
+
     function balanceOfVoter(
         address voter
     ) external view override returns (uint256) {

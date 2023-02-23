@@ -6,6 +6,7 @@ import { ethers, upgrades } from "hardhat";
 
 describe("GODHolder Tests", function () {
   const zeroAddress = "0x1111111000000000000000000000000000000000";
+  let admin;
   const precision = 100000000;
   const total = 100 * precision;
 
@@ -13,6 +14,15 @@ describe("GODHolder Tests", function () {
     it("Verify if the GODHolder contract is upgradeable safe ", async function () {
       const Governor = await ethers.getContractFactory("GODHolder");
       const args = [zeroAddress, zeroAddress];
+      const instance = await upgrades.deployProxy(Governor, args);
+      await instance.deployed();
+    });
+  });
+
+  describe("GODTokenHolderFactory Upgradeable", function () {
+    it("Verify if the GODTokenFactory contract is upgradeable safe ", async function () {
+      const Governor = await ethers.getContractFactory("GODTokenHolderFactory");
+      const args = [zeroAddress, zeroAddress, zeroAddress];
       const instance = await upgrades.deployProxy(Governor, args);
       await instance.deployed();
     });
@@ -26,6 +36,7 @@ describe("GODHolder Tests", function () {
 
   async function basicDeployments(mockBaseHTS: any) {
     const signers = await ethers.getSigners();
+    admin = signers[1].address;
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
     const tokenCont = await TokenCont.deploy(
       "tokenName",
@@ -41,11 +52,28 @@ describe("GODHolder Tests", function () {
       tokenCont.address,
     ]);
 
+    const GODTokenHolderFactory = await ethers.getContractFactory(
+      "GODTokenHolderFactory"
+    );
+    const godTokenHolderFactory = await GODTokenHolderFactory.deploy();
+
+    const MockGODHolder = await ethers.getContractFactory("GODHolderMock");
+    const mockGODHolder = await MockGODHolder.deploy();
+
+    await godTokenHolderFactory.initialize(
+      mockBaseHTS.address,
+      mockGODHolder.address,
+      admin
+    );
+
     return {
       tokenCont,
       mockBaseHTS,
       signers,
       godHolder,
+      godTokenHolderFactory,
+      admin,
+      mockGODHolder,
     };
   }
 
@@ -104,5 +132,73 @@ describe("GODHolder Tests", function () {
     await expect(godHolder.revertTokensForVoter()).to.revertedWith(
       "GODHolder: token transfer failed from contract."
     );
+  });
+
+  it("Given a GODHolder when factory is asked to create holder then address should be populated", async () => {
+    const { godTokenHolderFactory, tokenCont } = await loadFixture(
+      deployFixture
+    );
+
+    const holder = await godTokenHolderFactory.callStatic.getGODTokenHolder(
+      tokenCont.address
+    );
+
+    expect(holder).not.to.be.equal("0x0");
+  });
+
+  it("Given a GODHolder exist in factory when factory is asked to create another one with different token then address should be populated", async () => {
+    const { godTokenHolderFactory, tokenCont } = await loadFixture(
+      deployFixture
+    );
+
+    const TokenCont = await ethers.getContractFactory("ERC20Mock");
+    const newToken = await TokenCont.deploy(
+      "tokenName1",
+      "tokenSymbol1",
+      total,
+      0
+    );
+
+    const tx1 = await godTokenHolderFactory.getGODTokenHolder(
+      tokenCont.address
+    );
+
+    const tx2 = await godTokenHolderFactory.getGODTokenHolder(newToken.address);
+
+    const holder1Record = await tx1.wait();
+    const holder2Record = await tx2.wait();
+
+    const tokenGodHolder = holder1Record.events[2].args.godHolder;
+    const newTokenGodHolder = holder2Record.events[2].args.godHolder;
+
+    expect(holder1Record.events[2].args.token).to.be.equal(tokenCont.address);
+    expect(holder2Record.events[2].args.token).to.be.equal(newToken.address);
+    expect(tokenGodHolder).not.to.be.equal(newTokenGodHolder);
+    expect(tokenGodHolder).not.to.be.equal("0x0");
+    expect(newTokenGodHolder).not.to.be.equal("0x0");
+  });
+
+  it("Given a GODHolder exist in factory when factory is asked to create another one with same token then existing address should return", async () => {
+    const { godTokenHolderFactory, tokenCont } = await loadFixture(
+      deployFixture
+    );
+
+    const tx1 = await godTokenHolderFactory.getGODTokenHolder(
+      tokenCont.address
+    );
+
+    //Use callStatic as we are reading the existing state not modifying it.
+    const newTokenGodHolder =
+      await godTokenHolderFactory.callStatic.getGODTokenHolder(
+        tokenCont.address
+      );
+
+    const holder1Record = await tx1.wait();
+    //Below emits event as it add new GOD Holder
+    const tokenGodHolder = holder1Record.events[2].args.godHolder;
+
+    expect(tokenGodHolder).to.be.equal(newTokenGodHolder);
+    expect(tokenGodHolder).not.to.be.equal("0x0");
+    expect(newTokenGodHolder).not.to.be.equal("0x0");
   });
 });
