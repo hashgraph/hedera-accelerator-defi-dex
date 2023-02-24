@@ -15,7 +15,7 @@ interface IGovernorTokenDAO {
         view
         returns (address);
 
-    function getAllProposals() external returns (uint256[] memory);
+    function getAllProposals() external view returns (uint256[] memory);
 
     function createProposal(
         string memory title,

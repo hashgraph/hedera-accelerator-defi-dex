@@ -44,6 +44,7 @@ abstract contract BaseDAO is OwnableUpgradeable {
 
     function getDaoDetail()
         public
+        view
         returns (
             string memory name,
             string memory logoUrl,

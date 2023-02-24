@@ -1,8 +1,9 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-import "../common/IBaseHTS.sol";
 import "../common/IERC20.sol";
+import "../common/IEvents.sol";
+import "../common/IBaseHTS.sol";
 
 import "../dao/IGovernanceDAO.sol";
 import "../governance/IGODTokenHolderFactory.sol";
@@ -11,34 +12,38 @@ import "../governance/IGovernorTransferToken.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-contract GovernanceDAOFactory is OwnableUpgradeable {
-    event PublicDaoCreated(
-        address indexed daoAddress,
-        string name,
-        address admin
-    );
+contract GovernanceDAOFactory is OwnableUpgradeable, IEvents {
+    event PublicDaoCreated(address daoAddress);
+    event PrivateDaoCreated(address daoAddress);
 
-    event PrivateDaoCreated(
-        address indexed daoAddress,
-        string name,
-        address admin
-    );
+    error NotAdmin(string message);
+    error InvalidInput(string message);
+
+    string private constant GovernorTokenDAO = "GovernorTokenDAO";
+    string private constant GovernorTransferToken = "GovernorTransferToken";
 
     address private baseHTS;
     address private proxyAdmin;
 
     address[] private daos;
 
-    address private doaLogic;
+    IGovernorTokenDAO private doaLogic;
+    IGovernorTransferToken private tokenTransferLogic;
     IGODTokenHolderFactory private godTokenHolderFactory;
-    address private tokenTransferLogic;
+
+    modifier ifAdmin() {
+        if (msg.sender != proxyAdmin) {
+            revert NotAdmin("GovernanceDAOFactory: auth failed");
+        }
+        _;
+    }
 
     function initialize(
         address _proxyAdmin,
         address _baseHTS,
-        address _daoLogic,
+        IGovernorTokenDAO _daoLogic,
         IGODTokenHolderFactory _godTokenHolderFactory,
-        address _tokenTransferLogic
+        IGovernorTransferToken _tokenTransferLogic
     ) external initializer {
         __Ownable_init();
         proxyAdmin = _proxyAdmin;
@@ -46,6 +51,35 @@ contract GovernanceDAOFactory is OwnableUpgradeable {
         doaLogic = _daoLogic;
         godTokenHolderFactory = _godTokenHolderFactory;
         tokenTransferLogic = _tokenTransferLogic;
+
+        emit LogicUpdated(address(0), address(doaLogic), GovernorTokenDAO);
+        emit LogicUpdated(
+            address(0),
+            address(tokenTransferLogic),
+            GovernorTransferToken
+        );
+    }
+
+    function upgradeGovernorTokenDaoLogicImplementation(
+        IGovernorTokenDAO _newImpl
+    ) external ifAdmin {
+        emit LogicUpdated(
+            address(doaLogic),
+            address(_newImpl),
+            GovernorTokenDAO
+        );
+        doaLogic = _newImpl;
+    }
+
+    function upgradeGovernorTokenTransferLogicImplementation(
+        IGovernorTransferToken _newImpl
+    ) external ifAdmin {
+        emit LogicUpdated(
+            address(tokenTransferLogic),
+            address(_newImpl),
+            GovernorTransferToken
+        );
+        tokenTransferLogic = _newImpl;
     }
 
     function createDAO(
@@ -58,6 +92,21 @@ contract GovernanceDAOFactory is OwnableUpgradeable {
         uint256 _votingPeriod,
         bool _isPrivate
     ) external returns (address) {
+        if (bytes(_name).length == 0) {
+            revert InvalidInput("GovernanceDAOFactory: name is empty");
+        }
+        if (bytes(_logoUrl).length == 0) {
+            revert InvalidInput("GovernanceDAOFactory: url is empty");
+        }
+        if (address(_tokenAddress) == address(0)) {
+            revert InvalidInput("GovernanceDAOFactory: token address is zero");
+        }
+        if (address(_admin) == address(0)) {
+            revert InvalidInput("GovernanceDAOFactory: admin address is zero");
+        }
+        if (_votingPeriod == 0) {
+            revert InvalidInput("GovernanceDAOFactory: voting period is zero");
+        }
         IGODHolder iGODHolder = godTokenHolderFactory.getGODTokenHolder(
             _tokenAddress
         );
@@ -73,14 +122,17 @@ contract GovernanceDAOFactory is OwnableUpgradeable {
             _name,
             address(tokenTransfer)
         );
-
         if (_isPrivate) {
-            emit PrivateDaoCreated(createdDAOAddress, _name, _admin);
+            emit PrivateDaoCreated(createdDAOAddress);
         } else {
             daos.push(createdDAOAddress);
-            emit PublicDaoCreated(createdDAOAddress, _name, _admin);
+            emit PublicDaoCreated(createdDAOAddress);
         }
         return createdDAOAddress;
+    }
+
+    function getDAOs() external view returns (address[] memory) {
+        return daos;
     }
 
     function _createTokenTransfer(
@@ -89,8 +141,10 @@ contract GovernanceDAOFactory is OwnableUpgradeable {
         uint256 _votingDelay,
         uint256 _votingPeriod,
         IGODHolder _iGODHolder
-    ) private returns (IGovernorBase iGovernorBase) {
-        iGovernorBase = IGovernorBase(_createProxy(tokenTransferLogic));
+    ) private returns (IGovernorTransferToken iGovernorBase) {
+        iGovernorBase = IGovernorTransferToken(
+            _createProxy(address(tokenTransferLogic))
+        );
         iGovernorBase.initialize(
             IERC20(_tokenAddress),
             _votingDelay,
@@ -106,8 +160,10 @@ contract GovernanceDAOFactory is OwnableUpgradeable {
         string calldata _name,
         address _governorTokenTransferContractAddress
     ) private returns (address daoAddress) {
-        IGovernanceDAO iGovernanceDAO = IGovernanceDAO(_createProxy(doaLogic));
-        iGovernanceDAO.initialize(
+        IGovernorTokenDAO governanceDAO = IGovernorTokenDAO(
+            _createProxy(address(doaLogic))
+        );
+        governanceDAO.initialize(
             _admin,
             _name,
             _governorTokenTransferContractAddress
