@@ -26,13 +26,7 @@ contract GovernorTokenDAO is IGovernorTokenDAO, BaseDAO {
         return address(_governorTokenTransferAddress);
     }
 
-    function getAllProposals()
-        external
-        view
-        override
-        onlyOwner
-        returns (uint256[] memory)
-    {
+    function getAllProposals() external override returns (uint256[] memory) {
         return _proposals;
     }
 
@@ -52,7 +46,8 @@ contract GovernorTokenDAO is IGovernorTokenDAO, BaseDAO {
             transferFromAccount,
             transferToAccount,
             tokenToTransfer,
-            transferTokenAmount
+            transferTokenAmount,
+            msg.sender
         );
         _proposals.push(proposalId);
         return proposalId;

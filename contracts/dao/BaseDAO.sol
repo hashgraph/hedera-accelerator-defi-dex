@@ -4,16 +4,13 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 struct Social {
-    uint8 key;
+    string key;
     string value;
 }
 
 abstract contract BaseDAO is OwnableUpgradeable {
-    error AuthenticationError(string message, address sender);
-
     address internal _admin;
     string internal _name;
-    address[] internal _members;
     Social[] internal _webLinks;
     string internal _logoUrl;
 
@@ -28,18 +25,17 @@ abstract contract BaseDAO is OwnableUpgradeable {
         _transferOwnership(admin);
     }
 
-    function addMember(address _member) external onlyOwner {
-        _members.push(_member);
-    }
-
-    function addWebLink(uint8 _key, string calldata _value) external onlyOwner {
-        require(_key > 0, "BaseDAO: invalid key passed");
+    function addWebLink(
+        string calldata _key,
+        string calldata _value
+    ) external onlyOwner {
+        require(bytes(_key).length > 0, "BaseDAO: invalid key passed");
         require(bytes(_value).length > 0, "BaseDAO: invalid value passed");
         _webLinks.push(Social(_key, _value));
     }
 
-    function getMembers() external view returns (address[] memory) {
-        return _members;
+    function getWebLinks() external view returns (Social[] memory) {
+        return _webLinks;
     }
 
     function getDaoDetail()

@@ -808,7 +808,8 @@ describe("Governor Tests", function () {
           signers[1].address,
           signers[2].address,
           tokenAddress,
-          amount
+          amount,
+          signers[0].address
         );
       const record = await pIdResponse.wait();
       return record.events[0].args.proposalId.toString();

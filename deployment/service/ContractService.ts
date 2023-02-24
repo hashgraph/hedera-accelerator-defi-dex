@@ -23,6 +23,7 @@ export class ContractService {
   public godHolderContract = "godholder";
   public configuration = "configuration";
   public godTokenHolderFactory = "godtokenholderfactory";
+  public governorTokenDao = "governortokendao";
 
   private contractRecordFile = "./deployment/state/contracts.json";
   static DEV_CONTRACTS_PATH = "./deployment/state/contracts.json";

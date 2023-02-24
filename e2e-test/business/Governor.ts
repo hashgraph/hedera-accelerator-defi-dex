@@ -259,7 +259,7 @@ export default class Governor extends Base {
   ) => {
     const args = new ContractFunctionParameters().addString(title);
     const { receipt, result } = await this.execute(
-      900000,
+      999999,
       EXECUTE_PROPOSAL,
       client,
       args,
