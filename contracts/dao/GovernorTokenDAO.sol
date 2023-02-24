@@ -28,6 +28,7 @@ contract GovernorTokenDAO is IGovernorTokenDAO, BaseDAO {
 
     function getAllProposals()
         external
+        view
         override
         onlyOwner
         returns (uint256[] memory)
