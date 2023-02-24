@@ -14,6 +14,7 @@ export default class ContractMetadata {
     "Splitter",
     "Configuration",
     "GODTokenHolderFactory",
+    "GovernanceDAOFactory",
   ];
 
   static SUPPORTED_CONTRACTS_FOR_DEPLOYMENT = [
@@ -30,6 +31,8 @@ export default class ContractMetadata {
     "GODHolder",
     "Configuration",
     "GODTokenHolderFactory",
+    "GovernanceDAOFactory",
+    "GovernorTokenDAO",
   ];
 
   static SUPPORTED_PROXY_OPTIONS = ["create", "update"];

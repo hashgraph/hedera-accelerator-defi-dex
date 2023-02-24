@@ -30,7 +30,6 @@ contract GovernorTokenDAO is IGovernorTokenDAO, BaseDAO {
         external
         view
         override
-        onlyOwner
         returns (uint256[] memory)
     {
         return _proposals;
@@ -52,7 +51,8 @@ contract GovernorTokenDAO is IGovernorTokenDAO, BaseDAO {
             transferFromAccount,
             transferToAccount,
             tokenToTransfer,
-            transferTokenAmount
+            transferTokenAmount,
+            msg.sender
         );
         _proposals.push(proposalId);
         return proposalId;

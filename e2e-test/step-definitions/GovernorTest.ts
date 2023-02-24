@@ -99,7 +99,8 @@ export class GovernorSteps {
       tokenQty,
       clientsInfo.operatorClient,
       description,
-      link
+      link,
+      clientsInfo.operatorId.toSolidityAddress()
     );
 
     return proposalID;
@@ -126,7 +127,8 @@ export class GovernorSteps {
         tokenQty,
         clientsInfo.operatorClient,
         description,
-        link
+        link,
+        clientsInfo.operatorId.toSolidityAddress()
       );
     } catch (e: any) {
       msg = e.message;
@@ -176,7 +178,8 @@ export class GovernorSteps {
         tokenQty,
         clientWithNoGODToken,
         description,
-        link
+        link,
+        clientsInfo.operatorId.toSolidityAddress()
       );
     } catch (e: any) {
       msg = e.message;

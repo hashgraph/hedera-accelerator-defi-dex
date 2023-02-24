@@ -9,6 +9,8 @@ interface IGovernorTransferToken {
         address transferFromAccount,
         address transferToAccount,
         address tokenToTransfer,
-        int256 transferTokenAmount
+        int256 transferTokenAmount,
+        address creator
     ) external returns (uint256);
+
 }

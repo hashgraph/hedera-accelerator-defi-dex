@@ -23,12 +23,14 @@ contract GovernorTransferToken is
         address _transferFromAccount,
         address _transferToAccount,
         address _tokenToTransfer,
-        int256 _transferTokenAmount
-    ) external override returns (uint256) {
+        int256 _transferTokenAmount,
+        address creater
+    ) external returns (uint256) {
         uint256 proposalId = _createProposal(
             title,
             description,
-            linkToDiscussion
+            linkToDiscussion,
+            creater
         );
         _proposalData[proposalId] = TokenTransferData(
             _transferFromAccount,

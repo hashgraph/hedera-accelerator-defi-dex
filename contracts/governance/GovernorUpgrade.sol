@@ -26,7 +26,8 @@ contract GovernorUpgrade is GovernorCountingSimpleInternal {
         uint256 proposalId = _createProposal(
             title,
             description,
-            linkToDiscussion
+            linkToDiscussion,
+            msg.sender
         );
         _proposalData[proposalId] = TokenUpgradeData(
             proxyContract,
