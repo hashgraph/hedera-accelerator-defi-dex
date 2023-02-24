@@ -363,5 +363,21 @@
     "hash": "01803c731130de25a0ff125ce5156876",
     "transparentProxyAddress": "0x0000000000000000000000000000000000363712",
     "transparentProxyId": "0.0.3553042"
+  },
+  {
+    "name": "governancedaofactory",
+    "id": "0.0.3558512",
+    "address": "0x0000000000000000000000000000000000364c70",
+    "timestamp": "2023-02-23T19:34:38.235Z",
+    "hash": "60bd74dbec49692cbef85c465c0034c3",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000364d5b",
+    "transparentProxyId": "0.0.3558747"
+  },
+  {
+    "name": "governortokendao",
+    "id": "0.0.3560785",
+    "address": "0x0000000000000000000000000000000000365551",
+    "timestamp": "2023-02-24T05:29:11.982Z",
+    "hash": "ed2352389ebd08e6c0b7c9127e6271ab"
   }
 ]
