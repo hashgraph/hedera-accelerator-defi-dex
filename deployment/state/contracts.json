@@ -363,5 +363,14 @@
     "hash": "01803c731130de25a0ff125ce5156876",
     "transparentProxyAddress": "0x0000000000000000000000000000000000363712",
     "transparentProxyId": "0.0.3553042"
+  },
+  {
+    "name": "governancedaofactory",
+    "id": "0.0.3583943",
+    "address": "0x000000000000000000000000000000000036afc7",
+    "timestamp": "2023-02-27T12:05:50.368Z",
+    "hash": "3007718fc3e455974691a8415a9af932",
+    "transparentProxyAddress": "0x000000000000000000000000000000000036afce",
+    "transparentProxyId": "0.0.3583950"
   }
 ]
