@@ -14,9 +14,9 @@ const godHolderContract = csDev.getContractWithProxy(csDev.godHolderContract);
 const governorUpgradeContract = csDev.getContractWithProxy(
   csDev.governorUpgradeContract
 );
-// const factoryLogicId = csDev.getContract(csDev.factoryContractName).id!;
+
 let factoryProxyId = csDev.getContractWithProxy(csDev.factoryContractName)
-  .transparentProxyId!; // factoryProxyId contains both logic and proxyi
+  .transparentProxyId!; // factoryProxyId contains both logic and proxy id
 const governorContractId = governorUpgradeContract.transparentProxyId!;
 const godHolderContractId = godHolderContract.transparentProxyId!;
 const governor = new Governor(governorContractId);
