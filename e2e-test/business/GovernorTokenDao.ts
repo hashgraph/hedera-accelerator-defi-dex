@@ -85,7 +85,7 @@ export default class GovernorTokenDao extends Base {
     );
     const proposalId = result.getUint256(0).toFixed();
     console.log(
-      `- GovernorTokenDap#${CREATE_PROPOSAL}(): proposal-id = ${proposalId}\n`
+      `- GovernorTokenDao#${CREATE_PROPOSAL}(): proposal-id = ${proposalId}\n`
     );
     return proposalId;
   };
@@ -100,7 +100,7 @@ export default class GovernorTokenDao extends Base {
     );
     const proposalId = result.getUint256(0).toFixed();
     console.log(
-      `- GovernorTokenDap#${GET_ALL_PROPOSALS}(): proposal-id = ${proposalId}\n`
+      `- GovernorTokenDao#${GET_ALL_PROPOSALS}(): proposal-id = ${proposalId}\n`
     );
   };
 
@@ -114,7 +114,7 @@ export default class GovernorTokenDao extends Base {
       .addString(webLink);
 
     const { result } = await this.execute(9000000, ADD_WEB_LINK, client, args);
-    console.log(`- GovernorTokenDap#${ADD_WEB_LINK}()\n`);
+    console.log(`- GovernorTokenDao#${ADD_WEB_LINK}()\n`);
   };
 
   getDaoDetail = async (client: Client = clientsInfo.operatorClient) => {
@@ -128,7 +128,7 @@ export default class GovernorTokenDao extends Base {
     const name = result.getString(0);
     const logoUrl = result.getString(1);
     console.log(
-      `- GovernorTokenDap#${GET_DAO_DETAILS}(): name = ${name}\nlogoUrls: ${logoUrl}`
+      `- GovernorTokenDao#${GET_DAO_DETAILS}(): name = ${name}\nlogoUrls: ${logoUrl}`
     );
   };
 
@@ -141,6 +141,6 @@ export default class GovernorTokenDao extends Base {
         2
       )}\n${result.getString(3)}\n${result.getString(4)}`
     );
-    console.log(`- GovernorTokenDap#${GET_WEB_LINKS}(): link = ${link}\n`);
+    console.log(`- GovernorTokenDao#${GET_WEB_LINKS}(): link = ${link}\n`);
   };
 }
