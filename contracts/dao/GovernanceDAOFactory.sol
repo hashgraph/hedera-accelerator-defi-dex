@@ -21,6 +21,7 @@ contract GovernanceDAOFactory is OwnableUpgradeable, IEvents {
 
     string private constant GovernorTokenDAO = "GovernorTokenDAO";
     string private constant GovernorTransferToken = "GovernorTransferToken";
+    string private constant GODTokenHolderFactory = "GODTokenHolderFactory";
 
     address private baseHTS;
     address private proxyAdmin;
@@ -57,6 +58,11 @@ contract GovernanceDAOFactory is OwnableUpgradeable, IEvents {
             address(0),
             address(tokenTransferLogic),
             GovernorTransferToken
+        );
+        emit LogicUpdated(
+            address(0),
+            address(godTokenHolderFactory),
+            GODTokenHolderFactory
         );
     }
 
