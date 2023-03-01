@@ -7,7 +7,7 @@ contract GovernorTokenDAO is IGovernorTokenDAO, BaseDAO {
     IGovernorTransferToken private governorTokenTransferAddress;
     uint256[] private _proposals;
 
-    function initilize(
+    function initialize(
         address admin,
         string calldata name,
         string calldata logoUrl,

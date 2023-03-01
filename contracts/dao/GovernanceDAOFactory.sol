@@ -5,7 +5,7 @@ import "../common/IERC20.sol";
 import "../common/IEvents.sol";
 import "../common/IBaseHTS.sol";
 
-import "../dao/IGovernanceDAO.sol";
+import "../dao/IGovernorTokenDAO.sol";
 import "../governance/IGODTokenHolderFactory.sol";
 import "../governance/IGovernorTransferToken.sol";
 
@@ -120,7 +120,8 @@ contract GovernanceDAOFactory is OwnableUpgradeable, IEvents {
         address createdDAOAddress = _createDAO(
             _admin,
             _name,
-            address(tokenTransfer)
+            _logoUrl,
+            tokenTransfer
         );
         if (_isPrivate) {
             emit PrivateDaoCreated(createdDAOAddress);
@@ -141,11 +142,11 @@ contract GovernanceDAOFactory is OwnableUpgradeable, IEvents {
         uint256 _votingDelay,
         uint256 _votingPeriod,
         IGODHolder _iGODHolder
-    ) private returns (IGovernorTransferToken iGovernorBase) {
-        iGovernorBase = IGovernorTransferToken(
+    ) private returns (IGovernorTransferToken iGovernorTransferToken) {
+        iGovernorTransferToken = IGovernorTransferToken(
             _createProxy(address(tokenTransferLogic))
         );
-        iGovernorBase.initialize(
+        iGovernorTransferToken.initialize(
             IERC20(_tokenAddress),
             _votingDelay,
             _votingPeriod,
@@ -158,7 +159,8 @@ contract GovernanceDAOFactory is OwnableUpgradeable, IEvents {
     function _createDAO(
         address _admin,
         string calldata _name,
-        address _governorTokenTransferContractAddress
+        string calldata _logoUrl,
+        IGovernorTransferToken _governorTokenTransferContractAddress
     ) private returns (address daoAddress) {
         IGovernorTokenDAO governanceDAO = IGovernorTokenDAO(
             _createProxy(address(doaLogic))
@@ -166,9 +168,10 @@ contract GovernanceDAOFactory is OwnableUpgradeable, IEvents {
         governanceDAO.initialize(
             _admin,
             _name,
+            _logoUrl,
             _governorTokenTransferContractAddress
         );
-        return address(iGovernanceDAO);
+        return address(governanceDAO);
     }
 
     function _createProxy(address _logic) private returns (address) {
