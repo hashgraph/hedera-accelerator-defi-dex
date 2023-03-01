@@ -8,18 +8,22 @@ import Governor from "../../e2e-test/business/Governor";
 import GodHolder from "../../e2e-test/business/GodHolder";
 
 const csDev = new ContractService();
-const governorTokenDaoContractId = csDev.getContractWithProxy(
+const governorTokenDaoProxyContractId = csDev.getContractWithProxy(
   csDev.governorTokenDao
 ).transparentProxyId!;
-const godHolderAddress = csDev.getContractWithProxy(csDev.godHolderContract)
-  .transparentProxyId!;
-const governorTokenTransferContractId = csDev.getContractWithProxy(
+const godHolderProxyContractId = csDev.getContractWithProxy(
+  csDev.godHolderContract
+).transparentProxyId!;
+const governorTokenTransferProxyContractId = csDev.getContractWithProxy(
   csDev.governorTTContractName
 ).transparentProxyId!;
-const governorTokenDao = new GovernorTokenDao(governorTokenDaoContractId);
-const governor = new Governor(governorTokenTransferContractId);
+
+const governorTokenDao = new GovernorTokenDao(governorTokenDaoProxyContractId);
+const governorTokenTransfer = new Governor(
+  governorTokenTransferProxyContractId
+);
 const adminAddress: string = clientsInfo.uiUserId.toSolidityAddress();
-const godHolder = new GodHolder(godHolderAddress);
+const godHolder = new GodHolder(godHolderProxyContractId);
 
 const TOKEN_ID = TokenId.fromString(dex.TOKEN_LAB49_1);
 const TOKEN_QTY = 1 * 1e8;
@@ -29,7 +33,7 @@ async function main() {
     adminAddress,
     "Governor Token Dao",
     "dao url",
-    governor,
+    governorTokenTransfer,
     godHolder
   );
 
@@ -41,14 +45,14 @@ async function main() {
     TOKEN_ID.toSolidityAddress(),
     TOKEN_QTY
   );
-  await governor.getProposalDetails(proposalId);
-  await governor.forVote(proposalId);
-  await governor.forVote(proposalId, clientsInfo.treasureClient);
-  await governor.isQuorumReached(proposalId);
-  await governor.isVoteSucceeded(proposalId);
-  await governor.proposalVotes(proposalId);
-  await governor.delay(proposalId);
-  await governor.executeProposal(title, clientsInfo.treasureKey);
+  await governorTokenTransfer.getProposalDetails(proposalId);
+  await governorTokenTransfer.forVote(proposalId);
+  await governorTokenTransfer.forVote(proposalId, clientsInfo.treasureClient);
+  await governorTokenTransfer.isQuorumReached(proposalId);
+  await governorTokenTransfer.isVoteSucceeded(proposalId);
+  await governorTokenTransfer.proposalVotes(proposalId);
+  await governorTokenTransfer.delay(proposalId);
+  await governorTokenTransfer.executeProposal(title, clientsInfo.treasureKey);
   await godHolder.checkAndClaimedGodTokens(clientsInfo.treasureClient);
   await godHolder.checkAndClaimedGodTokens(clientsInfo.operatorClient);
 

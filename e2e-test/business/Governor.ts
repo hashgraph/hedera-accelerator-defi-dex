@@ -126,8 +126,8 @@ export default class Governor extends Base {
       .addAddress(fromAddress) // from
       .addAddress(toAddress) // to
       .addAddress(tokenId) // tokenToTransfer
-      .addInt256(BigNumber(tokenAmount))
-      .addAddress(creater); // amountToTransfer
+      .addInt256(BigNumber(tokenAmount)) // amountToTransfer
+      .addAddress(creater); // proposal creater
     const { result } = await this.execute(
       9000000,
       CREATE_PROPOSAL,

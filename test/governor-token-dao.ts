@@ -7,6 +7,10 @@ import { BigNumber } from "ethers";
 const defaultQuorumThresholdValue = 5;
 const defaultQuorumThresholdValueInBsp = defaultQuorumThresholdValue * 100;
 const zeroAddress = "0x1111111000000000000000000000000000000000";
+const daoName = "DaoName";
+const daoLogoUrl = "dao-logo-url";
+const webKey = "git";
+const webUrl = "web-url";
 
 describe("GovernorTokenDAO Tests", function () {
   async function deployFixture() {
@@ -45,8 +49,8 @@ describe("GovernorTokenDAO Tests", function () {
     const Dao = await ethers.getContractFactory("GovernorTokenDAO");
     const daoArgs = [
       signers[0].address,
-      "DaoName",
-      "daologourl",
+      daoName,
+      daoLogoUrl,
       governorTransferToken.address,
     ];
     const instanceDao = await upgrades.deployProxy(Dao, daoArgs);
@@ -77,12 +81,7 @@ describe("GovernorTokenDAO Tests", function () {
     const instance = await upgrades.deployProxy(Governor, args);
     await instance.deployed();
     const Dao = await ethers.getContractFactory("GovernorTokenDAO");
-    const daoArgs = [
-      signers[0].address,
-      "DaoName",
-      "daologourl",
-      instance.address,
-    ];
+    const daoArgs = [signers[0].address, daoName, daoLogoUrl, instance.address];
     const instanceDao = await upgrades.deployProxy(Dao, daoArgs);
     await instanceDao.deployed();
   });
@@ -94,15 +93,15 @@ describe("GovernorTokenDAO Tests", function () {
       );
       const daoArgs = [
         signers[0].address,
-        "DaoName",
-        "daologourl",
+        daoName,
+        daoLogoUrl,
         governorTransferToken.address,
       ];
       await expect(
         instanceDao.initialize(
           signers[0].address,
-          "DaoName",
-          "daologourl",
+          daoName,
+          daoLogoUrl,
           governorTransferToken.address
         )
       ).revertedWith("Initializable: contract is already initialized");
@@ -111,31 +110,29 @@ describe("GovernorTokenDAO Tests", function () {
     it("Verify getDaoDetail returns correct values", async function () {
       const { instanceDao } = await loadFixture(deployFixture);
       const result = await instanceDao.callStatic.getDaoDetail();
-      expect(result[0]).to.be.equals("DaoName");
-      expect(result[1]).to.be.equals("daologourl");
+      expect(result[0]).to.be.equals(daoName);
+      expect(result[1]).to.be.equals(daoLogoUrl);
     });
 
     it("Verify addWebLink and getWebLinks", async function () {
       const { instanceDao, signers } = await loadFixture(deployFixture);
-      await instanceDao.addWebLink("git", "githuburl");
+      await instanceDao.addWebLink(webKey, webUrl);
       const result = await instanceDao.callStatic.getWebLinks();
-      await expect(instanceDao.addWebLink("", "githuburl")).revertedWith(
+      await expect(instanceDao.addWebLink("", webUrl)).revertedWith(
         "BaseDAO: invalid key passed"
       );
-      await expect(instanceDao.addWebLink("git", "")).revertedWith(
+      await expect(instanceDao.addWebLink(webKey, "")).revertedWith(
         "BaseDAO: invalid value passed"
       );
 
-      expect(result[0].key).to.be.equals("git");
-      expect(result[0].value).to.be.equals("githuburl");
+      expect(result[0].key).to.be.equals(webKey);
+      expect(result[0].value).to.be.equals(webUrl);
     });
 
     it("Verify addWebLink fails when called by non admin", async function () {
       const { instanceDao, signers } = await loadFixture(deployFixture);
       await expect(
-        instanceDao
-          .connect(signers[1])
-          .callStatic.addWebLink("git", "githuburl")
+        instanceDao.connect(signers[1]).addWebLink(webKey, webUrl)
       ).revertedWith("Ownable: caller is not the owner");
     });
 
@@ -152,7 +149,7 @@ describe("GovernorTokenDAO Tests", function () {
       const { instanceDao, signers, tokenCont } = await loadFixture(
         deployFixture
       );
-      const proposalId = await instanceDao.callStatic.createProposal(
+      await instanceDao.createProposal(
         "proposal",
         "description",
         "linkToDiscussion",
@@ -161,7 +158,8 @@ describe("GovernorTokenDAO Tests", function () {
         tokenCont.address,
         100
       );
-      expect(proposalId).not.to.be.equals(0);
+      const proposals = await instanceDao.getAllProposals();
+      expect(proposals.length).to.be.equals(1);
     });
 
     it("Verify createProposal with non admin should fail", async function () {
@@ -196,7 +194,7 @@ describe("GovernorTokenDAO Tests", function () {
         tokenCont.address,
         100
       );
-      const proposals = await instanceDao.callStatic.getAllProposals();
+      const proposals = await instanceDao.getAllProposals();
       expect(proposals.length).to.be.equals(1);
     });
   });

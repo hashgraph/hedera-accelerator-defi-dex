@@ -3,9 +3,6 @@ pragma solidity ^0.8.4;
 import "../common/IERC20.sol";
 import "../common/IBaseHTS.sol";
 
-import "../common/IERC20.sol";
-import "../common/IBaseHTS.sol";
-
 interface IGODHolder {
     function initialize(IBaseHTS tokenService, IERC20 token) external;
 
