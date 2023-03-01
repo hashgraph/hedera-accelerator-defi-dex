@@ -7,6 +7,8 @@ import { Client, PrivateKey, ContractFunctionParameters } from "@hashgraph/sdk";
 const INITIALIZE = "initialize";
 const GET_TRANSACTIONS_FEE = "getTransactionsFee";
 const SET_TRANSACTIONS_FEE = "setTransactionFee";
+const ADD_URL_KEY = "addUrlKey";
+const GET_URL_KEYS = "getCommaSeparatedUrlKeys";
 
 export default class Configuration extends Base {
   initialize = async (client: Client = clientsInfo.operatorClient) => {
@@ -45,5 +47,33 @@ export default class Configuration extends Base {
       }, fees = ${JSON.stringify(fees)}\n`
     );
     return items;
+  };
+
+  addUrlKey = async (
+    key: string,
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    const args = new ContractFunctionParameters().addString(key);
+    await this.execute(
+      400000,
+      ADD_URL_KEY,
+      client,
+      args,
+      clientsInfo.operatorKey
+    );
+    console.log(
+      `- Configuration#${ADD_URL_KEY}(): ${key} added to configuration.\n`
+    );
+  };
+
+  getCommaSeparatedUrlKeys = async (
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    const { result } = await this.execute(50000, GET_URL_KEYS, client);
+    const allKeysCommaSeparated = JSON.stringify(result.getString(0));
+    console.log(
+      `- Configuration#${GET_URL_KEYS}(): keys = ${allKeysCommaSeparated}\n`
+    );
+    return allKeysCommaSeparated;
   };
 }
