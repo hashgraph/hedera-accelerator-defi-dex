@@ -363,5 +363,14 @@
     "hash": "01803c731130de25a0ff125ce5156876",
     "transparentProxyAddress": "0x0000000000000000000000000000000000363712",
     "transparentProxyId": "0.0.3553042"
+  },
+  {
+    "name": "configuration",
+    "id": "0.0.3603834",
+    "address": "0x000000000000000000000000000000000036fd7a",
+    "timestamp": "2023-03-01T08:21:51.671Z",
+    "hash": "7912d3a818845e5f2899c38679421c7d",
+    "transparentProxyAddress": "0x000000000000000000000000000000000036fd7e",
+    "transparentProxyId": "0.0.3603838"
   }
 ]

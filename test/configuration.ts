@@ -88,4 +88,51 @@ describe("Configuration contract tests", function () {
     const noOwner = await configurationInstance.owner();
     expect("0x0000000000000000000000000000000000000000").to.be.equals(noOwner);
   });
+
+  it("get all urlKeys", async function () {
+    const { configurationInstance } = await loadFixture(deployFixture);
+    const urlKeys = await configurationInstance.getCommaSeparatedUrlKeys();
+    expect(urlKeys).not.equals(undefined);
+  });
+
+  it("Verify adding a new key", async function () {
+    const { configurationInstance } = await loadFixture(deployFixture);
+    const newKey = "dummy";
+    const urlKeys = await configurationInstance.getCommaSeparatedUrlKeys();
+    expect(urlKeys).does.not.contains(newKey);
+    await configurationInstance.addUrlKey(newKey);
+    const newUrlKeys = await configurationInstance.getCommaSeparatedUrlKeys();
+    expect(newUrlKeys).contains(newKey);
+  });
+
+  it("Addition of duplicate key not allowed", async function () {
+    const { configurationInstance } = await loadFixture(deployFixture);
+    const newKey = "dummy";
+    await configurationInstance.addUrlKey(newKey);
+    const newUrlKeys = await configurationInstance.getCommaSeparatedUrlKeys();
+    expect(newUrlKeys).contains(newKey);
+    await expect(configurationInstance.addUrlKey(newKey))
+      .revertedWithCustomError(configurationInstance, "UrlKeyAlreadyExist")
+      .withArgs(newKey, "Url key already exists");
+  });
+
+  it("Verify addition of key should be reverted if caller is not owner", async function () {
+    const { configurationInstance, signers } = await loadFixture(deployFixture);
+    const newKey = "dummy";
+    const urlKeys = await configurationInstance.getCommaSeparatedUrlKeys();
+    await expect(
+      configurationInstance.connect(signers[1]).addUrlKey(newKey)
+    ).to.revertedWith("Ownable: caller is not the owner");
+
+    const oldOwner = await configurationInstance.owner();
+    expect(signers[0].address).to.be.equals(oldOwner);
+
+    await configurationInstance.transferOwnership(signers[1].address);
+    const newOwner = await configurationInstance.owner();
+    expect(signers[1].address).to.be.equals(newOwner);
+
+    await configurationInstance.connect(signers[1]).addUrlKey(newKey);
+    const newUrlKeys = await configurationInstance.getCommaSeparatedUrlKeys();
+    expect(newUrlKeys).contains(newKey);
+  });
 });

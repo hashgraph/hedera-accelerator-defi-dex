@@ -19,6 +19,9 @@ async function main() {
     clientsInfo.operatorKey
   );
   await configuration.getTransactionsFee();
+  await configuration.getCommaSeparatedUrlKeys();
+  await configuration.addUrlKey("newKey");
+  await configuration.getCommaSeparatedUrlKeys();
 }
 
 main()
