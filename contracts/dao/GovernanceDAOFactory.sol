@@ -110,14 +110,14 @@ contract GovernanceDAOFactory is OwnableUpgradeable, IEvents {
         IGODHolder iGODHolder = godTokenHolderFactory.getGODTokenHolder(
             _tokenAddress
         );
-        IGovernorTransferToken tokenTransfer = _createTokenTransfer(
-            address(_tokenAddress),
-            _quorumThreshold,
-            _votingDelay,
-            _votingPeriod,
-            iGODHolder
-        );
-        address createdDAOAddress = _createDAO(
+        IGovernorTransferToken tokenTransfer = _createGovernorTransferTokenContractInstance(
+                address(_tokenAddress),
+                _quorumThreshold,
+                _votingDelay,
+                _votingPeriod,
+                iGODHolder
+            );
+        address createdDAOAddress = _createGovernorTokenDAOContractInstance(
             _admin,
             _name,
             _logoUrl,
@@ -136,7 +136,7 @@ contract GovernanceDAOFactory is OwnableUpgradeable, IEvents {
         return daos;
     }
 
-    function _createTokenTransfer(
+    function _createGovernorTransferTokenContractInstance(
         address _tokenAddress,
         uint256 _quorumThreshold,
         uint256 _votingDelay,
@@ -156,7 +156,7 @@ contract GovernanceDAOFactory is OwnableUpgradeable, IEvents {
         );
     }
 
-    function _createDAO(
+    function _createGovernorTokenDAOContractInstance(
         address _admin,
         string calldata _name,
         string calldata _logoUrl,
