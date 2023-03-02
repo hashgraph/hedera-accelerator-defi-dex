@@ -5,6 +5,7 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 describe("GovernanceDAOFactory contract tests", function () {
   const zeroAddress = "0x0000000000000000000000000000000000000000";
+  const oneAddress = "0x0000000000000000000000000000000000000001";
   const total = 100 * 1e8;
 
   async function deployFixture() {
@@ -250,6 +251,14 @@ describe("GovernanceDAOFactory contract tests", function () {
     )
       .to.revertedWithCustomError(governorDAOFactoryInstance, "NotAdmin")
       .withArgs("GovernanceDAOFactory: auth failed");
+
+    await expect(
+      governorDAOFactoryInstance
+        .connect(daoAdminTwo)
+        .upgradeGODTokenHolderFactory(zeroAddress)
+    )
+      .to.revertedWithCustomError(governorDAOFactoryInstance, "NotAdmin")
+      .withArgs("GovernanceDAOFactory: auth failed");
   });
 
   it("Verify upgrade logic call should be proceeded dex owner", async function () {
@@ -259,18 +268,29 @@ describe("GovernanceDAOFactory contract tests", function () {
 
     const txn1 = await governorDAOFactoryInstance
       .connect(dexOwner)
-      .upgradeGovernorTokenDaoLogicImplementation(zeroAddress);
+      .upgradeGovernorTokenDaoLogicImplementation(oneAddress);
 
     const event1 = (await txn1.wait()).events.pop();
     expect(event1.event).to.be.equal("LogicUpdated");
     expect(event1.args.name).to.be.equal("GovernorTokenDAO");
+    expect(event1.args.newImplementation).to.be.equal(oneAddress);
 
     const txn2 = await governorDAOFactoryInstance
       .connect(dexOwner)
-      .upgradeGovernorTokenTransferLogicImplementation(zeroAddress);
+      .upgradeGovernorTokenTransferLogicImplementation(oneAddress);
 
     const event2 = (await txn2.wait()).events.pop();
     expect(event2.event).to.be.equal("LogicUpdated");
     expect(event2.args.name).to.be.equal("GovernorTransferToken");
+    expect(event2.args.newImplementation).to.be.equal(oneAddress);
+
+    const txn3 = await governorDAOFactoryInstance
+      .connect(dexOwner)
+      .upgradeGODTokenHolderFactory(oneAddress);
+
+    const event3 = (await txn3.wait()).events.pop();
+    expect(event3.event).to.be.equal("LogicUpdated");
+    expect(event3.args.name).to.be.equal("GODTokenHolderFactory");
+    expect(event3.args.newImplementation).to.be.equal(oneAddress);
   });
 });
