@@ -10,6 +10,7 @@ When User wait for create token proposal state to be "Active" for max 5 seconds
 Then User verify create token proposal state is "Active"
 When User vote "For" create token proposal
 When User wait for create token proposal state to be "Succeeded" for max 5 seconds
+Then User verify create token proposal state is "Succeeded"
 When User execute the create token proposal with title "proposalfortokencreate1"
 When User wait for create token proposal state to be "Executed" for max 5 seconds
 Then User verify that token is created with name "Token-1" and symbol "TokenSymbol-1"
