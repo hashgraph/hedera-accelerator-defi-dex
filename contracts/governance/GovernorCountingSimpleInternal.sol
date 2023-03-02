@@ -11,9 +11,11 @@ import "../common/IERC20.sol";
 import "../common/IBaseHTS.sol";
 import "../common/hedera/HederaResponseCodes.sol";
 import "./GODHolder.sol";
+import "./IGovernorBase.sol";
 
 abstract contract GovernorCountingSimpleInternal is
     Initializable,
+    IGovernorBase,
     GovernorUpgradeable,
     GovernorSettingsUpgradeable,
     GovernorCountingSimpleUpgradeable
@@ -83,9 +85,10 @@ abstract contract GovernorCountingSimpleInternal is
     function _createProposal(
         string memory title,
         string memory description,
-        string memory link
+        string memory link,
+        address creator
     ) internal returns (uint256) {
-        getGODToken();
+        getGODToken(creator);
         (
             address[] memory targets,
             uint256[] memory values,
@@ -93,14 +96,14 @@ abstract contract GovernorCountingSimpleInternal is
         ) = mockFunctionCall();
         uint256 proposalId = super.propose(targets, values, calldatas, title);
         proposalCreators[proposalId] = ProposalInfo(
-            _msgSender(),
+            creator,
             title,
             description,
             link
         );
         emit ProposalDetails(
             proposalId,
-            _msgSender(),
+            creator,
             title,
             description,
             link,
@@ -233,11 +236,11 @@ abstract contract GovernorCountingSimpleInternal is
         cleanup(proposalId);
     }
 
-    function getGODToken() internal {
+    function getGODToken(address creator) internal {
         tokenService.associateTokenPublic(address(this), address(token));
         int256 responseCode = tokenService.transferTokenPublic(
             address(token),
-            address(msg.sender),
+            address(creator),
             address(this),
             int64(uint64(precision))
         );
