@@ -22,7 +22,7 @@ const tokenGOD = dex.GOD_TOKEN_ID;
 
 const DEFAULT_QUORUM_THRESHOLD_IN_BSP = 1;
 const DEFAULT_VOTING_DELAY = 2;
-const DEFAULT_VOTING_PERIOD = 5;
+const DEFAULT_VOTING_PERIOD = 7;
 let errorMsg: string;
 let proposalId: string;
 let godToken: BigNumber;
