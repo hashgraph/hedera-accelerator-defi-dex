@@ -8,10 +8,13 @@ import {
   Client,
   ContractFunctionParameters,
   ContractExecuteTransaction,
+  Key,
+  ContractCreateFlow,
 } from "@hashgraph/sdk";
 import * as hethers from "@hashgraph/hethers";
 import { ContractService } from "../deployment/service/ContractService";
 import ClientManagement from "../utils/ClientManagement";
+import { clientsInfo } from "../utils/ClientManagement";
 import ContractMetadata from "../utils/ContractMetadata";
 import dex from "../deployment/model/dex";
 
@@ -124,6 +127,40 @@ export class Deployment {
   private contractService = new ContractService();
   private clientManagement = new ClientManagement();
   private contractMetadata = new ContractMetadata();
+
+  deploy = async (
+    contractName: string,
+    saveIntoDevJson: boolean = false,
+    adminKey: Key = clientsInfo.operatorKey.publicKey,
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    const contractABI = this.contractMetadata.getContractABI(contractName);
+    const txn = new ContractCreateFlow()
+      .setBytecode(contractABI.bytecode)
+      .setGas(2000000)
+      .setAdminKey(adminKey);
+
+    const txnResponse = await txn.execute(client);
+    const txnReceipt = await txnResponse.getReceipt(client);
+    const contractId = txnReceipt.contractId!.toString();
+    const contractAddress = "0x" + txnReceipt.contractId!.toSolidityAddress();
+
+    saveIntoDevJson &&
+      (await new ContractService().saveDeployedContract(
+        contractId,
+        contractAddress,
+        contractName,
+        this.contractMetadata.calculateHash(contractName)
+      ));
+
+    console.log(
+      `- Deployment#deploy(): done where contract-name = ${contractName}, id = ${contractId}, address = ${contractAddress}\n`
+    );
+    return {
+      id: contractId,
+      address: contractAddress,
+    };
+  };
 
   public deployContractAsAdmin = async (
     filePath: string,

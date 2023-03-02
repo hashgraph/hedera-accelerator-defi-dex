@@ -5,7 +5,10 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 describe("GovernanceDAOFactory contract tests", function () {
   const zeroAddress = "0x0000000000000000000000000000000000000000";
+  const oneAddress = "0x0000000000000000000000000000000000000001";
   const total = 100 * 1e8;
+  const DAO_NAME = "DAO_NAME";
+  const LOGO_URL = "LOGO_URL";
 
   async function deployFixture() {
     const dexOwner = await TestHelper.getDexOwner();
@@ -91,8 +94,8 @@ describe("GovernanceDAOFactory contract tests", function () {
     await expect(
       governorDAOFactoryInstance.createDAO(
         zeroAddress,
-        "name",
-        "logo-url",
+        DAO_NAME,
+        LOGO_URL,
         token.address,
         BigNumber.from(500),
         BigNumber.from(0),
@@ -111,7 +114,7 @@ describe("GovernanceDAOFactory contract tests", function () {
       governorDAOFactoryInstance.createDAO(
         daoAdminOne.address,
         "",
-        "logo-url",
+        LOGO_URL,
         token.address,
         BigNumber.from(500),
         BigNumber.from(0),
@@ -129,7 +132,7 @@ describe("GovernanceDAOFactory contract tests", function () {
     await expect(
       governorDAOFactoryInstance.createDAO(
         daoAdminOne.address,
-        "name",
+        DAO_NAME,
         "",
         token.address,
         BigNumber.from(500),
@@ -149,8 +152,8 @@ describe("GovernanceDAOFactory contract tests", function () {
     await expect(
       governorDAOFactoryInstance.createDAO(
         daoAdminOne.address,
-        "name",
-        "logo-url",
+        DAO_NAME,
+        LOGO_URL,
         zeroAddress,
         BigNumber.from(500),
         BigNumber.from(0),
@@ -168,8 +171,8 @@ describe("GovernanceDAOFactory contract tests", function () {
     await expect(
       governorDAOFactoryInstance.createDAO(
         daoAdminOne.address,
-        "name",
-        "logo-url",
+        DAO_NAME,
+        LOGO_URL,
         token.address,
         BigNumber.from(500),
         BigNumber.from(0),
@@ -190,8 +193,8 @@ describe("GovernanceDAOFactory contract tests", function () {
 
     const txn = await governorDAOFactoryInstance.createDAO(
       daoAdminOne.address,
-      "name",
-      "logo-url",
+      DAO_NAME,
+      LOGO_URL,
       token.address,
       BigNumber.from(500),
       BigNumber.from(0),
@@ -201,6 +204,7 @@ describe("GovernanceDAOFactory contract tests", function () {
 
     const lastEvent = (await txn.wait()).events.pop();
     expect(lastEvent.event).to.be.equal("PublicDaoCreated");
+    expect(lastEvent.args.daoAddress).not.to.be.equal("0x0");
 
     const updatedList = await governorDAOFactoryInstance.getDAOs();
     expect(updatedList.length).to.be.equal(1);
@@ -215,8 +219,8 @@ describe("GovernanceDAOFactory contract tests", function () {
 
     const txn = await governorDAOFactoryInstance.createDAO(
       daoAdminOne.address,
-      "name",
-      "logo-url",
+      DAO_NAME,
+      LOGO_URL,
       token.address,
       BigNumber.from(500),
       BigNumber.from(0),
@@ -226,6 +230,7 @@ describe("GovernanceDAOFactory contract tests", function () {
 
     const lastEvent = (await txn.wait()).events.pop();
     expect(lastEvent.event).to.be.equal("PrivateDaoCreated");
+    expect(lastEvent.args.daoAddress).not.to.be.equal("0x0");
 
     const updatedList = await governorDAOFactoryInstance.getDAOs();
     expect(updatedList.length).to.be.equal(0);
@@ -250,27 +255,46 @@ describe("GovernanceDAOFactory contract tests", function () {
     )
       .to.revertedWithCustomError(governorDAOFactoryInstance, "NotAdmin")
       .withArgs("GovernanceDAOFactory: auth failed");
+
+    await expect(
+      governorDAOFactoryInstance
+        .connect(daoAdminTwo)
+        .upgradeGODTokenHolderFactory(zeroAddress)
+    )
+      .to.revertedWithCustomError(governorDAOFactoryInstance, "NotAdmin")
+      .withArgs("GovernanceDAOFactory: auth failed");
   });
 
-  it("Verify upgrade logic call should be proceeded dex owner", async function () {
+  it("Verify upgrade logic call should be proceeded for dex owner", async function () {
     const { governorDAOFactoryInstance, dexOwner } = await loadFixture(
       deployFixture
     );
 
     const txn1 = await governorDAOFactoryInstance
       .connect(dexOwner)
-      .upgradeGovernorTokenDaoLogicImplementation(zeroAddress);
+      .upgradeGovernorTokenDaoLogicImplementation(oneAddress);
 
     const event1 = (await txn1.wait()).events.pop();
     expect(event1.event).to.be.equal("LogicUpdated");
     expect(event1.args.name).to.be.equal("GovernorTokenDAO");
+    expect(event1.args.newImplementation).to.be.equal(oneAddress);
 
     const txn2 = await governorDAOFactoryInstance
       .connect(dexOwner)
-      .upgradeGovernorTokenTransferLogicImplementation(zeroAddress);
+      .upgradeGovernorTokenTransferLogicImplementation(oneAddress);
 
     const event2 = (await txn2.wait()).events.pop();
     expect(event2.event).to.be.equal("LogicUpdated");
     expect(event2.args.name).to.be.equal("GovernorTransferToken");
+    expect(event2.args.newImplementation).to.be.equal(oneAddress);
+
+    const txn3 = await governorDAOFactoryInstance
+      .connect(dexOwner)
+      .upgradeGODTokenHolderFactory(oneAddress);
+
+    const event3 = (await txn3.wait()).events.pop();
+    expect(event3.event).to.be.equal("LogicUpdated");
+    expect(event3.args.name).to.be.equal("GODTokenHolderFactory");
+    expect(event3.args.newImplementation).to.be.equal(oneAddress);
   });
 });

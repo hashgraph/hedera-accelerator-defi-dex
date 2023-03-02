@@ -13,9 +13,6 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 contract GovernanceDAOFactory is OwnableUpgradeable, IEvents {
-    event PublicDaoCreated(address daoAddress);
-    event PrivateDaoCreated(address daoAddress);
-
     error NotAdmin(string message);
     error InvalidInput(string message);
 
@@ -23,7 +20,7 @@ contract GovernanceDAOFactory is OwnableUpgradeable, IEvents {
     string private constant GovernorTransferToken = "GovernorTransferToken";
     string private constant GODTokenHolderFactory = "GODTokenHolderFactory";
 
-    address private baseHTS;
+    IBaseHTS private baseHTS;
     address private proxyAdmin;
 
     address[] private daos;
@@ -41,7 +38,7 @@ contract GovernanceDAOFactory is OwnableUpgradeable, IEvents {
 
     function initialize(
         address _proxyAdmin,
-        address _baseHTS,
+        IBaseHTS _baseHTS,
         IGovernorTokenDAO _daoLogic,
         IGODTokenHolderFactory _godTokenHolderFactory,
         IGovernorTransferToken _tokenTransferLogic
@@ -64,6 +61,17 @@ contract GovernanceDAOFactory is OwnableUpgradeable, IEvents {
             address(godTokenHolderFactory),
             GODTokenHolderFactory
         );
+    }
+
+    function upgradeGODTokenHolderFactory(
+        IGODTokenHolderFactory _newGodTokenHolderFactory
+    ) external ifAdmin {
+        emit LogicUpdated(
+            address(godTokenHolderFactory),
+            address(_newGodTokenHolderFactory),
+            GODTokenHolderFactory
+        );
+        godTokenHolderFactory = _newGodTokenHolderFactory;
     }
 
     function upgradeGovernorTokenDaoLogicImplementation(
@@ -156,7 +164,7 @@ contract GovernanceDAOFactory is OwnableUpgradeable, IEvents {
             IERC20(_tokenAddress),
             _votingDelay,
             _votingPeriod,
-            IBaseHTS(baseHTS),
+            baseHTS,
             _iGODHolder,
             _quorumThreshold
         );
