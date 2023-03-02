@@ -1,0 +1,276 @@
+import { expect } from "chai";
+import { BigNumber } from "ethers";
+import { TestHelper } from "./TestHelper";
+import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+
+describe("GovernanceDAOFactory contract tests", function () {
+  const zeroAddress = "0x0000000000000000000000000000000000000000";
+  const total = 100 * 1e8;
+
+  async function deployFixture() {
+    const dexOwner = await TestHelper.getDexOwner();
+    const signers = await TestHelper.getSigners();
+    const daoAdminOne = signers[5];
+    const daoAdminTwo = signers[6];
+
+    const token = await TestHelper.deployLogic(
+      "ERC20Mock",
+      "Test",
+      "Test",
+      total,
+      0
+    );
+    token.setUserBalance(signers[0].address, total);
+
+    const bastHTS = await TestHelper.deployLogic(
+      "MockBaseHTS",
+      true,
+      zeroAddress
+    );
+
+    const governorTokenDAO = await TestHelper.deployLogic("GovernorTokenDAO");
+
+    const godHolder = await TestHelper.deployLogic("GODHolder");
+    const godHolderFactory = await TestHelper.deployProxy(
+      "GODTokenHolderFactory",
+      bastHTS.address,
+      godHolder.address,
+      dexOwner.address
+    );
+
+    const governorTransferToken = await TestHelper.deployLogic(
+      "GovernorTransferToken"
+    );
+
+    const governorDAOFactoryInstance = await TestHelper.deployProxy(
+      "GovernanceDAOFactory",
+      dexOwner.address,
+      bastHTS.address,
+      governorTokenDAO.address,
+      godHolderFactory.address,
+      governorTransferToken.address
+    );
+    return {
+      governorDAOFactoryInstance,
+      dexOwner,
+      bastHTS,
+      governorTokenDAO,
+      godHolderFactory,
+      governorTransferToken,
+      daoAdminOne,
+      daoAdminTwo,
+      token,
+    };
+  }
+
+  it("Verify GovernanceDAOFactory contract revert for multiple initialization", async function () {
+    const {
+      governorDAOFactoryInstance,
+      dexOwner,
+      bastHTS,
+      governorTokenDAO,
+      godHolderFactory,
+      governorTransferToken,
+    } = await loadFixture(deployFixture);
+
+    await expect(
+      governorDAOFactoryInstance.initialize(
+        dexOwner.address,
+        bastHTS.address,
+        governorTokenDAO.address,
+        godHolderFactory.address,
+        governorTransferToken.address
+      )
+    ).to.revertedWith("Initializable: contract is already initialized");
+  });
+
+  it("Verify createDAO should be reverted when dao admin is zero", async function () {
+    const { governorDAOFactoryInstance, token } = await loadFixture(
+      deployFixture
+    );
+    await expect(
+      governorDAOFactoryInstance.createDAO(
+        zeroAddress,
+        "name",
+        "logo-url",
+        token.address,
+        BigNumber.from(500),
+        BigNumber.from(0),
+        BigNumber.from(100),
+        true
+      )
+    )
+      .to.revertedWithCustomError(governorDAOFactoryInstance, "InvalidInput")
+      .withArgs("GovernanceDAOFactory: admin address is zero");
+  });
+
+  it("Verify createDAO should be reverted when dao name is empty", async function () {
+    const { governorDAOFactoryInstance, daoAdminOne, token } =
+      await loadFixture(deployFixture);
+    await expect(
+      governorDAOFactoryInstance.createDAO(
+        daoAdminOne.address,
+        "",
+        "logo-url",
+        token.address,
+        BigNumber.from(500),
+        BigNumber.from(0),
+        BigNumber.from(100),
+        true
+      )
+    )
+      .to.revertedWithCustomError(governorDAOFactoryInstance, "InvalidInput")
+      .withArgs("GovernanceDAOFactory: name is empty");
+  });
+
+  it("Verify createDAO should be reverted when dao url is empty", async function () {
+    const { governorDAOFactoryInstance, daoAdminOne, token } =
+      await loadFixture(deployFixture);
+    await expect(
+      governorDAOFactoryInstance.createDAO(
+        daoAdminOne.address,
+        "name",
+        "",
+        token.address,
+        BigNumber.from(500),
+        BigNumber.from(0),
+        BigNumber.from(100),
+        true
+      )
+    )
+      .to.revertedWithCustomError(governorDAOFactoryInstance, "InvalidInput")
+      .withArgs("GovernanceDAOFactory: url is empty");
+  });
+
+  it("Verify createDAO should be reverted when token address is zero", async function () {
+    const { governorDAOFactoryInstance, daoAdminOne } = await loadFixture(
+      deployFixture
+    );
+    await expect(
+      governorDAOFactoryInstance.createDAO(
+        daoAdminOne.address,
+        "name",
+        "logo-url",
+        zeroAddress,
+        BigNumber.from(500),
+        BigNumber.from(0),
+        BigNumber.from(100),
+        true
+      )
+    )
+      .to.revertedWithCustomError(governorDAOFactoryInstance, "InvalidInput")
+      .withArgs("GovernanceDAOFactory: token address is zero");
+  });
+
+  it("Verify createDAO should be reverted when voting period is zero", async function () {
+    const { governorDAOFactoryInstance, daoAdminOne, token } =
+      await loadFixture(deployFixture);
+    await expect(
+      governorDAOFactoryInstance.createDAO(
+        daoAdminOne.address,
+        "name",
+        "logo-url",
+        token.address,
+        BigNumber.from(500),
+        BigNumber.from(0),
+        BigNumber.from(0),
+        false
+      )
+    )
+      .to.revertedWithCustomError(governorDAOFactoryInstance, "InvalidInput")
+      .withArgs("GovernanceDAOFactory: voting period is zero");
+  });
+
+  it("Verify createDAO should add new dao into list when the dao is public", async function () {
+    const { governorDAOFactoryInstance, daoAdminOne, token } =
+      await loadFixture(deployFixture);
+
+    const currentList = await governorDAOFactoryInstance.getDAOs();
+    expect(currentList.length).to.be.equal(0);
+
+    const txn = await governorDAOFactoryInstance.createDAO(
+      daoAdminOne.address,
+      "name",
+      "logo-url",
+      token.address,
+      BigNumber.from(500),
+      BigNumber.from(0),
+      BigNumber.from(100),
+      false
+    );
+
+    const lastEvent = (await txn.wait()).events.pop();
+    expect(lastEvent.event).to.be.equal("PublicDaoCreated");
+
+    const updatedList = await governorDAOFactoryInstance.getDAOs();
+    expect(updatedList.length).to.be.equal(1);
+  });
+
+  it("Verify createDAO should not add new dao into list when the dao is private", async function () {
+    const { governorDAOFactoryInstance, daoAdminOne, token } =
+      await loadFixture(deployFixture);
+
+    const currentList = await governorDAOFactoryInstance.getDAOs();
+    expect(currentList.length).to.be.equal(0);
+
+    const txn = await governorDAOFactoryInstance.createDAO(
+      daoAdminOne.address,
+      "name",
+      "logo-url",
+      token.address,
+      BigNumber.from(500),
+      BigNumber.from(0),
+      BigNumber.from(100),
+      true
+    );
+
+    const lastEvent = (await txn.wait()).events.pop();
+    expect(lastEvent.event).to.be.equal("PrivateDaoCreated");
+
+    const updatedList = await governorDAOFactoryInstance.getDAOs();
+    expect(updatedList.length).to.be.equal(0);
+  });
+
+  it("Verify upgrade logic call should be reverted for non dex owner", async function () {
+    const { governorDAOFactoryInstance, daoAdminOne, daoAdminTwo } =
+      await loadFixture(deployFixture);
+
+    await expect(
+      governorDAOFactoryInstance
+        .connect(daoAdminOne)
+        .upgradeGovernorTokenDaoLogicImplementation(zeroAddress)
+    )
+      .to.revertedWithCustomError(governorDAOFactoryInstance, "NotAdmin")
+      .withArgs("GovernanceDAOFactory: auth failed");
+
+    await expect(
+      governorDAOFactoryInstance
+        .connect(daoAdminTwo)
+        .upgradeGovernorTokenTransferLogicImplementation(zeroAddress)
+    )
+      .to.revertedWithCustomError(governorDAOFactoryInstance, "NotAdmin")
+      .withArgs("GovernanceDAOFactory: auth failed");
+  });
+
+  it("Verify upgrade logic call should be proceeded dex owner", async function () {
+    const { governorDAOFactoryInstance, dexOwner } = await loadFixture(
+      deployFixture
+    );
+
+    const txn1 = await governorDAOFactoryInstance
+      .connect(dexOwner)
+      .upgradeGovernorTokenDaoLogicImplementation(zeroAddress);
+
+    const event1 = (await txn1.wait()).events.pop();
+    expect(event1.event).to.be.equal("LogicUpdated");
+    expect(event1.args.name).to.be.equal("GovernorTokenDAO");
+
+    const txn2 = await governorDAOFactoryInstance
+      .connect(dexOwner)
+      .upgradeGovernorTokenTransferLogicImplementation(zeroAddress);
+
+    const event2 = (await txn2.wait()).events.pop();
+    expect(event2.event).to.be.equal("LogicUpdated");
+    expect(event2.args.name).to.be.equal("GovernorTransferToken");
+  });
+});

@@ -116,7 +116,8 @@ export default class Governor extends Base {
     tokenAmount: number,
     client: Client = clientsInfo.operatorClient,
     description: string = DEFAULT_DESCRIPTION,
-    link: string = DEFAULT_LINK
+    link: string = DEFAULT_LINK,
+    creater: string = clientsInfo.operatorId.toSolidityAddress()
   ) => {
     const args = new ContractFunctionParameters()
       .addString(title)
@@ -125,7 +126,8 @@ export default class Governor extends Base {
       .addAddress(fromAddress) // from
       .addAddress(toAddress) // to
       .addAddress(tokenId) // tokenToTransfer
-      .addInt256(BigNumber(tokenAmount)); // amountToTransfer
+      .addInt256(BigNumber(tokenAmount)) // amountToTransfer
+      .addAddress(creater); // proposal creater
     const { result } = await this.execute(
       9000000,
       CREATE_PROPOSAL,
@@ -259,7 +261,7 @@ export default class Governor extends Base {
   ) => {
     const args = new ContractFunctionParameters().addString(title);
     const { receipt, result } = await this.execute(
-      900000,
+      999999,
       EXECUTE_PROPOSAL,
       client,
       args,

@@ -13,7 +13,8 @@ contract GovernorTextProposal is GovernorCountingSimpleInternal {
         uint256 proposalId = _createProposal(
             title,
             description,
-            linkToDiscussion
+            linkToDiscussion,
+            msg.sender
         );
         return proposalId;
     }

@@ -2,8 +2,12 @@
 pragma solidity ^0.8.4;
 import "./GovernorCountingSimpleInternal.sol";
 import "../common/hedera/HederaTokenService.sol";
+import "./IGovernorTransferToken.sol";
 
-contract GovernorTransferToken is GovernorCountingSimpleInternal {
+contract GovernorTransferToken is
+    IGovernorTransferToken,
+    GovernorCountingSimpleInternal
+{
     struct TokenTransferData {
         address transferFromAccount;
         address transferToAccount;
@@ -19,12 +23,14 @@ contract GovernorTransferToken is GovernorCountingSimpleInternal {
         address _transferFromAccount,
         address _transferToAccount,
         address _tokenToTransfer,
-        int256 _transferTokenAmount
-    ) public returns (uint256) {
+        int256 _transferTokenAmount,
+        address creater
+    ) external returns (uint256) {
         uint256 proposalId = _createProposal(
             title,
             description,
-            linkToDiscussion
+            linkToDiscussion,
+            creater
         );
         _proposalData[proposalId] = TokenTransferData(
             _transferFromAccount,
