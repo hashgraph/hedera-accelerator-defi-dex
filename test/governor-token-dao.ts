@@ -109,15 +109,15 @@ describe("GovernorTokenDAO Tests", function () {
 
     it("Verify getDaoDetail returns correct values", async function () {
       const { instanceDao } = await loadFixture(deployFixture);
-      const result = await instanceDao.callStatic.getDaoDetail();
+      const result = await instanceDao.getDaoDetail();
       expect(result[0]).to.be.equals(daoName);
       expect(result[1]).to.be.equals(daoLogoUrl);
     });
 
     it("Verify addWebLink and getWebLinks", async function () {
-      const { instanceDao, signers } = await loadFixture(deployFixture);
+      const { instanceDao } = await loadFixture(deployFixture);
       await instanceDao.addWebLink(webKey, webUrl);
-      const result = await instanceDao.callStatic.getWebLinks();
+      const result = await instanceDao.getWebLinks();
       await expect(instanceDao.addWebLink("", webUrl)).revertedWith(
         "BaseDAO: invalid key passed"
       );
