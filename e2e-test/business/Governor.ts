@@ -41,6 +41,7 @@ const PROPOSAL_DETAILS = "getProposalDetails";
 
 const GET_CONTRACT_ADDRESSES = "getContractAddresses";
 const GET_TOKEN_ADDRESSES = "getTokenAddress";
+const GET_GOD_TOKEN_ADDRESSES = "getGODTokenAddress";
 
 enum ProposalState {
   Pending,
@@ -194,6 +195,19 @@ export default class Governor extends Base {
     console.log(
       `- Governor#${CAST_VOTE}(): proposal-id = ${proposalId}, support = ${support}\n`
     );
+  };
+
+  getGODTokenAddress = async (client: Client = clientsInfo.operatorClient) => {
+    const { result } = await this.execute(
+      200000,
+      GET_GOD_TOKEN_ADDRESSES,
+      client
+    );
+    const address = result.getAddress(0);
+    console.log(
+      `- Governor#${GET_GOD_TOKEN_ADDRESSES}(): GOD token address = ${address}\n`
+    );
+    return TokenId.fromSolidityAddress(address);
   };
 
   isQuorumReached = async (

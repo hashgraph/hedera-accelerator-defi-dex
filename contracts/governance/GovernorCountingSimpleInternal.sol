@@ -70,6 +70,10 @@ abstract contract GovernorCountingSimpleInternal is
         __GovernorCountingSimple_init();
     }
 
+    function getGODTokenAddress() external view returns (address) {
+        return address(token);
+    }
+
     function _getVotes(
         address account,
         uint256,

@@ -66,6 +66,15 @@ contract GovernanceDAOFactory is OwnableUpgradeable, IEvents {
         );
     }
 
+    function getGODTokenHolderFactoryAddress()
+        external
+        view
+        ifAdmin
+        returns (address)
+    {
+        return address(godTokenHolderFactory);
+    }
+
     function upgradeGODTokenHolderFactory(
         IGODTokenHolderFactory _newGodTokenHolderFactory
     ) external ifAdmin {

@@ -19,9 +19,6 @@ export default class Base {
   constructor(_contractId: string) {
     this.htsAddress = this.getBaseHTSContractAddress();
     this.contractId = _contractId;
-    console.log(
-      `- Base#constructor(): called with contract-id = ${_contractId}\n`
-    );
   }
 
   getCurrentImplementation = async (
