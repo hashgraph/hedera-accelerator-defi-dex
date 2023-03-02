@@ -38,11 +38,11 @@ Scenario: Verify governor text proposal cannot create with blank title
     
 
 Scenario: Verify GOD tokens are returned on text proposal cancellation
-    When User create a text proposal with title "textproposal4" 
+    When User create a text proposal with title "sampletextproposal44" 
     When User wait for text proposal state to be "Active" for max 3 seconds
     Then User verify text proposal state is "Active"
     When User fetches GOD token balance
-    When User cancel the text proposal with title "textproposal4"
+    When User cancel the text proposal with title "sampletextproposal44"
     Then  User verify text proposal state is "Canceled"
     Then User verify GOD tokens are returned to user
 
