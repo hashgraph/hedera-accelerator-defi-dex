@@ -48,7 +48,7 @@ async function createDAO(name: string, tokenId: TokenId, isPrivate: boolean) {
     tokenId.toSolidityAddress(),
     500,
     0,
-    100,
+    20,
     isPrivate
   );
 }
