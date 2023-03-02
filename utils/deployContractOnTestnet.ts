@@ -130,7 +130,6 @@ export class Deployment {
 
   deploy = async (
     contractName: string,
-    saveIntoDevJson: boolean = false,
     adminKey: Key = clientsInfo.operatorKey.publicKey,
     client: Client = clientsInfo.operatorClient
   ) => {
@@ -144,14 +143,6 @@ export class Deployment {
     const txnReceipt = await txnResponse.getReceipt(client);
     const contractId = txnReceipt.contractId!.toString();
     const contractAddress = "0x" + txnReceipt.contractId!.toSolidityAddress();
-
-    saveIntoDevJson &&
-      (await new ContractService().saveDeployedContract(
-        contractId,
-        contractAddress,
-        contractName,
-        this.contractMetadata.calculateHash(contractName)
-      ));
 
     console.log(
       `- Deployment#deploy(): done where contract-name = ${contractName}, id = ${contractId}, address = ${contractAddress}\n`

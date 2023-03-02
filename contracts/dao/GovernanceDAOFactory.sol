@@ -13,6 +13,9 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 contract GovernanceDAOFactory is OwnableUpgradeable, IEvents {
+    event PublicDaoCreated(address daoAddress);
+    event PrivateDaoCreated(address daoAddress);
+
     error NotAdmin(string message);
     error InvalidInput(string message);
 

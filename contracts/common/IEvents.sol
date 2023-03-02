@@ -7,6 +7,4 @@ interface IEvents {
         address indexed newImplementation,
         string name
     );
-    event PublicDaoCreated(address daoAddress);
-    event PrivateDaoCreated(address daoAddress);
 }
