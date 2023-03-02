@@ -1,9 +1,12 @@
+import Web3 from "web3";
 import { getAllFilesSync } from "get-all-files";
 import platformPath from "path";
 import { ContractFunctionResult } from "@hashgraph/sdk";
 import inquirer from "inquirer";
 import { execSync } from "child_process";
 import { BigNumber } from "bignumber.js";
+
+const web3 = new Web3();
 
 export class Helper {
   static extractFileName(path: string): string {
@@ -86,5 +89,9 @@ export class Helper {
 
   static getGitLastCommitMessage() {
     return execSync("git log -1 HEAD --pretty=format:%s").toString().trim();
+  }
+
+  static createProposalTitle(titlePrefix: string) {
+    return `${titlePrefix} ${web3.utils.randomHex(20)}`;
   }
 }

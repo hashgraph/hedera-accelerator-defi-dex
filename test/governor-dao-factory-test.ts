@@ -297,4 +297,27 @@ describe("GovernanceDAOFactory contract tests", function () {
     expect(event3.args.name).to.be.equal("GODTokenHolderFactory");
     expect(event3.args.newImplementation).to.be.equal(oneAddress);
   });
+
+  it("Verify getGODTokenHolderFactoryAddress guard check ", async function () {
+    const {
+      governorDAOFactoryInstance,
+      daoAdminOne,
+      godHolderFactory,
+      dexOwner,
+    } = await loadFixture(deployFixture);
+
+    await expect(
+      governorDAOFactoryInstance
+        .connect(daoAdminOne)
+        .getGODTokenHolderFactoryAddress()
+    )
+      .to.revertedWithCustomError(governorDAOFactoryInstance, "NotAdmin")
+      .withArgs("GovernanceDAOFactory: auth failed");
+
+    const address = await governorDAOFactoryInstance
+      .connect(dexOwner)
+      .getGODTokenHolderFactoryAddress();
+
+    expect(address).to.be.equals(godHolderFactory.address);
+  });
 });

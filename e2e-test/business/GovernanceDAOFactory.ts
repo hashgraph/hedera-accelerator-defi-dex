@@ -4,8 +4,13 @@ import { Helper } from "../../utils/Helper";
 import { BigNumber } from "bignumber.js";
 import { Deployment } from "../../utils/deployContractOnTestnet";
 import { clientsInfo } from "../../utils/ClientManagement";
-import { Client, ContractFunctionParameters } from "@hashgraph/sdk";
+import { Client, ContractId, ContractFunctionParameters } from "@hashgraph/sdk";
 import { ContractService } from "../../deployment/service/ContractService";
+
+import Governor from "../../e2e-test/business/Governor";
+import GodHolder from "../../e2e-test/business/GodHolder";
+import GovernorTokenDao from "../../e2e-test/business/GovernorTokenDao";
+import GODTokenHolderFactory from "../../e2e-test/business/GODTokenHolderFactory";
 
 const deployment = new Deployment();
 const csDev = new ContractService();
@@ -20,6 +25,8 @@ const UPGRADE_GOVERNOR_TOKEN_TRANSFER_LOGIC_IMPL =
   "upgradeGovernorTokenTransferLogicImplementation";
 
 const UPGRADE_GOD_TOKEN_HOLDER_FACTORY = "upgradeGODTokenHolderFactory";
+
+const GET_GOD_TOKEN_HOLDER_FACTORY_ADDRESS = "getGODTokenHolderFactoryAddress";
 
 export default class GovernanceDAOFactory extends Base {
   initialize = async (
@@ -47,7 +54,6 @@ export default class GovernanceDAOFactory extends Base {
   };
 
   createDAO = async (
-    admin: string,
     name: string,
     logoUrl: string,
     tokenAddress: string,
@@ -55,7 +61,8 @@ export default class GovernanceDAOFactory extends Base {
     votingDelay: number,
     votingPeriod: number,
     isPrivate: boolean,
-    client: Client = clientsInfo.operatorClient
+    admin: string = clientsInfo.uiUserId.toSolidityAddress(),
+    client: Client = clientsInfo.uiUserClient
   ) => {
     const params = {
       admin,
@@ -130,5 +137,46 @@ export default class GovernanceDAOFactory extends Base {
     console.log(
       `- GovernanceDAOFactory#${UPGRADE_GOD_TOKEN_HOLDER_FACTORY}(): done\n`
     );
+  };
+
+  getGODTokenHolderFactoryAddress = async () => {
+    const { result } = await this.execute(
+      200000,
+      GET_GOD_TOKEN_HOLDER_FACTORY_ADDRESS,
+      clientsInfo.dexOwnerClient
+    );
+    const address = result.getAddress(0);
+    console.log(
+      `- GovernanceDAOFactory#${GET_GOD_TOKEN_HOLDER_FACTORY_ADDRESS}(): address = ${address}\n`
+    );
+    return ContractId.fromSolidityAddress(address);
+  };
+
+  getGovernorTokenDaoInstance = (daoProxyAddress: string) => {
+    const governorTokenDaoProxyId =
+      ContractId.fromSolidityAddress(daoProxyAddress).toString();
+    return new GovernorTokenDao(governorTokenDaoProxyId);
+  };
+
+  getGovernorTokenTransferInstance = async (
+    governorTokenDao: GovernorTokenDao
+  ) => {
+    const governorTokenTransferProxyContractId =
+      await governorTokenDao.getGovernorTokenTransferContractAddress();
+    return new Governor(governorTokenTransferProxyContractId.toString());
+  };
+
+  getGodHolderInstance = async (governor: Governor) => {
+    const godTokenHolderFactoryProxyContractId =
+      await this.getGODTokenHolderFactoryAddress();
+    const godHolderFactory = new GODTokenHolderFactory(
+      godTokenHolderFactoryProxyContractId.toString()
+    );
+    const godTokenId = await governor.getGODTokenAddress();
+    const godTokenAddress = godTokenId.toSolidityAddress();
+    const godHolderProxyContractId = await godHolderFactory.getGodTokenHolder(
+      godTokenAddress
+    );
+    return new GodHolder(godHolderProxyContractId.toString());
   };
 }

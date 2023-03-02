@@ -12,6 +12,8 @@ const GET_ALL_PROPOSALS = "getAllProposals";
 const ADD_WEB_LINK = "addWebLink";
 const GET_DAO_DETAILS = "getDaoDetail";
 const GET_WEB_LINKS = "getWebLinks";
+const GET_GOVERNOR_TOKEN_TRANSFER_CONTRACT_ADDRESS =
+  "getGovernorTokenTransferContractAddress";
 
 const DEFAULT_DESCRIPTION = "description";
 const DEFAULT_LINK = "https://defi-ui.hedera.com/governance";
@@ -142,5 +144,20 @@ export default class GovernorTokenDao extends Base {
       )}\n${result.getString(3)}\n${result.getString(4)}`
     );
     console.log(`- GovernorTokenDao#${GET_WEB_LINKS}(): link = ${link}\n`);
+  };
+
+  getGovernorTokenTransferContractAddress = async (
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    const { result } = await this.execute(
+      2000000,
+      GET_GOVERNOR_TOKEN_TRANSFER_CONTRACT_ADDRESS,
+      client
+    );
+    const address = result.getAddress(0);
+    console.log(
+      `- GovernorTokenDao#${GET_GOVERNOR_TOKEN_TRANSFER_CONTRACT_ADDRESS}(): address = ${address}\n`
+    );
+    return ContractId.fromSolidityAddress(address);
   };
 }
