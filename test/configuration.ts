@@ -119,7 +119,6 @@ describe("Configuration contract tests", function () {
   it("Verify addition of key should be reverted if caller is not owner", async function () {
     const { configurationInstance, signers } = await loadFixture(deployFixture);
     const newKey = "dummy";
-    const urlKeys = await configurationInstance.getCommaSeparatedUrlKeys();
     await expect(
       configurationInstance.connect(signers[1]).addUrlKey(newKey)
     ).to.revertedWith("Ownable: caller is not the owner");
