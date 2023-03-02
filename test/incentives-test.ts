@@ -191,9 +191,7 @@ describe("All Tests", function () {
 
   describe("Splitter Contract positive Tests", async () => {
     it("Check split token method success", async function () {
-      const { splitter, tokenCont, vault0, vault1, vault2 } = await loadFixture(
-        deployFixture
-      );
+      const { splitter, tokenCont } = await loadFixture(deployFixture);
       const value = await splitter.callStatic.splitTokensToVaults(
         tokenCont.address,
         newZeroAddress,
@@ -203,9 +201,7 @@ describe("All Tests", function () {
       expect(value).to.be.equals(expectedVal);
     });
     it("Check split token method transfer amount", async function () {
-      const { splitter, tokenCont, vault0, vault1, vault2 } = await loadFixture(
-        deployFixture
-      );
+      const { splitter, tokenCont } = await loadFixture(deployFixture);
       const value = await splitter.splitTokensToVaults(
         tokenCont.address,
         newZeroAddress,

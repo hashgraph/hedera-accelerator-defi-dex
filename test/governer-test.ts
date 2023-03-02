@@ -1,6 +1,5 @@
 // Commenting test as contract has dependency on HTS service which we need to mock somehow.
 import { expect } from "chai";
-import * as fs from "fs";
 
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { ethers, upgrades } from "hardhat";
@@ -341,9 +340,7 @@ describe("Governor Tests", function () {
     });
 
     it("When proposal created and user voted against then quorum should be reached ", async function () {
-      const { instance, tokenCont, signers, godHolder } = await loadFixture(
-        deployFixture
-      );
+      const { instance, tokenCont, signers } = await loadFixture(deployFixture);
 
       await verifyAccountBalance(tokenCont, signers[0].address, total * 0.2);
       const proposalIdResponse = await createProposal(instance, signers[0]);
@@ -374,9 +371,7 @@ describe("Governor Tests", function () {
     });
 
     it("When proposal created and user voted for with vote share less than 5 then quorum should not be reached ", async function () {
-      const { instance, tokenCont, signers, godHolder } = await loadFixture(
-        deployFixture
-      );
+      const { instance, tokenCont, signers } = await loadFixture(deployFixture);
 
       await verifyAccountBalance(tokenCont, signers[0].address, total * 0.2);
       const proposalIdResponse = await createProposal(instance, signers[0]);
@@ -416,9 +411,7 @@ describe("Governor Tests", function () {
     });
 
     it("When proposal created and user voted against then votes should not be succeeded ", async function () {
-      const { instance, tokenCont, signers, godHolder } = await loadFixture(
-        deployFixture
-      );
+      const { instance, tokenCont, signers } = await loadFixture(deployFixture);
 
       await verifyAccountBalance(tokenCont, signers[0].address, total * 0.2);
       const proposalIdResponse = await createProposal(instance, signers[0]);
@@ -449,9 +442,7 @@ describe("Governor Tests", function () {
     });
 
     it("When proposal created and user opted abstain then quorum should not be reached ", async function () {
-      const { instance, tokenCont, signers, godHolder } = await loadFixture(
-        deployFixture
-      );
+      const { instance, tokenCont, signers } = await loadFixture(deployFixture);
 
       await verifyAccountBalance(tokenCont, signers[0].address, total * 0.2);
       const proposalIdResponse = await createProposal(instance, signers[0]);
@@ -481,9 +472,7 @@ describe("Governor Tests", function () {
     });
 
     it("When proposal created and user opted abstain then vote should not be succeeded ", async function () {
-      const { instance, tokenCont, signers, godHolder } = await loadFixture(
-        deployFixture
-      );
+      const { instance, tokenCont, signers } = await loadFixture(deployFixture);
 
       await verifyAccountBalance(tokenCont, signers[0].address, total * 0.2);
       const proposalIdResponse = await createProposal(instance, signers[0]);
