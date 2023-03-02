@@ -2,7 +2,6 @@ import { expect } from "chai";
 
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { ethers, upgrades } from "hardhat";
-import { BigNumber } from "ethers";
 
 const defaultQuorumThresholdValue = 5;
 const defaultQuorumThresholdValueInBsp = defaultQuorumThresholdValue * 100;
@@ -91,12 +90,6 @@ describe("GovernorTokenDAO Tests", function () {
       const { instanceDao, signers, governorTransferToken } = await loadFixture(
         deployFixture
       );
-      const daoArgs = [
-        signers[0].address,
-        daoName,
-        daoLogoUrl,
-        governorTransferToken.address,
-      ];
       await expect(
         instanceDao.initialize(
           signers[0].address,
