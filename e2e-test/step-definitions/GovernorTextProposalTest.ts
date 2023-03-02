@@ -172,6 +172,7 @@ export class GovernorTextProposal {
   @then(/User receives "([^"]*)" error message/, undefined, 30000)
   public async verifyErrorMessage(msg: string) {
     expect(errorMsg).contains(msg);
+    errorMsg = "";
   }
 
   @when(/User fetches GOD token balance/, undefined, 30000)
