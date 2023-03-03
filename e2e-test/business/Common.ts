@@ -217,7 +217,7 @@ export default class Common {
         const data = response.data;
         balance = new BigNumber(data.tokens[0].balance);
         console.log(
-          `Common#getTokenBalance(): id = ${accountId}, TokenId = ${tokenId}, Balance = ${balance}`
+          `Common#fetchTokenBalanceFromMirrorNode(): id = ${accountId}, TokenId = ${tokenId}, Balance = ${balance}`
         );
       })
       .catch((error) => console.error(error));

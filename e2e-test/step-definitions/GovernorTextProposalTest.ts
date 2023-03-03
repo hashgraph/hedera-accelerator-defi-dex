@@ -201,6 +201,11 @@ export class GovernorTextProposal {
       clientsInfo.operatorId.toString(),
       tokenGOD
     );
+    console.log(
+      `GovernorTextProposal#verifyGODTokensAreReturned: Actual = ${Number(
+        updatedGODToken
+      )}, Expected = ${Number(godToken)}`
+    );
     expect(Number(updatedGODToken)).to.be.greaterThan(Number(godToken));
   }
 }
