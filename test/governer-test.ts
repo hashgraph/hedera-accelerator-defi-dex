@@ -658,7 +658,7 @@ describe("Governor Tests", function () {
       ).to.revertedWith("Only proposer can cancel the proposal");
     });
 
-    it.only("Check getProposalDetails function", async function () {
+    it("Check getProposalDetails function", async function () {
       const { instance, tokenCont, signers } = await loadFixture(deployFixture);
       await verifyAccountBalance(tokenCont, signers[0].address, total * 0.2);
       const proposalIdResponse = await createProposal(instance, signers[0]);
