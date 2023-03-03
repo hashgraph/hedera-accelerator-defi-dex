@@ -12,7 +12,7 @@ const governor = new Governor(governorTextContract.transparentProxyId!);
 const godHolder = new GodHolder(godHolderContract.transparentProxyId!);
 
 async function main() {
-  const title = "Text Proposal - 2";
+  const title = "Text Proposal - 1";
   await governor.initialize(godHolder);
   const proposalId = await governor.createTextProposal(title);
   await governor.getProposalDetails(proposalId);

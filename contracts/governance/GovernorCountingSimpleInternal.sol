@@ -117,23 +117,6 @@ abstract contract GovernorCountingSimpleInternal is
         return proposalId;
     }
 
-    function getProposalDetails(
-        uint proposalId
-    )
-        public
-        view
-        returns (address, string memory, string memory, string memory)
-    {
-        ProposalInfo memory proposalInfo = proposalCreators[proposalId];
-        require(proposalInfo.creator != address(0), "Proposal not found");
-        return (
-            proposalInfo.creator,
-            proposalInfo.title,
-            proposalInfo.description,
-            proposalInfo.link
-        );
-    }
-
     function votingDelay()
         public
         view
@@ -272,6 +255,10 @@ abstract contract GovernorCountingSimpleInternal is
     function quorum(
         uint256
     ) public view override(IGovernorUpgradeable) returns (uint256) {
+        return _quorum();
+    }
+
+    function _quorum() private view returns (uint256) {
         uint256 totalSupply = token.totalSupply();
         uint256 value = totalSupply * quorumThresholdInBsp;
         require(
@@ -279,6 +266,39 @@ abstract contract GovernorCountingSimpleInternal is
             "GOD token total supply multiple by quorum threshold in BSP cannot be less than 10,000"
         );
         return value / 10_000;
+    }
+
+    function getProposalDetails(
+        uint256 proposalId
+    )
+        public
+        view
+        returns (
+            uint256 quorumValue,
+            bool isQuorumReached,
+            ProposalState proposalState,
+            bool voted,
+            uint256 againstVotes,
+            uint256 forVotes,
+            uint256 abstainVotes,
+            address creator,
+            string memory title,
+            string memory descripition,
+            string memory link
+        )
+    {
+        ProposalInfo memory proposalInfo = proposalCreators[proposalId];
+        require(proposalInfo.creator != address(0), "Proposal not found");
+        quorumValue = _quorum();
+        isQuorumReached = _quorumReached(proposalId);
+        proposalState = state(proposalId);
+        voted = hasVoted(proposalId, msg.sender);
+        (againstVotes, forVotes, abstainVotes) = proposalVotes(proposalId);
+        require(proposalInfo.creator != address(0), "Proposal not found");
+        creator = proposalInfo.creator;
+        title = proposalInfo.title;
+        descripition = proposalInfo.description;
+        link = proposalInfo.link;
     }
 
     function mockFunctionCall()

@@ -314,11 +314,21 @@ export default class Governor extends Base {
       client,
       args
     );
-    const title = result.getString(1);
-    const description = result.getString(2);
-    const link = result.getString(3);
+    const quorumValue = result.getUint256(0);
+    const isQuorumReached = result.getBool(1);
+    const proposalState = result.getUint256(2);
+    const voted = result.getBool(3);
+    const againstVotes = result.getUint256(4);
+    const forVotes = result.getUint256(5);
+    const abstainVotes = result.getUint256(6);
+
+    const creator = result.getAddress(7);
+    const title = result.getString(8);
+    const description = result.getString(9);
+    const link = result.getString(10);
+
     console.log(
-      `- Governor#${PROPOSAL_DETAILS}(): proposal-id = ${proposalId}, title = ${title}, description = ${description}, link = ${link}\n`
+      `- Governor#${PROPOSAL_DETAILS}(): proposal-id = ${proposalId}, title = ${title}, description = ${description}, link = ${link}\nquorumValue = ${quorumValue}, isQuorumReached = ${isQuorumReached}, isQuorumReached = ${isQuorumReached}, proposalState = ${proposalState}, voted = ${voted}, againstVotes = ${againstVotes}, forVotes = ${forVotes}, abstainVotes = ${abstainVotes}`
     );
     return { title, description, link };
   };
