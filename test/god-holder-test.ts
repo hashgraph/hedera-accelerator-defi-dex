@@ -1,5 +1,4 @@
 import { expect } from "chai";
-import * as fs from "fs";
 
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { ethers, upgrades } from "hardhat";
@@ -85,9 +84,7 @@ describe("GODHolder Tests", function () {
   });
 
   it("Verify GODHolder grabtoken pass", async function () {
-    const { godHolder, signers, mockBaseHTS, tokenCont } = await loadFixture(
-      deployFixture
-    );
+    const { godHolder, signers, tokenCont } = await loadFixture(deployFixture);
     const userTokens = await tokenCont.balanceOf(signers[0].address);
     await godHolder.grabTokensFromUser(signers[0].address);
     const contractTokens = await tokenCont.balanceOf(godHolder.address);
@@ -97,7 +94,7 @@ describe("GODHolder Tests", function () {
   });
 
   it("Verify Add and remove active proposals", async function () {
-    const { godHolder, signers, tokenCont } = await loadFixture(deployFixture);
+    const { godHolder, signers } = await loadFixture(deployFixture);
     await godHolder.addProposalForVoter(signers[0].address, 1);
     await godHolder.addProposalForVoter(signers[1].address, 1);
     const activeProposals = await godHolder.getActiveProposalsForUser();

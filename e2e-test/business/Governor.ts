@@ -41,6 +41,7 @@ const PROPOSAL_DETAILS = "getProposalDetails";
 
 const GET_CONTRACT_ADDRESSES = "getContractAddresses";
 const GET_TOKEN_ADDRESSES = "getTokenAddress";
+const GET_GOD_TOKEN_ADDRESSES = "getGODTokenAddress";
 
 enum ProposalState {
   Pending,
@@ -116,7 +117,8 @@ export default class Governor extends Base {
     tokenAmount: number,
     client: Client = clientsInfo.operatorClient,
     description: string = DEFAULT_DESCRIPTION,
-    link: string = DEFAULT_LINK
+    link: string = DEFAULT_LINK,
+    creater: string = clientsInfo.operatorId.toSolidityAddress()
   ) => {
     const args = new ContractFunctionParameters()
       .addString(title)
@@ -125,7 +127,8 @@ export default class Governor extends Base {
       .addAddress(fromAddress) // from
       .addAddress(toAddress) // to
       .addAddress(tokenId) // tokenToTransfer
-      .addInt256(BigNumber(tokenAmount)); // amountToTransfer
+      .addInt256(BigNumber(tokenAmount)) // amountToTransfer
+      .addAddress(creater); // proposal creater
     const { result } = await this.execute(
       9000000,
       CREATE_PROPOSAL,
@@ -194,6 +197,19 @@ export default class Governor extends Base {
     );
   };
 
+  getGODTokenAddress = async (client: Client = clientsInfo.operatorClient) => {
+    const { result } = await this.execute(
+      200000,
+      GET_GOD_TOKEN_ADDRESSES,
+      client
+    );
+    const address = result.getAddress(0);
+    console.log(
+      `- Governor#${GET_GOD_TOKEN_ADDRESSES}(): GOD token address = ${address}\n`
+    );
+    return TokenId.fromSolidityAddress(address);
+  };
+
   isQuorumReached = async (
     proposalId: string,
     client: Client = clientsInfo.operatorClient
@@ -259,7 +275,7 @@ export default class Governor extends Base {
   ) => {
     const args = new ContractFunctionParameters().addString(title);
     const { receipt, result } = await this.execute(
-      900000,
+      999999,
       EXECUTE_PROPOSAL,
       client,
       args,

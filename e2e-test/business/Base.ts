@@ -1,6 +1,8 @@
+import ContractMetadata from "../../utils/ContractMetadata";
 import { BigNumber } from "bignumber.js";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { ContractService } from "../../deployment/service/ContractService";
+import { EventConsumer } from "../../utils/EventConsumer";
 import {
   Client,
   PrivateKey,
@@ -17,9 +19,6 @@ export default class Base {
   constructor(_contractId: string) {
     this.htsAddress = this.getBaseHTSContractAddress();
     this.contractId = _contractId;
-    console.log(
-      `- Base#constructor(): called with contract-id = ${_contractId}\n`
-    );
   }
 
   getCurrentImplementation = async (
@@ -62,6 +61,14 @@ export default class Base {
       record: txnRecord,
       result: txnRecord.contractFunctionResult!,
     };
+  };
+
+  protected isInitializationPending = async (contractName: string) => {
+    const path = new ContractMetadata().getFilePath(contractName);
+    const map = await new EventConsumer(path).getEventsFromMirror(
+      this.contractId
+    );
+    return !map.has("Initialized");
   };
 
   private signTxnIfNeeded = async (

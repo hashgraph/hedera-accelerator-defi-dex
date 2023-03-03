@@ -5,6 +5,7 @@ import {
 } from "@hashgraph/sdk";
 
 import ClientManagement from "../../utils/ClientManagement";
+import dex from "../model/dex";
 
 async function main() {
   await createGODToken(200000 * 100000000);
@@ -12,6 +13,16 @@ async function main() {
   await createToken("LAB49A", "LAB49A", 200000 * 1e8);
   await createToken("LAB49B", "LAB49B", 200000 * 1e8);
   await createToken("LAB49C", "LAB49C", 200000 * 1e8);
+  await createToken(
+    dex.GOVERNANCE_DAO_ONE,
+    dex.GOVERNANCE_DAO_ONE,
+    200000 * 1e8
+  );
+  await createToken(
+    dex.GOVERNANCE_DAO_TWO,
+    dex.GOVERNANCE_DAO_TWO,
+    200000 * 1e8
+  );
   return "executed successfully";
 }
 

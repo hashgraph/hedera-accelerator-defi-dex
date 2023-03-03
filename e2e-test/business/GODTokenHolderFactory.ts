@@ -1,5 +1,6 @@
 import Base from "./Base";
-import { Client, ContractFunctionParameters } from "@hashgraph/sdk";
+import { clientsInfo } from "../../utils/ClientManagement";
+import { Client, ContractId, ContractFunctionParameters } from "@hashgraph/sdk";
 
 const GET_GOD_TOKEN_HOLDER = "getGODTokenHolder";
 const INITIALIZE = "initialize";
@@ -19,7 +20,10 @@ export default class GODTokenHolderFactory extends Base {
     console.log(`- GODTokenHolderFactory#${INITIALIZE} done. \n`);
   };
 
-  getGodTokenHolder = async (tokenAddress: string, client: Client) => {
+  getGodTokenHolder = async (
+    tokenAddress: string,
+    client: Client = clientsInfo.operatorClient
+  ) => {
     const args = new ContractFunctionParameters().addAddress(tokenAddress);
 
     const { result } = await this.execute(
@@ -30,10 +34,10 @@ export default class GODTokenHolderFactory extends Base {
       undefined
     );
 
+    const address = result.getAddress(0);
     console.log(
-      `- GODTokenFactory#${GET_GOD_TOKEN_HOLDER} Token ${tokenAddress} has GOD token holder address ${result.getAddress(
-        0
-      )} \n`
+      `- GODTokenFactory#${GET_GOD_TOKEN_HOLDER} Token ${tokenAddress} has GOD token holder address ${address} \n`
     );
+    return ContractId.fromSolidityAddress(address);
   };
 }

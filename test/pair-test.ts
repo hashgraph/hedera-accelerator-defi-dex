@@ -1108,7 +1108,7 @@ describe("All Tests", function () {
       await lpToken.setUserBalance(lpTokenCont.address, 200);
       await lpTokenCont.allotLPTokenFor(100, 100, signers[0].address);
       const result = await lpTokenCont.lpTokenForUser(signers[0].address);
-      await expect(result).to.equal(100);
+      expect(result).to.equal(100);
     });
 
     it("verify allotLPToken call when lptoken not exist", async function () {

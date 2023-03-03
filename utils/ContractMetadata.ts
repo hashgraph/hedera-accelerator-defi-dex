@@ -1,3 +1,4 @@
+import * as fs from "fs";
 import { Helper } from "./Helper";
 import md5File from "md5-file";
 import { ContractService } from "../deployment/service/ContractService";
@@ -14,6 +15,7 @@ export default class ContractMetadata {
     "Splitter",
     "Configuration",
     "GODTokenHolderFactory",
+    "GovernanceDAOFactory",
   ];
 
   static SUPPORTED_CONTRACTS_FOR_DEPLOYMENT = [
@@ -30,6 +32,8 @@ export default class ContractMetadata {
     "GODHolder",
     "Configuration",
     "GODTokenHolderFactory",
+    "GovernanceDAOFactory",
+    "GovernorTokenDAO",
   ];
 
   static SUPPORTED_PROXY_OPTIONS = ["create", "update"];
@@ -56,6 +60,12 @@ export default class ContractMetadata {
     const hash = md5File.sync(filePath);
     return hash;
   };
+
+  getContractABI(contractName: string) {
+    const filePath = this.getFilePath(contractName.toLowerCase());
+    const rawData: any = fs.readFileSync(filePath);
+    return JSON.parse(rawData);
+  }
 
   public getAllChangedContractNames = (): Array<string> => {
     const eligibleContractsForDeployments: string[] = [];

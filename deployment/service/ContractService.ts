@@ -3,6 +3,7 @@ import { DeployedContract } from "../model/contract";
 import { httpRequest } from "../api/HttpsService";
 
 export class ContractService {
+  public governanceDaoFactory = "governancedaofactory";
   public factoryContractName = "factory";
   public pairContractName = "pair";
   public baseContractName = "basehts";
@@ -23,6 +24,7 @@ export class ContractService {
   public godHolderContract = "godholder";
   public configuration = "configuration";
   public godTokenHolderFactory = "godtokenholderfactory";
+  public governorTokenDao = "governortokendao";
 
   private contractRecordFile = "./deployment/state/contracts.json";
   static DEV_CONTRACTS_PATH = "./deployment/state/contracts.json";

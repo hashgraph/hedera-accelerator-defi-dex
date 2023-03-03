@@ -8,7 +8,7 @@ const INITIALIZE = "initialize";
 const REVERT_TOKENS_FOR_VOTER = "revertTokensForVoter";
 const CAN_USER_CLAIM_GOD_TOKEN = "canUserClaimGodTokens";
 
-export default class Governor extends Base {
+export default class GodHolder extends Base {
   initialize = async (client: Client) => {
     const args = new ContractFunctionParameters()
       .addAddress(this.htsAddress)
