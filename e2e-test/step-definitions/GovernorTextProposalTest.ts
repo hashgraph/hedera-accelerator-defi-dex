@@ -8,6 +8,7 @@ import Common from "../business/Common";
 import dex from "../../deployment/model/dex";
 import { TokenId } from "@hashgraph/sdk";
 import { BigNumber } from "bignumber.js";
+import { seconds } from "@nomicfoundation/hardhat-network-helpers/dist/src/helpers/time/duration";
 
 const csDev = new ContractService();
 const godHolderContract = csDev.getContractWithProxy(csDev.godHolderContract);
@@ -23,7 +24,7 @@ const tokenGOD = dex.GOD_TOKEN_ID;
 const DEFAULT_QUORUM_THRESHOLD_IN_BSP = 1;
 const DEFAULT_VOTING_DELAY = 2;
 const DEFAULT_VOTING_PERIOD = 7;
-let errorMsg: string;
+let errorMsg: string = "";
 let proposalId: string;
 let godToken: BigNumber;
 
@@ -55,8 +56,19 @@ export class GovernorTextProposal {
     try {
       proposalId = await governor.createTextProposal(title);
     } catch (e: any) {
-      errorMsg = e.message;
       console.log(e);
+      throw e;
+    }
+  }
+
+  @when(/User create a text proposal with blank title/, undefined, 30000)
+  public async createTextProposalWithBlankTitle() {
+    try {
+      proposalId = await governor.createTextProposal("");
+      await this.cancelProposalInternally();
+    } catch (e: any) {
+      errorMsg = e.message;
+      console.log("value of errorMsg", errorMsg);
     }
   }
 
@@ -137,12 +149,12 @@ export class GovernorTextProposal {
       const voteVal = await governor.getProposalVoteNumeric(vote);
       await governor.vote(proposalId, voteVal, clientsInfo.operatorClient);
     } catch (e: any) {
-      errorMsg = e.message;
       console.log(
         "Something went wrong while voting to proposal now cancelling the proposal"
       );
       console.log(e);
       await this.cancelProposalInternally();
+      throw e;
     }
   }
 
