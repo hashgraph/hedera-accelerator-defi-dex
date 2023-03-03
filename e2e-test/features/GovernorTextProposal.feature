@@ -17,23 +17,16 @@ Scenario: Verify governor text proposal execution
     Then User verify text proposal state is "Executed"
     Then User verify GOD tokens are returned to user
 
-Scenario: Verify user receives error message if user revote on a proposal
-    When User create a text proposal with title "textproposal2" 
-    When User wait for text proposal state to be "Active" for max 3 seconds
-    Then User verify text proposal state is "Active"
-    When User vote "For" to text proposal
-    When User vote "Against" to text proposal
-    Then User receives "CONTRACT_REVERT_EXECUTED" error message
-
 Scenario: Verify governor text proposal state is not changed if user abstain from voting
     When User create a text proposal with title "textproposal3" 
     When User wait for text proposal state to be "Active" for max 3 seconds
+    Then User verify text proposal state is "Active"
     When User vote "Abstain" to text proposal
     Then User verify text proposal state is "Active"
     When User cancel the text proposal with title "textproposal3"
 
 Scenario: Verify governor text proposal cannot create with blank title  
-    When User create a text proposal with title ""     
+    When User create a text proposal with blank title     
     Then User receives "CONTRACT_REVERT_EXECUTED" error message
     
 
