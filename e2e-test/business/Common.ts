@@ -19,8 +19,11 @@ import {
 } from "@hashgraph/sdk";
 import { BigNumber } from "bignumber.js";
 import { clientsInfo } from "../../utils/ClientManagement";
+import axios from "axios";
 
 export default class Common {
+  static baseUrl: string = "https://testnet.mirrornode.hedera.com/";
+
   static upgradeTo = async (
     proxyAddress: string,
     logicAddress: string,
@@ -200,5 +203,24 @@ export default class Common {
     console.log(
       `Common#mintToken(): TokenId = ${tokenId},  mintAmt = ${mintAmt}, transaction status is: ${transactionStatus.toString()}`
     );
+  };
+
+  static fetchTokenBalanceFromMirrorNode = async (
+    accountId: string,
+    tokenId: string
+  ) => {
+    let balance = new BigNumber(0);
+    const url = `${Common.baseUrl}api/v1/accounts/${accountId}/tokens?token.id=${tokenId}`;
+    await axios
+      .get(url)
+      .then((response) => {
+        const data = response.data;
+        balance = new BigNumber(data.tokens[0].balance);
+        console.log(
+          `Common#fetchTokenBalanceFromMirrorNode(): id = ${accountId}, TokenId = ${tokenId}, Balance = ${balance}`
+        );
+      })
+      .catch((error) => console.error(error));
+    return balance;
   };
 }
