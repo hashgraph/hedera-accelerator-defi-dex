@@ -104,7 +104,7 @@ export default class Governor extends Base {
     );
     const proposalId = result.getUint256(0).toFixed();
     console.log(
-      `- Governor#${CREATE_PROPOSAL}(): proposal-id = ${proposalId}\n`
+      `- Governor#${CREATE_PROPOSAL}(): proposal-id = ${proposalId}  proposal-title = ${title}\n`
     );
     return proposalId;
   };

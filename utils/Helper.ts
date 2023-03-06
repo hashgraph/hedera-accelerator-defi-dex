@@ -5,6 +5,7 @@ import { ContractFunctionResult } from "@hashgraph/sdk";
 import inquirer from "inquirer";
 import { execSync } from "child_process";
 import { BigNumber } from "bignumber.js";
+import * as fs from "fs";
 
 const web3 = new Web3();
 
@@ -93,5 +94,16 @@ export class Helper {
 
   static createProposalTitle(titlePrefix: string) {
     return `${titlePrefix} ${web3.utils.randomHex(20)}`;
+  }
+
+  static readWorkflowInputs() {
+    try {
+      const rawData: any = fs.readFileSync(
+        "./deployment/scripts/workflow-inputs.json"
+      );
+      return JSON.parse(rawData);
+    } catch (error) {
+      return undefined;
+    }
   }
 }
