@@ -28,7 +28,7 @@ contract GovernanceDAOFactory is OwnableUpgradeable, IEvents {
 
     address[] private daos;
 
-    IGovernorTokenDAO private doaLogic;
+    IGovernorTokenDAO private daoLogic;
     IGovernorTransferToken private tokenTransferLogic;
     IGODTokenHolderFactory private godTokenHolderFactory;
 
@@ -49,11 +49,11 @@ contract GovernanceDAOFactory is OwnableUpgradeable, IEvents {
         __Ownable_init();
         proxyAdmin = _proxyAdmin;
         baseHTS = _baseHTS;
-        doaLogic = _daoLogic;
+        daoLogic = _daoLogic;
         godTokenHolderFactory = _godTokenHolderFactory;
         tokenTransferLogic = _tokenTransferLogic;
 
-        emit LogicUpdated(address(0), address(doaLogic), GovernorTokenDAO);
+        emit LogicUpdated(address(0), address(daoLogic), GovernorTokenDAO);
         emit LogicUpdated(
             address(0),
             address(tokenTransferLogic),
@@ -90,11 +90,11 @@ contract GovernanceDAOFactory is OwnableUpgradeable, IEvents {
         IGovernorTokenDAO _newImpl
     ) external ifAdmin {
         emit LogicUpdated(
-            address(doaLogic),
+            address(daoLogic),
             address(_newImpl),
             GovernorTokenDAO
         );
-        doaLogic = _newImpl;
+        daoLogic = _newImpl;
     }
 
     function upgradeGovernorTokenTransferLogicImplementation(
@@ -189,7 +189,7 @@ contract GovernanceDAOFactory is OwnableUpgradeable, IEvents {
         IGovernorTransferToken _governorTokenTransferContractAddress
     ) private returns (address daoAddress) {
         IGovernorTokenDAO governanceDAO = IGovernorTokenDAO(
-            _createProxy(address(doaLogic))
+            _createProxy(address(daoLogic))
         );
         governanceDAO.initialize(
             _admin,
