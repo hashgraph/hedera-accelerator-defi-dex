@@ -413,20 +413,11 @@
   },
   {
     "name": "governortextproposal",
-    "id": "0.0.3663579",
-    "address": "0x000000000000000000000000000000000037e6db",
-    "timestamp": "2023-03-07T11:52:08.958Z",
+    "id": "0.0.3664910",
+    "address": "0x000000000000000000000000000000000037ec0e",
+    "timestamp": "2023-03-07T12:43:55.985Z",
     "hash": "6560c9964878a391f4ad605769219e4a",
-    "transparentProxyAddress": "0x000000000000000000000000000000000037e6e2",
-    "transparentProxyId": "0.0.3663586"
-  },
-  {
-    "name": "governortextproposal",
-    "id": "0.0.3664507",
-    "address": "0x000000000000000000000000000000000037ea7b",
-    "timestamp": "2023-03-07T12:32:33.111Z",
-    "hash": "6560c9964878a391f4ad605769219e4a",
-    "transparentProxyAddress": "0x000000000000000000000000000000000037ea83",
-    "transparentProxyId": "0.0.3664515"
+    "transparentProxyAddress": "0x000000000000000000000000000000000037ec19",
+    "transparentProxyId": "0.0.3664921"
   }
 ]

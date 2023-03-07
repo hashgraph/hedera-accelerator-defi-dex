@@ -20,7 +20,7 @@ import {
 const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
 const DEFAULT_QUORUM_THRESHOLD_IN_BSP = 500;
 const DEFAULT_VOTING_DELAY = 0; // blocks
-const DEFAULT_VOTING_PERIOD = 10; // blocks means 3 minutes as per test
+const DEFAULT_VOTING_PERIOD = 100; // blocks means 3 minutes as per test
 const DEFAULT_MAX_WAITING_TIME = DEFAULT_VOTING_PERIOD * 12 * 150;
 const EACH_ITERATION_DELAY = DEFAULT_VOTING_PERIOD * 0.3 * 1000;
 const DEFAULT_DESCRIPTION = "description";
