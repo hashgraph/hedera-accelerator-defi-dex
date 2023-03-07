@@ -658,22 +658,46 @@ describe("Governor Tests", function () {
       ).to.revertedWith("Only proposer can cancel the proposal");
     });
 
-    it("Verify GovernorTransferToken should return data for valid propsal id", async function () {
-      const { governorTransferTokenInstance, tokenCont, signers } =
-        await loadFixture(deployFixture);
-      const proposalId = await getTransferTokenProposalId(
-        governorTransferTokenInstance,
-        signers,
-        tokenCont.address,
-        5
+    it("Verify GovernorContract should return data for valid proposal id", async function () {
+      const { instance, tokenCont, signers } = await loadFixture(deployFixture);
+      await verifyAccountBalance(tokenCont, signers[0].address, total * 0.2);
+      const proposalIdResponse = await createProposal(instance, signers[0]);
+      await verifyAccountBalance(
+        tokenCont,
+        signers[0].address,
+        twentyPercent - 1 * precision
       );
-      const info = await governorTransferTokenInstance.getProposalDetails(
-        proposalId
-      );
-      expect(info[0]).to.be.equals(signers[0].address);
-      expect(info[1]).to.be.equals(title);
-      expect(info[2]).to.be.equals(desc);
-      expect(info[3]).to.be.equals(link);
+
+      const record = await proposalIdResponse.wait();
+      const proposalId = record.events[0].args.proposalId.toString();
+      const result = await instance.callStatic.getProposalDetails(proposalId);
+
+      expect(result[0]).to.be.equals(500000000);
+      expect(result[1]).to.be.equals(false);
+      expect(result[2]).to.be.equals(0);
+      expect(result[3]).to.be.equals(false);
+      expect(result[4]).to.be.equals(0);
+      expect(result[5]).to.be.equals(0);
+      expect(result[6]).to.be.equals(0);
+      expect(result[7]).to.be.equals(signers[0].address);
+      expect(result[8]).to.be.equals(title);
+      expect(result[9]).to.be.equals(desc);
+      expect(result[10]).to.be.equals(link);
+      await instance.castVote(proposalId, 1);
+
+      const result1 = await instance.callStatic.getProposalDetails(proposalId);
+
+      expect(result1[0]).to.be.equals(500000000);
+      expect(result1[1]).to.be.equals(true);
+      expect(result1[2]).to.be.equals(1);
+      expect(result1[3]).to.be.equals(true);
+      expect(result1[4]).to.be.equals(0);
+      expect(result1[5]).to.be.equals(1900000000);
+      expect(result1[6]).to.be.equals(0);
+      expect(result1[7]).to.be.equals(signers[0].address);
+      expect(result1[8]).to.be.equals(title);
+      expect(result1[9]).to.be.equals(desc);
+      expect(result1[10]).to.be.equals(link);
     });
 
     it("Verify GovernorTransferToken should reverted for invalid propsal id", async function () {

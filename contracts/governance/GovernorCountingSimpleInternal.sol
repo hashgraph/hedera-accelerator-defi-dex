@@ -118,20 +118,35 @@ abstract contract GovernorCountingSimpleInternal is
     }
 
     function getProposalDetails(
-        uint proposalId
+        uint256 proposalId
     )
         public
         view
-        returns (address, string memory, string memory, string memory)
+        returns (
+            uint256 quorumValue,
+            bool isQuorumReached,
+            ProposalState proposalState,
+            bool voted,
+            uint256 againstVotes,
+            uint256 forVotes,
+            uint256 abstainVotes,
+            address creator,
+            string memory title,
+            string memory descripition,
+            string memory link
+        )
     {
         ProposalInfo memory proposalInfo = proposalCreators[proposalId];
         require(proposalInfo.creator != address(0), "Proposal not found");
-        return (
-            proposalInfo.creator,
-            proposalInfo.title,
-            proposalInfo.description,
-            proposalInfo.link
-        );
+        quorumValue = quorum(0);
+        isQuorumReached = _quorumReached(proposalId);
+        proposalState = state(proposalId);
+        voted = hasVoted(proposalId, msg.sender);
+        (againstVotes, forVotes, abstainVotes) = proposalVotes(proposalId);
+        creator = proposalInfo.creator;
+        title = proposalInfo.title;
+        descripition = proposalInfo.description;
+        link = proposalInfo.link;
     }
 
     function votingDelay()
