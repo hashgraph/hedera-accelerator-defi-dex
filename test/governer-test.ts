@@ -658,7 +658,7 @@ describe("Governor Tests", function () {
       ).to.revertedWith("Only proposer can cancel the proposal");
     });
 
-    it("Check getProposalDetails function", async function () {
+    it("Verify GovernorContract should return data for valid proposal id", async function () {
       const { instance, tokenCont, signers } = await loadFixture(deployFixture);
       await verifyAccountBalance(tokenCont, signers[0].address, total * 0.2);
       const proposalIdResponse = await createProposal(instance, signers[0]);
@@ -670,7 +670,6 @@ describe("Governor Tests", function () {
 
       const record = await proposalIdResponse.wait();
       const proposalId = record.events[0].args.proposalId.toString();
-      console.log(proposalId);
       const result = await instance.callStatic.getProposalDetails(proposalId);
 
       expect(result[0]).to.be.equals(500000000);
