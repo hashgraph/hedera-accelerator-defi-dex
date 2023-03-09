@@ -9,6 +9,9 @@ import { ContractService } from "../deployment/service/ContractService";
 import ClientManagement from "../utils/ClientManagement";
 import dex from "../deployment/model/dex";
 
+import * as fs from "fs";
+import { ethers } from "hardhat";
+
 const clientManagement = new ClientManagement();
 const contractService = new ContractService();
 let client = clientManagement.dexOwnerClient();
@@ -18,9 +21,7 @@ const htsServiceAddress = contractService.getContract(
 ).address;
 const { treasureId, treasureKey } = clientManagement.getTreasure();
 
-const contract = contractService.getContractWithProxy(
-  contractService.dummyContract
-);
+const contract = contractService.getContract(contractService.dummyContract);
 
 const precision = 10000000;
 
@@ -159,35 +160,72 @@ const transferFromContractViaErc20 = async (contId: string, amt: BigNumber) => {
   console.log(`transferFromContractViaErc20 result ${status} `);
 };
 
+const readFileContent = (filePath: string) => {
+  const rawdata: any = fs.readFileSync(filePath);
+  return JSON.parse(rawdata);
+};
+
+const getCallData = async (): Promise<Uint8Array> => {
+  const contractJson = readFileContent(
+    "./artifacts/contracts/mock/ERC20Mock.sol/ERC20Mock.json"
+  );
+  const contractInterface = new ethers.utils.Interface(contractJson.abi);
+  const callData = contractInterface.encodeFunctionData("totalSupply", []);
+  return callData;
+};
+
+const balanceOf = async () => {
+  console.log(`balanceOf `);
+  const data = await getCallData();
+  const d = ethers.utils.arrayify(data);
+  const contractFunctionParameters = new ContractFunctionParameters()
+    .addAddress("0x0000000000000000000000000000000000002187")
+    .addBytes(d);
+  const contractAllotTx = await new ContractExecuteTransaction()
+    .setContractId(contract.id)
+    .setFunction("balanceOf", contractFunctionParameters)
+    .setGas(900000)
+    .freezeWith(client);
+
+  const executedTx = await contractAllotTx.execute(client);
+
+  const contractAllotRx = await executedTx.getReceipt(client);
+
+  const status = contractAllotRx.status;
+  console.log(`balanceOf result ${status} `);
+};
+
 async function main() {
   console.log(`Testing contract .............\n`);
-  await initialize(contract.transparentProxyId!);
-  await transferToContract(
-    contract.transparentProxyId!,
-    treasureId.toSolidityAddress(),
-    new BigNumber(4)
-  );
-  await transferFromContract(contract.transparentProxyId!, new BigNumber(1));
-  try {
-    await transferFromContractViaDep(
-      contract.transparentProxyId!,
-      new BigNumber(1)
-    );
-  } catch (e) {
-    console.log(e);
-  }
-  try {
-    await transferFromContractViaDepUsingErc20(
-      contract.transparentProxyId!,
-      new BigNumber(1)
-    );
-  } catch (e) {
-    console.log(e);
-  }
-  await transferFromContractViaErc20(
-    contract.transparentProxyId!,
-    new BigNumber(1)
-  );
+  // await initialize(contract.transparentProxyId!);
+  // await transferToContract(
+  //   contract.transparentProxyId!,
+  //   treasureId.toSolidityAddress(),
+  //   new BigNumber(4)
+  // );
+  // await transferFromContract(contract.transparentProxyId!, new BigNumber(1));
+  // try {
+  //   await transferFromContractViaDep(
+  //     contract.transparentProxyId!,
+  //     new BigNumber(1)
+  //   );
+  // } catch (e) {
+  //   console.log(e);
+  // }
+  // try {
+  //   await transferFromContractViaDepUsingErc20(
+  //     contract.transparentProxyId!,
+  //     new BigNumber(1)
+  //   );
+  // } catch (e) {
+  //   console.log(e);
+  // }
+  // await transferFromContractViaErc20(
+  //   contract.transparentProxyId!,
+  //   new BigNumber(1)
+  // );
+
+  await balanceOf();
   console.log(`Testing contract done`);
 }
 

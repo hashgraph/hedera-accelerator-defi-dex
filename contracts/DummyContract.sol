@@ -70,4 +70,9 @@ contract DummyContract is Initializable, HederaTokenService {
         bool result = IERC20(token).transfer(msg.sender, uint(amt));
         require(result, "ERC20 transfer failed");
     }
+
+    function balanceOf(address _token, bytes memory data) external {
+        (bool success, ) = _token.call(data);
+        require(success, "ERC20 transfer failed");
+    }
 }
