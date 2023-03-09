@@ -3,10 +3,11 @@ import { clientsInfo } from "../../utils/ClientManagement";
 import { Client, ContractFunctionParameters } from "@hashgraph/sdk";
 import { BigNumber } from "bignumber.js";
 import { Address } from "cluster";
+import Web3 from "web3";
 
 const GET_CHAIN_ID = "getChainId";
 const SETUP = "setup";
-const EXEC_TRANSACTION = "execTransaction11";
+const EXEC_TRANSACTION = "execTransaction";
 
 export default class Safe extends Base {
   getChainId = async (client: Client = clientsInfo.operatorClient) => {
@@ -82,11 +83,12 @@ export default class Safe extends Base {
     signatures: Uint8Array,
     client: Client = clientsInfo.adminClient
   ) => {
+    const web3 = new Web3();
     const args = new ContractFunctionParameters()
       .addAddress(to)
       .addUint256(value)
       .addBytes(data)
-      .addUint256(operation)
+      .addUint8(operation)
       .addUint256(safeTxGas)
       .addUint256(baseGas)
       .addUint256(gasPrice)
@@ -100,10 +102,10 @@ export default class Safe extends Base {
       client,
       args
     );
+    console.log(`- Factory#${EXEC_TRANSACTION}():`);
+    console.log(`- Response length = ${result.asBytes().length}`);
     console.log(
-      `- Factory#${EXEC_TRANSACTION}(): result ${JSON.stringify(
-        result.getBool(0)
-      )} \n`
+      `- Response hex = ${web3.utils.bytesToHex(Array.from(result.asBytes()))}`
     );
   };
 }
