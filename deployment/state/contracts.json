@@ -410,5 +410,19 @@
     "hash": "a05fd00e5e2dbaec2013eeb80373bc53",
     "transparentProxyAddress": "0x00000000000000000000000000000000003763f7",
     "transparentProxyId": "0.0.3630071"
+  },
+  {
+    "name": "gnosissafe",
+    "id": "0.0.3652214",
+    "address": "0x000000000000000000000000000000000037ba76",
+    "timestamp": "2023-03-06T10:59:09.496Z",
+    "hash": "c0b3a07084d70f88f45c3b66f1921818"
+  },
+  {
+    "name": "gnosissafeproxyfactory",
+    "id": "0.0.3652235",
+    "address": "0x000000000000000000000000000000000037ba8b",
+    "timestamp": "2023-03-06T10:59:55.884Z",
+    "hash": "b1c474596043bd848e6de4324d72de49"
   }
 ]

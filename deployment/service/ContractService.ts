@@ -26,6 +26,9 @@ export class ContractService {
   public godTokenHolderFactory = "godtokenholderfactory";
   public governorTokenDao = "governortokendao";
 
+  public gnosisSafe = "gnosissafe";
+  public gnosisSafeProxyFactory = "gnosissafeproxyfactory";
+
   private contractRecordFile = "./deployment/state/contracts.json";
   static DEV_CONTRACTS_PATH = "./deployment/state/contracts.json";
   static UAT_CONTRACTS_PATH = "./deployment/state/contractsUAT.json";

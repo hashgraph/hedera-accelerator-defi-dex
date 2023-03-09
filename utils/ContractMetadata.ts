@@ -34,6 +34,8 @@ export default class ContractMetadata {
     "GODTokenHolderFactory",
     "GovernanceDAOFactory",
     "GovernorTokenDAO",
+    "GnosisSafe",
+    "GnosisSafeProxyFactory",
   ];
 
   static SUPPORTED_PROXY_OPTIONS = ["create", "update"];
@@ -43,6 +45,14 @@ export default class ContractMetadata {
   );
 
   public getFilePath = (contractNameArgs: string) => {
+    if (contractNameArgs === "GnosisSafe".toLowerCase()) {
+      return "./safe/GnosisSafe.sol/GnosisSafe.json";
+    }
+
+    if (contractNameArgs === "GnosisSafeProxyFactory".toLowerCase()) {
+      return "safe/GnosisSafeProxyFactory.sol/GnosisSafeProxyFactory.json";
+    }
+
     const contractName = contractNameArgs.toLowerCase();
     const compiledPaths =
       Helper.getContractPathList("./artifacts").compiledPaths;
