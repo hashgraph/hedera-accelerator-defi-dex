@@ -16,6 +16,7 @@ import {
   ContractFunctionParameters,
   TokenDeleteTransaction,
   TokenMintTransaction,
+  TokenAssociateTransaction,
 } from "@hashgraph/sdk";
 import { BigNumber } from "bignumber.js";
 import { clientsInfo } from "../../utils/ClientManagement";
@@ -218,5 +219,24 @@ export default class Common {
       `Common#fetchTokenBalanceFromMirrorNode(): id = ${accountId}, TokenId = ${tokenId}, Balance = ${balance}`
     );
     return balance;
+  };
+
+  static associateTokensToAccount = async (
+    accountId: string | AccountId,
+    tokenIds: (string | TokenId)[],
+    client: Client = clientsInfo.operatorClient,
+    accountKey: PrivateKey = clientsInfo.operatorKey
+  ) => {
+    const transaction = await new TokenAssociateTransaction()
+      .setAccountId(accountId)
+      .setTokenIds(tokenIds)
+      .freezeWith(client);
+    const signTx = await transaction.sign(accountKey);
+    const txResponse = await signTx.execute(client);
+    const receipt = await txResponse.getReceipt(client);
+    const transactionStatus = receipt.status;
+    console.log(
+      `Common#associateTokensToAccount(): TokenIds = ${tokenIds},  accountId = ${accountId}, transaction status is: ${transactionStatus.toString()}`
+    );
   };
 }

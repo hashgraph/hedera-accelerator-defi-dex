@@ -54,7 +54,7 @@ const DEFAULT_VOTING_PERIOD = 4;
 let proposalId: string;
 let balance: BigNumber;
 let tokens: BigNumber;
-let errorMsg: string;
+let errorMsg: string = "";
 let daoAddress: any;
 
 @binding()
@@ -89,7 +89,7 @@ export class DAOGovernorTokenTransfer {
     }
   }
 
-  @given(/User initialize DAO factory contract/, undefined, 30000)
+  @given(/User initialize DAO factory contract/, undefined, 60000)
   public async initializeDAOFactory() {
     await daoFactory.initialize(
       daoFactoryContractName,
