@@ -8,7 +8,7 @@ import Common from "../business/Common";
 import dex from "../../deployment/model/dex";
 import { TokenId } from "@hashgraph/sdk";
 import { BigNumber } from "bignumber.js";
-import { seconds } from "@nomicfoundation/hardhat-network-helpers/dist/src/helpers/time/duration";
+import { Helper } from "../../utils/Helper";
 
 const csDev = new ContractService();
 const godHolderContract = csDev.getContractWithProxy(csDev.godHolderContract);
@@ -197,6 +197,7 @@ export class GovernorTextProposal {
 
   @then(/User verify GOD tokens are returned to user/, undefined, 30000)
   public async verifyGODTokensAreReturned() {
+    await Helper.delay(3000);
     const updatedGODToken = await Common.fetchTokenBalanceFromMirrorNode(
       clientsInfo.operatorId.toString(),
       tokenGOD

@@ -5,7 +5,7 @@ Feature: DAOGovernorToken e2e test
 
 Scenario: Verify proposal is not created if user gives -ve transfer amount
     Given User initialize the DAO governor token contract with name "DAOName111" and url "DAOUrl11"
-    When User create a new token transfer proposal with title "tokentransfertitle2" and token amount -10 with the help of DAO
+    When User create a new token transfer proposal with title "tokentransfertitle211" and token amount -10 with the help of DAO
     Then User verify that proposal is not created and user receives error message "CONTRACT_REVERT_EXECUTED"
 
 Scenario: Verify user can create a DAO and then transfer token with help of proposal    
@@ -47,16 +47,16 @@ Scenario: Verify proposal is not executed if token transfer amount is larger tha
 
 Scenario: Verify DAO and proposal flow with factory DAO
     Given User initialize DAO factory contract
-    When User create a DAO with name "factorydao1"   
+    When User create a DAO with name "factorydao1" and url "factorydao1url"   
     When User initialize the governor token dao and governor token transfer and god holder contract via dao factory
     When User fetches balance of token which user wants to transfer 
-    When User create a new token transfer proposal with title "factorytesttitle11abx" and token amount 1 with the help of DAO
+    When User create a new token transfer proposal with title "factorytesttitle11abxz" and token amount 1 with the help of DAO
     When User wait for token transfer proposal state to be "Active" for maximum 15 seconds
     Then User verify token transfer proposal state is "Active"
     When User vote "For" token transfer proposal
     When User wait for token transfer proposal state to be "Succeeded" for maximum 15 seconds
     Then User verify token transfer proposal state is "Succeeded"
-    When User execute token transfer proposal with title "factorytesttitle11abx"
+    When User execute token transfer proposal with title "factorytesttitle11abxz"
     Then User verify target token is transferred to payee account 
 
 Scenario: Verify user can not create DAO with empty name via factory
