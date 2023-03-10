@@ -824,6 +824,19 @@ describe("All Tests", function () {
       ).to.revertedWith("Pls pass correct token to swap.");
     });
 
+    it("Verify pair info call should return data", async function () {
+      const { pair } = await loadFixture(deployFixture);
+      const info = await pair.getPairInfo();
+      const pairObject = info[0];
+      expect(info.length).to.be.equals(6);
+      expect(
+        ethers.utils.arrayify(pairObject.tokenA.tokenAddress).length
+      ).greaterThan(0);
+      expect(
+        ethers.utils.arrayify(pairObject.tokenB.tokenAddress).length
+      ).greaterThan(0);
+    });
+
     it("Passing unknown B token to swap", async function () {
       const { pair } = await loadFixture(deployFixture);
       const tokenBeforeQty = await pair.getPairQty();

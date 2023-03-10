@@ -31,10 +31,6 @@ contract Pair is IPair, Initializable {
     IBaseHTS internal tokenService;
     ILPToken internal lpTokenContract;
 
-    struct LiquidityContributor {
-        Pair pair;
-    }
-
     Pair pair;
 
     int256 slippage;
@@ -302,6 +298,26 @@ contract Pair is IPair, Initializable {
         return (pair.tokenA.tokenQty, pair.tokenB.tokenQty);
     }
 
+    function getPairInfo()
+        public
+        view
+        returns (
+            Pair memory _pair,
+            int256 _tokenASpotPrice,
+            int256 _tokenBSpotPrice,
+            int256 _precision,
+            int256 _feePrecision,
+            int256 _fee
+        )
+    {
+        _pair = pair;
+        _tokenASpotPrice = getSpotPrice(pair.tokenA.tokenAddress);
+        _tokenBSpotPrice = getSpotPrice(pair.tokenB.tokenAddress);
+        _precision = getPrecisionValue();
+        _feePrecision = getFeePrecision();
+        _fee = fee;
+    }
+
     function getSpotPrice(address token) public view returns (int256) {
         int256 precision = getPrecisionValue();
         int256 spotTokenQty = token == pair.tokenA.tokenAddress
@@ -310,8 +326,10 @@ contract Pair is IPair, Initializable {
         int256 otherTokenQty = token == pair.tokenA.tokenAddress
             ? pair.tokenB.tokenQty
             : pair.tokenA.tokenQty;
-        int256 value = (spotTokenQty * precision) / otherTokenQty;
-
+        int256 value;
+        if (otherTokenQty > 0) {
+            value = (spotTokenQty * precision) / otherTokenQty;
+        }
         return value;
     }
 
