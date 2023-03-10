@@ -301,21 +301,16 @@ contract Pair is IPair, Initializable {
     function getPairInfo()
         public
         view
-        returns (
-            Pair memory _pair,
-            int256 _tokenASpotPrice,
-            int256 _tokenBSpotPrice,
-            int256 _precision,
-            int256 _feePrecision,
-            int256 _fee
-        )
+        returns (Pair memory _pair, Amount memory _amount)
     {
         _pair = pair;
-        _tokenASpotPrice = getSpotPrice(pair.tokenA.tokenAddress);
-        _tokenBSpotPrice = getSpotPrice(pair.tokenB.tokenAddress);
-        _precision = getPrecisionValue();
-        _feePrecision = getFeePrecision();
-        _fee = fee;
+        _amount = Amount(
+            getSpotPrice(pair.tokenA.tokenAddress),
+            getSpotPrice(pair.tokenB.tokenAddress),
+            getPrecisionValue(),
+            getFeePrecision(),
+            fee
+        );
     }
 
     function getSpotPrice(address token) public view returns (int256) {

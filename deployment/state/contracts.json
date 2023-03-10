@@ -313,6 +313,15 @@
     "transparentProxyId": "0.0.3664921"
   },
   {
+    "name": "pair",
+    "id": "0.0.3706291",
+    "address": "0x0000000000000000000000000000000000388db3",
+    "timestamp": "2023-03-10T13:00:43.838Z",
+    "hash": "055dcc3a7d116f9142386dafdff84512",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000388dbb",
+    "transparentProxyId": "0.0.3706299"
+  },
+  {
     "name": "factory",
     "id": "0.0.3875889",
     "address": "0x00000000000000000000000000000000003b2431",
