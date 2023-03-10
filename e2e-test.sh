@@ -44,7 +44,7 @@ echo DEX_CONTRACT_OWNER_KEY=$DEX_CONTRACT_OWNER_KEY >> .env;
 echo UI_USER_ID=$UI_USER_ID >> .env;
 echo UI_USER_KEY=$UI_USER_KEY >> .env;
 
-declare -a arr=("LPToken" "Pair" "Factory" "GovernorTransferToken" "GODHolder" "GovernorUpgrade" "GovernorTokenCreate" "GovernorTextProposal")
+declare -a arr=("LPToken" "Pair" "Factory" "GovernorTransferToken" "GODHolder" "GovernorUpgrade" "GovernorTokenCreate" "GovernorTextProposal" "GovernanceDAOFactory" "GovernorTokenDAO")
 for i in "${arr[@]}"
 do
     echo "Starting deployment for CONTRACT_NAME  " $i

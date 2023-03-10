@@ -211,16 +211,12 @@ export default class Common {
   ) => {
     let balance = new BigNumber(0);
     const url = `${Common.baseUrl}api/v1/accounts/${accountId}/tokens?token.id=${tokenId}`;
-    await axios
-      .get(url)
-      .then((response) => {
-        const data = response.data;
-        balance = new BigNumber(data.tokens[0].balance);
-        console.log(
-          `Common#fetchTokenBalanceFromMirrorNode(): id = ${accountId}, TokenId = ${tokenId}, Balance = ${balance}`
-        );
-      })
-      .catch((error) => console.error(error));
+    const response = await fetch(url, { cache: "no-store" });
+    const data = await response.json();
+    balance = new BigNumber(data.tokens[0].balance);
+    console.log(
+      `Common#fetchTokenBalanceFromMirrorNode(): id = ${accountId}, TokenId = ${tokenId}, Balance = ${balance}`
+    );
     return balance;
   };
 }
