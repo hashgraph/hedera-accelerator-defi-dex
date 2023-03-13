@@ -30,8 +30,8 @@ const {
     client.setOperator(myAccountId, myPrivateKey);
   
     //Create new keys
-    const newAccountPrivateKey = await PrivateKey.generateECDSA();
-    const publicKey = newAccountPrivateKey.publicKey;
+     const newAccountPrivateKey = await PrivateKey.fromStringECDSA("a2feafa184e93d67e50328b1ff0d0a17c25e1b3a3d4a4f113d8dd2cd16315f2b");
+     const publicKey = newAccountPrivateKey.publicKey;
   
     // Assuming that the target shard and realm are known.
     // For now they are virtually always 0 and 0.
@@ -47,29 +47,29 @@ const {
       "The transfer transaction from my account to the new account was: " +
         transactionReceipt.status.toString()
     );
-    await delay(10000); // wait for 5 seconds before querying account id
-    const mirrorNodeUrl = "https://testnet.mirrornode.hedera.com/api/v1/";
-    try {
-      const account = await axios.get(
-        mirrorNodeUrl +
-          "accounts?account.publickey=" +
-          newAccountPrivateKey.publicKey.toStringRaw()
-      );
-      console.log("new account id", account.data?.accounts[0].account);
-    } catch (err) {
-      console.log(err);
-    }
+    // await delay(10000); // wait for 5 seconds before querying account id
+    // const mirrorNodeUrl = "https://testnet.mirrornode.hedera.com/api/v1/";
+    // try {
+    //   const account = await axios.get(
+    //     mirrorNodeUrl +
+    //       "accounts?account.publickey=" +
+    //       newAccountPrivateKey.publicKey.toStringRaw()
+    //   );
+    //   console.log("new account id", account.data?.accounts[0].account);
+    // } catch (err) {
+    //   console.log(err);
+    // }
   
-    //https://testnet.mirrornode.hedera.com/api/v1/accounts?account.publickey=02a1a832ec5ea22b1796b4af034a9788791c49da4a889d54bdb8e1ca2261729bc9&balance=true&limit=2&order=desc
+    // //https://testnet.mirrornode.hedera.com/api/v1/accounts?account.publickey=02a1a832ec5ea22b1796b4af034a9788791c49da4a889d54bdb8e1ca2261729bc9&balance=true&limit=2&order=desc
   
-    console.log(
-      "new account private key(raw)",
-      newAccountPrivateKey.toStringRaw()
-    );
-    console.log("new account private key", newAccountPrivateKey.toString());
-    console.log(
-      "new account public key (raw)",
-      newAccountPrivateKey.publicKey.toStringRaw()
-    );
+    // console.log(
+    //   "new account private key(raw)",
+    //   newAccountPrivateKey.toStringRaw()
+    // );
+    // console.log("new account private key", newAccountPrivateKey.toString());
+    // console.log(
+    //   "new account public key (raw)",
+    //   newAccountPrivateKey.publicKey.toStringRaw()
+    // );
   }
   main();

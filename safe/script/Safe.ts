@@ -40,7 +40,7 @@ export default class Safe extends Base {
     paymentTokenAddress: string,
     payment: BigNumber,
     paymentReceiverAddress: string,
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.ecdsaClient
   ) => {
     const args = new ContractFunctionParameters()
       .addAddressArray(owners)

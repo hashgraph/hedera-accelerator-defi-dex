@@ -1,4 +1,4 @@
-import { ContractId, TransactionId, AccountId } from "@hashgraph/sdk";
+import { ContractId } from "@hashgraph/sdk";
 import { ContractService } from "../../deployment/service/ContractService";
 import SafeFactory from "./SafeFactory";
 import Safe from "./Safe";
@@ -10,6 +10,11 @@ import * as fs from "fs";
 import { ethers } from "hardhat";
 
 const contractService = new ContractService();
+
+const readFileContent = (fileName: string) => {
+  const rawdata: any = fs.readFileSync(fileName);
+  return JSON.parse(rawdata);
+};
 
 const createSigner = () => {
   //a2feafa184e93d67e50328b1ff0d0a17c25e1b3a3d4a4f113d8dd2cd16315f2b
@@ -39,11 +44,6 @@ interface SafeTransaction extends MetaTransaction {
   refundReceiver: string;
   nonce: string | number;
 }
-
-const readFileContent = (fileName: string) => {
-  const rawdata: any = fs.readFileSync(fileName);
-  return JSON.parse(rawdata);
-};
 
 interface SafeSignature {
   signer: string;
@@ -135,58 +135,52 @@ const getCallDataNew = async (): Promise<string> => {
   );
   const contractInterface = new ethers.utils.Interface(contractJson.abi);
   const callData = contractInterface.encodeFunctionData("totalSupply", []);
-  //const callData = contractInterface.encodeFunctionData("transfer(address,uint256)", [clientsInfo.dexOwnerId.toSolidityAddress(), 1]);
-
   return callData;
 };
 
 async function main() {
   const safeContract = contractService.getContract(contractService.gnosisSafe);
-  // const factoryContract = contractService.getContract(
-  //     contractService.gnosisSafeProxyFactory
-  // );
-  // console.log(`safeContract ${safeContract.id}`);
-  // console.log(`factoryContract ${factoryContract.id}`);
-  // const safeFactory = new SafeFactory(factoryContract.id);
-  // const safeProxy = await safeFactory.createProxy(safeContract.address);
-  // const safeProxyContractId = ContractId.fromSolidityAddress(safeProxy).toString();
-  //const safeProxyContractId = "0.0.3701207";
-  //console.log(`safeProxyContractId ${safeProxyContractId}`);
-  console.log(`safeContract ${safeContract.id}`);
-
-  const safe = new Safe(safeContract.id);
-  // await safe.getChainId();
-
-  const owners = [clientsInfo.operatorId.toSolidityAddress()];
+  const factoryContract = contractService.getContract(
+    contractService.gnosisSafeProxyFactory
+  );
+  const safeFactory = new SafeFactory(factoryContract.id);
+  const safeProxy = await safeFactory.createProxy(safeContract.address);
+  const safeProxyContractId =
+    ContractId.fromSolidityAddress(safeProxy).toString();
+  //const safeProxyContractId = "0.0.3663437";
+  console.log(`safeProxyContractId ${safeProxyContractId}`);
+  const safe = new Safe(safeProxyContractId);
+  await safe.getChainId();
+  const owners = [clientsInfo.ecdsaAcctId.toSolidityAddress()];
   const data = new Uint8Array();
-  // await safe.setup(
-  //   owners,
-  //   1,
-  //   clientsInfo.operatorId.toSolidityAddress(),
-  //   data,
-  //   clientsInfo.adminId.toSolidityAddress(),
-  //   dex.LAB49_3_TOKEN_ADDRESS,
-  //   new BigNumber(0),
-  //   clientsInfo.treasureId.toSolidityAddress()
-  // );
+  await safe.setup(
+    owners,
+    1,
+    clientsInfo.operatorId.toSolidityAddress(),
+    data,
+    clientsInfo.adminId.toSolidityAddress(),
+    dex.LAB49_3_TOKEN_ADDRESS,
+    new BigNumber(0),
+    clientsInfo.treasureId.toSolidityAddress()
+  );
 
-  // const safeTx1 = await safeTx(safeContract.address);
-  // const signBytes = await getSignatures(safeContract.address);
+  const safeTx1 = await safeTx(safeContract.address);
+  const signBytes = await getSignatures(safeContract.address);
 
-  // await safe.getSign(ethers.utils.arrayify(signBytes));
+  await safe.getSign(ethers.utils.arrayify(signBytes));
 
-  // await safe.execTransaction(
-  //     safeTx1.to,
-  //     safeTx1.value,
-  //     ethers.utils.arrayify(safeTx1.data),
-  //     safeTx1.operation,
-  //     new BigNumber(0),
-  //     new BigNumber(0),
-  //     new BigNumber(0),
-  //     safeTx1.gasToken,
-  //     safeTx1.refundReceiver,
-  //     ethers.utils.arrayify(signBytes)
-  // );
+  await safe.execTransaction(
+    safeTx1.to,
+    safeTx1.value,
+    ethers.utils.arrayify(safeTx1.data),
+    safeTx1.operation,
+    new BigNumber(0),
+    new BigNumber(0),
+    new BigNumber(0),
+    safeTx1.gasToken,
+    safeTx1.refundReceiver,
+    ethers.utils.arrayify(signBytes)
+  );
 
   return "Done";
 }
