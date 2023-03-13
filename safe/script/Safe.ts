@@ -2,11 +2,11 @@ import Base from "../../e2e-test/business/Base";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { Client, ContractFunctionParameters } from "@hashgraph/sdk";
 import { BigNumber } from "bignumber.js";
-import { ethers } from "hardhat";
 
 const GET_CHAIN_ID = "getChainId";
 const SETUP = "setup";
 const EXEC_TRANSACTION = "execTransaction";
+const NONCE = "nonce";
 
 export default class Safe extends Base {
   getChainId = async (client: Client = clientsInfo.ecdsaClient) => {
@@ -19,6 +19,13 @@ export default class Safe extends Base {
     const chainId = result.getUint256(0);
     console.log(`- Safe#${GET_CHAIN_ID}(): ${chainId}\n`);
     return chainId;
+  };
+
+  getNonce = async (client: Client = clientsInfo.ecdsaClient) => {
+    const { result } = await this.execute(9000000, NONCE, client, undefined);
+    const nonceCount = result.getUint256(0);
+    console.log(`- Safe#${NONCE}(): ${nonceCount}\n`);
+    return nonceCount;
   };
 
   /// @dev Setup function sets initial storage of contract.
@@ -99,27 +106,5 @@ export default class Safe extends Base {
       args
     );
     console.log(`- Safe#${EXEC_TRANSACTION}(): result ${result.getBool(0)} \n`);
-  };
-
-  //function getSign(bytes memory signatures) external pure returns (uint8, bytes32, bytes32) {
-
-  getSign = async (
-    signatures: Uint8Array,
-    client: Client = clientsInfo.ecdsaClient
-  ) => {
-    const args = new ContractFunctionParameters().addBytes(signatures);
-
-    const { result } = await this.execute(9000000, "getSign", client, args);
-    console.log(
-      `- Safe#getSign(): result ${result.getUint8(0)}  
-      ${ethers.utils.hexlify(result.getBytes32(1))} ${ethers.utils.hexlify(
-        result.getBytes32(2)
-      )}\n`
-    );
-
-    console.log(
-      `- Safe#splitSign(): result ${result.getUint8(0)}  
-      ${JSON.stringify(ethers.utils.splitSignature(signatures))}\n`
-    );
   };
 }

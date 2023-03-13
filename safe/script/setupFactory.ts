@@ -25,7 +25,7 @@ const createSigner = () => {
     "a2feafa184e93d67e50328b1ff0d0a17c25e1b3a3d4a4f113d8dd2cd16315f2b",
     provider
   );
-  console.log("Address", signer.address);
+  console.log("signer Address", signer.address);
   return signer;
 };
 
@@ -66,8 +66,7 @@ const EIP712_SAFE_TX_TYPE = {
   ],
 };
 
-const safeTx = async (safeAddress: string) => {
-  const data = await getCallDataNew();
+const safeTx = async (nonceCount: number, data: string) => {
   const safeTx: SafeTransaction = {
     to: dex.LAB49_1_TOKEN_ADDRESS,
     value: 0,
@@ -78,32 +77,26 @@ const safeTx = async (safeAddress: string) => {
     gasPrice: 0,
     gasToken: dex.LAB49_3_TOKEN_ADDRESS,
     refundReceiver: clientsInfo.treasureId.toSolidityAddress(),
-    nonce: 0,
+    nonce: nonceCount,
   };
   return safeTx;
-};
-
-const txHash = async (safeAddress: string) => {
-  return ethers.utils._TypedDataEncoder.hash(
-    { verifyingContract: safeAddress, chainId: 296 },
-    EIP712_SAFE_TX_TYPE,
-    await safeTx(safeAddress)
-  );
 };
 
 const safeSignTypedData = async (
   signer: ethers.Signer & ethers.TypedDataSigner,
   safeAddress: string,
-  safeTx: SafeTransaction
+  safeTx: SafeTransaction,
+  chainId: number
 ): Promise<SafeSignature> => {
   const signerAddress = await signer.getAddress();
+  const tx = await signer._signTypedData(
+    { verifyingContract: safeAddress, chainId: chainId },
+    EIP712_SAFE_TX_TYPE,
+    safeTx
+  );
   return {
     signer: signerAddress,
-    data: await signer._signTypedData(
-      { verifyingContract: safeAddress, chainId: 296 },
-      EIP712_SAFE_TX_TYPE,
-      safeTx
-    ),
+    data: tx,
   };
 };
 
@@ -118,18 +111,21 @@ const buildSignatureBytes = (signatures: SafeSignature[]): string => {
   return signatureBytes;
 };
 
-const getSignatures = async (safeAddress: string) => {
+const getSignatures = async (
+  tx: SafeTransaction,
+  safeAddress: string,
+  chainId: number
+) => {
   const signer = createSigner();
   const signers = [signer];
-  const tx = await safeTx(safeAddress);
   const sigs = await Promise.all(
-    signers.map((signer) => safeSignTypedData(signer, safeAddress, tx))
+    signers.map((signer) => safeSignTypedData(signer, safeAddress, tx, chainId))
   );
   const signatures = buildSignatureBytes(sigs);
   return signatures;
 };
 
-const getCallDataNew = async (): Promise<string> => {
+const tokenTotalSupply = async (): Promise<string> => {
   const contractJson = readFileContent(
     "./artifacts/contracts/common/IERC20.sol/IERC20.json"
   );
@@ -138,37 +134,11 @@ const getCallDataNew = async (): Promise<string> => {
   return callData;
 };
 
-async function main() {
-  const safeContract = contractService.getContract(contractService.gnosisSafe);
-  const factoryContract = contractService.getContract(
-    contractService.gnosisSafeProxyFactory
-  );
-  const safeFactory = new SafeFactory(factoryContract.id);
-  const safeProxy = await safeFactory.createProxy(safeContract.address);
-  const safeProxyContractId =
-    ContractId.fromSolidityAddress(safeProxy).toString();
-  //const safeProxyContractId = "0.0.3663437";
-  console.log(`safeProxyContractId ${safeProxyContractId}`);
-  const safe = new Safe(safeProxyContractId);
-  await safe.getChainId();
-  const owners = [clientsInfo.ecdsaAcctId.toSolidityAddress()];
-  const data = new Uint8Array();
-  await safe.setup(
-    owners,
-    1,
-    clientsInfo.operatorId.toSolidityAddress(),
-    data,
-    clientsInfo.adminId.toSolidityAddress(),
-    dex.LAB49_3_TOKEN_ADDRESS,
-    new BigNumber(0),
-    clientsInfo.treasureId.toSolidityAddress()
-  );
-
-  const safeTx1 = await safeTx(safeContract.address);
-  const signBytes = await getSignatures(safeContract.address);
-
-  await safe.getSign(ethers.utils.arrayify(signBytes));
-
+const executeSafeTransaction = async (
+  safeTx1: SafeTransaction,
+  safe: any,
+  signBytes: string
+) => {
   await safe.execTransaction(
     safeTx1.to,
     safeTx1.value,
@@ -181,6 +151,48 @@ async function main() {
     safeTx1.refundReceiver,
     ethers.utils.arrayify(signBytes)
   );
+};
+
+async function main() {
+  const safeContract = contractService.getContract(contractService.gnosisSafe);
+  const factoryContract = contractService.getContract(
+    contractService.gnosisSafeProxyFactory
+  );
+
+  const safeFactory = new SafeFactory(factoryContract.id);
+  const safeProxy = await safeFactory.createProxy(safeContract.address);
+  const safeProxyContractId =
+    ContractId.fromSolidityAddress(safeProxy).toString();
+  console.log(`safeProxyContractId ${safeProxyContractId}`);
+
+  const safe = new Safe(safeProxyContractId);
+
+  const chainId = await safe.getChainId();
+
+  const owners = ["0x21256d85dc994996a402e6e635e90d7cfb7c046c"]; //Hardcoded for now
+  const data = new Uint8Array();
+  await safe.setup(
+    owners,
+    1,
+    clientsInfo.operatorId.toSolidityAddress(),
+    data,
+    clientsInfo.adminId.toSolidityAddress(),
+    dex.LAB49_3_TOKEN_ADDRESS,
+    new BigNumber(0),
+    clientsInfo.treasureId.toSolidityAddress()
+  );
+
+  let nonceCount = await safe.getNonce();
+  let totalSupply = await tokenTotalSupply();
+  let safeTx1 = await safeTx(nonceCount.toNumber(), totalSupply);
+  let signBytes = await getSignatures(safeTx1, safeProxy, chainId.toNumber());
+  await executeSafeTransaction(safeTx1, safe, signBytes);
+
+  nonceCount = await safe.getNonce();
+  totalSupply = await tokenTotalSupply();
+  safeTx1 = await safeTx(nonceCount.toNumber(), totalSupply);
+  signBytes = await getSignatures(safeTx1, safeProxy, chainId.toNumber());
+  await executeSafeTransaction(safeTx1, safe, signBytes);
 
   return "Done";
 }
