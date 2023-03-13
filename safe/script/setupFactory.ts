@@ -25,7 +25,7 @@ const createSigner = () => {
     "a2feafa184e93d67e50328b1ff0d0a17c25e1b3a3d4a4f113d8dd2cd16315f2b",
     provider
   );
-  console.log("signer Address", signer.address);
+  console.log("Signer Address", signer.address);
   return signer;
 };
 
@@ -169,7 +169,9 @@ async function main() {
 
   const chainId = await safe.getChainId();
 
-  const owners = ["0x21256d85dc994996a402e6e635e90d7cfb7c046c"]; //Hardcoded for now
+  const signer = await createSigner();
+
+  const owners = [signer.address];
   const data = new Uint8Array();
   await safe.setup(
     owners,
@@ -186,12 +188,6 @@ async function main() {
   let totalSupply = await tokenTotalSupply();
   let safeTx1 = await safeTx(nonceCount.toNumber(), totalSupply);
   let signBytes = await getSignatures(safeTx1, safeProxy, chainId.toNumber());
-  await executeSafeTransaction(safeTx1, safe, signBytes);
-
-  nonceCount = await safe.getNonce();
-  totalSupply = await tokenTotalSupply();
-  safeTx1 = await safeTx(nonceCount.toNumber(), totalSupply);
-  signBytes = await getSignatures(safeTx1, safeProxy, chainId.toNumber());
   await executeSafeTransaction(safeTx1, safe, signBytes);
 
   return "Done";
