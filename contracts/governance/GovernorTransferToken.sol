@@ -7,8 +7,7 @@ import "./IGovernorTransferToken.sol";
 
 contract GovernorTransferToken is
     IGovernorTransferToken,
-    GovernorCountingSimpleInternal,
-    IErrors
+    GovernorCountingSimpleInternal
 {
     struct TokenTransferData {
         address transferFromAccount;
