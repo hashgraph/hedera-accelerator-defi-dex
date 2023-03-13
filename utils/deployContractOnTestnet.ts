@@ -12,6 +12,7 @@ import {
   ContractCreateFlow,
 } from "@hashgraph/sdk";
 import * as hethers from "@hashgraph/hethers";
+import { Wallet } from "@hashgraph/hethers";
 import { ContractService } from "../deployment/service/ContractService";
 import ClientManagement from "../utils/ClientManagement";
 import { clientsInfo } from "../utils/ClientManagement";
@@ -51,6 +52,15 @@ export class EtherDeployment {
         balance.toString()
       )} hbar`
     );
+  };
+
+  public createWallet = (): Wallet => {
+    const signerId = process.env.TOKEN_USER_ID!;
+    const signerKey = PrivateKey.fromString(process.env.TOKEN_USER_KEY!); // TO WORK WITH HETHERS, IT MUST BE ECDSA KEY (FOR NOW);
+    const provider: any = this.createProvider();
+    const eoaAccount: any = this.createEoaAccount(signerId, signerKey);
+    const wallet = new hethers.Wallet(eoaAccount, provider);
+    return wallet;
   };
 
   public deployContract = async (

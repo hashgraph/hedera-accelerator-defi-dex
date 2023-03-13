@@ -16,6 +16,11 @@ export default class ClientManagement {
   private uiUserId = AccountId.fromString(process.env.UI_USER_ID!);
   private uiUserKey = PrivateKey.fromString(process.env.UI_USER_KEY!);
 
+  private ecdsaAcctId = AccountId.fromString(process.env.ECDSA_USER_ID!);
+  private ecdsaAcctKey = PrivateKey.fromStringECDSA(
+    process.env.ECDSA_USER_KEY!
+  );
+
   private tokenUserIdNoGODToken = AccountId.fromString(
     process.env.TOKEN_USER_ID_WITH_NO_GOD_TOKEN!
   );
@@ -56,6 +61,10 @@ export default class ClientManagement {
     return this.doCreateClient(this.dexOwnerId, this.dexOwnerKey);
   };
 
+  public createECDSAClient = (): Client => {
+    return this.doCreateECDSAClient(this.ecdsaAcctId, this.ecdsaAcctKey);
+  };
+
   private doCreateClient = (
     accountId: AccountId,
     privateKey: PrivateKey
@@ -63,6 +72,22 @@ export default class ClientManagement {
     const client = Client.forTestnet();
     client.setOperator(accountId, privateKey);
     return client;
+  };
+
+  private doCreateECDSAClient = (
+    accountId: AccountId,
+    privateKey: PrivateKey
+  ): Client => {
+    const client = Client.forTestnet();
+    client.setOperator(accountId, privateKey);
+    return client;
+  };
+
+  public getEcdsaAccount = () => {
+    return {
+      ecdsaAcctId: this.ecdsaAcctId,
+      ecdsaAcctKey: this.ecdsaAcctKey,
+    };
   };
 
   public getAdmin = () => {
@@ -128,6 +153,10 @@ interface ClientsInfo {
   uiUserClient: Client;
   uiUserId: AccountId;
   uiUserKey: PrivateKey;
+
+  ecdsaClient: Client;
+  ecdsaAcctId: AccountId;
+  ecdsaAcctKey: PrivateKey;
 }
 
 function initClientsInfo(): ClientsInfo {
@@ -137,6 +166,7 @@ function initClientsInfo(): ClientsInfo {
   const treasureClient = cm.createClient();
   const dexOwnerClient = cm.dexOwnerClient();
   const uiUserClient = cm.createUIUserClient();
+  const ecdsaClient = cm.createECDSAClient();
 
   const uiUser = cm.getUIUser();
   const uiUserId = uiUser.uiUserId;
@@ -158,6 +188,10 @@ function initClientsInfo(): ClientsInfo {
   const treasureId = treasure.treasureId;
   const treasureKey = treasure.treasureKey;
 
+  const ecdsaAccount = cm.getEcdsaAccount();
+  const ecdsaAcctId = ecdsaAccount.ecdsaAcctId;
+  const ecdsaAcctKey = ecdsaAccount.ecdsaAcctKey;
+
   return {
     dexOwnerClient,
     dexOwnerId,
@@ -174,6 +208,9 @@ function initClientsInfo(): ClientsInfo {
     uiUserClient,
     uiUserId,
     uiUserKey,
+    ecdsaClient,
+    ecdsaAcctId,
+    ecdsaAcctKey,
   };
 }
 
