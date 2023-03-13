@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import "../common/IERC20.sol";
 import "../common/IEvents.sol";
+import "../common/IErrors.sol";
 import "../common/IBaseHTS.sol";
 
 import "../dao/IGovernorTokenDAO.sol";
@@ -12,12 +13,11 @@ import "../governance/IGovernorTransferToken.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-contract GovernanceDAOFactory is OwnableUpgradeable, IEvents {
+contract GovernanceDAOFactory is OwnableUpgradeable, IEvents, IErrors {
     event PublicDaoCreated(address daoAddress);
     event PrivateDaoCreated(address daoAddress);
 
     error NotAdmin(string message);
-    error InvalidInput(string message);
 
     string private constant GovernorTokenDAO = "GovernorTokenDAO";
     string private constant GovernorTransferToken = "GovernorTransferToken";
