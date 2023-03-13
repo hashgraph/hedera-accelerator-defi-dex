@@ -741,6 +741,20 @@ describe("Governor Tests", function () {
     it("Verify GovernorTransferToken contract proposal creation to execute flow with failed", async function () {
       const { governorTransferTokenInstance, tokenCont, signers, mockBaseHTS } =
         await loadFixture(deployFixture);
+      await expect(
+        getTransferTokenProposalId(
+          governorTransferTokenInstance,
+          signers,
+          tokenCont.address,
+          -1
+        )
+      )
+        .to.revertedWithCustomError(
+          governorTransferTokenInstance,
+          "InvalidInput"
+        )
+        .withArgs("GovernorTransferToken: invalid amount");
+
       const proposalId = await getTransferTokenProposalId(
         governorTransferTokenInstance,
         signers,

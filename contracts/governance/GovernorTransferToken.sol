@@ -2,11 +2,13 @@
 pragma solidity ^0.8.4;
 import "./GovernorCountingSimpleInternal.sol";
 import "../common/hedera/HederaTokenService.sol";
+import "../common/IErrors.sol";
 import "./IGovernorTransferToken.sol";
 
 contract GovernorTransferToken is
     IGovernorTransferToken,
-    GovernorCountingSimpleInternal
+    GovernorCountingSimpleInternal,
+    IErrors
 {
     struct TokenTransferData {
         address transferFromAccount;
@@ -26,6 +28,9 @@ contract GovernorTransferToken is
         int256 _transferTokenAmount,
         address creater
     ) external returns (uint256) {
+        if (_transferTokenAmount <= 0) {
+            revert InvalidInput("GovernorTransferToken: invalid amount");
+        }
         uint256 proposalId = _createProposal(
             title,
             description,
