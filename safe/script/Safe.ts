@@ -9,7 +9,7 @@ const EXEC_TRANSACTION = "execTransaction";
 const NONCE = "nonce";
 
 export default class Safe extends Base {
-  getChainId = async (client: Client = clientsInfo.ecdsaClient) => {
+  getChainId = async (client: Client = clientsInfo.operatorClient) => {
     const { result } = await this.execute(
       9000000,
       GET_CHAIN_ID,
@@ -21,7 +21,7 @@ export default class Safe extends Base {
     return chainId;
   };
 
-  getNonce = async (client: Client = clientsInfo.ecdsaClient) => {
+  getNonce = async (client: Client = clientsInfo.operatorClient) => {
     const { result } = await this.execute(9000000, NONCE, client, undefined);
     const nonceCount = result.getUint256(0);
     console.log(`- Safe#${NONCE}(): ${nonceCount}\n`);
@@ -47,7 +47,7 @@ export default class Safe extends Base {
     paymentTokenAddress: string,
     payment: BigNumber,
     paymentReceiverAddress: string,
-    client: Client = clientsInfo.ecdsaClient
+    client: Client = clientsInfo.operatorClient
   ) => {
     const args = new ContractFunctionParameters()
       .addAddressArray(owners)
@@ -74,7 +74,7 @@ export default class Safe extends Base {
     gasToken: string,
     refundReceiverAddress: string,
     signatures: Uint8Array,
-    client: Client = clientsInfo.ecdsaClient
+    client: Client = clientsInfo.operatorClient
   ) => {
     // address to,
     // uint256 value,

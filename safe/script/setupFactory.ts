@@ -25,7 +25,6 @@ const createSigner = () => {
     "a2feafa184e93d67e50328b1ff0d0a17c25e1b3a3d4a4f113d8dd2cd16315f2b",
     provider
   );
-  console.log("Signer Address", signer.address);
   return signer;
 };
 
@@ -66,12 +65,16 @@ const EIP712_SAFE_TX_TYPE = {
   ],
 };
 
-const safeTx = async (nonceCount: number, data: string) => {
+const safeTx = async (
+  nonceCount: number,
+  data: string,
+  callOrDelegate: number
+) => {
   const safeTx: SafeTransaction = {
     to: dex.LAB49_1_TOKEN_ADDRESS,
     value: 0,
     data: data,
-    operation: 0,
+    operation: callOrDelegate,
     safeTxGas: 0,
     baseGas: 0,
     gasPrice: 0,
@@ -134,6 +137,18 @@ const tokenTotalSupply = async (): Promise<string> => {
   return callData;
 };
 
+const transferToken = async (): Promise<string> => {
+  const contractJson = readFileContent(
+    "./artifacts/contracts/common/IERC20.sol/IERC20.json"
+  );
+  const contractInterface = new ethers.utils.Interface(contractJson.abi);
+  const callData = contractInterface.encodeFunctionData(
+    "transfer(address,uint256)",
+    [clientsInfo.dexOwnerId.toSolidityAddress(), 1]
+  );
+  return callData;
+};
+
 const executeSafeTransaction = async (
   safeTx1: SafeTransaction,
   safe: any,
@@ -171,6 +186,8 @@ async function main() {
 
   const signer = await createSigner();
 
+  console.log("Signer Address", signer.address);
+
   const owners = [signer.address];
   const data = new Uint8Array();
   await safe.setup(
@@ -186,9 +203,24 @@ async function main() {
 
   let nonceCount = await safe.getNonce();
   let totalSupply = await tokenTotalSupply();
-  let safeTx1 = await safeTx(nonceCount.toNumber(), totalSupply);
-  let signBytes = await getSignatures(safeTx1, safeProxy, chainId.toNumber());
-  await executeSafeTransaction(safeTx1, safe, signBytes);
+  let totalSupplyTx = await safeTx(nonceCount.toNumber(), totalSupply, 0);
+  let totalSupplySignBytes = await getSignatures(
+    totalSupplyTx,
+    safeProxy,
+    chainId.toNumber()
+  );
+  await executeSafeTransaction(totalSupplyTx, safe, totalSupplySignBytes);
+
+  nonceCount = await safe.getNonce();
+  let transferToken = await tokenTotalSupply();
+  let tokenTransferTx = await safeTx(nonceCount.toNumber(), transferToken, 1);
+  let signBytesTokenTransfer = await getSignatures(
+    tokenTransferTx,
+    safeProxy,
+    chainId.toNumber()
+  );
+
+  await executeSafeTransaction(tokenTransferTx, safe, signBytesTokenTransfer);
 
   return "Done";
 }
