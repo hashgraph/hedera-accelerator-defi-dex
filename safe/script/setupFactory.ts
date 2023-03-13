@@ -159,16 +159,16 @@ async function main() {
 
   const owners = [clientsInfo.operatorId.toSolidityAddress()];
   const data = new Uint8Array();
-  await safe.setup(
-    owners,
-    1,
-    clientsInfo.operatorId.toSolidityAddress(),
-    data,
-    clientsInfo.adminId.toSolidityAddress(),
-    dex.LAB49_3_TOKEN_ADDRESS,
-    new BigNumber(0),
-    clientsInfo.treasureId.toSolidityAddress()
-  );
+  // await safe.setup(
+  //   owners,
+  //   1,
+  //   clientsInfo.operatorId.toSolidityAddress(),
+  //   data,
+  //   clientsInfo.adminId.toSolidityAddress(),
+  //   dex.LAB49_3_TOKEN_ADDRESS,
+  //   new BigNumber(0),
+  //   clientsInfo.treasureId.toSolidityAddress()
+  // );
 
   // const safeTx1 = await safeTx(safeContract.address);
   // const signBytes = await getSignatures(safeContract.address);
