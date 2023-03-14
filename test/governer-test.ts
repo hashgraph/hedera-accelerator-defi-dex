@@ -678,7 +678,9 @@ describe("Governor Tests", function () {
           )
       )
         .to.revertedWithCustomError(instance, "InvalidInput")
-        .withArgs("GovernorCountingSimpleInternal: title is empty");
+        .withArgs(
+          "GovernorCountingSimpleInternal: proposal title can not be blank"
+        );
     });
 
     it("Verify GovernorContract should return data for valid proposal id", async function () {
