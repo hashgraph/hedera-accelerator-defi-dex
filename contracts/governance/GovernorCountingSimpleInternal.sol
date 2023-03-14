@@ -96,7 +96,7 @@ abstract contract GovernorCountingSimpleInternal is
     ) internal returns (uint256) {
         if (bytes(title).length == 0) {
             revert InvalidInput(
-                "GovernorCountingSimpleInternal: title is empty"
+                "GovernorCountingSimpleInternal: proposal title can not be blank"
             );
         }
         getGODToken(creator);
