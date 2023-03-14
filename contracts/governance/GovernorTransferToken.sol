@@ -29,7 +29,9 @@ contract GovernorTransferToken is
         address creater
     ) external returns (uint256) {
         if (_transferTokenAmount <= 0) {
-            revert InvalidInput("GovernorTransferToken: invalid amount");
+            revert InvalidInput(
+                "GovernorTransferToken: Token transfer amount must be a positive number"
+            );
         }
         uint256 proposalId = _createProposal(
             title,

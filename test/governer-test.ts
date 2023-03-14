@@ -753,7 +753,9 @@ describe("Governor Tests", function () {
           governorTransferTokenInstance,
           "InvalidInput"
         )
-        .withArgs("GovernorTransferToken: invalid amount");
+        .withArgs(
+          "GovernorTransferToken: Token transfer amount must be a positive number"
+        );
 
       const proposalId = await getTransferTokenProposalId(
         governorTransferTokenInstance,
