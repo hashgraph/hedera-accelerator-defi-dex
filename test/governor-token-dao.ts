@@ -2,6 +2,7 @@ import { expect } from "chai";
 
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { ethers, upgrades } from "hardhat";
+import { TestHelper } from "./TestHelper";
 
 const defaultQuorumThresholdValue = 5;
 const defaultQuorumThresholdValueInBsp = defaultQuorumThresholdValue * 100;
@@ -83,6 +84,59 @@ describe("GovernorTokenDAO Tests", function () {
     const daoArgs = [signers[0].address, daoName, daoLogoUrl, instance.address];
     const instanceDao = await upgrades.deployProxy(Dao, daoArgs);
     await instanceDao.deployed();
+  });
+
+  it("Verify GovernorTokenDAO initialize call", async function () {
+    const votingDelay = 0;
+    const votingPeriod = 12;
+    const signers = await ethers.getSigners();
+
+    const GovernorTransferToken = await TestHelper.deployProxy(
+      "GovernorTransferToken",
+      signers[0].address,
+      votingDelay,
+      votingPeriod,
+      signers[0].address,
+      signers[0].address,
+      defaultQuorumThresholdValueInBsp
+    );
+
+    const governorTokenDAOInstance = await TestHelper.deployLogic(
+      "GovernorTokenDAO"
+    );
+
+    await expect(
+      governorTokenDAOInstance.initialize(
+        signers[0].address,
+        "",
+        daoLogoUrl,
+        GovernorTransferToken.address
+      )
+    )
+      .to.revertedWithCustomError(governorTokenDAOInstance, "InvalidInput")
+      .withArgs("BaseDAO: name is empty");
+
+    await expect(
+      governorTokenDAOInstance.initialize(
+        signers[0].address,
+        daoName,
+        "",
+        GovernorTransferToken.address
+      )
+    )
+      .to.revertedWithCustomError(governorTokenDAOInstance, "InvalidInput")
+      .withArgs("BaseDAO: url is empty");
+
+    await expect(
+      governorTokenDAOInstance.initialize(
+        TestHelper.getZeroAddress(),
+        daoName,
+        daoLogoUrl,
+        GovernorTransferToken.address
+      )
+    )
+      .to.revertedWithCustomError(governorTokenDAOInstance, "InvalidInput")
+      .withArgs("BaseDAO: admin address is zero");
   });
 
   describe("Given GovernorTokenDAO contract deployed and initialised", async function () {
