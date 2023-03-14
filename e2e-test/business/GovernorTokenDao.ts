@@ -17,6 +17,9 @@ const GET_GOVERNOR_TOKEN_TRANSFER_CONTRACT_ADDRESS =
 
 const DEFAULT_DESCRIPTION = "description";
 const DEFAULT_LINK = "https://defi-ui.hedera.com/governance";
+const DEFAULT_QUORUM_THRESHOLD_IN_BSP = 500;
+const DEFAULT_VOTING_DELAY = 0; // blocks
+const DEFAULT_VOTING_PERIOD = 100; // blocks means 3 minutes as per test
 
 export default class GovernorTokenDao extends Base {
   async initialize(
@@ -25,10 +28,19 @@ export default class GovernorTokenDao extends Base {
     url: string,
     governor: Governor,
     godHolder: GodHolder,
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
+    defaultQuorumThresholdValue: number = DEFAULT_QUORUM_THRESHOLD_IN_BSP,
+    votingDelay: number = DEFAULT_VOTING_DELAY,
+    votingPeriod: number = DEFAULT_VOTING_PERIOD
   ) {
     try {
-      await governor.initialize(godHolder);
+      await governor.initialize(
+        godHolder,
+        client,
+        defaultQuorumThresholdValue,
+        votingDelay,
+        votingPeriod
+      );
     } catch (error) {}
 
     try {
