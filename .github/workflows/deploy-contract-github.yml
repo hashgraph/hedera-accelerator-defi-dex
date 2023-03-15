@@ -5,7 +5,11 @@ on:
       contractName:
         type: choice
         description: Please select the contract
+        required: true
         options:
+          - Factory
+          - GODHolder
+          - Configuration
           - GovernorUpgrade
           - GovernorTokenCreate
           - GovernorTextProposal
@@ -15,11 +19,10 @@ on:
       contractType:
         type: choice
         description: Please select the type
+        required: true
         options:
-          - Logic
           - Proxy
           - Upgrade
-
 env:
   OPERATOR_ID: 0.0.47710057
   OPERATOR_KEY: 3030020100300706052b8104000a04220420d38b0ed5f11f8985cd72c8e52c206b512541c6f301ddc9d18bd8b8b25a41a80f
