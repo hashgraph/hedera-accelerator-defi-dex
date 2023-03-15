@@ -39,7 +39,7 @@ const createPair = async (token0: TokenId, token1: TokenId) => {
   );
 };
 
-async function main() {
+export async function main() {
   await configuration.initialize();
 
   await factory.setupFactory();
@@ -88,9 +88,11 @@ async function main() {
   }
 }
 
-main()
-  .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
+if (require.main === module) {
+  main()
+    .then(() => process.exit(0))
+    .catch((error) => {
+      console.error(error);
+      process.exit(1);
+    });
+}

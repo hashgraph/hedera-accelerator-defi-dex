@@ -1,6 +1,7 @@
 import { Helper } from "../../utils/Helper";
 import { main as deployContract } from "./logic";
 import { main as upgradeProxy } from "./upgradeProxy";
+import { main as initContracts } from "./initializeContracts";
 import { main as createProxy } from "./transparentUpgradeableProxy";
 
 async function main() {
@@ -14,6 +15,7 @@ async function main() {
     await deployContract(contractName);
     if (contractType === "Proxy") {
       await createProxy(contractName);
+      await initContracts();
     } else if (contractType === "Upgrade") {
       await upgradeProxy(contractName);
     }
