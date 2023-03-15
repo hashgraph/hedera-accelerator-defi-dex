@@ -85,7 +85,11 @@ export default class GovernanceDAOFactory extends Base {
     const { result } = await this.execute(900000, CREATE_DAO, client, args);
     const address = result.getAddress(0);
     console.log(`- GovernanceDAOFactory#${CREATE_DAO}(): done`);
-    console.table({ ...params, "dao-address": address });
+    console.table({
+      ...params,
+      daoAddress: address,
+      daoFactoryId: this.contractId,
+    });
     return address;
   };
 

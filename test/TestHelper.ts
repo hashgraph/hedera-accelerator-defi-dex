@@ -1,6 +1,10 @@
 import { ethers, upgrades } from "hardhat";
 
 export class TestHelper {
+  static getZeroAddress() {
+    return "0x0000000000000000000000000000000000000000";
+  }
+
   static async getSigners() {
     return await ethers.getSigners();
   }

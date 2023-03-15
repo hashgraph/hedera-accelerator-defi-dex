@@ -1,9 +1,10 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
+import "../common/IErrors.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-abstract contract BaseDAO is OwnableUpgradeable {
+abstract contract BaseDAO is OwnableUpgradeable, IErrors {
     struct Social {
         string key;
         string value;
@@ -19,6 +20,15 @@ abstract contract BaseDAO is OwnableUpgradeable {
         string calldata name,
         string calldata logoUrl
     ) public onlyInitializing {
+        if (bytes(name).length == 0) {
+            revert InvalidInput("BaseDAO: name is empty");
+        }
+        if (bytes(logoUrl).length == 0) {
+            revert InvalidInput("BaseDAO: url is empty");
+        }
+        if (address(admin) == address(0)) {
+            revert InvalidInput("BaseDAO: admin address is zero");
+        }
         _admin = admin;
         _name = name;
         _logoUrl = logoUrl;

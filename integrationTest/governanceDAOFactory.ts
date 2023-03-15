@@ -5,31 +5,21 @@ import { executeGovernorTokenTransferFlow } from "./dao/daoGovernorToken";
 import dex from "../deployment/model/dex";
 import GovernanceDAOFactory from "../e2e-test/business/GovernanceDAOFactory";
 
-const csDev = new ContractService();
-const governanceDaoFactoryContract = csDev.getContractWithProxy(
-  csDev.governanceDaoFactory
-);
-const governanceDaoFactoryProxyContractId =
-  governanceDaoFactoryContract.transparentProxyId!;
-
-const governanceDAOFactory = new GovernanceDAOFactory(
-  governanceDaoFactoryProxyContractId
-);
-
-async function executeGovernorTokenDAOFlow(daoAddresses: string[]) {
+export async function executeGovernorTokenDAOFlow(
+  daoFactory: GovernanceDAOFactory,
+  daoAddresses: string[]
+) {
   if (daoAddresses.length > 0) {
     const daoProxyAddress = daoAddresses.pop()!;
     console.log(`- executing GovernorTokenDAO i.e ${daoProxyAddress}\n`);
 
     const governorTokenDao =
-      governanceDAOFactory.getGovernorTokenDaoInstance(daoProxyAddress);
+      daoFactory.getGovernorTokenDaoInstance(daoProxyAddress);
 
     const governorTokenTransfer =
-      await governanceDAOFactory.getGovernorTokenTransferInstance(
-        governorTokenDao
-      );
+      await daoFactory.getGovernorTokenTransferInstance(governorTokenDao);
 
-    const godHolder = await governanceDAOFactory.getGodHolderInstance(
+    const godHolder = await daoFactory.getGodHolderInstance(
       governorTokenTransfer
     );
 
@@ -41,8 +31,13 @@ async function executeGovernorTokenDAOFlow(daoAddresses: string[]) {
   }
 }
 
-async function createDAO(name: string, tokenId: TokenId, isPrivate: boolean) {
-  await governanceDAOFactory.createDAO(
+async function createDAO(
+  daoFactory: GovernanceDAOFactory,
+  name: string,
+  tokenId: TokenId,
+  isPrivate: boolean
+) {
+  await daoFactory.createDAO(
     name,
     "https://defi-ui.hedera.com/",
     tokenId.toSolidityAddress(),
@@ -53,27 +48,40 @@ async function createDAO(name: string, tokenId: TokenId, isPrivate: boolean) {
   );
 }
 
+function getGovernanceDAOFactoryInfo() {
+  const csDev = new ContractService();
+  const contract = csDev.getContractWithProxy(csDev.governanceDaoFactory);
+  const proxyId = contract.transparentProxyId!;
+  const daoFactory = new GovernanceDAOFactory(proxyId);
+  return { daoFactory, contractName: contract.name };
+}
+
 async function main() {
-  await governanceDAOFactory.initialize(governanceDaoFactoryContract.name);
-  await governanceDAOFactory.getGODTokenHolderFactoryAddress();
+  const { daoFactory, contractName } = getGovernanceDAOFactoryInfo();
+  await daoFactory.initialize(contractName);
+  await daoFactory.getGODTokenHolderFactoryAddress();
   await createDAO(
+    daoFactory,
     dex.GOVERNANCE_DAO_ONE,
     dex.GOVERNANCE_DAO_ONE_TOKEN_ID,
     false
   );
   await createDAO(
+    daoFactory,
     dex.GOVERNANCE_DAO_TWO,
     dex.GOVERNANCE_DAO_TWO_TOKEN_ID,
     true
   );
-  const daoAddresses = await governanceDAOFactory.getDAOs();
-  await executeGovernorTokenDAOFlow(daoAddresses);
+  const daoAddresses = await daoFactory.getDAOs();
+  await executeGovernorTokenDAOFlow(daoFactory, daoAddresses);
   console.log(`\nDone`);
 }
 
-main()
-  .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
+if (require.main === module) {
+  main()
+    .then(() => process.exit(0))
+    .catch((error) => {
+      console.error(error);
+      process.exit(1);
+    });
+}

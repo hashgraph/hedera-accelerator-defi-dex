@@ -21,7 +21,7 @@ const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
 const DEFAULT_QUORUM_THRESHOLD_IN_BSP = 500;
 const DEFAULT_VOTING_DELAY = 0; // blocks
 const DEFAULT_VOTING_PERIOD = 100; // blocks means 3 minutes as per test
-const DEFAULT_MAX_WAITING_TIME = DEFAULT_VOTING_PERIOD * 12 * 1000;
+const DEFAULT_MAX_WAITING_TIME = DEFAULT_VOTING_PERIOD * 12 * 150;
 const EACH_ITERATION_DELAY = DEFAULT_VOTING_PERIOD * 0.3 * 1000;
 const DEFAULT_DESCRIPTION = "description";
 const DEFAULT_LINK = "https://defi-ui.hedera.com/governance";
@@ -314,13 +314,35 @@ export default class Governor extends Base {
       client,
       args
     );
-    const title = result.getString(1);
-    const description = result.getString(2);
-    const link = result.getString(3);
-    console.log(
-      `- Governor#${PROPOSAL_DETAILS}(): proposal-id = ${proposalId}, title = ${title}, description = ${description}, link = ${link}\n`
-    );
-    return { title, description, link };
+    const quorumValue = result.getUint256(0).toFixed();
+    const isQuorumReached = result.getBool(1);
+    const proposalState = result.getUint256(2).toFixed();
+    const voted = result.getBool(3);
+    const againstVotes = result.getUint256(4).toFixed();
+    const forVotes = result.getUint256(5).toFixed();
+    const abstainVotes = result.getUint256(6).toFixed();
+    const creator = result.getAddress(7);
+    const title = result.getString(8);
+    const description = result.getString(9);
+    const link = result.getString(10);
+
+    const info = {
+      proposalId,
+      quorumValue,
+      isQuorumReached,
+      proposalState,
+      voted,
+      againstVotes,
+      forVotes,
+      abstainVotes,
+      creator,
+      title,
+      description,
+      link,
+    };
+    console.log(`- Governor#${PROPOSAL_DETAILS}():`);
+    console.table(info);
+    return info;
   };
 
   getContractAddressesFromGovernorUpgradeContract = async (

@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import "../common/IERC20.sol";
 import "../common/IEvents.sol";
+import "../common/IErrors.sol";
 import "../common/IBaseHTS.sol";
 
 import "../dao/IGovernorTokenDAO.sol";
@@ -12,12 +13,11 @@ import "../governance/IGovernorTransferToken.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-contract GovernanceDAOFactory is OwnableUpgradeable, IEvents {
+contract GovernanceDAOFactory is OwnableUpgradeable, IEvents, IErrors {
     event PublicDaoCreated(address daoAddress);
     event PrivateDaoCreated(address daoAddress);
 
     error NotAdmin(string message);
-    error InvalidInput(string message);
 
     string private constant GovernorTokenDAO = "GovernorTokenDAO";
     string private constant GovernorTransferToken = "GovernorTransferToken";
@@ -28,7 +28,7 @@ contract GovernanceDAOFactory is OwnableUpgradeable, IEvents {
 
     address[] private daos;
 
-    IGovernorTokenDAO private doaLogic;
+    IGovernorTokenDAO private daoLogic;
     IGovernorTransferToken private tokenTransferLogic;
     IGODTokenHolderFactory private godTokenHolderFactory;
 
@@ -49,11 +49,11 @@ contract GovernanceDAOFactory is OwnableUpgradeable, IEvents {
         __Ownable_init();
         proxyAdmin = _proxyAdmin;
         baseHTS = _baseHTS;
-        doaLogic = _daoLogic;
+        daoLogic = _daoLogic;
         godTokenHolderFactory = _godTokenHolderFactory;
         tokenTransferLogic = _tokenTransferLogic;
 
-        emit LogicUpdated(address(0), address(doaLogic), GovernorTokenDAO);
+        emit LogicUpdated(address(0), address(daoLogic), GovernorTokenDAO);
         emit LogicUpdated(
             address(0),
             address(tokenTransferLogic),
@@ -90,11 +90,11 @@ contract GovernanceDAOFactory is OwnableUpgradeable, IEvents {
         IGovernorTokenDAO _newImpl
     ) external ifAdmin {
         emit LogicUpdated(
-            address(doaLogic),
+            address(daoLogic),
             address(_newImpl),
             GovernorTokenDAO
         );
-        doaLogic = _newImpl;
+        daoLogic = _newImpl;
     }
 
     function upgradeGovernorTokenTransferLogicImplementation(
@@ -189,7 +189,7 @@ contract GovernanceDAOFactory is OwnableUpgradeable, IEvents {
         IGovernorTransferToken _governorTokenTransferContractAddress
     ) private returns (address daoAddress) {
         IGovernorTokenDAO governanceDAO = IGovernorTokenDAO(
-            _createProxy(address(doaLogic))
+            _createProxy(address(daoLogic))
         );
         governanceDAO.initialize(
             _admin,

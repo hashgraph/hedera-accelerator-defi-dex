@@ -12,18 +12,18 @@ async function main() {
   // below calls are validating input data only
   const contractId = ContractId.fromString(input.contractId);
   TokenId.fromSolidityAddress(input.tokenAddress);
-  AccountId.fromSolidityAddress(input.doaAdmin);
+  AccountId.fromSolidityAddress(input.daoAdmin);
 
   const governanceDAOFactory = new GovernanceDAOFactory(contractId.toString());
   await governanceDAOFactory.createDAO(
-    input.doaName,
+    input.daoName,
     input.daoLogoUrl,
     input.tokenAddress,
     Number(input.quorumThreshold),
     Number(input.votingDelay),
     Number(input.votingPeriod),
     input.isPrivate.toLowerCase() === "true",
-    input.doaAdmin
+    input.daoAdmin
   );
 }
 
