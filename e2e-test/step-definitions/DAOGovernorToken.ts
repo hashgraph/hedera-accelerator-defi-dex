@@ -77,7 +77,8 @@ export class DAOGovernorTokenTransfer {
         clientsInfo.operatorClient,
         DEFAULT_QUORUM_THRESHOLD_IN_BSP,
         DEFAULT_VOTING_DELAY,
-        DEFAULT_VOTING_PERIOD
+        DEFAULT_VOTING_PERIOD,
+        true
       );
     } catch (e: any) {
       if (blankTitleOrURL) {
