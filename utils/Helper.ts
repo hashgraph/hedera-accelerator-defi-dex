@@ -101,9 +101,12 @@ export class Helper {
       const rawData: any = fs.readFileSync(
         "./deployment/scripts/workflow-inputs.json"
       );
-      return JSON.parse(rawData);
-    } catch (error) {
-      return undefined;
+      const inputs = JSON.parse(rawData);
+      console.log("- Inputs from workflow:");
+      console.table(inputs);
+      return inputs;
+    } catch (error: any) {
+      throw Error(`- Failed to read workflow inputs, ${error.message}`);
     }
   }
 }

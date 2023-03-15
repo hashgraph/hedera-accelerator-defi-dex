@@ -33,8 +33,10 @@ jobs:
         with:
           node-version: "18.x"
       - run: npm ci
+      - name: Run code coverage
+        run: npx hardhat coverage
       - name: Deploy if contract changed
-        run: bash ./deploy.sh ${{ env.OPERATOR_ID }} ${{ env.OPERATOR_KEY }} ${{ env.TREASURE_ID }} ${{ env.TREASURE_KEY }} ${{ env.TOKEN_USER_ID }} ${{ env.TOKEN_USER_KEY }} ${{ env.DEX_CONTRACT_OWNER_ID }} ${{ env.DEX_CONTRACT_OWNER_KEY }}
+        run: npx hardhat run deployment/checkAndDeploy.ts
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
           file_pattern: deployment/state/*.json

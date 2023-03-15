@@ -5,9 +5,6 @@ import GovernanceDAOFactory from "../../e2e-test/business/GovernanceDAOFactory";
 
 async function main() {
   const input = Helper.readWorkflowInputs();
-  if (!input) {
-    throw Error("- Failed to read workflow inputs");
-  }
 
   // below calls are validating input data only
   const contractId = ContractId.fromString(input.contractId);

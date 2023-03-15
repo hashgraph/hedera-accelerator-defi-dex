@@ -3,15 +3,22 @@ on:
   workflow_dispatch:
     inputs:
       contractName:
-        description: "Name that represent the contract to deploy."
-        default: "swapContract"
-        required: true
-        type: string
-      type:
-        description: "Proxy or Logic or Upgrade"
-        default: "Logic"
-        required: true
-        type: string
+        type: choice
+        description: Please select the contract
+        options:
+          - GovernorUpgrade
+          - GovernorTokenCreate
+          - GovernorTextProposal
+          - GovernorTransferToken
+          - GovernanceDAOFactory
+          - GODTokenHolderFactory
+      contractType:
+        type: choice
+        description: Please select the type
+        options:
+          - Logic
+          - Proxy
+          - Upgrade
 
 env:
   OPERATOR_ID: 0.0.47710057
@@ -32,7 +39,6 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v3
       - name: Use Node.js 18.x
@@ -40,12 +46,22 @@ jobs:
         with:
           node-version: "18.x"
       - run: npm ci
-      - name: Running build and deployment
-        run: bash ./entrypoint.sh ${{ github.event.inputs.contractName }} ${{ github.event.inputs.type }} ${{ env.OPERATOR_ID }} ${{ env.OPERATOR_KEY }} ${{ env.TREASURE_ID }} ${{ env.TREASURE_KEY }} ${{ env.TOKEN_USER_ID }} ${{ env.TOKEN_USER_KEY }} ${{ env.DEX_CONTRACT_OWNER_ID }} ${{ env.DEX_CONTRACT_OWNER_KEY }}
+      - name: Run code coverage
+        run: npx hardhat coverage
+      - name: Save user inputs
+        uses: jsdaniell/create-json@v1.2.2
+        id: create-json
+        with:
+          name: "deployment/scripts/workflow-inputs.json"
+          json: ${{ toJSON(github.event.inputs) }}
+      - name: Deploy
+        run: npx hardhat run deployment/scripts/createContract.ts;
+      - name: Clear user inputs
+        run: rm "deployment/scripts/workflow-inputs.json"
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
           file_pattern: deployment/state/contracts.json
-          commit_message: Updating contract record
+          commit_message: ${{ github.event.inputs.contractName }} deployed from github action
           push_options: "--force"
           skip_dirty_check: false
           skip_fetch: true

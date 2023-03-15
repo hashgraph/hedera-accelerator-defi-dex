@@ -82,3 +82,5 @@ jobs:
           json: ${{ toJSON(github.event.inputs) }}
       - name: Create DAO
         run: npx hardhat run deployment/scripts/createGovernanceDAO.ts;
+      - name: Clear user inputs
+        run: rm "deployment/scripts/workflow-inputs.json"
