@@ -38,4 +38,4 @@ jobs:
       - name: Deployment
         run: npx hardhat run deployment/scripts/createContractsE2E.ts;
       - name: e2e
-        run: npm run e2e-test
+        run: npm run e2e-test suite-one
