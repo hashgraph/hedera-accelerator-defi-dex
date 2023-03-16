@@ -4,12 +4,12 @@ Feature: DAOGovernorToken e2e test
     This feature file contains e2e test for DAO Governor Token
 
 Scenario: Verify proposal is not created if user gives -ve transfer amount
-    Given User initialize the DAO governor token contract with name "DAOName111" and url "DAOUrl11"
+    Given User initialize the DAO governor token contract with name "DAOName111" and url "DAOUrl11" and want to check exception 0
     When User create a new token transfer proposal with title "tokentransfertitle211" and token amount -10 with the help of DAO
     Then User verify that proposal is not created and user receives error message "CONTRACT_REVERT_EXECUTED"
 
 Scenario: Verify user can create a DAO and then transfer token with help of proposal    
-    Given User initialize the DAO governor token contract with name "DAOName111" and url "DAOUrl11"
+    Given User initialize the DAO governor token contract with name "DAOName111" and url "DAOUrl11" and want to check exception 0
     When User fetches balance of token which user wants to transfer
     When User create a new token transfer proposal with title "tokentransferproposaltitle1" and token amount 1 with the help of DAO
     When User wait for token transfer proposal state to be "Active" for maximum 15 seconds
@@ -21,16 +21,16 @@ Scenario: Verify user can create a DAO and then transfer token with help of prop
     Then User verify target token is transferred to payee account 
 
 Scenario: Verify user can create a DAO with same name 
-    Given User initialize the DAO governor token contract with name "DAOName111" and url "DAOUrl11"
+    Given User initialize the DAO governor token contract with name "DAOName111" and url "DAOUrl11" and want to check exception 0
 
 
 Scenario: Verify user cann't create a DAO with empty name 
-    Given User initialize the DAO governor token contract with name "" and url "testurl"
+    Given User initialize the DAO governor token contract with name "" and url "testurl" and want to check exception 1
     Then User verify user receives error message "CONTRACT_REVERT_EXECUTED" 
 
 
 Scenario: Verify user cann't create a DAO with empty url 
-    Given User initialize the DAO governor token contract with name "daoname" and url ""
+    Given User initialize the DAO governor token contract with name "daoname" and url " and want to check exception 1
     Then User verify user receives error message "CONTRACT_REVERT_EXECUTED" 
 
 Scenario: Verify proposal is not executed if token transfer amount is larger than token current balance

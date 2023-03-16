@@ -12,13 +12,15 @@ import "../common/IBaseHTS.sol";
 import "../common/hedera/HederaResponseCodes.sol";
 import "./GODHolder.sol";
 import "./IGovernorBase.sol";
+import "../common/IErrors.sol";
 
 abstract contract GovernorCountingSimpleInternal is
     Initializable,
     IGovernorBase,
     GovernorUpgradeable,
     GovernorSettingsUpgradeable,
-    GovernorCountingSimpleUpgradeable
+    GovernorCountingSimpleUpgradeable,
+    IErrors
 {
     struct ProposalInfo {
         address creator;
@@ -92,6 +94,11 @@ abstract contract GovernorCountingSimpleInternal is
         string memory link,
         address creator
     ) internal returns (uint256) {
+        if (bytes(title).length == 0) {
+            revert InvalidInput(
+                "GovernorCountingSimpleInternal: proposal title can not be blank"
+            );
+        }
         getGODToken(creator);
         (
             address[] memory targets,
