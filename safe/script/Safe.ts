@@ -2,11 +2,15 @@ import Base from "../../e2e-test/business/Base";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { Client, ContractFunctionParameters } from "@hashgraph/sdk";
 import { BigNumber } from "bignumber.js";
+import { Helper } from "../../utils/Helper";
 
 const GET_CHAIN_ID = "getChainId";
 const SETUP = "setup";
 const EXEC_TRANSACTION = "execTransaction";
 const NONCE = "nonce";
+const GET_TRANSACTION_HASH = "getTransactionHash";
+const APPROVE_HASH = "approveHash";
+const GET_OWNERS = "getOwners";
 
 export default class Safe extends Base {
   getChainId = async (client: Client = clientsInfo.operatorClient) => {
@@ -27,16 +31,6 @@ export default class Safe extends Base {
     console.log(`- Safe#${NONCE}(): ${nonceCount}\n`);
     return nonceCount;
   };
-
-  /// @dev Setup function sets initial storage of contract.
-  /// @param _owners List of Safe owners.
-  /// @param _threshold Number of required confirmations for a Safe transaction.
-  /// @param to Contract address for optional delegate call.
-  /// @param data Data payload for optional delegate call.
-  /// @param fallbackHandler Handler for fallback calls to this contract
-  /// @param paymentToken Token that should be used for the payment (0 is ETH)
-  /// @param payment Value that should be paid
-  /// @param paymentReceiver Adddress that should receive the payment (or 0 if tx.origin)
 
   setup = async (
     owners: Array<string>,
@@ -76,17 +70,6 @@ export default class Safe extends Base {
     signatures: Uint8Array,
     client: Client = clientsInfo.operatorClient
   ) => {
-    // address to,
-    // uint256 value,
-    // bytes calldata data,
-    // Enum.Operation operation,
-    // uint256 safeTxGas,
-    // uint256 baseGas,
-    // uint256 gasPrice,
-    // address gasToken,
-    // address payable refundReceiver,
-    // bytes memory signatures
-
     const args = new ContractFunctionParameters()
       .addAddress(to)
       .addUint256(value)
@@ -105,6 +88,65 @@ export default class Safe extends Base {
       client,
       args
     );
-    console.log(`- Safe#${EXEC_TRANSACTION}(): result ${result.getBool(0)} \n`);
+    console.log(
+      `- Safe#${EXEC_TRANSACTION}(): Execution success - ${result.getBool(
+        0
+      )} \n`
+    );
+  };
+
+  getTransactionHash = async (
+    to: string,
+    value: number | BigNumber,
+    data: Uint8Array,
+    operation: number,
+    safeTxGas: BigNumber,
+    baseGas: BigNumber,
+    gasPrice: BigNumber,
+    gasToken: string,
+    refundReceiverAddress: string,
+    nonce: number,
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    const args = new ContractFunctionParameters()
+      .addAddress(to)
+      .addUint256(value)
+      .addBytes(data)
+      .addUint8(operation)
+      .addUint256(safeTxGas)
+      .addUint256(baseGas)
+      .addUint256(gasPrice)
+      .addAddress(gasToken)
+      .addAddress(refundReceiverAddress)
+      .addUint256(nonce);
+
+    const { result, receipt } = await this.execute(
+      9000000,
+      GET_TRANSACTION_HASH,
+      client,
+      args
+    );
+    const r = result.getBytes32(0);
+    console.log(
+      `- Safe#${GET_TRANSACTION_HASH}(): Execution success - ${receipt.status} \n`
+    );
+    return r;
+  };
+
+  approveHash = async (hashToApprove: Uint8Array, client: Client) => {
+    const args = new ContractFunctionParameters().addBytes32(hashToApprove);
+
+    const { receipt, record } = await this.execute(
+      9000000,
+      APPROVE_HASH,
+      client,
+      args
+    );
+    console.log(`- Safe#${APPROVE_HASH}(): ${receipt.status}\n`);
+  };
+
+  getOwners = async (client: Client = clientsInfo.operatorClient) => {
+    const { result } = await this.execute(9000000, GET_OWNERS, client);
+    console.log(`- Safe#${GET_OWNERS}(): ${Helper.getAddressArray(result)}\n`);
   };
 }

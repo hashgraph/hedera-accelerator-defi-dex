@@ -36,6 +36,7 @@ export default class ContractMetadata {
     "GovernorTokenDAO",
     "GnosisSafe",
     "GnosisSafeProxyFactory",
+    "HederaGnosisSafe",
   ];
 
   static SUPPORTED_PROXY_OPTIONS = ["create", "update"];
@@ -47,6 +48,10 @@ export default class ContractMetadata {
   public getFilePath = (contractNameArgs: string) => {
     if (contractNameArgs === "GnosisSafe".toLowerCase()) {
       return "./safe/GnosisSafe.sol/GnosisSafe.json";
+    }
+
+    if (contractNameArgs === "HederaGnosisSafe".toLowerCase()) {
+      return "./safe/HederaGnosisSafe.sol/HederaGnosisSafe.json";
     }
 
     if (contractNameArgs === "GnosisSafeProxyFactory".toLowerCase()) {

@@ -690,5 +690,61 @@
     "address": "0x0000000000000000000000000000000000392c08",
     "timestamp": "2023-03-13T10:17:35.285Z",
     "hash": "b1c474596043bd848e6de4324d72de49"
+  },
+  {
+    "name": "hederagnosissafe",
+    "id": "0.0.3805155",
+    "address": "0x00000000000000000000000000000000003a0fe3",
+    "timestamp": "2023-03-15T08:41:51.810Z",
+    "hash": "2e405729201983491c1999ad616c287e"
+  },
+  {
+    "name": "gnosissafeproxyfactory",
+    "id": "0.0.3805745",
+    "address": "0x00000000000000000000000000000000003a1231",
+    "timestamp": "2023-03-15T10:04:27.825Z",
+    "hash": "b1c474596043bd848e6de4324d72de49"
+  },
+  {
+    "name": "hederagnosissafe",
+    "id": "0.0.3805836",
+    "address": "0x00000000000000000000000000000000003a128c",
+    "timestamp": "2023-03-15T10:24:08.938Z",
+    "hash": "c4f1f9b55deb3eace5998e19b6dcf151"
+  },
+  {
+    "name": "gnosissafeproxyfactory",
+    "id": "0.0.3805862",
+    "address": "0x00000000000000000000000000000000003a12a6",
+    "timestamp": "2023-03-15T10:24:31.436Z",
+    "hash": "b1c474596043bd848e6de4324d72de49"
+  },
+  {
+    "name": "hederagnosissafe",
+    "id": "0.0.3825300",
+    "address": "0x00000000000000000000000000000000003a5e94",
+    "timestamp": "2023-03-16T07:27:06.918Z",
+    "hash": "bfa6dab9e1a8bd6a1c0603e72e2636cf"
+  },
+  {
+    "name": "gnosissafeproxyfactory",
+    "id": "0.0.3825302",
+    "address": "0x00000000000000000000000000000000003a5e96",
+    "timestamp": "2023-03-16T07:27:36.521Z",
+    "hash": "b1c474596043bd848e6de4324d72de49"
+  },
+  {
+    "name": "hederagnosissafe",
+    "id": "0.0.3825735",
+    "address": "0x00000000000000000000000000000000003a6047",
+    "timestamp": "2023-03-16T08:14:13.212Z",
+    "hash": "468030d117b1202edb26c04bb10f50ae"
+  },
+  {
+    "name": "gnosissafeproxyfactory",
+    "id": "0.0.3825744",
+    "address": "0x00000000000000000000000000000000003a6050",
+    "timestamp": "2023-03-16T08:15:33.849Z",
+    "hash": "b1c474596043bd848e6de4324d72de49"
   }
 ]

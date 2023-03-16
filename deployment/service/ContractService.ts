@@ -28,6 +28,7 @@ export class ContractService {
 
   public gnosisSafe = "gnosissafe";
   public gnosisSafeProxyFactory = "gnosissafeproxyfactory";
+  public hederaGnosisSafe = "hederagnosissafe";
 
   private contractRecordFile = "./deployment/state/contracts.json";
   static DEV_CONTRACTS_PATH = "./deployment/state/contracts.json";
