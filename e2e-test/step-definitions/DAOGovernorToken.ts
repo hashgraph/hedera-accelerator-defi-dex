@@ -60,11 +60,11 @@ let daoAddress: any;
 @binding()
 export class DAOGovernorTokenTransfer {
   @given(
-    /User initialize the DAO governor token contract with name "([^"]*)" and url "([^"]*)"/,
+    /User initialize the DAO governor token contract with name "([^"]*)" and url "([^"]*) and want to check exception (-?\d+)/,
     undefined,
     30000
   )
-  public async initialize(name: string, url: string) {
+  public async initialize(name: string, url: string, showException: number) {
     let blankTitleOrURL: boolean = false;
     try {
       if (name === "" || url === "") blankTitleOrURL = true;
@@ -78,7 +78,7 @@ export class DAOGovernorTokenTransfer {
         DEFAULT_QUORUM_THRESHOLD_IN_BSP,
         DEFAULT_VOTING_DELAY,
         DEFAULT_VOTING_PERIOD,
-        true
+        showException == 0 ? false : true
       );
     } catch (e: any) {
       if (blankTitleOrURL) {
