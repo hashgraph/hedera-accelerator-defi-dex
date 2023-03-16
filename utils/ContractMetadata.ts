@@ -4,6 +4,19 @@ import md5File from "md5-file";
 import { ContractService } from "../deployment/service/ContractService";
 
 export default class ContractMetadata {
+  static E2E_SUPPORTED_CONTRACTS_FOR_DEPLOYMENT = [
+    "LPToken",
+    "Pair",
+    "Factory",
+    "GovernorTransferToken",
+    "GODHolder",
+    "GovernorUpgrade",
+    "GovernorTokenCreate",
+    "GovernorTextProposal",
+    "GovernanceDAOFactory",
+    "GovernorTokenDAO",
+  ];
+
   static SUPPORTED_CONTRACTS_FOR_UPGRADE = [
     "Factory",
     "LPToken",
