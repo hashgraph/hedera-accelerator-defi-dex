@@ -658,6 +658,31 @@ describe("Governor Tests", function () {
       ).to.revertedWith("Only proposer can cancel the proposal");
     });
 
+    it("Verify createProposal should revert for empty title", async function () {
+      const { instance, signers } = await loadFixture(deployFixture);
+      const treasurerKey = ethers.utils.toUtf8Bytes("treasurer public key");
+      const adminKey = ethers.utils.toUtf8Bytes("Admin public key");
+      await expect(
+        instance
+          .connect(signers[0])
+          .createProposal(
+            "",
+            desc,
+            link,
+            zeroAddress,
+            treasurerKey,
+            zeroAddress,
+            adminKey,
+            "Token",
+            "Symbol"
+          )
+      )
+        .to.revertedWithCustomError(instance, "InvalidInput")
+        .withArgs(
+          "GovernorCountingSimpleInternal: proposal title can not be blank"
+        );
+    });
+
     it("Verify GovernorContract should return data for valid proposal id", async function () {
       const { instance, tokenCont, signers } = await loadFixture(deployFixture);
       await verifyAccountBalance(tokenCont, signers[0].address, total * 0.2);
