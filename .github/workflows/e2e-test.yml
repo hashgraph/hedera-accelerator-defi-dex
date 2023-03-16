@@ -1,10 +1,11 @@
 name: Deploy contract to testnet and run e2e-test
 on:
+  workflow_dispatch:
   pull_request:
-    types: opened
-    branches: develop
+    types: [opened]
+    branches: [develop]
   push:
-    branches: develop
+    branches: [develop]
 
 env:
   OPERATOR_ID: 0.0.6948
@@ -34,5 +35,7 @@ jobs:
         with:
           node-version: "18.x"
       - run: npm ci
-      - name: Running build and deployment
-        run: bash ./e2e-test.sh Pair Logic ${{ env.OPERATOR_ID }} ${{ env.OPERATOR_KEY }} ${{ env.TREASURE_ID }} ${{ env.TREASURE_KEY }} ${{ env.TOKEN_USER_ID }} ${{ env.TOKEN_USER_KEY }} ${{ env.DEX_CONTRACT_OWNER_ID }} ${{ env.DEX_CONTRACT_OWNER_KEY }}
+      - name: Deployment
+        run: npx hardhat run deployment/scripts/createContractsE2E.ts;
+      - name: e2e
+        run: npm run e2e-test

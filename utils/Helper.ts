@@ -109,4 +109,8 @@ export class Helper {
       throw Error(`- Failed to read workflow inputs, ${error.message}`);
     }
   }
+
+  static currentTimeInMills() {
+    return Date.now();
+  }
 }
