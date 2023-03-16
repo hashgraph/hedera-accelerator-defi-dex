@@ -1,4 +1,5 @@
 @Factory
+@TestSuite-1
 Feature: Factory contract e2e test
 
     This feature file contains e2e test for factory contract

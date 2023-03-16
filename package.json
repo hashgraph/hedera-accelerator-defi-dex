@@ -6,7 +6,9 @@
     "deploy": "npx hardhat run ./deployment/swapContract.ts",
     "prepare": "husky install",
     "code-format": "prettier --write \"**/*.ts\" \"**/*.json\"",
-    "test": "./node_modules/.bin/cucumber-js -p default",
+    "suite-one": ".\\node_modules\\.bin\\cucumber-js -p suiteOne",
+    "suite-two": ".\\node_modules\\.bin\\cucumber-js -p suiteTwo",
+    "test": ".\\node_modules\\.bin\\cucumber-js -p default",
     "e2e-test": "node trigger-test.js"
   },
   "devDependencies": {
