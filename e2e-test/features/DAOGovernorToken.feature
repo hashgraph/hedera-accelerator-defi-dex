@@ -31,11 +31,11 @@ Scenario: Verify user cann't create a DAO with empty name
 
 
 Scenario: Verify user cann't create a DAO with empty url 
-    Given User initialize the DAO governor token contract with name "daoname" and url " and want to check exception 1
+    Given User initialize the DAO governor token contract with name "daoname" and url "" and want to check exception 1
     Then User verify user receives error message "CONTRACT_REVERT_EXECUTED" 
 
 Scenario: Verify proposal is not executed if token transfer amount is larger than token current balance
-    Given User initialize the DAO governor token contract with name "DAOName111" and url "DAOUrl11"
+    Given User initialize the DAO governor token contract with name "DAOName111" and url "DAOUrl11" and want to check exception 0
     When User fetches balance of token which user wants to transfer
     When User create a new token transfer proposal with title "tokentransferwithhigheramt11" and token amount higher than current balance
     When User wait for token transfer proposal state to be "Active" for maximum 15 seconds

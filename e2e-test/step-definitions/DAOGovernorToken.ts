@@ -60,7 +60,8 @@ let daoAddress: any;
 @binding()
 export class DAOGovernorTokenTransfer {
   @given(
-    /User initialize the DAO governor token contract with name "([^"]*)" and url "([^"]*) and want to check exception (-?\d+)/,
+    /User initialize the DAO governor token contract with name "([^"]*)" and url "([^"]*)" and want to check exception (\d*)/,
+
     undefined,
     30000
   )
