@@ -31,8 +31,7 @@ export default class GovernorTokenDao extends Base {
     client: Client = clientsInfo.operatorClient,
     defaultQuorumThresholdValue: number = DEFAULT_QUORUM_THRESHOLD_IN_BSP,
     votingDelay: number = DEFAULT_VOTING_DELAY,
-    votingPeriod: number = DEFAULT_VOTING_PERIOD,
-    shouldThrowException: boolean = false
+    votingPeriod: number = DEFAULT_VOTING_PERIOD
   ) {
     try {
       await governor.initialize(
@@ -43,7 +42,7 @@ export default class GovernorTokenDao extends Base {
         votingPeriod
       );
     } catch (error) {
-      if (shouldThrowException) throw error;
+      throw error;
     }
 
     try {
@@ -56,7 +55,7 @@ export default class GovernorTokenDao extends Base {
       );
       console.log("Initialize done");
     } catch (error) {
-      if (shouldThrowException) throw error;
+      throw error;
     }
   }
 
