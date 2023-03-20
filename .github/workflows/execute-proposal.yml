@@ -22,6 +22,7 @@ env:
   TOKEN_USER_KEY_WITH_NO_GOD_TOKEN: 8e8fe8f694707f2e578f5ced24304a5190b59ef014a0b978d9db0732eaf6445d
   UI_USER_ID: 0.0.11674
   UI_USER_KEY: 899ec4fb7e8153a36bd37dd9500b9057982bf76bc1f0efa5b8cb170ee2329997
+  PROPOSAL_CONTRACT_ID: ${{ github.event.inputs.contractId }}
 
 jobs:
   build:
@@ -34,8 +35,8 @@ jobs:
         with:
           node-version: "18.x"
       - run: npm ci
-      - name: Running build and deployment
-        run: bash ./proposalExecute.sh ${{ env.OPERATOR_ID }} ${{ env.OPERATOR_KEY }} ${{ env.ADMIN_ID }} ${{ env.ADMIN_KEY }} ${{ env.TREASURE_ID }} ${{ env.TREASURE_KEY }} ${{ env.TOKEN_USER_ID }} ${{ env.TOKEN_USER_KEY }} ${{ env.DEX_CONTRACT_OWNER_ID }} ${{ env.DEX_CONTRACT_OWNER_KEY }} ${{ github.event.inputs.contractId }}
+      - name: Execute proposals
+        run: npx hardhat run deployment/scripts/proposalScript.ts
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
           file_pattern: deployment/state/*.json
