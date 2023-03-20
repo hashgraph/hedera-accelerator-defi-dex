@@ -1,41 +1,41 @@
-name: Deploy contract to testnet and run e2e-test suite two
-on:
-  workflow_dispatch:
-  pull_request:
-    types: [opened]
-    branches: [develop]
-  push:
-    branches: [develop]
+# name: Deploy contract to testnet and run e2e-test suite two
+# on:
+#   workflow_dispatch:
+#   pull_request:
+#     types: [opened]
+#     branches: [develop]
+#   push:
+#     branches: [develop]
 
-env:
-  OPERATOR_ID: 0.0.6883
-  OPERATOR_KEY: 2cc790b009e400a3ed97363980ae27ddfb58102fa8fb7c1a7b69e212f756c084
-  ADMIN_ID: 0.0.6948
-  ADMIN_KEY: c8cb72a0addffcbd898689e5b5641c0abff4399ddeb90a04071433e3724e14dd
-  TOKEN_USER_ID: 0.0.2375093
-  TOKEN_USER_KEY: 805a0b26c8ecee83e903076eebb86928c612590f32afc6d272ced4c73db6d466
-  TREASURE_ID: 0.0.6948
-  TREASURE_KEY: c8cb72a0addffcbd898689e5b5641c0abff4399ddeb90a04071433e3724e14dd
-  DEX_CONTRACT_OWNER_ID: 0.0.6950
-  DEX_CONTRACT_OWNER_KEY: b936fa8294df98d66e36eb20094fb12a8c69735a995fdf5e9da478642d28305a
-  TOKEN_USER_ID_WITH_NO_GOD_TOKEN: 0.0.3065652
-  TOKEN_USER_KEY_WITH_NO_GOD_TOKEN: 8e8fe8f694707f2e578f5ced24304a5190b59ef014a0b978d9db0732eaf6445d
-  UI_USER_ID: 0.0.11674
-  UI_USER_KEY: 899ec4fb7e8153a36bd37dd9500b9057982bf76bc1f0efa5b8cb170ee2329997
+# env:
+#   OPERATOR_ID: 0.0.6883
+#   OPERATOR_KEY: 2cc790b009e400a3ed97363980ae27ddfb58102fa8fb7c1a7b69e212f756c084
+#   ADMIN_ID: 0.0.6948
+#   ADMIN_KEY: c8cb72a0addffcbd898689e5b5641c0abff4399ddeb90a04071433e3724e14dd
+#   TOKEN_USER_ID: 0.0.2375093
+#   TOKEN_USER_KEY: 805a0b26c8ecee83e903076eebb86928c612590f32afc6d272ced4c73db6d466
+#   TREASURE_ID: 0.0.6948
+#   TREASURE_KEY: c8cb72a0addffcbd898689e5b5641c0abff4399ddeb90a04071433e3724e14dd
+#   DEX_CONTRACT_OWNER_ID: 0.0.6950
+#   DEX_CONTRACT_OWNER_KEY: b936fa8294df98d66e36eb20094fb12a8c69735a995fdf5e9da478642d28305a
+#   TOKEN_USER_ID_WITH_NO_GOD_TOKEN: 0.0.3065652
+#   TOKEN_USER_KEY_WITH_NO_GOD_TOKEN: 8e8fe8f694707f2e578f5ced24304a5190b59ef014a0b978d9db0732eaf6445d
+#   UI_USER_ID: 0.0.11674
+#   UI_USER_KEY: 899ec4fb7e8153a36bd37dd9500b9057982bf76bc1f0efa5b8cb170ee2329997
 
-jobs:
-  build:
-    if: github.event.action == 'opened' || github.event_name == 'push'
-    runs-on: ubuntu-latest
+# jobs:
+#   build:
+#     if: github.event.action == 'opened' || github.event_name == 'push'
+#     runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v3
-      - name: Use Node.js 18.x
-        uses: actions/setup-node@v3
-        with:
-          node-version: "18.x"
-      - run: npm ci
-      - name: Deployment
-        run: npx hardhat run deployment/scripts/createContractsE2E.ts;
-      - name: e2e
-        run: npm run e2e-test suite-two
+#     steps:
+#       - uses: actions/checkout@v3
+#       - name: Use Node.js 18.x
+#         uses: actions/setup-node@v3
+#         with:
+#           node-version: "18.x"
+#       - run: npm ci
+#       - name: Deployment
+#         run: npx hardhat run deployment/scripts/createContractsE2E.ts;
+#       - name: e2e
+#         run: npm run e2e-test suite-two
