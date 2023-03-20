@@ -31,24 +31,6 @@ export default class ContractMetadata {
     "GovernanceDAOFactory",
   ];
 
-  static SUPPORTED_CONTRACTS_FOR_DEPLOYMENT = [
-    "Factory",
-    "LPToken",
-    "Pair",
-    "BaseHTS",
-    "GovernorUpgrade",
-    "GovernorTransferToken",
-    "GovernorTextProposal",
-    "GovernorTokenCreate",
-    "Splitter",
-    "Vault",
-    "GODHolder",
-    "Configuration",
-    "GODTokenHolderFactory",
-    "GovernanceDAOFactory",
-    "GovernorTokenDAO",
-  ];
-
   static SUPPORTED_PROXY_OPTIONS = ["create", "update"];
 
   private contractUATService = new ContractService(
