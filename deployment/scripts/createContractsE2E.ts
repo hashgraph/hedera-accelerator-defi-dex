@@ -1,11 +1,10 @@
-import ContractMetadata from "../../utils/ContractMetadata";
-
 import { Helper } from "../../utils/Helper";
 import { main as deployContract } from "./logic";
 import { main as createProxy } from "./transparentUpgradeableProxy";
 
 async function main() {
-  const contracts = ContractMetadata.E2E_SUPPORTED_CONTRACTS_FOR_DEPLOYMENT;
+  const inputs = Helper.readWorkflowInputs();
+  const contracts = String(inputs.contracts).split(",");
   console.log("- Contracts for deployment are:", contracts);
 
   const startTime = Helper.currentTimeInMills();

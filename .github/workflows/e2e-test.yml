@@ -35,6 +35,12 @@ jobs:
         with:
           node-version: "18.x"
       - run: npm ci
+      - name: Save user inputs
+        uses: jsdaniell/create-json@v1.2.2
+        id: create-json
+        with:
+          name: "deployment/scripts/workflow-inputs.json"
+          json: '{"contracts":"LPToken,Pair,Factory,GovernorTransferToken,GODHolder,GovernorUpgrade,GovernorTokenCreate,GovernorTextProposal,GovernanceDAOFactory,GovernorTokenDAO"}'
       - name: Deployment
         run: npx hardhat run deployment/scripts/createContractsE2E.ts;
       - name: e2e
