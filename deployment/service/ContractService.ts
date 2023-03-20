@@ -59,8 +59,6 @@ export class ContractService {
 
     const contracts: [DeployedContract] = this.readFileContent();
 
-    console.log(`Contract id ${contractId}`);
-
     const newContract: DeployedContract = {
       name: contractNameLowerCase,
       id: contractId,
@@ -73,7 +71,7 @@ export class ContractService {
 
     const data = JSON.stringify(contractsWithNewContract, null, 2);
 
-    console.log(`Contract details ${data}`);
+    console.log(`Contract details: ${JSON.stringify(newContract)}`);
 
     fs.writeFileSync(this.contractRecordFile, data);
   };
@@ -127,7 +125,7 @@ export class ContractService {
 
     const data = JSON.stringify(updatedContracts, null, 2);
 
-    console.log(`Contract record updated ${data}`);
+    console.log(`Contract record updated ${JSON.stringify(updatedContract)}`);
 
     fs.writeFileSync(this.contractRecordFile, data);
   };
