@@ -41,7 +41,9 @@ export default class GovernorTokenDao extends Base {
         votingDelay,
         votingPeriod
       );
-    } catch (error) {}
+    } catch (error) {
+      throw error;
+    }
 
     try {
       await this.initializeInternally(
@@ -52,7 +54,9 @@ export default class GovernorTokenDao extends Base {
         client
       );
       console.log("Initialize done");
-    } catch (error) {}
+    } catch (error) {
+      throw error;
+    }
   }
 
   private initializeInternally = async (

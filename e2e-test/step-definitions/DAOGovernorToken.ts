@@ -60,11 +60,11 @@ let daoAddress: any;
 @binding()
 export class DAOGovernorTokenTransfer {
   @given(
-    /User initialize the DAO governor token contract with name "([^"]*)" and url "([^"]*)"/,
+    /User tries to initialize the DAO governor token contract with name "([^"]*)" and url "([^"]*)"/,
     undefined,
     30000
   )
-  public async initialize(name: string, url: string) {
+  public async initializeFail(name: string, url: string) {
     let blankTitleOrURL: boolean = false;
     try {
       if (name === "" || url === "") blankTitleOrURL = true;
@@ -87,6 +87,25 @@ export class DAOGovernorTokenTransfer {
         errorMsg = e.message;
       } else throw e;
     }
+  }
+
+  @given(
+    /User initialize the DAO governor token contract with name "([^"]*)" and url "([^"]*)"/,
+    undefined,
+    30000
+  )
+  public async initializeSafe(name: string, url: string) {
+    await governorTokenDao.initialize(
+      adminAddress,
+      name,
+      url,
+      governorTokenTransfer,
+      godHolder,
+      clientsInfo.operatorClient,
+      DEFAULT_QUORUM_THRESHOLD_IN_BSP,
+      DEFAULT_VOTING_DELAY,
+      DEFAULT_VOTING_PERIOD
+    );
   }
 
   @given(/User initialize DAO factory contract/, undefined, 60000)
