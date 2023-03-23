@@ -323,12 +323,12 @@
   },
   {
     "name": "factory",
-    "id": "0.0.3903936",
-    "address": "0x00000000000000000000000000000000003b91c0",
-    "timestamp": "2023-03-23T08:01:04.063Z",
+    "id": "0.0.3905814",
+    "address": "0x00000000000000000000000000000000003b9916",
+    "timestamp": "2023-03-23T11:12:21.256Z",
     "hash": "012187be25f102dddf3432b0f74162c8",
-    "transparentProxyAddress": "0x00000000000000000000000000000000003b91cf",
-    "transparentProxyId": "0.0.3903951"
+    "transparentProxyAddress": "0x00000000000000000000000000000000003b9933",
+    "transparentProxyId": "0.0.3905843"
   },
   {
     "name": "factory",
