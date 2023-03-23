@@ -2,8 +2,11 @@ const {
   spawn
 } = require('child_process')
 
-// your cmd to start the process, possibly spawn('npm.cmd', ['test'))
-const proc = spawn('npm',['test'])
+var args = process.argv.slice(2);
+// your cmd to start the process, possibly spawn('npm.cmd', ['test')) for win
+
+const suiteName = args[0];
+const proc = spawn('npm',['run', suiteName]) // change it to npm for linux
 let flag = false;
 proc.stdout.on('data', (data) => {
   if(data.includes('failed')){

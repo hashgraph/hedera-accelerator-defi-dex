@@ -1,4 +1,5 @@
 @Pair
+@TestSuite-1
 Feature: Pair contract e2e test
 
     This feature file contains e2e test for pair contract

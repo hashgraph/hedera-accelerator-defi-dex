@@ -1,4 +1,5 @@
 @GovernorCreateToken
+@TestSuite-2
 Feature: GovernorCreateToken e2e test
 
     This feature file contains e2e test for Governor Create token
