@@ -16,6 +16,7 @@ const tokenHBARX = TokenId.fromString(dex.HBARX_TOKEN_ID);
 const INITIALIZE = "initialize";
 const SWAP_TOKEN = "swapToken";
 const GET_PAIR_QTY = "getPairQty";
+const GET_PAIR_INFO = "getPairInfo";
 const SET_SLIPPAGE = "setSlippage";
 const GET_SPOT_PRICE = "getSpotPrice";
 const GET_OUT_GIVEN_IN = "getOutGivenIn";
@@ -258,6 +259,32 @@ export default class Pair extends Base {
       tokenReceiverKey
     );
     console.log(`- Pair#${REMOVE_LIQUIDITY}(): LpTokenQty = ${lpTokenQty}\n`);
+  };
+
+  public getPairInfo = async (client: Client = clientsInfo.operatorClient) => {
+    const { result } = await this.execute(8000000, GET_PAIR_INFO, client);
+    const tokenAAddress = result.getAddress(0);
+    const tokenAQty = result.getInt256(1);
+    const tokenBAddress = result.getAddress(2);
+    const tokenBQty = result.getInt256(3);
+    const tokenASpotPrice = result.getInt256(4);
+    const tokenBSpotPrice = result.getInt256(5);
+    const precision = result.getInt256(6);
+    const feePrecision = result.getInt256(7);
+    const fee = result.getInt256(8);
+    const info = {
+      tokenAAddress,
+      tokenAQty,
+      tokenBAddress,
+      tokenBQty,
+      tokenASpotPrice,
+      tokenBSpotPrice,
+      precision,
+      feePrecision,
+      fee,
+    };
+    console.log(`- Pair#${GET_PAIR_INFO}():`);
+    console.table(info);
   };
 
   public swapToken = async (

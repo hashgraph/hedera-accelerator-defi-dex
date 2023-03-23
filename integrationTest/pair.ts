@@ -177,6 +177,7 @@ async function testForSinglePair(
   await getTokenPairAddress();
   await getAccountTokensBalance();
   await addLiquidity();
+  await pair.getPairInfo();
   await getAccountTokensBalance();
   await removeLiquidity();
   await getAccountTokensBalance();

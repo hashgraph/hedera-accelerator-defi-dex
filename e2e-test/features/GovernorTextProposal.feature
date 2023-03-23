@@ -1,4 +1,5 @@
 @GovernorTextProposal
+@TestSuite-2
 Feature: GovernorTextProposal e2e test
 
     This feature file contains e2e test for Governor text proposal

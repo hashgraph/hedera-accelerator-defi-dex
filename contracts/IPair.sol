@@ -15,6 +15,14 @@ abstract contract IPair {
         int256 tokenQty;
     }
 
+    struct Amount {
+        int256 tokenASpotPrice;
+        int256 tokenBSpotPrice;
+        int256 precision;
+        int256 feePrecision;
+        int256 fee;
+    }
+
     function getPair() external virtual returns (Pair memory);
 
     function initialize(
