@@ -102,9 +102,8 @@ async function testForSinglePair(
 ) {
   await getTokensInfo(token0, token1);
   const pairContractAddress = await createPair(token0, token1, fee);
-  const pairContractId =
-    ContractId.fromSolidityAddress(pairContractAddress).toString();
-  pair = new Pair(pairContractId);
+  const pairContractId = ContractId.fromSolidityAddress(pairContractAddress);
+  pair = new Pair(pairContractId.toString());
   await getPrecisionValue();
   await getTreasureBalance(pairContractId, [token0, token1]);
   await addLiquidity(token0, token1);
