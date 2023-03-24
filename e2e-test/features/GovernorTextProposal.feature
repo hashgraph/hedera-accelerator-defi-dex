@@ -25,6 +25,7 @@ Scenario: Verify governor text proposal state is not changed if user abstain fro
     When User vote "Abstain" to text proposal
     Then User verify text proposal state is "Active"
     When User cancel the text proposal with title "textproposal3"
+    When User revert the god tokens
 
 Scenario: Verify governor text proposal cannot create with blank title  
     When User create a text proposal with blank title     

@@ -11,6 +11,7 @@ import { TokenId } from "@hashgraph/sdk";
 import { BigNumber } from "bignumber.js";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { ContractService } from "../../deployment/service/ContractService";
+import { CommonSteps } from "./CommonSteps";
 
 const clientManagement = new ClientManagement();
 const csDev = new ContractService();
@@ -41,7 +42,7 @@ const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
 const TRANSFER_TOKEN_ID = TokenId.fromString(dex.TOKEN_LAB49_1);
 
 @binding()
-export class GovernorSteps {
+export class GovernorSteps extends CommonSteps {
   @given(
     /User have initialized the governor transfer token contract/,
     undefined,
@@ -149,7 +150,12 @@ export class GovernorSteps {
     } catch (e: any) {
       console.log("Something went wrong while verifying the state of proposal");
       console.log(e);
-      await this.cancelProposalInternally();
+      await this.cancelProposalInternally(
+        governor,
+        proposalID,
+        clientsInfo.operatorClient,
+        godHolder
+      );
       throw e;
     }
   }
@@ -196,7 +202,12 @@ export class GovernorSteps {
         "Something went wrong while voting to proposal now cancelling the proposal"
       );
       console.log(e);
-      await this.cancelProposalInternally();
+      await this.cancelProposalInternally(
+        governor,
+        proposalID,
+        clientsInfo.operatorClient,
+        godHolder
+      );
       throw e;
     }
   }
@@ -214,7 +225,12 @@ export class GovernorSteps {
         "Something went wrong while executing proposal cancelling the proposal"
       );
       console.log(e);
-      await this.cancelProposalInternally();
+      await this.cancelProposalInternally(
+        governor,
+        proposalID,
+        clientsInfo.operatorClient,
+        godHolder
+      );
       throw e;
     }
   }
@@ -282,18 +298,5 @@ export class GovernorSteps {
       seconds * 1000,
       1000
     );
-  }
-
-  private async cancelProposalInternally() {
-    try {
-      const details = await governor.getProposalDetails(
-        proposalID,
-        clientsInfo.operatorClient
-      );
-      await governor.cancelProposal(details.title, clientsInfo.operatorClient);
-      await this.revertGODToken();
-    } catch (e: any) {
-      console.log("Failed while cleaning up");
-    }
   }
 }

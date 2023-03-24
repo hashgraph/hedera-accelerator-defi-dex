@@ -21,7 +21,7 @@ export class ContractService {
     this.governorTTContractName,
     this.governorUpgradeContract,
   ];
-  public godHolderContract = "godholder";
+  public godHolderContract = "testgodholder";
   public configuration = "configuration";
   public godTokenHolderFactory = "godtokenholderfactory";
   public governorTokenDao = "governortokendao";

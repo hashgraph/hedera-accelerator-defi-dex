@@ -7,6 +7,7 @@ const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
 const INITIALIZE = "initialize";
 const REVERT_TOKENS_FOR_VOTER = "revertTokensForVoter";
 const CAN_USER_CLAIM_GOD_TOKEN = "canUserClaimGodTokens";
+const REVERT_TOKENS_FOR_VOTER_FORCEFULLY = "revertTokensForVoterForcefully";
 
 export default class GodHolder extends Base {
   initialize = async (client: Client) => {
@@ -62,6 +63,21 @@ export default class GodHolder extends Base {
     const responseCode = result.getUint256(0);
     console.log(
       `- GodHolder#${REVERT_TOKENS_FOR_VOTER}(): response-code = ${responseCode}\n`
+    );
+    return responseCode;
+  };
+
+  revertTokensForVoterForcefully = async (client: Client) => {
+    const { result } = await this.execute(
+      9000000,
+      REVERT_TOKENS_FOR_VOTER_FORCEFULLY,
+      client,
+      undefined,
+      undefined
+    );
+    const responseCode = result.getUint256(0);
+    console.log(
+      `- GodHolder#${REVERT_TOKENS_FOR_VOTER_FORCEFULLY}(): response-code = ${responseCode}\n`
     );
     return responseCode;
   };

@@ -11,6 +11,8 @@ Feature: GovernorTransferToken e2e test
         When User wait for proposal state to be "Active" for max 5 seconds         
         Then User verify that proposal state is "Active"
         When User cancel the proposal with title "testtitle"
+        When User revert the god tokens
+        
 
     Scenario: Verify user can not create proposal with same title 
         When User create a new proposal with duplicate title "testtitle" description "testdescription" link "testlink" and token amount 1
@@ -37,6 +39,7 @@ Feature: GovernorTransferToken e2e test
         When User create a new proposal with unique title "sampletest" description "testdescription" link "testlink" and token amount 1
         When User wait for proposal state to be "Active" for max 5 seconds 
         When User cancel the proposal with title "sampletest"
+        When User revert the god tokens
         Then User verify that proposal state is "Canceled"
 
     Scenario: Verify proposal state is defeated if required votes are not in favour
@@ -55,5 +58,6 @@ Feature: GovernorTransferToken e2e test
         When User wait for proposal state to be "Defeated" for max 15 seconds
         Then User verify that proposal state is "Defeated"
         When User cancel the proposal with title "testtitlesamples"
+        When User revert the god tokens
 
  

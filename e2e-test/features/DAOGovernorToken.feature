@@ -28,6 +28,7 @@ Scenario: Verify user can create a DAO and then transfer token with help of prop
     When User wait for token transfer proposal state to be "Succeeded" for maximum 15 seconds
     Then User verify token transfer proposal state is "Succeeded"
     When User execute token transfer proposal with title "tokentransferproposaltitle1"
+    When User wait for token transfer proposal state to be "Executed" for maximum 10 seconds
     Then User verify target token is transferred to payee account 
 
 
@@ -40,6 +41,7 @@ Scenario: Verify proposal is not executed if token transfer amount is larger tha
     When User wait for token transfer proposal state to be "Succeeded" for maximum 15 seconds
     Then User verify token transfer proposal state is "Succeeded"
     When User tries to execute token transfer proposal with title "tokentransferwithhigheramt11"
+    When User revert the god tokens
     Then User verify user receives error message "CONTRACT_REVERT_EXECUTED"
 
 Scenario: Verify DAO and proposal flow with factory DAO
@@ -54,6 +56,7 @@ Scenario: Verify DAO and proposal flow with factory DAO
     When User wait for token transfer proposal state to be "Succeeded" for maximum 15 seconds
     Then User verify token transfer proposal state is "Succeeded"
     When User execute token transfer proposal with title "factorytesttitle11abxz"
+    When User wait for token transfer proposal state to be "Executed" for maximum 10 seconds
     Then User verify target token is transferred to payee account 
 
 Scenario: Verify user can not create DAO with empty name via factory
