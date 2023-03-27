@@ -14,14 +14,8 @@ export class CommonSteps {
       await governor.cancelProposal(details.title, client);
       await godHolder.revertTokensForVoter(client);
     } catch (e: any) {
-      console.log("Failed while cleaning up level - 1");
+      console.log("Failed while cleaning up");
       console.log(e);
-      try {
-        await godHolder.revertTokensForVoterForcefully(client);
-      } catch (e: any) {
-        console.log("Failed while cleaning up level - 2");
-        console.log(e);
-      }
     }
   }
 }
