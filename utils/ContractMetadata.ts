@@ -29,7 +29,7 @@ export default class ContractMetadata {
     "GovernorTokenCreate",
     "Splitter",
     "Vault",
-    "TestGODHolder",
+    "GODHolder",
     "Configuration",
     "GODTokenHolderFactory",
     "GovernanceDAOFactory",
