@@ -31,6 +31,13 @@ contract MultisigDAOFactory is OwnableUpgradeable, IEvents, IErrors {
 
     address[] private daos;
 
+    modifier ifAdmin() {
+        if (msg.sender != proxyAdmin) {
+            revert NotAdmin("MultisigDAOFactory: auth failed");
+        }
+        _;
+    }
+
     function initialize(
         address _proxyAdmin,
         address _daoLogic,
@@ -47,29 +54,17 @@ contract MultisigDAOFactory is OwnableUpgradeable, IEvents, IErrors {
         emit LogicUpdated(address(0), safeFactory, SafeFactory);
     }
 
-    function getDaoLogicAddress() external view onlyOwner returns (address) {
-        return daoLogic;
-    }
-
-    function getSafeLogicAddress() external view onlyOwner returns (address) {
-        return safeLogic;
-    }
-
-    function getSafeFactoryAddress() external view onlyOwner returns (address) {
-        return safeFactory;
-    }
-
-    function upgradeSafeFactoryAddress(address _newImpl) external onlyOwner {
+    function upgradeSafeFactoryAddress(address _newImpl) external ifAdmin {
         emit LogicUpdated(safeFactory, _newImpl, SafeFactory);
         safeFactory = _newImpl;
     }
 
-    function upgradeSafeLogicAddress(address _newImpl) external onlyOwner {
+    function upgradeSafeLogicAddress(address _newImpl) external ifAdmin {
         emit LogicUpdated(safeLogic, _newImpl, SafeLogic);
         safeLogic = _newImpl;
     }
 
-    function upgradeDaoLogicAddress(address _newImpl) external onlyOwner {
+    function upgradeDaoLogicAddress(address _newImpl) external ifAdmin {
         emit LogicUpdated(daoLogic, _newImpl, DaoLogic);
         daoLogic = _newImpl;
     }

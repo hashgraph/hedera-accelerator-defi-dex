@@ -7,9 +7,9 @@ import "@gnosis.pm/safe-contracts/contracts/external/GnosisSafeMath.sol";
 contract HederaGnosisSafe is GnosisSafe {
     using GnosisSafeMath for uint256;
 
+    bytes private constant BYTES_ZERO = "";
     uint256 private constant UINT_ZERO = 0;
     address payable private constant ADDRESS_ZERO = payable(address(0));
-    bytes private constant BYTES_ZERO = "";
 
     uint256 private txnNonce;
     mapping(bytes32 => bool) public executedHash;
@@ -25,11 +25,11 @@ contract HederaGnosisSafe is GnosisSafe {
             value,
             data,
             operation,
-            0,
-            0,
-            0,
-            address(0),
-            address(0),
+            UINT_ZERO,
+            UINT_ZERO,
+            UINT_ZERO,
+            ADDRESS_ZERO,
+            ADDRESS_ZERO,
             ++txnNonce
         );
         return (txnHash, txnNonce);
