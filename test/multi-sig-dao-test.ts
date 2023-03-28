@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { Contract } from "ethers";
+import { BigNumber, Contract } from "ethers";
 import { TestHelper } from "./TestHelper";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
@@ -342,7 +342,7 @@ describe("MultiSig contract tests", function () {
       const { multiSigDAOInstance, signers, tokenInstance } = await loadFixture(
         deployFixture
       );
-      const { txnHash } = await createTransaction(
+      const { txnHash } = await proposeTransaction(
         multiSigDAOInstance,
         signers[1].address,
         tokenInstance.address
@@ -355,7 +355,7 @@ describe("MultiSig contract tests", function () {
       const { multiSigDAOInstance, signers, tokenInstance } = await loadFixture(
         deployFixture
       );
-      const { txnHash } = await createTransaction(
+      const { txnHash } = await proposeTransaction(
         multiSigDAOInstance,
         signers[1].address,
         tokenInstance.address
@@ -371,7 +371,7 @@ describe("MultiSig contract tests", function () {
         hederaGnosisSafeProxyContract,
         daoSigners,
       } = await loadFixture(deployFixture);
-      const { txnHash } = await createTransaction(
+      const { txnHash } = await proposeTransaction(
         multiSigDAOInstance,
         signers[1].address,
         tokenInstance.address
@@ -392,7 +392,7 @@ describe("MultiSig contract tests", function () {
         hederaGnosisSafeProxyContract,
         daoSigners,
       } = await loadFixture(deployFixture);
-      const { txnHash, info } = await createTransaction(
+      const { txnHash, info } = await proposeTransferTransaction(
         multiSigDAOInstance,
         signers[1].address,
         tokenInstance.address
@@ -441,7 +441,7 @@ describe("MultiSig contract tests", function () {
         hederaGnosisSafeProxyContract,
         daoSigners,
       } = await loadFixture(deployFixture);
-      const { txnHash, info } = await createTransaction(
+      const { txnHash, info } = await proposeTransaction(
         multiSigDAOInstance,
         signers[1].address,
         tokenInstance.address,
@@ -477,7 +477,7 @@ describe("MultiSig contract tests", function () {
         tokenInstance,
         hederaGnosisSafeProxyContract,
       } = await loadFixture(deployFixture);
-      const { info } = await createTransaction(
+      const { info } = await proposeTransaction(
         multiSigDAOInstance,
         signers[1].address,
         tokenInstance.address
@@ -500,7 +500,7 @@ describe("MultiSig contract tests", function () {
         tokenInstance,
         hederaGnosisSafeProxyContract,
       } = await loadFixture(deployFixture);
-      const { info } = await createTransaction(
+      const { info } = await proposeTransaction(
         multiSigDAOInstance,
         signers[1].address,
         tokenInstance.address
@@ -529,7 +529,7 @@ describe("MultiSig contract tests", function () {
         hederaGnosisSafeProxyContract,
         daoSigners,
       } = await loadFixture(deployFixture);
-      const { txnHash, info } = await createTransaction(
+      const { txnHash, info } = await proposeTransaction(
         multiSigDAOInstance,
         signers[1].address,
         tokenInstance.address
@@ -557,7 +557,7 @@ describe("MultiSig contract tests", function () {
       ).to.revertedWith("HederaGnosisSafe: txn already executed");
     });
 
-    async function createTransaction(
+    async function proposeTransaction(
       multiSigDAOInstance: Contract,
       receiver: string,
       token: string,
@@ -565,6 +565,30 @@ describe("MultiSig contract tests", function () {
       operation: number = 0 // 1 delegate and 0 call (balance verification not working with 1,so default is 0 for unit test)
     ) {
       const transaction = await multiSigDAOInstance.proposeTransaction(
+        token,
+        createTransferTransactionABIData(receiver, amount),
+        operation
+      );
+      const { name, args } = await TestHelper.readEvent(transaction);
+      const txnHash = args.txnHash;
+      const info = args.info;
+
+      expect(name).equal("TransactionCreated");
+      expect(txnHash).not.equals(TestHelper.ZERO_ADDRESS);
+      expect(info.to).not.equals(TestHelper.ZERO_ADDRESS);
+      expect(info.operation).equals(operation);
+      expect(info.nonce).equals(1);
+      return { txnHash, info };
+    }
+
+    async function proposeTransferTransaction(
+      multiSigDAOInstance: Contract,
+      receiver: string,
+      token: string,
+      amount: number = TRANSFER_AMOUNT,
+      operation: number = 0 // 1 delegate and 0 call (balance verification not working with 1,so default is 0 for unit test)
+    ) {
+      const transaction = await multiSigDAOInstance.proposeTransferTransaction(
         receiver,
         token,
         amount,
@@ -580,6 +604,16 @@ describe("MultiSig contract tests", function () {
       expect(info.operation).equals(operation);
       expect(info.nonce).equals(1);
       return { txnHash, info };
+    }
+
+    function createTransferTransactionABIData(
+      receiver: string,
+      amount: number
+    ): Uint8Array {
+      const ABI = ["function transfer(address to, uint amount) returns (bool)"];
+      const iface = new ethers.utils.Interface(ABI);
+      const data = iface.encodeFunctionData("transfer", [receiver, amount]);
+      return ethers.utils.arrayify(data);
     }
   });
 });

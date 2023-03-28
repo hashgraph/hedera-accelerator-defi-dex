@@ -60,22 +60,16 @@ contract MultiSigDAO is BaseDAO {
     }
 
     function proposeTransaction(
-        address _recieverAddress,
-        address _token,
-        uint256 _amount,
+        address to,
+        bytes memory data,
         Enum.Operation operation
-    ) external payable returns (bytes32) {
-        bytes memory _data = _getTransferABICallData(_recieverAddress, _amount);
-        (bytes32 txnHash, uint256 txnNonce) = _proposeTransaction(
-            _token,
-            msg.value,
-            _data,
-            operation
-        );
+    ) public payable returns (bytes32) {
+        (bytes32 txnHash, uint256 txnNonce) = hederaGnosisSafe
+            .getTransactionHash(to, msg.value, data, operation);
         TranscationInfo storage transactionInfo = proposals[txnHash];
-        transactionInfo.to = _token;
+        transactionInfo.to = to;
         transactionInfo.value = msg.value;
-        transactionInfo.data = _data;
+        transactionInfo.data = data;
         transactionInfo.operation = operation;
         transactionInfo.nonce = txnNonce;
 
@@ -83,19 +77,20 @@ contract MultiSigDAO is BaseDAO {
         return txnHash;
     }
 
+    function proposeTransferTransaction(
+        address _recieverAddress,
+        address _token,
+        uint256 _amount,
+        Enum.Operation operation
+    ) external payable returns (bytes32) {
+        bytes memory _data = _getTransferABICallData(_recieverAddress, _amount);
+        return proposeTransaction(_token, _data, operation);
+    }
+
     function _getTransferABICallData(
         address _recieverAddress,
         uint256 _amount
     ) private pure returns (bytes memory) {
         return abi.encodeWithSelector(0xa9059cbb, _recieverAddress, _amount);
-    }
-
-    function _proposeTransaction(
-        address to,
-        uint256 value,
-        bytes memory data,
-        Enum.Operation operation
-    ) private returns (bytes32, uint256) {
-        return hederaGnosisSafe.getTransactionHash(to, value, data, operation);
     }
 }
