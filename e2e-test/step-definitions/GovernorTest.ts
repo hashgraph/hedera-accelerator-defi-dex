@@ -273,16 +273,16 @@ export class GovernorSteps extends CommonSteps {
     console.log("god token balance --", balance);
   }
 
-  @when(/User revert the god tokens/, undefined, 30000)
+  @when(
+    /User revert the god tokens for transfer token contract/,
+    undefined,
+    30000
+  )
   public async revertGODToken() {
-    try {
-      await godHolder.revertTokensForVoter(clientsInfo.operatorClient);
-    } catch (e: any) {
-      console.log(
-        "Something went wrong while reverting the god token cancelling the proposal"
-      );
-      console.log(e);
-    }
+    await this.revertGODTokensFromGodHolder(
+      godHolder,
+      clientsInfo.operatorClient
+    );
   }
 
   @when(

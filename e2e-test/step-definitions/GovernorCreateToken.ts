@@ -410,15 +410,15 @@ export class GovernorCreateToken extends CommonSteps {
     ).to.eql(Number(tokenBQuantity));
   }
 
-  @when(/User revert the god tokens/, undefined, 30000)
+  @when(
+    /User revert the god tokens for create token contract/,
+    undefined,
+    30000
+  )
   public async revertGODToken() {
-    try {
-      await godHolder.revertTokensForVoter(clientsInfo.operatorClient);
-    } catch (e: any) {
-      console.log(
-        "Something went wrong while reverting the god token cancelling the proposal"
-      );
-      console.log(e);
-    }
+    await this.revertGODTokensFromGodHolder(
+      godHolder,
+      clientsInfo.operatorClient
+    );
   }
 }

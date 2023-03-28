@@ -284,15 +284,11 @@ export class GovernorUpgradeSteps extends CommonSteps {
     await governor.cancelProposal(title, clientsInfo.operatorClient);
   }
 
-  @when(/User revert the god tokens/, undefined, 30000)
+  @when(/User revert the god tokens for contract upgrade/, undefined, 30000)
   public async revertGODToken() {
-    try {
-      await godHolder.revertTokensForVoter(clientsInfo.operatorClient);
-    } catch (e: any) {
-      console.log(
-        "Something went wrong while reverting the god token cancelling the proposal"
-      );
-      console.log(e);
-    }
+    await this.revertGODTokensFromGodHolder(
+      godHolder,
+      clientsInfo.operatorClient
+    );
   }
 }

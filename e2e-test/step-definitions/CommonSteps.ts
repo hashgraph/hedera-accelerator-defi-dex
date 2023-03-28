@@ -18,4 +18,11 @@ export class CommonSteps {
       console.log(e);
     }
   }
+
+  public async revertGODTokensFromGodHolder(
+    godHolder: GodHolder,
+    client: Client
+  ) {
+    await godHolder.revertTokensForVoter(client);
+  }
 }

@@ -411,16 +411,4 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
     expect(errorMsg).contains(msg);
     errorMsg = "";
   }
-
-  @when(/User revert the god tokens/, undefined, 30000)
-  public async revertGODToken() {
-    try {
-      await godHolder.revertTokensForVoter(clientsInfo.operatorClient);
-    } catch (e: any) {
-      console.log(
-        "Something went wrong while reverting the god token cancelling the proposal"
-      );
-      console.log(e);
-    }
-  }
 }
