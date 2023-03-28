@@ -2,13 +2,17 @@ import { Contract } from "ethers";
 import { ethers, upgrades } from "hardhat";
 
 export class TestHelper {
+  static ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+  static ONE_ADDRESS = "0x0000000000000000000000000000000000000001";
+
+  static async readEvent(transaction: any) {
+    const lastEvent = (await transaction.wait()).events.pop();
+    return { name: lastEvent.event, args: lastEvent.args };
+  }
+
   static getAccountBalance = async (tokenCont: Contract, account: string) => {
     return await tokenCont.balanceOf(account);
   };
-
-  static getZeroAddress() {
-    return "0x0000000000000000000000000000000000000000";
-  }
 
   static async getSigners() {
     return await ethers.getSigners();

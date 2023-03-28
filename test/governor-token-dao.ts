@@ -130,7 +130,7 @@ describe("GovernorTokenDAO Tests", function () {
 
     await expect(
       governorTokenDAOInstance.initialize(
-        TestHelper.getZeroAddress(),
+        TestHelper.ZERO_ADDRESS,
         daoName,
         daoLogoUrl,
         GovernorTransferToken.address
