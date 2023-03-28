@@ -35,7 +35,6 @@ When User create a proposal with title "proposalfortokencreate2" to create a new
 When User wait for create token proposal state to be "Active" for max 5 seconds
 Then User verify create token proposal state is "Active"
 When User cancel the create token proposal with title "proposalfortokencreate2"
-When User revert the god tokens
 Then User verify that token is not created and user receives "CONTRACT_REVERT_EXECUTED" message
 
 Scenario: Verify token is not created if required votes are not in favor
@@ -44,16 +43,15 @@ When User wait for create token proposal state to be "Active" for max 5 seconds
 Then User verify create token proposal state is "Active"
 When User vote "Against" create token proposal
 When User wait for create token proposal state to be "Defeated" for max 15 seconds
-When User revert the god tokens
 Then User verify that token is not created and user receives "CONTRACT_REVERT_EXECUTED" message
 When User cancel the create token proposal with title "proposalfortokencreate3"
+When User revert the god tokens
 
 Scenario: Verify token is not created if no one voted on it
 When User create a proposal with title "proposalfortokencreate4" to create a new token with name "Token-4" and symbol "TokenSymbol-4"
 When User wait for create token proposal state to be "Active" for max 5 seconds
 Then User verify create token proposal state is "Active"
 When User wait for create token proposal state to be "Defeated" for max 15 seconds
-When User revert the god tokens
 Then User verify that token is not created and user receives "CONTRACT_REVERT_EXECUTED" message
 When User cancel the create token proposal with title "proposalfortokencreate4"
 

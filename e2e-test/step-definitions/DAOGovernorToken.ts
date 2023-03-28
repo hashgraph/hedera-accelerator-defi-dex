@@ -161,7 +161,9 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
   }
 
   @when(
-    /User create a new token transfer proposal with title "([^"]*)" and token amount (-?\d+) with the help of DAO/
+    /User create a new token transfer proposal with title "([^"]*)" and token amount (-?\d+) with the help of DAO/,
+    undefined,
+    30000
   )
   public async createTokenTransferProposal(title: string, tokenAmount: number) {
     let negativeAmt: boolean = false;
@@ -395,7 +397,6 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
       );
     } catch (e: any) {
       errorMsg = e.message;
-      console.log(e);
       await this.cancelProposalInternally(
         governorTokenTransfer,
         proposalId,
