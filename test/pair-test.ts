@@ -304,10 +304,20 @@ describe("All Tests", function () {
 
   describe("Factory Contract positive Tests", async () => {
     it("Check createPair method, Same Tokens and same fees", async function () {
-      const { factory, mockBaseHTS, signers, token1Address, token2Address } =
-        await loadFixture(deployFixture);
+      const {
+        factory,
+        mockBaseHTS,
+        signers,
+        token1Address,
+        token2Address,
+        configuration,
+      } = await loadFixture(deployFixture);
       // Given
-      await factory.setUpFactory(mockBaseHTS.address, signers[0].address);
+      await factory.setUpFactory(
+        mockBaseHTS.address,
+        signers[0].address,
+        configuration.address
+      );
 
       // When
       // we call createPair with same token pair and fees multiple time,
@@ -327,10 +337,20 @@ describe("All Tests", function () {
     });
 
     it("Check createPair method, Same Tokens and different fees", async function () {
-      const { factory, mockBaseHTS, signers, token1Address, token2Address } =
-        await loadFixture(deployFixture);
+      const {
+        factory,
+        mockBaseHTS,
+        signers,
+        token1Address,
+        token2Address,
+        configuration,
+      } = await loadFixture(deployFixture);
       // Given
-      await factory.setUpFactory(mockBaseHTS.address, signers[0].address);
+      await factory.setUpFactory(
+        mockBaseHTS.address,
+        signers[0].address,
+        configuration.address
+      );
 
       // When
       // we call createPair with same token pair and different fees multiple time,
@@ -348,10 +368,9 @@ describe("All Tests", function () {
       expect(pairs[0]).to.not.be.equals(pairs[1]);
     });
 
-    describe.only("Pool tests ", () => {
-      it.only("Given no pair exists when user ask for recommended pair then no pair should be returned ", async function () {
+    describe("Recommended pool for swap tests ", () => {
+      it("Given no pool of pair exists when user ask for swap recommendation then no pair should be returned ", async function () {
         const {
-          pair,
           factory,
           mockBaseHTS,
           signers,
@@ -359,24 +378,24 @@ describe("All Tests", function () {
           token2Address,
           configuration,
         } = await loadFixture(deployFixture);
-        // Given
+
         await factory.setUpFactory(
           mockBaseHTS.address,
           signers[0].address,
           configuration.address
         );
 
-        const token2SwapResult = await factory.recommendedPairToSwap(
+        const tokenSwapResult = await factory.recommendedPairToSwap(
           token1Address,
           token2Address,
           BigNumber.from(10).mul(precision)
         );
-        expect(token2SwapResult.pair).eq.toString(
+        expect(tokenSwapResult.pair).to.be.equals(
           "0x0000000000000000000000000000000000000000"
         );
       });
 
-      it("Given one pair exists when user ask for recommended pair then that should be returned ", async function () {
+      it("Given one pool of pair exists when user ask for swap recommendation then that should be returned ", async function () {
         const {
           pair,
           factory,
@@ -386,26 +405,28 @@ describe("All Tests", function () {
           token2Address,
           configuration,
         } = await loadFixture(deployFixture);
-        // Given
         await factory.setUpFactory(
           mockBaseHTS.address,
           signers[0].address,
           configuration.address
         );
 
-        // When
-        // we call createPair with same token pair and different fees multiple time,
-        // and fetch pair after creating
+        const initialFees = Helper.convertToFeeObjectArray(
+          await configuration.getTransactionsFee()
+        );
+
+        const poolFee = initialFees[0].value;
+
         await factory.createPair(
           token1Address,
           token2Address,
           treasury,
-          BigNumber.from(5)
+          poolFee
         );
         const pair1 = await factory.getPair(
           token1Address,
           token2Address,
-          BigNumber.from(5)
+          poolFee
         );
 
         const pool1 = await pair.attach(pair1);
@@ -422,23 +443,19 @@ describe("All Tests", function () {
           );
 
         const token2SwapResult = await factory.recommendedPairToSwap(
-          token1Address,
           token2Address,
+          token1Address,
           BigNumber.from(10).mul(precision)
         );
 
-        console.log(`pair address ${token2SwapResult.pair}`);
-        console.log(
-          `swappedQty ${BigNumber.from(token2SwapResult.swappedQty).div(
-            precision
-          )}`
+        expect(token2SwapResult.pair).not.to.be.equals(
+          "0x0000000000000000000000000000000000000000"
         );
-        console.log(`swappedQty ${token2SwapResult.swappedQty}`);
-        console.log(`fee ${token2SwapResult.fee}`);
-        console.log(`slippage ${token2SwapResult.slippage} \n`);
+        expect(token2SwapResult.token).to.be.equals(token2Address);
+        expect(token2SwapResult.fee).to.be.equals(poolFee);
       });
 
-      it("Check createPair method, Same Tokens and different fees ", async function () {
+      it("Given multiple pools of a exist when user ask for recommendation for swap then pool that gives maximum quantity should be returned. ", async function () {
         const {
           pair,
           factory,
@@ -448,42 +465,45 @@ describe("All Tests", function () {
           token2Address,
           configuration,
         } = await loadFixture(deployFixture);
-        // Given
         await factory.setUpFactory(
           mockBaseHTS.address,
           signers[0].address,
           configuration.address
         );
 
-        // When
-        // we call createPair with same token pair and different fees multiple time,
-        // and fetch pair after creating
+        const initialFees = Helper.convertToFeeObjectArray(
+          await configuration.getTransactionsFee()
+        );
+
+        const poolFee1 = initialFees[0].value;
+        const poolFee2 = initialFees[1].value;
+
         await factory.createPair(
           token1Address,
           token2Address,
           treasury,
-          BigNumber.from(5)
+          poolFee1
         );
         const pair1 = await factory.getPair(
           token1Address,
           token2Address,
-          BigNumber.from(5)
+          poolFee1
         );
         await factory.createPair(
           token1Address,
           token2Address,
           treasury,
-          BigNumber.from(30)
+          poolFee2
         );
         const pair2 = await factory.getPair(
           token1Address,
           token2Address,
-          BigNumber.from(30)
+          poolFee2
         );
 
         const pool1 = await pair.attach(pair1);
-        let tokenAPoolQty = BigNumber.from(100).mul(precision);
-        let tokenBPoolQty = BigNumber.from(100).mul(precision);
+        let tokenAPoolQty = BigNumber.from(10000).mul(precision);
+        let tokenBPoolQty = BigNumber.from(10000).mul(precision);
         await pool1
           .connect(signers[1])
           .addLiquidity(
@@ -495,8 +515,8 @@ describe("All Tests", function () {
           );
 
         const pool2 = await pair.attach(pair2);
-        tokenAPoolQty = BigNumber.from(100).mul(precision);
-        tokenBPoolQty = BigNumber.from(100).mul(precision);
+        tokenAPoolQty = BigNumber.from(2000).mul(precision);
+        tokenBPoolQty = BigNumber.from(50000).mul(precision);
         await pool2
           .connect(signers[1])
           .addLiquidity(
@@ -507,46 +527,126 @@ describe("All Tests", function () {
             tokenBPoolQty
           );
 
-        const token2SwapResult = await factory.recommendedPairToSwap(
-          token1Address,
-          token2Address,
-          BigNumber.from(10).mul(precision)
-        );
-        const token1SwapResult = await factory.recommendedPairToSwap(
+        const tokenSwapResult = await factory.recommendedPairToSwap(
           token1Address,
           token2Address,
           BigNumber.from(10).mul(precision)
         );
 
-        console.log(`pair address ${token2SwapResult.pair}`);
-        console.log(
-          `swappedQty ${BigNumber.from(token2SwapResult.swappedQty).div(
-            precision
-          )}`
+        expect(tokenSwapResult.pair).not.to.be.equals(
+          "0x0000000000000000000000000000000000000000"
         );
-        console.log(`swappedQty ${token2SwapResult.swappedQty}`);
-        console.log(`fee ${token2SwapResult.fee}`);
-        console.log(`slippage ${token2SwapResult.slippage} \n`);
+        expect(tokenSwapResult.token).to.be.equals(token2Address);
+        expect(tokenSwapResult.fee).to.be.equals(poolFee2);
+        expect(
+          BigNumber.from(tokenSwapResult.swappedQty).div(precision)
+        ).to.be.equals(251);
+      });
 
-        console.log(`pair address ${token1SwapResult.pair}`);
-        console.log(
-          `swappedQty ${BigNumber.from(token1SwapResult.swappedQty).div(
-            precision
-          )}`
+      it("Given multiple pools exist when user ask for recommendation for swap(other token) then pool that gives maximum quantity should be returned. ", async function () {
+        const {
+          pair,
+          factory,
+          mockBaseHTS,
+          signers,
+          token1Address,
+          token2Address,
+          configuration,
+        } = await loadFixture(deployFixture);
+        await factory.setUpFactory(
+          mockBaseHTS.address,
+          signers[0].address,
+          configuration.address
         );
-        console.log(`swappedQty ${token1SwapResult.swappedQty}`);
-        console.log(`fee ${token1SwapResult.fee}`);
-        console.log(`slippage ${token1SwapResult.slippage} \n`);
+
+        const initialFees = Helper.convertToFeeObjectArray(
+          await configuration.getTransactionsFee()
+        );
+
+        const poolFee1 = initialFees[0].value;
+        const poolFee2 = initialFees[1].value;
+
+        await factory.createPair(
+          token1Address,
+          token2Address,
+          treasury,
+          poolFee1
+        );
+        const pair1 = await factory.getPair(
+          token1Address,
+          token2Address,
+          poolFee1
+        );
+        await factory.createPair(
+          token1Address,
+          token2Address,
+          treasury,
+          poolFee2
+        );
+        const pair2 = await factory.getPair(
+          token1Address,
+          token2Address,
+          poolFee2
+        );
+
+        const pool1 = await pair.attach(pair1);
+        //This pool gives more tokenA qty after swap as tokenA is 5 times tokenB
+        let tokenAPoolQty = BigNumber.from(50000).mul(precision);
+        let tokenBPoolQty = BigNumber.from(10000).mul(precision);
+        await pool1
+          .connect(signers[1])
+          .addLiquidity(
+            signers[1].address,
+            token1Address,
+            token2Address,
+            tokenAPoolQty,
+            tokenBPoolQty
+          );
+
+        const pool2 = await pair.attach(pair2);
+        tokenAPoolQty = BigNumber.from(10000).mul(precision);
+        tokenBPoolQty = BigNumber.from(10000).mul(precision);
+        await pool2
+          .connect(signers[1])
+          .addLiquidity(
+            signers[1].address,
+            token1Address,
+            token2Address,
+            tokenAPoolQty,
+            tokenBPoolQty
+          );
+
+        const tokenSwapResult = await factory.recommendedPairToSwap(
+          token2Address,
+          token1Address,
+          BigNumber.from(10).mul(precision)
+        );
+
+        expect(tokenSwapResult.pair).not.to.be.equals(
+          "0x0000000000000000000000000000000000000000"
+        );
+        expect(tokenSwapResult.token).to.be.equals(token2Address);
+        expect(tokenSwapResult.fee).to.be.equals(poolFee1);
+        expect(
+          BigNumber.from(tokenSwapResult.swappedQty).div(precision)
+        ).to.be.equals(49);
       });
     });
 
     it("verify factory initization should be failed for subsequent initization call", async function () {
-      const { factory, mockBaseHTS, signers } = await loadFixture(
-        deployFixture
+      const { factory, mockBaseHTS, signers, configuration } =
+        await loadFixture(deployFixture);
+      await factory.setUpFactory(
+        mockBaseHTS.address,
+        signers[0].address,
+        configuration.address
       );
-      await factory.setUpFactory(mockBaseHTS.address, signers[0].address);
       await expect(
-        factory.setUpFactory(mockBaseHTS.address, signers[0].address)
+        factory.setUpFactory(
+          mockBaseHTS.address,
+          signers[0].address,
+          configuration.address
+        )
       ).to.revertedWith("Initializable: contract is already initialized");
     });
 
@@ -558,8 +658,13 @@ describe("All Tests", function () {
         token1Address,
         token2Address,
         token3Address,
+        configuration,
       } = await loadFixture(deployFixture);
-      await factory.setUpFactory(mockBaseHTS.address, signers[0].address);
+      await factory.setUpFactory(
+        mockBaseHTS.address,
+        signers[0].address,
+        configuration.address
+      );
       await factory.createPair(token1Address, token2Address, treasury, fee);
       const pairs = await factory.getPairs();
       expect(pairs.length).to.be.equals(1);
@@ -569,29 +674,45 @@ describe("All Tests", function () {
     });
 
     it("Check For identical Tokens", async function () {
-      const { factory, mockBaseHTS, signers } = await loadFixture(
-        deployFixture
+      const { factory, mockBaseHTS, signers, configuration } =
+        await loadFixture(deployFixture);
+      await factory.setUpFactory(
+        mockBaseHTS.address,
+        signers[0].address,
+        configuration.address
       );
-      await factory.setUpFactory(mockBaseHTS.address, signers[0].address);
       await expect(
         factory.createPair(tokenAAddress, tokenAAddress, treasury, fee)
       ).to.revertedWith("IDENTICAL_ADDRESSES");
     });
 
     it("Check For zero Token address", async function () {
-      const { factory, mockBaseHTS, signers } = await loadFixture(
-        deployFixture
+      const { factory, mockBaseHTS, signers, configuration } =
+        await loadFixture(deployFixture);
+      await factory.setUpFactory(
+        mockBaseHTS.address,
+        signers[0].address,
+        configuration.address
       );
-      await factory.setUpFactory(mockBaseHTS.address, signers[0].address);
       await expect(
         factory.createPair(newZeroAddress, tokenAAddress, treasury, fee)
       ).to.revertedWith("ZERO_ADDRESS");
     });
 
     it("Check getPair method", async function () {
-      const { factory, mockBaseHTS, signers, token1Address, token2Address } =
-        await loadFixture(deployFixture);
-      await factory.setUpFactory(mockBaseHTS.address, signers[0].address);
+      const {
+        factory,
+        mockBaseHTS,
+        signers,
+        token1Address,
+        token2Address,
+        configuration,
+      } = await loadFixture(deployFixture);
+      await factory.setUpFactory(
+        mockBaseHTS.address,
+        signers[0].address,
+        configuration.address
+      );
       await factory.createPair(token1Address, token2Address, treasury, fee);
       const pair = await factory.getPair(token1Address, token2Address, fee);
       expect(pair).to.be.not.equal(zeroAddress);
