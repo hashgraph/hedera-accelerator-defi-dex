@@ -86,7 +86,7 @@ describe("GODHolder Tests", function () {
   it("Verify GODHolder grabtoken pass", async function () {
     const { godHolder, signers, tokenCont } = await loadFixture(deployFixture);
     const userTokens = await tokenCont.balanceOf(signers[0].address);
-    await godHolder.grabTokensFromUser(signers[0].address);
+    await godHolder.grabTokensFromUser(signers[0].address, 0);
     const contractTokens = await tokenCont.balanceOf(godHolder.address);
     const userTokens1 = await tokenCont.balanceOf(signers[0].address);
     expect(userTokens1).to.be.equal(0);
@@ -99,13 +99,13 @@ describe("GODHolder Tests", function () {
     await godHolder.addProposalForVoter(signers[1].address, 1);
     const activeProposals = await godHolder.getActiveProposalsForUser();
     expect(activeProposals.length).to.be.equal(1);
-    const canClaimGod = await godHolder.canUserClaimGodTokens();
+    const canClaimGod = await godHolder.canUserClaimTokens();
     expect(canClaimGod).to.be.equal(false);
 
     await godHolder.removeActiveProposals([signers[0].address], 1);
     const activeProposals1 = await godHolder.getActiveProposalsForUser();
     expect(activeProposals1.length).to.be.equal(0);
-    const canClaimGod1 = await godHolder.canUserClaimGodTokens();
+    const canClaimGod1 = await godHolder.canUserClaimTokens();
     expect(canClaimGod1).to.be.equal(true);
   });
 
@@ -115,7 +115,7 @@ describe("GODHolder Tests", function () {
     );
     await mockBaseHTS.setPassTransactionCount(1);
     await expect(
-      godHolder.grabTokensFromUser(signers[0].address)
+      godHolder.grabTokensFromUser(signers[0].address, 0)
     ).to.revertedWith("GODHolder: token transfer failed to contract.");
   });
 
@@ -124,7 +124,7 @@ describe("GODHolder Tests", function () {
     await expect(godHolder.revertTokensForVoter()).to.revertedWith(
       "GODHolder: No amount for the Voter."
     );
-    godHolder.grabTokensFromUser(signers[0].address);
+    godHolder.grabTokensFromUser(signers[0].address, 0);
     await tokenCont.setTransaferFailed(true);
     await expect(godHolder.revertTokensForVoter()).to.revertedWith(
       "GODHolder: token transfer failed from contract."

@@ -20,7 +20,7 @@ import {
 const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
 const DEFAULT_QUORUM_THRESHOLD_IN_BSP = 500;
 const DEFAULT_VOTING_DELAY = 0; // blocks
-const DEFAULT_VOTING_PERIOD = 100; // blocks means 3 minutes as per test
+const DEFAULT_VOTING_PERIOD = 10; // blocks means 3 minutes as per test
 const DEFAULT_MAX_WAITING_TIME = DEFAULT_VOTING_PERIOD * 12 * 150;
 const EACH_ITERATION_DELAY = DEFAULT_VOTING_PERIOD * 0.3 * 1000;
 const DEFAULT_DESCRIPTION = "description";
@@ -28,7 +28,7 @@ const DEFAULT_LINK = "https://defi-ui.hedera.com/governance";
 
 const INITIALIZE = "initialize";
 const STATE = "state";
-const CAST_VOTE = "castVote";
+const CAST_VOTE = "castVotePublic";
 
 const QUORUM_REACHED = "quorumReached";
 const VOTE_SUCCEEDED = "voteSucceeded";
@@ -190,7 +190,9 @@ export default class Governor extends Base {
   ) => await this.vote(proposalId, 2, client);
 
   vote = async (proposalId: string, support: number, client: Client) => {
-    const args = this.createParams(proposalId).addUint8(support);
+    const args = this.createParams(proposalId)
+      .addInt256(BigNumber(0))
+      .addUint8(support);
     await this.execute(9900000, CAST_VOTE, client, args);
     console.log(
       `- Governor#${CAST_VOTE}(): proposal-id = ${proposalId}, support = ${support}\n`

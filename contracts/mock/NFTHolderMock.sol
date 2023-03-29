@@ -4,7 +4,7 @@ import "../common/IERC20.sol";
 
 import "../governance/IGODTokenHolderFactory.sol";
 
-contract GODHolderMock is IGODHolder {
+contract NFTHolderMock is IGODHolder {
     function initialize(
         IBaseHTS tokenService,
         address token

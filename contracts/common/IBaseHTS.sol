@@ -12,6 +12,13 @@ interface IBaseHTS {
         int256 amount
     ) external returns (int256 responseCode);
 
+    function transferNFTPublic(
+        address token,
+        address sender,
+        address receiver,
+        int256 serial
+    ) external returns (int256);
+
     function associateTokenPublic(
         address account,
         address token

@@ -128,6 +128,15 @@ contract MockBaseHTS is IBaseHTS {
     ) external payable override returns (bool) {
         return getResponseCode() == int(22) ? true : false;
     }
+
+    function transferNFTPublic(
+        address token,
+        address sender,
+        address receiver,
+        int256 serial
+    ) external override returns (int256) {
+        return getResponseCode();
+    }
 }
 
 library StorageSlot {

@@ -72,7 +72,7 @@ contract GODTokenHolderFactory is IGODTokenHolderFactory, Initializable {
     function _createGODHolder(IERC20 _token) private returns (IGODHolder) {
         address proxy = _createProxy();
         IGODHolder holder = IGODHolder(proxy);
-        holder.initialize(tokenService, _token);
+        holder.initialize(tokenService, address(_token));
         return holder;
     }
 }

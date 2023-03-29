@@ -53,4 +53,11 @@ contract MockBaseHTSWithTokenCreationFail is IBaseHTS {
     function transferHBAR(
         address payable toAccount
     ) external payable override returns (bool) {}
+
+    function transferNFTPublic(
+        address token,
+        address sender,
+        address receiver,
+        int256 serial
+    ) external override returns (int256) {}
 }

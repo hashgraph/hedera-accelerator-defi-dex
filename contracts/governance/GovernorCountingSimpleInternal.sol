@@ -233,13 +233,14 @@ abstract contract GovernorCountingSimpleInternal is
     /**
      * @dev See {IGovernor-castVote}.
      */
-    function castVote(
+    function castVotePublic(
         uint256 proposalId,
+        int256 tokenId,
         uint8 support
-    ) public virtual override returns (uint256) {
+    ) public returns (uint256) {
         address voter = _msgSender();
         require(_getVotes(voter, 0, "") > 0, "No voting power");
-        godHolder.grabTokensFromUser(voter);
+        godHolder.grabTokensFromUser(voter, tokenId);
         godHolder.addProposalForVoter(voter, proposalId);
         uint256 weight = _castVote(proposalId, voter, support, "");
         address[] storage voters = proposalVoters[proposalId];

@@ -338,5 +338,23 @@
     "hash": "012187be25f102dddf3432b0f74162c8",
     "transparentProxyAddress": "0x00000000000000000000000000000000003b9290",
     "transparentProxyId": "0.0.3904144"
+  },
+  {
+    "name": "governortextproposal",
+    "id": "0.0.3942312",
+    "address": "0x00000000000000000000000000000000003c27a8",
+    "timestamp": "2023-03-29T06:00:01.426Z",
+    "hash": "40d709212a3fa29204753e1199bf0f78",
+    "transparentProxyAddress": "0x00000000000000000000000000000000003c27ae",
+    "transparentProxyId": "0.0.3942318"
+  },
+  {
+    "name": "godholder",
+    "id": "0.0.3942355",
+    "address": "0x00000000000000000000000000000000003c27d3",
+    "timestamp": "2023-03-29T07:11:32.392Z",
+    "hash": "83e571acd4377c70fe1ea45c4cb8bad7",
+    "transparentProxyAddress": "0x00000000000000000000000000000000003c2809",
+    "transparentProxyId": "0.0.3942409"
   }
 ]
