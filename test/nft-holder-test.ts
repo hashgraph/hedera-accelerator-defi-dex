@@ -56,10 +56,19 @@ describe("NFTHolder Tests", function () {
     ).to.revertedWith("Initializable: contract is already initialized");
   });
 
+  it("Verify NFTHolder balanceOfVoter", async function () {
+    const { nftHolder, signers, tokenCont } = await loadFixture(deployFixture);
+    const tokenId = await nftHolder.balanceOfVoter(signers[0].address);
+    expect(tokenId).to.be.equal(0);
+    await nftHolder.grabTokensFromUser(signers[0].address, 1);
+    const tokenIdAfterGrab = await nftHolder.balanceOfVoter(signers[0].address);
+    expect(tokenIdAfterGrab).to.be.equal(1);
+  });
+
   it("Verify NFTHolder grabtoken pass", async function () {
     const { nftHolder, signers, tokenCont } = await loadFixture(deployFixture);
     const userTokens = await tokenCont.balanceOf(signers[0].address);
-    await nftHolder.grabTokensFromUser(signers[0].address, 0);
+    await nftHolder.grabTokensFromUser(signers[0].address, 1);
     const contractTokens = await tokenCont.balanceOf(nftHolder.address);
     const userTokens1 = await tokenCont.balanceOf(signers[0].address);
     expect(userTokens1).to.be.equal(0);
@@ -97,5 +106,16 @@ describe("NFTHolder Tests", function () {
     await expect(nftHolder.revertTokensForVoter()).to.revertedWith(
       "NFTHolder: No amount for the Voter."
     );
+    await nftHolder.addProposalForVoter(signers[0].address, 1);
+    await expect(nftHolder.revertTokensForVoter()).to.revertedWith(
+      "User's Proposals are active"
+    );
+  });
+
+  it("Verify NFTHolder revertTokensForVoter pass", async function () {
+    const { nftHolder, signers, tokenCont } = await loadFixture(deployFixture);
+    nftHolder.grabTokensFromUser(signers[0].address, 2);
+    const response = await nftHolder.callStatic.revertTokensForVoter();
+    expect(response).to.be.equal(22);
   });
 });
