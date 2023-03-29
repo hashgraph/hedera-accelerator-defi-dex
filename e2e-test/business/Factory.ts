@@ -11,6 +11,7 @@ import {
   AccountId,
   ContractId,
 } from "@hashgraph/sdk";
+import { ContractService } from "../../deployment/service/ContractService";
 
 const GET_PAIR = "getPair";
 const GET_PAIRS = "getPairs";
@@ -25,9 +26,11 @@ export default class Factory extends Base {
     client: Client = clientsInfo.operatorClient
   ) => {
     try {
+      const csDev = new ContractService();
       const args = new ContractFunctionParameters()
         .addAddress(this.htsAddress)
-        .addAddress(adminAddress);
+        .addAddress(adminAddress)
+        .addAddress(csDev.getContract(csDev.configuration).address);
       await this.execute(9000000, SETUP_FACTORY, client, args, undefined);
       console.log(`- Factory#${SETUP_FACTORY}(): done\n`);
     } catch (error) {
