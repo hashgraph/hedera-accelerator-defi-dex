@@ -6,6 +6,7 @@ import "./ILPToken.sol";
 import "./common/IERC20.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import "./Configuration.sol";
 
 contract Factory is Initializable {
     event PairCreated(address indexed pairAddress);
@@ -22,10 +23,21 @@ contract Factory is Initializable {
     IBaseHTS private service;
 
     address[] private allPairs;
-    mapping(address => mapping(address => mapping(int256 => address))) private pairs;
+    mapping(address => mapping(address => mapping(int256 => address)))
+        private pairs;
 
     address private pairLogic;
     address private lpLogic;
+
+    Configuration configuration;
+
+    struct PairDetail {
+        address pair;
+        address token;
+        int256 swappedQty;
+        int256 fee;
+        int256 slippage;
+    }
 
     modifier ifAdmin() {
         require(msg.sender == admin, "Factory: auth failed");
@@ -34,11 +46,13 @@ contract Factory is Initializable {
 
     function setUpFactory(
         IBaseHTS _service,
-        address _admin
+        address _admin,
+        Configuration _configuration
     ) public initializer {
         service = _service;
         admin = _admin;
         pairLogic = address(new Pair());
+        configuration = _configuration;
         emit LogicUpdated(address(0), pairLogic, PAIR);
         lpLogic = address(new LPToken());
         emit LogicUpdated(address(0), lpLogic, LP_TOKEN);
@@ -91,6 +105,42 @@ contract Factory is Initializable {
     function upgradeLpTokenImplementation(address _newImpl) external ifAdmin {
         emit LogicUpdated(lpLogic, _newImpl, LP_TOKEN);
         lpLogic = _newImpl;
+    }
+
+    function recommendedPairToSwap(
+        address _tokenToSwap,
+        address _otherTokenOfPair,
+        int256 _qtyToSwap
+    ) external view returns (PairDetail memory) {
+        uint256[] memory feeItems = configuration.getTransactionsFee();
+        (address _token0, address _token1) = sortTokens(_tokenToSwap, _otherTokenOfPair);
+        uint parisCount = feeItems.length / 2;
+        PairDetail[] memory recommendedPairs = new PairDetail[](parisCount);
+        uint256 count = 0;
+        for (uint i = 0; i < feeItems.length; i = i + 2) {
+            uint256 value = feeItems[i + 1];
+            Pair pair = Pair(pairs[_token0][_token1][int256(value)]);
+            if (address(pair) != address(0x0)) {
+                int256 _qty = (_tokenToSwap == _token0) ? pair.getOutGivenIn(_qtyToSwap) : pair.getInGivenOut(_qtyToSwap);
+                int256 slippage = (_tokenToSwap == _token0) ? pair.slippageOutGivenIn(_qtyToSwap) : pair.slippageInGivenOut(_qtyToSwap);
+                recommendedPairs[count] = PairDetail(
+                    address(pair),
+                    _token0,
+                    _qty,
+                    int256(value),
+                    slippage
+                );
+                count += 1;
+            }
+        }
+
+        PairDetail memory finalPair = recommendedPairs[count];
+        for (uint i = 0; i < count; i++) {
+            if (recommendedPairs[i].swappedQty > finalPair.swappedQty) {
+                finalPair = recommendedPairs[i];
+            }
+        }
+        return finalPair;
     }
 
     function sortTokens(
