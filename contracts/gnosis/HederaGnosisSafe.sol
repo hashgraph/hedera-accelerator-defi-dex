@@ -14,6 +14,15 @@ contract HederaGnosisSafe is GnosisSafe {
     uint256 private txnNonce;
     mapping(bytes32 => bool) public executedHash;
 
+    function transferTokenViaSafe(
+        address token,
+        address receiver,
+        uint256 amount
+    ) public returns (bool transferred) {
+        require(msg.sender == address(this), "GS031"); // only via safe txn
+        return super.transferToken(token, receiver, amount);
+    }
+
     function getTransactionHash(
         address to,
         uint256 value,
