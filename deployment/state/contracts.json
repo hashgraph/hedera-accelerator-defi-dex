@@ -359,11 +359,11 @@
   },
   {
     "name": "godtokenholderfactory",
-    "id": "0.0.3950781",
-    "address": "0x00000000000000000000000000000000003c48bd",
-    "timestamp": "2023-03-30T08:11:12.652Z",
+    "id": "0.0.3951522",
+    "address": "0x00000000000000000000000000000000003c4ba2",
+    "timestamp": "2023-03-30T09:45:49.999Z",
     "hash": "6d1d0d0fead9bb8fc92fabce14e662ba",
-    "transparentProxyAddress": "0x00000000000000000000000000000000003c48f8",
-    "transparentProxyId": "0.0.3950840"
+    "transparentProxyAddress": "0x00000000000000000000000000000000003c4bf5",
+    "transparentProxyId": "0.0.3951605"
   }
 ]

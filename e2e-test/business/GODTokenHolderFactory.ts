@@ -26,7 +26,11 @@ export default class GODTokenHolderFactory extends Base {
   initializeNew = async (client: Client = clientsInfo.operatorClient) => {
     if (await this.isInitializationPending("godtokenholderfactory")) {
       const proxyAdmin = clientsInfo.dexOwnerId.toSolidityAddress();
-      const godHolderLogic = await deployment.deploy("godholder");
+      const godHolderLogic = await deployment.deploy(
+        "godholder",
+        clientsInfo.operatorKey.publicKey,
+        clientsInfo.e2eOperatorClient
+      );
       const args = new ContractFunctionParameters()
         .addAddress(this.htsAddress)
         .addAddress(godHolderLogic.address)
