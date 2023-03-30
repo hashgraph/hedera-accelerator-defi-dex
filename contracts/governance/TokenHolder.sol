@@ -17,6 +17,7 @@ abstract contract TokenHolder is IGODHolder, Initializable {
     ) public initializer {
         _tokenService = tokenService;
         _token = token;
+        _tokenService.associateTokenPublic(address(this), address(_token));
     }
 
     function getToken() public view override returns (address) {

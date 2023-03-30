@@ -193,11 +193,7 @@ export default class Governor extends Base {
     const args = this.createParams(proposalId)
       .addInt256(BigNumber(0))
       .addUint8(support);
-    await this.execute(9900000, CAST_VOTE, client, args, [
-      clientsInfo.operatorKey,
-      clientsInfo.treasureKey,
-      clientsInfo.dexOwnerKey,
-    ]);
+    await this.execute(9900000, CAST_VOTE, client, args);
     console.log(
       `- Governor#${CAST_VOTE}(): proposal-id = ${proposalId}, support = ${support}\n`
     );

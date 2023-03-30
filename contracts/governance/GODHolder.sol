@@ -37,7 +37,6 @@ contract GODHolder is TokenHolder {
             return;
         }
         godTokenForUsers[user] += userBalance;
-        _tokenService.associateTokenPublic(address(this), address(_token));
         int256 responseCode = _tokenService.transferTokenPublic(
             address(_token),
             address(user),
