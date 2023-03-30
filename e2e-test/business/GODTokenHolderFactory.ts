@@ -28,7 +28,7 @@ export default class GODTokenHolderFactory extends Base {
       const proxyAdmin = clientsInfo.dexOwnerId.toSolidityAddress();
       const godHolderLogic = await deployment.deploy(
         "godholder",
-        clientsInfo.operatorKey.publicKey,
+        clientsInfo.e2eOperatorKey.publicKey,
         clientsInfo.e2eOperatorClient
       );
       const args = new ContractFunctionParameters()
