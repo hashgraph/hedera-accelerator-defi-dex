@@ -9,6 +9,7 @@ import dex from "../../deployment/model/dex";
 import { TokenId } from "@hashgraph/sdk";
 import { BigNumber } from "bignumber.js";
 import { Helper } from "../../utils/Helper";
+import { CommonSteps } from "./CommonSteps";
 
 const csDev = new ContractService();
 const godHolderContract = csDev.getContractWithProxy(csDev.godHolderContract);
@@ -29,7 +30,7 @@ let proposalId: string;
 let godToken: BigNumber;
 
 @binding()
-export class GovernorTextProposal {
+export class GovernorTextProposal extends CommonSteps {
   @given(
     /User have initialized the governor text proposal contract/,
     undefined,
@@ -65,7 +66,12 @@ export class GovernorTextProposal {
   public async createTextProposalWithBlankTitle() {
     try {
       proposalId = await governor.createTextProposal("");
-      await this.cancelProposalInternally();
+      await this.cancelProposalInternally(
+        governor,
+        proposalId,
+        clientsInfo.operatorClient,
+        godHolder
+      );
     } catch (e: any) {
       errorMsg = e.message;
       console.log("value of errorMsg", errorMsg);
@@ -100,7 +106,12 @@ export class GovernorTextProposal {
     } catch (e: any) {
       console.log("Something went wrong while getting the state with timeout ");
       console.log(e);
-      await this.cancelProposalInternally();
+      await this.cancelProposalInternally(
+        governor,
+        proposalId,
+        clientsInfo.operatorClient,
+        godHolder
+      );
       throw e;
     }
   }
@@ -108,20 +119,6 @@ export class GovernorTextProposal {
   @when(/User cancel the text proposal with title "([^"]*)"/, undefined, 30000)
   public async cancelProposal(title: string) {
     await governor.cancelProposal(title, clientsInfo.operatorClient);
-  }
-
-  private async cancelProposalInternally() {
-    try {
-      const details = await governor.getProposalDetails(
-        proposalId,
-        clientsInfo.operatorClient
-      );
-      await governor.cancelProposal(details.title, clientsInfo.operatorClient);
-      await godHolder.revertTokensForVoter(clientsInfo.operatorClient);
-    } catch (e: any) {
-      console.log("Failed while cleaning up");
-      console.log(e);
-    }
   }
 
   @then(/User verify text proposal state is "([^"]*)"/, undefined, 30000)
@@ -138,7 +135,12 @@ export class GovernorTextProposal {
     } catch (e: any) {
       console.log("Something went wrong while verifying the state of proposal");
       console.log(e);
-      await this.cancelProposalInternally();
+      await this.cancelProposalInternally(
+        governor,
+        proposalId,
+        clientsInfo.operatorClient,
+        godHolder
+      );
       throw e;
     }
   }
@@ -153,7 +155,12 @@ export class GovernorTextProposal {
         "Something went wrong while voting to proposal now cancelling the proposal"
       );
       console.log(e);
-      await this.cancelProposalInternally();
+      await this.cancelProposalInternally(
+        governor,
+        proposalId,
+        clientsInfo.operatorClient,
+        godHolder
+      );
       throw e;
     }
   }
@@ -176,7 +183,12 @@ export class GovernorTextProposal {
         "Something went wrong while executing proposal cancelling the proposal"
       );
       console.log(e);
-      await this.cancelProposalInternally();
+      await this.cancelProposalInternally(
+        governor,
+        proposalId,
+        clientsInfo.operatorClient,
+        godHolder
+      );
       throw e;
     }
   }
@@ -208,5 +220,13 @@ export class GovernorTextProposal {
       )}, Expected = ${Number(godToken)}`
     );
     expect(Number(updatedGODToken)).to.be.greaterThan(Number(godToken));
+  }
+
+  @when(/User revert the god tokens for text proposal/, undefined, 30000)
+  public async revertGODToken() {
+    await this.revertGODTokensFromGodHolder(
+      godHolder,
+      clientsInfo.operatorClient
+    );
   }
 }

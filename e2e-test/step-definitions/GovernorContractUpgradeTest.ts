@@ -8,6 +8,7 @@ import { clientsInfo } from "../../utils/ClientManagement";
 import { expect } from "chai";
 import Factory from "../business/Factory";
 import { main as deployContract } from "../../deployment/scripts/logic";
+import { CommonSteps } from "./CommonSteps";
 
 const csDev = new ContractService();
 const godHolderContract = csDev.getContractWithProxy(csDev.godHolderContract);
@@ -32,7 +33,7 @@ let factoryLogicIdOld: string;
 let factoryLogicIdNew: string;
 
 @binding()
-export class GovernorUpgradeSteps {
+export class GovernorUpgradeSteps extends CommonSteps {
   @given(
     /User have initialized the governor upgrade contract/,
     undefined,
@@ -100,7 +101,12 @@ export class GovernorUpgradeSteps {
     } catch (e: any) {
       console.log("Something went wrong while getting the state with timeout ");
       console.log(e);
-      await this.cancelProposalInternally();
+      await this.cancelProposalInternally(
+        governor,
+        proposalId,
+        clientsInfo.operatorClient,
+        godHolder
+      );
       throw e;
     }
   }
@@ -123,7 +129,12 @@ export class GovernorUpgradeSteps {
     } catch (e: any) {
       console.log("Something went wrong while verifying the state of proposal");
       console.log(e);
-      await this.cancelProposalInternally();
+      await this.cancelProposalInternally(
+        governor,
+        proposalId,
+        clientsInfo.operatorClient,
+        godHolder
+      );
       throw e;
     }
   }
@@ -138,7 +149,12 @@ export class GovernorUpgradeSteps {
         "Something went wrong while voting to proposal now cancelling the proposal"
       );
       console.log(e);
-      await this.cancelProposalInternally();
+      await this.cancelProposalInternally(
+        governor,
+        proposalId,
+        clientsInfo.operatorClient,
+        godHolder
+      );
       throw e;
     }
   }
@@ -160,7 +176,12 @@ export class GovernorUpgradeSteps {
         "Something went wrong while executing proposal cancelling the proposal"
       );
       console.log(e);
-      await this.cancelProposalInternally();
+      await this.cancelProposalInternally(
+        governor,
+        proposalId,
+        clientsInfo.operatorClient,
+        godHolder
+      );
       throw e;
     }
   }
@@ -182,7 +203,12 @@ export class GovernorUpgradeSteps {
         "Something went wrong while getting the address of target contract from governor upgrade contract"
       );
       console.log(e);
-      await this.cancelProposalInternally();
+      await this.cancelProposalInternally(
+        governor,
+        proposalId,
+        clientsInfo.operatorClient,
+        godHolder
+      );
       throw e;
     }
   }
@@ -258,17 +284,11 @@ export class GovernorUpgradeSteps {
     await governor.cancelProposal(title, clientsInfo.operatorClient);
   }
 
-  private async cancelProposalInternally() {
-    try {
-      const details = await governor.getProposalDetails(
-        proposalId,
-        clientsInfo.operatorClient
-      );
-      await governor.cancelProposal(details.title, clientsInfo.operatorClient);
-      await godHolder.revertTokensForVoter(clientsInfo.operatorClient);
-    } catch (e: any) {
-      console.log("Failed while cleaning up");
-      console.log(e);
-    }
+  @when(/User revert the god tokens for contract upgrade/, undefined, 30000)
+  public async revertGODToken() {
+    await this.revertGODTokensFromGodHolder(
+      godHolder,
+      clientsInfo.operatorClient
+    );
   }
 }

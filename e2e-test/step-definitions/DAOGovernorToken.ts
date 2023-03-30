@@ -11,6 +11,7 @@ import GovernanceDAOFactory from "../../e2e-test/business/GovernanceDAOFactory";
 import { expect } from "chai";
 import Common from "../business/Common";
 import { BigNumber } from "bignumber.js";
+import { CommonSteps } from "./CommonSteps";
 
 const csDev = new ContractService();
 
@@ -58,7 +59,7 @@ let errorMsg: string = "";
 let daoAddress: any;
 
 @binding()
-export class DAOGovernorTokenTransfer {
+export class DAOGovernorTokenTransfer extends CommonSteps {
   @given(
     /User tries to initialize the DAO governor token contract with name "([^"]*)" and url "([^"]*)"/,
     undefined,
@@ -160,7 +161,9 @@ export class DAOGovernorTokenTransfer {
   }
 
   @when(
-    /User create a new token transfer proposal with title "([^"]*)" and token amount (-?\d+) with the help of DAO/
+    /User create a new token transfer proposal with title "([^"]*)" and token amount (-?\d+) with the help of DAO/,
+    undefined,
+    30000
   )
   public async createTokenTransferProposal(title: string, tokenAmount: number) {
     let negativeAmt: boolean = false;
@@ -229,7 +232,12 @@ export class DAOGovernorTokenTransfer {
     } catch (e: any) {
       console.log("Something went wrong while getting the state with timeout ");
       console.log(e);
-      await this.cancelProposalInternally();
+      await this.cancelProposalInternally(
+        governorTokenTransfer,
+        proposalId,
+        clientsInfo.operatorClient,
+        godHolder
+      );
       throw e;
     }
   }
@@ -245,24 +253,6 @@ export class DAOGovernorTokenTransfer {
       clientsInfo.operatorClient
     );
   }
-
-  private async cancelProposalInternally() {
-    try {
-      const details = await governorTokenTransfer.getProposalDetails(
-        proposalId,
-        clientsInfo.operatorClient
-      );
-      await governorTokenTransfer.cancelProposal(
-        details.title,
-        clientsInfo.operatorClient
-      );
-      await godHolder.revertTokensForVoter(clientsInfo.operatorClient);
-    } catch (e: any) {
-      console.log("Failed while cleaning up");
-      console.log(e);
-    }
-  }
-
   @then(
     /User verify token transfer proposal state is "([^"]*)"/,
     undefined,
@@ -280,7 +270,12 @@ export class DAOGovernorTokenTransfer {
     } catch (e: any) {
       console.log("Something went wrong while verifying the state of proposal");
       console.log(e);
-      await this.cancelProposalInternally();
+      await this.cancelProposalInternally(
+        governorTokenTransfer,
+        proposalId,
+        clientsInfo.operatorClient,
+        godHolder
+      );
       throw e;
     }
   }
@@ -299,7 +294,12 @@ export class DAOGovernorTokenTransfer {
         "Something went wrong while voting to proposal now cancelling the proposal"
       );
       console.log(e);
-      await this.cancelProposalInternally();
+      await this.cancelProposalInternally(
+        governorTokenTransfer,
+        proposalId,
+        clientsInfo.operatorClient,
+        godHolder
+      );
       throw e;
     }
   }
@@ -321,7 +321,12 @@ export class DAOGovernorTokenTransfer {
         "Something went wrong while executing proposal cancelling the proposal"
       );
       console.log(e);
-      await this.cancelProposalInternally();
+      await this.cancelProposalInternally(
+        governorTokenTransfer,
+        proposalId,
+        clientsInfo.operatorClient,
+        godHolder
+      );
       throw e;
     }
   }
@@ -392,8 +397,12 @@ export class DAOGovernorTokenTransfer {
       );
     } catch (e: any) {
       errorMsg = e.message;
-      console.log(e);
-      await this.cancelProposalInternally();
+      await this.cancelProposalInternally(
+        governorTokenTransfer,
+        proposalId,
+        clientsInfo.operatorClient,
+        godHolder
+      );
     }
   }
 

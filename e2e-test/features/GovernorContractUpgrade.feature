@@ -41,6 +41,7 @@ Feature: Governor Contract Upgrade E2E Test
         When User vote "Against" contract upgrade proposal
         When User wait for upgrade proposal state to be "Defeated" for max 15 seconds    
         When User cancel the contract upgrade proposal with title "proposalforcontractupgrade4w42xy" 
+        When User revert the god tokens for contract upgrade
         Then User verify logic address of target contract is not changed        
 
     Scenario: Verify contract is not upgraded if no body voted on it 

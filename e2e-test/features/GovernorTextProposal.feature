@@ -10,7 +10,7 @@ Scenario: Verify governor text proposal execution
     When User wait for text proposal state to be "Active" for max 3 seconds
     Then User verify text proposal state is "Active"
     When User vote "For" to text proposal    
-    When User wait for text proposal state to be "Succeeded" for max 5 seconds    
+    When User wait for text proposal state to be "Succeeded" for max 10 seconds    
     Then User verify text proposal state is "Succeeded"
     When User fetches GOD token balance
     When User execute the text proposal with title "sampletextproposal11"
@@ -25,6 +25,7 @@ Scenario: Verify governor text proposal state is not changed if user abstain fro
     When User vote "Abstain" to text proposal
     Then User verify text proposal state is "Active"
     When User cancel the text proposal with title "textproposal3"
+    When User revert the god tokens for text proposal
 
 Scenario: Verify governor text proposal cannot create with blank title  
     When User create a text proposal with blank title     

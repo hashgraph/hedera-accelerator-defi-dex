@@ -13,6 +13,7 @@ import { Helper } from "../../utils/Helper";
 import Pair from "../business/Pair";
 import BigNumber from "bignumber.js";
 import BaseHTS from "../business/BaseHTS";
+import { CommonSteps } from "./CommonSteps";
 
 const csDev = new ContractService();
 const factoryContractId = csDev.getContractWithProxy(csDev.factoryContractName)
@@ -45,7 +46,7 @@ let tokensBefore: BigNumber[];
 let tokensAfter: BigNumber[];
 
 @binding()
-export class GovernorCreateToken {
+export class GovernorCreateToken extends CommonSteps {
   @given(
     /User have initialized the governor token create contract/,
     undefined,
@@ -123,7 +124,12 @@ export class GovernorCreateToken {
     } catch (e: any) {
       console.log("Something went wrong while getting the state with timeout ");
       console.log(e);
-      await this.cancelProposalInternally();
+      await this.cancelProposalInternally(
+        governor,
+        proposalId,
+        clientsInfo.operatorClient,
+        godHolder
+      );
       throw e;
     }
   }
@@ -135,20 +141,6 @@ export class GovernorCreateToken {
   )
   public async cancelProposal(title: string) {
     await governor.cancelProposal(title, clientsInfo.operatorClient);
-  }
-
-  private async cancelProposalInternally() {
-    try {
-      const details = await governor.getProposalDetails(
-        proposalId,
-        clientsInfo.operatorClient
-      );
-      await governor.cancelProposal(details.title, clientsInfo.operatorClient);
-      await godHolder.revertTokensForVoter(clientsInfo.operatorClient);
-    } catch (e: any) {
-      console.log("Failed while cleaning up");
-      console.log(e);
-    }
   }
 
   @then(
@@ -169,7 +161,12 @@ export class GovernorCreateToken {
     } catch (e: any) {
       console.log("Something went wrong while verifying the state of proposal");
       console.log(e);
-      await this.cancelProposalInternally();
+      await this.cancelProposalInternally(
+        governor,
+        proposalId,
+        clientsInfo.operatorClient,
+        godHolder
+      );
       throw e;
     }
   }
@@ -184,7 +181,12 @@ export class GovernorCreateToken {
         "Something went wrong while voting to proposal now cancelling the proposal"
       );
       console.log(e);
-      await this.cancelProposalInternally();
+      await this.cancelProposalInternally(
+        governor,
+        proposalId,
+        clientsInfo.operatorClient,
+        godHolder
+      );
       throw e;
     }
   }
@@ -206,7 +208,12 @@ export class GovernorCreateToken {
         "Something went wrong while executing proposal cancelling the proposal"
       );
       console.log(e);
-      await this.cancelProposalInternally();
+      await this.cancelProposalInternally(
+        governor,
+        proposalId,
+        clientsInfo.operatorClient,
+        godHolder
+      );
       throw e;
     }
   }
@@ -401,5 +408,17 @@ export class GovernorCreateToken {
     expect(
       Number(Number(tokensAfter[0].dividedBy(withPrecision)).toFixed())
     ).to.eql(Number(tokenBQuantity));
+  }
+
+  @when(
+    /User revert the god tokens for create token contract/,
+    undefined,
+    30000
+  )
+  public async revertGODToken() {
+    await this.revertGODTokensFromGodHolder(
+      godHolder,
+      clientsInfo.operatorClient
+    );
   }
 }
