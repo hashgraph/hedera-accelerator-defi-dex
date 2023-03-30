@@ -78,19 +78,19 @@ contract MultiSigDAO is BaseDAO {
     }
 
     function proposeTransferTransaction(
-        address _recieverAddress,
         address _token,
-        uint256 _amount,
-        Enum.Operation operation
-    ) external payable returns (bytes32) {
-        bytes memory _data = _getTransferABICallData(_recieverAddress, _amount);
-        return proposeTransaction(_token, _data, operation);
-    }
-
-    function _getTransferABICallData(
-        address _recieverAddress,
+        address _receiver,
         uint256 _amount
-    ) private pure returns (bytes memory) {
-        return abi.encodeWithSelector(0xa9059cbb, _recieverAddress, _amount);
+    ) external payable returns (bytes32) {
+        // HederaGnosisSafe#transferTokenViaSafe(address token, address receiver, uint256 amount)
+        // 0xbb34db5a - keccack("transferTokenViaSafe(address,address,uint256)")
+        bytes memory data = abi.encodeWithSelector(
+            0xbb34db5a,
+            _token,
+            _receiver,
+            _amount
+        );
+        Enum.Operation call = Enum.Operation.Call;
+        return proposeTransaction(address(hederaGnosisSafe), data, call);
     }
 }
