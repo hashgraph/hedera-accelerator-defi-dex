@@ -2,6 +2,9 @@ import Base from "./Base";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { Client, ContractId, ContractFunctionParameters } from "@hashgraph/sdk";
 
+import { Deployment } from "../../utils/deployContractOnTestnet";
+const deployment = new Deployment();
+
 const GET_GOD_TOKEN_HOLDER = "getGODTokenHolder";
 const INITIALIZE = "initialize";
 
@@ -18,6 +21,22 @@ export default class GODTokenHolderFactory extends Base {
     await this.execute(2000000, INITIALIZE, client, args, undefined);
 
     console.log(`- GODTokenHolderFactory#${INITIALIZE} done. \n`);
+  };
+
+  initializeNew = async (client: Client = clientsInfo.operatorClient) => {
+    if (await this.isInitializationPending("godtokenholderfactory")) {
+      const proxyAdmin = clientsInfo.dexOwnerId.toSolidityAddress();
+      const godHolderLogic = await deployment.deploy("godholder");
+      const args = new ContractFunctionParameters()
+        .addAddress(this.htsAddress)
+        .addAddress(godHolderLogic.address)
+        .addAddress(proxyAdmin);
+      await this.execute(2000000, INITIALIZE, client, args, undefined);
+      console.log(`- GODTokenHolderFactory#${INITIALIZE} done. \n`);
+      return;
+    }
+
+    console.log(`- GODTokenHolderFactory#${INITIALIZE} already done. \n`);
   };
 
   getGodTokenHolder = async (
