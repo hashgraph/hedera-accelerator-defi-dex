@@ -82,7 +82,7 @@ export default class GovernanceDAOFactory extends Base {
       .addUint256(BigNumber(votingDelay))
       .addUint256(BigNumber(votingPeriod))
       .addBool(isPrivate);
-    const { result } = await this.execute(900000, CREATE_DAO, client, args);
+    const { result } = await this.execute(9000000, CREATE_DAO, client, args);
     const address = result.getAddress(0);
     console.log(`- GovernanceDAOFactory#${CREATE_DAO}(): done`);
     console.table({
