@@ -9,6 +9,7 @@ import "./common/TokenOperations.sol";
 import "./common/IERC20.sol";
 import "./ILPToken.sol";
 import "./IPair.sol";
+import "hardhat/console.sol";
 
 /// Emitted when the calculated slippage is over the slippage threshold.
 /// @param message a description of the error.
@@ -173,22 +174,15 @@ contract Pair is IPair, Initializable, TokenOperations {
         int256 calculatedSlippage = slippageOutGivenIn(_deltaAQty);
         isSlippageBreached(calculatedSlippage, _slippage);
 
-        // Token A Calculation
         (
             int256 _tokenATreasureFee,
-            int256 _deltaAQtyAfterAdjustingFee,
-            int256 _tokenASwapQtyPlusContractTokenShare
-        ) = _calculateIncomingTokenQuantities(_deltaAQty);
-
-        int256 swapBValue = getOutGivenIn(_deltaAQtyAfterAdjustingFee);
-
-        //Token B Calculation
-        (
+            int256 _tokenASwapQtyPlusContractTokenShare,
             int256 _actualSwapBValue,
             int256 _tokenBTreasureFee
-        ) = _calculateOutgoingTokenQuantities(swapBValue);
+        ) = getOutGivenIn(_deltaAQty);
 
         pair.tokenA.tokenQty += _tokenASwapQtyPlusContractTokenShare;
+
         //Token A transfer
         transferTokenInternally(
             to,
@@ -238,19 +232,15 @@ contract Pair is IPair, Initializable, TokenOperations {
         int256 calculatedSlippage = slippageInGivenOut(_deltaBQty);
         isSlippageBreached(calculatedSlippage, _slippage);
         // Token A Calculation
+
         (
             int256 _tokenBTreasureFee,
-            int256 _deltaBQtyAfterAdjustingFee,
-            int256 _tokenBSwapQtyPlusContractTokenShare
-        ) = _calculateIncomingTokenQuantities(_deltaBQty);
-
-        int256 swapAValue = getInGivenOut(_deltaBQtyAfterAdjustingFee);
-
-        //Token B Calculation
-        (
+            int256 _tokenBSwapQtyPlusContractTokenShare,
             int256 _actualSwapAValue,
             int256 _tokenATreasureFee
-        ) = _calculateOutgoingTokenQuantities(swapAValue);
+        ) = getInGivenOut(_deltaBQty);
+
+        //Token B Calculation
 
         pair.tokenB.tokenQty += _tokenBSwapQtyPlusContractTokenShare;
 
@@ -329,16 +319,38 @@ contract Pair is IPair, Initializable, TokenOperations {
         return value;
     }
 
-    function getInGivenOut(int256 amountTokenB) public view returns (int256) {
-        int256 invariantValue = getVariantValue();
-        int256 precision = getPrecisionValue();
-        int256 tokenAQ = pair.tokenA.tokenQty;
-        int256 tokenBQ = pair.tokenB.tokenQty;
-        int256 adjustedValue = (invariantValue * precision) /
-            (tokenBQ - amountTokenB);
-        int256 newValue = adjustedValue / precision;
-        int256 amountTokenA = newValue - tokenAQ;
-        return amountTokenA;
+    function getInGivenOut(
+        int256 amountTokenB
+    ) public view returns (int256, int256, int256, int256) {
+        (
+            int256 _tokenBTreasureFee,
+            int256 _deltaBQtyAfterAdjustingFee,
+            int256 _tokenBSwapQtyPlusContractTokenShare
+        ) = _calculateIncomingTokenQuantities(amountTokenB);
+
+        int256 amountTokenA;
+        {
+            int256 invariantValue = getVariantValue();
+            int256 precision = getPrecisionValue();
+            int256 tokenAQ = pair.tokenA.tokenQty;
+            int256 tokenBQ = pair.tokenB.tokenQty + _deltaBQtyAfterAdjustingFee;
+            int256 adjustedValue = (invariantValue * precision) /
+                (tokenBQ - amountTokenB);
+            int256 newValue = adjustedValue / precision;
+            amountTokenA = newValue - tokenAQ;
+        }
+
+        (
+            int256 _actualSwapAValue,
+            int256 _tokenATreasureFee
+        ) = _calculateOutgoingTokenQuantities(amountTokenA);
+
+        return (
+            _tokenBTreasureFee,
+            _tokenBSwapQtyPlusContractTokenShare,
+            _actualSwapAValue,
+            _tokenATreasureFee
+        );
     }
 
     function getVariantValue() public view returns (int256) {
@@ -351,16 +363,41 @@ contract Pair is IPair, Initializable, TokenOperations {
         return 100_000_000;
     }
 
-    function getOutGivenIn(int256 amountTokenA) public view returns (int256) {
-        int256 precision = getPrecisionValue();
-        int256 invariantValue = getVariantValue();
-        int256 tokenAQ = pair.tokenA.tokenQty;
-        int256 tokenBQ = pair.tokenB.tokenQty;
-        int256 adjustedValue = (invariantValue * precision) /
-            (tokenAQ + amountTokenA);
-        int256 newValue = adjustedValue / precision;
-        int256 amountTokenB = tokenBQ - newValue;
-        return amountTokenB;
+    function getOutGivenIn(
+        int256 amountTokenA
+    ) public view returns (int256, int256, int256, int256) {
+        // Token A Calculation
+        (
+            int256 _tokenATreasureFee,
+            int256 _deltaAQtyAfterAdjustingFee,
+            int256 _tokenASwapQtyPlusContractTokenShare
+        ) = _calculateIncomingTokenQuantities(amountTokenA);
+
+        int256 amountTokenB;
+        //Scoped variable to avoid stack too deep
+        {
+            int256 precision = getPrecisionValue();
+            int256 invariantValue = getVariantValue();
+            int256 tokenAQ = pair.tokenA.tokenQty + _deltaAQtyAfterAdjustingFee;
+            int256 tokenBQ = pair.tokenB.tokenQty;
+            int256 adjustedValue = (invariantValue * precision) /
+                (tokenAQ + amountTokenA);
+            int256 newValue = adjustedValue / precision;
+            amountTokenB = tokenBQ - newValue;
+        }
+
+        //Token B Calculation
+        (
+            int256 _actualSwapBValue,
+            int256 _tokenBTreasureFee
+        ) = _calculateOutgoingTokenQuantities(amountTokenB);
+
+        return (
+            _tokenATreasureFee,
+            _tokenASwapQtyPlusContractTokenShare,
+            _actualSwapBValue,
+            _tokenBTreasureFee
+        );
     }
 
     function getSlippage() public view returns (int256) {
@@ -381,9 +418,17 @@ contract Pair is IPair, Initializable, TokenOperations {
         int256 tokenBQ = pair.tokenB.tokenQty;
         int256 unitPriceForA = (tokenBQ * precision) / tokenAQ;
         int256 spotValueExpected = (_tokenAQty * unitPriceForA) / precision;
-        int256 deltaTokenBQty = getOutGivenIn(_tokenAQty);
+
+        (
+            ,
+            ,
+            int256 _actualSwapBValue,
+            int256 _tokenBTreasureFee
+        ) = getOutGivenIn(_tokenAQty);
+        int256 finalDeltaBQty = (_actualSwapBValue + _tokenBTreasureFee);
+
         return
-            ((spotValueExpected - deltaTokenBQty) * precision) /
+            ((spotValueExpected - finalDeltaBQty) * precision) /
             spotValueExpected;
     }
 
@@ -395,9 +440,18 @@ contract Pair is IPair, Initializable, TokenOperations {
         int256 tokenBQ = pair.tokenB.tokenQty;
         int256 unitPriceForB = (tokenAQ * precision) / tokenBQ;
         int256 spotValueExpected = (_tokenBQty * unitPriceForB) / precision;
-        int256 deltaTokenAQty = getInGivenOut(_tokenBQty);
+
+        (
+            ,
+            ,
+            int256 _actualSwapAValue,
+            int256 _tokenATreasureFee
+        ) = getInGivenOut(_tokenBQty);
+
+        int256 finalDeltaAQty = (_actualSwapAValue + _tokenATreasureFee);
+
         return
-            ((deltaTokenAQty - spotValueExpected) * precision) /
+            ((finalDeltaAQty - spotValueExpected) * precision) /
             spotValueExpected;
     }
 

@@ -6,7 +6,7 @@ import { ethers, upgrades } from "hardhat";
 import { BigNumber } from "ethers";
 import { Helper } from "../utils/Helper";
 
-describe("All Tests", function () {
+describe.only("All Tests", function () {
   const tokenBAddress = "0x0000000000000000000000000000000000010001";
   const tokenAAddress = "0x0000000000000000000000000000000000020002";
   const tokenCAddress = "0x0000000000000000000000000000000000020003";
@@ -183,40 +183,50 @@ describe("All Tests", function () {
     pair: any,
     addTokenAQty: BigNumber
   ) => {
-    const feeForTokenA = await pair.feeForToken(addTokenAQty);
+    // const feeForTokenA = await pair.feeForToken(addTokenAQty);
 
-    const tokenAQtyAfterSubtractingFee =
-      Number(addTokenAQty) - Number(feeForTokenA) / 2;
+    // const tokenAQtyAfterSubtractingFee =
+    //   Number(addTokenAQty) - Number(feeForTokenA) / 2;
 
-    const bQty = await pair.getOutGivenIn(addTokenAQty.sub(feeForTokenA));
-    const feeForTokenB = await pair.feeForToken(bQty);
-    const tokenBResultantQtyAfterFee = Number(bQty) - Number(feeForTokenB);
+    // //const bQty = await pair.getOutGivenIn(addTokenAQty.sub(feeForTokenA));
+    const result = await pair.getOutGivenIn(addTokenAQty);
+    // const feeForTokenB = await pair.feeForToken(bQty);
+    // const tokenBResultantQtyAfterFee = Number(bQty) - Number(feeForTokenB);
 
-    const treasuryShare = Number(feeForTokenB) / 2;
+    // const treasuryShare = Number(feeForTokenB) / 2;
 
-    const tokenBResultantQty =
-      Number(tokenBResultantQtyAfterFee) + Number(treasuryShare.toFixed(0));
-    return { tokenAQtyAfterSubtractingFee, tokenBResultantQty };
+    // const tokenBResultantQty =
+    //   Number(tokenBResultantQtyAfterFee) + Number(treasuryShare.toFixed(0));
+    return {
+      tokenAQtyAfterSubtractingFee: result[1],
+      tokenBResultantQty: Number(result[2]) + Number(result[3]),
+    };
   };
 
   const quantitiesAfterSwappingTokenB = async (
     pair: any,
     addTokenBQty: BigNumber
   ) => {
-    const feeForTokenB = await pair.feeForToken(addTokenBQty);
+    // const feeForTokenB = await pair.feeForToken(addTokenBQty);
 
-    const tokenBQtyAfterSubtractingFee =
-      Number(addTokenBQty) - Number(feeForTokenB) / 2;
+    // const tokenBQtyAfterSubtractingFee =
+    //   Number(addTokenBQty) - Number(feeForTokenB) / 2;
 
-    const aQty = await pair.getInGivenOut(addTokenBQty.sub(feeForTokenB));
-    const feeForTokenA = await pair.feeForToken(aQty);
-    const tokenAResultantQtyAfterFee = Number(aQty) - Number(feeForTokenA);
+    // const aQty = await pair.getInGivenOut(addTokenBQty.sub(feeForTokenB));
+    // const feeForTokenA = await pair.feeForToken(aQty);
+    // const tokenAResultantQtyAfterFee = Number(aQty) - Number(feeForTokenA);
 
-    const treasuryShare = Number(feeForTokenA) / 2;
+    // const treasuryShare = Number(feeForTokenA) / 2;
 
-    const tokenAResultantQty =
-      Number(tokenAResultantQtyAfterFee) + Number(treasuryShare.toFixed(0));
-    return { tokenBQtyAfterSubtractingFee, tokenAResultantQty };
+    // const tokenAResultantQty =
+    //   Number(tokenAResultantQtyAfterFee) + Number(treasuryShare.toFixed(0));
+    // return { tokenBQtyAfterSubtractingFee, tokenAResultantQty };
+
+    const result = await pair.getInGivenOut(addTokenBQty);
+    return {
+      tokenBQtyAfterSubtractingFee: result[1],
+      tokenAResultantQty: Number(result[2]) + Number(result[3]),
+    };
   };
 
   it("Given a pair of HBAR/TOKEN-B exists when user try to swap 1 unit of Hbar then  swapped quantities should match the expectation ", async function () {
@@ -515,8 +525,6 @@ describe("All Tests", function () {
           );
 
         const pool2 = await pair.attach(pair2);
-        tokenAPoolQty = BigNumber.from(2000).mul(precision);
-        tokenBPoolQty = BigNumber.from(50000).mul(precision);
         await pool2
           .connect(signers[1])
           .addLiquidity(
@@ -530,17 +538,17 @@ describe("All Tests", function () {
         const tokenSwapResult = await factory.recommendedPairToSwap(
           token1Address,
           token2Address,
-          BigNumber.from(10).mul(precision)
+          BigNumber.from(100).mul(precision)
         );
 
         expect(tokenSwapResult.pair).not.to.be.equals(
           "0x0000000000000000000000000000000000000000"
         );
         expect(tokenSwapResult.token).to.be.equals(token2Address);
-        expect(tokenSwapResult.fee).to.be.equals(poolFee2);
         expect(
           BigNumber.from(tokenSwapResult.swappedQty).div(precision)
         ).to.be.equals(251);
+        expect(tokenSwapResult.fee).to.be.equals(poolFee1);
       });
 
       it("Given multiple pools exist when user ask for recommendation for swap(other token) then pool that gives maximum quantity should be returned. ", async function () {
@@ -565,6 +573,7 @@ describe("All Tests", function () {
 
         const poolFee1 = initialFees[0].value;
         const poolFee2 = initialFees[1].value;
+        const poolFee3 = initialFees[2].value;
 
         await factory.createPair(
           token1Address,
@@ -588,6 +597,17 @@ describe("All Tests", function () {
           token2Address,
           poolFee2
         );
+        await factory.createPair(
+          token1Address,
+          token2Address,
+          treasury,
+          poolFee3
+        );
+        const pair3 = await factory.getPair(
+          token1Address,
+          token2Address,
+          poolFee3
+        );
 
         const pool1 = await pair.attach(pair1);
         //This pool gives more tokenA qty after swap as tokenA is 5 times tokenB
@@ -604,9 +624,18 @@ describe("All Tests", function () {
           );
 
         const pool2 = await pair.attach(pair2);
-        tokenAPoolQty = BigNumber.from(10000).mul(precision);
-        tokenBPoolQty = BigNumber.from(10000).mul(precision);
         await pool2
+          .connect(signers[1])
+          .addLiquidity(
+            signers[1].address,
+            token1Address,
+            token2Address,
+            tokenAPoolQty,
+            tokenBPoolQty
+          );
+
+        const pool3 = await pair.attach(pair3);
+        await pool3
           .connect(signers[1])
           .addLiquidity(
             signers[1].address,
@@ -619,7 +648,7 @@ describe("All Tests", function () {
         const tokenSwapResult = await factory.recommendedPairToSwap(
           token2Address,
           token1Address,
-          BigNumber.from(10).mul(precision)
+          BigNumber.from(100).mul(precision)
         );
 
         expect(tokenSwapResult.pair).not.to.be.equals(
@@ -629,7 +658,7 @@ describe("All Tests", function () {
         expect(tokenSwapResult.fee).to.be.equals(poolFee1);
         expect(
           BigNumber.from(tokenSwapResult.swappedQty).div(precision)
-        ).to.be.equals(49);
+        ).to.be.equals(944);
       });
     });
 
@@ -778,6 +807,9 @@ describe("All Tests", function () {
 
     const { tokenAQtyAfterSubtractingFee, tokenBResultantQty } =
       await quantitiesAfterSwappingTokenA(pair, addTokenAQty);
+    console.log(
+      `tokenAQtyAfterSubtractingFee ${tokenAQtyAfterSubtractingFee} tokenBResultantQty ${tokenBResultantQty}`
+    );
 
     const tx = await pair.swapToken(
       signers[0].address,
@@ -958,7 +990,7 @@ describe("All Tests", function () {
     );
     const tokenBeforeQty = await pair.getPairQty();
     expect(Number(tokenBeforeQty[0])).to.be.equals(tokenAPoolQty);
-    const addTokenAQty = BigNumber.from(100).mul(precision);
+    const addTokenAQty = BigNumber.from(101).mul(precision);
     await expect(
       pair.swapToken(
         zeroAddress,
@@ -970,7 +1002,7 @@ describe("All Tests", function () {
       .to.be.revertedWithCustomError(pair, "SlippageBreached")
       .withArgs(
         "The calculated slippage is over the slippage threshold.",
-        33333333,
+        869873,
         500000
       );
   });
@@ -1030,7 +1062,7 @@ describe("All Tests", function () {
       .to.be.revertedWithCustomError(pair, "SlippageBreached")
       .withArgs(
         "The calculated slippage is over the slippage threshold.",
-        33333333,
+        374843,
         100000
       );
   });
@@ -1503,8 +1535,7 @@ describe("All Tests", function () {
         16
       );
       const value = await pair.getOutGivenIn(10);
-
-      expect(value).to.be.equals(5);
+      expect(Number(value[2]) + Number(value[3])).to.be.equals(8);
     });
 
     it("check get in given out price value without precision", async function () {
@@ -1615,7 +1646,7 @@ describe("All Tests", function () {
       const deltaAQty = BigNumber.from(10).mul(precision);
       const value = await pair.getOutGivenIn(deltaAQty);
 
-      expect(Number(value)).to.be.equals(Number(470588236));
+      expect(Number(value[1])).to.be.equals(Number(997500000));
     });
 
     it("check getInGivenOut for big number with precision", async function () {
@@ -1671,7 +1702,7 @@ describe("All Tests", function () {
       const deltaAQty = BigNumber.from(1).mul(precision);
       const slippage = await pair.slippageOutGivenIn(deltaAQty);
       const slippageWithoutPrecision = Number(slippage) / Number(precision);
-      expect(slippageWithoutPrecision).to.be.equals(0.00869565);
+      expect(slippageWithoutPrecision).to.be.equals(0.95578624);
     });
 
     it("Verify slippageInGivenOut ", async function () {

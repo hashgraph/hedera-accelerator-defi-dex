@@ -7,6 +7,7 @@ import "./common/IERC20.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import "./Configuration.sol";
+import "hardhat/console.sol";
 
 contract Factory is Initializable {
     event PairCreated(address indexed pairAddress);
@@ -113,34 +114,58 @@ contract Factory is Initializable {
         int256 _qtyToSwap
     ) external view returns (PairDetail memory) {
         uint256[] memory feeItems = configuration.getTransactionsFee();
-        (address _token0, address _token1) = sortTokens(_tokenToSwap, _otherTokenOfPair);
+        (address _token0, address _token1) = sortTokens(
+            _tokenToSwap,
+            _otherTokenOfPair
+        );
         uint parisCount = feeItems.length / 2;
         PairDetail[] memory recommendedPairs = new PairDetail[](parisCount);
         uint256 count = 0;
-        for (uint i = 0; i < feeItems.length; i = i + 2) {
-            uint256 value = feeItems[i + 1];
-            Pair pair = Pair(pairs[_token0][_token1][int256(value)]);
-            if (address(pair) != address(0x0)) {
-                int256 _qty = (_tokenToSwap == _token0) ? pair.getOutGivenIn(_qtyToSwap) : pair.getInGivenOut(_qtyToSwap);
-                int256 slippage = (_tokenToSwap == _token0) ? pair.slippageOutGivenIn(_qtyToSwap) : pair.slippageInGivenOut(_qtyToSwap);
-                recommendedPairs[count] = PairDetail(
-                    address(pair),
-                    _token0,
-                    _qty,
-                    int256(value),
-                    slippage
-                );
-                count += 1;
+        {
+            for (uint i = 0; i < feeItems.length; i = i + 2) {
+                uint256 value = feeItems[i + 1];
+                Pair pair = Pair(pairs[_token0][_token1][int256(value)]);
+                if (address(pair) != address(0x0)) {
+                    int256 _qty;
+                    address _token;
+                    int256 _slippage;
+                    if (_tokenToSwap == _token0) {
+                        (, , _qty, ) = pair.getOutGivenIn(_qtyToSwap);
+                        _token = _token0;
+                        _slippage = pair.slippageOutGivenIn(_qtyToSwap);
+                    } else {
+                        (, _qty, , ) = pair.getInGivenOut(_qtyToSwap);
+                        _token = _token1;
+                        _slippage = pair.slippageInGivenOut(_qtyToSwap);
+                    }
+
+                    recommendedPairs[count] = PairDetail(
+                        address(pair),
+                        _token0,
+                        _qty,
+                        int256(value),
+                        _slippage
+                    );
+                    count += 1;
+                }
             }
         }
 
-        PairDetail memory finalPair = recommendedPairs[count];
-        for (uint i = 0; i < count; i++) {
-            if (recommendedPairs[i].swappedQty > finalPair.swappedQty) {
-                finalPair = recommendedPairs[i];
+        PairDetail memory finalPair = recommendedPairs[0];
+        {
+            for (uint i = 0; i < count; i++) {
+                console.logInt(recommendedPairs[i].swappedQty);
+                console.logInt(finalPair.swappedQty);
+                if (recommendedPairs[i].swappedQty > finalPair.swappedQty) {
+                    finalPair = recommendedPairs[i];
+                }
             }
         }
         return finalPair;
+    }
+
+    function findMaxQtyPool() {
+        
     }
 
     function sortTokens(
