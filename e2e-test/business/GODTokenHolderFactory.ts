@@ -23,7 +23,9 @@ export default class GODTokenHolderFactory extends Base {
     console.log(`- GODTokenHolderFactory#${INITIALIZE} done. \n`);
   };
 
-  initializeNew = async (client: Client = clientsInfo.operatorClient) => {
+  initializeWithGodNewHolder = async (
+    client: Client = clientsInfo.operatorClient
+  ) => {
     if (await this.isInitializationPending("godtokenholderfactory")) {
       const proxyAdmin = clientsInfo.dexOwnerId.toSolidityAddress();
       const godHolderLogic = await deployment.deploy("godholder");

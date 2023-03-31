@@ -112,7 +112,7 @@ export async function main() {
   }
 
   try {
-    await godHolderFactoryInstance.initializeNew();
+    await godHolderFactoryInstance.initializeWithGodNewHolder();
   } catch (error) {
     console.log(`- GODHolder initialization failed.`);
     console.error(error);
