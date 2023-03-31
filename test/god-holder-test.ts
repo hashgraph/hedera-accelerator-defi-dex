@@ -13,7 +13,9 @@ describe("GODHolder Tests", function () {
     it("Verify if the GODHolder contract is upgradeable safe ", async function () {
       const Governor = await ethers.getContractFactory("GODHolder");
       const args = [zeroAddress, zeroAddress];
-      const instance = await upgrades.deployProxy(Governor, args);
+      const instance = await upgrades.deployProxy(Governor, args, {
+        unsafeAllow: ["delegatecall"],
+      });
       await instance.deployed();
     });
   });
@@ -46,10 +48,11 @@ describe("GODHolder Tests", function () {
     tokenCont.setUserBalance(signers[0].address, total);
 
     const GODHolder = await ethers.getContractFactory("GODHolder");
-    const godHolder = await upgrades.deployProxy(GODHolder, [
-      mockBaseHTS.address,
-      tokenCont.address,
-    ]);
+    const godHolder = await upgrades.deployProxy(
+      GODHolder,
+      [mockBaseHTS.address, tokenCont.address],
+      { unsafeAllow: ["delegatecall"] }
+    );
 
     const GODTokenHolderFactory = await ethers.getContractFactory(
       "GODTokenHolderFactory"

@@ -30,10 +30,11 @@ describe("GovernorTokenDAO Tests", function () {
     const mockBaseHTS = await MockBaseHTS.deploy(true, zeroAddress);
 
     const GODHolder = await ethers.getContractFactory("GODHolder");
-    const godHolder = await upgrades.deployProxy(GODHolder, [
-      mockBaseHTS.address,
-      tokenCont.address,
-    ]);
+    const godHolder = await upgrades.deployProxy(
+      GODHolder,
+      [mockBaseHTS.address, tokenCont.address],
+      { unsafeAllow: ["delegatecall"] }
+    );
 
     const Governor = await ethers.getContractFactory("GovernorTransferToken");
     const args = [

@@ -13,7 +13,9 @@ describe("NFTHolder Tests", function () {
     it("Verify if the NFTHolder contract is upgradeable safe ", async function () {
       const Governor = await ethers.getContractFactory("NFTHolder");
       const args = [zeroAddress, zeroAddress];
-      const instance = await upgrades.deployProxy(Governor, args);
+      const instance = await upgrades.deployProxy(Governor, args, {
+        unsafeAllow: ["delegatecall"],
+      });
       await instance.deployed();
     });
   });
@@ -31,10 +33,11 @@ describe("NFTHolder Tests", function () {
     const tokenCont = await TokenCont.deploy();
 
     const NFTHolder = await ethers.getContractFactory("NFTHolder");
-    const nftHolder = await upgrades.deployProxy(NFTHolder, [
-      mockBaseHTS.address,
-      tokenCont.address,
-    ]);
+    const nftHolder = await upgrades.deployProxy(
+      NFTHolder,
+      [mockBaseHTS.address, tokenCont.address],
+      { unsafeAllow: ["delegatecall"] }
+    );
 
     const MockNFTHolder = await ethers.getContractFactory("NFTHolderMock");
     const mockNFTHolder = await MockNFTHolder.deploy();

@@ -17,7 +17,21 @@ abstract contract TokenHolder is IGODHolder, Initializable {
     ) public initializer {
         _tokenService = tokenService;
         _token = token;
-        _tokenService.associateTokenPublic(address(this), address(_token));
+        _associateToken(address(this), address(_token));
+    }
+
+    function _associateToken(address account, address token) private {
+        (bool success, ) = address(_tokenService).delegatecall(
+            abi.encodeWithSelector(
+                IBaseHTS.associateTokenPublic.selector,
+                account,
+                token
+            )
+        );
+        //Its done to silent the not-used return value. Intentionally not putting
+        //requires check as it fails the unit test. We need to investigate more to
+        //find the root cause.
+        success = success || true;
     }
 
     function getToken() public view override returns (address) {

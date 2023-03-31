@@ -77,10 +77,11 @@ describe("Governor Tests", function () {
     const votingPeriod = 12;
 
     const GODHolder = await ethers.getContractFactory("GODHolder");
-    const godHolder = await upgrades.deployProxy(GODHolder, [
-      mockBaseHTS.address,
-      tokenCont.address,
-    ]);
+    const godHolder = await upgrades.deployProxy(
+      GODHolder,
+      [mockBaseHTS.address, tokenCont.address],
+      { unsafeAllow: ["delegatecall"] }
+    );
 
     const Governor = await ethers.getContractFactory("GovernorTokenCreate");
     const args = [
