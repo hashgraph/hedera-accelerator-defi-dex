@@ -2,10 +2,14 @@
 pragma solidity >=0.7.0 <0.9.0;
 
 import "../common/BaseHTS.sol";
+import "../common/hedera/HederaResponseCodes.sol";
+
 import "@gnosis.pm/safe-contracts/contracts/GnosisSafe.sol";
 import "@gnosis.pm/safe-contracts/contracts/external/GnosisSafeMath.sol";
 
 contract HederaGnosisSafe is GnosisSafe, BaseHTS {
+    event TokenAssociated(address token);
+
     using GnosisSafeMath for uint256;
 
     bytes private constant BYTES_ZERO = "";
@@ -18,7 +22,10 @@ contract HederaGnosisSafe is GnosisSafe, BaseHTS {
     function associateTokenToSafe(
         address _tokenAddress
     ) public returns (int256 responseCode) {
-        return super.associateTokenPublic(address(this), _tokenAddress);
+        responseCode = super.associateTokenPublic(address(this), _tokenAddress);
+        if (responseCode == HederaResponseCodes.SUCCESS) {
+            emit TokenAssociated(_tokenAddress);
+        }
     }
 
     function transferTokenViaSafe(
