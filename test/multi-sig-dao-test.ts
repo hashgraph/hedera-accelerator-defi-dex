@@ -320,7 +320,7 @@ describe("MultiSig contract tests", function () {
       const { multiSigDAOInstance, hederaGnosisSafeProxyContract } =
         await loadFixture(deployFixture);
       const currentAddress =
-        await multiSigDAOInstance.getMultisigContractAddress();
+        await multiSigDAOInstance.getHederaGnosisSafeContractAddress();
       expect(currentAddress).equals(hederaGnosisSafeProxyContract.address);
     });
 

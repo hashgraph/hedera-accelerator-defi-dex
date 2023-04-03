@@ -80,7 +80,7 @@ contract MultisigDAOFactory is OwnableUpgradeable, IEvents, IErrors {
         address[] calldata _owners,
         uint256 _threshold,
         bool _isPrivate
-    ) external returns (address a) {
+    ) external returns (address) {
         HederaGnosisSafe hederaGnosisSafe = _createGnosisSafeProxyInstance(
             _owners,
             _threshold
