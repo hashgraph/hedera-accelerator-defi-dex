@@ -9,7 +9,6 @@ import "./common/TokenOperations.sol";
 import "./common/IERC20.sol";
 import "./ILPToken.sol";
 import "./IPair.sol";
-import "hardhat/console.sol";
 
 /// Emitted when the calculated slippage is over the slippage threshold.
 /// @param message a description of the error.
@@ -423,10 +422,6 @@ contract Pair is IPair, Initializable, TokenOperations {
             int256 _tokenBTreasureFee
         ) = getOutGivenIn(_tokenAQty);
         int256 finalDeltaBQty = (_actualSwapBValue + _tokenBTreasureFee);
-        console.log("spotValueExpected");
-        console.logInt(spotValueExpected);
-        console.log("finalDeltaBQty");
-        console.logInt(finalDeltaBQty);
 
         return
             ((spotValueExpected - finalDeltaBQty) * precision) /
@@ -681,11 +676,10 @@ contract Pair is IPair, Initializable, TokenOperations {
         int256 _slippage
     ) private view {
         int256 slippageThreshold = _slippage > 0 ? _slippage : getSlippage();
-        // calculatedSlippage = calculatedSlippage < 0
-        //     ? -calculatedSlippage
-        //     : calculatedSlippage;
-        console.logInt(calculatedSlippage);
-        console.logInt(slippageThreshold);
+
+        calculatedSlippage = calculatedSlippage < 0
+            ? -calculatedSlippage
+            : calculatedSlippage;
 
         if (calculatedSlippage > slippageThreshold) {
             revert SlippageBreached({
