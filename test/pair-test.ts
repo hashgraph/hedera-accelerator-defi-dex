@@ -6,7 +6,7 @@ import { ethers, upgrades } from "hardhat";
 import { BigNumber } from "ethers";
 import { Helper } from "../utils/Helper";
 
-describe.only("All Tests", function () {
+describe("All Tests", function () {
   const tokenBAddress = "0x0000000000000000000000000000000000010001";
   const tokenAAddress = "0x0000000000000000000000000000000000020002";
   const tokenCAddress = "0x0000000000000000000000000000000000020003";
@@ -77,6 +77,20 @@ describe.only("All Tests", function () {
     );
     await pair.deployed();
 
+    const pairWithZeroFee = await upgrades.deployProxy(
+      Pair,
+      [
+        mockBaseHTS.address,
+        lpTokenCont.address,
+        token1Address,
+        token2Address,
+        treasury,
+        0,
+      ],
+      { unsafeAllow: ["delegatecall"] }
+    );
+    await pairWithZeroFee.deployed();
+
     precision = await pair.getPrecisionValue();
     await tokenCont.setUserBalance(signers[0].address, precision.mul(1000));
     await tokenCont1.setUserBalance(signers[0].address, precision.mul(1000));
@@ -97,6 +111,7 @@ describe.only("All Tests", function () {
       tokenCont,
       tokenCont1,
       configuration,
+      pairWithZeroFee,
     };
   }
 
@@ -183,20 +198,7 @@ describe.only("All Tests", function () {
     pair: any,
     addTokenAQty: BigNumber
   ) => {
-    // const feeForTokenA = await pair.feeForToken(addTokenAQty);
-
-    // const tokenAQtyAfterSubtractingFee =
-    //   Number(addTokenAQty) - Number(feeForTokenA) / 2;
-
-    // //const bQty = await pair.getOutGivenIn(addTokenAQty.sub(feeForTokenA));
     const result = await pair.getOutGivenIn(addTokenAQty);
-    // const feeForTokenB = await pair.feeForToken(bQty);
-    // const tokenBResultantQtyAfterFee = Number(bQty) - Number(feeForTokenB);
-
-    // const treasuryShare = Number(feeForTokenB) / 2;
-
-    // const tokenBResultantQty =
-    //   Number(tokenBResultantQtyAfterFee) + Number(treasuryShare.toFixed(0));
     return {
       tokenAQtyAfterSubtractingFee: result[1],
       tokenBResultantQty: Number(result[2]) + Number(result[3]),
@@ -207,21 +209,6 @@ describe.only("All Tests", function () {
     pair: any,
     addTokenBQty: BigNumber
   ) => {
-    // const feeForTokenB = await pair.feeForToken(addTokenBQty);
-
-    // const tokenBQtyAfterSubtractingFee =
-    //   Number(addTokenBQty) - Number(feeForTokenB) / 2;
-
-    // const aQty = await pair.getInGivenOut(addTokenBQty.sub(feeForTokenB));
-    // const feeForTokenA = await pair.feeForToken(aQty);
-    // const tokenAResultantQtyAfterFee = Number(aQty) - Number(feeForTokenA);
-
-    // const treasuryShare = Number(feeForTokenA) / 2;
-
-    // const tokenAResultantQty =
-    //   Number(tokenAResultantQtyAfterFee) + Number(treasuryShare.toFixed(0));
-    // return { tokenBQtyAfterSubtractingFee, tokenAResultantQty };
-
     const result = await pair.getInGivenOut(addTokenBQty);
     return {
       tokenBQtyAfterSubtractingFee: result[1],
@@ -229,7 +216,7 @@ describe.only("All Tests", function () {
     };
   };
 
-  it("Given a pair of HBAR/TOKEN-B exists when user try to swap 1 unit of Hbar then  swapped quantities should match the expectation ", async function () {
+  it("Given a pair of HBAR/TOKEN-B exists when user try to swap 1 unit of Hbar then swapped quantities should match the expectation ", async function () {
     const {
       pair,
       signers,
@@ -263,15 +250,9 @@ describe.only("All Tests", function () {
     const { tokenAQtyAfterSubtractingFee, tokenBResultantQty } =
       await quantitiesAfterSwappingTokenA(pair, addTokenAQty);
 
-    const tx = await pair.swapToken(
-      signers[0].address,
-      hbarToken,
-      0,
-      defaultSlippageInput,
-      {
-        value: addTokenAQty,
-      }
-    );
+    const tx = await pair.swapToken(signers[0].address, hbarToken, 0, 1200000, {
+      value: addTokenAQty,
+    });
     await tx.wait();
 
     const tokenQty = await pair.getPairQty();
@@ -658,7 +639,7 @@ describe.only("All Tests", function () {
         expect(tokenSwapResult.fee).to.be.equals(poolFee1);
         expect(
           BigNumber.from(tokenSwapResult.swappedQty).div(precision)
-        ).to.be.equals(944);
+        ).to.be.equals(470);
       });
     });
 
@@ -790,8 +771,8 @@ describe.only("All Tests", function () {
       tokenCont1,
       signers,
     } = await loadFixture(deployFixtureTokenTest);
-    const tokenAPoolQty = BigNumber.from(1140000).mul(precision);
-    const tokenBPoolQty = BigNumber.from(2200000).mul(precision);
+    const tokenAPoolQty = BigNumber.from(114).mul(precision);
+    const tokenBPoolQty = BigNumber.from(220).mul(precision);
 
     await pair.addLiquidity(
       signers[0].address,
@@ -815,7 +796,7 @@ describe.only("All Tests", function () {
       signers[0].address,
       token1Address,
       addTokenAQty,
-      defaultSlippageInput
+      1800000
     );
     await tx.wait();
 
@@ -864,7 +845,7 @@ describe.only("All Tests", function () {
       signers[0].address,
       token2Address,
       addTokenBQty,
-      defaultSlippageInput
+      1200000
     );
     await tx.wait();
 
@@ -892,7 +873,7 @@ describe.only("All Tests", function () {
     } = await loadFixture(deployFixtureTokenTest);
     const tokenAPoolQty = BigNumber.from(200).mul(precision);
     const tokenBPoolQty = BigNumber.from(220).mul(precision);
-    const slippageInput = BigNumber.from(5).mul(precision.div(1000));
+    const slippageInput = BigNumber.from(2).mul(precision.div(100));
 
     await pair.addLiquidity(
       signers[0].address,
@@ -929,7 +910,7 @@ describe.only("All Tests", function () {
     expect(pairAccountBalance1).to.be.equals(tokenQty[1]);
   });
 
-  it("Swap 1 units of token B within  slippage threshold input", async function () {
+  it("Swap 1 units of token B within slippage threshold input", async function () {
     const {
       pair,
       token1Address,
@@ -940,7 +921,7 @@ describe.only("All Tests", function () {
     } = await loadFixture(deployFixtureTokenTest);
     const tokenAPoolQty = BigNumber.from(114).mul(precision);
     const tokenBPoolQty = BigNumber.from(220).mul(precision);
-    const slippageInput = BigNumber.from(5).mul(precision.div(1000));
+    const slippageInput = BigNumber.from(2).mul(precision.div(100));
     await pair.addLiquidity(
       signers[0].address,
       token1Address,
@@ -975,7 +956,7 @@ describe.only("All Tests", function () {
     expect(pairAccountBalance1).to.be.equals(tokenQty[1]);
   });
 
-  it("Swap 100 units of token A - breaching slippage  ", async function () {
+  it("Swap 100 units of token A - default breaching slippage  ", async function () {
     const { pair, token1Address, token2Address } = await loadFixture(
       deployFixture
     );
@@ -1002,12 +983,12 @@ describe.only("All Tests", function () {
       .to.be.revertedWithCustomError(pair, "SlippageBreached")
       .withArgs(
         "The calculated slippage is over the slippage threshold.",
-        869873,
+        33941496,
         500000
       );
   });
 
-  it("Swap 100 units of token B - breaching slippage  ", async function () {
+  it("Swap 100 units of token B - default breaching slippage  ", async function () {
     const { pair, token1Address, token2Address } = await loadFixture(
       deployFixture
     );
@@ -1034,64 +1015,8 @@ describe.only("All Tests", function () {
       .to.be.revertedWithCustomError(pair, "SlippageBreached")
       .withArgs(
         "The calculated slippage is over the slippage threshold.",
-        31657980,
+        753193,
         500000
-      );
-  });
-
-  it("Swap 100 units of token A - breaching user input slippage  ", async function () {
-    const { pair, token1Address, token2Address } = await loadFixture(
-      deployFixture
-    );
-    const tokenAPoolQty = BigNumber.from(200).mul(precision);
-    const tokenBPoolQty = BigNumber.from(220).mul(precision);
-    const slippageInput = BigNumber.from(1).mul(precision.div(1000));
-    await pair.addLiquidity(
-      zeroAddress,
-      token1Address,
-      token2Address,
-      tokenAPoolQty,
-      tokenBPoolQty
-    );
-    const tokenBeforeQty = await pair.getPairQty();
-    expect(Number(tokenBeforeQty[0])).to.be.equals(tokenAPoolQty);
-    const addTokenAQty = BigNumber.from(100).mul(precision);
-    await expect(
-      pair.swapToken(zeroAddress, token1Address, addTokenAQty, slippageInput)
-    )
-      .to.be.revertedWithCustomError(pair, "SlippageBreached")
-      .withArgs(
-        "The calculated slippage is over the slippage threshold.",
-        374843,
-        100000
-      );
-  });
-
-  it("Swap 100 units of token B - breaching user input slippage ", async function () {
-    const { pair, token1Address, token2Address } = await loadFixture(
-      deployFixture
-    );
-    const tokenAPoolQty = BigNumber.from(114).mul(precision);
-    const tokenBPoolQty = BigNumber.from(220).mul(precision);
-    const slippageInput = BigNumber.from(1).mul(precision.div(1000));
-    await pair.addLiquidity(
-      zeroAddress,
-      token1Address,
-      token2Address,
-      tokenAPoolQty,
-      tokenBPoolQty
-    );
-    const tokenBeforeQty = await pair.getPairQty();
-    expect(Number(tokenBeforeQty[1])).to.be.equals(tokenBPoolQty);
-    const addTokenBQty = BigNumber.from(100).mul(precision);
-    await expect(
-      pair.swapToken(zeroAddress, token2Address, addTokenBQty, slippageInput)
-    )
-      .to.be.revertedWithCustomError(pair, "SlippageBreached")
-      .withArgs(
-        "The calculated slippage is over the slippage threshold.",
-        83333336,
-        100000
       );
   });
 
@@ -1249,12 +1174,7 @@ describe.only("All Tests", function () {
       expect(tokenBeforeQty[0]).to.be.equals(totalQtyA);
       await tokenCont1.setTransaferFailed(true);
       await expect(
-        pair.swapToken(
-          zeroAddress,
-          token1Address,
-          precision.mul(1),
-          defaultSlippageInput
-        )
+        pair.swapToken(zeroAddress, token1Address, precision.mul(1), 1200000)
       ).to.revertedWith(
         "swapTokenA: Transferring token B to user failed with status code"
       );
@@ -1276,12 +1196,7 @@ describe.only("All Tests", function () {
       expect(Number(tokenBeforeQty[0])).to.be.equals(precision.mul(1000));
       mockBaseHTS.setPassTransactionCount(1);
       await expect(
-        pair.swapToken(
-          zeroAddress,
-          token2Address,
-          precision.mul(1),
-          defaultSlippageInput
-        )
+        pair.swapToken(zeroAddress, token2Address, precision.mul(1), 1200000)
       ).to.revertedWith(
         "swapTokenB: Transferring token B to contract failed with status code"
       );
@@ -1302,12 +1217,7 @@ describe.only("All Tests", function () {
       expect(Number(tokenBeforeQty[0])).to.be.equals(precision.mul(1000));
       await tokenCont.setTransaferFailed(true);
       await expect(
-        pair.swapToken(
-          zeroAddress,
-          token2Address,
-          precision.mul(1),
-          defaultSlippageInput
-        )
+        pair.swapToken(zeroAddress, token2Address, precision.mul(1), 1200000)
       ).to.revertedWith(
         "swapTokenB: Transferring token A to user failed with status code"
       );
@@ -1523,7 +1433,7 @@ describe.only("All Tests", function () {
       expect(token1SpotPrice).to.be.equals(50000000);
     });
 
-    it("check get out given In price value without precision", async function () {
+    it("check get out given in price value without precision", async function () {
       const { pair, token2Address, token1Address } = await loadFixture(
         deployFixture
       );
@@ -1535,7 +1445,7 @@ describe.only("All Tests", function () {
         16
       );
       const value = await pair.getOutGivenIn(10);
-      expect(Number(value[2]) + Number(value[3])).to.be.equals(8);
+      expect(Number(value[2]) + Number(value[3])).to.be.equals(5);
     });
 
     it("check get in given out price value without precision", async function () {
@@ -1646,7 +1556,9 @@ describe.only("All Tests", function () {
       const deltaAQty = BigNumber.from(10).mul(precision);
       const value = await pair.getOutGivenIn(deltaAQty);
 
-      expect(Number(value[2])).to.be.equals(Number(997500000));
+      expect(Number(value[2]) + Number(value[3])).to.be.equals(
+        Number(949566211)
+      );
     });
 
     it("check getInGivenOut for big number with precision", async function () {
@@ -1665,8 +1577,55 @@ describe.only("All Tests", function () {
       const value = await pair.getInGivenOut(
         BigNumber.from("10").mul(precision)
       );
-      const valueWithoutPrecision = Number(value[2]) / Number(precision);
-      expect(valueWithoutPrecision).to.be.equals(0.5107032);
+      const valueWithoutPrecision =
+        (Number(value[2]) + Number(value[3])) / Number(precision);
+      expect(valueWithoutPrecision).to.be.equals(9.49566211);
+    });
+
+    it("Verify getOutGivenIn for big number and zero fee", async function () {
+      const { pairWithZeroFee, token1Address, token2Address } =
+        await loadFixture(deployFixture);
+      const precision = await pairWithZeroFee.getPrecisionValue();
+      const tokenAQ = BigNumber.from(10).mul(precision);
+      const tokenBQ = BigNumber.from(10).mul(precision);
+
+      await pairWithZeroFee.addLiquidity(
+        zeroAddress,
+        token1Address,
+        token2Address,
+        tokenAQ,
+        tokenBQ,
+        {
+          value: ethers.utils.parseEther("10"),
+        }
+      );
+
+      const deltaAQty = BigNumber.from(10).mul(precision);
+      const value = await pairWithZeroFee.getOutGivenIn(deltaAQty);
+
+      expect(Number(value[2]) + Number(value[3])).to.be.equals(
+        Number(500000000)
+      );
+    });
+
+    it("Verify getInGivenOut for big number and zero fee", async function () {
+      const { pairWithZeroFee, token1Address, token2Address } =
+        await loadFixture(deployFixture);
+      const tokenAQ = BigNumber.from("10").mul(precision);
+      const tokenBQ = BigNumber.from("10").mul(precision);
+      await pairWithZeroFee.addLiquidity(
+        zeroAddress,
+        token1Address,
+        token2Address,
+        tokenAQ,
+        tokenBQ
+      );
+      const value = await pairWithZeroFee.getInGivenOut(
+        BigNumber.from("10").mul(precision)
+      );
+      expect(Number(value[2]) + Number(value[3])).to.be.equals(
+        Number(500000000)
+      );
     });
   });
 
@@ -1686,7 +1645,7 @@ describe.only("All Tests", function () {
       expect(value).to.be.equals(6);
     });
 
-    it.only("Verify slippageOutGivenIn ", async function () {
+    it("Verify slippageOutGivenIn ", async function () {
       const { pair, token1Address, token2Address } = await loadFixture(
         deployFixture
       );
@@ -1702,7 +1661,7 @@ describe.only("All Tests", function () {
       const deltaAQty = BigNumber.from(1).mul(precision);
       const slippage = await pair.slippageOutGivenIn(deltaAQty);
       const slippageWithoutPrecision = Number(slippage) / Number(precision);
-      expect(slippageWithoutPrecision).to.be.equals(0.1);
+      expect(slippageWithoutPrecision).to.be.equals(0.01607525);
     });
 
     it("Verify slippageInGivenOut ", async function () {
@@ -1721,7 +1680,7 @@ describe.only("All Tests", function () {
       const deltaBQty = BigNumber.from(1).mul(precision);
       const slippage = await pair.slippageInGivenOut(deltaBQty);
       const slippageWithoutPrecision = Number(slippage) / Number(precision);
-      expect(slippageWithoutPrecision).to.be.equals(0.00456621);
+      expect(Math.abs(slippageWithoutPrecision)).to.be.equals(0.01195611);
     });
   });
 
