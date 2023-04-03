@@ -231,7 +231,6 @@ contract Pair is IPair, Initializable, TokenOperations {
     ) private {
         int256 calculatedSlippage = slippageInGivenOut(_deltaBQty);
         isSlippageBreached(calculatedSlippage, _slippage);
-        // Token A Calculation
 
         (
             int256 _tokenBTreasureFee,
@@ -334,8 +333,7 @@ contract Pair is IPair, Initializable, TokenOperations {
             int256 precision = getPrecisionValue();
             int256 tokenAQ = pair.tokenA.tokenQty;
             int256 tokenBQ = pair.tokenB.tokenQty + _deltaBQtyAfterAdjustingFee;
-            int256 adjustedValue = (invariantValue * precision) /
-                (tokenBQ - amountTokenB);
+            int256 adjustedValue = (invariantValue * precision) / (tokenBQ);
             int256 newValue = adjustedValue / precision;
             amountTokenA = newValue - tokenAQ;
         }
@@ -351,16 +349,6 @@ contract Pair is IPair, Initializable, TokenOperations {
             _actualSwapAValue,
             _tokenATreasureFee
         );
-    }
-
-    function getVariantValue() public view returns (int256) {
-        int256 tokenAQ = pair.tokenA.tokenQty;
-        int256 tokenBQ = pair.tokenB.tokenQty;
-        return tokenAQ * tokenBQ;
-    }
-
-    function getPrecisionValue() public pure returns (int256) {
-        return 100_000_000;
     }
 
     function getOutGivenIn(
@@ -380,8 +368,7 @@ contract Pair is IPair, Initializable, TokenOperations {
             int256 invariantValue = getVariantValue();
             int256 tokenAQ = pair.tokenA.tokenQty + _deltaAQtyAfterAdjustingFee;
             int256 tokenBQ = pair.tokenB.tokenQty;
-            int256 adjustedValue = (invariantValue * precision) /
-                (tokenAQ + amountTokenA);
+            int256 adjustedValue = (invariantValue * precision) / (tokenAQ);
             int256 newValue = adjustedValue / precision;
             amountTokenB = tokenBQ - newValue;
         }
@@ -398,6 +385,16 @@ contract Pair is IPair, Initializable, TokenOperations {
             _actualSwapBValue,
             _tokenBTreasureFee
         );
+    }
+
+    function getVariantValue() public view returns (int256) {
+        int256 tokenAQ = pair.tokenA.tokenQty;
+        int256 tokenBQ = pair.tokenB.tokenQty;
+        return tokenAQ * tokenBQ;
+    }
+
+    function getPrecisionValue() public pure returns (int256) {
+        return 100_000_000;
     }
 
     function getSlippage() public view returns (int256) {
@@ -426,6 +423,10 @@ contract Pair is IPair, Initializable, TokenOperations {
             int256 _tokenBTreasureFee
         ) = getOutGivenIn(_tokenAQty);
         int256 finalDeltaBQty = (_actualSwapBValue + _tokenBTreasureFee);
+        console.log("spotValueExpected");
+        console.logInt(spotValueExpected);
+        console.log("finalDeltaBQty");
+        console.logInt(finalDeltaBQty);
 
         return
             ((spotValueExpected - finalDeltaBQty) * precision) /
@@ -449,10 +450,10 @@ contract Pair is IPair, Initializable, TokenOperations {
         ) = getInGivenOut(_tokenBQty);
 
         int256 finalDeltaAQty = (_actualSwapAValue + _tokenATreasureFee);
+        int256 calculatedSlippage = ((finalDeltaAQty - spotValueExpected) *
+            precision) / spotValueExpected;
 
-        return
-            ((finalDeltaAQty - spotValueExpected) * precision) /
-            spotValueExpected;
+        return calculatedSlippage;
     }
 
     function getContractAddress() public view returns (address) {
@@ -516,6 +517,7 @@ contract Pair is IPair, Initializable, TokenOperations {
     function _calculateOutgoingTokenQuantities(
         int256 swappedValue
     ) private view returns (int256, int256) {
+        swappedValue = swappedValue < 0 ? -swappedValue : swappedValue;
         int256 tokenFee = feeForToken(swappedValue);
         int256 _actualSwappedValue = swappedValue - tokenFee;
         int256 _tokenTreasureFee = tokenFee / 2;
@@ -679,6 +681,12 @@ contract Pair is IPair, Initializable, TokenOperations {
         int256 _slippage
     ) private view {
         int256 slippageThreshold = _slippage > 0 ? _slippage : getSlippage();
+        // calculatedSlippage = calculatedSlippage < 0
+        //     ? -calculatedSlippage
+        //     : calculatedSlippage;
+        console.logInt(calculatedSlippage);
+        console.logInt(slippageThreshold);
+
         if (calculatedSlippage > slippageThreshold) {
             revert SlippageBreached({
                 message: "The calculated slippage is over the slippage threshold.",

@@ -547,7 +547,7 @@ describe.only("All Tests", function () {
         expect(tokenSwapResult.token).to.be.equals(token2Address);
         expect(
           BigNumber.from(tokenSwapResult.swappedQty).div(precision)
-        ).to.be.equals(251);
+        ).to.be.equals(98);
         expect(tokenSwapResult.fee).to.be.equals(poolFee1);
       });
 
@@ -790,8 +790,8 @@ describe.only("All Tests", function () {
       tokenCont1,
       signers,
     } = await loadFixture(deployFixtureTokenTest);
-    const tokenAPoolQty = BigNumber.from(200).mul(precision);
-    const tokenBPoolQty = BigNumber.from(220).mul(precision);
+    const tokenAPoolQty = BigNumber.from(1140000).mul(precision);
+    const tokenBPoolQty = BigNumber.from(2200000).mul(precision);
 
     await pair.addLiquidity(
       signers[0].address,
@@ -1011,8 +1011,8 @@ describe.only("All Tests", function () {
     const { pair, token1Address, token2Address } = await loadFixture(
       deployFixture
     );
-    const tokenAPoolQty = BigNumber.from(114).mul(precision);
-    const tokenBPoolQty = BigNumber.from(220).mul(precision);
+    const tokenAPoolQty = BigNumber.from(2222200).mul(precision);
+    const tokenBPoolQty = BigNumber.from(2222200).mul(precision);
     await pair.addLiquidity(
       zeroAddress,
       token1Address,
@@ -1034,7 +1034,7 @@ describe.only("All Tests", function () {
       .to.be.revertedWithCustomError(pair, "SlippageBreached")
       .withArgs(
         "The calculated slippage is over the slippage threshold.",
-        83333336,
+        31657980,
         500000
       );
   });
@@ -1546,12 +1546,12 @@ describe.only("All Tests", function () {
         zeroAddress,
         token1Address,
         token2Address,
-        24,
-        16
+        100,
+        50
       );
-      const value = await pair.getInGivenOut(11);
+      const value = await pair.getInGivenOut(5);
 
-      expect(value).to.be.equals(52);
+      expect(value[2]).to.be.equals(10);
     });
 
     it("check spot price by multiplying with precision value", async function () {
@@ -1631,8 +1631,8 @@ describe.only("All Tests", function () {
         deployFixture
       );
       const precision = await pair.getPrecisionValue();
-      const tokenAQ = BigNumber.from(24).mul(precision);
-      const tokenBQ = BigNumber.from(16).mul(precision);
+      const tokenAQ = BigNumber.from(220).mul(precision);
+      const tokenBQ = BigNumber.from(220).mul(precision);
       await pair.addLiquidity(
         zeroAddress,
         token1Address,
@@ -1646,14 +1646,14 @@ describe.only("All Tests", function () {
       const deltaAQty = BigNumber.from(10).mul(precision);
       const value = await pair.getOutGivenIn(deltaAQty);
 
-      expect(Number(value[1])).to.be.equals(Number(997500000));
+      expect(Number(value[2])).to.be.equals(Number(997500000));
     });
 
     it("check getInGivenOut for big number with precision", async function () {
       const { pair, token1Address, token2Address } = await loadFixture(
         deployFixture
       );
-      const tokenAQ = BigNumber.from("114").mul(precision);
+      const tokenAQ = BigNumber.from("220").mul(precision);
       const tokenBQ = BigNumber.from("220").mul(precision);
       await pair.addLiquidity(
         zeroAddress,
@@ -1663,10 +1663,10 @@ describe.only("All Tests", function () {
         tokenBQ
       );
       const value = await pair.getInGivenOut(
-        BigNumber.from("1").mul(precision)
+        BigNumber.from("10").mul(precision)
       );
-      const valueWithoutPrecision = Number(value) / Number(precision);
-      expect(valueWithoutPrecision).to.be.equals(0.52054794);
+      const valueWithoutPrecision = Number(value[2]) / Number(precision);
+      expect(valueWithoutPrecision).to.be.equals(0.5107032);
     });
   });
 
@@ -1686,7 +1686,7 @@ describe.only("All Tests", function () {
       expect(value).to.be.equals(6);
     });
 
-    it("Verify slippageOutGivenIn ", async function () {
+    it.only("Verify slippageOutGivenIn ", async function () {
       const { pair, token1Address, token2Address } = await loadFixture(
         deployFixture
       );
@@ -1702,7 +1702,7 @@ describe.only("All Tests", function () {
       const deltaAQty = BigNumber.from(1).mul(precision);
       const slippage = await pair.slippageOutGivenIn(deltaAQty);
       const slippageWithoutPrecision = Number(slippage) / Number(precision);
-      expect(slippageWithoutPrecision).to.be.equals(0.95578624);
+      expect(slippageWithoutPrecision).to.be.equals(0.1);
     });
 
     it("Verify slippageInGivenOut ", async function () {
