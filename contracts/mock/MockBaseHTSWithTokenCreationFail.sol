@@ -13,12 +13,12 @@ contract MockBaseHTSWithTokenCreationFail is IBaseHTS {
         address sender,
         address receiver,
         int256 amount
-    ) external override returns (int256 responseCode) {}
+    ) public override returns (int256 responseCode) {}
 
     function associateTokenPublic(
         address account,
         address token
-    ) external override returns (int256 responseCode) {}
+    ) public override returns (int256 responseCode) {}
 
     function associateTokensPublic(
         address account,

@@ -43,7 +43,7 @@ contract MockBaseHTS is IBaseHTS {
         address from,
         address to,
         int256 amount
-    ) external override returns (int256) {
+    ) public override returns (int256) {
         if (StorageSlot.getBooleanSlot(tokenTestSlot).value) {
             ERC20Mock(token).transfer(from, to, uint(amount));
         }
@@ -53,7 +53,7 @@ contract MockBaseHTS is IBaseHTS {
     function associateTokenPublic(
         address,
         address
-    ) external override returns (int256) {
+    ) public override returns (int256) {
         return getResponseCode();
     }
 

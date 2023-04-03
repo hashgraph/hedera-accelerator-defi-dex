@@ -10,6 +10,12 @@ import "@gnosis.pm/safe-contracts/contracts/external/GnosisSafeMath.sol";
 contract HederaGnosisSafe is GnosisSafe, BaseHTS {
     event TokenAssociated(address token);
 
+    event TokenTransferred(
+        address indexed token,
+        address indexed sender,
+        int256 indexed amount
+    );
+
     using GnosisSafeMath for uint256;
 
     bytes private constant BYTES_ZERO = "";
@@ -19,12 +25,23 @@ contract HederaGnosisSafe is GnosisSafe, BaseHTS {
     uint256 private txnNonce;
     mapping(bytes32 => bool) public executedHash;
 
-    function associateTokenToSafe(
-        address _tokenAddress
+    function transferTokenToSafe(
+        address token,
+        int256 amount
     ) public returns (int256 responseCode) {
-        responseCode = super.associateTokenPublic(address(this), _tokenAddress);
+        address sender = msg.sender;
+        responseCode = super.associateTokenPublic(address(this), token);
         if (responseCode == HederaResponseCodes.SUCCESS) {
-            emit TokenAssociated(_tokenAddress);
+            emit TokenAssociated(token);
+        }
+        responseCode = super.transferTokenPublic(
+            token,
+            sender,
+            address(this),
+            amount
+        );
+        if (responseCode == HederaResponseCodes.SUCCESS) {
+            emit TokenTransferred(token, sender, amount);
         }
     }
 
