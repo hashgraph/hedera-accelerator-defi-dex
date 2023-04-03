@@ -18,14 +18,9 @@ describe("MultiSig contract tests", function () {
     expect(args.singleton).not.equal(TestHelper.ZERO_ADDRESS);
   }
 
-  async function getDAOSigners() {
-    const signers = await TestHelper.getSigners();
-    return [signers[4], signers[5]];
-  }
-
   async function deployFixture() {
-    const signers = await ethers.getSigners();
-    const daoAdminOne = signers[5];
+    const signers = await TestHelper.getSigners();
+    const daoAdminOne = await TestHelper.getDAOAdminOne();
 
     const tokenInstance = await TestHelper.deployLogic(
       "ERC20Mock",
@@ -51,7 +46,7 @@ describe("MultiSig contract tests", function () {
       hederaGnosisSafeLogicInstance.address,
       new Uint8Array()
     );
-    const { name, args } = await TestHelper.readEvent(transaction);
+    const { name, args } = await TestHelper.readLastEvent(transaction);
     gnosisProxyCreationVerification(name, args);
 
     const hederaGnosisSafeProxyInstance = args.proxy;
@@ -60,11 +55,12 @@ describe("MultiSig contract tests", function () {
       hederaGnosisSafeProxyInstance
     );
 
-    const daoSigners = await getDAOSigners();
+    const daoSigners = await TestHelper.getDAOSigners();
+    expect(daoSigners.length).not.equals(0);
+
     const doaSignersAddresses = daoSigners.map(
       (signer: SignerWithAddress) => signer.address
     );
-    expect(daoSigners.length).not.equals(0);
 
     await hederaGnosisSafeProxyContract.setup(
       doaSignersAddresses,
@@ -95,6 +91,9 @@ describe("MultiSig contract tests", function () {
       hederaGnosisSafeProxyFactoryInstance.address
     );
 
+    // token association to gnosis contract not possible in unit test as of now
+
+    // token transfer to contract
     await tokenInstance.setUserBalance(
       hederaGnosisSafeProxyContract.address,
       TOTAL
@@ -202,7 +201,7 @@ describe("MultiSig contract tests", function () {
         false
       );
 
-      const { name, args } = await TestHelper.readEvent(txn);
+      const { name, args } = await TestHelper.readLastEvent(txn);
       expect(name).to.be.equal("PublicDaoCreated");
       expect(args.daoAddress).not.to.be.equal(TestHelper.ZERO_ADDRESS);
 
@@ -226,7 +225,7 @@ describe("MultiSig contract tests", function () {
         true
       );
 
-      const { name, args } = await TestHelper.readEvent(txn);
+      const { name, args } = await TestHelper.readLastEvent(txn);
       expect(name).to.be.equal("PrivateDaoCreated");
       expect(args.daoAddress).not.to.be.equal(TestHelper.ZERO_ADDRESS);
 
@@ -272,7 +271,9 @@ describe("MultiSig contract tests", function () {
       const safeFactoryTxn = await multiSigDAOFactoryInstance
         .connect(dexOwner)
         .upgradeSafeFactoryAddress(TestHelper.ONE_ADDRESS);
-      const safeFactoryTxnEvent = await TestHelper.readEvent(safeFactoryTxn);
+      const safeFactoryTxnEvent = await TestHelper.readLastEvent(
+        safeFactoryTxn
+      );
       expect(safeFactoryTxnEvent.name).to.be.equal("LogicUpdated");
       expect(safeFactoryTxnEvent.args.name).to.be.equal("SafeFactory");
       expect(safeFactoryTxnEvent.args.newImplementation).to.be.equal(
@@ -282,7 +283,7 @@ describe("MultiSig contract tests", function () {
       const safeLogicTxn = await multiSigDAOFactoryInstance
         .connect(dexOwner)
         .upgradeSafeLogicAddress(TestHelper.ONE_ADDRESS);
-      const safeLogicTxnEvent = await TestHelper.readEvent(safeLogicTxn);
+      const safeLogicTxnEvent = await TestHelper.readLastEvent(safeLogicTxn);
       expect(safeLogicTxnEvent.name).to.be.equal("LogicUpdated");
       expect(safeLogicTxnEvent.args.name).to.be.equal("SafeLogic");
       expect(safeLogicTxnEvent.args.newImplementation).to.be.equal(
@@ -292,7 +293,7 @@ describe("MultiSig contract tests", function () {
       const daoLogicTxn = await multiSigDAOFactoryInstance
         .connect(dexOwner)
         .upgradeDaoLogicAddress(TestHelper.ONE_ADDRESS);
-      const daoLogicTxnEvent = await TestHelper.readEvent(daoLogicTxn);
+      const daoLogicTxnEvent = await TestHelper.readLastEvent(daoLogicTxn);
       expect(daoLogicTxnEvent.name).to.be.equal("LogicUpdated");
       expect(daoLogicTxnEvent.args.name).to.be.equal("DaoLogic");
       expect(daoLogicTxnEvent.args.newImplementation).to.be.equal(
@@ -409,7 +410,7 @@ describe("MultiSig contract tests", function () {
           info.operation,
           info.nonce
         );
-      const { name, args } = await TestHelper.readEvent(transaction);
+      const { name, args } = await TestHelper.readLastEvent(transaction);
       expect(name).equals("ExecutionSuccess");
       expect(args.txHash).equals(txnHash);
       const isTxnExecuted =
@@ -460,7 +461,7 @@ describe("MultiSig contract tests", function () {
           info.operation,
           info.nonce
         );
-      const { name, args } = await TestHelper.readEvent(transaction);
+      const { name, args } = await TestHelper.readLastEvent(transaction);
       expect(name).equals("ExecutionSuccess");
       expect(args.txHash).equals(txnHash);
       const isTxnExecuted =
@@ -568,7 +569,7 @@ describe("MultiSig contract tests", function () {
         createTransferTransactionABIData(receiver, amount),
         operation
       );
-      const { name, args } = await TestHelper.readEvent(transaction);
+      const { name, args } = await TestHelper.readLastEvent(transaction);
       const txnHash = args.txnHash;
       const info = args.info;
 
@@ -591,7 +592,7 @@ describe("MultiSig contract tests", function () {
         receiver,
         amount
       );
-      const { name, args } = await TestHelper.readEvent(transaction);
+      const { name, args } = await TestHelper.readLastEvent(transaction);
       const txnHash = args.txnHash;
       const info = args.info;
 

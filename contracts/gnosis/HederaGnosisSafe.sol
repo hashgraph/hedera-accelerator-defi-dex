@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.7.0 <0.9.0;
 
+import "../common/BaseHTS.sol";
 import "@gnosis.pm/safe-contracts/contracts/GnosisSafe.sol";
 import "@gnosis.pm/safe-contracts/contracts/external/GnosisSafeMath.sol";
 
-contract HederaGnosisSafe is GnosisSafe {
+contract HederaGnosisSafe is GnosisSafe, BaseHTS {
     using GnosisSafeMath for uint256;
 
     bytes private constant BYTES_ZERO = "";
@@ -13,6 +14,12 @@ contract HederaGnosisSafe is GnosisSafe {
 
     uint256 private txnNonce;
     mapping(bytes32 => bool) public executedHash;
+
+    function associateTokenToSafe(
+        address _tokenAddress
+    ) public returns (int256 responseCode) {
+        return super.associateTokenPublic(address(this), _tokenAddress);
+    }
 
     function transferTokenViaSafe(
         address token,
