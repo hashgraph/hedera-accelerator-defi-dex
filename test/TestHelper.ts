@@ -5,7 +5,7 @@ export class TestHelper {
   static ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
   static ONE_ADDRESS = "0x0000000000000000000000000000000000000001";
 
-  static async readEvent(transaction: any) {
+  static async readLastEvent(transaction: any) {
     const lastEvent = (await transaction.wait()).events.pop();
     return { name: lastEvent.event, args: lastEvent.args };
   }
@@ -19,7 +19,19 @@ export class TestHelper {
   }
 
   static async getDexOwner() {
-    return (await ethers.getSigners()).pop()!;
+    return (await ethers.getSigners()).at(-1)!;
+  }
+
+  static async getDAOAdminOne() {
+    return (await ethers.getSigners()).at(-2)!;
+  }
+
+  static async getDAOAdminTwo() {
+    return (await ethers.getSigners()).at(-3)!;
+  }
+
+  static async getDAOSigners() {
+    return (await ethers.getSigners()).slice(4, 6)!;
   }
 
   static async deployLogic(name: string, ...args: any) {
