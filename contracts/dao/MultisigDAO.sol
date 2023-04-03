@@ -23,7 +23,7 @@ contract MultiSigDAO is BaseDAO {
     }
 
     HederaGnosisSafe private hederaGnosisSafe;
-    mapping(bytes32 => TranscationInfo) private proposals;
+    mapping(bytes32 => TranscationInfo) private transactions;
 
     function initialize(
         address _admin,
@@ -35,12 +35,16 @@ contract MultiSigDAO is BaseDAO {
         __BaseDAO_init(_admin, _name, _logoUrl);
     }
 
-    function getMultisigContractAddress() external view returns (address) {
+    function getHederaGnosisSafeContractAddress()
+        external
+        view
+        returns (address)
+    {
         return address(hederaGnosisSafe);
     }
 
     function state(bytes32 txnHash) external view returns (TransactionState) {
-        TranscationInfo memory transactionInfo = proposals[txnHash];
+        TranscationInfo memory transactionInfo = transactions[txnHash];
         require(transactionInfo.nonce != 0, "MultiSigDAO: no txn exist");
         if (hederaGnosisSafe.isTransactionExecuted(txnHash)) {
             return TransactionState.Executed;
@@ -54,7 +58,7 @@ contract MultiSigDAO is BaseDAO {
     function getTransactionInfo(
         bytes32 txnHash
     ) external view returns (TranscationInfo memory) {
-        TranscationInfo memory transactionInfo = proposals[txnHash];
+        TranscationInfo memory transactionInfo = transactions[txnHash];
         require(transactionInfo.nonce != 0, "MultiSigDAO: no txn exist");
         return transactionInfo;
     }
@@ -66,7 +70,7 @@ contract MultiSigDAO is BaseDAO {
     ) public payable returns (bytes32) {
         (bytes32 txnHash, uint256 txnNonce) = hederaGnosisSafe
             .getTransactionHash(to, msg.value, data, operation);
-        TranscationInfo storage transactionInfo = proposals[txnHash];
+        TranscationInfo storage transactionInfo = transactions[txnHash];
         transactionInfo.to = to;
         transactionInfo.value = msg.value;
         transactionInfo.data = data;
