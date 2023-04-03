@@ -118,42 +118,63 @@ contract Factory is Initializable {
             _tokenToSwap,
             _otherTokenOfPair
         );
-        uint parisCount = feeItems.length / 2;
-        PairDetail[] memory recommendedPairs = new PairDetail[](parisCount);
-        uint256 count = 0;
-        {
-            for (uint i = 0; i < feeItems.length; i = i + 2) {
-                uint256 value = feeItems[i + 1];
-                Pair pair = Pair(pairs[_token0][_token1][int256(value)]);
-                if (address(pair) != address(0x0)) {
-                    int256 _qty;
-                    address _token;
-                    int256 _slippage;
-                    if (_tokenToSwap == _token0) {
-                        (, , _qty, ) = pair.getOutGivenIn(_qtyToSwap);
-                        _token = _token0;
-                        _slippage = pair.slippageOutGivenIn(_qtyToSwap);
-                    } else {
-                        (, _qty, , ) = pair.getInGivenOut(_qtyToSwap);
-                        _token = _token1;
-                        _slippage = pair.slippageInGivenOut(_qtyToSwap);
-                    }
 
-                    recommendedPairs[count] = PairDetail(
-                        address(pair),
-                        _token0,
-                        _qty,
-                        int256(value),
-                        _slippage
-                    );
-                    count += 1;
+        PairDetail[] memory recommendedPairs = qtyPoolResult(
+            feeItems,
+            _token0,
+            _token1,
+            _tokenToSwap,
+            _qtyToSwap
+        );
+        return findMaxQtyPool(recommendedPairs);
+    }
+
+    function qtyPoolResult(
+        uint256[] memory feeItems,
+        address _token0,
+        address _token1,
+        address _tokenToSwap,
+        int256 _qtyToSwap
+    ) private view returns (PairDetail[] memory) {
+        uint256 pairsCount = feeItems.length / 2;
+        uint256 count = 0;
+        PairDetail[] memory recommendedPairs = new PairDetail[](pairsCount);
+        for (uint i = 0; i < feeItems.length; i = i + 2) {
+            uint256 value = feeItems[i + 1];
+            Pair pair = Pair(pairs[_token0][_token1][int256(value)]);
+            if (address(pair) != address(0x0)) {
+                int256 _qty;
+                address _token;
+                int256 _slippage;
+                if (_tokenToSwap == _token0) {
+                    (, , _qty, ) = pair.getOutGivenIn(_qtyToSwap);
+                    _token = _token0;
+                    _slippage = pair.slippageOutGivenIn(_qtyToSwap);
+                } else {
+                    (, _qty, , ) = pair.getInGivenOut(_qtyToSwap);
+                    _token = _token1;
+                    _slippage = pair.slippageInGivenOut(_qtyToSwap);
                 }
+
+                recommendedPairs[count] = PairDetail(
+                    address(pair),
+                    _token0,
+                    _qty,
+                    int256(value),
+                    _slippage
+                );
+                count += 1;
             }
         }
+        return recommendedPairs;
+    }
 
+    function findMaxQtyPool(
+        PairDetail[] memory recommendedPairs
+    ) private view returns (PairDetail memory) {
         PairDetail memory finalPair = recommendedPairs[0];
         {
-            for (uint i = 0; i < count; i++) {
+            for (uint i = 0; i < recommendedPairs.length; i++) {
                 console.logInt(recommendedPairs[i].swappedQty);
                 console.logInt(finalPair.swappedQty);
                 if (recommendedPairs[i].swappedQty > finalPair.swappedQty) {
@@ -162,10 +183,6 @@ contract Factory is Initializable {
             }
         }
         return finalPair;
-    }
-
-    function findMaxQtyPool() {
-        
     }
 
     function sortTokens(
