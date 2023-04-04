@@ -360,7 +360,7 @@ describe("All Tests", function () {
     });
 
     describe("Recommended pool for swap tests ", () => {
-      it("Given no pool of pair exists when user ask for swap recommendation then no pair should be returned ", async function () {
+      it("Given no pool of pair exists when user asks for swap recommendation then no pair should be returned ", async function () {
         const {
           factory,
           mockBaseHTS,
@@ -386,7 +386,7 @@ describe("All Tests", function () {
         );
       });
 
-      it("Given one pool of pair exists when user ask for swap recommendation then that should be returned ", async function () {
+      it("Given one pool of pair exists when user asks for swap recommendation then that should be returned ", async function () {
         const {
           pair,
           factory,
@@ -446,7 +446,7 @@ describe("All Tests", function () {
         expect(token2SwapResult.fee).to.be.equals(poolFee);
       });
 
-      it("Given multiple pools of a exist when user ask for recommendation for swap then pool that gives maximum quantity should be returned. ", async function () {
+      it("Given multiple pools of a exist when user asks for recommendation for swap then pool that gives maximum quantity should be returned. ", async function () {
         const {
           pair,
           factory,
@@ -592,7 +592,7 @@ describe("All Tests", function () {
 
         const pool1 = await pair.attach(pair1);
         //This pool gives more tokenA qty after swap as tokenA is 5 times tokenB
-        let tokenAPoolQty = BigNumber.from(50000).mul(precision);
+        let tokenAPoolQty = BigNumber.from(10000).mul(precision);
         let tokenBPoolQty = BigNumber.from(10000).mul(precision);
         await pool1
           .connect(signers[1])
@@ -639,7 +639,7 @@ describe("All Tests", function () {
         expect(tokenSwapResult.fee).to.be.equals(poolFee1);
         expect(
           BigNumber.from(tokenSwapResult.swappedQty).div(precision)
-        ).to.be.equals(470);
+        ).to.be.equals(94);
       });
     });
 
@@ -762,106 +762,6 @@ describe("All Tests", function () {
     expect(qtys[1]).to.be.equals(precision.mul(0));
   });
 
-  it("Swap 1 units of token A  ", async function () {
-    const {
-      pair,
-      token1Address,
-      tokenCont,
-      token2Address,
-      tokenCont1,
-      signers,
-    } = await loadFixture(deployFixtureTokenTest);
-    const tokenAPoolQty = BigNumber.from(114).mul(precision);
-    const tokenBPoolQty = BigNumber.from(220).mul(precision);
-
-    await pair.addLiquidity(
-      signers[0].address,
-      token1Address,
-      token2Address,
-      tokenAPoolQty,
-      tokenBPoolQty
-    );
-    const tokenBeforeQty = await pair.getPairQty();
-    expect(Number(tokenBeforeQty[0])).to.be.equals(tokenAPoolQty);
-
-    const addTokenAQty = BigNumber.from(1).mul(precision);
-
-    const { tokenAQtyAfterSubtractingFee, tokenBResultantQty } =
-      await quantitiesAfterSwappingTokenA(pair, addTokenAQty);
-    console.log(
-      `tokenAQtyAfterSubtractingFee ${tokenAQtyAfterSubtractingFee} tokenBResultantQty ${tokenBResultantQty}`
-    );
-
-    const tx = await pair.swapToken(
-      signers[0].address,
-      token1Address,
-      addTokenAQty,
-      1800000
-    );
-    await tx.wait();
-
-    const tokenQty = await pair.getPairQty();
-    const pairAccountBalance = await tokenCont.balanceOf(pair.address);
-    expect(pairAccountBalance).to.be.equals(tokenQty[0]);
-    expect(tokenQty[0]).to.be.equals(
-      tokenAPoolQty.add(tokenAQtyAfterSubtractingFee)
-    );
-
-    expect(tokenQty[1]).to.be.equals(tokenBPoolQty.sub(tokenBResultantQty));
-
-    const pairAccountBalance1 = await tokenCont1.balanceOf(pair.address);
-    expect(pairAccountBalance1).to.be.equals(tokenQty[1]);
-  });
-
-  it("Swap 1 units of token B  ", async function () {
-    const {
-      pair,
-      token1Address,
-      tokenCont,
-      token2Address,
-      tokenCont1,
-      signers,
-    } = await loadFixture(deployFixtureTokenTest);
-    const tokenAPoolQty = BigNumber.from(114).mul(precision);
-    const tokenBPoolQty = BigNumber.from(220).mul(precision);
-
-    await pair.addLiquidity(
-      signers[0].address,
-      token1Address,
-      token2Address,
-      tokenAPoolQty,
-      tokenBPoolQty
-    );
-
-    const tokenBeforeQty = await pair.getPairQty();
-    expect(Number(tokenBeforeQty[1])).to.be.equals(tokenBPoolQty);
-
-    const addTokenBQty = BigNumber.from(1).mul(precision);
-
-    const { tokenBQtyAfterSubtractingFee, tokenAResultantQty } =
-      await quantitiesAfterSwappingTokenB(pair, addTokenBQty);
-
-    const tx = await pair.swapToken(
-      signers[0].address,
-      token2Address,
-      addTokenBQty,
-      1200000
-    );
-    await tx.wait();
-
-    const tokenQty = await pair.getPairQty();
-    const pairAccountBalance = await tokenCont.balanceOf(pair.address);
-    expect(pairAccountBalance).to.be.equals(tokenQty[0]);
-    expect(tokenQty[0]).to.be.equals(tokenAPoolQty.sub(tokenAResultantQty));
-
-    expect(tokenQty[1]).to.be.equals(
-      tokenBPoolQty.add(tokenBQtyAfterSubtractingFee)
-    );
-
-    const pairAccountBalance1 = await tokenCont1.balanceOf(pair.address);
-    expect(pairAccountBalance1).to.be.equals(tokenQty[1]);
-  });
-
   it("Swap 1 unit of token A within slippage threshold input", async function () {
     const {
       pair,
@@ -882,6 +782,9 @@ describe("All Tests", function () {
       tokenAPoolQty,
       tokenBPoolQty
     );
+
+    const tokenBeforeQty = await pair.getPairQty();
+    expect(Number(tokenBeforeQty[0])).to.be.equals(tokenAPoolQty);
 
     const addTokenAQty = BigNumber.from(1).mul(precision);
 
@@ -929,6 +832,9 @@ describe("All Tests", function () {
       tokenAPoolQty,
       tokenBPoolQty
     );
+
+    const tokenBeforeQty = await pair.getPairQty();
+    expect(Number(tokenBeforeQty[1])).to.be.equals(tokenBPoolQty);
 
     const addTokenBQty = BigNumber.from(1).mul(precision);
 
@@ -1604,7 +1510,7 @@ describe("All Tests", function () {
       const value = await pairWithZeroFee.getOutGivenIn(deltaAQty);
 
       expect(Number(value[2]) + Number(value[3])).to.be.equals(
-        Number(500000000)
+        Number(deltaAQty) / 2
       );
     });
 
@@ -1620,11 +1526,10 @@ describe("All Tests", function () {
         tokenAQ,
         tokenBQ
       );
-      const value = await pairWithZeroFee.getInGivenOut(
-        BigNumber.from("10").mul(precision)
-      );
+      const deltaBQty = BigNumber.from(10).mul(precision);
+      const value = await pairWithZeroFee.getInGivenOut(deltaBQty);
       expect(Number(value[2]) + Number(value[3])).to.be.equals(
-        Number(500000000)
+        Number(deltaBQty) / 2
       );
     });
   });
