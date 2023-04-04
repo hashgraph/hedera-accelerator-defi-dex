@@ -16,7 +16,7 @@ contract NFTHolderMock is IGODHolder {
         address voter
     ) external view override returns (uint256) {}
 
-    function grabTokensFromUser(address user, int256) external override {}
+    function grabTokensFromUser(address user, uint256) external override {}
 
     function addProposalForVoter(
         address voter,

@@ -29,7 +29,7 @@ contract NFTHolder is TokenHolder {
 
     function grabTokensFromUser(
         address user,
-        int256 tokenId
+        uint256 tokenId
     ) external override {
         if (nftTokenForUsers[user] > 0) {
             return;
@@ -40,7 +40,7 @@ contract NFTHolder is TokenHolder {
             address(_token),
             address(user),
             address(this),
-            tokenId
+            int64(int256(tokenId))
         );
         require(
             responseCode == HederaResponseCodes.SUCCESS,

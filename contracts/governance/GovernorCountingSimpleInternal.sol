@@ -235,7 +235,7 @@ abstract contract GovernorCountingSimpleInternal is
      */
     function castVotePublic(
         uint256 proposalId,
-        int256 tokenId,
+        uint256 tokenId,
         uint8 support
     ) public returns (uint256) {
         address voter = _msgSender();

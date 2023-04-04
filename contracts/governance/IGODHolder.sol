@@ -10,7 +10,7 @@ interface IGODHolder {
 
     function balanceOfVoter(address voter) external view returns (uint256);
 
-    function grabTokensFromUser(address user, int256 tokenId) external;
+    function grabTokensFromUser(address user, uint256 tokenId) external;
 
     function addProposalForVoter(
         address voter,

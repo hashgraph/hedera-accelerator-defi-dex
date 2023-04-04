@@ -31,7 +31,7 @@ contract GODHolder is TokenHolder {
         return HederaResponseCodes.SUCCESS;
     }
 
-    function grabTokensFromUser(address user, int256) external override {
+    function grabTokensFromUser(address user, uint256) external override {
         uint256 userBalance = IERC20(_token).balanceOf(user);
         if (godTokenForUsers[user] > 0 && userBalance == 0) {
             return;

@@ -133,7 +133,7 @@ contract MockBaseHTS is IBaseHTS {
         address token,
         address sender,
         address receiver,
-        int256 serial
+        int64 serial
     ) external override returns (int256) {
         return getResponseCode();
     }
