@@ -1,7 +1,7 @@
 import { binding, given, then, when } from "cucumber-tsflow";
 import { expect } from "chai";
 import { ContractService } from "../../deployment/service/ContractService";
-import ClientManagement from "../../utils/ClientManagement";
+import ClientManagement, { clientsInfo } from "../../utils/ClientManagement";
 import { TokenId, ContractId } from "@hashgraph/sdk";
 import { BigNumber } from "bignumber.js";
 import Pair from "../business/Pair";
@@ -40,6 +40,10 @@ let slippageInGivenOut: BigNumber;
 let lpTokenSymbol: string;
 let lpTokenName: string;
 let precision: BigNumber;
+let tokenBalanceBeforeSwapWithTreasury: Number;
+let feeForSwap: BigNumber;
+let errorMsg: string;
+
 @binding()
 export class PairTestSteps {
   @given(
@@ -170,6 +174,9 @@ export class PairTestSteps {
       slippage,
       client
     );
+    const withPrecision = Common.withPrecision(1, precision);
+    const tokenQty = new BigNumber(tokenCount).multipliedBy(withPrecision);
+    feeForSwap = await pair.feeForSwap(tokenQty, clientsInfo.operatorClient);
   }
 
   @then(
@@ -251,8 +258,12 @@ export class PairTestSteps {
     await lpToken.initialize(lpTokenName, lpTokenSymbol, client);
   }
 
-  @when(/User initialize pair contract/, undefined, 30000)
-  public async initializePairOfTokens(): Promise<void> {
+  @when(
+    /User initialize pair contract with swap transaction fee as (-?\d+\.\d+)%/,
+    undefined,
+    30000
+  )
+  public async initializePairOfTokens(fee: number): Promise<void> {
     console.log("Initializing pair contract with following");
     console.log("contractId : ", pair.contractId);
     console.log("treasureId : ", treasureId.toString());
@@ -266,6 +277,7 @@ export class PairTestSteps {
       treasureKey,
       tokenA,
       tokenB,
+      new BigNumber(fee * 100),
       client
     );
   }
@@ -308,5 +320,53 @@ export class PairTestSteps {
     expect(Number(Number(tokenBalance / withPrecision).toFixed())).to.eql(
       Number(tokenQty)
     );
+  }
+
+  @then(
+    /User verify "([^"]*)" balance with treasury is (\d+\.\d+)/,
+    undefined,
+    30000
+  )
+  public async verifyTokenBalanceWithTreasury(
+    tokenName: string,
+    balance: number
+  ) {
+    const tokenId = tokenNameIdMap.get(tokenName);
+    const tokenBalanceAfterSwapWithTreasury = Number(
+      await Common.getTokenBalance(treasureId, tokenId, client)
+    );
+
+    const withPrecision = Number(Common.withPrecision(1, precision));
+    const actualBal = Number(tokenBalanceAfterSwapWithTreasury / withPrecision);
+    const eligibleAmtForTreasury =
+      Number(feeForSwap.dividedBy(withPrecision)) / 2;
+    expect(actualBal).to.eql(Number(balance));
+    expect(eligibleAmtForTreasury).to.eql(actualBal);
+  }
+
+  @when(
+    /User tries to initialize the pair contract with same tokens and same fee as (-?\d+\.\d+)%/,
+    undefined,
+    30000
+  )
+  public async initializeWithSameTokenAndFee(fee: number) {
+    try {
+      await pair.initialize(
+        lpTokenContract.transparentProxyAddress!,
+        treasureId,
+        treasureKey,
+        tokenA,
+        tokenB,
+        new BigNumber(fee * 100),
+        client
+      );
+    } catch (e: any) {
+      errorMsg = e.message;
+    }
+  }
+
+  @then(/User receive error message "([^"]*)"/)
+  public async verifyErrorMessage(msg: string) {
+    expect(errorMsg).contains(msg);
   }
 }
