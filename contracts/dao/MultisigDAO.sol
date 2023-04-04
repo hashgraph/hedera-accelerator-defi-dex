@@ -47,12 +47,12 @@ contract MultiSigDAO is BaseDAO {
         return address(hederaGnosisSafe);
     }
 
-    function state(bytes32 txnHash) external view returns (TransactionState) {
-        TransactionInfo memory transactionInfo = transactions[txnHash];
+    function state(bytes32 _txnHash) external view returns (TransactionState) {
+        TransactionInfo memory transactionInfo = transactions[_txnHash];
         require(transactionInfo.nonce != 0, "MultiSigDAO: no txn exist");
-        if (hederaGnosisSafe.isTransactionExecuted(txnHash)) {
+        if (hederaGnosisSafe.isTransactionExecuted(_txnHash)) {
             return TransactionState.Executed;
-        } else if (hederaGnosisSafe.checkApprovals(txnHash)) {
+        } else if (hederaGnosisSafe.checkApprovals(_txnHash)) {
             return TransactionState.Approved;
         } else {
             return TransactionState.Pending;
@@ -60,25 +60,25 @@ contract MultiSigDAO is BaseDAO {
     }
 
     function getTransactionInfo(
-        bytes32 txnHash
+        bytes32 _txnHash
     ) external view returns (TransactionInfo memory) {
-        TransactionInfo memory transactionInfo = transactions[txnHash];
+        TransactionInfo memory transactionInfo = transactions[_txnHash];
         require(transactionInfo.nonce != 0, "MultiSigDAO: no txn exist");
         return transactionInfo;
     }
 
     function proposeTransaction(
-        address to,
-        bytes memory data,
-        Enum.Operation operation
+        address _to,
+        bytes memory _data,
+        Enum.Operation _operation
     ) public payable returns (bytes32) {
         (bytes32 txnHash, uint256 txnNonce) = hederaGnosisSafe
-            .getTransactionHash(to, msg.value, data, operation);
+            .getTransactionHash(_to, msg.value, _data, _operation);
         TransactionInfo storage transactionInfo = transactions[txnHash];
-        transactionInfo.to = to;
+        transactionInfo.to = _to;
         transactionInfo.value = msg.value;
-        transactionInfo.data = data;
-        transactionInfo.operation = operation;
+        transactionInfo.data = _data;
+        transactionInfo.operation = _operation;
         transactionInfo.nonce = txnNonce;
 
         emit TransactionCreated(txnHash, transactionInfo);
