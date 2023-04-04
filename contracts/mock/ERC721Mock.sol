@@ -9,7 +9,6 @@ contract ERC721Mock is IERC721 {
     mapping(address => uint256) userBalances;
     mapping(uint256 => address) userTokenIds;
     int failTransferAfterCount;
-    bool isFailTransferAfterCountEnabled;
 
     function setTransaferFailed(bool _transferFailed) public {
         transferFailed = _transferFailed;
@@ -53,7 +52,6 @@ contract ERC721Mock is IERC721 {
         address _to,
         uint256 _tokenId
     ) external payable {
-        console.log(" transferFrom called");
         userTokenIds[_tokenId] = _from;
         userBalances[_from] -= (userBalances[_from] > 0 ? 1 : 0);
         userBalances[_to] += 1;
