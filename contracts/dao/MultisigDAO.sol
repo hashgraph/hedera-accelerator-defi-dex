@@ -6,7 +6,7 @@ import "../gnosis/HederaGnosisSafe.sol";
 import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
 contract MultiSigDAO is BaseDAO {
-    event TransactionCreated(bytes32 txnHash, TranscationInfo info);
+    event TransactionCreated(bytes32 txnHash, TransactionInfo info);
 
     enum TransactionState {
         Pending,
@@ -14,7 +14,7 @@ contract MultiSigDAO is BaseDAO {
         Executed
     }
 
-    struct TranscationInfo {
+    struct TransactionInfo {
         address to;
         uint256 value;
         bytes data;
@@ -23,7 +23,7 @@ contract MultiSigDAO is BaseDAO {
     }
 
     HederaGnosisSafe private hederaGnosisSafe;
-    mapping(bytes32 => TranscationInfo) private transactions;
+    mapping(bytes32 => TransactionInfo) private transactions;
 
     function initialize(
         address _admin,
@@ -44,7 +44,7 @@ contract MultiSigDAO is BaseDAO {
     }
 
     function state(bytes32 txnHash) external view returns (TransactionState) {
-        TranscationInfo memory transactionInfo = transactions[txnHash];
+        TransactionInfo memory transactionInfo = transactions[txnHash];
         require(transactionInfo.nonce != 0, "MultiSigDAO: no txn exist");
         if (hederaGnosisSafe.isTransactionExecuted(txnHash)) {
             return TransactionState.Executed;
@@ -57,8 +57,8 @@ contract MultiSigDAO is BaseDAO {
 
     function getTransactionInfo(
         bytes32 txnHash
-    ) external view returns (TranscationInfo memory) {
-        TranscationInfo memory transactionInfo = transactions[txnHash];
+    ) external view returns (TransactionInfo memory) {
+        TransactionInfo memory transactionInfo = transactions[txnHash];
         require(transactionInfo.nonce != 0, "MultiSigDAO: no txn exist");
         return transactionInfo;
     }
@@ -70,7 +70,7 @@ contract MultiSigDAO is BaseDAO {
     ) public payable returns (bytes32) {
         (bytes32 txnHash, uint256 txnNonce) = hederaGnosisSafe
             .getTransactionHash(to, msg.value, data, operation);
-        TranscationInfo storage transactionInfo = transactions[txnHash];
+        TransactionInfo storage transactionInfo = transactions[txnHash];
         transactionInfo.to = to;
         transactionInfo.value = msg.value;
         transactionInfo.data = data;
