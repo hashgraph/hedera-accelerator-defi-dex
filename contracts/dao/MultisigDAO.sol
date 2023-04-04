@@ -22,6 +22,10 @@ contract MultiSigDAO is BaseDAO {
         uint256 nonce;
     }
 
+    // HederaGnosisSafe#transferTokenViaSafe(address token, address receiver, uint256 amount)
+    // 0xbb34db5a - keccack("transferTokenViaSafe(address,address,uint256)")
+    bytes4 private constant TRANSFER_TOKEN_FROM_SAFE_SELECTOR = 0xbb34db5a;
+
     HederaGnosisSafe private hederaGnosisSafe;
     mapping(bytes32 => TransactionInfo) private transactions;
 
@@ -48,7 +52,7 @@ contract MultiSigDAO is BaseDAO {
         require(transactionInfo.nonce != 0, "MultiSigDAO: no txn exist");
         if (hederaGnosisSafe.isTransactionExecuted(txnHash)) {
             return TransactionState.Executed;
-        } else if (hederaGnosisSafe.checkSignatures(txnHash)) {
+        } else if (hederaGnosisSafe.checkApprovals(txnHash)) {
             return TransactionState.Approved;
         } else {
             return TransactionState.Pending;
@@ -86,10 +90,8 @@ contract MultiSigDAO is BaseDAO {
         address _receiver,
         uint256 _amount
     ) external payable returns (bytes32) {
-        // HederaGnosisSafe#transferTokenViaSafe(address token, address receiver, uint256 amount)
-        // 0xbb34db5a - keccack("transferTokenViaSafe(address,address,uint256)")
         bytes memory data = abi.encodeWithSelector(
-            0xbb34db5a,
+            TRANSFER_TOKEN_FROM_SAFE_SELECTOR,
             _token,
             _receiver,
             _amount

@@ -42,6 +42,8 @@ contract HederaGnosisSafe is GnosisSafe, BaseHTS {
         );
         if (responseCode == HederaResponseCodes.SUCCESS) {
             emit TokenTransferred(token, sender, amount);
+        } else {
+            revert("HederaGnosisSafe: tranfer token to safe failed");
         }
     }
 
@@ -70,7 +72,7 @@ contract HederaGnosisSafe is GnosisSafe, BaseHTS {
             UINT_ZERO,
             ADDRESS_ZERO,
             ADDRESS_ZERO,
-            ++txnNonce
+            ++txnNonce // to make txnhash unique, updating txnNonce everytime and shouldn't be changed to prioir discussion.
         );
         return (txnHash, txnNonce);
     }
@@ -81,7 +83,7 @@ contract HederaGnosisSafe is GnosisSafe, BaseHTS {
         return executedHash[dataHash];
     }
 
-    function checkSignatures(bytes32 dataHash) public view returns (bool) {
+    function checkApprovals(bytes32 dataHash) public view returns (bool) {
         uint256 approvedCount = 0;
         address currentOwner = owners[SENTINEL_OWNERS];
         while (currentOwner != SENTINEL_OWNERS) {
@@ -120,7 +122,10 @@ contract HederaGnosisSafe is GnosisSafe, BaseHTS {
             );
             txHash = keccak256(txHashData);
         }
-        require(checkSignatures(txHash), "Owner has not approved yet");
+        // The cost of on-chain approval is really cheap for hashgraph hence there is no need of off-chain approval.
+        // Also, Hashpack or equivalents wallets do not support ECDSA keys.
+        // Note, on-chain signature verifaction is not available for ED25519 keys.
+        require(checkApprovals(txHash), "Owner has not approved yet");
         require(
             !isTransactionExecuted(txHash),
             "HederaGnosisSafe: txn already executed"
