@@ -119,7 +119,7 @@ contract Factory is Initializable {
             _otherTokenOfPair
         );
 
-        PairDetail[] memory recommendedPairs = qtyPoolResult(
+        PairDetail[] memory recommendedPairs = findSwappedQtyForAllPairs(
             feeItems,
             _token0,
             _token1,
@@ -129,7 +129,7 @@ contract Factory is Initializable {
         return findMaxQtyPool(recommendedPairs);
     }
 
-    function qtyPoolResult(
+    function findSwappedQtyForAllPairs(
         uint256[] memory feeItems,
         address _token0,
         address _token1,
@@ -171,12 +171,10 @@ contract Factory is Initializable {
 
     function findMaxQtyPool(
         PairDetail[] memory recommendedPairs
-    ) private view returns (PairDetail memory) {
+    ) private pure returns (PairDetail memory) {
         PairDetail memory finalPair = recommendedPairs[0];
         {
             for (uint i = 0; i < recommendedPairs.length; i++) {
-                console.logInt(recommendedPairs[i].swappedQty);
-                console.logInt(finalPair.swappedQty);
                 if (recommendedPairs[i].swappedQty > finalPair.swappedQty) {
                     finalPair = recommendedPairs[i];
                 }
