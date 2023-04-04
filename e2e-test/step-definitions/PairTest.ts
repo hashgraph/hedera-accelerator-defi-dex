@@ -403,4 +403,52 @@ export class PairTestSteps {
       Number(secondTokenAmt)
     );
   }
+
+  @then(
+    /User verify "([^"]*)" balance with treasury is (\d+\.\d+)/,
+    undefined,
+    30000
+  )
+  public async verifyTokenBalanceWithTreasury(
+    tokenName: string,
+    balance: number
+  ) {
+    const tokenId = tokenNameIdMap.get(tokenName);
+    const tokenBalanceAfterSwapWithTreasury = Number(
+      await Common.getTokenBalance(treasureId, tokenId, client)
+    );
+
+    const withPrecision = Number(Common.withPrecision(1, precision));
+    const actualBal = Number(tokenBalanceAfterSwapWithTreasury / withPrecision);
+    const eligibleAmtForTreasury =
+      Number(feeForSwap.dividedBy(withPrecision)) / 2;
+    expect(actualBal).to.eql(Number(balance));
+    expect(eligibleAmtForTreasury).to.eql(actualBal);
+  }
+
+  @when(
+    /User tries to initialize the pair contract with same tokens and same fee as (-?\d+\.\d+)%/,
+    undefined,
+    30000
+  )
+  public async initializeWithSameTokenAndFee(fee: number) {
+    try {
+      await pair.initialize(
+        lpTokenContract.transparentProxyAddress!,
+        treasureId,
+        treasureKey,
+        tokenA,
+        tokenB,
+        new BigNumber(fee * 100),
+        client
+      );
+    } catch (e: any) {
+      errorMsg = e.message;
+    }
+  }
+
+  @then(/User receive error message "([^"]*)"/)
+  public async verifyErrorMessage(msg: string) {
+    expect(errorMsg).contains(msg);
+  }
 }
