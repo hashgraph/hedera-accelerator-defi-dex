@@ -135,154 +135,6 @@ contract Pair is IPair, Initializable, TokenOperations {
         lpTokenContract.removeLPTokenFor(_lpToken, toAccount);
     }
 
-    function calculateTokenstoGetBack(
-        int256 _lpToken
-    ) internal view returns (int256, int256) {
-        int256 allLPTokens = lpTokenContract.getAllLPTokenCount();
-
-        int256 tokenAQuantity = (_lpToken * pair.tokenA.tokenQty) / allLPTokens;
-        int256 tokenBQuantity = (_lpToken * pair.tokenB.tokenQty) / allLPTokens;
-
-        return (tokenAQuantity, tokenBQuantity);
-    }
-
-    function swapToken(
-        address to,
-        address _token,
-        int256 _deltaQty,
-        int256 _slippage
-    ) external payable virtual override {
-        require(
-            _token == pair.tokenA.tokenAddress ||
-                _token == pair.tokenB.tokenAddress,
-            "Pls pass correct token to swap."
-        );
-        _deltaQty = _tokenQuantity(_token, _deltaQty);
-        if (_token == pair.tokenA.tokenAddress) {
-            doTokenASwap(to, _deltaQty, _slippage);
-        } else {
-            doTokenBSwap(to, _deltaQty, _slippage);
-        }
-    }
-
-    function doTokenASwap(
-        address to,
-        int256 _deltaAQty,
-        int256 _slippage
-    ) private {
-        int256 calculatedSlippage = slippageOutGivenIn(_deltaAQty);
-        isSlippageBreached(calculatedSlippage, _slippage);
-
-        (
-            int256 _tokenATreasureFee,
-            int256 _tokenASwapQtyPlusContractTokenShare,
-            int256 _actualSwapBValue,
-            int256 _tokenBTreasureFee
-        ) = getOutGivenIn(_deltaAQty);
-
-        pair.tokenA.tokenQty += _tokenASwapQtyPlusContractTokenShare;
-
-        //Token A transfer
-        transferTokenInternally(
-            to,
-            address(this),
-            pair.tokenA.tokenAddress,
-            _tokenASwapQtyPlusContractTokenShare,
-            "swapTokenA: Transferring token A to contract failed with status code"
-        );
-
-        // token A fee transfer
-        transferTokenInternally(
-            to,
-            treasury,
-            pair.tokenA.tokenAddress,
-            _tokenATreasureFee,
-            "swapTokenAFee: Transferring fee as token A to treasuary failed with status code"
-        );
-
-        pair.tokenB.tokenQty -= _actualSwapBValue + _tokenBTreasureFee;
-
-        //Token B transfer
-        _associateToken(to, pair.tokenB.tokenAddress);
-
-        transferTokenInternally(
-            address(this),
-            to,
-            pair.tokenB.tokenAddress,
-            _actualSwapBValue,
-            "swapTokenA: Transferring token B to user failed with status code"
-        );
-
-        //token B fee transfer
-        transferTokenInternally(
-            address(this),
-            treasury,
-            pair.tokenB.tokenAddress,
-            _tokenBTreasureFee,
-            "swapTokenBFee: Transferring fee as token B to treasuary failed with status code"
-        );
-    }
-
-    function doTokenBSwap(
-        address to,
-        int256 _deltaBQty,
-        int256 _slippage
-    ) private {
-        int256 calculatedSlippage = slippageInGivenOut(_deltaBQty);
-        isSlippageBreached(calculatedSlippage, _slippage);
-
-        (
-            int256 _tokenBTreasureFee,
-            int256 _tokenBSwapQtyPlusContractTokenShare,
-            int256 _actualSwapAValue,
-            int256 _tokenATreasureFee
-        ) = getInGivenOut(_deltaBQty);
-
-        //Token B Calculation
-
-        pair.tokenB.tokenQty += _tokenBSwapQtyPlusContractTokenShare;
-
-        //Token A transfer
-        transferTokenInternally(
-            to,
-            address(this),
-            pair.tokenB.tokenAddress,
-            _tokenBSwapQtyPlusContractTokenShare,
-            "swapTokenB: Transferring token B to contract failed with status code"
-        );
-
-        // token A fee transfer
-        transferTokenInternally(
-            to,
-            treasury,
-            pair.tokenB.tokenAddress,
-            _tokenBTreasureFee,
-            "swapTokenBFee: Transferring fee as token B to treasuary failed with status code"
-        );
-
-        pair.tokenA.tokenQty -= _actualSwapAValue + _tokenATreasureFee;
-
-        //Token B transfer
-        _associateToken(to, pair.tokenA.tokenAddress);
-
-        transferTokenInternally(
-            address(this),
-            to,
-            pair.tokenA.tokenAddress,
-            _actualSwapAValue,
-            "swapTokenB: Transferring token A to user failed with status code"
-        );
-
-        //token B fee transfer
-        transferTokenInternally(
-            address(this),
-            treasury,
-            pair.tokenA.tokenAddress,
-            _tokenATreasureFee,
-            "swapTokenBFee: Transferring fee as token A to treasuary failed with status code"
-        );
-    }
-
     function getPairQty() public view returns (int256, int256) {
         return (pair.tokenA.tokenQty, pair.tokenB.tokenQty);
     }
@@ -488,6 +340,154 @@ contract Pair is IPair, Initializable, TokenOperations {
     function feeForToken(int256 _tokenQ) public view returns (int256) {
         int256 tokenQ = ((_tokenQ * fee) / 2) / getFeePrecision();
         return tokenQ;
+    }
+
+    function swapToken(
+        address to,
+        address _token,
+        int256 _deltaQty,
+        int256 _slippage
+    ) external payable virtual override {
+        require(
+            _token == pair.tokenA.tokenAddress ||
+                _token == pair.tokenB.tokenAddress,
+            "Pls pass correct token to swap."
+        );
+        _deltaQty = _tokenQuantity(_token, _deltaQty);
+        if (_token == pair.tokenA.tokenAddress) {
+            doTokenASwap(to, _deltaQty, _slippage);
+        } else {
+            doTokenBSwap(to, _deltaQty, _slippage);
+        }
+    }
+
+    function calculateTokenstoGetBack(
+        int256 _lpToken
+    ) internal view returns (int256, int256) {
+        int256 allLPTokens = lpTokenContract.getAllLPTokenCount();
+
+        int256 tokenAQuantity = (_lpToken * pair.tokenA.tokenQty) / allLPTokens;
+        int256 tokenBQuantity = (_lpToken * pair.tokenB.tokenQty) / allLPTokens;
+
+        return (tokenAQuantity, tokenBQuantity);
+    }
+
+    function doTokenASwap(
+        address to,
+        int256 _deltaAQty,
+        int256 _slippage
+    ) private {
+        int256 calculatedSlippage = slippageOutGivenIn(_deltaAQty);
+        isSlippageBreached(calculatedSlippage, _slippage);
+
+        (
+            int256 _tokenATreasureFee,
+            int256 _tokenASwapQtyPlusContractTokenShare,
+            int256 _actualSwapBValue,
+            int256 _tokenBTreasureFee
+        ) = getOutGivenIn(_deltaAQty);
+
+        pair.tokenA.tokenQty += _tokenASwapQtyPlusContractTokenShare;
+
+        //Token A transfer
+        transferTokenInternally(
+            to,
+            address(this),
+            pair.tokenA.tokenAddress,
+            _tokenASwapQtyPlusContractTokenShare,
+            "swapTokenA: Transferring token A to contract failed with status code"
+        );
+
+        // token A fee transfer
+        transferTokenInternally(
+            to,
+            treasury,
+            pair.tokenA.tokenAddress,
+            _tokenATreasureFee,
+            "swapTokenAFee: Transferring fee as token A to treasuary failed with status code"
+        );
+
+        pair.tokenB.tokenQty -= _actualSwapBValue + _tokenBTreasureFee;
+
+        //Token B transfer
+        _associateToken(to, pair.tokenB.tokenAddress);
+
+        transferTokenInternally(
+            address(this),
+            to,
+            pair.tokenB.tokenAddress,
+            _actualSwapBValue,
+            "swapTokenA: Transferring token B to user failed with status code"
+        );
+
+        //token B fee transfer
+        transferTokenInternally(
+            address(this),
+            treasury,
+            pair.tokenB.tokenAddress,
+            _tokenBTreasureFee,
+            "swapTokenBFee: Transferring fee as token B to treasuary failed with status code"
+        );
+    }
+
+    function doTokenBSwap(
+        address to,
+        int256 _deltaBQty,
+        int256 _slippage
+    ) private {
+        int256 calculatedSlippage = slippageInGivenOut(_deltaBQty);
+        isSlippageBreached(calculatedSlippage, _slippage);
+
+        (
+            int256 _tokenBTreasureFee,
+            int256 _tokenBSwapQtyPlusContractTokenShare,
+            int256 _actualSwapAValue,
+            int256 _tokenATreasureFee
+        ) = getInGivenOut(_deltaBQty);
+
+        //Token B Calculation
+
+        pair.tokenB.tokenQty += _tokenBSwapQtyPlusContractTokenShare;
+
+        //Token A transfer
+        transferTokenInternally(
+            to,
+            address(this),
+            pair.tokenB.tokenAddress,
+            _tokenBSwapQtyPlusContractTokenShare,
+            "swapTokenB: Transferring token B to contract failed with status code"
+        );
+
+        // token A fee transfer
+        transferTokenInternally(
+            to,
+            treasury,
+            pair.tokenB.tokenAddress,
+            _tokenBTreasureFee,
+            "swapTokenBFee: Transferring fee as token B to treasuary failed with status code"
+        );
+
+        pair.tokenA.tokenQty -= _actualSwapAValue + _tokenATreasureFee;
+
+        //Token B transfer
+        _associateToken(to, pair.tokenA.tokenAddress);
+
+        transferTokenInternally(
+            address(this),
+            to,
+            pair.tokenA.tokenAddress,
+            _actualSwapAValue,
+            "swapTokenB: Transferring token A to user failed with status code"
+        );
+
+        //token B fee transfer
+        transferTokenInternally(
+            address(this),
+            treasury,
+            pair.tokenA.tokenAddress,
+            _tokenATreasureFee,
+            "swapTokenBFee: Transferring fee as token A to treasuary failed with status code"
+        );
     }
 
     function _calculateIncomingTokenQuantities(
