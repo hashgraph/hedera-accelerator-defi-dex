@@ -20,6 +20,7 @@ abstract contract TokenHolder is IGODHolder, Initializable {
         _associateToken(address(this), address(_token));
     }
 
+    /// @custom:oz-upgrades-unsafe-allow delegatecall
     function _associateToken(address account, address token) private {
         (bool success, ) = address(_tokenService).delegatecall(
             abi.encodeWithSelector(

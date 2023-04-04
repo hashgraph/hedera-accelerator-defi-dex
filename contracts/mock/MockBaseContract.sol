@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import "../common/IBaseHTS.sol";
 import "../common/hedera/HederaResponseCodes.sol";
 import "./IERC20Mock.sol";
+import "../common/IERC721.sol";
 import "./ERC20Mock.sol";
 import "hardhat/console.sol";
 
@@ -135,6 +136,13 @@ contract MockBaseHTS is IBaseHTS {
         address receiver,
         int64 serial
     ) external override returns (int256) {
+        if (StorageSlot.getBooleanSlot(tokenTestSlot).value) {
+            IERC721(token).transferFrom(
+                sender,
+                receiver,
+                uint256(int256(serial))
+            );
+        }
         return getResponseCode();
     }
 }
