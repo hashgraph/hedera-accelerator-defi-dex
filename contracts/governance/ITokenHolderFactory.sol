@@ -2,24 +2,26 @@
 pragma solidity ^0.8.4;
 import "../common/IERC20.sol";
 import "../common/IBaseHTS.sol";
-import "./IGODHolder.sol";
+import "./ITokenHolder.sol";
 
-interface IGODTokenHolderFactory {
+interface ITokenHolderFactory {
     event LogicUpdated(
         address indexed oldImplementation,
         address indexed newImplementation,
         string name
     );
 
-    event GODHolderCreated(address token, address godHolder);
+    event TokenHolderCreated(address token, address tokenHolder);
 
     function initialize(
         IBaseHTS _tokenService,
-        IGODHolder _godHolderLogic,
+        ITokenHolder _tokenHolderLogic,
         address _admin
     ) external;
 
-    function getGODTokenHolder(IERC20 _token) external returns (IGODHolder);
+    function getTokenHolder(address _token) external returns (ITokenHolder);
 
-    function upgradeGodHolderLogicImplementation(IGODHolder _newImpl) external;
+    function upgradeGodHolderLogicImplementation(
+        ITokenHolder _newImpl
+    ) external;
 }
