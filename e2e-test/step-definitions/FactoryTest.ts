@@ -482,6 +482,50 @@ export class FactorySteps {
     expect(Number(sportPrice)).to.eql(Number(expectedSpotPrice));
   }
 
+  @when(
+    /User create a new pair with tokens "([^"]*)" and "([^"]*)" and with fee as (-?\d+\.\d+)%/,
+    undefined,
+    30000
+  )
+  public async createPairWithExistingTokens(
+    firstTokenName: string,
+    secondTokenName: string,
+    feeAmt: number
+  ) {
+    const tokenOne = tokenNameIdMap.get(firstTokenName);
+    const tokenTwo = tokenNameIdMap.get(secondTokenName);
+    fees = new BigNumber(feeAmt * 100);
+    try {
+      actualPairAddress = await factory.createPair(
+        tokenOne,
+        tokenTwo,
+        id,
+        key,
+        client,
+        fees
+      );
+    } catch (e: any) {
+      errorMsg = e.message;
+    }
+  }
+
+  @then(/User receive error message "([^"]*)"/, undefined, 30000)
+  public async verifyErrorMsg(msg: string) {
+    expect(errorMsg).contains(msg);
+    errorMsg = "";
+  }
+
+  @when(/User get spot price for "([^"]*)"/, undefined, 30000)
+  public async fetchSpotPriceForTokenA(tokenName: string) {
+    const tokenId = tokenNameIdMap.get(tokenName);
+    sportPrice = await pair.getSpotPrice(tokenId, client);
+  }
+
+  @then(/Expected spot price should be (\d*)/, undefined, 30000)
+  public async verifySportPriceISNotZero(expectedSpotPrice: string) {
+    expect(Number(sportPrice)).to.eql(Number(expectedSpotPrice));
+  }
+
   private async fetchContractID(pairAddress: string): Promise<ContractId> {
     await Helper.delay(15000);
     const response = await httpRequest(pairAddress, undefined);
