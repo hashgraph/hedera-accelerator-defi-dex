@@ -381,7 +381,7 @@ describe("All Tests", function () {
           token2Address,
           BigNumber.from(10).mul(precision)
         );
-        expect(tokenSwapResult.pair).to.be.equals(
+        expect(tokenSwapResult[0]).to.be.equals(
           "0x0000000000000000000000000000000000000000"
         );
       });
@@ -439,11 +439,11 @@ describe("All Tests", function () {
           BigNumber.from(10).mul(precision)
         );
 
-        expect(token2SwapResult.pair).not.to.be.equals(
+        expect(token2SwapResult[0]).not.to.be.equals(
           "0x0000000000000000000000000000000000000000"
         );
-        expect(token2SwapResult.token).to.be.equals(token2Address);
-        expect(token2SwapResult.fee).to.be.equals(poolFee);
+        expect(token2SwapResult[1]).to.be.equals(token1Address);
+        expect(token2SwapResult[3]).to.be.equals(poolFee);
       });
 
       it("Given multiple pools of a exist when user asks for recommendation for swap then pool that gives maximum quantity should be returned. ", async function () {
@@ -522,14 +522,14 @@ describe("All Tests", function () {
           BigNumber.from(100).mul(precision)
         );
 
-        expect(tokenSwapResult.pair).not.to.be.equals(
+        expect(tokenSwapResult[0]).not.to.be.equals(
           "0x0000000000000000000000000000000000000000"
         );
-        expect(tokenSwapResult.token).to.be.equals(token2Address);
-        expect(
-          BigNumber.from(tokenSwapResult.swappedQty).div(precision)
-        ).to.be.equals(98);
-        expect(tokenSwapResult.fee).to.be.equals(poolFee1);
+        expect(tokenSwapResult[1]).to.be.equals(token2Address);
+        expect(BigNumber.from(tokenSwapResult[2]).div(precision)).to.be.equals(
+          98
+        );
+        expect(tokenSwapResult[3]).to.be.equals(poolFee1);
       });
 
       it("Given multiple pools exist when user ask for recommendation for swap(other token) then pool that gives maximum quantity should be returned. ", async function () {
@@ -632,14 +632,14 @@ describe("All Tests", function () {
           BigNumber.from(100).mul(precision)
         );
 
-        expect(tokenSwapResult.pair).not.to.be.equals(
+        expect(tokenSwapResult[0]).not.to.be.equals(
           "0x0000000000000000000000000000000000000000"
         );
-        expect(tokenSwapResult.token).to.be.equals(token2Address);
-        expect(tokenSwapResult.fee).to.be.equals(poolFee1);
-        expect(
-          BigNumber.from(tokenSwapResult.swappedQty).div(precision)
-        ).to.be.equals(94);
+        expect(tokenSwapResult[1]).to.be.equals(token1Address);
+        expect(tokenSwapResult[3]).to.be.equals(poolFee1);
+        expect(BigNumber.from(tokenSwapResult[2]).div(precision)).to.be.equals(
+          94
+        );
       });
     });
 

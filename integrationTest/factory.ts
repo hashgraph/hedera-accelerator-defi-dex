@@ -7,6 +7,7 @@ import dex from "../deployment/model/dex";
 import Pair from "../e2e-test/business/Pair";
 import Common from "../e2e-test/business/Common";
 import Factory from "../e2e-test/business/Factory";
+import Configuration from "../e2e-test/business/Configuration";
 
 const tokenA = TokenId.fromString(dex.TOKEN_LAB49_1);
 const tokenB = TokenId.fromString(dex.TOKEN_LAB49_2);
@@ -21,6 +22,11 @@ const factoryContractId = csDev.getContractWithProxy(csDev.factoryContractName)
 let pair: Pair;
 let precision = BigNumber(0);
 const factory = new Factory(factoryContractId);
+
+const configurationContractId = csDev.getContractWithProxy(csDev.configuration)
+  .transparentProxyId!;
+
+const configuration = new Configuration(configurationContractId);
 
 const getPrecisionValue = async () => {
   precision = await pair.getPrecisionValue();
@@ -86,13 +92,30 @@ const swapToken = async (token: TokenId) => {
   );
 };
 
+const recommendedPairToSwap = async (
+  tokenAddress: TokenId,
+  otherTokenAddress: TokenId,
+  qtyToSwap: number
+) => {
+  await factory.recommendedPairToSwap(
+    tokenAddress.toSolidityAddress(),
+    otherTokenAddress.toSolidityAddress(),
+    Common.withPrecision(qtyToSwap, 100000000)
+  );
+};
+
 async function main() {
   await factory.setupFactory();
-  await testForSinglePair(tokenB, tokenHBARX);
-  await testForSinglePair(tokenA, tokenC);
-  await testForSinglePair(tokenA, tokenB);
-  await testForSinglePair(tokenA, tokenGOD);
+  const fees = await configuration.getTransactionsFee();
+  await testForSinglePair(tokenB, tokenHBARX, fees[1]);
+  await testForSinglePair(tokenA, tokenC, fees[3]);
+  await testForSinglePair(tokenA, tokenB, fees[1]);
+  await testForSinglePair(tokenA, tokenGOD, fees[5]);
   await factory.getPairs();
+  await recommendedPairToSwap(tokenB, tokenHBARX, 1);
+  await recommendedPairToSwap(tokenA, tokenC, 1);
+  await recommendedPairToSwap(tokenA, tokenB, 1);
+  await recommendedPairToSwap(tokenA, tokenGOD, 1);
 }
 
 async function testForSinglePair(
