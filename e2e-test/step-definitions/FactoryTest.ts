@@ -33,7 +33,7 @@ let actualPairAddress: string;
 let pairCountBefore: string[];
 let pairCountAfter: string[];
 const tokenHBARX = TokenId.fromString(dex.HBARX_TOKEN_ID);
-const fees = new BigNumber(10);
+let fees: BigNumber;
 let tokenAHBARPairAddress: string;
 let tokensBefore: BigNumber[];
 let tokensAfter: BigNumber[];
@@ -45,6 +45,8 @@ let slippageOutGivenIn: BigNumber;
 let slippageInGivenOut: BigNumber;
 let precision: BigNumber;
 let pairContractId: any;
+let errorMsg: string = "";
+let sportPrice: BigNumber;
 let tokenNameIdMap = new Map();
 
 @binding()
@@ -68,15 +70,15 @@ export class FactorySteps {
   }
 
   @when(
-    /User create a new pair of tokens with name "([^"]*)" and "([^"]*)"/,
+    /User create a new pair of tokens with name "([^"]*)" and "([^"]*)" and with fee as (-?\d+\.\d+)%/,
     undefined,
     60000
   )
   public async createNewPair(
     firstToken: string,
-    secondToken: string
+    secondToken: string,
+    fee: number
   ): Promise<void> {
-    // const num = Math.floor(Math.random() * 100) + 1;
     tokenOne = await Common.createToken(
       firstToken,
       firstToken,
@@ -91,12 +93,14 @@ export class FactorySteps {
       key,
       client
     );
+    fees = new BigNumber(fee * 100);
     actualPairAddress = await factory.createPair(
       tokenOne,
       tokenTwo,
       id,
       key,
-      client
+      client,
+      fees
     );
     tokenNameIdMap.set(firstToken, tokenOne);
     tokenNameIdMap.set(secondToken, tokenTwo);
@@ -424,6 +428,50 @@ export class FactorySteps {
     expect(Number(Number(tokenBalance / withPrecision).toFixed())).to.eql(
       Number(tokenQty)
     );
+  }
+
+  @when(
+    /User create a new pair with tokens "([^"]*)" and "([^"]*)" and with fee as (-?\d+\.\d+)%/,
+    undefined,
+    30000
+  )
+  public async createPairWithExistingTokens(
+    firstTokenName: string,
+    secondTokenName: string,
+    feeAmt: number
+  ) {
+    const tokenOne = tokenNameIdMap.get(firstTokenName);
+    const tokenTwo = tokenNameIdMap.get(secondTokenName);
+    fees = new BigNumber(feeAmt * 100);
+    try {
+      actualPairAddress = await factory.createPair(
+        tokenOne,
+        tokenTwo,
+        id,
+        key,
+        client,
+        fees
+      );
+    } catch (e: any) {
+      errorMsg = e.message;
+    }
+  }
+
+  @then(/User receive error message "([^"]*)"/, undefined, 30000)
+  public async verifyErrorMsg(msg: string) {
+    expect(errorMsg).contains(msg);
+    errorMsg = "";
+  }
+
+  @when(/User get spot price for "([^"]*)"/, undefined, 30000)
+  public async fetchSpotPriceForTokenA(tokenName: string) {
+    const tokenId = tokenNameIdMap.get(tokenName);
+    sportPrice = await pair.getSpotPrice(tokenId, client);
+  }
+
+  @then(/Expected spot price should be (\d*)/, undefined, 30000)
+  public async verifySportPriceISNotZero(expectedSpotPrice: string) {
+    expect(Number(sportPrice)).to.eql(Number(expectedSpotPrice));
   }
 
   private async fetchContractID(pairAddress: string): Promise<ContractId> {
