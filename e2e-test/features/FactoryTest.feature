@@ -6,16 +6,28 @@ Feature: Factory contract e2e test
 
     Scenario: Verify address of pair is same to address recieved after pair creation
         Given User have setup the factory
-        When User create a new pair of tokens with name "FactoryTest1" and "FactoryTest2"
+        When User create a new pair of tokens with name "FactoryTest1" and "FactoryTest2" and with fee as 0.1%
         Then User verify address of pair is same to address received after pair creation
+
+    Scenario: Verify user can create pair of same tokens with different fees
+        When User create a new pair with tokens "FactoryTest1" and "FactoryTest2" and with fee as 0.3%
+        Then User verify address of pair is same to address received after pair creation
+
+    Scenario: Verify user can not create pair of same tokens with same fees
+        When User create a new pair with tokens "FactoryTest1" and "FactoryTest2" and with fee as 0.3%
+        Then User receive error message "CONTRACT_REVERT_EXECUTED"
+
+    Scenario: Verify user can not create pair of same tokens with negative fees
+        When User create a new pair with tokens "FactoryTest1" and "FactoryTest2" and with fee as -0.3%
+        Then User receive error message "CONTRACT_REVERT_EXECUTED"    
     
     Scenario: Verify pair count in pool increases by 1 after creating new pair        
         When User get all pairs of tokens
-        When User create a new pair of tokens with name "FactoryTest3" and "FactoryTest4"
+        When User create a new pair of tokens with name "FactoryTest3" and "FactoryTest4" and with fee as 0.1%
         Then User verifies count of pairs is increased by 1
     
     Scenario: Verify user can create pair with same tokens only once
-        When User create a new pair of tokens with name "FactoryTest5" and "FactoryTest6"
+        When User create a new pair of tokens with name "FactoryTest5" and "FactoryTest6" and with fee as 0.1%
         Then User verify address of pair is same to address received after pair creation        
         When User create a new pair with same tokens
         Then User verify address of pair is same to address received after pair creation
@@ -78,8 +90,9 @@ Feature: Factory contract e2e test
         When User gives 10 units of HBAR to calculate slippage in
         Then Slippage in value should be 3647851    
 
-# #TO-DO - Add scenario when functionalty is available to get spot price for give
-#     # Scenario: Verify spot price for HBAR
+    Scenario: Verify spot price for HBAR 
+        When User get spot price for "HBAR"
+        Then Expected spot price should be 53294539
     
     
 
