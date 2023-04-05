@@ -126,7 +126,13 @@ contract Factory is Initializable {
             _qtyToSwap
         );
 
-        return (maxQtyPair.pair, maxQtyPair.token, maxQtyPair.swappedQty, maxQtyPair.fee, maxQtyPair.slippage);
+        return (
+            maxQtyPair.pair,
+            maxQtyPair.token,
+            maxQtyPair.swappedQty,
+            maxQtyPair.fee,
+            maxQtyPair.slippage
+        );
     }
 
     function findMaxQtyPool(
@@ -136,9 +142,6 @@ contract Factory is Initializable {
         address _tokenToSwap,
         int256 _qtyToSwap
     ) private view returns (PairDetail memory) {
-        uint256 pairsCount = fees.length / 2;
-        uint256 count = 0;
-        PairDetail[] memory recommendedPairs = new PairDetail[](pairsCount);
         PairDetail memory maxQtyPair;
         for (uint i = 0; i < fees.length; i = i + 2) {
             uint256 value = fees[i + 1];
@@ -157,21 +160,15 @@ contract Factory is Initializable {
                     _slippage = pair.slippageInGivenOut(_qtyToSwap);
                 }
 
-                recommendedPairs[count] = PairDetail(
-                    address(pair),
-                    _token,
-                    _qty,
-                    value,
-                    _slippage
-                );
-
-                if (
-                    recommendedPairs[count].swappedQty > maxQtyPair.swappedQty
-                ) {
-                    maxQtyPair = recommendedPairs[count];
+                if (_qty > maxQtyPair.swappedQty) {
+                    maxQtyPair = PairDetail(
+                        address(pair),
+                        _token,
+                        _qty,
+                        value,
+                        _slippage
+                    );
                 }
-
-                count += 1;
             }
         }
         return maxQtyPair;
