@@ -3,7 +3,7 @@ import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { ethers, upgrades } from "hardhat";
 
-describe.only("NFTHolder Tests", function () {
+describe("NFTHolder Tests", function () {
   const zeroAddress = "0x1111111000000000000000000000000000000000";
   let admin;
   const precision = 100000000;
