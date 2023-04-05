@@ -7,7 +7,6 @@ import "./common/IERC20.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import "./Configuration.sol";
-import "hardhat/console.sol";
 
 contract Factory is Initializable {
     event PairCreated(address indexed pairAddress);
@@ -36,7 +35,7 @@ contract Factory is Initializable {
         address pair;
         address token;
         int256 swappedQty;
-        int256 fee;
+        uint256 fee;
         int256 slippage;
     }
 
@@ -112,35 +111,37 @@ contract Factory is Initializable {
         address _tokenToSwap,
         address _otherTokenOfPair,
         int256 _qtyToSwap
-    ) external view returns (PairDetail memory) {
-        uint256[] memory feeItems = configuration.getTransactionsFee();
+    ) external view returns (address, address, int256, uint256, int256) {
+        uint256[] memory fees = configuration.getTransactionsFee();
         (address _token0, address _token1) = sortTokens(
             _tokenToSwap,
             _otherTokenOfPair
         );
 
-        PairDetail[] memory recommendedPairs = findSwappedQtyForAllPairs(
-            feeItems,
+        PairDetail memory maxQtyPair = findMaxQtyPool(
+            fees,
             _token0,
             _token1,
             _tokenToSwap,
             _qtyToSwap
         );
-        return findMaxQtyPool(recommendedPairs);
+
+        return (maxQtyPair.pair, maxQtyPair.token, maxQtyPair.swappedQty, maxQtyPair.fee, maxQtyPair.slippage);
     }
 
-    function findSwappedQtyForAllPairs(
-        uint256[] memory feeItems,
+    function findMaxQtyPool(
+        uint256[] memory fees,
         address _token0,
         address _token1,
         address _tokenToSwap,
         int256 _qtyToSwap
-    ) private view returns (PairDetail[] memory) {
-        uint256 pairsCount = feeItems.length / 2;
+    ) private view returns (PairDetail memory) {
+        uint256 pairsCount = fees.length / 2;
         uint256 count = 0;
         PairDetail[] memory recommendedPairs = new PairDetail[](pairsCount);
-        for (uint i = 0; i < feeItems.length; i = i + 2) {
-            uint256 value = feeItems[i + 1];
+        PairDetail memory maxQtyPair;
+        for (uint i = 0; i < fees.length; i = i + 2) {
+            uint256 value = fees[i + 1];
             Pair pair = Pair(pairs[_token0][_token1][int256(value)]);
             if (address(pair) != address(0x0)) {
                 int256 _qty;
@@ -148,39 +149,32 @@ contract Factory is Initializable {
                 int256 _slippage;
                 if (_tokenToSwap == _token0) {
                     (, , _qty, ) = pair.getOutGivenIn(_qtyToSwap);
-                    _token = _token0;
+                    _token = _token1;
                     _slippage = pair.slippageOutGivenIn(_qtyToSwap);
                 } else {
                     (, _qty, , ) = pair.getInGivenOut(_qtyToSwap);
-                    _token = _token1;
+                    _token = _token0;
                     _slippage = pair.slippageInGivenOut(_qtyToSwap);
                 }
 
                 recommendedPairs[count] = PairDetail(
                     address(pair),
-                    _token0,
+                    _token,
                     _qty,
-                    int256(value),
+                    value,
                     _slippage
                 );
+
+                if (
+                    recommendedPairs[count].swappedQty > maxQtyPair.swappedQty
+                ) {
+                    maxQtyPair = recommendedPairs[count];
+                }
+
                 count += 1;
             }
         }
-        return recommendedPairs;
-    }
-
-    function findMaxQtyPool(
-        PairDetail[] memory recommendedPairs
-    ) private pure returns (PairDetail memory) {
-        PairDetail memory finalPair = recommendedPairs[0];
-        {
-            for (uint i = 0; i < recommendedPairs.length; i++) {
-                if (recommendedPairs[i].swappedQty > finalPair.swappedQty) {
-                    finalPair = recommendedPairs[i];
-                }
-            }
-        }
-        return finalPair;
+        return maxQtyPair;
     }
 
     function sortTokens(
