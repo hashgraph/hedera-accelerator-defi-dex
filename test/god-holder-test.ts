@@ -139,7 +139,7 @@ describe("GODHolder Tests", function () {
       deployFixture
     );
 
-    const holder = await godTokenHolderFactory.callStatic.getGODTokenHolder(
+    const holder = await godTokenHolderFactory.callStatic.getTokenHolder(
       tokenCont.address
     );
 
@@ -159,17 +159,15 @@ describe("GODHolder Tests", function () {
       0
     );
 
-    const tx1 = await godTokenHolderFactory.getGODTokenHolder(
-      tokenCont.address
-    );
+    const tx1 = await godTokenHolderFactory.getTokenHolder(tokenCont.address);
 
-    const tx2 = await godTokenHolderFactory.getGODTokenHolder(newToken.address);
+    const tx2 = await godTokenHolderFactory.getTokenHolder(newToken.address);
 
     const holder1Record = await tx1.wait();
     const holder2Record = await tx2.wait();
 
-    const tokenGodHolder = holder1Record.events[2].args.godHolder;
-    const newTokenGodHolder = holder2Record.events[2].args.godHolder;
+    const tokenGodHolder = holder1Record.events[2].args.tokenHolder;
+    const newTokenGodHolder = holder2Record.events[2].args.tokenHolder;
 
     expect(holder1Record.events[2].args.token).to.be.equal(tokenCont.address);
     expect(holder2Record.events[2].args.token).to.be.equal(newToken.address);
@@ -183,19 +181,15 @@ describe("GODHolder Tests", function () {
       deployFixture
     );
 
-    const tx1 = await godTokenHolderFactory.getGODTokenHolder(
-      tokenCont.address
-    );
+    const tx1 = await godTokenHolderFactory.getTokenHolder(tokenCont.address);
 
     //Use callStatic as we are reading the existing state not modifying it.
     const newTokenGodHolder =
-      await godTokenHolderFactory.callStatic.getGODTokenHolder(
-        tokenCont.address
-      );
+      await godTokenHolderFactory.callStatic.getTokenHolder(tokenCont.address);
 
     const holder1Record = await tx1.wait();
     //Below emits event as it add new GOD Holder
-    const tokenGodHolder = holder1Record.events[2].args.godHolder;
+    const tokenGodHolder = holder1Record.events[2].args.tokenHolder;
 
     expect(tokenGodHolder).to.be.equal(newTokenGodHolder);
     expect(tokenGodHolder).not.to.be.equal("0x0");
