@@ -340,6 +340,15 @@
     "transparentProxyId": "0.0.3904144"
   },
   {
+    "name": "pair",
+    "id": "0.0.3997266",
+    "address": "0x00000000000000000000000000000000003cfe52",
+    "timestamp": "2023-04-06T09:22:16.595Z",
+    "hash": "85c7d8d8fa1ce81abdecc7ac4aa8fce8",
+    "transparentProxyAddress": "0x00000000000000000000000000000000003cfe55",
+    "transparentProxyId": "0.0.3997269"
+  },
+  {
     "name": "godtokenholderfactory",
     "id": "0.0.3959812",
     "address": "0x00000000000000000000000000000000003c6c04",

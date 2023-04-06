@@ -5,6 +5,7 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./common/hedera/HederaResponseCodes.sol";
 import "./common/IBaseHTS.sol";
+import "./common/TokenOperations.sol";
 import "./common/IERC20.sol";
 import "./ILPToken.sol";
 import "./IPair.sol";
@@ -27,7 +28,7 @@ error WrongPairPassed(
     address expectedTokenB
 );
 
-contract Pair is IPair, Initializable {
+contract Pair is IPair, Initializable, TokenOperations {
     IBaseHTS internal tokenService;
     ILPToken internal lpTokenContract;
 
@@ -611,17 +612,7 @@ contract Pair is IPair, Initializable {
 
     function _associateToken(address account, address token) private {
         if (!_tokenIsHBARX(token)) {
-            (bool success, ) = address(tokenService).delegatecall(
-                abi.encodeWithSelector(
-                    IBaseHTS.associateTokenPublic.selector,
-                    account,
-                    token
-                )
-            );
-            //Its done to silent the not-used return value. Intentionally not putting
-            //requires check as it fails the unit test. We need to investigate more to
-            //find the root cause.
-            success = success || true;
+            _associateToken(tokenService, account, token);
         }
     }
 
