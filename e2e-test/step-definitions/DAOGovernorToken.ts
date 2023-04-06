@@ -338,7 +338,7 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
   )
   public async getTokenBalance() {
     balance = await Common.fetchTokenBalanceFromMirrorNode(
-      toAccount.toString(),
+      fromAccount.toString(),
       tokenId.toString()
     );
     console.log(
