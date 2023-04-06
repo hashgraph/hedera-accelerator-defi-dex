@@ -338,5 +338,14 @@
     "hash": "012187be25f102dddf3432b0f74162c8",
     "transparentProxyAddress": "0x00000000000000000000000000000000003b9290",
     "transparentProxyId": "0.0.3904144"
+  },
+  {
+    "name": "godtokenholderfactory",
+    "id": "0.0.3959812",
+    "address": "0x00000000000000000000000000000000003c6c04",
+    "timestamp": "2023-03-31T07:34:27.926Z",
+    "hash": "6d1d0d0fead9bb8fc92fabce14e662ba",
+    "transparentProxyAddress": "0x00000000000000000000000000000000003c6c0d",
+    "transparentProxyId": "0.0.3959821"
   }
 ]

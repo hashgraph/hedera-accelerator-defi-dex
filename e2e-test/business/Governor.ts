@@ -28,7 +28,7 @@ const DEFAULT_LINK = "https://defi-ui.hedera.com/governance";
 
 const INITIALIZE = "initialize";
 const STATE = "state";
-const CAST_VOTE = "castVote";
+const CAST_VOTE = "castVotePublic";
 
 const QUORUM_REACHED = "quorumReached";
 const VOTE_SUCCEEDED = "voteSucceeded";
@@ -190,7 +190,9 @@ export default class Governor extends Base {
   ) => await this.vote(proposalId, 2, client);
 
   vote = async (proposalId: string, support: number, client: Client) => {
-    const args = this.createParams(proposalId).addUint8(support);
+    const args = this.createParams(proposalId)
+      .addUint256(BigNumber(0))
+      .addUint8(support);
     await this.execute(9900000, CAST_VOTE, client, args);
     console.log(
       `- Governor#${CAST_VOTE}(): proposal-id = ${proposalId}, support = ${support}\n`

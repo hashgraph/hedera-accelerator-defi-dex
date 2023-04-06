@@ -28,6 +28,15 @@ contract BaseHTS is HederaTokenService, IBaseHTS {
             );
     }
 
+    function transferNFTPublic(
+        address token,
+        address sender,
+        address receiver,
+        int64 serial
+    ) external override returns (int256) {
+        return HederaTokenService.transferNFT(token, sender, receiver, serial);
+    }
+
     function associateTokenPublic(
         address account,
         address token

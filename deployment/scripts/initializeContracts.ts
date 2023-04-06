@@ -3,6 +3,7 @@ import Factory from "../../e2e-test/business/Factory";
 import Governor from "../../e2e-test/business/Governor";
 import GodHolder from "../../e2e-test/business/GodHolder";
 import Configuration from "../../e2e-test/business/Configuration";
+import GODTokenHolderFactory from "../../e2e-test/business/GODTokenHolderFactory";
 import GovernanceDAOFactory from "../../e2e-test/business/GovernanceDAOFactory";
 
 import { TokenId } from "@hashgraph/sdk";
@@ -49,18 +50,34 @@ function createInstances() {
     csDev.governanceDaoFactory
   ).transparentProxyId!;
 
+  const godHolderFactory = csDev.getContractWithProxy(
+    csDev.godTokenHolderFactory
+  ).transparentProxyId!;
+
   const factory = new Factory(factoryContractId);
   const godHolder = new GodHolder(godHolderContractId);
   const configuration = new Configuration(configurationContractId);
   const governanceDaoFactory = new GovernanceDAOFactory(
     governanceDaoFactoryContractId
   );
-  return { factory, godHolder, configuration, governanceDaoFactory };
+  const godHolderFactoryInstance = new GODTokenHolderFactory(godHolderFactory);
+  return {
+    factory,
+    godHolder,
+    configuration,
+    governanceDaoFactory,
+    godHolderFactoryInstance,
+  };
 }
 
 export async function main() {
-  const { factory, godHolder, configuration, governanceDaoFactory } =
-    createInstances();
+  const {
+    factory,
+    godHolder,
+    configuration,
+    governanceDaoFactory,
+    godHolderFactoryInstance,
+  } = createInstances();
 
   await configuration.initialize();
   await governanceDaoFactory.initialize(csDev.governanceDaoFactory);
@@ -89,6 +106,13 @@ export async function main() {
 
   try {
     await godHolder.initialize(clientsInfo.operatorClient);
+  } catch (error) {
+    console.log(`- GODHolder initialization failed.`);
+    console.error(error);
+  }
+
+  try {
+    await godHolderFactoryInstance.initializeWithGodNewHolder();
   } catch (error) {
     console.log(`- GODHolder initialization failed.`);
     console.error(error);
