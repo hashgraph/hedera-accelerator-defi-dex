@@ -4,7 +4,7 @@ pragma solidity >=0.5.0 <0.9.0;
 import "./IERC20.sol";
 import "./IBaseHTS.sol";
 
-contract BaseHTSUtil {
+contract TokenOperations {
     function _associateToken(
         IBaseHTS _baseHTS,
         address _account,

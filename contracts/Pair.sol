@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./common/hedera/HederaResponseCodes.sol";
 import "./common/IBaseHTS.sol";
-import "./common/BaseHTSUtil.sol";
+import "./common/TokenOperations.sol";
 import "./common/IERC20.sol";
 import "./ILPToken.sol";
 import "./IPair.sol";
@@ -28,7 +28,7 @@ error WrongPairPassed(
     address expectedTokenB
 );
 
-contract Pair is IPair, Initializable, BaseHTSUtil {
+contract Pair is IPair, Initializable, TokenOperations {
     IBaseHTS internal tokenService;
     ILPToken internal lpTokenContract;
 
