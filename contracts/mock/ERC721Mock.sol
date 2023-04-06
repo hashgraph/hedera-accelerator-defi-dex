@@ -30,7 +30,7 @@ contract ERC721Mock is IERC721 {
         address _from,
         address _to,
         uint256 _tokenId,
-        bytes memory data
+        bytes memory
     ) external payable {
         userTokenIds[_tokenId] = _from;
         userBalances[_from] -= (userBalances[_from] > 0 ? 1 : 0);

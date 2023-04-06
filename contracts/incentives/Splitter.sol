@@ -98,7 +98,8 @@ contract Splitter is ISplitter, Initializable {
         IVault vault,
         uint256 totalAmount,
         uint256 totalWeightForAllVaults
-    ) private returns (uint256 amountToTransfer) {
+    ) private       view
+returns (uint256 amountToTransfer) {
         uint256 percentage = _calculateTokenRewardPercentage(
             vault,
             totalWeightForAllVaults
