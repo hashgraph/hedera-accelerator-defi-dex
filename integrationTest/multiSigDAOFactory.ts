@@ -13,13 +13,13 @@ import {
 async function main() {
   const daoFactory = getMultiSigFactoryInstance();
   await daoFactory.initialize();
-  // await daoFactory.createDAO(
-  //   DAO_NAME,
-  //   DAO_LOGO,
-  //   DAO_OWNERS_ADDRESSES,
-  //   DAO_OWNERS_ADDRESSES.length,
-  //   false
-  // );
+  await daoFactory.createDAO(
+    DAO_NAME,
+    DAO_LOGO,
+    DAO_OWNERS_ADDRESSES,
+    DAO_OWNERS_ADDRESSES.length,
+    false
+  );
   const addresses = await daoFactory.getDAOs();
   if (addresses.length > 0) {
     const dao = addresses.pop()!;
