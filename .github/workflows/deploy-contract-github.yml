@@ -11,6 +11,7 @@ on:
           - GODHolder
           - Configuration
           - GovernorUpgrade
+          - MultisigDAOFactory
           - GovernorTokenCreate
           - GovernorTextProposal
           - GovernorTransferToken

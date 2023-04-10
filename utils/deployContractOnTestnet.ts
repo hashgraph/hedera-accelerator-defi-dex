@@ -128,11 +128,26 @@ export class Deployment {
   private clientManagement = new ClientManagement();
   private contractMetadata = new ContractMetadata();
 
+  deployContracts = async (
+    names: string[],
+    adminKey: Key = clientsInfo.operatorKey.publicKey,
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    const deployedItems = new Map<String, any>();
+    const pendingItems = names.map(async (name: string) => {
+      const item = await this.deploy(name, adminKey, client);
+      deployedItems.set(name, item);
+    });
+    await Promise.all(pendingItems);
+    return deployedItems;
+  };
+
   deploy = async (
     contractName: string,
     adminKey: Key = clientsInfo.operatorKey.publicKey,
     client: Client = clientsInfo.operatorClient
   ) => {
+    console.log(`- Deployment#deploy(): ${contractName} deploying...\n`);
     const contractABI = this.contractMetadata.getContractABI(contractName);
     const txn = new ContractCreateFlow()
       .setBytecode(contractABI.bytecode)
