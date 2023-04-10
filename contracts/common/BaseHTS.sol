@@ -18,7 +18,7 @@ contract BaseHTS is HederaTokenService, IBaseHTS {
         address sender,
         address receiver,
         int256 amount
-    ) public override returns (int256) {
+    ) external override returns (int256) {
         return
             HederaTokenService.transferToken(
                 token,
@@ -40,7 +40,7 @@ contract BaseHTS is HederaTokenService, IBaseHTS {
     function associateTokenPublic(
         address account,
         address token
-    ) public override returns (int256 responseCode) {
+    ) external override returns (int256 responseCode) {
         return HederaTokenService.associateToken(account, token);
     }
 
