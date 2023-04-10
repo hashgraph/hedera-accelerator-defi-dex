@@ -63,7 +63,7 @@ contract HederaGnosisSafe is GnosisSafe, TokenOperations {
         if (code == HederaResponseCodes.SUCCESS) {
             emit TokenTransferred(_token, _sender, _amount);
         } else {
-            revert("HederaGnosisSafe: tranfer token to safe failed");
+            revert("HederaGnosisSafe: transfer token to safe failed");
         }
     }
 

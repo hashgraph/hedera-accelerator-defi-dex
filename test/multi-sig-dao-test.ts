@@ -4,6 +4,7 @@ import { Contract } from "ethers";
 import { TestHelper } from "./TestHelper";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { emit } from "process";
 
 describe("MultiSig contract tests", function () {
   const INVALID_TXN_HASH = ethers.utils.formatBytes32String("INVALID_TXN_HASH");
@@ -81,7 +82,7 @@ describe("MultiSig contract tests", function () {
 
     const bastHTS = await TestHelper.deployLogic(
       "MockBaseHTS",
-      false,
+      true,
       TestHelper.ZERO_ADDRESS
     );
 
@@ -222,6 +223,57 @@ describe("MultiSig contract tests", function () {
       expect(approvalStatus3).equals(true);
 
       expect(await multiSigDAOInstance.state(txnHash)).equals(1); // Approved
+    });
+
+    it("Verify transfer token to contract should revert", async function () {
+      const {
+        tokenInstance,
+        hederaGnosisSafeProxyContract,
+        bastHTS,
+        daoAdminOne,
+      } = await loadFixture(deployFixture);
+
+      await bastHTS.setPassTransactionCount(0);
+      await expect(
+        hederaGnosisSafeProxyContract.transferToSafe(
+          bastHTS.address,
+          tokenInstance.address,
+          1e8,
+          daoAdminOne.address
+        )
+      ).revertedWith("HederaGnosisSafe: transfer token to safe failed");
+    });
+
+    it("Verify transfer token to contract should emit event once transferred", async function () {
+      const {
+        tokenInstance,
+        hederaGnosisSafeProxyContract,
+        bastHTS,
+        daoAdminOne,
+      } = await loadFixture(deployFixture);
+
+      const TOKEN_BALANCE = 10e8;
+      const TOKEN_TRANSFER_AMOUNT = 1e8;
+
+      await tokenInstance.setUserBalance(daoAdminOne.address, TOKEN_BALANCE);
+
+      const beforeBalance = await tokenInstance.balanceOf(daoAdminOne.address);
+      expect(beforeBalance).equals(TOKEN_BALANCE);
+
+      const transaction = await hederaGnosisSafeProxyContract.transferToSafe(
+        bastHTS.address,
+        tokenInstance.address,
+        TOKEN_TRANSFER_AMOUNT,
+        daoAdminOne.address
+      );
+      const lastEvent = await TestHelper.readLastEvent(transaction);
+      expect(lastEvent.name).equals("TokenTransferred");
+      expect(lastEvent.args[0]).equals(tokenInstance.address);
+      expect(lastEvent.args[1]).equals(daoAdminOne.address);
+      expect(lastEvent.args[2]).equals(TOKEN_TRANSFER_AMOUNT);
+
+      const balance = await tokenInstance.balanceOf(daoAdminOne.address);
+      expect(balance).equals(TOKEN_BALANCE - TOKEN_TRANSFER_AMOUNT);
     });
 
     it("Verify transfer token from safe should be reverted if called without safe txn", async function () {
