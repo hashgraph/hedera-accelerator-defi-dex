@@ -44,7 +44,7 @@ contract TokenHolderFactory is ITokenHolderFactory, Initializable {
         return tokenHolder;
     }
 
-    function upgradeGodHolderLogicImplementation(
+    function upgradeTokenHolderLogicImplementation(
         ITokenHolder _newImpl
     ) public ifAdmin {
         emit LogicUpdated(

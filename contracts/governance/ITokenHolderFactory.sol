@@ -21,7 +21,7 @@ interface ITokenHolderFactory {
 
     function getTokenHolder(address _token) external returns (ITokenHolder);
 
-    function upgradeGodHolderLogicImplementation(
+    function upgradeTokenHolderLogicImplementation(
         ITokenHolder _newImpl
     ) external;
 }
