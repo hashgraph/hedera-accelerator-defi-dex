@@ -1,22 +1,22 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.7.0 <0.9.0;
 
-import "../common/BaseHTS.sol";
-import "../common/hedera/HederaResponseCodes.sol";
+import "../common/IBaseHTS.sol";
+import "../common/TokenOperations.sol";
 
 import "@gnosis.pm/safe-contracts/contracts/GnosisSafe.sol";
 import "@gnosis.pm/safe-contracts/contracts/external/GnosisSafeMath.sol";
 
-contract HederaGnosisSafe is GnosisSafe, BaseHTS {
+contract HederaGnosisSafe is GnosisSafe, TokenOperations {
+    using GnosisSafeMath for uint256;
+
     event TokenAssociated(address token);
 
     event TokenTransferred(
         address indexed token,
         address indexed sender,
-        int256 indexed amount
+        uint256 indexed amount
     );
-
-    using GnosisSafeMath for uint256;
 
     bytes private constant BYTES_ZERO = "";
     uint256 private constant UINT_ZERO = 0;
@@ -24,58 +24,6 @@ contract HederaGnosisSafe is GnosisSafe, BaseHTS {
 
     uint256 private txnNonce;
     mapping(bytes32 => bool) public executedHash;
-
-    function transferTokenToSafe(
-        address token,
-        int256 amount
-    ) public returns (int256 responseCode) {
-        address sender = msg.sender;
-        responseCode = super.associateTokenPublic(address(this), token);
-        if (responseCode == HederaResponseCodes.SUCCESS) {
-            emit TokenAssociated(token);
-        }
-        responseCode = super.transferTokenPublic(
-            token,
-            sender,
-            address(this),
-            amount
-        );
-        if (responseCode == HederaResponseCodes.SUCCESS) {
-            emit TokenTransferred(token, sender, amount);
-        } else {
-            revert("HederaGnosisSafe: tranfer token to safe failed");
-        }
-    }
-
-    function transferTokenViaSafe(
-        address token,
-        address receiver,
-        uint256 amount
-    ) public returns (bool transferred) {
-        require(msg.sender == address(this), "GS031"); // only via safe txn
-        return super.transferToken(token, receiver, amount);
-    }
-
-    function getTransactionHash(
-        address to,
-        uint256 value,
-        bytes calldata data,
-        Enum.Operation operation
-    ) public returns (bytes32, uint256) {
-        bytes32 txnHash = super.getTransactionHash(
-            to,
-            value,
-            data,
-            operation,
-            UINT_ZERO,
-            UINT_ZERO,
-            UINT_ZERO,
-            ADDRESS_ZERO,
-            ADDRESS_ZERO,
-            ++txnNonce // to make txnhash unique, updating txnNonce everytime and shouldn't be changed to prioir discussion.
-        );
-        return (txnHash, txnNonce);
-    }
 
     function isTransactionExecuted(
         bytes32 dataHash
@@ -95,13 +43,67 @@ contract HederaGnosisSafe is GnosisSafe, BaseHTS {
         return approvedCount > 0 && approvedCount >= threshold;
     }
 
+    function transferToSafe(
+        IBaseHTS _baseHTS,
+        address _token,
+        uint256 _amount,
+        address _sender
+    ) external {
+        int256 code = _associateToken(_baseHTS, address(this), _token);
+        if (code == HederaResponseCodes.SUCCESS) {
+            emit TokenAssociated(_token);
+        }
+        code = _transferToken(
+            _baseHTS,
+            _token,
+            _sender,
+            address(this),
+            int256(_amount)
+        );
+        if (code == HederaResponseCodes.SUCCESS) {
+            emit TokenTransferred(_token, _sender, _amount);
+        } else {
+            revert("HederaGnosisSafe: tranfer token to safe failed");
+        }
+    }
+
+    function transferTokenViaSafe(
+        address token,
+        address receiver,
+        uint256 amount
+    ) external returns (bool transferred) {
+        require(msg.sender == address(this), "GS031"); // only via safe txn
+        return super.transferToken(token, receiver, amount);
+    }
+
+    function getTxnHash(
+        address to,
+        uint256 value,
+        bytes calldata data,
+        Enum.Operation operation
+    ) external returns (bytes32, uint256) {
+        bytes32 txnHash = super.getTransactionHash(
+            to,
+            value,
+            data,
+            operation,
+            UINT_ZERO,
+            UINT_ZERO,
+            UINT_ZERO,
+            ADDRESS_ZERO,
+            ADDRESS_ZERO,
+            ++txnNonce // to make txnhash unique, updating txnNonce everytime and shouldn't be changed to prioir discussion.
+        );
+        return (txnHash, txnNonce);
+    }
+
     function executeTransaction(
         address to,
         uint256 value,
         bytes calldata data,
         Enum.Operation operation,
         uint256 nonce
-    ) public payable returns (bool success) {
+    ) external payable returns (bool success) {
         bytes32 txHash;
         // Use scope here to limit variable lifetime and prevent `stack too deep` errors
         {

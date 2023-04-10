@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "./BaseDAO.sol";
+import "../common/IBaseHTS.sol";
 import "../gnosis/HederaGnosisSafe.sol";
 import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
@@ -26,6 +27,7 @@ contract MultiSigDAO is BaseDAO {
     // 0xbb34db5a - keccack("transferTokenViaSafe(address,address,uint256)")
     bytes4 private constant TRANSFER_TOKEN_FROM_SAFE_SELECTOR = 0xbb34db5a;
 
+    IBaseHTS private baseHTS;
     HederaGnosisSafe private hederaGnosisSafe;
     mapping(bytes32 => TransactionInfo) private transactions;
 
@@ -33,8 +35,10 @@ contract MultiSigDAO is BaseDAO {
         address _admin,
         string calldata _name,
         string calldata _logoUrl,
-        HederaGnosisSafe _hederaGnosisSafe
+        HederaGnosisSafe _hederaGnosisSafe,
+        IBaseHTS _iBaseHTS
     ) external initializer {
+        baseHTS = _iBaseHTS;
         hederaGnosisSafe = _hederaGnosisSafe;
         __BaseDAO_init(_admin, _name, _logoUrl);
     }
@@ -72,8 +76,12 @@ contract MultiSigDAO is BaseDAO {
         bytes memory _data,
         Enum.Operation _operation
     ) public payable returns (bytes32) {
-        (bytes32 txnHash, uint256 txnNonce) = hederaGnosisSafe
-            .getTransactionHash(_to, msg.value, _data, _operation);
+        (bytes32 txnHash, uint256 txnNonce) = hederaGnosisSafe.getTxnHash(
+            _to,
+            msg.value,
+            _data,
+            _operation
+        );
         TransactionInfo storage transactionInfo = transactions[txnHash];
         transactionInfo.to = _to;
         transactionInfo.value = msg.value;
@@ -90,6 +98,7 @@ contract MultiSigDAO is BaseDAO {
         address _receiver,
         uint256 _amount
     ) external payable returns (bytes32) {
+        hederaGnosisSafe.transferToSafe(baseHTS, _token, _amount, msg.sender);
         bytes memory data = abi.encodeWithSelector(
             TRANSFER_TOKEN_FROM_SAFE_SELECTOR,
             _token,

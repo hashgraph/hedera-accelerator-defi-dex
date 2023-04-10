@@ -79,6 +79,12 @@ describe("MultiSig contract tests", function () {
     const signers = await TestHelper.getSigners();
     const daoAdminOne = await TestHelper.getDAOAdminOne();
 
+    const bastHTS = await TestHelper.deployLogic(
+      "MockBaseHTS",
+      false,
+      TestHelper.ZERO_ADDRESS
+    );
+
     const tokenInstance = await TestHelper.deployLogic(
       "ERC20Mock",
       "Test",
@@ -131,21 +137,25 @@ describe("MultiSig contract tests", function () {
     );
 
     const dexOwner = await TestHelper.getDexOwner();
-    const multiSigDAOInstance = await TestHelper.deployProxy(
-      "MultiSigDAO",
+    const multiSigDAOInstance = await TestHelper.deployLogic("MultiSigDAO");
+    await multiSigDAOInstance.initialize(
       dexOwner.address,
       DAO_NAME,
       LOGO_URL,
-      hederaGnosisSafeProxyInstance
+      hederaGnosisSafeProxyInstance,
+      bastHTS.address
     );
 
     // factory setup
-    const multiSigDAOFactoryInstance = await TestHelper.deployProxy(
-      "MultisigDAOFactory",
+    const multiSigDAOFactoryInstance = await TestHelper.deployLogic(
+      "MultisigDAOFactory"
+    );
+    await multiSigDAOFactoryInstance.initialize(
       dexOwner.address,
       multiSigDAOLogicInstance.address,
       hederaGnosisSafeLogicInstance.address,
-      hederaGnosisSafeProxyFactoryInstance.address
+      hederaGnosisSafeProxyFactoryInstance.address,
+      bastHTS.address
     );
 
     // token association to gnosis contract not possible in unit test as of now
@@ -169,6 +179,7 @@ describe("MultiSig contract tests", function () {
       daoSigners,
       doaSignersAddresses,
       daoAdminOne,
+      bastHTS,
     };
   }
 
@@ -261,13 +272,15 @@ describe("MultiSig contract tests", function () {
           multiSigDAOLogicInstance,
           hederaGnosisSafeLogicInstance,
           hederaGnosisSafeProxyFactoryInstance,
+          bastHTS,
         } = await loadFixture(deployFixture);
         await expect(
           multiSigDAOFactoryInstance.initialize(
             dexOwner.address,
             multiSigDAOLogicInstance.address,
             hederaGnosisSafeLogicInstance.address,
-            hederaGnosisSafeProxyFactoryInstance.address
+            hederaGnosisSafeProxyFactoryInstance.address,
+            bastHTS.address
           )
         ).to.revertedWith("Initializable: contract is already initialized");
       });
@@ -451,14 +464,19 @@ describe("MultiSig contract tests", function () {
 
     describe("MultiSigDAO contract tests", function () {
       it("Verify MultiSigDAO contract revert for multiple initialization", async function () {
-        const { multiSigDAOInstance, dexOwner, hederaGnosisSafeProxyContract } =
-          await loadFixture(deployFixture);
+        const {
+          multiSigDAOInstance,
+          dexOwner,
+          hederaGnosisSafeProxyContract,
+          bastHTS,
+        } = await loadFixture(deployFixture);
         await expect(
           multiSigDAOInstance.initialize(
             dexOwner.address,
             DAO_NAME,
             LOGO_URL,
-            hederaGnosisSafeProxyContract.address
+            hederaGnosisSafeProxyContract.address,
+            bastHTS.address
           )
         ).to.revertedWith("Initializable: contract is already initialized");
       });

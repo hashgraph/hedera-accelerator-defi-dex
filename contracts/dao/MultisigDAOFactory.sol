@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import "../common/IEvents.sol";
 import "../common/IErrors.sol";
+import "../common/IBaseHTS.sol";
 
 import "../dao/MultisigDAO.sol";
 
@@ -28,6 +29,7 @@ contract MultisigDAOFactory is OwnableUpgradeable, IEvents, IErrors {
     address private daoLogic;
     address private safeLogic;
     address private safeFactory;
+    IBaseHTS private baseHTS;
 
     address[] private daos;
 
@@ -42,13 +44,15 @@ contract MultisigDAOFactory is OwnableUpgradeable, IEvents, IErrors {
         address _proxyAdmin,
         address _daoLogic,
         address _safeLogic,
-        address _safeFactory
+        address _safeFactory,
+        IBaseHTS _baseHTS
     ) external initializer {
         __Ownable_init();
         proxyAdmin = _proxyAdmin;
         daoLogic = _daoLogic;
         safeLogic = _safeLogic;
         safeFactory = _safeFactory;
+        baseHTS = _baseHTS;
         emit LogicUpdated(address(0), daoLogic, DaoLogic);
         emit LogicUpdated(address(0), safeLogic, SafeLogic);
         emit LogicUpdated(address(0), safeFactory, SafeFactory);
@@ -112,7 +116,7 @@ contract MultisigDAOFactory is OwnableUpgradeable, IEvents, IErrors {
                 NO_DATA
             );
         MultiSigDAO _mSigDAO = MultiSigDAO(address(upgradeableProxy));
-        _mSigDAO.initialize(_admin, _name, _logoUrl, hederaGnosisSafe);
+        _mSigDAO.initialize(_admin, _name, _logoUrl, hederaGnosisSafe, baseHTS);
         return address(_mSigDAO);
     }
 
