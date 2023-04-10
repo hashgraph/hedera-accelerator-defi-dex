@@ -65,7 +65,7 @@ export default class MultiSigDAOFactory extends Base {
       .addAddressArray(owners)
       .addUint256(BigNumber(threshold))
       .addBool(isPrivate);
-    const { result } = await this.execute(5_30_000, CREATE_DAO, client, args);
+    const { result } = await this.execute(7_00_000, CREATE_DAO, client, args);
     const address = result.getAddress(0);
     console.log(`- MultiSigDAOFactory#${CREATE_DAO}(): done`);
     console.table({
