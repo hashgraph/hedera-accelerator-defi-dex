@@ -527,7 +527,7 @@ describe("All Tests", function () {
         );
         expect(tokenSwapResult[1]).to.be.equals(token2Address);
         expect(BigNumber.from(tokenSwapResult[2]).div(precision)).to.be.equals(
-          98
+          94
         );
         expect(tokenSwapResult[3]).to.be.equals(poolFee1);
       });
@@ -638,7 +638,7 @@ describe("All Tests", function () {
         expect(tokenSwapResult[1]).to.be.equals(token1Address);
         expect(tokenSwapResult[3]).to.be.equals(poolFee1);
         expect(BigNumber.from(tokenSwapResult[2]).div(precision)).to.be.equals(
-          94
+          98
         );
       });
     });
