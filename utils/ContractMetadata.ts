@@ -36,6 +36,8 @@ export default class ContractMetadata {
     "NFTTokenHolderFactory",
     "GovernanceDAOFactory",
     "GovernorTokenDAO",
+    "MultisigDAOFactory",
+    "MultisigDAO",
   ];
 
   static SUPPORTED_PROXY_OPTIONS = ["create", "update"];

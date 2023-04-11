@@ -5,6 +5,7 @@ import GodHolder from "../../e2e-test/business/GodHolder";
 import Configuration from "../../e2e-test/business/Configuration";
 import GODTokenHolderFactory from "../../e2e-test/business/GODTokenHolderFactory";
 import GovernanceDAOFactory from "../../e2e-test/business/GovernanceDAOFactory";
+import MultiSigDAOFactory from "../../e2e-test/business/factories/MultiSigDAOFactory";
 
 import { TokenId } from "@hashgraph/sdk";
 import { clientsInfo } from "../../utils/ClientManagement";
@@ -54,6 +55,10 @@ function createInstances() {
     csDev.godTokenHolderFactory
   ).transparentProxyId!;
 
+  const multiSigDaoFactoryContractId = csDev.getContractWithProxy(
+    ContractService.MULTI_SIG_FACTORY
+  ).transparentProxyId!;
+
   const factory = new Factory(factoryContractId);
   const godHolder = new GodHolder(godHolderContractId);
   const configuration = new Configuration(configurationContractId);
@@ -61,12 +66,16 @@ function createInstances() {
     governanceDaoFactoryContractId
   );
   const godHolderFactoryInstance = new GODTokenHolderFactory(godHolderFactory);
+  const multiSigDaoFactoryInstance = new MultiSigDAOFactory(
+    multiSigDaoFactoryContractId
+  );
   return {
     factory,
     godHolder,
     configuration,
     governanceDaoFactory,
     godHolderFactoryInstance,
+    multiSigDaoFactoryInstance,
   };
 }
 
@@ -77,6 +86,7 @@ export async function main() {
     configuration,
     governanceDaoFactory,
     godHolderFactoryInstance,
+    multiSigDaoFactoryInstance,
   } = createInstances();
 
   await configuration.initialize();
@@ -132,6 +142,8 @@ export async function main() {
       console.error(error);
     }
   }
+
+  await multiSigDaoFactoryInstance.initialize();
 }
 
 if (require.main === module) {

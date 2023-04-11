@@ -58,6 +58,14 @@ export class Helper {
     return result;
   };
 
+  static getBytes = (result: ContractFunctionResult, index: number) => {
+    const offSet = result.getUint256(index).div(32); // bytes offset
+    const bytesLength = result.getUint256(offSet.toNumber() + 1); // bytes length at index (offset + 1)
+    const begin = offSet.plus(2).multipliedBy(32).toNumber(); // bytes data at index (offset + 2)
+    const end = bytesLength.plus(begin).toNumber();
+    return result.asBytes().subarray(begin, end);
+  };
+
   static convertToFeeObjectArray = (items: BigNumber[]) => {
     if (items.length % 2 !== 0) {
       throw Error(`Helper: Invalid items size = ${items.length}`);

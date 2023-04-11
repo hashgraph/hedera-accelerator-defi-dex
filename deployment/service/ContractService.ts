@@ -3,6 +3,11 @@ import { DeployedContract } from "../model/contract";
 import { httpRequest } from "../api/HttpsService";
 
 export class ContractService {
+  public static MULTI_SIG = "multisigdao";
+  public static MULTI_SIG_FACTORY = "multisigdaofactory";
+  public static SAFE = "hederagnosissafe";
+  public static SAFE_FACTORY = "hederagnosissafeproxyfactory";
+
   public governanceDaoFactory = "governancedaofactory";
   public factoryContractName = "factory";
   public pairContractName = "pair";
