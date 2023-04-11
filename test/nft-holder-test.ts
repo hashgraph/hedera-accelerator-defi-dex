@@ -46,6 +46,17 @@ describe("NFTHolder Tests", function () {
     const MockNFTHolder = await ethers.getContractFactory("NFTHolderMock");
     const mockNFTHolder = await MockNFTHolder.deploy();
 
+    const NFTTokenHolderFactory = await ethers.getContractFactory(
+      "NFTTokenHolderFactory"
+    );
+    const nftTokenHolderFactory = await NFTTokenHolderFactory.deploy();
+
+    await nftTokenHolderFactory.initialize(
+      mockBaseHTS.address,
+      mockNFTHolder.address,
+      admin
+    );
+
     return {
       tokenCont,
       mockBaseHTS,
@@ -53,6 +64,7 @@ describe("NFTHolder Tests", function () {
       nftHolder,
       admin,
       mockNFTHolder,
+      nftTokenHolderFactory,
     };
   }
 
@@ -94,14 +106,14 @@ describe("NFTHolder Tests", function () {
     await nftHolder.addProposalForVoter(signers[0].address, 1);
     const activeProposals = await nftHolder.getActiveProposalsForUser();
     expect(activeProposals.length).to.be.equal(1);
-    const canClaimGod = await nftHolder.canUserClaimTokens();
-    expect(canClaimGod).to.be.equal(false);
+    const canClaimNFT = await nftHolder.canUserClaimTokens();
+    expect(canClaimNFT).to.be.equal(false);
 
     await nftHolder.removeActiveProposals([signers[0].address], 1);
     const activeProposals1 = await nftHolder.getActiveProposalsForUser();
     expect(activeProposals1.length).to.be.equal(0);
-    const canClaimGod1 = await nftHolder.canUserClaimTokens();
-    expect(canClaimGod1).to.be.equal(true);
+    const canClaimNFT1 = await nftHolder.canUserClaimTokens();
+    expect(canClaimNFT1).to.be.equal(true);
   });
 
   it("Verify NFTHolder grabtoken revert", async function () {
@@ -143,5 +155,67 @@ describe("NFTHolder Tests", function () {
     );
     expect(userBalanceAfterRevert).to.be.equal(userTotalToken);
     expect(nftHolderBalanceAfterRevert).to.be.equal(0);
+  });
+
+  it("Given a NFTHolder when factory is asked to create holder then address should be populated", async () => {
+    const { nftTokenHolderFactory, tokenCont } = await loadFixture(
+      deployFixture
+    );
+
+    const holder = await nftTokenHolderFactory.callStatic.getTokenHolder(
+      tokenCont.address
+    );
+
+    expect(holder).not.to.be.equal("0x0");
+  });
+
+  it("Given a NFTHolder exist in factory when factory is asked to create another one with different token then address should be populated", async () => {
+    const { nftTokenHolderFactory, tokenCont } = await loadFixture(
+      deployFixture
+    );
+
+    const TokenCont = await ethers.getContractFactory("ERC20Mock");
+    const newToken = await TokenCont.deploy(
+      "tokenName1",
+      "tokenSymbol1",
+      total,
+      0
+    );
+
+    const tx1 = await nftTokenHolderFactory.getTokenHolder(tokenCont.address);
+
+    const tx2 = await nftTokenHolderFactory.getTokenHolder(newToken.address);
+
+    const holder1Record = await tx1.wait();
+    const holder2Record = await tx2.wait();
+
+    const tokenNFTHolder = holder1Record.events[2].args.tokenHolder;
+    const newTokenNFTHolder = holder2Record.events[2].args.tokenHolder;
+
+    expect(holder1Record.events[2].args.token).to.be.equal(tokenCont.address);
+    expect(holder2Record.events[2].args.token).to.be.equal(newToken.address);
+    expect(tokenNFTHolder).not.to.be.equal(newTokenNFTHolder);
+    expect(tokenNFTHolder).not.to.be.equal("0x0");
+    expect(newTokenNFTHolder).not.to.be.equal("0x0");
+  });
+
+  it("Given a NFTHolder exist in factory when factory is asked to create another one with same token then existing address should return", async () => {
+    const { nftTokenHolderFactory, tokenCont } = await loadFixture(
+      deployFixture
+    );
+
+    const tx1 = await nftTokenHolderFactory.getTokenHolder(tokenCont.address);
+
+    //Use callStatic as we are reading the existing state not modifying it.
+    const newTokenNFTHolder =
+      await nftTokenHolderFactory.callStatic.getTokenHolder(tokenCont.address);
+
+    const holder1Record = await tx1.wait();
+    //Below emits event as it add new NFT Holder
+    const tokenNFTHolder = holder1Record.events[2].args.tokenHolder;
+
+    expect(tokenNFTHolder).to.be.equal(newTokenNFTHolder);
+    expect(tokenNFTHolder).not.to.be.equal("0x0");
+    expect(newTokenNFTHolder).not.to.be.equal("0x0");
   });
 });
