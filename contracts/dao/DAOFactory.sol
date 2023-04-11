@@ -34,7 +34,7 @@ contract DAOFactory is OwnableUpgradeable, IEvents, IErrors {
 
     modifier ifAdmin() {
         if (msg.sender != proxyAdmin) {
-            revert NotAdmin("GovernanceDAOFactory: auth failed");
+            revert NotAdmin("DAOFactory: auth failed");
         }
         _;
     }
@@ -66,7 +66,7 @@ contract DAOFactory is OwnableUpgradeable, IEvents, IErrors {
         );
     }
 
-    function getGODTokenHolderFactoryAddress()
+    function getTokenHolderFactoryAddress()
         external
         view
         ifAdmin
@@ -115,19 +115,19 @@ contract DAOFactory is OwnableUpgradeable, IEvents, IErrors {
         bool _isPrivate
     ) external returns (address) {
         if (bytes(_name).length == 0) {
-            revert InvalidInput("GovernanceDAOFactory: name is empty");
+            revert InvalidInput("DAOFactory: name is empty");
         }
         if (bytes(_logoUrl).length == 0) {
-            revert InvalidInput("GovernanceDAOFactory: url is empty");
+            revert InvalidInput("DAOFactory: url is empty");
         }
         if (address(_tokenAddress) == address(0)) {
-            revert InvalidInput("GovernanceDAOFactory: token address is zero");
+            revert InvalidInput("DAOFactory: token address is zero");
         }
         if (address(_admin) == address(0)) {
-            revert InvalidInput("GovernanceDAOFactory: admin address is zero");
+            revert InvalidInput("DAOFactory: admin address is zero");
         }
         if (_votingPeriod == 0) {
-            revert InvalidInput("GovernanceDAOFactory: voting period is zero");
+            revert InvalidInput("DAOFactory: voting period is zero");
         }
         ITokenHolder iTokenHolder = tokenHolderFactory.getTokenHolder(
             address(_tokenAddress)
