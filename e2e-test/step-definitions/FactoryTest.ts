@@ -521,7 +521,7 @@ export class FactorySteps {
     sportPrice = await pair.getSpotPrice(tokenId, client);
   }
 
-  @then(/Expected spot price should be (\d*)/, undefined, 30000)
+  @then(/Expected spot price should be (\d+\.?\d*)/, undefined, 30000)
   public async verifySportPriceISNotZero(expectedSpotPrice: string) {
     expect(Number(sportPrice)).to.eql(Number(expectedSpotPrice));
   }

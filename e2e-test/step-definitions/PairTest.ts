@@ -451,4 +451,31 @@ export class PairTestSteps {
   public async verifyErrorMessage(msg: string) {
     expect(errorMsg).contains(msg);
   }
+
+  @then(
+    /Balance of "([^"]*)" and "([^"]*)" in user account is (\d+\.?\d*) and (\d+\.?\d*) respectively/,
+    undefined,
+    30000
+  )
+  public async verifyTokenBalance(
+    firstTokenName: string,
+    secondTokenName: string,
+    firstTokenAmt: number,
+    secondTokenAmt: number
+  ) {
+    await Helper.delay(10000);
+    const firstTokenId = tokenNameIdMap.get(firstTokenName);
+    const secondTokenId = tokenNameIdMap.get(secondTokenName);
+    const firstTokenBalance = Number(
+      await Common.getTokenBalance(id, firstTokenId, client)
+    );
+    const secondTokenBalance = Number(
+      await Common.getTokenBalance(id, secondTokenId, client)
+    );
+
+    expect(firstTokenBalance / Number(precision)).to.eql(Number(firstTokenAmt));
+    expect(secondTokenBalance / Number(precision)).to.eql(
+      Number(secondTokenAmt)
+    );
+  }
 }
