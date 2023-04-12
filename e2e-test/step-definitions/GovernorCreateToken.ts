@@ -361,21 +361,27 @@ export class GovernorCreateToken extends CommonSteps {
   }
 
   @when(
-    /User swaps (\d*) unit of "([^"]*)" token with another token in pair/,
+    /User swaps (\d*) unit of "([^"]*)" token with another token in pair with slippage as (\d+\.?\d*)/,
     undefined,
     30000
   )
-  public async swapToken(tokenCount: number, tokenName: string): Promise<void> {
+  public async swapToken(
+    tokenCount: number,
+    tokenName: string,
+    slippage: number
+  ): Promise<void> {
     tokensBefore = await pair.getPairQty(clientsInfo.operatorClient);
     const tokenToSwap = tokenIDNameMap.get(tokenName);
-    const slippage = new BigNumber(0);
+    const slippageVal = new BigNumber(slippage).multipliedBy(
+      precision.div(100)
+    );
     await pair.swapToken(
       tokenToSwap,
       tokenCount,
       clientsInfo.operatorId,
       clientsInfo.operatorKey,
       precision,
-      slippage,
+      slippageVal,
       clientsInfo.treasureClient
     );
   }
