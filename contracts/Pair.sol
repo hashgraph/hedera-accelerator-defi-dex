@@ -273,11 +273,17 @@ contract Pair is IPair, Initializable, TokenOperations {
             int256 _actualSwapBValue,
             int256 _tokenBTreasureFee
         ) = getOutGivenIn(_tokenAQty);
+        
         int256 finalDeltaBQty = (_actualSwapBValue + _tokenBTreasureFee);
 
-        return
-            ((spotValueExpected - finalDeltaBQty) * precision) /
-            spotValueExpected;
+        int256 calculatedSlippage = ((spotValueExpected - finalDeltaBQty) *
+            precision) / spotValueExpected;
+
+        calculatedSlippage = calculatedSlippage < 0
+            ? -calculatedSlippage
+            : calculatedSlippage;
+
+        return calculatedSlippage;
     }
 
     function slippageInGivenOut(
@@ -297,8 +303,13 @@ contract Pair is IPair, Initializable, TokenOperations {
         ) = getInGivenOut(_tokenBQty);
 
         int256 finalDeltaAQty = (_actualSwapAValue + _tokenATreasureFee);
+
         int256 calculatedSlippage = ((finalDeltaAQty - spotValueExpected) *
             precision) / spotValueExpected;
+
+        calculatedSlippage = calculatedSlippage < 0
+            ? -calculatedSlippage
+            : calculatedSlippage;
 
         return calculatedSlippage;
     }
@@ -676,10 +687,6 @@ contract Pair is IPair, Initializable, TokenOperations {
         int256 _slippage
     ) private view {
         int256 slippageThreshold = _slippage > 0 ? _slippage : getSlippage();
-
-        calculatedSlippage = calculatedSlippage < 0
-            ? -calculatedSlippage
-            : calculatedSlippage;
 
         if (calculatedSlippage > slippageThreshold) {
             revert SlippageBreached({
