@@ -2,9 +2,9 @@
 pragma solidity ^0.8.0;
 import "../common/IERC20.sol";
 
-import "../governance/IGODTokenHolderFactory.sol";
+import "../governance/ITokenHolderFactory.sol";
 
-contract NFTHolderMock is IGODHolder {
+contract NFTHolderMock is ITokenHolder {
     function initialize(
         IBaseHTS tokenService,
         address token

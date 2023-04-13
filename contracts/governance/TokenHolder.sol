@@ -4,9 +4,9 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "../common/IERC20.sol";
 import "../common/IBaseHTS.sol";
 import "../common/hedera/HederaResponseCodes.sol";
-import "./IGODHolder.sol";
+import "./ITokenHolder.sol";
 
-abstract contract TokenHolder is IGODHolder, Initializable {
+abstract contract TokenHolder is ITokenHolder, Initializable {
     mapping(address => uint256[]) activeProposalsForUsers;
     IBaseHTS internal _tokenService;
     address internal _token;

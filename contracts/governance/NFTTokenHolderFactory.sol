@@ -2,4 +2,4 @@
 pragma solidity ^0.8.4;
 import "./TokenHolderFactory.sol";
 
-contract GODTokenHolderFactory is TokenHolderFactory {}
+contract NFTTokenHolderFactory is TokenHolderFactory {}

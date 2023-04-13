@@ -3,7 +3,7 @@ pragma solidity ^0.8.4;
 import "../common/IERC20.sol";
 import "../common/IBaseHTS.sol";
 
-interface IGODHolder {
+interface ITokenHolder {
     function initialize(IBaseHTS tokenService, address token) external;
 
     function revertTokensForVoter() external returns (int32);

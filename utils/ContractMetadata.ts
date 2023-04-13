@@ -15,6 +15,7 @@ export default class ContractMetadata {
     "Splitter",
     "Configuration",
     "GODTokenHolderFactory",
+    "NFTTokenHolderFactory",
     "GovernanceDAOFactory",
   ];
 
@@ -30,8 +31,10 @@ export default class ContractMetadata {
     "Splitter",
     "Vault",
     "GODHolder",
+    "NFTHolder",
     "Configuration",
     "GODTokenHolderFactory",
+    "NFTTokenHolderFactory",
     "GovernanceDAOFactory",
     "GovernorTokenDAO",
   ];

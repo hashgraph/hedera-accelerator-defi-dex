@@ -22,8 +22,11 @@ export class ContractService {
     this.governorUpgradeContract,
   ];
   public godHolderContract = "godholder";
+  public nftHolderContract = "nftholder";
   public configuration = "configuration";
   public godTokenHolderFactory = "godtokenholderfactory";
+  public nftTokenHolderFactory = "nfttokenholderfactory";
+
   public governorTokenDao = "governortokendao";
 
   private contractRecordFile = "./deployment/state/contracts.json";
