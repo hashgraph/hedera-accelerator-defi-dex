@@ -1,6 +1,6 @@
 import dex from "../deployment/model/dex";
-import GnosisSafe from "../e2e-test/business/GnosisSafe";
 import MultiSigDao from "../e2e-test/business/MultiSigDao";
+import HederaGnosisSafe from "../e2e-test/business/HederaGnosisSafe";
 
 import { AccountId, Client, ContractId, TokenId } from "@hashgraph/sdk";
 import { clientsInfo } from "../utils/ClientManagement";
@@ -89,7 +89,7 @@ export async function executeDAO(
 
 async function getGnosisSafeInstance(multiSigDAO: MultiSigDao) {
   const safeContractId = await multiSigDAO.getHederaGnosisSafeContractAddress();
-  return new GnosisSafe(safeContractId.toString());
+  return new HederaGnosisSafe(safeContractId.toString());
 }
 
 if (require.main === module) {

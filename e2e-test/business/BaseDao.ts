@@ -22,13 +22,7 @@ export default class BaseDAO extends Base {
   };
 
   getDaoDetail = async (client: Client = clientsInfo.operatorClient) => {
-    const args = new ContractFunctionParameters();
-    const { result } = await this.execute(
-      9_00_000,
-      GET_DAO_DETAILS,
-      client,
-      args
-    );
+    const { result } = await this.execute(9_00_000, GET_DAO_DETAILS, client);
     const name = result.getString(0);
     const logoUrl = result.getString(1);
     console.log(`- BaseDAO#${GET_DAO_DETAILS}(): done`);
@@ -37,13 +31,7 @@ export default class BaseDAO extends Base {
   };
 
   getWebLinks = async (client: Client = clientsInfo.operatorClient) => {
-    const args = new ContractFunctionParameters();
-    const { result } = await this.execute(
-      9_00_000,
-      GET_WEB_LINKS,
-      client,
-      args
-    );
+    const { result } = await this.execute(9_00_000, GET_WEB_LINKS, client);
     const link = result.getString(1);
     console.log(
       `${result.getString(0)}\n${result.getString(1)}\n${result.getString(

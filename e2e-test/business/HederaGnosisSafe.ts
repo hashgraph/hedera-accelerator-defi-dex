@@ -1,4 +1,4 @@
-import Base from "../../e2e-test/business/Base";
+import Base from "./Base";
 
 import { ethers } from "ethers";
 import { Helper } from "../../utils/Helper";
@@ -11,7 +11,7 @@ const APPROVE_HASH = "approveHash";
 const EXEC_TRANSACTION = "executeTransaction";
 const GET_TRANSACTION_HASH = "getTransactionHash";
 
-export default class GnosisSafe extends Base {
+export default class HederaGnosisSafe extends Base {
   executeTransaction = async (
     to: string,
     value: number | BigNumber,
