@@ -37,7 +37,7 @@ contract TokenHolderFactory is ITokenHolderFactory, Initializable {
         ITokenHolder tokenHolder = tokenToHolderContractMap[_token];
 
         if (address(tokenHolder) == address(0x0)) {
-            tokenHolder = _createGODHolder(_token);
+            tokenHolder = _createTokenHolder(_token);
             tokenToHolderContractMap[_token] = tokenHolder;
             emit TokenHolderCreated(address(_token), address(tokenHolder));
         }
@@ -67,7 +67,7 @@ contract TokenHolderFactory is ITokenHolderFactory, Initializable {
             );
     }
 
-    function _createGODHolder(address _token) private returns (ITokenHolder) {
+    function _createTokenHolder(address _token) private returns (ITokenHolder) {
         address proxy = _createProxy();
         ITokenHolder holder = ITokenHolder(proxy);
         holder.initialize(tokenService, _token);
