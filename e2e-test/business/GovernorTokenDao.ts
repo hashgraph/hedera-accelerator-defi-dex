@@ -1,5 +1,6 @@
 import Base from "./Base";
 import GodHolder from "../../e2e-test/business/GodHolder";
+import NFTHolder from "../../e2e-test/business/NFTHolder";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { BigNumber } from "bignumber.js";
 
@@ -27,7 +28,7 @@ export default class GovernorTokenDao extends Base {
     name: string,
     url: string,
     governor: Governor,
-    godHolder: GodHolder,
+    tokenHolder: GodHolder | NFTHolder,
     client: Client = clientsInfo.operatorClient,
     defaultQuorumThresholdValue: number = DEFAULT_QUORUM_THRESHOLD_IN_BSP,
     votingDelay: number = DEFAULT_VOTING_DELAY,
@@ -35,7 +36,7 @@ export default class GovernorTokenDao extends Base {
   ) {
     try {
       await governor.initialize(
-        godHolder,
+        tokenHolder,
         client,
         defaultQuorumThresholdValue,
         votingDelay,

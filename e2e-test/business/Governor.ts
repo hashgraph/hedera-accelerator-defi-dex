@@ -15,6 +15,7 @@ import {
   ContractId,
   ContractFunctionParameters,
 } from "@hashgraph/sdk";
+import NFTHolder from "./NFTHolder";
 
 const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
 const DEFAULT_QUORUM_THRESHOLD_IN_BSP = 500;
@@ -61,16 +62,16 @@ enum VoteType {
 
 export default class Governor extends Base {
   async initialize(
-    godHolder: GodHolder,
+    tokenHolder: GodHolder | NFTHolder,
     client: Client = clientsInfo.operatorClient,
     defaultQuorumThresholdValue: number = DEFAULT_QUORUM_THRESHOLD_IN_BSP,
     votingDelay: number = DEFAULT_VOTING_DELAY,
     votingPeriod: number = DEFAULT_VOTING_PERIOD,
     tokenId: TokenId = GOD_TOKEN_ID
   ) {
-    await godHolder.initialize(client, tokenId.toSolidityAddress());
+    await tokenHolder.initialize(client, tokenId.toSolidityAddress());
 
-    const godHolderContractId = godHolder.contractId;
+    const godHolderContractId = tokenHolder.contractId;
     const godHolderProxyAddress =
       ContractId.fromString(godHolderContractId).toSolidityAddress();
 
