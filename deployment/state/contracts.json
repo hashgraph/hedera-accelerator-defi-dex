@@ -185,5 +185,39 @@
     "hash": "2ebeac0a980dd9cf6b9eb95ab548ecd4",
     "transparentProxyAddress": "0x00000000000000000000000000000000003f94f7",
     "transparentProxyId": "0.0.4166903"
+  },
+  {
+    "name": "basehts",
+    "id": "0.0.4067446",
+    "address": "0x00000000000000000000000000000000003e1076",
+    "timestamp": "2023-04-13T10:30:16.559Z",
+    "hash": "a1b131b18cc9d9f149b4d297448a7ea5"
+  },
+  {
+    "name": "governortransfertoken",
+    "id": "0.0.4070252",
+    "address": "0x00000000000000000000000000000000003e1b6c",
+    "timestamp": "2023-04-13T12:35:24.140Z",
+    "hash": "7a63f477057fe5d0fcdae3e34da9cd8f",
+    "transparentProxyAddress": "0x00000000000000000000000000000000003e1bf1",
+    "transparentProxyId": "0.0.4070385"
+  },
+  {
+    "name": "governortokendao",
+    "id": "0.0.4070394",
+    "address": "0x00000000000000000000000000000000003e1bfa",
+    "timestamp": "2023-04-13T12:35:57.647Z",
+    "hash": "a79a848fb61e3452839d333eb5b3e292",
+    "transparentProxyAddress": "0x00000000000000000000000000000000003e1bfe",
+    "transparentProxyId": "0.0.4070398"
+  },
+  {
+    "name": "nftholder",
+    "id": "0.0.4070405",
+    "address": "0x00000000000000000000000000000000003e1c05",
+    "timestamp": "2023-04-13T12:36:28.365Z",
+    "hash": "b75f143f22dad0b0c3988fbcdd39ac1b",
+    "transparentProxyAddress": "0x00000000000000000000000000000000003e1c09",
+    "transparentProxyId": "0.0.4070409"
   }
 ]

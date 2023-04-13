@@ -43,6 +43,7 @@ export default class GovernorTokenDao extends Base {
         votingPeriod
       );
     } catch (error) {
+      console.log("governor.initialize catch");
       throw error;
     }
 

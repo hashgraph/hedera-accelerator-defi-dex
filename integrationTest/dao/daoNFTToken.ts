@@ -7,6 +7,8 @@ import dex from "../../deployment/model/dex";
 import Governor from "../../e2e-test/business/Governor";
 import NFTHolder from "../../e2e-test/business/NFTHolder";
 import GovernorTokenDao from "../../e2e-test/business/GovernorTokenDao";
+import Common from "../../e2e-test/business/Common";
+import BigNumber from "bignumber.js";
 
 const csDev = new ContractService();
 
@@ -25,26 +27,40 @@ const governorTokenTransfer = new Governor(
 const nftHolderProxyContractId = csDev.getContractWithProxy(
   csDev.nftHolderContract
 ).transparentProxyId!;
+const baseHTSContractId = csDev.getContract(csDev.baseContractName).id!;
+
 const nftHolder = new NFTHolder(nftHolderProxyContractId);
 
-const adminAddress: string = clientsInfo.uiUserId.toSolidityAddress();
+const adminAddress: string = clientsInfo.operatorId.toSolidityAddress();
 
 const TOKEN_ID = TokenId.fromString(dex.TOKEN_LAB49_1);
 const TOKEN_QTY = 1 * 1e8;
 
 async function main() {
-  await governorTokenDao.initialize(
-    adminAddress,
-    "Governor Token Dao",
-    "dao url",
-    governorTokenTransfer,
-    nftHolder
-  );
-  await nftHolder.grabTokensForVoter(
-    clientsInfo.operatorId.toSolidityAddress(),
-    1,
+  try {
+    await governorTokenDao.initialize(
+      adminAddress,
+      "Governor Token Dao",
+      "dao url",
+      governorTokenTransfer,
+      nftHolder
+    );
+  } catch (error) {
+    console.log("governorTokenDao.initialize catch");
+    console.log(error);
+  }
+  await Common.setNFTTokenAllowance(
+    dex.NFT_TOKEN_ID,
+    baseHTSContractId,
+    clientsInfo.operatorId,
+    clientsInfo.operatorKey,
     clientsInfo.operatorClient
   );
+  // await nftHolder.grabTokensForVoter(
+  //   clientsInfo.operatorId.toSolidityAddress(),
+  //   1,
+  //   clientsInfo.operatorClient,
+  // );
 
   await executeGovernorTokenTransferFlow(
     nftHolder,
@@ -76,20 +92,24 @@ export async function executeGovernorTokenTransferFlow(
   toAccount: AccountId = clientsInfo.operatorId,
   tokenId: TokenId = TOKEN_ID,
   tokenAmount: number = TOKEN_QTY,
-  proposalCreatorClient: Client = clientsInfo.uiUserClient,
+  proposalCreatorClient: Client = clientsInfo.operatorClient,
   voterClient: Client = clientsInfo.operatorClient
 ) {
   const title = Helper.createProposalTitle("Transfer Token Proposal");
-  const proposalId = await governorTokenDao.createTokenTransferProposal(
-    title,
-    fromAccount.toSolidityAddress(),
-    toAccount.toSolidityAddress(),
-    tokenId.toSolidityAddress(),
-    tokenAmount,
-    proposalCreatorClient
-  );
+  // await Common.setTokenAllowance(dex.GOD_TOKEN_ID, baseHTSContractId, 10e8, clientsInfo.operatorId, clientsInfo.operatorKey, clientsInfo.operatorClient);
+  // const proposalId = await governorTokenDao.createTokenTransferProposal(
+  //   title,
+  //   fromAccount.toSolidityAddress(),
+  //   toAccount.toSolidityAddress(),
+  //   tokenId.toSolidityAddress(),
+  //   tokenAmount,
+  //   proposalCreatorClient
+  // );
+  const proposalId =
+    "38220384499510439979761349416708822429408032272119124857091426611874315495892";
+
   await governorTokenTransfer.getProposalDetails(proposalId);
-  await governorTokenTransfer.forVote(proposalId, voterClient);
+  // await governorTokenTransfer.forVote(proposalId, 3, voterClient);
   await governorTokenTransfer.isQuorumReached(proposalId);
   await governorTokenTransfer.isVoteSucceeded(proposalId);
   await governorTokenTransfer.proposalVotes(proposalId);

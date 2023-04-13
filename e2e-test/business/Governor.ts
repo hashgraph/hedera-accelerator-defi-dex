@@ -180,22 +180,30 @@ export default class Governor extends Base {
 
   againstVote = async (
     proposalId: string,
+    tokenId: number,
     client: Client = clientsInfo.operatorClient
-  ) => await this.vote(proposalId, 0, client);
+  ) => await this.vote(proposalId, 0, tokenId, client);
 
   forVote = async (
     proposalId: string,
+    tokenId: number,
     client: Client = clientsInfo.operatorClient
-  ) => await this.vote(proposalId, 1, client);
+  ) => await this.vote(proposalId, 1, tokenId, client);
 
   abstainVote = async (
     proposalId: string,
+    tokenId: number,
     client: Client = clientsInfo.operatorClient
-  ) => await this.vote(proposalId, 2, client);
+  ) => await this.vote(proposalId, 2, tokenId, client);
 
-  vote = async (proposalId: string, support: number, client: Client) => {
+  vote = async (
+    proposalId: string,
+    support: number,
+    tokenId: number,
+    client: Client
+  ) => {
     const args = this.createParams(proposalId)
-      .addUint256(BigNumber(0))
+      .addUint256(BigNumber(tokenId))
       .addUint8(support);
     await this.execute(9900000, CAST_VOTE, client, args);
     console.log(
@@ -458,8 +466,7 @@ export default class Governor extends Base {
         currentState = Number(await this.state(proposalId, client));
         if (currentState === requiredState) {
           console.log(
-            `- Governor#getStateWithTimeout(): succeeded where total waiting time = ${
-              maxWaitInMsInternally - maxWaitInMs
+            `- Governor#getStateWithTimeout(): succeeded where total waiting time = ${maxWaitInMsInternally - maxWaitInMs
             } ms\n`
           );
           break;

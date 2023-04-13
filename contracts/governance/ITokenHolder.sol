@@ -23,4 +23,6 @@ interface ITokenHolder {
     ) external returns (int32);
 
     function getToken() external view returns (address);
+
+    function quorum(uint256) external view returns (uint256);
 }

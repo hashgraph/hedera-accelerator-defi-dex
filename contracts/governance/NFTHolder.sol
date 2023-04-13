@@ -12,7 +12,10 @@ contract NFTHolder is TokenHolder {
     function balanceOfVoter(
         address voter
     ) external view override returns (uint256) {
-        return nftTokenForUsers[voter];
+        if (nftTokenForUsers[voter] > 0) {
+            return 1;
+        }
+        return 0;
     }
 
     function revertTokensForVoter(uint256) external override returns (int32) {
@@ -35,7 +38,7 @@ contract NFTHolder is TokenHolder {
             return;
         }
         nftTokenForUsers[user] = uint256(tokenId);
-        _tokenService.associateTokenPublic(address(this), address(_token));
+
         int256 responseCode = _tokenService.transferNFTPublic(
             address(_token),
             address(user),
@@ -46,5 +49,9 @@ contract NFTHolder is TokenHolder {
             responseCode == HederaResponseCodes.SUCCESS,
             "NFTHolder: token transfer failed to contract."
         );
+    }
+
+    function quorum(uint256) external view override returns (uint256) {
+        return 1;
     }
 }

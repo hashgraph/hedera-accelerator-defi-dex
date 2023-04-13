@@ -82,11 +82,11 @@ export default class NFTHolder extends Base {
       GRAB_TOKENS_FOR_VOTER,
       client,
       args,
-      undefined
+      clientsInfo.operatorKey
     );
     const responseCode = result.getUint256(0);
     console.log(
-      `- NFTHolder#${REVERT_TOKENS_FOR_VOTER}(): response-code = ${responseCode}\n`
+      `- NFTHolder#${GRAB_TOKENS_FOR_VOTER}(): response-code = ${responseCode}\n`
     );
     return responseCode;
   };
