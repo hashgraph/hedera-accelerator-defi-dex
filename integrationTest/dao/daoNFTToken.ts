@@ -40,6 +40,11 @@ async function main() {
     governorTokenTransfer,
     nftHolder
   );
+  await nftHolder.grabTokensForVoter(
+    clientsInfo.operatorId.toSolidityAddress(),
+    1,
+    clientsInfo.operatorClient
+  );
 
   await executeGovernorTokenTransferFlow(
     nftHolder,
