@@ -26,9 +26,9 @@ When User mints 10000 units of "Token-1"
 Scenario: Verify user can perform swap with newly created pair
 When User gives 300 units of "Token-1" and 150 units of "HBAR" token in to the pool 
 Then User verify "Token-1" and "HBAR" balances in the pool are 300 units and 150 units respectively
-When User sets the slippage value to 1 
-When User swaps 100 unit of "Token-1" token with another token in pair
-Then User verify "Token-1" and "HBAR" quantity in pool is 398 units and 82 units
+When User sets the slippage value to 200 
+When User swaps 100 unit of "Token-1" token with another token in pair with slippage as 200
+Then User verify "Token-1" and "HBAR" quantity in pool is 398 units and 115 units
 
 Scenario: Verify token is not created if proposal is cancelled
 When User create a proposal with title "proposalfortokencreate2" to create a new token with name "Token-2" and symbol "TokenSymbol-2"

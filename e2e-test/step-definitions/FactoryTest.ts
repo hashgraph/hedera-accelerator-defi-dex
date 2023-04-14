@@ -33,7 +33,7 @@ let actualPairAddress: string;
 let pairCountBefore: string[];
 let pairCountAfter: string[];
 const tokenHBARX = TokenId.fromString(dex.HBARX_TOKEN_ID);
-const fees = new BigNumber(10);
+let fees: BigNumber;
 let tokenAHBARPairAddress: string;
 let tokensBefore: BigNumber[];
 let tokensAfter: BigNumber[];
@@ -45,6 +45,8 @@ let slippageOutGivenIn: BigNumber;
 let slippageInGivenOut: BigNumber;
 let precision: BigNumber;
 let pairContractId: any;
+let errorMsg: string = "";
+let sportPrice: BigNumber;
 let tokenNameIdMap = new Map();
 
 @binding()
@@ -68,15 +70,15 @@ export class FactorySteps {
   }
 
   @when(
-    /User create a new pair of tokens with name "([^"]*)" and "([^"]*)"/,
+    /User create a new pair of tokens with name "([^"]*)" and "([^"]*)" and with fee as (-?\d+\.\d+)%/,
     undefined,
     60000
   )
   public async createNewPair(
     firstToken: string,
-    secondToken: string
+    secondToken: string,
+    fee: number
   ): Promise<void> {
-    // const num = Math.floor(Math.random() * 100) + 1;
     tokenOne = await Common.createToken(
       firstToken,
       firstToken,
@@ -91,12 +93,14 @@ export class FactorySteps {
       key,
       client
     );
+    fees = new BigNumber(fee * 100);
     actualPairAddress = await factory.createPair(
       tokenOne,
       tokenTwo,
       id,
       key,
-      client
+      client,
+      fees
     );
     tokenNameIdMap.set(firstToken, tokenOne);
     tokenNameIdMap.set(secondToken, tokenTwo);
@@ -192,7 +196,7 @@ export class FactorySteps {
   }
 
   @when(
-    /User adds (\d*) units of "([^"]*)" and (\d*) units of "([^"]*)" token/,
+    /User adds (\d+\.?\d*) units of "([^"]*)" and (\d+\.?\d*) units of "([^"]*)" token/,
     undefined,
     30000
   )
@@ -223,7 +227,7 @@ export class FactorySteps {
   }
 
   @then(
-    /HBAR and Factory9 balances in the pool are (\d*) units and (\d*) units respectively/,
+    /HBAR and Factory9 balances in the pool are (\d+\.?\d*) units and (\d+\.?\d*) units respectively/,
     undefined,
     30000
   )
@@ -246,7 +250,7 @@ export class FactorySteps {
     lpTokensInPool = await Common.getTokenBalance(id, lpTokenId, client);
   }
 
-  @when(/User gives (\d*) units of lptoken to pool/, undefined, 30000)
+  @when(/User gives (\d+\.?\d*) units of lptoken to pool/, undefined, 30000)
   public async returnLPTokensAndRemoveLiquidity(
     lpTokenCount: number
   ): Promise<void> {
@@ -257,7 +261,7 @@ export class FactorySteps {
   }
 
   @then(
-    /User verifies (\d*) units of HBAR and (\d*) units of Factory9 are left in pool/,
+    /User verifies (\d+\.?\d*) units of HBAR and (\d+\.?\d*) units of Factory9 are left in pool/,
     undefined,
     30000
   )
@@ -267,52 +271,58 @@ export class FactorySteps {
   ): Promise<void> {
     tokensAfter = await pair.getPairQty(client);
     const withPrecision = Common.withPrecision(1, precision);
-    expect(
-      Number(Number(tokensAfter[0].dividedBy(withPrecision)).toFixed())
-    ).to.eql(Number(tokenAQuantity));
-    expect(
-      Number(Number(tokensAfter[1].dividedBy(withPrecision)).toFixed())
-    ).to.eql(Number(tokenBQuantity));
+    expect(Number(tokensAfter[0].dividedBy(withPrecision))).to.eql(
+      Number(tokenAQuantity)
+    );
+    expect(Number(tokensAfter[1].dividedBy(withPrecision))).to.eql(
+      Number(tokenBQuantity)
+    );
   }
 
   @given(
-    /Factory9 and HBAR are present in pool with quantity (\d*) units and (\d*) units respectively/,
+    /Factory9 and HBAR are present in pool with quantity (\d+\.?\d*) units and (\d+\.?\d*) units respectively/,
     undefined,
     30000
   )
   public async tokensArePresent(tokenOneQty: number, tokenTwoQty: number) {
     const tokensQty = await pair.getPairQty(client);
     const withPrecision = Common.withPrecision(1, precision);
-    expect(Number(tokensQty[1].dividedBy(withPrecision)).toFixed()).to.eql(
-      tokenOneQty
+    expect(Number(tokensQty[1].dividedBy(withPrecision))).to.eql(
+      Number(tokenOneQty)
     );
-    expect(Number(tokensQty[0].dividedBy(withPrecision)).toFixed()).to.eql(
-      tokenTwoQty
+    expect(Number(tokensQty[0].dividedBy(withPrecision))).to.eql(
+      Number(tokenTwoQty)
     );
   }
 
   @when(
-    /User make swap of (\d*) unit of "([^"]*)" token with another token in pair/,
+    /User make swap of (\d+\.?\d*) unit of "([^"]*)" token with another token in pair with slippage as (\d+\.?\d*)/,
     undefined,
     30000
   )
-  public async swapToken(tokenCount: number, tokenName: string): Promise<void> {
+  public async swapToken(
+    tokenCount: number,
+    tokenName: string,
+    slippage: number
+  ): Promise<void> {
     tokensBefore = await pair.getPairQty(client);
     const tokenToSwap = tokenNameIdMap.get(tokenName);
-    const slippage = new BigNumber(0);
+    const slippageVal = new BigNumber(slippage).multipliedBy(
+      precision.div(100)
+    );
     await pair.swapToken(
       tokenToSwap,
       tokenCount,
       id,
       key,
       precision,
-      slippage,
+      slippageVal,
       client
     );
   }
 
   @then(
-    /HBAR token quantity is (\d*) and Factory9 quantity is (\d*) in pool/,
+    /HBAR token quantity is (\d+\.?\d*) and Factory9 quantity is (\d+\.?\d*) in pool/,
     undefined,
     30000
   )
@@ -323,15 +333,15 @@ export class FactorySteps {
     tokensAfter = await pair.getPairQty(client);
 
     const withPrecision = Common.withPrecision(1, precision);
-    expect(
-      Number(Number(tokensAfter[0].dividedBy(withPrecision)).toFixed())
-    ).to.eql(Number(tokenAQuantity));
-    expect(
-      Number(Number(tokensAfter[1].dividedBy(withPrecision)).toFixed())
-    ).to.eql(Number(tokenBQuantity));
+    expect(Number(tokensAfter[0].dividedBy(withPrecision))).to.eql(
+      Number(tokenAQuantity)
+    );
+    expect(Number(tokensAfter[1].dividedBy(withPrecision))).to.eql(
+      Number(tokenBQuantity)
+    );
   }
 
-  @when(/User update the slippage value to (\d*)/, undefined, 30000)
+  @when(/User update the slippage value to (\d+\.?\d*)/, undefined, 30000)
   public async setSlippageVal(slippage: number): Promise<void> {
     const slippageWithPrecision = Common.withPrecision(slippage, precision);
     pair.setSlippage(slippageWithPrecision, client);
@@ -352,22 +362,26 @@ export class FactorySteps {
     }
   }
 
-  @when(/User gives (\d*) units of HBAR to the pool/, undefined, 30000)
+  @when(/User gives (\d+\.?\d*) units of HBAR to the pool/, undefined, 30000)
   public async calculateTokenAQtyForGivenTokenBQty(tokenHBARCount: number) {
     const tokenHBARQty = Common.withPrecision(tokenHBARCount, precision);
     tokenAQty = await pair.getInGivenOut(tokenHBARQty, client);
   }
 
-  @then(/Expected quantity of Factory9 token should be (\d*)/, undefined, 30000)
+  @then(
+    /Expected quantity of Factory9 token should be (\d+\.?\d*)/,
+    undefined,
+    30000
+  )
   public async verifyTokenAQty(expectedTokenAQty: string) {
     const withPrecision = Common.withPrecision(1, precision);
-    expect(Number(Number(tokenAQty.dividedBy(withPrecision)).toFixed())).to.eql(
+    expect(Number(tokenAQty.dividedBy(withPrecision))).to.eql(
       Number(expectedTokenAQty)
     );
   }
 
   @when(
-    /User gives (\d*) units of Factory9 to calculate slippage out/,
+    /User gives (\d+\.?\d*) units of Factory9 to calculate slippage out/,
     undefined,
     30000
   )
@@ -376,13 +390,13 @@ export class FactorySteps {
     slippageOutGivenIn = await pair.slippageOutGivenIn(tokenAQty, client);
   }
 
-  @then(/Slippage out value should be (\d*)/, undefined, 30000)
-  public async verifySlippageOut(expectedSlippageOut: string) {
+  @then(/Slippage out value should be (\d+\.?\d*)/, undefined, 30000)
+  public async verifySlippageOut(expectedSlippageOut: number) {
     expect(Number(slippageOutGivenIn)).to.eql(Number(expectedSlippageOut));
   }
 
   @when(
-    /User gives (\d*) units of HBAR to calculate slippage in/,
+    /User gives (\d+\.?\d*) units of HBAR to calculate slippage in/,
     undefined,
     30000
   )
@@ -391,13 +405,13 @@ export class FactorySteps {
     slippageInGivenOut = await pair.slippageInGivenOut(tokenBQty, client);
   }
 
-  @then(/Slippage in value should be (\d*)/, undefined, 30000)
+  @then(/Slippage in value should be (\d+\.?\d*)/, undefined, 30000)
   public async verifySlippageIn(expectedSlippageIn: string) {
     expect(Number(slippageInGivenOut)).to.eql(Number(expectedSlippageIn));
   }
 
   @then(
-    /User verifies balance of "([^"]*)" token from contract is (\d*)/,
+    /User verifies balance of "([^"]*)" token from contract is (\d+\.?\d*)/,
     undefined,
     30000
   )
@@ -421,9 +435,51 @@ export class FactorySteps {
     console.log(
       `token name is - ${tokenName} tokenId is - ${tokenId} and tokenBalance is - ${tokenBalance}`
     );
-    expect(Number(Number(tokenBalance / withPrecision).toFixed())).to.eql(
-      Number(tokenQty)
-    );
+    expect(Number(tokenBalance / withPrecision)).to.eql(Number(tokenQty));
+  }
+
+  @when(
+    /User create a new pair with tokens "([^"]*)" and "([^"]*)" and with fee as (-?\d+\.\d+)%/,
+    undefined,
+    30000
+  )
+  public async createPairWithExistingTokens(
+    firstTokenName: string,
+    secondTokenName: string,
+    feeAmt: number
+  ) {
+    const tokenOne = tokenNameIdMap.get(firstTokenName);
+    const tokenTwo = tokenNameIdMap.get(secondTokenName);
+    fees = new BigNumber(feeAmt * 100);
+    try {
+      actualPairAddress = await factory.createPair(
+        tokenOne,
+        tokenTwo,
+        id,
+        key,
+        client,
+        fees
+      );
+    } catch (e: any) {
+      errorMsg = e.message;
+    }
+  }
+
+  @then(/User receive error message "([^"]*)"/, undefined, 30000)
+  public async verifyErrorMsg(msg: string) {
+    expect(errorMsg).contains(msg);
+    errorMsg = "";
+  }
+
+  @when(/User get spot price for "([^"]*)"/, undefined, 30000)
+  public async fetchSpotPriceForTokenA(tokenName: string) {
+    const tokenId = tokenNameIdMap.get(tokenName);
+    sportPrice = await pair.getSpotPrice(tokenId, client);
+  }
+
+  @then(/Expected spot price should be (\d+\.?\d*)/, undefined, 30000)
+  public async verifySportPriceISNotZero(expectedSpotPrice: string) {
+    expect(Number(sportPrice)).to.eql(Number(expectedSpotPrice));
   }
 
   private async fetchContractID(pairAddress: string): Promise<ContractId> {
