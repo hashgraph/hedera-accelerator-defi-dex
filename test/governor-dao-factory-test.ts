@@ -3,7 +3,7 @@ import { BigNumber } from "ethers";
 import { TestHelper } from "./TestHelper";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-describe.only("GovernanceDAOFactory contract tests", function () {
+describe("GovernanceDAOFactory contract tests", function () {
   const zeroAddress = "0x0000000000000000000000000000000000000000";
   const oneAddress = "0x0000000000000000000000000000000000000001";
   const total = 100 * 1e8;
