@@ -30,10 +30,14 @@ export default class ContractMetadata {
     "Splitter",
     "Vault",
     "GODHolder",
+    "NFTHolder",
     "Configuration",
     "GODTokenHolderFactory",
+    "NFTTokenHolderFactory",
     "GovernanceDAOFactory",
     "GovernorTokenDAO",
+    "MultisigDAOFactory",
+    "MultisigDAO",
   ];
 
   static SUPPORTED_PROXY_OPTIONS = ["create", "update"];

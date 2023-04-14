@@ -134,15 +134,16 @@ contract LPToken is ILPToken, Initializable {
         myToken.treasury = address(this);
         myToken.expiry = expiry;
         myToken.tokenKeys = keys;
-
-        (bool success, bytes memory result) = address(tokenService).delegatecall(
-            abi.encodeWithSelector(
-                IBaseHTS.createFungibleTokenPublic.selector,
-                myToken,
-                uint256(mintingAmount),
-                8
-            )
-        );
+        /// @custom:oz-upgrades-unsafe-allow delegatecall
+        (bool success, bytes memory result) = address(tokenService)
+            .delegatecall(
+                abi.encodeWithSelector(
+                    IBaseHTS.createFungibleTokenPublic.selector,
+                    myToken,
+                    uint256(mintingAmount),
+                    8
+                )
+            );
 
         (responseCode, tokenAddress) = success
             ? abi.decode(result, (int256, address))

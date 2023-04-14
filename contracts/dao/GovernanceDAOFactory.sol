@@ -7,7 +7,7 @@ import "../common/IErrors.sol";
 import "../common/IBaseHTS.sol";
 
 import "../dao/IGovernorTokenDAO.sol";
-import "../governance/IGODTokenHolderFactory.sol";
+import "../governance/ITokenHolderFactory.sol";
 import "../governance/IGovernorTransferToken.sol";
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -30,7 +30,7 @@ contract GovernanceDAOFactory is OwnableUpgradeable, IEvents, IErrors {
 
     IGovernorTokenDAO private daoLogic;
     IGovernorTransferToken private tokenTransferLogic;
-    IGODTokenHolderFactory private godTokenHolderFactory;
+    ITokenHolderFactory private godTokenHolderFactory;
 
     modifier ifAdmin() {
         if (msg.sender != proxyAdmin) {
@@ -43,7 +43,7 @@ contract GovernanceDAOFactory is OwnableUpgradeable, IEvents, IErrors {
         address _proxyAdmin,
         IBaseHTS _baseHTS,
         IGovernorTokenDAO _daoLogic,
-        IGODTokenHolderFactory _godTokenHolderFactory,
+        ITokenHolderFactory _godTokenHolderFactory,
         IGovernorTransferToken _tokenTransferLogic
     ) external initializer {
         __Ownable_init();
@@ -76,7 +76,7 @@ contract GovernanceDAOFactory is OwnableUpgradeable, IEvents, IErrors {
     }
 
     function upgradeGODTokenHolderFactory(
-        IGODTokenHolderFactory _newGodTokenHolderFactory
+        ITokenHolderFactory _newGodTokenHolderFactory
     ) external ifAdmin {
         emit LogicUpdated(
             address(godTokenHolderFactory),
@@ -133,15 +133,15 @@ contract GovernanceDAOFactory is OwnableUpgradeable, IEvents, IErrors {
         if (_votingPeriod == 0) {
             revert InvalidInput("GovernanceDAOFactory: voting period is zero");
         }
-        IGODHolder iGODHolder = godTokenHolderFactory.getGODTokenHolder(
-            _tokenAddress
+        ITokenHolder iTokenHolder = godTokenHolderFactory.getTokenHolder(
+            address(_tokenAddress)
         );
         IGovernorTransferToken tokenTransfer = _createGovernorTransferTokenContractInstance(
                 address(_tokenAddress),
                 _quorumThreshold,
                 _votingDelay,
                 _votingPeriod,
-                iGODHolder
+                iTokenHolder
             );
         address createdDAOAddress = _createGovernorTokenDAOContractInstance(
             _admin,
@@ -167,7 +167,7 @@ contract GovernanceDAOFactory is OwnableUpgradeable, IEvents, IErrors {
         uint256 _quorumThreshold,
         uint256 _votingDelay,
         uint256 _votingPeriod,
-        IGODHolder _iGODHolder
+        ITokenHolder _iTokenHolder
     ) private returns (IGovernorTransferToken iGovernorTransferToken) {
         iGovernorTransferToken = IGovernorTransferToken(
             _createProxy(address(tokenTransferLogic))
@@ -177,7 +177,7 @@ contract GovernanceDAOFactory is OwnableUpgradeable, IEvents, IErrors {
             _votingDelay,
             _votingPeriod,
             baseHTS,
-            _iGODHolder,
+            _iTokenHolder,
             _quorumThreshold
         );
     }

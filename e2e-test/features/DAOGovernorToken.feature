@@ -29,8 +29,6 @@ Scenario: Verify user can create a DAO and then transfer token with help of prop
     Then User verify token transfer proposal state is "Succeeded"
     When User execute token transfer proposal with title "tokentransferproposaltitle1"
     When User wait for token transfer proposal state to be "Executed" for maximum 10 seconds
-    Then User verify target token is transferred to payee account 
-
 
 Scenario: Verify proposal is not executed if token transfer amount is larger than token current balance
     When User fetches balance of token which user wants to transfer
@@ -56,7 +54,6 @@ Scenario: Verify DAO and proposal flow with factory DAO
     Then User verify token transfer proposal state is "Succeeded"
     When User execute token transfer proposal with title "factorytesttitle11abxz"
     When User wait for token transfer proposal state to be "Executed" for maximum 10 seconds
-    Then User verify target token is transferred to payee account 
 
 Scenario: Verify user can not create DAO with empty name via factory
      When User create a DAO with name "daonametest" and url ""

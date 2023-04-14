@@ -5,6 +5,7 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./common/hedera/HederaResponseCodes.sol";
 import "./common/IBaseHTS.sol";
+import "./common/TokenOperations.sol";
 import "./common/IERC20.sol";
 import "./ILPToken.sol";
 import "./IPair.sol";
@@ -27,7 +28,7 @@ error WrongPairPassed(
     address expectedTokenB
 );
 
-contract Pair is IPair, Initializable {
+contract Pair is IPair, Initializable, TokenOperations {
     IBaseHTS internal tokenService;
     ILPToken internal lpTokenContract;
 
@@ -134,15 +135,222 @@ contract Pair is IPair, Initializable {
         lpTokenContract.removeLPTokenFor(_lpToken, toAccount);
     }
 
-    function calculateTokenstoGetBack(
-        int256 _lpToken
-    ) internal view returns (int256, int256) {
-        int256 allLPTokens = lpTokenContract.getAllLPTokenCount();
+    function getPairQty() public view returns (int256, int256) {
+        return (pair.tokenA.tokenQty, pair.tokenB.tokenQty);
+    }
 
-        int256 tokenAQuantity = (_lpToken * pair.tokenA.tokenQty) / allLPTokens;
-        int256 tokenBQuantity = (_lpToken * pair.tokenB.tokenQty) / allLPTokens;
+    function getPairInfo()
+        public
+        view
+        returns (Pair memory _pair, Amount memory _amount)
+    {
+        _pair = pair;
+        _amount = Amount(
+            getSpotPrice(pair.tokenA.tokenAddress),
+            getSpotPrice(pair.tokenB.tokenAddress),
+            getPrecisionValue(),
+            getFeePrecision(),
+            fee
+        );
+    }
 
-        return (tokenAQuantity, tokenBQuantity);
+    function getSpotPrice(address token) public view returns (int256) {
+        int256 precision = getPrecisionValue();
+        int256 spotTokenQty = token == pair.tokenA.tokenAddress
+            ? pair.tokenA.tokenQty
+            : pair.tokenB.tokenQty;
+        int256 otherTokenQty = token == pair.tokenA.tokenAddress
+            ? pair.tokenB.tokenQty
+            : pair.tokenA.tokenQty;
+        int256 value;
+        if (otherTokenQty > 0) {
+            value = (spotTokenQty * precision) / otherTokenQty;
+        }
+        return value;
+    }
+
+    function getInGivenOut(
+        int256 amountTokenB
+    ) public view returns (int256, int256, int256, int256) {
+        (
+            int256 _tokenBTreasureFee,
+            int256 _deltaBQtyAfterAdjustingFee,
+            int256 _tokenBSwapQtyPlusContractTokenShare
+        ) = _calculateIncomingTokenQuantities(amountTokenB);
+
+        int256 amountTokenA;
+        {
+            int256 invariantValue = getVariantValue();
+            int256 precision = getPrecisionValue();
+            int256 tokenAQ = pair.tokenA.tokenQty;
+            int256 tokenBQ = pair.tokenB.tokenQty + _deltaBQtyAfterAdjustingFee;
+            int256 adjustedValue = (invariantValue * precision) / (tokenBQ);
+            int256 newValue = adjustedValue / precision;
+            amountTokenA = newValue - tokenAQ;
+        }
+
+        (
+            int256 _actualSwapAValue,
+            int256 _tokenATreasureFee
+        ) = _calculateOutgoingTokenQuantities(amountTokenA);
+
+        return (
+            _tokenBTreasureFee,
+            _tokenBSwapQtyPlusContractTokenShare,
+            _actualSwapAValue,
+            _tokenATreasureFee
+        );
+    }
+
+    function getOutGivenIn(
+        int256 amountTokenA
+    ) public view returns (int256, int256, int256, int256) {
+        // Token A Calculation
+        (
+            int256 _tokenATreasureFee,
+            int256 _deltaAQtyAfterAdjustingFee,
+            int256 _tokenASwapQtyPlusContractTokenShare
+        ) = _calculateIncomingTokenQuantities(amountTokenA);
+
+        int256 amountTokenB;
+        //Scoped variable to avoid stack too deep
+        {
+            int256 precision = getPrecisionValue();
+            int256 invariantValue = getVariantValue();
+            int256 tokenAQ = pair.tokenA.tokenQty + _deltaAQtyAfterAdjustingFee;
+            int256 tokenBQ = pair.tokenB.tokenQty;
+            int256 adjustedValue = (invariantValue * precision) / (tokenAQ);
+            int256 newValue = adjustedValue / precision;
+            amountTokenB = tokenBQ - newValue;
+        }
+
+        //Token B Calculation
+        (
+            int256 _actualSwapBValue,
+            int256 _tokenBTreasureFee
+        ) = _calculateOutgoingTokenQuantities(amountTokenB);
+
+        return (
+            _tokenATreasureFee,
+            _tokenASwapQtyPlusContractTokenShare,
+            _actualSwapBValue,
+            _tokenBTreasureFee
+        );
+    }
+
+    function getVariantValue() public view returns (int256) {
+        int256 tokenAQ = pair.tokenA.tokenQty;
+        int256 tokenBQ = pair.tokenB.tokenQty;
+        return tokenAQ * tokenBQ;
+    }
+
+    function getPrecisionValue() public pure returns (int256) {
+        return 100_000_000;
+    }
+
+    function getSlippage() public view returns (int256) {
+        // 0.005 should be default as per requirement.
+        return (slippage <= 0) ? int256(500000) : slippage;
+    }
+
+    function setSlippage(int256 _slippage) external returns (int256) {
+        slippage = _slippage;
+        return slippage;
+    }
+
+    function slippageOutGivenIn(
+        int256 _tokenAQty
+    ) public view returns (int256) {
+        int256 precision = getPrecisionValue();
+        int256 tokenAQ = pair.tokenA.tokenQty;
+        int256 tokenBQ = pair.tokenB.tokenQty;
+        int256 unitPriceForA = (tokenBQ * precision) / tokenAQ;
+        int256 spotValueExpected = (_tokenAQty * unitPriceForA) / precision;
+
+        (
+            ,
+            ,
+            int256 _actualSwapBValue,
+            int256 _tokenBTreasureFee
+        ) = getOutGivenIn(_tokenAQty);
+        
+        int256 finalDeltaBQty = (_actualSwapBValue + _tokenBTreasureFee);
+
+        int256 calculatedSlippage = ((spotValueExpected - finalDeltaBQty) *
+            precision) / spotValueExpected;
+
+        calculatedSlippage = calculatedSlippage < 0
+            ? -calculatedSlippage
+            : calculatedSlippage;
+
+        return calculatedSlippage;
+    }
+
+    function slippageInGivenOut(
+        int256 _tokenBQty
+    ) public view returns (int256) {
+        int256 precision = getPrecisionValue();
+        int256 tokenAQ = pair.tokenA.tokenQty;
+        int256 tokenBQ = pair.tokenB.tokenQty;
+        int256 unitPriceForB = (tokenAQ * precision) / tokenBQ;
+        int256 spotValueExpected = (_tokenBQty * unitPriceForB) / precision;
+
+        (
+            ,
+            ,
+            int256 _actualSwapAValue,
+            int256 _tokenATreasureFee
+        ) = getInGivenOut(_tokenBQty);
+
+        int256 finalDeltaAQty = (_actualSwapAValue + _tokenATreasureFee);
+
+        int256 calculatedSlippage = ((finalDeltaAQty - spotValueExpected) *
+            precision) / spotValueExpected;
+
+        calculatedSlippage = calculatedSlippage < 0
+            ? -calculatedSlippage
+            : calculatedSlippage;
+
+        return calculatedSlippage;
+    }
+
+    function getContractAddress() public view returns (address) {
+        return address(this);
+    }
+
+    function getLpTokenContractAddress()
+        external
+        view
+        override
+        returns (address)
+    {
+        return address(lpTokenContract);
+    }
+
+    function getTokenPairAddress()
+        public
+        view
+        returns (address, address, address, int256)
+    {
+        return (
+            pair.tokenA.tokenAddress,
+            pair.tokenB.tokenAddress,
+            lpTokenContract.getLpTokenAddress(),
+            fee
+        );
+    }
+
+    function getFee() public view returns (int256) {
+        return fee;
+    }
+
+    function getFeePrecision() public pure returns (int256) {
+        return 100;
+    }
+
+    function feeForToken(int256 _tokenQ) public view returns (int256) {
+        int256 tokenQ = ((_tokenQ * fee) / 2) / getFeePrecision();
+        return tokenQ;
     }
 
     function swapToken(
@@ -164,6 +372,17 @@ contract Pair is IPair, Initializable {
         }
     }
 
+    function calculateTokenstoGetBack(
+        int256 _lpToken
+    ) internal view returns (int256, int256) {
+        int256 allLPTokens = lpTokenContract.getAllLPTokenCount();
+
+        int256 tokenAQuantity = (_lpToken * pair.tokenA.tokenQty) / allLPTokens;
+        int256 tokenBQuantity = (_lpToken * pair.tokenB.tokenQty) / allLPTokens;
+
+        return (tokenAQuantity, tokenBQuantity);
+    }
+
     function doTokenASwap(
         address to,
         int256 _deltaAQty,
@@ -172,22 +391,15 @@ contract Pair is IPair, Initializable {
         int256 calculatedSlippage = slippageOutGivenIn(_deltaAQty);
         isSlippageBreached(calculatedSlippage, _slippage);
 
-        // Token A Calculation
         (
             int256 _tokenATreasureFee,
-            int256 _deltaAQtyAfterAdjustingFee,
-            int256 _tokenASwapQtyPlusContractTokenShare
-        ) = _calculateIncomingTokenQuantities(_deltaAQty);
-
-        int256 swapBValue = getOutGivenIn(_deltaAQtyAfterAdjustingFee);
-
-        //Token B Calculation
-        (
+            int256 _tokenASwapQtyPlusContractTokenShare,
             int256 _actualSwapBValue,
             int256 _tokenBTreasureFee
-        ) = _calculateOutgoingTokenQuantities(swapBValue);
+        ) = getOutGivenIn(_deltaAQty);
 
         pair.tokenA.tokenQty += _tokenASwapQtyPlusContractTokenShare;
+
         //Token A transfer
         transferTokenInternally(
             to,
@@ -236,20 +448,15 @@ contract Pair is IPair, Initializable {
     ) private {
         int256 calculatedSlippage = slippageInGivenOut(_deltaBQty);
         isSlippageBreached(calculatedSlippage, _slippage);
-        // Token A Calculation
+
         (
             int256 _tokenBTreasureFee,
-            int256 _deltaBQtyAfterAdjustingFee,
-            int256 _tokenBSwapQtyPlusContractTokenShare
-        ) = _calculateIncomingTokenQuantities(_deltaBQty);
-
-        int256 swapAValue = getInGivenOut(_deltaBQtyAfterAdjustingFee);
-
-        //Token B Calculation
-        (
+            int256 _tokenBSwapQtyPlusContractTokenShare,
             int256 _actualSwapAValue,
             int256 _tokenATreasureFee
-        ) = _calculateOutgoingTokenQuantities(swapAValue);
+        ) = getInGivenOut(_deltaBQty);
+
+        //Token B Calculation
 
         pair.tokenB.tokenQty += _tokenBSwapQtyPlusContractTokenShare;
 
@@ -294,151 +501,6 @@ contract Pair is IPair, Initializable {
         );
     }
 
-    function getPairQty() public view returns (int256, int256) {
-        return (pair.tokenA.tokenQty, pair.tokenB.tokenQty);
-    }
-
-    function getPairInfo()
-        public
-        view
-        returns (Pair memory _pair, Amount memory _amount)
-    {
-        _pair = pair;
-        _amount = Amount(
-            getSpotPrice(pair.tokenA.tokenAddress),
-            getSpotPrice(pair.tokenB.tokenAddress),
-            getPrecisionValue(),
-            getFeePrecision(),
-            fee
-        );
-    }
-
-    function getSpotPrice(address token) public view returns (int256) {
-        int256 precision = getPrecisionValue();
-        int256 spotTokenQty = token == pair.tokenA.tokenAddress
-            ? pair.tokenA.tokenQty
-            : pair.tokenB.tokenQty;
-        int256 otherTokenQty = token == pair.tokenA.tokenAddress
-            ? pair.tokenB.tokenQty
-            : pair.tokenA.tokenQty;
-        int256 value;
-        if (otherTokenQty > 0) {
-            value = (spotTokenQty * precision) / otherTokenQty;
-        }
-        return value;
-    }
-
-    function getInGivenOut(int256 amountTokenB) public view returns (int256) {
-        int256 invariantValue = getVariantValue();
-        int256 precision = getPrecisionValue();
-        int256 tokenAQ = pair.tokenA.tokenQty;
-        int256 tokenBQ = pair.tokenB.tokenQty;
-        int256 adjustedValue = (invariantValue * precision) /
-            (tokenBQ - amountTokenB);
-        int256 newValue = adjustedValue / precision;
-        int256 amountTokenA = newValue - tokenAQ;
-        return amountTokenA;
-    }
-
-    function getVariantValue() public view returns (int256) {
-        int256 tokenAQ = pair.tokenA.tokenQty;
-        int256 tokenBQ = pair.tokenB.tokenQty;
-        return tokenAQ * tokenBQ;
-    }
-
-    function getPrecisionValue() public pure returns (int256) {
-        return 100_000_000;
-    }
-
-    function getOutGivenIn(int256 amountTokenA) public view returns (int256) {
-        int256 precision = getPrecisionValue();
-        int256 invariantValue = getVariantValue();
-        int256 tokenAQ = pair.tokenA.tokenQty;
-        int256 tokenBQ = pair.tokenB.tokenQty;
-        int256 adjustedValue = (invariantValue * precision) /
-            (tokenAQ + amountTokenA);
-        int256 newValue = adjustedValue / precision;
-        int256 amountTokenB = tokenBQ - newValue;
-        return amountTokenB;
-    }
-
-    function getSlippage() public view returns (int256) {
-        // 0.005 should be default as per requirement.
-        return (slippage <= 0) ? int256(500000) : slippage;
-    }
-
-    function setSlippage(int256 _slippage) external returns (int256) {
-        slippage = _slippage;
-        return slippage;
-    }
-
-    function slippageOutGivenIn(
-        int256 _tokenAQty
-    ) public view returns (int256) {
-        int256 precision = getPrecisionValue();
-        int256 tokenAQ = pair.tokenA.tokenQty;
-        int256 tokenBQ = pair.tokenB.tokenQty;
-        int256 unitPriceForA = (tokenBQ * precision) / tokenAQ;
-        int256 spotValueExpected = (_tokenAQty * unitPriceForA) / precision;
-        int256 deltaTokenBQty = getOutGivenIn(_tokenAQty);
-        return
-            ((spotValueExpected - deltaTokenBQty) * precision) /
-            spotValueExpected;
-    }
-
-    function slippageInGivenOut(
-        int256 _tokenBQty
-    ) public view returns (int256) {
-        int256 precision = getPrecisionValue();
-        int256 tokenAQ = pair.tokenA.tokenQty;
-        int256 tokenBQ = pair.tokenB.tokenQty;
-        int256 unitPriceForB = (tokenAQ * precision) / tokenBQ;
-        int256 spotValueExpected = (_tokenBQty * unitPriceForB) / precision;
-        int256 deltaTokenAQty = getInGivenOut(_tokenBQty);
-        return
-            ((deltaTokenAQty - spotValueExpected) * precision) /
-            spotValueExpected;
-    }
-
-    function getContractAddress() public view returns (address) {
-        return address(this);
-    }
-
-    function getLpTokenContractAddress()
-        external
-        view
-        override
-        returns (address)
-    {
-        return address(lpTokenContract);
-    }
-
-    function getTokenPairAddress()
-        public
-        view
-        returns (address, address, address, int256)
-    {
-        return (
-            pair.tokenA.tokenAddress,
-            pair.tokenB.tokenAddress,
-            lpTokenContract.getLpTokenAddress(),
-            fee
-        );
-    }
-
-    function getFee() public view returns (int256) {
-        return fee;
-    }
-
-    function getFeePrecision() public pure returns (int256) {
-        return 100;
-    }
-
-    function feeForToken(int256 _tokenQ) public view returns (int256) {
-        int256 tokenQ = ((_tokenQ * fee) / 2) / getFeePrecision();
-        return tokenQ;
-    }
-
     function _calculateIncomingTokenQuantities(
         int256 senderSwapQty
     ) private view returns (int256, int256, int256) {
@@ -461,6 +523,7 @@ contract Pair is IPair, Initializable {
     function _calculateOutgoingTokenQuantities(
         int256 swappedValue
     ) private view returns (int256, int256) {
+        swappedValue = swappedValue < 0 ? -swappedValue : swappedValue;
         int256 tokenFee = feeForToken(swappedValue);
         int256 _actualSwappedValue = swappedValue - tokenFee;
         int256 _tokenTreasureFee = tokenFee / 2;
@@ -611,17 +674,7 @@ contract Pair is IPair, Initializable {
 
     function _associateToken(address account, address token) private {
         if (!_tokenIsHBARX(token)) {
-            (bool success, ) = address(tokenService).delegatecall(
-                abi.encodeWithSelector(
-                    IBaseHTS.associateTokenPublic.selector,
-                    account,
-                    token
-                )
-            );
-            //Its done to silent the not-used return value. Intentionally not putting
-            //requires check as it fails the unit test. We need to investigate more to
-            //find the root cause.
-            success = success || true;
+            _associateToken(tokenService, account, token);
         }
     }
 
@@ -634,6 +687,7 @@ contract Pair is IPair, Initializable {
         int256 _slippage
     ) private view {
         int256 slippageThreshold = _slippage > 0 ? _slippage : getSlippage();
+
         if (calculatedSlippage > slippageThreshold) {
             revert SlippageBreached({
                 message: "The calculated slippage is over the slippage threshold.",

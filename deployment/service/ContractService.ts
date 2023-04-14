@@ -3,6 +3,11 @@ import { DeployedContract } from "../model/contract";
 import { httpRequest } from "../api/HttpsService";
 
 export class ContractService {
+  public static MULTI_SIG = "multisigdao";
+  public static MULTI_SIG_FACTORY = "multisigdaofactory";
+  public static SAFE = "hederagnosissafe";
+  public static SAFE_FACTORY = "hederagnosissafeproxyfactory";
+
   public governanceDaoFactory = "governancedaofactory";
   public factoryContractName = "factory";
   public pairContractName = "pair";
@@ -22,8 +27,11 @@ export class ContractService {
     this.governorUpgradeContract,
   ];
   public godHolderContract = "godholder";
+  public nftHolderContract = "nftholder";
   public configuration = "configuration";
   public godTokenHolderFactory = "godtokenholderfactory";
+  public nftTokenHolderFactory = "nfttokenholderfactory";
+
   public governorTokenDao = "governortokendao";
 
   private contractRecordFile = "./deployment/state/contracts.json";

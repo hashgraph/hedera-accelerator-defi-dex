@@ -338,5 +338,104 @@
     "hash": "012187be25f102dddf3432b0f74162c8",
     "transparentProxyAddress": "0x00000000000000000000000000000000003b9290",
     "transparentProxyId": "0.0.3904144"
+  },
+  {
+    "name": "pair",
+    "id": "0.0.3997266",
+    "address": "0x00000000000000000000000000000000003cfe52",
+    "timestamp": "2023-04-06T09:22:16.595Z",
+    "hash": "85c7d8d8fa1ce81abdecc7ac4aa8fce8",
+    "transparentProxyAddress": "0x00000000000000000000000000000000003cfe55",
+    "transparentProxyId": "0.0.3997269"
+  },
+  {
+    "name": "godtokenholderfactory",
+    "id": "0.0.3959812",
+    "address": "0x00000000000000000000000000000000003c6c04",
+    "timestamp": "2023-03-31T07:34:27.926Z",
+    "hash": "6d1d0d0fead9bb8fc92fabce14e662ba",
+    "transparentProxyAddress": "0x00000000000000000000000000000000003c6c0d",
+    "transparentProxyId": "0.0.3959821"
+  },
+  {
+    "name": "multisigdao",
+    "id": "0.0.4038496",
+    "address": "0x00000000000000000000000000000000003d9f60",
+    "timestamp": "2023-04-10T09:38:08.673Z",
+    "hash": "e7eecb615c05209483d6512b64828afa",
+    "transparentProxyAddress": "0x00000000000000000000000000000000003d9f68",
+    "transparentProxyId": "0.0.4038504"
+  },
+  {
+    "name": "factory",
+    "id": "0.0.3943668",
+    "address": "0x00000000000000000000000000000000003c2cf4",
+    "timestamp": "2023-03-29T11:10:39.481Z",
+    "hash": "63faad7cded50b1e08d8d8c938abb4ba",
+    "transparentProxyAddress": "0x00000000000000000000000000000000003c2cf8",
+    "transparentProxyId": "0.0.3943672"
+  },
+  {
+    "name": "factory",
+    "id": "0.0.3997417",
+    "address": "0x00000000000000000000000000000000003cfee9",
+    "timestamp": "2023-04-06T09:34:53.165Z",
+    "hash": "06aa76fe793436431f6f162a02031ada",
+    "transparentProxyAddress": "0x00000000000000000000000000000000003cfef0",
+    "transparentProxyId": "0.0.3997424"
+  },
+  {
+    "name": "godtokenholderfactory",
+    "id": "0.0.4047854",
+    "address": "0x00000000000000000000000000000000003dc3ee",
+    "timestamp": "2023-04-11T10:06:49.342Z",
+    "hash": "624f80c59c8dd1476f0b49cac2ffd903",
+    "transparentProxyAddress": "0x00000000000000000000000000000000003dc3f0",
+    "transparentProxyId": "0.0.4047856"
+  },
+  {
+    "name": "governancedaofactory",
+    "id": "0.0.4047891",
+    "address": "0x00000000000000000000000000000000003dc413",
+    "timestamp": "2023-04-11T10:09:56.916Z",
+    "hash": "908b51e8ec051329d3af83fa515d2009",
+    "transparentProxyAddress": "0x00000000000000000000000000000000003dc417",
+    "transparentProxyId": "0.0.4047895"
+  },
+  {
+    "name": "factory",
+    "id": "0.0.4053722",
+    "address": "0x00000000000000000000000000000000003ddada",
+    "timestamp": "2023-04-12T05:42:31.529Z",
+    "hash": "95706c7e69aa262717efa4203befc7b3",
+    "transparentProxyAddress": "0x00000000000000000000000000000000003ddadc",
+    "transparentProxyId": "0.0.4053724"
+  },
+  {
+    "name": "factory",
+    "id": "0.0.4054207",
+    "address": "0x00000000000000000000000000000000003ddcbf",
+    "timestamp": "2023-04-12T07:03:49.957Z",
+    "hash": "95706c7e69aa262717efa4203befc7b3",
+    "transparentProxyAddress": "0x00000000000000000000000000000000003ddcc1",
+    "transparentProxyId": "0.0.4054209"
+  },
+  {
+    "name": "godtokenholderfactory",
+    "id": "0.0.4086540",
+    "address": "0x00000000000000000000000000000000003e5b0c",
+    "timestamp": "2023-04-14T07:35:28.483Z",
+    "hash": "9a92f58bf37bff6f5d52a2289cbc3ac6",
+    "transparentProxyAddress": "0x00000000000000000000000000000000003e5b0e",
+    "transparentProxyId": "0.0.4086542"
+  },
+  {
+    "name": "multisigdaofactory",
+    "id": "0.0.4039368",
+    "address": "0x00000000000000000000000000000000003da2c8",
+    "timestamp": "2023-04-10T10:12:34.631Z",
+    "hash": "97fb84caa385ea8e52581a2a94fdedd3",
+    "transparentProxyAddress": "0x00000000000000000000000000000000003d9f33",
+    "transparentProxyId": "0.0.4038451"
   }
 ]

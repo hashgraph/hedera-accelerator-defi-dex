@@ -10,7 +10,7 @@ import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesQ
 import "../common/IERC20.sol";
 import "../common/IBaseHTS.sol";
 import "../common/hedera/HederaResponseCodes.sol";
-import "./GODHolder.sol";
+import "./TokenHolder.sol";
 import "./IGovernorBase.sol";
 import "../common/IErrors.sol";
 
@@ -43,7 +43,7 @@ abstract contract GovernorCountingSimpleInternal is
     IERC20 token;
     mapping(uint256 => ProposalInfo) proposalCreators;
     IBaseHTS internal tokenService;
-    IGODHolder godHolder;
+    ITokenHolder tokenHolder;
 
     mapping(uint256 => address[]) proposalVoters;
     uint256 quorumThresholdInBsp;
@@ -53,11 +53,11 @@ abstract contract GovernorCountingSimpleInternal is
         uint256 _votingDelayValue,
         uint256 _votingPeriodValue,
         IBaseHTS _tokenService,
-        IGODHolder _godHolder,
+        ITokenHolder _tokenHolder,
         uint256 _quorumThresholdInBsp
     ) public initializer {
         tokenService = _tokenService;
-        godHolder = _godHolder;
+        tokenHolder = _tokenHolder;
         token = _token;
         precision = 100000000;
         quorumThresholdInBsp = _quorumThresholdInBsp == 0
@@ -81,7 +81,7 @@ abstract contract GovernorCountingSimpleInternal is
         uint256,
         bytes memory /*params*/
     ) internal view virtual override returns (uint256) {
-        uint256 balance = godHolder.balanceOfVoter(account);
+        uint256 balance = tokenHolder.balanceOfVoter(account);
         if (balance == 0) {
             balance = token.balanceOf(account);
         }
@@ -233,14 +233,15 @@ abstract contract GovernorCountingSimpleInternal is
     /**
      * @dev See {IGovernor-castVote}.
      */
-    function castVote(
+    function castVotePublic(
         uint256 proposalId,
+        uint256 tokenId,
         uint8 support
-    ) public virtual override returns (uint256) {
+    ) public returns (uint256) {
         address voter = _msgSender();
         require(_getVotes(voter, 0, "") > 0, "No voting power");
-        godHolder.grabTokensFromUser(voter);
-        godHolder.addProposalForVoter(voter, proposalId);
+        tokenHolder.grabTokensFromUser(voter, tokenId);
+        tokenHolder.addProposalForVoter(voter, proposalId);
         uint256 weight = _castVote(proposalId, voter, support, "");
         address[] storage voters = proposalVoters[proposalId];
         voters.push(voter);
@@ -287,7 +288,7 @@ abstract contract GovernorCountingSimpleInternal is
 
     function cleanup(uint256 proposal) private {
         address[] memory voters = proposalVoters[proposal];
-        godHolder.removeActiveProposals(voters, proposal);
+        tokenHolder.removeActiveProposals(voters, proposal);
         delete (proposalVoters[proposal]);
     }
 

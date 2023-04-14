@@ -1,12 +1,14 @@
 import { binding, given, then, when } from "cucumber-tsflow";
 import { expect } from "chai";
 import { ContractService } from "../../deployment/service/ContractService";
-import ClientManagement from "../../utils/ClientManagement";
+import ClientManagement, { clientsInfo } from "../../utils/ClientManagement";
 import { TokenId, ContractId } from "@hashgraph/sdk";
 import { BigNumber } from "bignumber.js";
 import Pair from "../business/Pair";
 import LpToken from "../business/LpToken";
 import Common from "../business/Common";
+import exp from "constants";
+import { Helper } from "../../utils/Helper";
 
 const clientManagement = new ClientManagement();
 const contractService = new ContractService();
@@ -40,6 +42,10 @@ let slippageInGivenOut: BigNumber;
 let lpTokenSymbol: string;
 let lpTokenName: string;
 let precision: BigNumber;
+let tokenBalanceBeforeSwapWithTreasury: Number;
+let feeForSwap: BigNumber;
+let errorMsg: string;
+
 @binding()
 export class PairTestSteps {
   @given(
@@ -76,7 +82,7 @@ export class PairTestSteps {
   }
 
   @when(
-    /User adds (\d*) units of PairToken1 and (\d*) units of PairToken2/,
+    /User adds (-?\d+\.\d+) units of PairToken1 and (-?\d+\.\d+) units of PairToken2/,
     undefined,
     30000
   )
@@ -99,7 +105,7 @@ export class PairTestSteps {
   }
 
   @then(
-    /PairToken1 and PairToken2 balances in the pool are (\d*) units and (\d*) units respectively/,
+    /PairToken1 and PairToken2 balances in the pool are (-?\d+\.\d+) units and (-?\d+\.\d+) units respectively/,
     undefined,
     30000
   )
@@ -119,7 +125,7 @@ export class PairTestSteps {
     lpTokensInPool = await lpToken.getAllLPTokenCount(client);
   }
 
-  @when(/User returns (\d*) units of lptoken/, undefined, 30000)
+  @when(/User returns (-?\d+\.\d+) units of lptoken/, undefined, 30000)
   public async returnLPTokensAndRemoveLiquidity(
     lpTokenCount: number
   ): Promise<void> {
@@ -129,22 +135,22 @@ export class PairTestSteps {
   }
 
   @then(
-    /User verifies (\d*) units of PairToken1 and (\d*) units of PairToken2 are left in pool/,
+    /User verifies (-?\d+\.\d+) units of PairToken1 and (-?\d+\.\d+) units of PairToken2 are left in pool/,
     undefined,
     30000
   )
   public async verifyTokensLeftInPoolAfterRemovingLiquidity(
-    tokenAQuantity: Number,
-    tokenBQuantity: Number
+    tokenAQuantity: number,
+    tokenBQuantity: number
   ): Promise<void> {
     tokensAfter = await pair.getPairQty(client);
     const withPrecision = Common.withPrecision(1, precision);
-    expect(
-      Number(Number(tokensAfter[0].dividedBy(withPrecision)).toFixed())
-    ).to.eql(Number(tokenAQuantity));
-    expect(
-      Number(Number(tokensAfter[1].dividedBy(withPrecision)).toFixed())
-    ).to.eql(Number(tokenBQuantity));
+    expect(Number(tokensAfter[0].dividedBy(withPrecision))).to.eql(
+      Number(tokenAQuantity)
+    );
+    expect(Number(tokensAfter[1].dividedBy(withPrecision))).to.eql(
+      Number(tokenBQuantity)
+    );
   }
 
   @given(/PairToken1 and PairToken2 are present in pool/, undefined, 30000)
@@ -154,41 +160,51 @@ export class PairTestSteps {
     expect(Number(tokensQty[1])).to.greaterThan(0);
   }
 
-  @when(/User swap (\d*) unit of token "([^"]*)"/, undefined, 30000)
+  @when(
+    /User swap (\d*) unit of token "([^"]*)" with slippage as (-?\d+\.\d+)/,
+    undefined,
+    30000
+  )
   public async swapTokenA(
     tokenCount: number,
-    tokenName: string
+    tokenName: string,
+    slippage: number
   ): Promise<void> {
+    const slippageVal = new BigNumber(slippage).multipliedBy(
+      precision.div(100)
+    );
     const tokenId = tokenNameIdMap.get(tokenName);
-    const slippage = new BigNumber(0);
     await pair.swapToken(
       tokenId,
       tokenCount,
       id,
       key,
       precision,
-      slippage,
+      slippageVal,
       client
     );
+    const withPrecision = Common.withPrecision(1, precision);
+    const tokenQty = new BigNumber(tokenCount).multipliedBy(withPrecision);
+    feeForSwap = await pair.feeForSwap(tokenQty, clientsInfo.operatorClient);
   }
 
   @then(
-    /PairToken1 quantity is (\d*) and PairToken2 quantity is (\d*) in pool/,
+    /PairToken1 quantity is (-?\d+\.\d+) and PairToken2 quantity is (-?\d+\.\d+) in pool/,
     undefined,
     30000
   )
   public async verifyTokenAQtyIncreasedAndTokenBQtyDecreased(
-    tokenAQuantity: BigNumber,
-    tokenBQuantity: BigNumber
+    tokenAQuantity: number,
+    tokenBQuantity: number
   ): Promise<void> {
     tokensAfter = await pair.getPairQty(client);
     const withPrecision = Common.withPrecision(1, precision);
-    expect(
-      Number(Number(tokensAfter[0].dividedBy(withPrecision)).toFixed())
-    ).to.eql(Number(tokenAQuantity));
-    expect(
-      Number(Number(tokensAfter[1].dividedBy(withPrecision)).toFixed())
-    ).to.eql(Number(tokenBQuantity));
+    expect(Number(tokensAfter[0].dividedBy(withPrecision))).to.eql(
+      Number(tokenAQuantity)
+    );
+    expect(Number(tokensAfter[1].dividedBy(withPrecision))).to.eql(
+      Number(tokenBQuantity)
+    );
   }
 
   @when(/User fetch spot price for "([^"]*)"/, undefined, 30000)
@@ -208,10 +224,10 @@ export class PairTestSteps {
     tokenAQty = await pair.getInGivenOut(tokenBQty, client);
   }
 
-  @then(/Expected PairToken1 quantity should be (\d*)/, undefined, 30000)
-  public async verifyTokenAQty(expectedTokenAQty: string) {
+  @then(/Expected PairToken1 quantity should be (\d+\.?\d*)/, undefined, 30000)
+  public async verifyTokenAQty(expectedTokenAQty: number) {
     const withPrecision = Common.withPrecision(1, precision);
-    expect(Number(Number(tokenAQty.dividedBy(withPrecision)).toFixed())).to.eql(
+    expect(Number(tokenAQty.dividedBy(withPrecision))).to.eql(
       Number(expectedTokenAQty)
     );
   }
@@ -241,8 +257,8 @@ export class PairTestSteps {
     slippageInGivenOut = await pair.slippageInGivenOut(tokenBQty, client);
   }
 
-  @then(/Expected slippage in value should be (\d*)/, undefined, 30000)
-  public async verifySlippageIn(expectedSlippageIn: string) {
+  @then(/Expected slippage in value should be (\d+\.?\d*)/, undefined, 30000)
+  public async verifySlippageIn(expectedSlippageIn: number) {
     expect(Number(slippageInGivenOut)).to.eql(Number(expectedSlippageIn));
   }
 
@@ -251,8 +267,12 @@ export class PairTestSteps {
     await lpToken.initialize(lpTokenName, lpTokenSymbol, client);
   }
 
-  @when(/User initialize pair contract/, undefined, 30000)
-  public async initializePairOfTokens(): Promise<void> {
+  @when(
+    /User initialize pair contract with swap transaction fee as (-?\d+\.\d+)%/,
+    undefined,
+    30000
+  )
+  public async initializePairOfTokens(fee: number): Promise<void> {
     console.log("Initializing pair contract with following");
     console.log("contractId : ", pair.contractId);
     console.log("treasureId : ", treasureId.toString());
@@ -266,6 +286,7 @@ export class PairTestSteps {
       treasureKey,
       tokenA,
       tokenB,
+      new BigNumber(fee * 100),
       client
     );
   }
@@ -288,7 +309,7 @@ export class PairTestSteps {
   }
 
   @then(
-    /User verify balance of "([^"]*)" token with contract is (\d*)/,
+    /User verify balance of "([^"]*)" token with contract is (-?\d+\.\d+)/,
     undefined,
     30000
   )
@@ -305,8 +326,81 @@ export class PairTestSteps {
       )
     );
     const withPrecision = Number(Common.withPrecision(1, precision));
-    expect(Number(Number(tokenBalance / withPrecision).toFixed())).to.eql(
-      Number(tokenQty)
+    expect(Number(tokenBalance / withPrecision)).to.eql(Number(tokenQty));
+  }
+
+  @then(
+    /User verify "([^"]*)" balance with treasury is (\d+\.\d+)/,
+    undefined,
+    30000
+  )
+  public async verifyTokenBalanceWithTreasury(
+    tokenName: string,
+    balance: number
+  ) {
+    const tokenId = tokenNameIdMap.get(tokenName);
+    const tokenBalanceAfterSwapWithTreasury = Number(
+      await Common.getTokenBalance(treasureId, tokenId, client)
+    );
+
+    const withPrecision = Number(Common.withPrecision(1, precision));
+    const actualBal = Number(tokenBalanceAfterSwapWithTreasury / withPrecision);
+    const eligibleAmtForTreasury =
+      Number(feeForSwap.dividedBy(withPrecision)) / 2;
+    expect(actualBal).to.eql(Number(balance));
+    expect(eligibleAmtForTreasury).to.eql(actualBal);
+  }
+
+  @when(
+    /User tries to initialize the pair contract with same tokens and same fee as (-?\d+\.\d+)%/,
+    undefined,
+    30000
+  )
+  public async initializeWithSameTokenAndFee(fee: number) {
+    try {
+      await pair.initialize(
+        lpTokenContract.transparentProxyAddress!,
+        treasureId,
+        treasureKey,
+        tokenA,
+        tokenB,
+        new BigNumber(fee * 100),
+        client
+      );
+    } catch (e: any) {
+      errorMsg = e.message;
+    }
+  }
+
+  @then(/User receive error message "([^"]*)"/)
+  public async verifyErrorMessage(msg: string) {
+    expect(errorMsg).contains(msg);
+  }
+
+  @then(
+    /Balance of "([^"]*)" and "([^"]*)" in user account is (\d+\.?\d*) and (\d+\.?\d*) respectively/,
+    undefined,
+    30000
+  )
+  public async verifyTokenBalance(
+    firstTokenName: string,
+    secondTokenName: string,
+    firstTokenAmt: number,
+    secondTokenAmt: number
+  ) {
+    await Helper.delay(10000);
+    const firstTokenId = tokenNameIdMap.get(firstTokenName);
+    const secondTokenId = tokenNameIdMap.get(secondTokenName);
+    const firstTokenBalance = Number(
+      await Common.getTokenBalance(id, firstTokenId, client)
+    );
+    const secondTokenBalance = Number(
+      await Common.getTokenBalance(id, secondTokenId, client)
+    );
+
+    expect(firstTokenBalance / Number(precision)).to.eql(Number(firstTokenAmt));
+    expect(secondTokenBalance / Number(precision)).to.eql(
+      Number(secondTokenAmt)
     );
   }
 }

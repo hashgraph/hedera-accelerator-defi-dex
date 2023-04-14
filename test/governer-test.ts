@@ -77,10 +77,11 @@ describe("Governor Tests", function () {
     const votingPeriod = 12;
 
     const GODHolder = await ethers.getContractFactory("GODHolder");
-    const godHolder = await upgrades.deployProxy(GODHolder, [
-      mockBaseHTS.address,
-      tokenCont.address,
-    ]);
+    const godHolder = await upgrades.deployProxy(
+      GODHolder,
+      [mockBaseHTS.address, tokenCont.address],
+      { unsafeAllow: ["delegatecall"] }
+    );
 
     const Governor = await ethers.getContractFactory("GovernorTokenCreate");
     const args = [
@@ -198,7 +199,7 @@ describe("Governor Tests", function () {
       const record = await proposalIdResponse.wait();
       const proposalId = record.events[0].args.proposalId.toString();
       await mineNBlocks(10);
-      await instance.castVote(proposalId, 1);
+      await instance.castVotePublic(proposalId, 0, 1);
       await mineNBlocks(20);
       await mockBaseHTS.setPassTransactionCount(0); // 0 pass transaction
       await mockBaseHTS.setRevertCreateToken(true);
@@ -242,7 +243,7 @@ describe("Governor Tests", function () {
       const voteSucceeded = await instance.voteSucceeded(proposalId);
       expect(voteSucceeded).to.be.equals(false);
 
-      await instance.castVote(proposalId, 1);
+      await instance.castVotePublic(proposalId, 0, 1);
       const voteSucceeded1 = await instance.voteSucceeded(proposalId);
       await verifyProposalVotes(instance, proposalId, {
         abstainVotes: 0,
@@ -257,7 +258,7 @@ describe("Governor Tests", function () {
       const activeProposals =
         await godHolder.callStatic.getActiveProposalsForUser();
       expect(activeProposals.length).to.be.equals(1);
-      const canWithdrawGod = await godHolder.callStatic.canUserClaimGodTokens();
+      const canWithdrawGod = await godHolder.callStatic.canUserClaimTokens();
       expect(canWithdrawGod).to.be.equals(false);
 
       await expect(godHolder.revertTokensForVoter()).to.revertedWith(
@@ -270,8 +271,7 @@ describe("Governor Tests", function () {
 
       await instance.cancelProposal(title);
       await verifyAccountBalance(tokenCont, signers[0].address, 1 * precision);
-      const canWithdrawGod1 =
-        await godHolder.callStatic.canUserClaimGodTokens();
+      const canWithdrawGod1 = await godHolder.callStatic.canUserClaimTokens();
       expect(canWithdrawGod1).to.be.equals(true);
       await godHolder.revertTokensForVoter();
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
@@ -304,7 +304,7 @@ describe("Governor Tests", function () {
       const voteSucceeded = await instance.voteSucceeded(proposalId);
       expect(voteSucceeded).to.be.equals(false);
 
-      await instance.castVote(proposalId, 1);
+      await instance.castVotePublic(proposalId, 0, 1);
       const voteSucceeded1 = await instance.voteSucceeded(proposalId);
       expect(voteSucceeded1).to.be.equals(true);
       const quorumReached1 = await instance.quorumReached(proposalId);
@@ -318,7 +318,7 @@ describe("Governor Tests", function () {
       const activeProposals =
         await godHolder.callStatic.getActiveProposalsForUser();
       expect(activeProposals.length).to.be.equals(1);
-      const canWithdrawGod = await godHolder.callStatic.canUserClaimGodTokens();
+      const canWithdrawGod = await godHolder.callStatic.canUserClaimTokens();
       expect(canWithdrawGod).to.be.equals(false);
 
       await mineNBlocks(20);
@@ -330,8 +330,7 @@ describe("Governor Tests", function () {
 
       await instance.executeProposal(title);
       await verifyAccountBalance(tokenCont, signers[0].address, 1 * precision);
-      const canWithdrawGod1 =
-        await godHolder.callStatic.canUserClaimGodTokens();
+      const canWithdrawGod1 = await godHolder.callStatic.canUserClaimTokens();
       expect(canWithdrawGod1).to.be.equals(true);
       await godHolder.revertTokensForVoter();
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
@@ -364,7 +363,7 @@ describe("Governor Tests", function () {
       const voteSucceeded = await instance.voteSucceeded(proposalId);
       expect(voteSucceeded).to.be.equals(false);
 
-      await instance.castVote(proposalId, 2);
+      await instance.castVotePublic(proposalId, 0, 2);
 
       const quorumReached1 = await instance.quorumReached(proposalId);
       expect(quorumReached1).to.be.equals(true);
@@ -404,7 +403,7 @@ describe("Governor Tests", function () {
         signers[1].address,
         balanceLessThanRequiredQuorum
       );
-      await instance.connect(signers[1]).castVote(proposalId, 1);
+      await instance.connect(signers[1]).castVotePublic(proposalId, 0, 1);
 
       const quorumReached1 = await instance.quorumReached(proposalId);
       expect(quorumReached1).to.be.equals(false);
@@ -435,7 +434,7 @@ describe("Governor Tests", function () {
       const voteSucceeded = await instance.voteSucceeded(proposalId);
       expect(voteSucceeded).to.be.equals(false);
 
-      await instance.castVote(proposalId, 2);
+      await instance.castVotePublic(proposalId, 0, 2);
 
       const voteSucceeded1 = await instance.voteSucceeded(proposalId);
       expect(voteSucceeded1).to.be.equals(false);
@@ -466,7 +465,7 @@ describe("Governor Tests", function () {
       const voteSucceeded = await instance.voteSucceeded(proposalId);
       expect(voteSucceeded).to.be.equals(false);
 
-      await instance.castVote(proposalId, 0); //Against vote does reach quorum
+      await instance.castVotePublic(proposalId, 0, 0); //Against vote does reach quorum
       const quorumReached1 = await instance.quorumReached(proposalId);
       expect(quorumReached1).to.be.equals(false);
     });
@@ -496,7 +495,7 @@ describe("Governor Tests", function () {
       const voteSucceeded = await instance.voteSucceeded(proposalId);
       expect(voteSucceeded).to.be.equals(false);
 
-      await instance.castVote(proposalId, 0);
+      await instance.castVotePublic(proposalId, 0, 0);
 
       const voteSucceeded1 = await instance.voteSucceeded(proposalId);
       expect(voteSucceeded1).to.be.equals(false);
@@ -534,7 +533,7 @@ describe("Governor Tests", function () {
       );
       expect(voteSucceeded).to.be.equals(false);
 
-      await textGovernorInstance.castVote(proposalId, 1);
+      await textGovernorInstance.castVotePublic(proposalId, 0, 1);
       const voteSucceeded1 = await textGovernorInstance.voteSucceeded(
         proposalId
       );
@@ -546,7 +545,7 @@ describe("Governor Tests", function () {
       const activeProposals =
         await godHolder.callStatic.getActiveProposalsForUser();
       expect(activeProposals.length).to.be.equals(1);
-      const canWithdrawGod = await godHolder.callStatic.canUserClaimGodTokens();
+      const canWithdrawGod = await godHolder.callStatic.canUserClaimTokens();
       expect(canWithdrawGod).to.be.equals(false);
 
       await mineNBlocks(20);
@@ -555,8 +554,7 @@ describe("Governor Tests", function () {
 
       await textGovernorInstance.executeProposal(title);
       await verifyAccountBalance(tokenCont, signers[0].address, 1 * precision);
-      const canWithdrawGod1 =
-        await godHolder.callStatic.canUserClaimGodTokens();
+      const canWithdrawGod1 = await godHolder.callStatic.canUserClaimTokens();
       expect(canWithdrawGod1).to.be.equals(true);
       await godHolder.revertTokensForVoter();
       await verifyAccountBalance(tokenCont, signers[0].address, twentyPercent);
@@ -571,7 +569,7 @@ describe("Governor Tests", function () {
         signers[0]
       );
 
-      await governorUpgradeInstance.castVote(proposalId, 1);
+      await governorUpgradeInstance.castVotePublic(proposalId, 0, 1);
 
       const voteSucceeded = await governorUpgradeInstance.voteSucceeded(
         proposalId
@@ -708,7 +706,7 @@ describe("Governor Tests", function () {
       expect(result[8]).to.be.equals(title);
       expect(result[9]).to.be.equals(desc);
       expect(result[10]).to.be.equals(link);
-      await instance.castVote(proposalId, 1);
+      await instance.castVotePublic(proposalId, 0, 1);
 
       const result1 = await instance.callStatic.getProposalDetails(proposalId);
 
@@ -743,7 +741,7 @@ describe("Governor Tests", function () {
         tokenCont.address,
         5
       );
-      await governorTransferTokenInstance.castVote(proposalId, 1);
+      await governorTransferTokenInstance.castVotePublic(proposalId, 0, 1);
       const voteSucceeded = await governorTransferTokenInstance.voteSucceeded(
         proposalId
       );
@@ -788,7 +786,7 @@ describe("Governor Tests", function () {
         tokenCont.address,
         5
       );
-      await governorTransferTokenInstance.castVote(proposalId, 1);
+      await governorTransferTokenInstance.castVotePublic(proposalId, 0, 1);
       const voteSucceeded = await governorTransferTokenInstance.voteSucceeded(
         proposalId
       );

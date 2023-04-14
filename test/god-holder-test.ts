@@ -13,7 +13,9 @@ describe("GODHolder Tests", function () {
     it("Verify if the GODHolder contract is upgradeable safe ", async function () {
       const Governor = await ethers.getContractFactory("GODHolder");
       const args = [zeroAddress, zeroAddress];
-      const instance = await upgrades.deployProxy(Governor, args);
+      const instance = await upgrades.deployProxy(Governor, args, {
+        unsafeAllow: ["delegatecall"],
+      });
       await instance.deployed();
     });
   });
@@ -46,10 +48,11 @@ describe("GODHolder Tests", function () {
     tokenCont.setUserBalance(signers[0].address, total);
 
     const GODHolder = await ethers.getContractFactory("GODHolder");
-    const godHolder = await upgrades.deployProxy(GODHolder, [
-      mockBaseHTS.address,
-      tokenCont.address,
-    ]);
+    const godHolder = await upgrades.deployProxy(
+      GODHolder,
+      [mockBaseHTS.address, tokenCont.address],
+      { unsafeAllow: ["delegatecall"] }
+    );
 
     const GODTokenHolderFactory = await ethers.getContractFactory(
       "GODTokenHolderFactory"
@@ -86,7 +89,7 @@ describe("GODHolder Tests", function () {
   it("Verify GODHolder grabtoken pass", async function () {
     const { godHolder, signers, tokenCont } = await loadFixture(deployFixture);
     const userTokens = await tokenCont.balanceOf(signers[0].address);
-    await godHolder.grabTokensFromUser(signers[0].address);
+    await godHolder.grabTokensFromUser(signers[0].address, 0);
     const contractTokens = await tokenCont.balanceOf(godHolder.address);
     const userTokens1 = await tokenCont.balanceOf(signers[0].address);
     expect(userTokens1).to.be.equal(0);
@@ -99,13 +102,13 @@ describe("GODHolder Tests", function () {
     await godHolder.addProposalForVoter(signers[1].address, 1);
     const activeProposals = await godHolder.getActiveProposalsForUser();
     expect(activeProposals.length).to.be.equal(1);
-    const canClaimGod = await godHolder.canUserClaimGodTokens();
+    const canClaimGod = await godHolder.canUserClaimTokens();
     expect(canClaimGod).to.be.equal(false);
 
     await godHolder.removeActiveProposals([signers[0].address], 1);
     const activeProposals1 = await godHolder.getActiveProposalsForUser();
     expect(activeProposals1.length).to.be.equal(0);
-    const canClaimGod1 = await godHolder.canUserClaimGodTokens();
+    const canClaimGod1 = await godHolder.canUserClaimTokens();
     expect(canClaimGod1).to.be.equal(true);
   });
 
@@ -115,7 +118,7 @@ describe("GODHolder Tests", function () {
     );
     await mockBaseHTS.setPassTransactionCount(1);
     await expect(
-      godHolder.grabTokensFromUser(signers[0].address)
+      godHolder.grabTokensFromUser(signers[0].address, 0)
     ).to.revertedWith("GODHolder: token transfer failed to contract.");
   });
 
@@ -124,7 +127,7 @@ describe("GODHolder Tests", function () {
     await expect(godHolder.revertTokensForVoter()).to.revertedWith(
       "GODHolder: No amount for the Voter."
     );
-    godHolder.grabTokensFromUser(signers[0].address);
+    godHolder.grabTokensFromUser(signers[0].address, 0);
     await tokenCont.setTransaferFailed(true);
     await expect(godHolder.revertTokensForVoter()).to.revertedWith(
       "GODHolder: token transfer failed from contract."
@@ -136,7 +139,7 @@ describe("GODHolder Tests", function () {
       deployFixture
     );
 
-    const holder = await godTokenHolderFactory.callStatic.getGODTokenHolder(
+    const holder = await godTokenHolderFactory.callStatic.getTokenHolder(
       tokenCont.address
     );
 
@@ -156,17 +159,15 @@ describe("GODHolder Tests", function () {
       0
     );
 
-    const tx1 = await godTokenHolderFactory.getGODTokenHolder(
-      tokenCont.address
-    );
+    const tx1 = await godTokenHolderFactory.getTokenHolder(tokenCont.address);
 
-    const tx2 = await godTokenHolderFactory.getGODTokenHolder(newToken.address);
+    const tx2 = await godTokenHolderFactory.getTokenHolder(newToken.address);
 
     const holder1Record = await tx1.wait();
     const holder2Record = await tx2.wait();
 
-    const tokenGodHolder = holder1Record.events[2].args.godHolder;
-    const newTokenGodHolder = holder2Record.events[2].args.godHolder;
+    const tokenGodHolder = holder1Record.events[2].args.tokenHolder;
+    const newTokenGodHolder = holder2Record.events[2].args.tokenHolder;
 
     expect(holder1Record.events[2].args.token).to.be.equal(tokenCont.address);
     expect(holder2Record.events[2].args.token).to.be.equal(newToken.address);
@@ -180,19 +181,15 @@ describe("GODHolder Tests", function () {
       deployFixture
     );
 
-    const tx1 = await godTokenHolderFactory.getGODTokenHolder(
-      tokenCont.address
-    );
+    const tx1 = await godTokenHolderFactory.getTokenHolder(tokenCont.address);
 
     //Use callStatic as we are reading the existing state not modifying it.
     const newTokenGodHolder =
-      await godTokenHolderFactory.callStatic.getGODTokenHolder(
-        tokenCont.address
-      );
+      await godTokenHolderFactory.callStatic.getTokenHolder(tokenCont.address);
 
     const holder1Record = await tx1.wait();
     //Below emits event as it add new GOD Holder
-    const tokenGodHolder = holder1Record.events[2].args.godHolder;
+    const tokenGodHolder = holder1Record.events[2].args.tokenHolder;
 
     expect(tokenGodHolder).to.be.equal(newTokenGodHolder);
     expect(tokenGodHolder).not.to.be.equal("0x0");

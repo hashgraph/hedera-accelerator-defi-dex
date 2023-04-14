@@ -2,12 +2,12 @@
 pragma solidity ^0.8.0;
 import "../common/IERC20.sol";
 
-import "../governance/IGODTokenHolderFactory.sol";
+import "../governance/ITokenHolderFactory.sol";
 
-contract GODHolderMock is IGODHolder {
+contract GODHolderMock is ITokenHolder {
     function initialize(
         IBaseHTS tokenService,
-        IERC20 token
+        address token
     ) external override {}
 
     function revertTokensForVoter() external override returns (int32) {}
@@ -16,9 +16,7 @@ contract GODHolderMock is IGODHolder {
         address voter
     ) external view override returns (uint256) {}
 
-    function grabTokensFromUser(
-        address user
-    ) external override returns (uint256 amount) {}
+    function grabTokensFromUser(address user, uint256) external override {}
 
     function addProposalForVoter(
         address voter,
@@ -30,5 +28,5 @@ contract GODHolderMock is IGODHolder {
         uint256 proposalId
     ) external override returns (int32) {}
 
-    function getGODToken() external view override returns (IERC20) {}
+    function getToken() external view override returns (address) {}
 }

@@ -4,11 +4,13 @@ pragma solidity ^0.8.0;
 import "../common/IBaseHTS.sol";
 import "../common/hedera/HederaResponseCodes.sol";
 import "./IERC20Mock.sol";
+import "../common/IERC721.sol";
 import "./ERC20Mock.sol";
 import "hardhat/console.sol";
 
 contract MockBaseHTS is IBaseHTS {
     address private hbarx;
+    uint256 private constant PASS_TXN_COUNT = 100;
     bytes32 revertCreateTokenSlot = keccak256("revertCreateTokenSlot");
     bytes32 passTransactionCountSlot = keccak256("passTransactionCountSlot");
     bytes32 tokenTestSlot = keccak256("tokenTestSlot");
@@ -16,7 +18,7 @@ contract MockBaseHTS is IBaseHTS {
     constructor(bool _tokenTest, address _hbarx) {
         StorageSlot.Uint256Slot storage passTransactionCount = StorageSlot
             .getUint256Slot(passTransactionCountSlot);
-        passTransactionCount.value = uint256(100);
+        passTransactionCount.value = PASS_TXN_COUNT;
 
         StorageSlot.BooleanSlot storage isTokenTest = StorageSlot
             .getBooleanSlot(tokenTestSlot);
@@ -109,7 +111,11 @@ contract MockBaseHTS is IBaseHTS {
             .value;
 
         if (_passTransactionCount > 1) {
-            _passTransactionCount -= 1;
+            // _passTransactionCount shouldn't be < PASS_TXN_COUNT for call
+            //  it might be > PASS_TXN_COUNT with delegatecall
+            if (_passTransactionCount < PASS_TXN_COUNT) {
+                _passTransactionCount -= 1;
+            }
             StorageSlot
                 .getUint256Slot(passTransactionCountSlot)
                 .value = _passTransactionCount;
@@ -127,6 +133,22 @@ contract MockBaseHTS is IBaseHTS {
         address payable
     ) external payable override returns (bool) {
         return getResponseCode() == int(22) ? true : false;
+    }
+
+    function transferNFTPublic(
+        address token,
+        address sender,
+        address receiver,
+        int64 serial
+    ) external override returns (int256) {
+        if (StorageSlot.getBooleanSlot(tokenTestSlot).value) {
+            IERC721(token).transferFrom(
+                sender,
+                receiver,
+                uint256(int256(serial))
+            );
+        }
+        return getResponseCode();
     }
 }
 

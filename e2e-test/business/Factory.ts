@@ -11,11 +11,13 @@ import {
   AccountId,
   ContractId,
 } from "@hashgraph/sdk";
+import { ContractService } from "../../deployment/service/ContractService";
 
 const GET_PAIR = "getPair";
 const GET_PAIRS = "getPairs";
 const CREATE_PAIR = "createPair";
 const SETUP_FACTORY = "setUpFactory";
+const RECOMMENDED_PAIR_TO_SWAP = "recommendedPairToSwap";
 export const METHOD_PAIR_IMPL = "upgradePairImplementation";
 export const METHOD_LP_IMPL = "upgradeLpTokenImplementation";
 
@@ -25,9 +27,13 @@ export default class Factory extends Base {
     client: Client = clientsInfo.operatorClient
   ) => {
     try {
+      const csDev = new ContractService();
       const args = new ContractFunctionParameters()
         .addAddress(this.htsAddress)
-        .addAddress(adminAddress);
+        .addAddress(adminAddress)
+        .addAddress(
+          csDev.getContract(csDev.configuration).transparentProxyAddress!
+        );
       await this.execute(9000000, SETUP_FACTORY, client, args, undefined);
       console.log(`- Factory#${SETUP_FACTORY}(): done\n`);
     } catch (error) {
@@ -119,5 +125,35 @@ export default class Factory extends Base {
       return await new Pair(cId).getLpContractAddress();
     }
     throw Error(`Invalid function name passed: ${functionName}`);
+  };
+
+  recommendedPairToSwap = async (
+    tokenAddress: string,
+    otherTokenAddress: string,
+    qtyToSwap: BigNumber,
+    client: Client = clientsInfo.operatorClient
+  ): Promise<number> => {
+    const args = new ContractFunctionParameters()
+      .addAddress(tokenAddress)
+      .addAddress(otherTokenAddress)
+      .addInt256(qtyToSwap);
+
+    const { result } = await this.execute(
+      9999999,
+      RECOMMENDED_PAIR_TO_SWAP,
+      client,
+      args,
+      undefined
+    );
+    console.log(
+      `- Factory#${RECOMMENDED_PAIR_TO_SWAP}(): 
+      Selected pair = ${result.getAddress(0)}, 
+      token = ${result.getAddress(1)}, 
+      swapped qty = ${result.getInt256(2)}, 
+      fee = ${result.getUint256(3)}, 
+      slippage = ${result.getInt256(4)}
+      \n`
+    );
+    return Number(result.getInt256(2));
   };
 }
