@@ -72,9 +72,17 @@ export async function executeGovernorTokenTransferFlow(
   tokenId: TokenId = TOKEN_ID,
   tokenAmount: number = TOKEN_QTY,
   proposalCreatorClient: Client = clientsInfo.uiUserClient,
-  voterClient: Client = clientsInfo.operatorClient
+  voterClient: Client = clientsInfo.operatorClient,
+  voterAccountId: AccountId = clientsInfo.operatorId,
+  voterAccountPrivateKey: PrivateKey = clientsInfo.operatorKey
 ) {
-  const title = Helper.createProposalTitle("Transfer Token Proposal");
+  await godHolder.lock(
+    10005e8,
+    voterAccountId,
+    voterAccountPrivateKey,
+    voterClient
+  );
+  const title = Helper.createProposalTitle("Token Transfer Proposal");
   const proposalId = await governorTokenDao.createTokenTransferProposal(
     title,
     fromAccount.toSolidityAddress(),
@@ -88,7 +96,10 @@ export async function executeGovernorTokenTransferFlow(
   await governorTokenTransfer.isQuorumReached(proposalId);
   await governorTokenTransfer.isVoteSucceeded(proposalId);
   await governorTokenTransfer.proposalVotes(proposalId);
-  await governorTokenTransfer.delay(proposalId);
-  await governorTokenTransfer.executeProposal(title, fromAccountPrivateKey);
-  await godHolder.checkAndClaimedGodTokens(voterClient);
+  if (await governorTokenTransfer.isSucceeded(proposalId)) {
+    await governorTokenTransfer.executeProposal(title, fromAccountPrivateKey);
+  } else {
+    await governorTokenTransfer.cancelProposal(title, proposalCreatorClient);
+  }
+  await godHolder.checkAndClaimedGodTokens(voterClient, voterAccountId);
 }

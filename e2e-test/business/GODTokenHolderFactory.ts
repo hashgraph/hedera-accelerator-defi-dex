@@ -1,44 +1,28 @@
 import Base from "./Base";
+
 import { clientsInfo } from "../../utils/ClientManagement";
+import { Deployment } from "../../utils/deployContractOnTestnet";
 import { Client, ContractId, ContractFunctionParameters } from "@hashgraph/sdk";
 
-import { Deployment } from "../../utils/deployContractOnTestnet";
 const deployment = new Deployment();
 
-const GET_TOKEN_HOLDER = "getTokenHolder";
 const INITIALIZE = "initialize";
+const GET_TOKEN_HOLDER = "getTokenHolder";
 
 export default class GODTokenHolderFactory extends Base {
-  initialize = async (
-    godHolderLogic: string,
-    admin: string,
-    client: Client
-  ) => {
-    const args = new ContractFunctionParameters()
-      .addAddress(this.htsAddress)
-      .addAddress(godHolderLogic)
-      .addAddress(admin);
-    await this.execute(2000000, INITIALIZE, client, args, undefined);
-
-    console.log(`- GODTokenHolderFactory#${INITIALIZE} done. \n`);
-  };
-
-  initializeWithGodNewHolder = async (
-    client: Client = clientsInfo.operatorClient
-  ) => {
-    if (await this.isInitializationPending("godtokenholderfactory")) {
+  initialize = async (client: Client = clientsInfo.operatorClient) => {
+    if (await this.isInitializationPending("GODTokenHolderFactory")) {
+      const godHolderLogic = await deployment.deploy("GodHolder");
       const proxyAdmin = clientsInfo.dexOwnerId.toSolidityAddress();
-      const godHolderLogic = await deployment.deploy("godholder");
       const args = new ContractFunctionParameters()
         .addAddress(this.htsAddress)
         .addAddress(godHolderLogic.address)
         .addAddress(proxyAdmin);
-      await this.execute(2000000, INITIALIZE, client, args, undefined);
-      console.log(`- GODTokenHolderFactory#${INITIALIZE} done. \n`);
+      await this.execute(4_00_000, INITIALIZE, client, args);
+      console.log(`- GODTokenHolderFactory#${INITIALIZE}(): done. \n`);
       return;
     }
-
-    console.log(`- GODTokenHolderFactory#${INITIALIZE} already done. \n`);
+    console.log(`- GODTokenHolderFactory#${INITIALIZE}(): already done. \n`);
   };
 
   getTokenHolder = async (
@@ -48,16 +32,15 @@ export default class GODTokenHolderFactory extends Base {
     const args = new ContractFunctionParameters().addAddress(tokenAddress);
 
     const { result } = await this.execute(
-      2000000,
+      9_00_000,
       GET_TOKEN_HOLDER,
       client,
-      args,
-      undefined
+      args
     );
 
     const address = result.getAddress(0);
     console.log(
-      `- GODTokenFactory#${GET_TOKEN_HOLDER} Token ${tokenAddress} has GOD token holder address ${address} \n`
+      `- GODTokenFactory#${GET_TOKEN_HOLDER}(): Token = ${tokenAddress}, Holder address =  ${address}\n`
     );
     return ContractId.fromSolidityAddress(address);
   };

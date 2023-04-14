@@ -14,14 +14,13 @@ import {
   PrivateKey,
   ContractId,
   ContractFunctionParameters,
-  ContractExecuteTransaction,
 } from "@hashgraph/sdk";
 
 const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
 const DEFAULT_QUORUM_THRESHOLD_IN_BSP = 500;
 const DEFAULT_VOTING_DELAY = 0; // blocks
 const DEFAULT_VOTING_PERIOD = 100; // blocks means 3 minutes as per test
-const DEFAULT_MAX_WAITING_TIME = DEFAULT_VOTING_PERIOD * 12 * 150;
+const DEFAULT_MAX_WAITING_TIME = DEFAULT_VOTING_PERIOD * 12 * 300;
 const EACH_ITERATION_DELAY = DEFAULT_VOTING_PERIOD * 0.3 * 1000;
 const DEFAULT_DESCRIPTION = "description";
 const DEFAULT_LINK = "https://defi-ui.hedera.com/governance";
@@ -66,24 +65,28 @@ export default class Governor extends Base {
     client: Client = clientsInfo.operatorClient,
     defaultQuorumThresholdValue: number = DEFAULT_QUORUM_THRESHOLD_IN_BSP,
     votingDelay: number = DEFAULT_VOTING_DELAY,
-    votingPeriod: number = DEFAULT_VOTING_PERIOD
+    votingPeriod: number = DEFAULT_VOTING_PERIOD,
+    tokenId: TokenId = GOD_TOKEN_ID
   ) {
-    try {
-      await godHolder.initialize(client);
-    } catch (error) {}
+    await godHolder.initialize(client, tokenId.toSolidityAddress());
 
-    try {
-      const godHolderContractId = godHolder.contractId;
-      const godHolderProxyAddress =
-        ContractId.fromString(godHolderContractId).toSolidityAddress();
-      await this.initializeInternally(
-        godHolderProxyAddress,
-        defaultQuorumThresholdValue,
-        votingDelay,
-        votingPeriod,
-        client
-      );
-    } catch (error) {}
+    const godHolderContractId = godHolder.contractId;
+    const godHolderProxyAddress =
+      ContractId.fromString(godHolderContractId).toSolidityAddress();
+
+    if (await this.isInitializationPending("GovernorCountingSimpleInternal")) {
+      const args = new ContractFunctionParameters()
+        .addAddress(tokenId.toSolidityAddress())
+        .addUint256(votingDelay)
+        .addUint256(votingPeriod)
+        .addAddress(this.htsAddress)
+        .addAddress(godHolderProxyAddress)
+        .addUint256(defaultQuorumThresholdValue);
+      await this.execute(1_000_000, INITIALIZE, client, args);
+      console.log(`- Governor#${INITIALIZE}(): done\n`);
+      return;
+    }
+    console.log(`- Governor#${INITIALIZE}(): already done\n`);
   }
 
   createTextProposal = async (
@@ -266,8 +269,9 @@ export default class Governor extends Base {
     return state;
   };
 
-  delay = async (proposalId: string, requiredState: number = 4) => {
-    await this.getStateWithTimeout(proposalId, requiredState);
+  isSucceeded = async (proposalId: string, requiredState: number = 4) => {
+    const state = await this.getStateWithTimeout(proposalId, requiredState);
+    return requiredState === state;
   };
 
   executeProposal = async (
@@ -442,18 +446,7 @@ export default class Governor extends Base {
     votingDelay: number,
     votingPeriod: number,
     client: Client
-  ) => {
-    const args = new ContractFunctionParameters()
-      // token that define the voting weight, to vote user should have % of this token.
-      .addAddress(GOD_TOKEN_ID.toSolidityAddress())
-      .addUint256(votingDelay)
-      .addUint256(votingPeriod)
-      .addAddress(this.htsAddress)
-      .addAddress(godHolderProxyAddress)
-      .addUint256(defaultQuorumThresholdValue);
-    await this.execute(900000, INITIALIZE, client, args);
-    console.log(`- Governor#${INITIALIZE}(): done\n`);
-  };
+  ) => {};
 
   public getStateWithTimeout = async (
     proposalId: string,
@@ -461,17 +454,26 @@ export default class Governor extends Base {
     maxWaitInMs: number = DEFAULT_MAX_WAITING_TIME,
     eachIterationDelayInMS: number = EACH_ITERATION_DELAY,
     client: Client = clientsInfo.operatorClient
-  ): Promise<void> => {
+  ): Promise<number> => {
     console.log(
       `- Governor#getStateWithTimeout(): called with maxWaitInMs = ${maxWaitInMs}, eachIterationDelayInMS = ${eachIterationDelayInMS}, requiredState = ${requiredState}, proposal-id = ${proposalId}\n`
     );
+    let currentState = -1;
     const maxWaitInMsInternally = maxWaitInMs;
     while (maxWaitInMs > 0) {
       try {
-        const currentState = Number(await this.state(proposalId, client));
+        currentState = Number(await this.state(proposalId, client));
         if (currentState === requiredState) {
           console.log(
             `- Governor#getStateWithTimeout(): succeeded where total waiting time = ${
+              maxWaitInMsInternally - maxWaitInMs
+            } ms\n`
+          );
+          break;
+        }
+        if (currentState === ProposalState.Defeated) {
+          console.log(
+            `- Governor#getStateWithTimeout(): defeated where total waiting time = ${
               maxWaitInMsInternally - maxWaitInMs
             } ms\n`
           );
@@ -487,6 +489,7 @@ export default class Governor extends Base {
       maxWaitInMs -= eachIterationDelayInMS;
     }
     console.log(`- Governor#getStateWithTimeout(): done\n`);
+    return currentState;
   };
 
   getProposalNumericState = async (proposalState: string) => {

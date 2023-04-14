@@ -15,37 +15,57 @@ contract GODHolder is TokenHolder {
         return godTokenForUsers[voter];
     }
 
-    function revertTokensForVoter() external override returns (int32) {
+    function revertTokensForVoter(
+        uint256 _amount
+    ) external override returns (int32) {
+        require(
+            _amount > 0,
+            "GODHolder: unlock amount must be a positive number"
+        );
         require(
             activeProposalsForUsers[msg.sender].length == 0,
             "User's Proposals are active"
         );
-        uint256 amount = godTokenForUsers[msg.sender];
-        require(amount > 0, "GODHolder: No amount for the Voter.");
-        bool tranferStatus = IERC20(_token).transfer(msg.sender, amount);
+        uint256 balance = godTokenForUsers[msg.sender];
         require(
-            tranferStatus,
+            balance >= _amount,
+            "GODHolder: unlock amount can't be greater to the locked amount"
+        );
+        require(
+            IERC20(_token).transfer(msg.sender, _amount),
             "GODHolder: token transfer failed from contract."
         );
         delete (godTokenForUsers[msg.sender]);
         return HederaResponseCodes.SUCCESS;
     }
 
-    function grabTokensFromUser(address user, uint256) external override {
-        uint256 userBalance = IERC20(_token).balanceOf(user);
-        if (godTokenForUsers[user] > 0 && userBalance == 0) {
-            return;
-        }
-        godTokenForUsers[user] += userBalance;
-        int256 responseCode = _tokenService.transferTokenPublic(
+    function grabTokensFromUser(
+        address user,
+        uint256 _amount
+    ) external override {
+        require(
+            _amount > 0,
+            "GODHolder: lock amount must be a positive number"
+        );
+        uint256 balance = IERC20(_token).balanceOf(user);
+        require(
+            _amount <= balance,
+            "GODHolder: lock amount can't be greater to the balance amount"
+        );
+        godTokenForUsers[user] += _amount;
+        int256 code = _tokenService.transferTokenPublic(
             address(_token),
             address(user),
             address(this),
-            int256(userBalance)
+            int256(_amount)
         );
         require(
-            responseCode == HederaResponseCodes.SUCCESS,
+            code == HederaResponseCodes.SUCCESS,
             "GODHolder: token transfer failed to contract."
         );
+    }
+
+    function canUserClaimTokens() public view override returns (bool) {
+        return super.canUserClaimTokens() && godTokenForUsers[msg.sender] > 0;
     }
 }

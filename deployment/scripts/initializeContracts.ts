@@ -115,14 +115,17 @@ export async function main() {
   }
 
   try {
-    await godHolder.initialize(clientsInfo.operatorClient);
+    await godHolder.initialize(
+      clientsInfo.operatorClient,
+      tokenGOD.toSolidityAddress()
+    );
   } catch (error) {
     console.log(`- GODHolder initialization failed.`);
     console.error(error);
   }
 
   try {
-    await godHolderFactoryInstance.initializeWithGodNewHolder();
+    await godHolderFactoryInstance.initialize();
   } catch (error) {
     console.log(`- GODHolder initialization failed.`);
     console.error(error);

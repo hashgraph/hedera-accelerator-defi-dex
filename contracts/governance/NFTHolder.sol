@@ -8,14 +8,14 @@ import "./TokenHolder.sol";
 
 contract NFTHolder is TokenHolder {
     mapping(address => uint256) nftTokenForUsers;
-    
+
     function balanceOfVoter(
         address voter
     ) external view override returns (uint256) {
         return nftTokenForUsers[voter];
     }
 
-    function revertTokensForVoter() external override returns (int32) {
+    function revertTokensForVoter(uint256) external override returns (int32) {
         require(
             activeProposalsForUsers[msg.sender].length == 0,
             "User's Proposals are active"

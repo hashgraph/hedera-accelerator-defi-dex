@@ -242,18 +242,6 @@ export class Deployment {
     );
 
     const contractEvmAddress = "0x" + contractId?.toSolidityAddress()!;
-    const baseContract = this.contractService.getContract(
-      this.contractService.baseContractName
-    );
-
-    await this.associateTokenPublic(
-      baseContract.id,
-      contractEvmAddress,
-      operatorKey,
-      dex.GOD_TOKEN_ADDRESS,
-      clientArg
-    );
-
     clientArg.close();
 
     return {

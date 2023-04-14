@@ -2,6 +2,7 @@ import dex from "../../deployment/model/dex";
 import Governor from "../../e2e-test/business/Governor";
 import GodHolder from "../../e2e-test/business/GodHolder";
 
+import { Helper } from "../../utils/Helper";
 import { TokenId } from "@hashgraph/sdk";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { ContractService } from "../../deployment/service/ContractService";
@@ -18,12 +19,13 @@ const governorTransferTokenId = csDev.getContractWithProxy(
 const governor = new Governor(governorTransferTokenId);
 const godHolder = new GodHolder(godHolderProxyId);
 
-const TOKEN_ID = TokenId.fromString(dex.TOKEN_LAB49_1).toString();
-const TOKEN_QTY = 1 * 1e8;
+const TOKEN_ID = TokenId.fromString(dex.TOKEN_LAB49_1).toSolidityAddress();
+const TOKEN_QTY = 1e8;
 
 async function main() {
-  const title = "Token Transfer Proposal - 1";
+  const title = Helper.createProposalTitle("Token Transfer Proposal");
   await governor.initialize(godHolder);
+  await godHolder.lock();
   const proposalId = await governor.createTokenTransferProposal(
     title,
     clientsInfo.treasureId.toSolidityAddress(),
@@ -32,12 +34,19 @@ async function main() {
     TOKEN_QTY
   );
   await governor.getProposalDetails(proposalId);
-  await governor.forVote(proposalId);
+  await governor.forVote(proposalId, clientsInfo.uiUserClient);
   await governor.isQuorumReached(proposalId);
   await governor.isVoteSucceeded(proposalId);
   await governor.proposalVotes(proposalId);
-  await governor.delay(proposalId);
-  await governor.executeProposal(title, clientsInfo.treasureKey);
+  if (await governor.isSucceeded(proposalId)) {
+    await governor.executeProposal(title, clientsInfo.treasureKey);
+  } else {
+    await governor.cancelProposal(title, clientsInfo.operatorClient);
+  }
+  await godHolder.checkAndClaimedGodTokens(
+    clientsInfo.uiUserClient,
+    clientsInfo.uiUserId
+  );
 }
 
 main()

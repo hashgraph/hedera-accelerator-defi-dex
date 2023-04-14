@@ -437,5 +437,68 @@
     "hash": "97fb84caa385ea8e52581a2a94fdedd3",
     "transparentProxyAddress": "0x00000000000000000000000000000000003d9f33",
     "transparentProxyId": "0.0.4038451"
+  },
+  {
+    "name": "governortextproposal",
+    "id": "0.0.4072622",
+    "address": "0x00000000000000000000000000000000003e24ae",
+    "timestamp": "2023-04-13T14:30:28.226Z",
+    "hash": "899c22bc77b037b89436f45704dde211",
+    "transparentProxyAddress": "0x00000000000000000000000000000000003e24b0",
+    "transparentProxyId": "0.0.4072624"
+  },
+  {
+    "name": "governortokencreate",
+    "id": "0.0.4072676",
+    "address": "0x00000000000000000000000000000000003e24e4",
+    "timestamp": "2023-04-13T14:35:48.459Z",
+    "hash": "7d176ccb5e366156ac18a19f68774100",
+    "transparentProxyAddress": "0x00000000000000000000000000000000003e24e6",
+    "transparentProxyId": "0.0.4072678"
+  },
+  {
+    "name": "governorupgrade",
+    "id": "0.0.4072735",
+    "address": "0x00000000000000000000000000000000003e251f",
+    "timestamp": "2023-04-13T14:42:15.566Z",
+    "hash": "1943d565bc9b0d1aab7949ef25057879",
+    "transparentProxyAddress": "0x00000000000000000000000000000000003e2522",
+    "transparentProxyId": "0.0.4072738"
+  },
+  {
+    "name": "governortransfertoken",
+    "id": "0.0.4072763",
+    "address": "0x00000000000000000000000000000000003e253b",
+    "timestamp": "2023-04-13T14:44:49.738Z",
+    "hash": "c16e5d63d031acfb0d7c3b956d751304",
+    "transparentProxyAddress": "0x00000000000000000000000000000000003e2541",
+    "transparentProxyId": "0.0.4072769"
+  },
+  {
+    "name": "godholder",
+    "id": "0.0.4073078",
+    "address": "0x00000000000000000000000000000000003e2676",
+    "timestamp": "2023-04-13T15:03:13.963Z",
+    "hash": "c99fbd9174d0fc3ffd38dbb62c0048c4",
+    "transparentProxyAddress": "0x00000000000000000000000000000000003e24aa",
+    "transparentProxyId": "0.0.4072618"
+  },
+  {
+    "name": "godtokenholderfactory",
+    "id": "0.0.4086748",
+    "address": "0x00000000000000000000000000000000003e5bdc",
+    "timestamp": "2023-04-14T07:53:56.983Z",
+    "hash": "8bb17bf13075bab0b0f6d901137c5a33",
+    "transparentProxyAddress": "0x00000000000000000000000000000000003e5be1",
+    "transparentProxyId": "0.0.4086753"
+  },
+  {
+    "name": "governancedaofactory",
+    "id": "0.0.4086789",
+    "address": "0x00000000000000000000000000000000003e5c05",
+    "timestamp": "2023-04-14T07:59:17.748Z",
+    "hash": "2ebeac0a980dd9cf6b9eb95ab548ecd4",
+    "transparentProxyAddress": "0x00000000000000000000000000000000003e5c0b",
+    "transparentProxyId": "0.0.4086795"
   }
 ]
