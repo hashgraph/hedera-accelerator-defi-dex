@@ -13,7 +13,7 @@ import {
 const GET_TOKEN = "getToken";
 const INITIALIZE = "initialize";
 const BALANCE_OF_VOTER = "balanceOfVoter";
-const CAN_USER_CLAIM_GOD_TOKEN = "canUserClaimTokens";
+const CAN_USER_CLAIM_TOKENS = "canUserClaimTokens";
 const REVERT_TOKENS_FOR_VOTER = "revertTokensForVoter";
 const GRAB_TOKEN_FROM_USER = "grabTokensFromUser";
 
@@ -34,7 +34,7 @@ export default class GodHolder extends Base {
     client: Client = clientsInfo.operatorClient,
     accountId: AccountId = clientsInfo.operatorId
   ) => {
-    if (await this.canUserClaimGodTokens(client)) {
+    if (await this.canUserClaimTokens(client)) {
       const balance = await this.balanceOfVoter(accountId, client);
       await this.revertTokensForVoter(client, balance);
     }
@@ -43,16 +43,16 @@ export default class GodHolder extends Base {
   canUserClaimTokens = async (client: Client) => {
     const { result } = await this.execute(
       3_00_000,
-      CAN_USER_CLAIM_GOD_TOKEN,
+      CAN_USER_CLAIM_TOKENS,
       client,
       undefined,
       undefined
     );
-    const canUserClaimGodTokens = result.getBool(0);
+    const canUserClaimTokens = result.getBool(0);
     console.log(
-      `- GodHolder#${CAN_USER_CLAIM_TOKENS}(): canUserClaimGodTokens = ${canUserClaimGodTokens}\n`
+      `- GodHolder#${CAN_USER_CLAIM_TOKENS}(): canUserClaimTokens = ${canUserClaimTokens}\n`
     );
-    return canUserClaimGodTokens;
+    return canUserClaimTokens;
   };
 
   revertTokensForVoter = async (client: Client, balance: number) => {
