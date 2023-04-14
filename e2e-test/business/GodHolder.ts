@@ -6,7 +6,7 @@ import { Client, TokenId, ContractFunctionParameters } from "@hashgraph/sdk";
 const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
 const INITIALIZE = "initialize";
 const REVERT_TOKENS_FOR_VOTER = "revertTokensForVoter";
-const CAN_USER_CLAIM_GOD_TOKEN = "canUserClaimGodTokens";
+const CAN_USER_CLAIM_TOKENS = "canUserClaimTokens";
 
 export default class GodHolder extends Base {
   initialize = async (client: Client) => {
@@ -31,22 +31,22 @@ export default class GodHolder extends Base {
     client: Client = clientsInfo.operatorClient
   ) => {
     return (
-      (await this.canUserClaimGodTokens(client)) &&
+      (await this.canUserClaimTokens(client)) &&
       (await this.revertTokensForVoter(client))
     );
   };
 
-  canUserClaimGodTokens = async (client: Client) => {
+  canUserClaimTokens = async (client: Client) => {
     const { result } = await this.execute(
       9000000,
-      CAN_USER_CLAIM_GOD_TOKEN,
+      CAN_USER_CLAIM_TOKENS,
       client,
       undefined,
       undefined
     );
     const canUserClaimGodTokens = result.getBool(0);
     console.log(
-      `- GodHolder#${CAN_USER_CLAIM_GOD_TOKEN}(): canUserClaimGodTokens = ${canUserClaimGodTokens}\n`
+      `- GodHolder#${CAN_USER_CLAIM_TOKENS}(): canUserClaimGodTokens = ${canUserClaimGodTokens}\n`
     );
     return canUserClaimGodTokens;
   };
