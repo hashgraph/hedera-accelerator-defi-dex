@@ -15,7 +15,6 @@ export default class ContractMetadata {
     "Splitter",
     "Configuration",
     "GODTokenHolderFactory",
-    "NFTTokenHolderFactory",
     "GovernanceDAOFactory",
   ];
 
