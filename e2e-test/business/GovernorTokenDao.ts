@@ -84,7 +84,7 @@ export default class GovernorTokenDao extends Base {
     toAddress: string,
     tokenId: string,
     tokenAmount: number,
-    client: Client = clientsInfo.uiUserClient,
+    client: Client = clientsInfo.operatorClient,
     description: string = DEFAULT_DESCRIPTION,
     link: string = DEFAULT_LINK
   ) => {
@@ -127,7 +127,7 @@ export default class GovernorTokenDao extends Base {
   addWebLink = async (
     webLinkName: string = "GIT",
     webLink: string = "git_url",
-    client: Client = clientsInfo.uiUserClient
+    client: Client = clientsInfo.operatorClient
   ) => {
     const args = new ContractFunctionParameters()
       .addString(webLinkName)

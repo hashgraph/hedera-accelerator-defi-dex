@@ -95,25 +95,40 @@ export async function executeGovernorTokenTransferFlow(
   proposalCreatorClient: Client = clientsInfo.operatorClient,
   voterClient: Client = clientsInfo.operatorClient
 ) {
-  const title = Helper.createProposalTitle("Transfer Token Proposal");
-  // await Common.setTokenAllowance(dex.GOD_TOKEN_ID, baseHTSContractId, 10e8, clientsInfo.operatorId, clientsInfo.operatorKey, clientsInfo.operatorClient);
-  // const proposalId = await governorTokenDao.createTokenTransferProposal(
-  //   title,
-  //   fromAccount.toSolidityAddress(),
-  //   toAccount.toSolidityAddress(),
-  //   tokenId.toSolidityAddress(),
-  //   tokenAmount,
-  //   proposalCreatorClient
-  // );
-  const proposalId =
-    "38220384499510439979761349416708822429408032272119124857091426611874315495892";
+  const title = Helper.createProposalTitle("Transfer Token Proposal 2");
+  await Common.setTokenAllowance(
+    dex.GOD_TOKEN_ID,
+    baseHTSContractId,
+    10e8,
+    clientsInfo.operatorId,
+    clientsInfo.operatorKey,
+    clientsInfo.operatorClient
+  );
+  const proposalId = await governorTokenDao.createTokenTransferProposal(
+    title,
+    fromAccount.toSolidityAddress(),
+    toAccount.toSolidityAddress(),
+    tokenId.toSolidityAddress(),
+    tokenAmount,
+    proposalCreatorClient
+  );
+  // const proposalId =
+  //   "38220384499510439979761349416708822429408032272119124857091426611874315495892";
 
   await governorTokenTransfer.getProposalDetails(proposalId);
-  // await governorTokenTransfer.forVote(proposalId, 3, voterClient);
+  await governorTokenTransfer.forVote(proposalId, 8, voterClient);
   await governorTokenTransfer.isQuorumReached(proposalId);
   await governorTokenTransfer.isVoteSucceeded(proposalId);
   await governorTokenTransfer.proposalVotes(proposalId);
   await governorTokenTransfer.delay(proposalId);
+  await Common.setTokenAllowance(
+    dex.TOKEN_LAB49_1,
+    baseHTSContractId,
+    10e8,
+    clientsInfo.treasureId,
+    clientsInfo.treasureKey,
+    clientsInfo.operatorClient
+  );
   await governorTokenTransfer.executeProposal(title, fromAccountPrivateKey);
   await nftHolder.checkAndClaimedNFTTokens(voterClient);
 }

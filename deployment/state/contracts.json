@@ -219,5 +219,32 @@
     "hash": "b75f143f22dad0b0c3988fbcdd39ac1b",
     "transparentProxyAddress": "0x00000000000000000000000000000000003e1c09",
     "transparentProxyId": "0.0.4070409"
+  },
+  {
+    "name": "nftholder",
+    "id": "0.0.4086201",
+    "address": "0x00000000000000000000000000000000003e59b9",
+    "timestamp": "2023-04-14T07:21:57.145Z",
+    "hash": "b75f143f22dad0b0c3988fbcdd39ac1b",
+    "transparentProxyAddress": "0x00000000000000000000000000000000003e5a7d",
+    "transparentProxyId": "0.0.4086397"
+  },
+  {
+    "name": "governortransfertoken",
+    "id": "0.0.4086414",
+    "address": "0x00000000000000000000000000000000003e5a8e",
+    "timestamp": "2023-04-14T07:23:01.201Z",
+    "hash": "7a63f477057fe5d0fcdae3e34da9cd8f",
+    "transparentProxyAddress": "0x00000000000000000000000000000000003e5a90",
+    "transparentProxyId": "0.0.4086416"
+  },
+  {
+    "name": "nfttokenholderfactory",
+    "id": "0.0.4086423",
+    "address": "0x00000000000000000000000000000000003e5a97",
+    "timestamp": "2023-04-14T07:23:56.241Z",
+    "hash": "d8894ec302068484fbbf4ffbf0a7281e",
+    "transparentProxyAddress": "0x00000000000000000000000000000000003e5a9d",
+    "transparentProxyId": "0.0.4086429"
   }
 ]
