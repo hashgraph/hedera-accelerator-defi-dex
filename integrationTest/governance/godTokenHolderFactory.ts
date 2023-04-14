@@ -27,11 +27,11 @@ async function main() {
     clientsInfo.adminId.toSolidityAddress(),
     clientsInfo.operatorClient
   );
-  await godTokenHolderFactory.getGodTokenHolder(
+  await godTokenHolderFactory.getTokenHolder(
     GOD_TOKEN_ID.toSolidityAddress(),
     clientsInfo.operatorClient
   );
-  await godTokenHolderFactory.getGodTokenHolder(
+  await godTokenHolderFactory.getTokenHolder(
     TOKEN_ID.toSolidityAddress(),
     clientsInfo.operatorClient
   );

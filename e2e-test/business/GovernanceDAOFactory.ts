@@ -178,7 +178,7 @@ export default class GovernanceDAOFactory extends Base {
     );
     const godTokenId = await governor.getGODTokenAddress();
     const godTokenAddress = godTokenId.toSolidityAddress();
-    const godHolderProxyContractId = await godHolderFactory.getGodTokenHolder(
+    const godHolderProxyContractId = await godHolderFactory.getTokenHolder(
       godTokenAddress
     );
     return new GodHolder(godHolderProxyContractId.toString());
