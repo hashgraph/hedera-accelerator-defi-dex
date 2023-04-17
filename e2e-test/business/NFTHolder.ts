@@ -8,7 +8,7 @@ const NFT_TOKEN_ID = TokenId.fromString(dex.NFT_TOKEN_ID);
 const INITIALIZE = "initialize";
 const GRAB_TOKENS_FOR_VOTER = "grabTokensFromUser";
 const REVERT_TOKENS_FOR_VOTER = "revertTokensForVoter";
-const CAN_USER_CLAIM_GOD_TOKEN = "canUserClaimTokens";
+const CAN_USER_CLAIM_TOKEN = "canUserClaimTokens";
 
 export default class NFTHolder extends Base {
   initialize = async (client: Client) => {
@@ -41,16 +41,16 @@ export default class NFTHolder extends Base {
   canUserClaimTokens = async (client: Client) => {
     const { result } = await this.execute(
       9000000,
-      CAN_USER_CLAIM_GOD_TOKEN,
+      CAN_USER_CLAIM_TOKEN,
       client,
       undefined,
       undefined
     );
-    const canUserClaimGodTokens = result.getBool(0);
+    const canUserClaimTokens = result.getBool(0);
     console.log(
-      `- NFTHolder#${CAN_USER_CLAIM_GOD_TOKEN}(): canUserClaimGodTokens = ${canUserClaimGodTokens}\n`
+      `- NFTHolder#${CAN_USER_CLAIM_TOKEN}(): canUserClaimTokens = ${canUserClaimTokens}\n`
     );
-    return canUserClaimGodTokens;
+    return canUserClaimTokens;
   };
 
   revertTokensForVoter = async (client: Client) => {

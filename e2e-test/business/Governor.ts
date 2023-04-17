@@ -466,7 +466,8 @@ export default class Governor extends Base {
         currentState = Number(await this.state(proposalId, client));
         if (currentState === requiredState) {
           console.log(
-            `- Governor#getStateWithTimeout(): succeeded where total waiting time = ${maxWaitInMsInternally - maxWaitInMs
+            `- Governor#getStateWithTimeout(): succeeded where total waiting time = ${
+              maxWaitInMsInternally - maxWaitInMs
             } ms\n`
           );
           break;
