@@ -3,4 +3,4 @@ pragma solidity ^0.8.0;
 
 import "./DAOFactory.sol";
 
-contract GovernanceDAOFactory is DAOFactory {}
+contract NFTDAOFactory is DAOFactory {}

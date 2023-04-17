@@ -19,14 +19,14 @@ const INITIALIZE = "initialize";
 const CREATE_DAO = "createDAO";
 const GET_DAOS = "getDAOs";
 const UPGRADE_GOVERNOR_TOKEN_DAO_LOGIC_IMPL =
-  "upgradeGovernorTokenDaoLogicImplementation";
+  "upgradeTokenDaoLogicImplementation";
 
 const UPGRADE_GOVERNOR_TOKEN_TRANSFER_LOGIC_IMPL =
-  "upgradeGovernorTokenTransferLogicImplementation";
+  "upgradeTokenTransferLogicImplementation";
 
-const UPGRADE_GOD_TOKEN_HOLDER_FACTORY = "upgradeGODTokenHolderFactory";
+const UPGRADE_GOD_TOKEN_HOLDER_FACTORY = "upgradeTokenHolderFactory";
 
-const GET_GOD_TOKEN_HOLDER_FACTORY_ADDRESS = "getGODTokenHolderFactoryAddress";
+const GET_GOD_TOKEN_HOLDER_FACTORY_ADDRESS = "getTokenHolderFactoryAddress";
 
 export default class GovernanceDAOFactory extends Base {
   initialize = async (

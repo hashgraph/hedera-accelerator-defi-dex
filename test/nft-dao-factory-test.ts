@@ -3,7 +3,7 @@ import { BigNumber } from "ethers";
 import { TestHelper } from "./TestHelper";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-describe("GovernanceDAOFactory contract tests", function () {
+describe("NFTDAOFactory contract tests", function () {
   const zeroAddress = "0x0000000000000000000000000000000000000000";
   const oneAddress = "0x0000000000000000000000000000000000000001";
   const total = 100 * 1e8;
@@ -16,13 +16,7 @@ describe("GovernanceDAOFactory contract tests", function () {
     const daoAdminOne = signers[5];
     const daoAdminTwo = signers[6];
 
-    const token = await TestHelper.deployLogic(
-      "ERC20Mock",
-      "Test",
-      "Test",
-      total,
-      0
-    );
+    const token = await TestHelper.deployLogic("ERC721Mock");
     token.setUserBalance(signers[0].address, total);
 
     const bastHTS = await TestHelper.deployLogic(
@@ -31,13 +25,13 @@ describe("GovernanceDAOFactory contract tests", function () {
       zeroAddress
     );
 
-    const governorTokenDAO = await TestHelper.deployLogic("GovernorTokenDAO");
+    const nftTokenDAO = await TestHelper.deployLogic("GovernorTokenDAO");
 
-    const godHolder = await TestHelper.deployLogic("GODHolder");
-    const godHolderFactory = await TestHelper.deployProxy(
-      "GODTokenHolderFactory",
+    const nftHolder = await TestHelper.deployLogic("NFTHolder");
+    const nftHolderFactory = await TestHelper.deployProxy(
+      "NFTTokenHolderFactory",
       bastHTS.address,
-      godHolder.address,
+      nftHolder.address,
       dexOwner.address
     );
 
@@ -46,19 +40,19 @@ describe("GovernanceDAOFactory contract tests", function () {
     );
 
     const governorDAOFactoryInstance = await TestHelper.deployProxy(
-      "GovernanceDAOFactory",
+      "NFTDAOFactory",
       dexOwner.address,
       bastHTS.address,
-      governorTokenDAO.address,
-      godHolderFactory.address,
+      nftTokenDAO.address,
+      nftHolderFactory.address,
       governorTransferToken.address
     );
     return {
       governorDAOFactoryInstance,
       dexOwner,
       bastHTS,
-      governorTokenDAO,
-      godHolderFactory,
+      nftTokenDAO,
+      nftHolderFactory,
       governorTransferToken,
       daoAdminOne,
       daoAdminTwo,
@@ -66,13 +60,13 @@ describe("GovernanceDAOFactory contract tests", function () {
     };
   }
 
-  it("Verify GovernanceDAOFactory contract revert for multiple initialization", async function () {
+  it("Verify NFTDAOFactory contract revert for multiple initialization", async function () {
     const {
       governorDAOFactoryInstance,
       dexOwner,
       bastHTS,
-      governorTokenDAO,
-      godHolderFactory,
+      nftTokenDAO,
+      nftHolderFactory,
       governorTransferToken,
     } = await loadFixture(deployFixture);
 
@@ -80,8 +74,8 @@ describe("GovernanceDAOFactory contract tests", function () {
       governorDAOFactoryInstance.initialize(
         dexOwner.address,
         bastHTS.address,
-        governorTokenDAO.address,
-        godHolderFactory.address,
+        nftTokenDAO.address,
+        nftHolderFactory.address,
         governorTransferToken.address
       )
     ).to.revertedWith("Initializable: contract is already initialized");
@@ -298,11 +292,11 @@ describe("GovernanceDAOFactory contract tests", function () {
     expect(event3.args.newImplementation).to.be.equal(oneAddress);
   });
 
-  it("Verify getGODTokenHolderFactoryAddress guard check ", async function () {
+  it("Verify getNFTTokenHolderFactoryAddress guard check ", async function () {
     const {
       governorDAOFactoryInstance,
       daoAdminOne,
-      godHolderFactory,
+      nftHolderFactory,
       dexOwner,
     } = await loadFixture(deployFixture);
 
@@ -318,6 +312,6 @@ describe("GovernanceDAOFactory contract tests", function () {
       .connect(dexOwner)
       .getTokenHolderFactoryAddress();
 
-    expect(address).to.be.equals(godHolderFactory.address);
+    expect(address).to.be.equals(nftHolderFactory.address);
   });
 });
