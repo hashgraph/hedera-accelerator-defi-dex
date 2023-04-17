@@ -580,6 +580,28 @@ describe("Governor Tests", function () {
         "GovernorTokenCreate: Token creation failed."
       );
     });
+
+    it("Verify contract should return a correct token address", async function () {
+      const { governorText, token } = await loadFixture(deployFixture);
+      const tokenAddress = await governorText.getGODTokenAddress();
+      expect(token.address).equals(tokenAddress);
+    });
+
+    it("Verify contract should initialize quorum threshold value with 500 when user passed 0 as threshold", async function () {
+      const { godHolder, baseHTS, token } = await loadFixture(deployFixture);
+      const ARGS = [
+        token.address,
+        VOTING_DELAY,
+        VOTING_PERIOD,
+        baseHTS.address,
+        godHolder.address,
+        0,
+      ];
+      const governorText = await TestHelper.deployLogic("GovernorTextProposal");
+      await governorText.initialize(...ARGS);
+      const result = await governorText.quorum(0);
+      expect(result).equals(TestHelper.toPrecision(QUORUM_THRESHOLD));
+    });
   });
 
   describe("GovernorUpgrade contract tests", async () => {
