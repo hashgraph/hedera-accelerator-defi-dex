@@ -1,5 +1,6 @@
 import Governor from "../../e2e-test/business/Governor";
 import GodHolder from "../../e2e-test/business/GodHolder";
+
 import { Helper } from "../../utils/Helper";
 import { ContractService } from "../../deployment/service/ContractService";
 import { clientsInfo } from "../../utils/ClientManagement";
@@ -16,15 +17,22 @@ const godHolder = new GodHolder(godHolderContract.transparentProxyId!);
 async function main() {
   const title = Helper.createProposalTitle("Text Proposal");
   await governor.initialize(godHolder);
+  await godHolder.lock();
   const proposalId = await governor.createTextProposal(title);
   await governor.getProposalDetails(proposalId);
   await governor.forVote(proposalId, clientsInfo.uiUserClient);
   await governor.isQuorumReached(proposalId);
   await governor.isVoteSucceeded(proposalId);
   await governor.proposalVotes(proposalId);
-  await governor.delay(proposalId);
-  await governor.executeProposal(title);
-  await godHolder.checkAndClaimedGodTokens(clientsInfo.uiUserClient);
+  if (await governor.isSucceeded(proposalId)) {
+    await governor.executeProposal(title);
+  } else {
+    await governor.cancelProposal(title, clientsInfo.operatorClient);
+  }
+  await godHolder.checkAndClaimGodTokens(
+    clientsInfo.uiUserClient,
+    clientsInfo.uiUserId
+  );
   console.log(`\nDone`);
 }
 

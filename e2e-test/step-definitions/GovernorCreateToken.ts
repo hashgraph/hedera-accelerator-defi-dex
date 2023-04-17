@@ -91,7 +91,7 @@ export class GovernorCreateToken extends CommonSteps {
         clientsInfo.operatorKey.publicKey
       );
     } catch (e: any) {
-      await godHolder.revertTokensForVoter(clientsInfo.operatorClient);
+      await godHolder.checkAndClaimGodTokens(clientsInfo.operatorClient);
       throw e;
     }
   }
@@ -119,7 +119,7 @@ export class GovernorCreateToken extends CommonSteps {
         console.log(
           `State of proposal is - ${state} revert of god token required is- ${revertRequired}`
         );
-        await godHolder.revertTokensForVoter(clientsInfo.operatorClient);
+        await godHolder.checkAndClaimGodTokens(clientsInfo.operatorClient);
       }
     } catch (e: any) {
       console.log("Something went wrong while getting the state with timeout ");

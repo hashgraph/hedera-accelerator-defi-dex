@@ -67,7 +67,7 @@ abstract contract TokenHolder is ITokenHolder, Initializable {
         return HederaResponseCodes.SUCCESS;
     }
 
-    function canUserClaimTokens() external view returns (bool) {
+    function canUserClaimTokens() public view virtual returns (bool) {
         return activeProposalsForUsers[msg.sender].length == 0;
     }
 
