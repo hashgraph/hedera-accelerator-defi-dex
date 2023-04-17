@@ -12,7 +12,7 @@ describe("Governor Tests", function () {
   const TWENTY_PERCENT = TOTAL_SUPPLY * 0.2;
   const FIFTY_PERCENT = TOTAL_SUPPLY * 0.5;
   const THIRTY_PERCENT = TOTAL_SUPPLY * 0.3;
-  const LOCKED_TOKEN = THIRTY_PERCENT / 2;
+  const LOCKED_TOKEN = TWENTY_PERCENT / 2;
 
   const DESC = "Test";
   const LINK = "Link";
@@ -181,7 +181,7 @@ describe("Governor Tests", function () {
         );
     });
 
-    it("Verify cancelling proposal with non existing title should be reverted", async function () {
+    it("Verify cancelling proposal should be reverted for non-existing title", async function () {
       const { governorText, creator } = await loadFixture(deployFixture);
       await getTextProposalId(governorText, creator);
       await expect(governorText.cancelProposal("not-found")).revertedWith(
@@ -192,6 +192,13 @@ describe("Governor Tests", function () {
     it("Verify vote casting should be reverted for non-existing proposal id", async function () {
       const { governorText } = await loadFixture(deployFixture);
       await expect(governorText.castVotePublic(1, 0, 1)).revertedWith(
+        "GovernorCountingSimpleInternal: Proposal not found"
+      );
+    });
+
+    it("Verify get proposal details should be reverted for non-existing proposal id", async function () {
+      const { governorText } = await loadFixture(deployFixture);
+      await expect(governorText.getProposalDetails(1)).revertedWith(
         "GovernorCountingSimpleInternal: Proposal not found"
       );
     });
@@ -212,6 +219,7 @@ describe("Governor Tests", function () {
       const BEFORE = await token.balanceOf(creator.address);
       const AFTER = BEFORE.add(TestHelper.toPrecision(1)).toNumber();
 
+      await verifyAccountBalance(token, creator.address, BEFORE);
       await governorText.cancelProposal(TITLE);
       await verifyAccountBalance(token, creator.address, AFTER);
     });
@@ -230,6 +238,7 @@ describe("Governor Tests", function () {
       await governorText.castVotePublic(proposalId, 0, 1);
       await TestHelper.mineNBlocks(BLOCKS_COUNT);
 
+      await verifyAccountBalance(token, creator.address, BEFORE);
       await governorText.executeProposal(TITLE);
       await verifyAccountBalance(token, creator.address, AFTER);
     });
@@ -252,7 +261,7 @@ describe("Governor Tests", function () {
       expect(threshold).equals(0);
     });
 
-    it("Verify votes, quorum, vote-succeeded value's should have default value when no vote casted", async function () {
+    it("Verify votes, quorum, vote-succeeded value's should have default values when no vote casted", async function () {
       const { governorText, creator } = await loadFixture(deployFixture);
       const { proposalId } = await getTextProposalId(governorText, creator);
       await verifyProposalVotes(governorText, proposalId, {
@@ -281,20 +290,21 @@ describe("Governor Tests", function () {
       expect(await governorText.quorumReached(proposalId)).equals(true);
     });
 
-    it("Verify votes value should be updated when vote casted against", async function () {
+    it("Verify votes, vote-succeeded value's should be updated when vote casted in favour with less then quorum share", async function () {
       const { governorText, creator, godHolder } = await loadFixture(
         deployFixture
       );
-      await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
+      const lockedTokens = TestHelper.toPrecision(QUORUM_THRESHOLD - 1);
+      await godHolder.grabTokensFromUser(creator.address, lockedTokens);
 
       const { proposalId } = await getTextProposalId(governorText, creator);
-      await governorText.castVotePublic(proposalId, 0, 0);
+      await governorText.castVotePublic(proposalId, 0, 1);
       await verifyProposalVotes(governorText, proposalId, {
         abstainVotes: 0,
-        forVotes: 0,
-        againstVotes: LOCKED_TOKEN,
+        againstVotes: 0,
+        forVotes: lockedTokens,
       });
-      expect(await governorText.voteSucceeded(proposalId)).equals(false);
+      expect(await governorText.voteSucceeded(proposalId)).equals(true);
       expect(await governorText.quorumReached(proposalId)).equals(false);
     });
 
@@ -315,17 +325,20 @@ describe("Governor Tests", function () {
       expect(await governorText.quorumReached(proposalId)).equals(true);
     });
 
-    it("When proposal created and user voted for with vote share less than 5 then quorum should not be reached", async function () {
-      const { governorText, godHolder, creator } = await loadFixture(
+    it("Verify votes value should be updated when vote casted against", async function () {
+      const { governorText, creator, godHolder } = await loadFixture(
         deployFixture
       );
-
-      await godHolder.grabTokensFromUser(creator.address, QUORUM_THRESHOLD - 1);
+      await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
 
       const { proposalId } = await getTextProposalId(governorText, creator);
-
-      expect(await governorText.quorumReached(proposalId)).equals(false);
-      await governorText.castVotePublic(proposalId, 0, 1);
+      await governorText.castVotePublic(proposalId, 0, 0);
+      await verifyProposalVotes(governorText, proposalId, {
+        abstainVotes: 0,
+        forVotes: 0,
+        againstVotes: LOCKED_TOKEN,
+      });
+      expect(await governorText.voteSucceeded(proposalId)).equals(false);
       expect(await governorText.quorumReached(proposalId)).equals(false);
     });
 
@@ -336,12 +349,43 @@ describe("Governor Tests", function () {
       await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
 
       const { proposalId } = await getTextProposalId(governorText, creator);
+
+      expect(
+        (await godHolder.callStatic.getActiveProposalsForUser()).length
+      ).equals(0);
+
       await governorText.castVotePublic(proposalId, 0, 1);
 
-      const activeProposals =
-        await godHolder.callStatic.getActiveProposalsForUser();
-      expect(activeProposals.length).equals(1);
-      expect(await godHolder.callStatic.canUserClaimTokens()).equals(false);
+      expect(
+        (await godHolder.callStatic.getActiveProposalsForUser()).length
+      ).equals(1);
+    });
+
+    it("Verify proposal should be in 'Pending' state when proposal created and voting period not started", async function () {
+      const { governorText, creator } = await loadFixture(deployFixture);
+      const { proposalId } = await getTextProposalId(governorText, creator);
+      expect(await governorText.state(proposalId)).equals(0);
+    });
+
+    it("Verify proposal should be in 'Active' state when proposal created", async function () {
+      const { governorText, creator } = await loadFixture(deployFixture);
+      const { proposalId } = await getTextProposalId(governorText, creator);
+      await TestHelper.mineNBlocks(2);
+      expect(await governorText.state(proposalId)).equals(1);
+    });
+
+    it("Verify proposal should be in 'Cancelled' state when proposal cancelled", async function () {
+      const { governorText, creator } = await loadFixture(deployFixture);
+      const { proposalId } = await getTextProposalId(governorText, creator);
+      await governorText.cancelProposal(TITLE);
+      expect(await governorText.state(proposalId)).equals(2);
+    });
+
+    it("Verify proposal should be in 'Defeated' state when no vote casted and voting period ended", async function () {
+      const { governorText, creator } = await loadFixture(deployFixture);
+      const { proposalId } = await getTextProposalId(governorText, creator);
+      await TestHelper.mineNBlocks(BLOCKS_COUNT);
+      expect(await governorText.state(proposalId)).equals(3);
     });
 
     it("Verify proposal should be in 'Succeeded' state when vote succeeded and quorum reached", async function () {
@@ -349,12 +393,22 @@ describe("Governor Tests", function () {
         deployFixture
       );
       await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
-
       const { proposalId } = await getTextProposalId(governorText, creator);
       await governorText.castVotePublic(proposalId, 0, 1);
       await TestHelper.mineNBlocks(BLOCKS_COUNT);
-
       expect(await governorText.state(proposalId)).equals(4);
+    });
+
+    it("Verify proposal should be in 'Executed' state when proposal executed", async function () {
+      const { governorText, creator, godHolder } = await loadFixture(
+        deployFixture
+      );
+      await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
+      const { proposalId } = await getTextProposalId(governorText, creator);
+      await governorText.castVotePublic(proposalId, 0, 1);
+      await TestHelper.mineNBlocks(20);
+      await governorText.executeProposal(TITLE);
+      expect(await governorText.state(proposalId)).equals(7);
     });
 
     it("Verify proposal creation should be reverted when creator having zero GOD token", async function () {
@@ -394,13 +448,6 @@ describe("Governor Tests", function () {
         governorText.connect(signers[1]).cancelProposal(TITLE)
       ).revertedWith(
         "GovernorCountingSimpleInternal: Only proposer can cancel the proposal"
-      );
-    });
-
-    it("Verify proposal details call should be reverted for invalid proposal id", async function () {
-      const { governorText } = await loadFixture(deployFixture);
-      await expect(governorText.getProposalDetails(1)).revertedWith(
-        "GovernorCountingSimpleInternal: Proposal not found"
       );
     });
 

@@ -440,14 +440,6 @@ export default class Governor extends Base {
     return new ContractFunctionParameters().addUint256(BigNumber(proposalId));
   }
 
-  private initializeInternally = async (
-    godHolderProxyAddress: string,
-    defaultQuorumThresholdValue: number,
-    votingDelay: number,
-    votingPeriod: number,
-    client: Client
-  ) => {};
-
   public getStateWithTimeout = async (
     proposalId: string,
     requiredState: number,

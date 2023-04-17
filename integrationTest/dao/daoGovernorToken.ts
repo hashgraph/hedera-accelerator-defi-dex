@@ -101,5 +101,5 @@ export async function executeGovernorTokenTransferFlow(
   } else {
     await governorTokenTransfer.cancelProposal(title, proposalCreatorClient);
   }
-  await godHolder.checkAndClaimedGodTokens(voterClient, voterAccountId);
+  await godHolder.checkAndClaimGodTokens(voterClient, voterAccountId);
 }

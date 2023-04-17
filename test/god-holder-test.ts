@@ -41,7 +41,9 @@ describe("GODHolder tests", function () {
     });
 
     it("Verify contract should be reverted for invalid inputs during token locking", async function () {
-      const { godHolder, voter, baseHTS } = await loadFixture(deployFixture);
+      const { godHolder, voter, baseHTS, token } = await loadFixture(
+        deployFixture
+      );
       await expect(godHolder.grabTokensFromUser(voter, 0)).revertedWith(
         "GODHolder: lock amount must be a positive number"
       );
@@ -52,13 +54,19 @@ describe("GODHolder tests", function () {
         "GODHolder: lock amount can't be greater to the balance amount"
       );
 
+      await token.setUserBalance(voter, 0);
+      await expect(
+        godHolder.grabTokensFromUser(voter, TestHelper.toPrecision(10))
+      ).revertedWith("GODHolder: balance amount must be a positive number");
+
+      await token.setUserBalance(voter, TOTAL_AMOUNT);
       await baseHTS.setPassTransactionCount(0);
       await expect(
         godHolder.grabTokensFromUser(voter, TestHelper.toPrecision(1))
       ).revertedWith("GODHolder: token transfer failed to contract.");
     });
 
-    it("Verify contract call should be succeeded for valid inputs during token locking", async function () {
+    it("Verify contract calls for fully token locking", async function () {
       const { godHolder, voter, token } = await loadFixture(deployFixture);
       const voterBalanceFromContractBeforeLocking =
         await godHolder.balanceOfVoter(voter);
@@ -83,6 +91,35 @@ describe("GODHolder tests", function () {
       expect(contractBalanceFromTokenAfterLocking).equals(TOTAL_AMOUNT);
       expect(voterBalanceFromContractAfterLocking).equals(TOTAL_AMOUNT);
       expect(voterBalanceFromTokenAfterLocking).equals(0);
+    });
+
+    it("Verify contract calls for partial token locking", async function () {
+      const { godHolder, voter, token } = await loadFixture(deployFixture);
+      const voterBalanceFromContractBeforeLocking =
+        await godHolder.balanceOfVoter(voter);
+      const voterBalanceFromTokenBeforeLocking = await token.balanceOf(voter);
+      const contractBalanceFromTokenBeforeLocking = await token.balanceOf(
+        godHolder.address
+      );
+
+      const LOCKED_AMOUNT = TOTAL_AMOUNT - TestHelper.toPrecision(5);
+      const BALANCE_AMOUNT = TOTAL_AMOUNT - LOCKED_AMOUNT;
+      await godHolder.grabTokensFromUser(voter, LOCKED_AMOUNT);
+
+      const voterBalanceFromContractAfterLocking =
+        await godHolder.balanceOfVoter(voter);
+      const voterBalanceFromTokenAfterLocking = await token.balanceOf(voter);
+      const contractBalanceFromTokenAfterLocking = await token.balanceOf(
+        godHolder.address
+      );
+
+      expect(contractBalanceFromTokenBeforeLocking).equals(0);
+      expect(voterBalanceFromContractBeforeLocking).equals(0);
+      expect(voterBalanceFromTokenBeforeLocking).equals(TOTAL_AMOUNT);
+
+      expect(contractBalanceFromTokenAfterLocking).equals(LOCKED_AMOUNT);
+      expect(voterBalanceFromContractAfterLocking).equals(LOCKED_AMOUNT);
+      expect(voterBalanceFromTokenAfterLocking).equals(BALANCE_AMOUNT);
     });
 
     it("Verify contract should be reverted for invalid inputs during token unlocking", async function () {
@@ -112,7 +149,7 @@ describe("GODHolder tests", function () {
       await godHolder.removeActiveProposals([voter], 1);
     });
 
-    it("Verify contract call should be succeeded for valid inputs during token unlocking", async function () {
+    it("Verify contract calls for fully token unlocking", async function () {
       const { godHolder, token, voter } = await loadFixture(deployFixture);
       await godHolder.grabTokensFromUser(voter, TOTAL_AMOUNT);
 
@@ -141,8 +178,39 @@ describe("GODHolder tests", function () {
       expect(voterBalanceFromTokenAfterUnLocking).equals(TOTAL_AMOUNT);
     });
 
+    it("Verify contract calls for partial token unlocking", async function () {
+      const { godHolder, token, voter } = await loadFixture(deployFixture);
+      await godHolder.grabTokensFromUser(voter, TOTAL_AMOUNT);
+
+      const voterBalanceFromContractBeforeUnLocking =
+        await godHolder.balanceOfVoter(voter);
+      const voterBalanceFromTokenBeforeUnLocking = await token.balanceOf(voter);
+      const contractBalanceFromTokenBeforeUnLocking = await token.balanceOf(
+        godHolder.address
+      );
+
+      const UNLOCK_AMOUNT = TOTAL_AMOUNT - TestHelper.toPrecision(1);
+      const BALANCE_AMOUNT = TOTAL_AMOUNT - UNLOCK_AMOUNT;
+      await godHolder.revertTokensForVoter(UNLOCK_AMOUNT);
+
+      const voterBalanceFromContractAfterUnLocking =
+        await godHolder.balanceOfVoter(voter);
+      const voterBalanceFromTokenAfterUnLocking = await token.balanceOf(voter);
+      const contractBalanceFromTokenAfterUnLocking = await token.balanceOf(
+        godHolder.address
+      );
+
+      expect(contractBalanceFromTokenBeforeUnLocking).equals(TOTAL_AMOUNT);
+      expect(voterBalanceFromContractBeforeUnLocking).equals(TOTAL_AMOUNT);
+      expect(voterBalanceFromTokenBeforeUnLocking).equals(0);
+
+      expect(contractBalanceFromTokenAfterUnLocking).equals(BALANCE_AMOUNT);
+      expect(voterBalanceFromContractAfterUnLocking).equals(BALANCE_AMOUNT);
+      expect(voterBalanceFromTokenAfterUnLocking).equals(UNLOCK_AMOUNT);
+    });
+
     it("Verify add and remove active proposals", async function () {
-      const { godHolder, signers, voter } = await loadFixture(deployFixture);
+      const { godHolder, voter } = await loadFixture(deployFixture);
       expect((await godHolder.getActiveProposalsForUser()).length).equal(0);
       await godHolder.addProposalForVoter(voter, 1);
       await godHolder.addProposalForVoter(voter, 2);

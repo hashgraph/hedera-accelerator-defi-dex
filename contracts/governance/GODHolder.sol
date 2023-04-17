@@ -31,11 +31,14 @@ contract GODHolder is TokenHolder {
             balance >= _amount,
             "GODHolder: unlock amount can't be greater to the locked amount"
         );
+        godTokenForUsers[msg.sender] -= _amount;
         require(
             IERC20(_token).transfer(msg.sender, _amount),
             "GODHolder: token transfer failed from contract."
         );
-        delete (godTokenForUsers[msg.sender]);
+        if (godTokenForUsers[msg.sender] == 0) {
+            delete (godTokenForUsers[msg.sender]);
+        }
         return HederaResponseCodes.SUCCESS;
     }
 
@@ -48,6 +51,10 @@ contract GODHolder is TokenHolder {
             "GODHolder: lock amount must be a positive number"
         );
         uint256 balance = IERC20(_token).balanceOf(user);
+        require(
+            balance > 0,
+            "GODHolder: balance amount must be a positive number"
+        );
         require(
             _amount <= balance,
             "GODHolder: lock amount can't be greater to the balance amount"

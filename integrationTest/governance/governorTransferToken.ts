@@ -43,7 +43,7 @@ async function main() {
   } else {
     await governor.cancelProposal(title, clientsInfo.operatorClient);
   }
-  await godHolder.checkAndClaimedGodTokens(
+  await godHolder.checkAndClaimGodTokens(
     clientsInfo.uiUserClient,
     clientsInfo.uiUserId
   );

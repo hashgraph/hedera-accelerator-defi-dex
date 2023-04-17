@@ -23,14 +23,14 @@ export default class GodHolder extends Base {
       const args = new ContractFunctionParameters()
         .addAddress(this.htsAddress)
         .addAddress(tokenAddress);
-      await this.execute(4_00_000, INITIALIZE, client, args);
+      await this.execute(9_00_000, INITIALIZE, client, args);
       console.log(`- GodHolder#${INITIALIZE}(): done\n`);
       return;
     }
     console.log(`- GodHolder#${INITIALIZE}(): already done\n`);
   };
 
-  checkAndClaimedGodTokens = async (
+  checkAndClaimGodTokens = async (
     client: Client = clientsInfo.operatorClient,
     accountId: AccountId = clientsInfo.operatorId
   ) => {
