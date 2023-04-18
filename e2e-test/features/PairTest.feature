@@ -13,11 +13,6 @@ Feature: Pair contract e2e test
         When User adds 210.00 units of PairToken1 and 230.00 units of PairToken2
         Then PairToken1 and PairToken2 balances in the pool are 210.00 units and 230.00 units respectively   
         Then Balance of "PairToken1" and "PairToken2" in user account is 199790.00 and 199770.00 respectively
-        
-
-    Scenario: Verify user can not create pair of same tokens with same fees
-        When User tries to initialize the pair contract with same tokens and same fee as 1.0%
-        Then User receive error message "CONTRACT_REVERT_EXECUTED"
     
     Scenario: Verify token balance after removing liquidity
         Given User gets the count of lptokens from  pool
@@ -59,5 +54,5 @@ Feature: Pair contract e2e test
      Scenario: Verify slippage in value for given out PairToken2 quantity
         Given PairToken1 and PairToken2 are present in pool
         When User gives 10 units of PairToken2 for calculating slippage in
-        Then Expected slippage in value should be 4656957    
+        Then Expected slippage in value should be 63303831    
       

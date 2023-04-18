@@ -48,6 +48,7 @@ contract Pair is IPair, Initializable, TokenOperations {
         address _treasury,
         int256 _fee
     ) public override initializer {
+        require(_fee >= 0, "Pair: Fee should be greater than zero.");
         tokenService = _tokenService;
         lpTokenContract = _lpTokenContract;
         fee = _fee;
@@ -273,7 +274,7 @@ contract Pair is IPair, Initializable, TokenOperations {
             int256 _actualSwapBValue,
             int256 _tokenBTreasureFee
         ) = getOutGivenIn(_tokenAQty);
-        
+
         int256 finalDeltaBQty = (_actualSwapBValue + _tokenBTreasureFee);
 
         int256 calculatedSlippage = ((spotValueExpected - finalDeltaBQty) *
