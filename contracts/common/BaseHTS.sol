@@ -107,4 +107,13 @@ contract BaseHTS is HederaTokenService, IBaseHTS {
         (bool sent, ) = toAccount.call{value: uint256(msg.value)}("");
         return sent;
     }
+
+    function transferViaErc20(
+        address from,
+        address to,
+        address token,
+        uint256 amt
+    ) external override returns (bool) {
+        return IERC20(token).transferFrom(from, to, uint256(amt));
+    }
 }

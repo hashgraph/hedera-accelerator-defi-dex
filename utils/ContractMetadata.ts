@@ -38,7 +38,7 @@ export default class ContractMetadata {
     "GovernorTokenDAO",
     "MultisigDAOFactory",
     "MultisigDAO",
-    "DummyContract"
+    "DummyContract",
   ];
 
   static SUPPORTED_PROXY_OPTIONS = ["create", "update"];

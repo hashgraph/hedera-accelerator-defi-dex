@@ -197,33 +197,33 @@ const balanceOf = async () => {
 
 async function main() {
   console.log(`Testing contract .............\n`);
-  // await initialize(contract.transparentProxyId!);
-  // await transferToContract(
-  //   contract.transparentProxyId!,
-  //   treasureId.toSolidityAddress(),
-  //   new BigNumber(4)
-  // );
-  // await transferFromContract(contract.transparentProxyId!, new BigNumber(1));
-  // try {
-  //   await transferFromContractViaDep(
-  //     contract.transparentProxyId!,
-  //     new BigNumber(1)
-  //   );
-  // } catch (e) {
-  //   console.log(e);
-  // }
-  // try {
-  //   await transferFromContractViaDepUsingErc20(
-  //     contract.transparentProxyId!,
-  //     new BigNumber(1)
-  //   );
-  // } catch (e) {
-  //   console.log(e);
-  // }
-  // await transferFromContractViaErc20(
-  //   contract.transparentProxyId!,
-  //   new BigNumber(1)
-  // );
+  await initialize(contract.transparentProxyId!);
+  await transferToContract(
+    contract.transparentProxyId!,
+    treasureId.toSolidityAddress(),
+    new BigNumber(4)
+  );
+  await transferFromContract(contract.transparentProxyId!, new BigNumber(1));
+  try {
+    await transferFromContractViaDep(
+      contract.transparentProxyId!,
+      new BigNumber(1)
+    );
+  } catch (e) {
+    console.log(e);
+  }
+  try {
+    await transferFromContractViaDepUsingErc20(
+      contract.transparentProxyId!,
+      new BigNumber(1)
+    );
+  } catch (e) {
+    console.log(e);
+  }
+  await transferFromContractViaErc20(
+    contract.transparentProxyId!,
+    new BigNumber(1)
+  );
 
   await balanceOf();
   console.log(`Testing contract done`);

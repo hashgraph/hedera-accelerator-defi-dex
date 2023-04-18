@@ -60,4 +60,11 @@ contract MockBaseHTSWithTokenCreationFail is IBaseHTS {
         address receiver,
         int64 serial
     ) external override returns (int256) {}
+
+    function transferViaErc20(
+        address from,
+        address to,
+        address token,
+        uint256 amt
+    ) external override returns (bool) {}
 }

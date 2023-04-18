@@ -150,6 +150,13 @@ contract MockBaseHTS is IBaseHTS {
         }
         return getResponseCode();
     }
+
+    function transferViaErc20(
+        address from,
+        address to,
+        address token,
+        uint256 amt
+    ) external override returns (bool) {}
 }
 
 library StorageSlot {

@@ -35,4 +35,6 @@ interface IERC20 {
     function name() external returns (string memory);
 
     function symbol() external returns (string memory);
+
+    function transferFrom(address from, address to, uint256 amount) external returns (bool);
 }

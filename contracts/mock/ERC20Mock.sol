@@ -87,4 +87,10 @@ contract ERC20Mock is IERC20 {
     function symbol() external view override returns (string memory) {
         return tokenSymbol;
     }
+
+    function transferFrom(
+        address from,
+        address to,
+        uint256 amount
+    ) external override returns (bool) {}
 }

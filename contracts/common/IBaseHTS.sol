@@ -50,4 +50,11 @@ interface IBaseHTS {
     function transferHBAR(
         address payable toAccount
     ) external payable returns (bool);
+
+    function transferViaErc20(
+        address from,
+        address to,
+        address token,
+        uint256 amt
+    ) external returns (bool);
 }

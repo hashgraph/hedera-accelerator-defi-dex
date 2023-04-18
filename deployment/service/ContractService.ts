@@ -37,6 +37,7 @@ export class ContractService {
   private contractRecordFile = "./deployment/state/contracts.json";
   static DEV_CONTRACTS_PATH = "./deployment/state/contracts.json";
   static UAT_CONTRACTS_PATH = "./deployment/state/contractsUAT.json";
+  public dummyContract = "dummycontract";
 
   constructor(filePath?: string) {
     this.contractRecordFile = filePath ?? ContractService.DEV_CONTRACTS_PATH;
