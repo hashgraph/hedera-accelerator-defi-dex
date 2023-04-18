@@ -51,7 +51,7 @@ contract NFTHolder is TokenHolder {
         );
     }
 
-    function quorum(uint256) external view override returns (uint256) {
-        return 1;
+    function isHoldingNFT() external view returns (bool) {
+        return true;
     }
 }

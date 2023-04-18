@@ -271,13 +271,17 @@ abstract contract GovernorCountingSimpleInternal is
     function quorum(
         uint256
     ) public view override(IGovernorUpgradeable) returns (uint256) {
-        uint256 totalSupply = token.totalSupply();
-        uint256 value = totalSupply * quorumThresholdInBsp;
-        require(
-            value >= 10_000,
-            "GovernorCountingSimpleInternal: GOD token total supply multiple by quorum threshold in BSP cannot be less than 10,000"
-        );
-        return value / 10_000;
+        if (!tokenHolder.isHoldingNFT()) {
+            uint256 totalSupply = IERC20(token).totalSupply();
+            uint256 value = totalSupply * quorumThresholdInBsp;
+            require(
+                value >= 10_000,
+                "GOD token total supply multiple by quorum threshold in BSP cannot be less than 10,000"
+            );
+            return value / 10_000;
+        } else {
+            return 1;
+        }
     }
 
     function _mockFunctionCall()

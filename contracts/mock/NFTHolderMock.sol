@@ -30,5 +30,7 @@ contract NFTHolderMock is ITokenHolder {
 
     function getToken() external view override returns (address) {}
 
-    function quorum(uint256) external view returns (uint256) {}
+    function isHoldingNFT() external view returns (bool) {
+        return true;
+    }
 }

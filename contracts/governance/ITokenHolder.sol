@@ -24,5 +24,5 @@ interface ITokenHolder {
 
     function getToken() external view returns (address);
 
-    function quorum(uint256) external view returns (uint256);
+    function isHoldingNFT() external view returns (bool);
 }

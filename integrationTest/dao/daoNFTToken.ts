@@ -56,11 +56,6 @@ async function main() {
     clientsInfo.operatorKey,
     clientsInfo.operatorClient
   );
-  // await nftHolder.grabTokensForVoter(
-  //   clientsInfo.operatorId.toSolidityAddress(),
-  //   1,
-  //   clientsInfo.operatorClient,
-  // );
 
   await executeGovernorTokenTransferFlow(
     nftHolder,
