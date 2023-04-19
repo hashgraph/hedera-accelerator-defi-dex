@@ -24,5 +24,5 @@ interface ITokenHolder {
 
     function getToken() external view returns (address);
 
-    function isHoldingNFT() external view returns (bool);
+    function isNFTType() external view returns (bool);
 }

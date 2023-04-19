@@ -271,7 +271,7 @@ abstract contract GovernorCountingSimpleInternal is
     function quorum(
         uint256
     ) public view override(IGovernorUpgradeable) returns (uint256) {
-        if (!tokenHolder.isHoldingNFT()) {
+        if (!tokenHolder.isNFTType()) {
             uint256 totalSupply = IERC20(token).totalSupply();
             uint256 value = totalSupply * quorumThresholdInBsp;
             require(

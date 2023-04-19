@@ -51,7 +51,7 @@ contract NFTHolder is TokenHolder {
         );
     }
 
-    function isHoldingNFT() external view returns (bool) {
+    function isNFTType() external view returns (bool) {
         return true;
     }
 }

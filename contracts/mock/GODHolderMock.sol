@@ -30,7 +30,7 @@ contract GODHolderMock is ITokenHolder {
 
     function getToken() external view override returns (address) {}
 
-    function isHoldingNFT() external view returns (bool) {
+    function isNFTType() external view returns (bool) {
         return false;
     }
 }
