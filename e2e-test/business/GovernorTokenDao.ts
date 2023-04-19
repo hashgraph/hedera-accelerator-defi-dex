@@ -34,6 +34,7 @@ export default class GovernorTokenDao extends Base {
     votingDelay: number = DEFAULT_VOTING_DELAY,
     votingPeriod: number = DEFAULT_VOTING_PERIOD
   ) {
+    console.log(`GovernorTokenDao : ${this.contractId}`);
     try {
       await governor.initialize(
         tokenHolder,
@@ -44,7 +45,7 @@ export default class GovernorTokenDao extends Base {
       );
     } catch (error) {
       console.log("governor.initialize catch");
-      throw error;
+      //throw error;
     }
 
     try {
@@ -57,7 +58,8 @@ export default class GovernorTokenDao extends Base {
       );
       console.log("Initialize done");
     } catch (error) {
-      throw error;
+      console.log(`GovernorTokenDao catch`);
+      //throw error;
     }
   }
 

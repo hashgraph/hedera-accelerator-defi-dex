@@ -1,7 +1,12 @@
 import dex from "../../deployment/model/dex";
 import Base from "./Base";
 import { clientsInfo } from "../../utils/ClientManagement";
-import { Client, TokenId, ContractFunctionParameters } from "@hashgraph/sdk";
+import {
+  Client,
+  TokenId,
+  ContractFunctionParameters,
+  Hbar,
+} from "@hashgraph/sdk";
 import BigNumber from "bignumber.js";
 
 const NFT_TOKEN_ID = TokenId.fromString(dex.NFT_TOKEN_ID);
@@ -54,12 +59,14 @@ export default class NFTHolder extends Base {
   };
 
   revertTokensForVoter = async (client: Client) => {
+    const args = new ContractFunctionParameters().addUint256(0);
     const { result } = await this.execute(
       9000000,
       REVERT_TOKENS_FOR_VOTER,
       client,
+      args,
       undefined,
-      undefined
+      0
     );
     const responseCode = result.getUint256(0);
     console.log(
@@ -78,7 +85,7 @@ export default class NFTHolder extends Base {
       .addUint256(new BigNumber(tokenId));
 
     const { result } = await this.execute(
-      9000000,
+      9999999,
       GRAB_TOKENS_FOR_VOTER,
       client,
       args,

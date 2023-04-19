@@ -18,7 +18,9 @@ contract NFTHolder is TokenHolder {
         return 0;
     }
 
-    function revertTokensForVoter(uint256) external override returns (int32) {
+    function revertTokensForVoter(
+        uint256
+    ) external payable override returns (int32) {
         require(
             activeProposalsForUsers[msg.sender].length == 0,
             "User's Proposals are active"

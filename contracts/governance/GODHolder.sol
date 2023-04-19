@@ -17,7 +17,7 @@ contract GODHolder is TokenHolder {
 
     function revertTokensForVoter(
         uint256 _amount
-    ) external override returns (int32) {
+    ) external payable override returns (int32) {
         require(
             _amount > 0,
             "GODHolder: unlock amount must be a positive number"

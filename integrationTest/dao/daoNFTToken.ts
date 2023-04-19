@@ -8,7 +8,6 @@ import Governor from "../../e2e-test/business/Governor";
 import NFTHolder from "../../e2e-test/business/NFTHolder";
 import GovernorTokenDao from "../../e2e-test/business/GovernorTokenDao";
 import Common from "../../e2e-test/business/Common";
-import BigNumber from "bignumber.js";
 
 const csDev = new ContractService();
 
@@ -57,6 +56,12 @@ async function main() {
     clientsInfo.operatorClient
   );
 
+  await nftHolder.grabTokensForVoter(
+    clientsInfo.operatorId.toSolidityAddress(),
+    12,
+    clientsInfo.operatorClient
+  );
+
   await executeGovernorTokenTransferFlow(
     nftHolder,
     governorTokenDao,
@@ -90,7 +95,7 @@ export async function executeGovernorTokenTransferFlow(
   proposalCreatorClient: Client = clientsInfo.operatorClient,
   voterClient: Client = clientsInfo.operatorClient
 ) {
-  const title = Helper.createProposalTitle("Transfer Token Proposal 2");
+  const title = Helper.createProposalTitle("Transfer Token Proposal 7");
   await Common.setTokenAllowance(
     dex.GOD_TOKEN_ID,
     baseHTSContractId,
@@ -109,7 +114,7 @@ export async function executeGovernorTokenTransferFlow(
   );
 
   await governorTokenTransfer.getProposalDetails(proposalId);
-  await governorTokenTransfer.forVote(proposalId, 8, voterClient);
+  await governorTokenTransfer.forVote(proposalId, 12, voterClient);
   await governorTokenTransfer.isQuorumReached(proposalId);
   await governorTokenTransfer.isVoteSucceeded(proposalId);
   await governorTokenTransfer.proposalVotes(proposalId);
