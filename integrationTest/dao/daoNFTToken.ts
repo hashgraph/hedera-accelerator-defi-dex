@@ -107,23 +107,24 @@ export async function executeGovernorTokenTransferFlow(
     tokenAmount,
     proposalCreatorClient
   );
-  // const proposalId =
-  //   "38220384499510439979761349416708822429408032272119124857091426611874315495892";
 
   await governorTokenTransfer.getProposalDetails(proposalId);
   await governorTokenTransfer.forVote(proposalId, 8, voterClient);
   await governorTokenTransfer.isQuorumReached(proposalId);
   await governorTokenTransfer.isVoteSucceeded(proposalId);
   await governorTokenTransfer.proposalVotes(proposalId);
-  await governorTokenTransfer.delay(proposalId);
-  await Common.setTokenAllowance(
-    dex.TOKEN_LAB49_1,
-    baseHTSContractId,
-    10e8,
-    clientsInfo.treasureId,
-    clientsInfo.treasureKey,
-    clientsInfo.operatorClient
-  );
-  await governorTokenTransfer.executeProposal(title, fromAccountPrivateKey);
+  if (await governorTokenTransfer.isSucceeded(proposalId)) {
+    await Common.setTokenAllowance(
+      dex.TOKEN_LAB49_1,
+      baseHTSContractId,
+      10e8,
+      clientsInfo.treasureId,
+      clientsInfo.treasureKey,
+      clientsInfo.operatorClient
+    );
+    await governorTokenTransfer.executeProposal(title, fromAccountPrivateKey);
+  } else {
+    await governorTokenTransfer.cancelProposal(title, proposalCreatorClient);
+  }
   await nftHolder.checkAndClaimedNFTTokens(voterClient);
 }

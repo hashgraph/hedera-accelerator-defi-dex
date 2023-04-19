@@ -276,7 +276,7 @@ abstract contract GovernorCountingSimpleInternal is
             uint256 value = totalSupply * quorumThresholdInBsp;
             require(
                 value >= 10_000,
-                "GOD token total supply multiple by quorum threshold in BSP cannot be less than 10,000"
+                "GovernorCountingSimpleInternal: GOD token total supply multiple by quorum threshold in BSP cannot be less than 10,000"
             );
             return value / 10_000;
         } else {
