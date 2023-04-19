@@ -17,6 +17,7 @@ import {
   TokenDeleteTransaction,
   TokenMintTransaction,
   TokenAssociateTransaction,
+  AccountAllowanceApproveTransaction,
 } from "@hashgraph/sdk";
 import { BigNumber } from "bignumber.js";
 import { clientsInfo } from "../../utils/ClientManagement";
@@ -24,6 +25,56 @@ import axios from "axios";
 
 export default class Common {
   static baseUrl: string = "https://testnet.mirrornode.hedera.com/";
+
+  static setNFTTokenAllowance = async (
+    tokenId: string | TokenId,
+    spenderAccountId: string | AccountId,
+    ownerAccount: string | AccountId,
+    ownerAccountPrivateKey: PrivateKey,
+    client: Client
+  ) => {
+    const allowanceTxn =
+      new AccountAllowanceApproveTransaction().approveTokenNftAllowanceAllSerials(
+        tokenId,
+        ownerAccount,
+        spenderAccountId
+      );
+    const signTx = await allowanceTxn
+      .freezeWith(client)
+      .sign(ownerAccountPrivateKey);
+    const txResponse = await signTx.execute(client);
+    const receipt = await txResponse.getReceipt(client);
+    const transactionStatus = receipt.status;
+    console.log(
+      `- Common#setTokenAllowance(): status = ${transactionStatus.toString()}, tokenId = ${tokenId.toString()},spenderAccountId =  ${spenderAccountId.toString()}, ownerAccount =  ${ownerAccount.toString()}\n`
+    );
+  };
+
+  static setTokenAllowance = async (
+    tokenId: string | TokenId,
+    spenderAccountId: string | AccountId,
+    amount: number,
+    ownerAccount: string | AccountId,
+    ownerAccountPrivateKey: PrivateKey,
+    client: Client
+  ) => {
+    const allowanceTxn =
+      new AccountAllowanceApproveTransaction().approveTokenAllowance(
+        tokenId,
+        ownerAccount,
+        spenderAccountId,
+        amount
+      );
+    const signTx = await allowanceTxn
+      .freezeWith(client)
+      .sign(ownerAccountPrivateKey);
+    const txResponse = await signTx.execute(client);
+    const receipt = await txResponse.getReceipt(client);
+    const transactionStatus = receipt.status;
+    console.log(
+      `- Common#setTokenAllowance(): status = ${transactionStatus.toString()}, tokenId = ${tokenId.toString()},spenderAccountId =  ${spenderAccountId.toString()}, ownerAccount =  ${ownerAccount.toString()}\n`
+    );
+  };
 
   static upgradeTo = async (
     proxyAddress: string,

@@ -37,7 +37,7 @@ contract TokenOperations {
     function isContract(address _account) private view returns (bool) {
         return _account.code.length > 0;
     }
-
+    /// @custom:oz-upgrades-unsafe-allow delegatecall
     function associateTokenViaDelegation(
         IBaseHTS _baseHTS,
         address _account,

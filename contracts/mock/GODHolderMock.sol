@@ -10,7 +10,7 @@ contract GODHolderMock is ITokenHolder {
         address token
     ) external override {}
 
-    function revertTokensForVoter(uint256) external override returns (int32) {}
+    function revertTokensForVoter(uint256) external payable override returns (int32) {}
 
     function balanceOfVoter(
         address voter
@@ -29,4 +29,8 @@ contract GODHolderMock is ITokenHolder {
     ) external override returns (int32) {}
 
     function getToken() external view override returns (address) {}
+
+    function isNFTType() external pure returns (bool) {
+        return false;
+    }
 }

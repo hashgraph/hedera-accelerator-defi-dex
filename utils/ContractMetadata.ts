@@ -16,6 +16,7 @@ export default class ContractMetadata {
     "Configuration",
     "GODTokenHolderFactory",
     "GovernanceDAOFactory",
+    "NFTDAOFactory",
   ];
 
   static SUPPORTED_CONTRACTS_FOR_DEPLOYMENT = [
@@ -38,6 +39,7 @@ export default class ContractMetadata {
     "GovernorTokenDAO",
     "MultisigDAOFactory",
     "MultisigDAO",
+    "NFTDAOFactory",
   ];
 
   static SUPPORTED_PROXY_OPTIONS = ["create", "update"];

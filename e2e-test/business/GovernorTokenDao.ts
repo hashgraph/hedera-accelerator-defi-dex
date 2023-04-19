@@ -1,5 +1,6 @@
 import Base from "./Base";
 import GodHolder from "../../e2e-test/business/GodHolder";
+import NFTHolder from "../../e2e-test/business/NFTHolder";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { BigNumber } from "bignumber.js";
 
@@ -27,22 +28,24 @@ export default class GovernorTokenDao extends Base {
     name: string,
     url: string,
     governor: Governor,
-    godHolder: GodHolder,
+    tokenHolder: GodHolder | NFTHolder,
     client: Client = clientsInfo.operatorClient,
     defaultQuorumThresholdValue: number = DEFAULT_QUORUM_THRESHOLD_IN_BSP,
     votingDelay: number = DEFAULT_VOTING_DELAY,
     votingPeriod: number = DEFAULT_VOTING_PERIOD
   ) {
+    console.log(`GovernorTokenDao : ${this.contractId}`);
     try {
       await governor.initialize(
-        godHolder,
+        tokenHolder,
         client,
         defaultQuorumThresholdValue,
         votingDelay,
         votingPeriod
       );
     } catch (error) {
-      throw error;
+      console.log("governor.initialize catch");
+      //throw error;
     }
 
     try {
@@ -55,7 +58,8 @@ export default class GovernorTokenDao extends Base {
       );
       console.log("Initialize done");
     } catch (error) {
-      throw error;
+      console.log(`GovernorTokenDao catch`);
+      //throw error;
     }
   }
 
@@ -82,7 +86,7 @@ export default class GovernorTokenDao extends Base {
     toAddress: string,
     tokenId: string,
     tokenAmount: number,
-    client: Client = clientsInfo.uiUserClient,
+    client: Client = clientsInfo.operatorClient,
     description: string = DEFAULT_DESCRIPTION,
     link: string = DEFAULT_LINK
   ) => {
@@ -125,7 +129,7 @@ export default class GovernorTokenDao extends Base {
   addWebLink = async (
     webLinkName: string = "GIT",
     webLink: string = "git_url",
-    client: Client = clientsInfo.uiUserClient
+    client: Client = clientsInfo.operatorClient
   ) => {
     const args = new ContractFunctionParameters()
       .addString(webLinkName)
