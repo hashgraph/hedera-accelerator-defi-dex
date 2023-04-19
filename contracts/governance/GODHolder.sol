@@ -76,7 +76,7 @@ contract GODHolder is TokenHolder {
         return super.canUserClaimTokens() && godTokenForUsers[msg.sender] > 0;
     }
 
-    function isNFTType() external view returns (bool) {
+    function isNFTType() external pure returns (bool) {
         return false;
     }
 }

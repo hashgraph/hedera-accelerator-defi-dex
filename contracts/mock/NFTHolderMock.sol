@@ -32,7 +32,7 @@ contract NFTHolderMock is ITokenHolder {
 
     function getToken() external view override returns (address) {}
 
-    function isNFTType() external view returns (bool) {
+    function isNFTType() external pure returns (bool) {
         return true;
     }
 }
