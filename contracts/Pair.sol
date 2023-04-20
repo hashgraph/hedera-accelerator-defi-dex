@@ -48,7 +48,7 @@ contract Pair is IPair, Initializable, TokenOperations {
         address _treasury,
         int256 _fee
     ) public override initializer {
-        require(_fee >= 0, "Pair: Fee should be greater than zero.");
+        require(_fee > 0, "Pair: Fee should be greater than zero.");
         tokenService = _tokenService;
         lpTokenContract = _lpTokenContract;
         fee = _fee;

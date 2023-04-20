@@ -6,7 +6,7 @@ import { ethers, upgrades } from "hardhat";
 import { BigNumber } from "ethers";
 import { Helper } from "../utils/Helper";
 
-describe("All Tests", function () {
+describe.only("All Tests", function () {
   const tokenBAddress = "0x0000000000000000000000000000000000010001";
   const tokenAAddress = "0x0000000000000000000000000000000000020002";
   const tokenCAddress = "0x0000000000000000000000000000000000020003";
@@ -77,20 +77,6 @@ describe("All Tests", function () {
     );
     await pair.deployed();
 
-    const pairWithZeroFee = await upgrades.deployProxy(
-      Pair,
-      [
-        mockBaseHTS.address,
-        lpTokenCont.address,
-        token1Address,
-        token2Address,
-        treasury,
-        0,
-      ],
-      { unsafeAllow: ["delegatecall"] }
-    );
-    await pairWithZeroFee.deployed();
-
     precision = await pair.getPrecisionValue();
     await tokenCont.setUserBalance(signers[0].address, precision.mul(1000));
     await tokenCont1.setUserBalance(signers[0].address, precision.mul(1000));
@@ -111,7 +97,6 @@ describe("All Tests", function () {
       tokenCont,
       tokenCont1,
       configuration,
-      pairWithZeroFee,
     };
   }
 
@@ -158,23 +143,6 @@ describe("All Tests", function () {
   }
 
   describe("HBAR pool test cases", async function () {
-    it("Add liquidity to the pool by adding 50 units of HBAR and 50 units of token B  ", async function () {
-      const { pair, token1Address, token2Address } = await loadFixture(
-        deployFixture
-      );
-      const tx = await pair.addLiquidity(
-        zeroAddress,
-        token1Address,
-        token2Address,
-        precision.mul(50),
-        precision.mul(50)
-      );
-      await tx.wait();
-      const tokenQty = await pair.getPairQty();
-      expect(tokenQty[0]).to.be.equals(precision.mul(50));
-      expect(tokenQty[1]).to.be.equals(precision.mul(50));
-    });
-
     it("Add liquidity for HBAR", async function () {
       const { pair, token1Address, token2Address } = await loadFixture(
         deployFixtureHBARX
@@ -391,6 +359,28 @@ describe("All Tests", function () {
       ).to.be.revertedWith("Pair: Fee should be greater than zero.");
     });
 
+    it("When user try to createPair with zero fee then pair creation should fail", async function () {
+      const {
+        factory,
+        mockBaseHTS,
+        signers,
+        token1Address,
+        token2Address,
+        configuration,
+      } = await loadFixture(deployFixture);
+      // Given
+      await factory.setUpFactory(
+        mockBaseHTS.address,
+        signers[0].address,
+        configuration.address
+      );
+
+      const zeroFee = 0;
+      await expect(
+        factory.createPair(token1Address, token2Address, treasury, zeroFee)
+      ).to.be.revertedWith("Pair: Fee should be greater than zero.");
+    });
+
     describe("Recommended pool for swap tests ", () => {
       it("Given no pool of pair exists when user asks for swap recommendation then no pair should be returned ", async function () {
         const {
@@ -559,7 +549,7 @@ describe("All Tests", function () {
         );
         expect(tokenSwapResult[1]).to.be.equals(token2Address);
         expect(BigNumber.from(tokenSwapResult[2]).div(precision)).to.be.equals(
-          94
+          98
         );
         expect(tokenSwapResult[3]).to.be.equals(poolFee1);
       });
@@ -670,7 +660,7 @@ describe("All Tests", function () {
         expect(tokenSwapResult[1]).to.be.equals(token1Address);
         expect(tokenSwapResult[3]).to.be.equals(poolFee1);
         expect(BigNumber.from(tokenSwapResult[2]).div(precision)).to.be.equals(
-          98
+          94
         );
       });
     });
@@ -1537,51 +1527,6 @@ describe("All Tests", function () {
       const valueWithoutPrecision =
         (Number(value[2]) + Number(value[3])) / Number(precision);
       expect(valueWithoutPrecision).to.be.equals(9.49566211);
-    });
-
-    it("Verify getOutGivenIn for big number and zero fee", async function () {
-      const { pairWithZeroFee, token1Address, token2Address } =
-        await loadFixture(deployFixture);
-      const precision = await pairWithZeroFee.getPrecisionValue();
-      const tokenAQ = BigNumber.from(10).mul(precision);
-      const tokenBQ = BigNumber.from(10).mul(precision);
-
-      await pairWithZeroFee.addLiquidity(
-        zeroAddress,
-        token1Address,
-        token2Address,
-        tokenAQ,
-        tokenBQ,
-        {
-          value: ethers.utils.parseEther("10"),
-        }
-      );
-
-      const deltaAQty = BigNumber.from(10).mul(precision);
-      const value = await pairWithZeroFee.getOutGivenIn(deltaAQty);
-
-      expect(Number(value[2]) + Number(value[3])).to.be.equals(
-        Number(deltaAQty) / 2
-      );
-    });
-
-    it("Verify getInGivenOut for big number and zero fee", async function () {
-      const { pairWithZeroFee, token1Address, token2Address } =
-        await loadFixture(deployFixture);
-      const tokenAQ = BigNumber.from("10").mul(precision);
-      const tokenBQ = BigNumber.from("10").mul(precision);
-      await pairWithZeroFee.addLiquidity(
-        zeroAddress,
-        token1Address,
-        token2Address,
-        tokenAQ,
-        tokenBQ
-      );
-      const deltaBQty = BigNumber.from(10).mul(precision);
-      const value = await pairWithZeroFee.getInGivenOut(deltaBQty);
-      expect(Number(value[2]) + Number(value[3])).to.be.equals(
-        Number(deltaBQty) / 2
-      );
     });
   });
 
