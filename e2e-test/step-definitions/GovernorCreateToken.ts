@@ -175,7 +175,7 @@ export class GovernorCreateToken extends CommonSteps {
   public async voteToProposal(vote: string): Promise<void> {
     try {
       const voteVal = await governor.getProposalVoteNumeric(vote);
-      await governor.vote(proposalId, voteVal, clientsInfo.operatorClient);
+      await governor.vote(proposalId, voteVal, 0, clientsInfo.operatorClient);
     } catch (e: any) {
       console.log(
         "Something went wrong while voting to proposal now cancelling the proposal"
