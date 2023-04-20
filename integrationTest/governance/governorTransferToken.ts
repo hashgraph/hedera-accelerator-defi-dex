@@ -34,7 +34,7 @@ async function main() {
     TOKEN_QTY
   );
   await governor.getProposalDetails(proposalId);
-  await governor.forVote(proposalId, clientsInfo.uiUserClient);
+  await governor.forVote(proposalId, 0, clientsInfo.uiUserClient);
   await governor.isQuorumReached(proposalId);
   await governor.isVoteSucceeded(proposalId);
   await governor.proposalVotes(proposalId);
