@@ -468,7 +468,7 @@ describe("All Tests", function () {
         expect(token2SwapResult[3]).to.be.equals(poolFee);
       });
 
-      it("Given multiple pools of a exist when user asks for recommendation for swap then pool that gives maximum quantity should be returned. ", async function () {
+      it("Given multiple pools(with low fee pool first) of a exist when user asks for recommendation for swap then pool that gives maximum quantity should be returned. ", async function () {
         const {
           pair,
           factory,
@@ -488,30 +488,30 @@ describe("All Tests", function () {
           await configuration.getTransactionsFee()
         );
 
-        const poolFee1 = initialFees[0].value;
-        const poolFee2 = initialFees[1].value;
+        const poolFee1With5PerFee = initialFees[0].value;
+        const poolFee2With30PerFee = initialFees[1].value;
 
         await factory.createPair(
           token1Address,
           token2Address,
           treasury,
-          poolFee1
+          poolFee1With5PerFee
         );
         const pair1 = await factory.getPair(
           token1Address,
           token2Address,
-          poolFee1
+          poolFee1With5PerFee
         );
         await factory.createPair(
           token1Address,
           token2Address,
           treasury,
-          poolFee2
+          poolFee2With30PerFee
         );
         const pair2 = await factory.getPair(
           token1Address,
           token2Address,
-          poolFee2
+          poolFee2With30PerFee
         );
 
         const pool1 = await pair.attach(pair1);
@@ -548,10 +548,90 @@ describe("All Tests", function () {
           "0x0000000000000000000000000000000000000000"
         );
         expect(tokenSwapResult[1]).to.be.equals(token2Address);
-        expect(BigNumber.from(tokenSwapResult[2]).div(precision)).to.be.equals(
-          98
+        expect(tokenSwapResult[3]).to.be.equals(poolFee1With5PerFee);
+      });
+
+      it("Given multiple pools(with high fee pool first) of a exist when user asks for recommendation for swap then pool that gives maximum quantity should be returned. ", async function () {
+        const {
+          pair,
+          factory,
+          mockBaseHTS,
+          signers,
+          token1Address,
+          token2Address,
+          configuration,
+        } = await loadFixture(deployFixture);
+        await factory.setUpFactory(
+          mockBaseHTS.address,
+          signers[0].address,
+          configuration.address
         );
-        expect(tokenSwapResult[3]).to.be.equals(poolFee1);
+
+        const initialFees = Helper.convertToFeeObjectArray(
+          await configuration.getTransactionsFee()
+        );
+
+        const poolFee1With30PerFee = initialFees[1].value;
+        const poolFee2With10PerFee = initialFees[2].value;
+
+        await factory.createPair(
+          token1Address,
+          token2Address,
+          treasury,
+          poolFee1With30PerFee
+        );
+        const pair1 = await factory.getPair(
+          token1Address,
+          token2Address,
+          poolFee1With30PerFee
+        );
+        await factory.createPair(
+          token1Address,
+          token2Address,
+          treasury,
+          poolFee2With10PerFee
+        );
+        const pair2 = await factory.getPair(
+          token1Address,
+          token2Address,
+          poolFee2With10PerFee
+        );
+
+        const pool1 = await pair.attach(pair1);
+        let tokenAPoolQty = BigNumber.from(10000).mul(precision);
+        let tokenBPoolQty = BigNumber.from(10000).mul(precision);
+        await pool1
+          .connect(signers[1])
+          .addLiquidity(
+            signers[1].address,
+            token1Address,
+            token2Address,
+            tokenAPoolQty,
+            tokenBPoolQty
+          );
+
+        const pool2 = await pair.attach(pair2);
+        await pool2
+          .connect(signers[1])
+          .addLiquidity(
+            signers[1].address,
+            token1Address,
+            token2Address,
+            tokenAPoolQty,
+            tokenBPoolQty
+          );
+
+        const tokenSwapResult = await factory.recommendedPairToSwap(
+          token1Address,
+          token2Address,
+          BigNumber.from(100).mul(precision)
+        );
+
+        expect(tokenSwapResult[0]).not.to.be.equals(
+          "0x0000000000000000000000000000000000000000"
+        );
+        expect(tokenSwapResult[1]).to.be.equals(token2Address);
+        expect(tokenSwapResult[3]).to.be.equals(poolFee2With10PerFee);
       });
 
       it("Given multiple pools exist when user ask for recommendation for swap(other token) then pool that gives maximum quantity should be returned. ", async function () {
@@ -659,9 +739,6 @@ describe("All Tests", function () {
         );
         expect(tokenSwapResult[1]).to.be.equals(token1Address);
         expect(tokenSwapResult[3]).to.be.equals(poolFee1);
-        expect(BigNumber.from(tokenSwapResult[2]).div(precision)).to.be.equals(
-          94
-        );
       });
     });
 
