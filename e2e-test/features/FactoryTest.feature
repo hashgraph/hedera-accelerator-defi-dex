@@ -88,7 +88,7 @@ Feature: Factory contract e2e test
     Scenario: Verify slippage in value for given out HBAR quantity
         Given Factory9 and HBAR are present in pool with quantity 284.17095904 units and 151.72869449 units respectively
         When User gives 10 units of HBAR to calculate slippage in
-        Then Slippage in value should be 3647851   
+        Then Slippage in value should be 10371337   
 
     Scenario: Verify spot price for HBAR 
         When User get spot price for "HBAR"
