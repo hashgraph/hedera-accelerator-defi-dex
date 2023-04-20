@@ -6,7 +6,7 @@ import { ethers, upgrades } from "hardhat";
 import { BigNumber } from "ethers";
 import { Helper } from "../utils/Helper";
 
-describe.only("All Tests", function () {
+describe("All Tests", function () {
   const tokenBAddress = "0x0000000000000000000000000000000000010001";
   const tokenAAddress = "0x0000000000000000000000000000000000020002";
   const tokenCAddress = "0x0000000000000000000000000000000000020003";
