@@ -1,3 +1,4 @@
+import { Helper } from "../utils/Helper";
 import { TokenId } from "@hashgraph/sdk";
 import { ContractService } from "../deployment/service/ContractService";
 import { executeGovernorTokenTransferFlow } from "./dao/daoGovernorToken";
@@ -52,13 +53,12 @@ function getGovernanceDAOFactoryInfo() {
   const csDev = new ContractService();
   const contract = csDev.getContractWithProxy(csDev.governanceDaoFactory);
   const proxyId = contract.transparentProxyId!;
-  const daoFactory = new GovernanceDAOFactory(proxyId);
-  return { daoFactory, contractName: contract.name };
+  return new GovernanceDAOFactory(proxyId);
 }
 
 async function main() {
-  const { daoFactory, contractName } = getGovernanceDAOFactoryInfo();
-  await daoFactory.initialize(contractName);
+  const daoFactory = getGovernanceDAOFactoryInfo();
+  await daoFactory.initialize();
   await daoFactory.getGODTokenHolderFactoryAddress();
   await createDAO(
     daoFactory,
@@ -80,8 +80,5 @@ async function main() {
 if (require.main === module) {
   main()
     .then(() => process.exit(0))
-    .catch((error) => {
-      console.error(error);
-      process.exit(1);
-    });
+    .catch(Helper.processError);
 }

@@ -43,15 +43,19 @@ export default class Pair extends Base {
     fee: BigNumber = new BigNumber(10),
     client: Client = clientsInfo.operatorClient
   ) => {
-    const args = new ContractFunctionParameters()
-      .addAddress(this.htsAddress)
-      .addAddress(lpTokenContractAddress)
-      .addAddress(tokenA.toSolidityAddress())
-      .addAddress(tokenB.toSolidityAddress())
-      .addAddress(feeCollectionAccountId.toSolidityAddress())
-      .addInt256(fee);
-    await this.execute(9000000, INITIALIZE, client, args, tokensOwnerKey);
-    console.log(`- Pair#${INITIALIZE}(): done\n`);
+    if (await this.isInitializationPending()) {
+      const args = new ContractFunctionParameters()
+        .addAddress(this.htsAddress)
+        .addAddress(lpTokenContractAddress)
+        .addAddress(tokenA.toSolidityAddress())
+        .addAddress(tokenB.toSolidityAddress())
+        .addAddress(feeCollectionAccountId.toSolidityAddress())
+        .addInt256(fee);
+      await this.execute(9000000, INITIALIZE, client, args, tokensOwnerKey);
+      console.log(`- Pair#${INITIALIZE}(): done\n`);
+      return;
+    }
+    console.log(`- Pair#${INITIALIZE}(): already done\n`);
   };
 
   public getLpContractAddress = async (

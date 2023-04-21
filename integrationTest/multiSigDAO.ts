@@ -2,9 +2,10 @@ import dex from "../deployment/model/dex";
 import MultiSigDao from "../e2e-test/business/MultiSigDao";
 import HederaGnosisSafe from "../e2e-test/business/HederaGnosisSafe";
 
-import { AccountId, Client, ContractId, TokenId } from "@hashgraph/sdk";
+import { Helper } from "../utils/Helper";
 import { clientsInfo } from "../utils/ClientManagement";
 import { ContractService } from "../deployment/service/ContractService";
+import { AccountId, Client, ContractId, TokenId } from "@hashgraph/sdk";
 
 const csDev = new ContractService();
 
@@ -95,8 +96,5 @@ async function getGnosisSafeInstance(multiSigDAO: MultiSigDao) {
 if (require.main === module) {
   main()
     .then(() => process.exit(0))
-    .catch((error) => {
-      console.error(error);
-      process.exit(1);
-    });
+    .catch(Helper.processError);
 }

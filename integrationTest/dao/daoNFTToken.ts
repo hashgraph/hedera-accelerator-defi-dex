@@ -131,5 +131,5 @@ export async function executeGovernorTokenTransferFlow(
   } else {
     await governorTokenTransfer.cancelProposal(title, proposalCreatorClient);
   }
-  await nftHolder.checkAndClaimedNFTTokens(voterClient);
+  await nftHolder.checkAndClaimNFTTokens(voterClient);
 }

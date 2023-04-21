@@ -1,3 +1,4 @@
+import { Helper } from "../utils/Helper";
 import { BigNumber } from "bignumber.js";
 import { clientsInfo } from "../utils/ClientManagement";
 import { ContractService } from "../deployment/service/ContractService";
@@ -26,7 +27,4 @@ async function main() {
 
 main()
   .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
+  .catch(Helper.processError);
