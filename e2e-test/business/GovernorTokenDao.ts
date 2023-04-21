@@ -35,7 +35,7 @@ export default class GovernorTokenDao extends Base {
     votingPeriod: number = DEFAULT_VOTING_PERIOD
   ) {
     await governor.initialize(
-      godHolder,
+      tokenHolder,
       client,
       defaultQuorumThresholdValue,
       votingDelay,
