@@ -1,8 +1,7 @@
-import ContractMetadata from "../../utils/ContractMetadata";
 import { BigNumber } from "bignumber.js";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { ContractService } from "../../deployment/service/ContractService";
-import { EventConsumer } from "../../utils/EventConsumer";
+import { MirrorNodeService } from "../../utils/MirrorNodeService";
 import {
   Client,
   PrivateKey,
@@ -14,10 +13,12 @@ import {
 export default class Base {
   private csDev: ContractService = new ContractService();
   protected htsAddress: string;
+  protected configuration: string;
   contractId: string;
 
   constructor(_contractId: string) {
     this.htsAddress = this.getBaseHTSContractAddress();
+    this.configuration = this.getConfigurationContractAddress();
     this.contractId = _contractId;
   }
 
@@ -63,12 +64,10 @@ export default class Base {
     };
   };
 
-  protected isInitializationPending = async (contractName: string) => {
-    const path = new ContractMetadata().getFilePath(contractName);
-    const map = await new EventConsumer(path).getEventsFromMirror(
+  protected isInitializationPending = async () => {
+    return await MirrorNodeService.getInstance().isInitializationPending(
       this.contractId
     );
-    return !map.has("Initialized");
   };
 
   private signTxnIfNeeded = async (
@@ -89,5 +88,10 @@ export default class Base {
 
   private getBaseHTSContractAddress(): string {
     return this.csDev.getContract(this.csDev.baseContractName).address;
+  }
+
+  private getConfigurationContractAddress(): string {
+    return this.csDev.getContractWithProxy(this.csDev.configuration)
+      .transparentProxyAddress!!;
   }
 }

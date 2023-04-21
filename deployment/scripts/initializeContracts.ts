@@ -90,7 +90,7 @@ export async function main() {
   } = createInstances();
 
   await configuration.initialize();
-  await governanceDaoFactory.initialize(csDev.governanceDaoFactory);
+  await governanceDaoFactory.initialize();
 
   await factory.setupFactory();
   try {
@@ -115,10 +115,7 @@ export async function main() {
   }
 
   try {
-    await godHolder.initialize(
-      clientsInfo.operatorClient,
-      tokenGOD.toSolidityAddress()
-    );
+    await godHolder.initialize();
   } catch (error) {
     console.log(`- GODHolder initialization failed.`);
     console.error(error);

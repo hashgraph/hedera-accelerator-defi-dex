@@ -1,11 +1,11 @@
 import Base from "./Base";
 import GodHolder from "../../e2e-test/business/GodHolder";
 import NFTHolder from "../../e2e-test/business/NFTHolder";
+import Governor from "./Governor";
+
 import { clientsInfo } from "../../utils/ClientManagement";
 import { BigNumber } from "bignumber.js";
-
 import { Client, ContractId, ContractFunctionParameters } from "@hashgraph/sdk";
-import Governor from "./Governor";
 
 const INITIALIZE = "initialize";
 const CREATE_PROPOSAL = "createProposal";
@@ -34,51 +34,29 @@ export default class GovernorTokenDao extends Base {
     votingDelay: number = DEFAULT_VOTING_DELAY,
     votingPeriod: number = DEFAULT_VOTING_PERIOD
   ) {
-    console.log(`GovernorTokenDao : ${this.contractId}`);
-    try {
-      await governor.initialize(
-        tokenHolder,
-        client,
-        defaultQuorumThresholdValue,
-        votingDelay,
-        votingPeriod
-      );
-    } catch (error) {
-      console.log("governor.initialize catch");
-      //throw error;
-    }
+    await governor.initialize(
+      tokenHolder,
+      client,
+      defaultQuorumThresholdValue,
+      votingDelay,
+      votingPeriod
+    );
 
-    try {
-      await this.initializeInternally(
-        admin,
-        name,
-        url,
-        ContractId.fromString(governor.contractId).toSolidityAddress(),
-        client
-      );
-      console.log("Initialize done");
-    } catch (error) {
-      console.log(`GovernorTokenDao catch`);
-      //throw error;
+    if (await this.isInitializationPending()) {
+      const governorId = governor.contractId;
+      const governorAddress =
+        ContractId.fromString(governorId).toSolidityAddress();
+      const args = new ContractFunctionParameters()
+        .addAddress(admin)
+        .addString(name)
+        .addString(url)
+        .addAddress(governorAddress);
+      await this.execute(9_00_000, INITIALIZE, client, args);
+      console.log(`- GovernorTokenDao#${INITIALIZE}(): done\n`);
+      return;
     }
+    console.log(`- GovernorTokenDao#${INITIALIZE}(): already done\n`);
   }
-
-  private initializeInternally = async (
-    admin: string,
-    name: string,
-    url: string,
-    governorTokenTransfer: string,
-    client: Client
-  ) => {
-    const args = new ContractFunctionParameters()
-      // token that define the voting weight, to vote user should have % of this token.
-      .addAddress(admin)
-      .addString(name)
-      .addString(url)
-      .addAddress(governorTokenTransfer);
-    await this.execute(900000, INITIALIZE, client, args);
-    console.log(`- GovernorTokenDao#${INITIALIZE}(): done\n`);
-  };
 
   createTokenTransferProposal = async (
     title: string,

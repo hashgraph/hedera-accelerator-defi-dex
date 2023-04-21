@@ -75,7 +75,7 @@ export default class Governor extends Base {
     const godHolderProxyAddress =
       ContractId.fromString(godHolderContractId).toSolidityAddress();
 
-    if (await this.isInitializationPending("GovernorCountingSimpleInternal")) {
+    if (await this.isInitializationPending()) {
       const args = new ContractFunctionParameters()
         .addAddress(tokenId.toSolidityAddress())
         .addUint256(votingDelay)
@@ -83,7 +83,7 @@ export default class Governor extends Base {
         .addAddress(this.htsAddress)
         .addAddress(godHolderProxyAddress)
         .addUint256(defaultQuorumThresholdValue);
-      await this.execute(1_000_000, INITIALIZE, client, args);
+      await this.execute(1_500_000, INITIALIZE, client, args);
       console.log(`- Governor#${INITIALIZE}(): done\n`);
       return;
     }

@@ -1,6 +1,7 @@
 import MultiSigDao from "../e2e-test/business/MultiSigDao";
 import MultiSigDAOFactory from "../e2e-test/business/factories/MultiSigDAOFactory";
 
+import { Helper } from "../utils/Helper";
 import { ContractId } from "@hashgraph/sdk";
 import { ContractService } from "../deployment/service/ContractService";
 import {
@@ -38,7 +39,4 @@ function getMultiSigFactoryInstance() {
 
 main()
   .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
+  .catch(Helper.processError);

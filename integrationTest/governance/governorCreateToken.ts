@@ -45,7 +45,7 @@ async function createTokenViaProposal(name: string, symbol: string) {
   );
 
   await governor.getProposalDetails(proposalId);
-  await governor.forVote(proposalId, clientsInfo.uiUserClient);
+  await governor.forVote(proposalId, 0, clientsInfo.uiUserClient);
   await governor.isQuorumReached(proposalId);
   await governor.isVoteSucceeded(proposalId);
   await governor.proposalVotes(proposalId);
@@ -78,7 +78,4 @@ async function runFactoryTest(token1: TokenId, token2: TokenId) {
 
 main()
   .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
+  .catch(Helper.processError);

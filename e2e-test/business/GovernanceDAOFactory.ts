@@ -29,17 +29,18 @@ const UPGRADE_GOD_TOKEN_HOLDER_FACTORY = "upgradeTokenHolderFactory";
 const GET_GOD_TOKEN_HOLDER_FACTORY_ADDRESS = "getTokenHolderFactoryAddress";
 
 export default class GovernanceDAOFactory extends Base {
-  initialize = async (
-    contractName: string,
-    client: Client = clientsInfo.operatorClient
-  ) => {
-    if (await this.isInitializationPending(contractName)) {
+  initialize = async (client: Client = clientsInfo.operatorClient) => {
+    if (await this.isInitializationPending()) {
       const proxyAdmin = clientsInfo.dexOwnerId.toSolidityAddress();
       const godHolderFactoryAddress = csDev.getContractWithProxy(
         csDev.godTokenHolderFactory
       ).transparentProxyAddress!;
-      const governorTokenDao = await deployment.deploy(csDev.governorTokenDao);
-      const governorTT = await deployment.deploy(csDev.governorTTContractName);
+      const deployedItems = await deployment.deployContracts([
+        csDev.governorTokenDao,
+        csDev.governorTTContractName,
+      ]);
+      const governorTokenDao = deployedItems.get(csDev.governorTokenDao);
+      const governorTT = deployedItems.get(csDev.governorTTContractName);
       const args = new ContractFunctionParameters()
         .addAddress(proxyAdmin)
         .addAddress(this.htsAddress)

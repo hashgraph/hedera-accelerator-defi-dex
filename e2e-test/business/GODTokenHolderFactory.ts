@@ -11,7 +11,7 @@ const GET_TOKEN_HOLDER = "getTokenHolder";
 
 export default class GODTokenHolderFactory extends Base {
   initialize = async (client: Client = clientsInfo.operatorClient) => {
-    if (await this.isInitializationPending("GODTokenHolderFactory")) {
+    if (await this.isInitializationPending()) {
       const godHolderLogic = await deployment.deploy("GodHolder");
       const proxyAdmin = clientsInfo.dexOwnerId.toSolidityAddress();
       const args = new ContractFunctionParameters()

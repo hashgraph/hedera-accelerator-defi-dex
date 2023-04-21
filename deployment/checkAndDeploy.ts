@@ -23,7 +23,7 @@ const upgradeGovernor = contractDevService.getContract(
 const governor = new Governor(upgradeGovernor.transparentProxyId!);
 
 async function main() {
-  const contractsToDeploy = contractMetadata.getAllChangedContractNames();
+  const contractsToDeploy = await contractMetadata.getAllChangedContractNames();
   console.log(`Eligible contracts for upgrade: [${contractsToDeploy}]\n`);
   for (const contractName of contractsToDeploy) {
     const oldVersion = contractUATService.getContractWithProxy(contractName);

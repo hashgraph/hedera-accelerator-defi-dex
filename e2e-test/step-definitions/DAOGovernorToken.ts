@@ -36,7 +36,6 @@ const daoFactoryContract = csDev.getContractWithProxy(
 );
 const proxyId = daoFactoryContract.transparentProxyId!;
 const daoFactory = new GovernanceDAOFactory(proxyId);
-const daoFactoryContractName = daoFactoryContract.name;
 
 const adminAddress: string = clientsInfo.operatorId.toSolidityAddress();
 
@@ -111,10 +110,7 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
 
   @given(/User initialize DAO factory contract/, undefined, 60000)
   public async initializeDAOFactory() {
-    await daoFactory.initialize(
-      daoFactoryContractName,
-      clientsInfo.operatorClient
-    );
+    await daoFactory.initialize(clientsInfo.operatorClient);
   }
 
   @when(

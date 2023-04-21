@@ -1,5 +1,6 @@
 import Base from "./Base";
 import Common from "./Common";
+import dex from "../../deployment/model/dex";
 
 import { clientsInfo } from "../../utils/ClientManagement";
 import {
@@ -16,10 +17,13 @@ const BALANCE_OF_VOTER = "balanceOfVoter";
 const CAN_USER_CLAIM_TOKENS = "canUserClaimTokens";
 const REVERT_TOKENS_FOR_VOTER = "revertTokensForVoter";
 const GRAB_TOKEN_FROM_USER = "grabTokensFromUser";
-
+const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
 export default class GodHolder extends Base {
-  initialize = async (client: Client, tokenAddress: string) => {
-    if (await this.isInitializationPending("GodHolder")) {
+  initialize = async (
+    client: Client = clientsInfo.operatorClient,
+    tokenAddress: string = GOD_TOKEN_ID.toSolidityAddress()
+  ) => {
+    if (await this.isInitializationPending()) {
       const args = new ContractFunctionParameters()
         .addAddress(this.htsAddress)
         .addAddress(tokenAddress);

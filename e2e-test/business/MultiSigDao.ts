@@ -38,7 +38,7 @@ export default class MultiSigDao extends BaseDao {
     client: Client = clientsInfo.operatorClient,
     threshold: number = owners.length
   ) {
-    if (await this.isInitializationPending(ContractService.MULTI_SIG)) {
+    if (await this.isInitializationPending()) {
       const deployedItems = await deployment.deployContracts([
         ContractService.SAFE,
         ContractService.SAFE_FACTORY,

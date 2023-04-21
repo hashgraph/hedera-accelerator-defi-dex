@@ -15,7 +15,7 @@ export async function main(_contractName: string) {
   }
   const contractName = _contractName.toLowerCase();
   console.log(`contract name value ${contractName}`);
-  const filePath = contractMetadata.getFilePath(contractName);
+  const filePath = await contractMetadata.getFilePath(contractName);
   console.log(
     `Deploying (${contractName}) contract, where file path is (${filePath})`
   );

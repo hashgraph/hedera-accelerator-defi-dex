@@ -1,13 +1,9 @@
 import dex from "../../deployment/model/dex";
 import Base from "./Base";
-import { clientsInfo } from "../../utils/ClientManagement";
-import {
-  Client,
-  TokenId,
-  ContractFunctionParameters,
-  Hbar,
-} from "@hashgraph/sdk";
 import BigNumber from "bignumber.js";
+
+import { clientsInfo } from "../../utils/ClientManagement";
+import { Client, TokenId, ContractFunctionParameters } from "@hashgraph/sdk";
 
 const NFT_TOKEN_ID = TokenId.fromString(dex.NFT_TOKEN_ID);
 const INITIALIZE = "initialize";
@@ -16,25 +12,23 @@ const REVERT_TOKENS_FOR_VOTER = "revertTokensForVoter";
 const CAN_USER_CLAIM_TOKEN = "canUserClaimTokens";
 
 export default class NFTHolder extends Base {
-  initialize = async (client: Client) => {
-    const args = new ContractFunctionParameters()
-      .addAddress(this.htsAddress)
-      .addAddress(NFT_TOKEN_ID.toSolidityAddress());
+  initialize = async (
+    client: Client = clientsInfo.operatorClient,
+    tokenAddress: string = NFT_TOKEN_ID.toSolidityAddress()
+  ) => {
+    if (await this.isInitializationPending()) {
+      const args = new ContractFunctionParameters()
+        .addAddress(this.htsAddress)
+        .addAddress(tokenAddress);
 
-    await this.execute(900000, INITIALIZE, client, args);
-    console.log(`- NFTHolder#${INITIALIZE}(): done\n`);
+      await this.execute(900000, INITIALIZE, client, args);
+      console.log(`- NFTHolder#${INITIALIZE}(): done\n`);
+      return;
+    }
+    console.log(`- NFTHolder#${INITIALIZE}(): already done\n`);
   };
 
-  initializeWithToken = async (client: Client, tokenAddress: string) => {
-    const args = new ContractFunctionParameters()
-      .addAddress(this.htsAddress)
-      .addAddress(tokenAddress);
-
-    await this.execute(900000, INITIALIZE, client, args);
-    console.log(`- NFTHolder#${INITIALIZE}(): done\n`);
-  };
-
-  checkAndClaimedNFTTokens = async (
+  checkAndClaimNFTTokens = async (
     client: Client = clientsInfo.operatorClient
   ) => {
     return (

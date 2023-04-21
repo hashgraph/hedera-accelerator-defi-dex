@@ -1,7 +1,9 @@
 import Common from "../e2e-test/business/Common";
 import LpToken from "../e2e-test/business/LpToken";
-import { ContractService } from "../deployment/service/ContractService";
+
+import { Helper } from "../utils/Helper";
 import { clientsInfo } from "../utils/ClientManagement";
+import { ContractService } from "../deployment/service/ContractService";
 
 const csDev = new ContractService();
 const lpContracts = [csDev.getContractWithProxy(csDev.lpTokenContractName)];
@@ -67,7 +69,4 @@ async function forSingleContract(contractId: string) {
 
 main()
   .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
+  .catch(Helper.processError);
