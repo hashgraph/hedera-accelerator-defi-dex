@@ -63,6 +63,30 @@ contract ERC20Mock is IERC20 {
         address to,
         uint256 amount
     ) external override returns (bool) {
+       return transferInternal(msg.sender, to, amount);
+    }
+
+    function name() external view override returns (string memory) {
+        return tokeName;
+    }
+
+    function symbol() external view override returns (string memory) {
+        return tokenSymbol;
+    }
+
+    function transferFrom(
+        address from,
+        address to,
+        uint256 amount
+    ) external override returns (bool) {
+        return transferInternal(from, to, amount);
+    }
+
+    function transferInternal(
+        address from,
+        address to,
+        uint256 amount
+    ) private returns(bool) {
         if (
             transferFailed ||
             (isFailTransferAfterCountEnabled && failTransferAfterCount == 0)
@@ -72,19 +96,11 @@ contract ERC20Mock is IERC20 {
             if (isFailTransferAfterCountEnabled) {
                 failTransferAfterCount -= 1;
             }
-            if (userBalances[msg.sender] >= amount) {
-                userBalances[msg.sender] -= amount;
+            if (userBalances[from] >= amount) {
+                userBalances[from] -= amount;
                 userBalances[to] += amount;
             }
             return true;
         }
-    }
-
-    function name() external view override returns (string memory) {
-        return tokeName;
-    }
-
-    function symbol() external view override returns (string memory) {
-        return tokenSymbol;
     }
 }
