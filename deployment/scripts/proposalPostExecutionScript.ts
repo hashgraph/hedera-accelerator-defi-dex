@@ -103,7 +103,7 @@ async function updateDirectProxy(
     ...oldVersionContract,
     id: logicId.toString(),
     address: logicId.toSolidityAddress(),
-    hash: contractMetadata.calculateHash(oldVersionContract.name),
+    hash: await contractMetadata.calculateHash(oldVersionContract.name),
     timestamp: new Date().toISOString(),
   };
   contractService.remove(logicId.toString());

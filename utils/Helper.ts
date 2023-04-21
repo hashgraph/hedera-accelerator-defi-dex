@@ -1,41 +1,66 @@
+import * as fs from "fs";
 import Web3 from "web3";
-import { getAllFilesSync } from "get-all-files";
-import platformPath from "path";
-import { ContractFunctionResult } from "@hashgraph/sdk";
 import inquirer from "inquirer";
+import ContractMetadata from "./ContractMetadata";
+
 import { execSync } from "child_process";
 import { BigNumber } from "bignumber.js";
-import * as fs from "fs";
+import { ContractFunctionResult, TransactionId } from "@hashgraph/sdk";
+import { MirrorNodeService } from "../utils/MirrorNodeService";
+import { ContractService } from "../deployment/service/ContractService";
 
 const web3 = new Web3();
+const csDev = new ContractService();
 
 export class Helper {
-  static extractFileName(path: string): string {
-    return platformPath.parse(path).name;
+  static async processError(apiError: any) {
+    console.log(apiError);
+    console.log("- Parsing error message ...");
+    try {
+      const txnIdFromError = Helper.parseTxnIdFromError(apiError);
+      const mns = MirrorNodeService.getInstance().enableLogs();
+      const info = await mns.getErrorInfo(txnIdFromError);
+      console.log("- Parsing done -> ", {
+        TxnId: txnIdFromError.toString(),
+        Link: `https://hashscan.io/testnet/transaction/${info.timestamp}`,
+        Message: info.message,
+      });
+    } catch (error) {
+      console.log("- Parsing failed.");
+    } finally {
+      process.exit(1);
+    }
   }
 
-  static getContractPathList(path: string) {
-    const info: {
-      compiledPaths: Array<string>;
-    } = {
-      compiledPaths: [],
-    };
-
-    // reading compiled path to get json files
-    try {
-      info.compiledPaths = getAllFilesSync(path)
-        .toArray()
-        .filter((path) => {
-          return (
-            path.includes(".sol") &&
-            !path.includes(".dbg") &&
-            path.endsWith(".json")
-          );
-        });
-    } catch (e) {
-      info.compiledPaths = [];
+  private static parseTxnIdFromError(error: any) {
+    if (error.message.includes("contained error status")) {
+      const txnIdInString = error.message
+        .split(" ")
+        .filter((item: string) => item.startsWith("0.0"))
+        .pop();
+      return TransactionId.fromString(txnIdInString);
     }
-    return info;
+    throw error;
+  }
+
+  static async readContractIdFromPrompt() {
+    const name: string = await Helper.prompt(
+      ContractMetadata.SUPPORTED_CONTRACTS_FOR_DEPLOYMENT,
+      "Please select which contract events you want to read?"
+    );
+    if (name === "exit") {
+      throw Error("nothing to execute");
+    }
+    const nameInLowerCase = name.toLowerCase();
+    const proxyContract = csDev.getContractWithProxy(nameInLowerCase);
+    if (proxyContract && proxyContract.transparentProxyId) {
+      return proxyContract.transparentProxyId;
+    }
+    const contract = csDev.getContract(nameInLowerCase);
+    if (contract && contract.id) {
+      return contract.id;
+    }
+    throw Error(`No details exist in json for '${name}'`);
   }
 
   /// This function is used to iterate over result of ContractFunctionResult which returning array
@@ -79,7 +104,7 @@ export class Helper {
     return details;
   };
 
-  async prompt(inputs: string[], userMessage: string) {
+  static async prompt(inputs: string[], userMessage: string) {
     return (
       await inquirer.prompt([
         {

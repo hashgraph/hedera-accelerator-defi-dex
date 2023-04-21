@@ -24,8 +24,8 @@ contract MultiSigDAO is BaseDAO {
     }
 
     // HederaGnosisSafe#transferTokenViaSafe(address token, address receiver, uint256 amount)
-    // 0xbb34db5a - keccack("transferTokenViaSafe(address,address,uint256)")
-    bytes4 private constant TRANSFER_TOKEN_FROM_SAFE_SELECTOR = 0xbb34db5a;
+    bytes4 private constant TRANSFER_TOKEN_FROM_SAFE_SELECTOR =
+        bytes4(keccak256("transferTokenViaSafe(address,address,uint256)"));
 
     IBaseHTS private baseHTS;
     HederaGnosisSafe private hederaGnosisSafe;

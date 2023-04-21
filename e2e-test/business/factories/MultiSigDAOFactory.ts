@@ -18,7 +18,7 @@ const UPGRADE_SAFE_FACTORY_LOGIC_IMPL = "upgradeSafeFactoryAddress";
 
 export default class MultiSigDAOFactory extends Base {
   initialize = async (client: Client = clientsInfo.operatorClient) => {
-    if (await this.isInitializationPending(ContractService.MULTI_SIG_FACTORY)) {
+    if (await this.isInitializationPending()) {
       const proxyAdmin = clientsInfo.dexOwnerId.toSolidityAddress();
       const deployedItems = await deployment.deployContracts([
         ContractService.SAFE_FACTORY,

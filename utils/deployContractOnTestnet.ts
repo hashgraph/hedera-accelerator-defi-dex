@@ -146,9 +146,9 @@ export class Deployment {
     client: Client = clientsInfo.operatorClient
   ) => {
     console.log(`- Deployment#deploy(): ${contractName} deploying...\n`);
-    const contractABI = this.contractMetadata.getContractABI(contractName);
+    const info = await this.contractMetadata.getContractInfo(contractName);
     const txn = new ContractCreateFlow()
-      .setBytecode(contractABI.bytecode)
+      .setBytecode(info.artifact.bytecode)
       .setGas(2000000)
       .setAdminKey(adminKey);
 
@@ -236,7 +236,7 @@ export class Deployment {
       contractId?.toString()!,
       contractId?.toSolidityAddress()!,
       compiledContract.contractName,
-      this.contractMetadata.calculateHash(compiledContract.contractName)
+      await this.contractMetadata.calculateHash(compiledContract.contractName)
     );
 
     const contractEvmAddress = "0x" + contractId?.toSolidityAddress()!;

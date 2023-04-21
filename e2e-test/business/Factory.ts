@@ -22,25 +22,17 @@ export const METHOD_PAIR_IMPL = "upgradePairImplementation";
 export const METHOD_LP_IMPL = "upgradeLpTokenImplementation";
 
 export default class Factory extends Base {
-  setupFactory = async (
-    adminAddress: string = clientsInfo.dexOwnerId.toSolidityAddress(),
-    client: Client = clientsInfo.operatorClient
-  ) => {
-    try {
-      const csDev = new ContractService();
+  setupFactory = async (client: Client = clientsInfo.operatorClient) => {
+    if (await this.isInitializationPending()) {
       const args = new ContractFunctionParameters()
         .addAddress(this.htsAddress)
-        .addAddress(adminAddress)
-        .addAddress(
-          csDev.getContract(csDev.configuration).transparentProxyAddress!
-        );
-      await this.execute(9000000, SETUP_FACTORY, client, args, undefined);
+        .addAddress(clientsInfo.dexOwnerId.toSolidityAddress())
+        .addAddress(this.configuration);
+      await this.execute(9_000_000, SETUP_FACTORY, client, args);
       console.log(`- Factory#${SETUP_FACTORY}(): done\n`);
-    } catch (error) {
-      console.error(`- Factory#${SETUP_FACTORY}(): error`, error, "\n");
-      return false;
+      return;
     }
-    return true;
+    console.log(`- Factory#${SETUP_FACTORY}(): already done\n`);
   };
 
   createPair = async (

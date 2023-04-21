@@ -21,12 +21,16 @@ export default class LpToken extends Base {
     tokenSymbol: string,
     client: Client = clientsInfo.operatorClient
   ) => {
-    const args = new ContractFunctionParameters()
-      .addAddress(this.htsAddress)
-      .addString(tokenSymbol)
-      .addString(tokenName);
-    await this.execute(500000, INITIALIZE, client, args, undefined, 60);
-    console.log(`- LpToken#${INITIALIZE}(): done\n`);
+    if (await this.isInitializationPending()) {
+      const args = new ContractFunctionParameters()
+        .addAddress(this.htsAddress)
+        .addString(tokenSymbol)
+        .addString(tokenName);
+      await this.execute(5_00_000, INITIALIZE, client, args, undefined, 60);
+      console.log(`- LpToken#${INITIALIZE}(): done\n`);
+      return;
+    }
+    console.log(`- LpToken#${INITIALIZE}(): already done\n`);
   };
 
   getLpTokenAddress = async (client: Client = clientsInfo.operatorClient) => {

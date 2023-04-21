@@ -1,6 +1,7 @@
 import dex from "../../deployment/model/dex";
 import GODTokenHolderFactory from "../../e2e-test/business/GODTokenHolderFactory";
 
+import { Helper } from "../../utils/Helper";
 import { TokenId } from "@hashgraph/sdk";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { ContractService } from "../../deployment/service/ContractService";
@@ -32,7 +33,4 @@ async function main() {
 
 main()
   .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
+  .catch(Helper.processError);
