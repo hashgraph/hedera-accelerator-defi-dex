@@ -287,6 +287,7 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
       await governorTokenTransfer.vote(
         proposalId,
         voteVal,
+        0,
         clientsInfo.operatorClient
       );
     } catch (e: any) {

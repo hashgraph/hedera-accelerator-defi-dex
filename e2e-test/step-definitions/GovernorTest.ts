@@ -196,7 +196,7 @@ export class GovernorSteps extends CommonSteps {
   public async voteToProposal(vote: string): Promise<void> {
     try {
       const voteVal = await governor.getProposalVoteNumeric(vote);
-      await governor.vote(proposalID, voteVal, clientsInfo.operatorClient);
+      await governor.vote(proposalID, voteVal, 0, clientsInfo.operatorClient);
     } catch (e: any) {
       console.log(
         "Something went wrong while voting to proposal now cancelling the proposal"
