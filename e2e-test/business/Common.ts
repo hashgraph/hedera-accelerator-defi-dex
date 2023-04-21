@@ -72,7 +72,7 @@ export default class Common {
     const receipt = await txResponse.getReceipt(client);
     const transactionStatus = receipt.status;
     console.log(
-      `- Common#setTokenAllowance(): status = ${transactionStatus.toString()}, tokenId = ${tokenId.toString()},spenderAccountId =  ${spenderAccountId.toString()}, ownerAccount =  ${ownerAccount.toString()}\n`
+      `- Common#setTokenAllowance(): status = ${transactionStatus.toString()}, tokenId = ${tokenId.toString()},spenderAccountId =  ${spenderAccountId.toString()}, ownerAccount =  ${ownerAccount.toString()} amount = ${amount}\n`
     );
   };
 

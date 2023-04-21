@@ -1391,11 +1391,11 @@ describe("All Tests", function () {
     });
 
     it("verify removeLPTokenFor call should failed during transfer-token call", async function () {
-      const { mockBaseHTS, lpTokenCont, signers } = await loadFixture(
+      const { mockBaseHTS, lpTokenCont, signers, lpToken } = await loadFixture(
         deployFixtureTokenTest
       );
       await lpTokenCont.allotLPTokenFor(10, 10, signers[0].address);
-      await mockBaseHTS.setPassTransactionCount(1);
+      await lpToken.setTransaferFailed(true);
       await expect(
         lpTokenCont.removeLPTokenFor(5, signers[0].address)
       ).to.revertedWith("LPToken: token transfer failed to contract.");
@@ -1406,7 +1406,7 @@ describe("All Tests", function () {
         deployFixtureTokenTest
       );
       await lpTokenCont.allotLPTokenFor(10, 10, signers[0].address);
-      await mockBaseHTS.setPassTransactionCount(2);
+      await mockBaseHTS.setPassTransactionCount(1);
       await expect(
         lpTokenCont.removeLPTokenFor(5, signers[0].address)
       ).to.revertedWith("LP token burn failed.");

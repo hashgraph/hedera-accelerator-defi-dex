@@ -26,4 +26,9 @@ interface ILPToken {
     function getLpTokenAddress() external view returns (address);
 
     function getAllLPTokenCount() external view returns (int256);
+
+    function lpTokenCountForGivenTokensQty(
+        int256 tokenAQuantity,
+        int256 tokenBQuantity
+    ) external view returns (int256);
 }

@@ -239,5 +239,14 @@
     "hash": "5e8013f60feae6cff64df65761b96ec5",
     "transparentProxyAddress": "0x0000000000000000000000000000000000418a05",
     "transparentProxyId": "0.0.4295173"
+  },
+  {
+    "name": "lptoken",
+    "id": "0.0.4317320",
+    "address": "0x000000000000000000000000000000000041e088",
+    "timestamp": "2023-04-21T10:55:27.077Z",
+    "hash": "832f695d2e1a95aff04966966f1bffdb",
+    "transparentProxyAddress": "0x000000000000000000000000000000000041e0d4",
+    "transparentProxyId": "0.0.4317396"
   }
 ]
