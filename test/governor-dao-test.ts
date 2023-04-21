@@ -2,6 +2,7 @@ import { expect } from "chai";
 import { BigNumber } from "ethers";
 import { TestHelper } from "./TestHelper";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { Events, GovernanceDAOCreatedEventLog } from "./types";
 
 describe("GovernanceTokenDAO tests", function () {
   const QUORUM_THRESHOLD = 5;
@@ -220,9 +221,12 @@ describe("GovernanceTokenDAO tests", function () {
         false
       );
 
-      const lastEvent = (await txn.wait()).events.pop();
-      expect(lastEvent.event).to.be.equal("PublicDaoCreated");
-      expect(lastEvent.args.daoAddress).not.to.be.equal("0x0");
+      const { args } = await TestHelper.readLastEvent(txn);
+      const argsWithNames =
+        TestHelper.getEventArgumentsByName<GovernanceDAOCreatedEventLog>(args);
+      const { daoAddress, isPrivate } = argsWithNames.daoDetails;
+      expect(isPrivate).to.be.equal(false);
+      expect(daoAddress).not.to.be.equal("0x0");
 
       const updatedList = await governorDAOFactory.getDAOs();
       expect(updatedList.length).to.be.equal(1);
@@ -247,9 +251,12 @@ describe("GovernanceTokenDAO tests", function () {
         true
       );
 
-      const lastEvent = (await txn.wait()).events.pop();
-      expect(lastEvent.event).to.be.equal("PrivateDaoCreated");
-      expect(lastEvent.args.daoAddress).not.to.be.equal("0x0");
+      const { args } = await TestHelper.readLastEvent(txn);
+      const argsWithNames =
+        TestHelper.getEventArgumentsByName<GovernanceDAOCreatedEventLog>(args);
+      const { daoAddress, isPrivate } = argsWithNames.daoDetails;
+      expect(isPrivate).to.be.equal(true);
+      expect(daoAddress).not.to.be.equal("0x0");
 
       const updatedList = await governorDAOFactory.getDAOs();
       expect(updatedList.length).to.be.equal(0);

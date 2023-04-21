@@ -1,9 +1,10 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { Contract } from "ethers";
+import { Contract, BigNumber } from "ethers";
 import { TestHelper } from "./TestHelper";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { Events, MultiSigDAOCreatedEventLog } from "./types";
 
 describe("MultiSig tests", function () {
   const INVALID_TXN_HASH = ethers.utils.formatBytes32String("INVALID_TXN_HASH");
@@ -424,6 +425,46 @@ describe("MultiSig tests", function () {
         .withArgs("BaseDAO: url is empty");
     });
 
+    it("Verify createDAO should emit MultiSigDAOCreated event when a DAO is created", async function () {
+      const { multiSigDAOFactoryInstance, doaSignersAddresses, daoAdminOne } =
+        await loadFixture(deployFixture);
+
+      const txn = await multiSigDAOFactoryInstance.createDAO(
+        daoAdminOne.address,
+        DAO_NAME,
+        LOGO_URL,
+        doaSignersAddresses,
+        doaSignersAddresses.length,
+        false
+      );
+
+      const { name, args } = await TestHelper.readLastEvent(txn);
+      expect(name).to.be.equal(Events.MultiSigDAOCreated);
+
+      const argsWithNames =
+        TestHelper.getEventArgumentsByName<MultiSigDAOCreatedEventLog>(args, [
+          "owners",
+        ]);
+
+      expect(argsWithNames).to.include.keys(["daoAddress", "safeAddress"]);
+
+      const { daoAddress, safeAddress } = argsWithNames;
+      expect(daoAddress).to.have.lengthOf.greaterThan(0);
+      expect(safeAddress).to.have.lengthOf.greaterThan(0);
+
+      expect(argsWithNames).to.deep.include({
+        admin: daoAdminOne.address,
+        name: "DAO_NAME",
+        logoUrl: "LOGO_URL",
+        owners: [
+          "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65",
+          "0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc",
+        ],
+        threshold: BigNumber.from(2),
+        isPrivate: false,
+      });
+    });
+
     it("Verify createDAO should add new dao into list when the dao is public", async function () {
       const { multiSigDAOFactoryInstance, doaSignersAddresses, daoAdminOne } =
         await loadFixture(deployFixture);
@@ -440,9 +481,11 @@ describe("MultiSig tests", function () {
         false
       );
 
-      const { name, args } = await TestHelper.readLastEvent(txn);
-      expect(name).to.be.equal("PublicDaoCreated");
-      expect(args.daoAddress).not.to.be.equal(TestHelper.ZERO_ADDRESS);
+      const { args } = await TestHelper.readLastEvent(txn);
+      const argsWithNames =
+        TestHelper.getEventArgumentsByName<MultiSigDAOCreatedEventLog>(args);
+      const { isPrivate } = argsWithNames;
+      expect(isPrivate).to.be.equal(false);
 
       const updatedList = await multiSigDAOFactoryInstance.getDAOs();
       expect(updatedList.length).to.be.equal(1);
@@ -464,9 +507,11 @@ describe("MultiSig tests", function () {
         true
       );
 
-      const { name, args } = await TestHelper.readLastEvent(txn);
-      expect(name).to.be.equal("PrivateDaoCreated");
-      expect(args.daoAddress).not.to.be.equal(TestHelper.ZERO_ADDRESS);
+      const { args } = await TestHelper.readLastEvent(txn);
+      const argsWithNames =
+        TestHelper.getEventArgumentsByName<MultiSigDAOCreatedEventLog>(args);
+      const { isPrivate } = argsWithNames;
+      expect(isPrivate).to.be.equal(true);
 
       const updatedList = await multiSigDAOFactoryInstance.getDAOs();
       expect(updatedList.length).to.be.equal(0);

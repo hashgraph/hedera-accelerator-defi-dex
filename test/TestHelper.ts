@@ -1,5 +1,7 @@
-import { Contract } from "ethers";
+import { Contract, Event } from "ethers";
+import { Result } from "ethers/lib/utils";
 import { ethers, upgrades } from "hardhat";
+import { isIterable } from "./utils";
 
 export class TestHelper {
   static ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
@@ -16,9 +18,11 @@ export class TestHelper {
     return targetAmount * 1e8;
   }
 
-  static async readLastEvent(transaction: any) {
-    const lastEvent = (await transaction.wait()).events.pop();
-    return { name: lastEvent.event, args: lastEvent.args };
+  static async readLastEvent(
+    transaction: any
+  ): Promise<{ name: string; args: Result }> {
+    const lastEvent: Event = (await transaction.wait()).events.pop();
+    return { name: lastEvent.event ?? "", args: lastEvent.args ?? [] };
   }
 
   static getAccountBalance = async (tokenCont: Contract, account: string) => {
@@ -86,6 +90,52 @@ export class TestHelper {
 
   static async getContract(name: string, address: string) {
     return ethers.getContractAt(name, address);
+  }
+
+  /**
+   * Returns the [named key]:value pairs in a Result object. String keys
+   * are assumed to be the named arguments of an Event.
+   * @remarks
+   * The ethers Result object is an associative array that contains both number indexed
+   * and string named key:value pairs.
+   * @example Result args
+   * ```typescript
+   * [
+   *  "0x8aCd85898458400f7Db866d53FCFF6f0D49741FF"
+   *  daoAddress: "0x8aCd85898458400f7Db866d53FCFF6f0D49741FF",
+   * ]
+   * ```
+   * getEventArgumentsByName(args)
+   * ```typescript
+   * {
+   *  daoAddress: "0x8aCd85898458400f7Db866d53FCFF6f0D49741FF"
+   * }
+   * ```
+   * @param args - The Result of an emitted Event.
+   * @param excludedKeys - An optional array of keys to exclude from the Result object filtering.
+   * This is typically useful for differentiating between a value that is an Array and
+   * a Result (associative array created by an emitted event).
+   * @returns A Record containing the [named key]:value pairs in a Result.
+   */
+  static getEventArgumentsByName<EventLog extends Record<string, any>>(
+    args: Result,
+    excludedKeys: string[] = []
+  ): EventLog {
+    const namedArguments: Record<string, any> = {} as EventLog;
+    for (const key in args) {
+      const isNamedArgument = Number.isNaN(Number(key));
+      if (isNamedArgument) {
+        const arg = args[key];
+        const shouldFilterArg =
+          isIterable(arg) &&
+          typeof arg !== "string" &&
+          !excludedKeys.includes(key);
+        namedArguments[key] = shouldFilterArg
+          ? TestHelper.getEventArgumentsByName<EventLog>(arg, excludedKeys)
+          : arg;
+      }
+    }
+    return namedArguments as EventLog;
   }
 
   private static async deployInternally(

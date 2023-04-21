@@ -2,6 +2,7 @@ import { expect } from "chai";
 import { BigNumber } from "ethers";
 import { TestHelper } from "./TestHelper";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { Events, NFTDAOCreatedEventLog } from "./types";
 
 describe("NFTDAOFactory contract tests", function () {
   const zeroAddress = "0x0000000000000000000000000000000000000000";
@@ -178,6 +179,46 @@ describe("NFTDAOFactory contract tests", function () {
       .withArgs("DAOFactory: voting period is zero");
   });
 
+  it("Verify createDAO should emit NFTDAOCreated event when a DAO is created", async function () {
+    const { governorDAOFactoryInstance, daoAdminOne, token } =
+      await loadFixture(deployFixture);
+
+    const txn = await governorDAOFactoryInstance.createDAO(
+      daoAdminOne.address,
+      DAO_NAME,
+      LOGO_URL,
+      token.address,
+      BigNumber.from(500),
+      BigNumber.from(0),
+      BigNumber.from(100),
+      false
+    );
+
+    const { name, args } = await TestHelper.readLastEvent(txn);
+    expect(name).to.be.equal(Events.NFTDAOCreated);
+
+    const argsWithName =
+      TestHelper.getEventArgumentsByName<NFTDAOCreatedEventLog>(args);
+    const { daoDetails } = argsWithName;
+    expect(daoDetails).to.have.property("daoAddress");
+
+    const { daoAddress } = daoDetails;
+    expect(daoAddress).to.have.lengthOf.greaterThan(0);
+
+    expect(daoDetails).to.deep.include({
+      admin: daoAdminOne.address,
+      name: "DAO_NAME",
+      logoUrl: "LOGO_URL",
+      tokenAddress: token.address,
+      votingRules: {
+        quorumThreshold: BigNumber.from(500),
+        votingDelay: BigNumber.from(0),
+        votingPeriod: BigNumber.from(100),
+      },
+      isPrivate: false,
+    });
+  });
+
   it("Verify createDAO should add new dao into list when the dao is public", async function () {
     const { governorDAOFactoryInstance, daoAdminOne, token } =
       await loadFixture(deployFixture);
@@ -196,9 +237,12 @@ describe("NFTDAOFactory contract tests", function () {
       false
     );
 
-    const lastEvent = (await txn.wait()).events.pop();
-    expect(lastEvent.event).to.be.equal("PublicDaoCreated");
-    expect(lastEvent.args.daoAddress).not.to.be.equal("0x0");
+    const { args } = await TestHelper.readLastEvent(txn);
+    const argsWithNames =
+      TestHelper.getEventArgumentsByName<NFTDAOCreatedEventLog>(args);
+    const { daoAddress, isPrivate } = argsWithNames.daoDetails;
+    expect(isPrivate).to.be.equal(false);
+    expect(daoAddress).not.to.be.equal("0x0");
 
     const updatedList = await governorDAOFactoryInstance.getDAOs();
     expect(updatedList.length).to.be.equal(1);
@@ -222,9 +266,12 @@ describe("NFTDAOFactory contract tests", function () {
       true
     );
 
-    const lastEvent = (await txn.wait()).events.pop();
-    expect(lastEvent.event).to.be.equal("PrivateDaoCreated");
-    expect(lastEvent.args.daoAddress).not.to.be.equal("0x0");
+    const { args } = await TestHelper.readLastEvent(txn);
+    const argsWithNames =
+      TestHelper.getEventArgumentsByName<NFTDAOCreatedEventLog>(args);
+    const { daoAddress, isPrivate } = argsWithNames.daoDetails;
+    expect(isPrivate).to.be.equal(true);
+    expect(daoAddress).not.to.be.equal("0x0");
 
     const updatedList = await governorDAOFactoryInstance.getDAOs();
     expect(updatedList.length).to.be.equal(0);
