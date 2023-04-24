@@ -239,5 +239,32 @@
     "hash": "832f695d2e1a95aff04966966f1bffdb",
     "transparentProxyAddress": "0x000000000000000000000000000000000041e0d4",
     "transparentProxyId": "0.0.4317396"
+  },
+  {
+    "name": "godtokenholderfactory",
+    "id": "0.0.4381084",
+    "address": "0x000000000000000000000000000000000042d99c",
+    "timestamp": "2023-04-24T13:39:55.689Z",
+    "hash": "30d5e2977c6296934fa82739b33fe912",
+    "transparentProxyAddress": "0x000000000000000000000000000000000042d9a6",
+    "transparentProxyId": "0.0.4381094"
+  },
+  {
+    "name": "multisigdaofactory",
+    "id": "0.0.4381090",
+    "address": "0x000000000000000000000000000000000042d9a2",
+    "timestamp": "2023-04-24T13:39:58.683Z",
+    "hash": "c3ecd95f30ed955b2dcfebd9982a4d80",
+    "transparentProxyAddress": "0x000000000000000000000000000000000042d9a8",
+    "transparentProxyId": "0.0.4381096"
+  },
+  {
+    "name": "governancedaofactory",
+    "id": "0.0.4381089",
+    "address": "0x000000000000000000000000000000000042d9a1",
+    "timestamp": "2023-04-24T13:39:58.807Z",
+    "hash": "66a7ddd9cc3475d3f866cff82ed53ead",
+    "transparentProxyAddress": "0x000000000000000000000000000000000042d9a9",
+    "transparentProxyId": "0.0.4381097"
   }
 ]
