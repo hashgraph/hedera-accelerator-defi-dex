@@ -221,7 +221,7 @@ describe("GovernanceTokenDAO tests", function () {
       );
 
       const lastEvent = (await txn.wait()).events.pop();
-      expect(lastEvent.event).to.be.equal("PublicDaoCreated");
+      expect(lastEvent.event).to.be.equal("DAOCreated");
       expect(lastEvent.args.daoAddress).not.to.be.equal("0x0");
 
       const updatedList = await governorDAOFactory.getDAOs();
@@ -248,7 +248,7 @@ describe("GovernanceTokenDAO tests", function () {
       );
 
       const lastEvent = (await txn.wait()).events.pop();
-      expect(lastEvent.event).to.be.equal("PrivateDaoCreated");
+      expect(lastEvent.event).to.be.equal("DAOCreated");
       expect(lastEvent.args.daoAddress).not.to.be.equal("0x0");
 
       const updatedList = await governorDAOFactory.getDAOs();

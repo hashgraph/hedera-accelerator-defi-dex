@@ -14,8 +14,16 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 contract MultisigDAOFactory is OwnableUpgradeable, IEvents, IErrors {
-    event PublicDaoCreated(address daoAddress);
-    event PrivateDaoCreated(address daoAddress);
+    event DAOCreated(
+        address daoAddress,
+        address safeAddress,
+        address admin,
+        string name,
+        string logoUrl,
+        address[] owners,
+        uint256 threshold,
+        bool isPrivate
+    );
 
     error NotAdmin(string message);
 
@@ -95,12 +103,19 @@ contract MultisigDAOFactory is OwnableUpgradeable, IEvents, IErrors {
             _logoUrl,
             hederaGnosisSafe
         );
-        if (_isPrivate) {
-            emit PrivateDaoCreated(createdDAOAddress);
-        } else {
+        if (!_isPrivate) {
             daos.push(createdDAOAddress);
-            emit PublicDaoCreated(createdDAOAddress);
         }
+        emit DAOCreated(
+            createdDAOAddress,
+            address(hederaGnosisSafe),
+            _admin,
+            _name,
+            _logoUrl,
+            _owners,
+            _threshold,
+            _isPrivate
+        );
         return createdDAOAddress;
     }
 
