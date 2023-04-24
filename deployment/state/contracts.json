@@ -178,15 +178,6 @@
     "transparentProxyId": "0.0.4260871"
   },
   {
-    "name": "basehts",
-    "id": "0.0.4260960",
-    "address": "0x0000000000000000000000000000000000410460",
-    "timestamp": "2023-04-19T09:35:14.967Z",
-    "hash": "a1b131b18cc9d9f149b4d297448a7ea5",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000410465",
-    "transparentProxyId": "0.0.4260965"
-  },
-  {
     "name": "governortransfertoken",
     "id": "0.0.4262790",
     "address": "0x0000000000000000000000000000000000410b86",

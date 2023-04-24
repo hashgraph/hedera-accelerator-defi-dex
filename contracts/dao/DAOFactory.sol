@@ -14,8 +14,17 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 contract DAOFactory is OwnableUpgradeable, IEvents, IErrors {
-    event PublicDaoCreated(address daoAddress);
-    event PrivateDaoCreated(address daoAddress);
+    event DAOCreated(
+        address daoAddress,
+        address admin,
+        string name,
+        string logoUrl,
+        address tokenAddress,
+        uint256 quorumThreshold,
+        uint256 votingDelay,
+        uint256 votingPeriod,
+        bool isPrivate
+    );
 
     error NotAdmin(string message);
 
@@ -145,12 +154,20 @@ contract DAOFactory is OwnableUpgradeable, IEvents, IErrors {
             _logoUrl,
             tokenTransfer
         );
-        if (_isPrivate) {
-            emit PrivateDaoCreated(createdDAOAddress);
-        } else {
+        if (!_isPrivate) {
             daos.push(createdDAOAddress);
-            emit PublicDaoCreated(createdDAOAddress);
         }
+        emit DAOCreated(
+            createdDAOAddress,
+            _admin,
+            _name,
+            _logoUrl,
+            address(_tokenAddress),
+            _quorumThreshold,
+            _votingDelay,
+            _votingPeriod,
+            _isPrivate
+        );
         return createdDAOAddress;
     }
 

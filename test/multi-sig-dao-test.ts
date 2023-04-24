@@ -441,7 +441,7 @@ describe("MultiSig tests", function () {
       );
 
       const { name, args } = await TestHelper.readLastEvent(txn);
-      expect(name).to.be.equal("PublicDaoCreated");
+      expect(name).to.be.equal("DAOCreated");
       expect(args.daoAddress).not.to.be.equal(TestHelper.ZERO_ADDRESS);
 
       const updatedList = await multiSigDAOFactoryInstance.getDAOs();
@@ -465,7 +465,7 @@ describe("MultiSig tests", function () {
       );
 
       const { name, args } = await TestHelper.readLastEvent(txn);
-      expect(name).to.be.equal("PrivateDaoCreated");
+      expect(name).to.be.equal("DAOCreated");
       expect(args.daoAddress).not.to.be.equal(TestHelper.ZERO_ADDRESS);
 
       const updatedList = await multiSigDAOFactoryInstance.getDAOs();
