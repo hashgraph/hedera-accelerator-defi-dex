@@ -52,5 +52,95 @@
     "hash": "012187be25f102dddf3432b0f74162c8",
     "transparentProxyAddress": "0x00000000000000000000000000000000003b9933",
     "transparentProxyId": "0.0.3905843"
+  },
+  {
+    "name": "godholder",
+    "id": "0.0.4393105",
+    "address": "0x0000000000000000000000000000000000430891",
+    "timestamp": "2023-04-25T11:31:19.667Z",
+    "hash": "8a502a0fec248e3a9c96a80a53aa371a",
+    "transparentProxyAddress": "0x00000000000000000000000000000000004308a6",
+    "transparentProxyId": "0.0.4393126"
+  },
+  {
+    "name": "nftholder",
+    "id": "0.0.4393104",
+    "address": "0x0000000000000000000000000000000000430890",
+    "timestamp": "2023-04-25T11:31:19.772Z",
+    "hash": "11f99c62d0adec89c59edec4bcedbfbf",
+    "transparentProxyAddress": "0x00000000000000000000000000000000004308a8",
+    "transparentProxyId": "0.0.4393128"
+  },
+  {
+    "name": "governortokendao",
+    "id": "0.0.4393111",
+    "address": "0x0000000000000000000000000000000000430897",
+    "timestamp": "2023-04-25T11:31:21.370Z",
+    "hash": "f593b0e59b300ec6b9dc0011a741e0ce",
+    "transparentProxyAddress": "0x00000000000000000000000000000000004308ab",
+    "transparentProxyId": "0.0.4393131"
+  },
+  {
+    "name": "multisigdaofactory",
+    "id": "0.0.4393116",
+    "address": "0x000000000000000000000000000000000043089c",
+    "timestamp": "2023-04-25T11:31:22.947Z",
+    "hash": "0d2c1bb52412999469469482b37afbea",
+    "transparentProxyAddress": "0x00000000000000000000000000000000004308ae",
+    "transparentProxyId": "0.0.4393134"
+  },
+  {
+    "name": "nftdaofactory",
+    "id": "0.0.4393119",
+    "address": "0x000000000000000000000000000000000043089f",
+    "timestamp": "2023-04-25T11:31:23.790Z",
+    "hash": "ae29fcbdb639bdc3a1077c1beb9a059a",
+    "transparentProxyAddress": "0x00000000000000000000000000000000004308b1",
+    "transparentProxyId": "0.0.4393137"
+  },
+  {
+    "name": "governancedaofactory",
+    "id": "0.0.4393118",
+    "address": "0x000000000000000000000000000000000043089e",
+    "timestamp": "2023-04-25T11:31:24.015Z",
+    "hash": "66a7ddd9cc3475d3f866cff82ed53ead",
+    "transparentProxyAddress": "0x00000000000000000000000000000000004308b2",
+    "transparentProxyId": "0.0.4393138"
+  },
+  {
+    "name": "governortextproposal",
+    "id": "0.0.4393136",
+    "address": "0x00000000000000000000000000000000004308b0",
+    "timestamp": "2023-04-25T11:31:30.184Z",
+    "hash": "4e8a7f7c662b00bff11d054616b28dd5",
+    "transparentProxyAddress": "0x00000000000000000000000000000000004308c0",
+    "transparentProxyId": "0.0.4393152"
+  },
+  {
+    "name": "governorupgrade",
+    "id": "0.0.4393141",
+    "address": "0x00000000000000000000000000000000004308b5",
+    "timestamp": "2023-04-25T11:31:31.048Z",
+    "hash": "363a1c4d6ea10ef2fa21af5d8a2118f6",
+    "transparentProxyAddress": "0x00000000000000000000000000000000004308c1",
+    "transparentProxyId": "0.0.4393153"
+  },
+  {
+    "name": "governortransfertoken",
+    "id": "0.0.4393140",
+    "address": "0x00000000000000000000000000000000004308b4",
+    "timestamp": "2023-04-25T11:31:31.695Z",
+    "hash": "750b668156fc039be776eff921a3c1da",
+    "transparentProxyAddress": "0x00000000000000000000000000000000004308c2",
+    "transparentProxyId": "0.0.4393154"
+  },
+  {
+    "name": "governortokencreate",
+    "id": "0.0.4393150",
+    "address": "0x00000000000000000000000000000000004308be",
+    "timestamp": "2023-04-25T11:31:34.130Z",
+    "hash": "e366ef07885d0ef60345fbee56b2eb16",
+    "transparentProxyAddress": "0x00000000000000000000000000000000004308c3",
+    "transparentProxyId": "0.0.4393155"
   }
 ]
