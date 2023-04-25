@@ -7,7 +7,7 @@ import ClientManagement from "../../utils/ClientManagement";
 
 import { expect } from "chai";
 import { binding, given, then, when } from "cucumber-tsflow";
-import { TokenId } from "@hashgraph/sdk";
+import { TokenId, ContractId, AccountId } from "@hashgraph/sdk";
 import { BigNumber } from "bignumber.js";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { ContractService } from "../../deployment/service/ContractService";
@@ -33,7 +33,7 @@ const DEFAULT_QUORUM_THRESHOLD_IN_BSP = 1;
 const DEFAULT_VOTING_DELAY = 2;
 const DEFAULT_VOTING_PERIOD = 4;
 
-let proposalID: string;
+let proposalId: string;
 let msg: string;
 let balance: Long;
 let tokens: BigNumber;
@@ -55,13 +55,10 @@ export class GovernorSteps extends CommonSteps {
     console.log("contractId :", tokenTransferProxyId);
     console.log("operatorId :", clientsInfo.operatorId.toString());
     console.log("treasureId :", clientsInfo.treasureId.toString());
-
-    await governor.initialize(
+    await this.initializeGovernorContract(
+      governor,
       godHolder,
-      clientsInfo.operatorClient,
-      DEFAULT_QUORUM_THRESHOLD_IN_BSP,
-      DEFAULT_VOTING_DELAY,
-      DEFAULT_VOTING_PERIOD
+      clientsInfo.operatorClient
     );
   }
 
@@ -76,7 +73,7 @@ export class GovernorSteps extends CommonSteps {
     link: string,
     tokenAmount: number
   ): Promise<void> {
-    proposalID = await this.createProposalInternal(
+    proposalId = await this.createProposalInternal(
       title,
       description,
       link,
@@ -92,7 +89,7 @@ export class GovernorSteps extends CommonSteps {
   ): Promise<string> {
     const tokenQty = tokenAmount * 100000000;
     tokens = new BigNumber(tokenQty);
-    proposalID = await governor.createTokenTransferProposal(
+    proposalId = await governor.createTokenTransferProposal(
       title,
       clientsInfo.operatorId.toSolidityAddress(),
       clientsInfo.treasureId.toSolidityAddress(),
@@ -104,7 +101,7 @@ export class GovernorSteps extends CommonSteps {
       clientsInfo.operatorId.toSolidityAddress()
     );
 
-    return proposalID;
+    return proposalId;
   }
 
   @when(
@@ -120,7 +117,7 @@ export class GovernorSteps extends CommonSteps {
   ): Promise<void> {
     try {
       const tokenQty = tokenAmount * 100000000;
-      proposalID = await governor.createTokenTransferProposal(
+      proposalId = await governor.createTokenTransferProposal(
         title,
         clientsInfo.operatorId.toSolidityAddress(),
         clientsInfo.treasureId.toSolidityAddress(),
@@ -138,26 +135,13 @@ export class GovernorSteps extends CommonSteps {
 
   @then(/User verify that proposal state is "([^"]*)"/, undefined, 30000)
   public async verifyProposalState(proposalState: string): Promise<void> {
-    try {
-      const currentState = await governor.state(
-        proposalID,
-        clientsInfo.operatorClient
-      );
-      const proposalStateNumeric = await governor.getProposalNumericState(
-        proposalState
-      );
-      expect(Number(currentState)).to.eql(proposalStateNumeric);
-    } catch (e: any) {
-      console.log("Something went wrong while verifying the state of proposal");
-      console.log(e);
-      await this.cancelProposalInternally(
-        governor,
-        proposalID,
-        clientsInfo.operatorClient,
-        godHolder
-      );
-      throw e;
-    }
+    const { currentState, proposalStateNumeric } = await this.getProposalState(
+      governor,
+      proposalId,
+      clientsInfo.operatorClient,
+      proposalState
+    );
+    expect(Number(currentState)).to.eql(proposalStateNumeric);
   }
 
   @then(/User gets message "([^"]*)" on creating proposal/, undefined, 30000)
@@ -194,45 +178,17 @@ export class GovernorSteps extends CommonSteps {
 
   @when(/User vote "([^"]*)" proposal/, undefined, 30000)
   public async voteToProposal(vote: string): Promise<void> {
-    try {
-      const voteVal = await governor.getProposalVoteNumeric(vote);
-      await governor.vote(proposalID, voteVal, 0, clientsInfo.operatorClient);
-    } catch (e: any) {
-      console.log(
-        "Something went wrong while voting to proposal now cancelling the proposal"
-      );
-      console.log(e);
-      await this.cancelProposalInternally(
-        governor,
-        proposalID,
-        clientsInfo.operatorClient,
-        godHolder
-      );
-      throw e;
-    }
+    await this.vote(governor, vote, proposalId, clientsInfo.operatorClient);
   }
 
   @when(/User execute the proposal with title "([^"]*)"/, undefined, 30000)
-  public async executeProposal(title: string) {
-    try {
-      await governor.executeProposal(
-        title,
-        clientsInfo.treasureKey,
-        clientsInfo.operatorClient
-      );
-    } catch (e: any) {
-      console.log(
-        "Something went wrong while executing proposal cancelling the proposal"
-      );
-      console.log(e);
-      await this.cancelProposalInternally(
-        governor,
-        proposalID,
-        clientsInfo.operatorClient,
-        godHolder
-      );
-      throw e;
-    }
+  public async execute(title: string) {
+    await this.executeProposal(
+      governor,
+      title,
+      clientsInfo.treasureKey,
+      clientsInfo.operatorClient
+    );
   }
 
   @when(/User fetches token balance of the payee account/, undefined, 30000)
@@ -274,29 +230,38 @@ export class GovernorSteps extends CommonSteps {
   }
 
   @when(
-    /User revert the god tokens for transfer token contract/,
+    /User wait for proposal state to be "([^"]*)" for max (\d*) seconds/,
+    undefined,
+    60000
+  )
+  public async waitForState(state: string, seconds: number) {
+    await this.waitForProposalState(governor, state, proposalId, seconds);
+  }
+
+  @when(
+    /User lock (\d+\.?\d*) GOD token before voting to transfer token proposal/,
     undefined,
     30000
   )
-  public async revertGODToken() {
-    await this.revertGODTokensFromGodHolder(
+  public async lockGOD(tokenAmt: number) {
+    await this.lockTokens(
       godHolder,
+      tokenAmt * CommonSteps.withPrecision,
+      clientsInfo.operatorId,
+      clientsInfo.operatorKey,
       clientsInfo.operatorClient
     );
   }
 
-  @when(
-    /User wait for proposal state to be "([^"]*)" for max (\d*) seconds/,
-    undefined,
-    30000
-  )
-  public async userWaitForState(state: string, seconds: number) {
-    const requiredState = await governor.getProposalNumericState(state);
-    await governor.getStateWithTimeout(
-      proposalID,
-      requiredState,
-      seconds * 1000,
-      1000
+  @when(/User fetches GOD token back from GOD holder/, undefined, 30000)
+  public async revertGOD() {
+    await this.revertTokens(
+      ContractId.fromString(godHolderProxyId),
+      clientsInfo.operatorId,
+      AccountId.fromString(godHolderProxyId),
+      clientsInfo.operatorKey,
+      TokenId.fromString(dex.GOD_TOKEN_ID),
+      clientsInfo.operatorClient
     );
   }
 }

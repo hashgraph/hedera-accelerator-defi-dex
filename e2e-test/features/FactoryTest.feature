@@ -41,7 +41,8 @@ Feature: Factory contract e2e test
         Then User gets message "CONTRACT_REVERT_EXECUTED" on creating pair with same token
 
      Scenario: Verify Factory9 token and HBAR balance before and after adding liquidity
-        When User create pair of "Factory9" and HBAR              
+        When User create pair of "Factory9" and HBAR  
+        When User associate LPToken with account            
         When User adds 300 units of "Factory9" and 150 units of "HBAR" token      
         Then HBAR and Factory9 balances in the pool are 150.00 units and 300.00 units respectively    
         Then User verifies balance of "HBAR" token from contract is 150.00    

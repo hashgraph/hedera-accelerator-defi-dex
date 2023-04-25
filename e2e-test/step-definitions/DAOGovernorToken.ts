@@ -1,8 +1,14 @@
 import { Helper } from "../../utils/Helper";
-import { AccountId, Client, PrivateKey, TokenId } from "@hashgraph/sdk";
+import {
+  AccountId,
+  Client,
+  ContractId,
+  PrivateKey,
+  TokenId,
+} from "@hashgraph/sdk";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { ContractService } from "../../deployment/service/ContractService";
-import { given, binding, when, then } from "cucumber-tsflow/dist";
+import { given, binding, when, then, after } from "cucumber-tsflow/dist";
 import dex from "../../deployment/model/dex";
 import Governor from "../../e2e-test/business/Governor";
 import GodHolder from "../../e2e-test/business/GodHolder";
@@ -12,6 +18,7 @@ import { expect } from "chai";
 import Common from "../business/Common";
 import { BigNumber } from "bignumber.js";
 import { CommonSteps } from "./CommonSteps";
+import GODTokenHolderFactory from "../business/GODTokenHolderFactory";
 
 const csDev = new ContractService();
 
@@ -37,25 +44,29 @@ const daoFactoryContract = csDev.getContractWithProxy(
 const proxyId = daoFactoryContract.transparentProxyId!;
 const daoFactory = new GovernanceDAOFactory(proxyId);
 
+const godHolderFactoryId = csDev.getContractWithProxy(
+  csDev.godTokenHolderFactory
+).transparentProxyId!;
+
+const godTokenHolderFactory = new GODTokenHolderFactory(godHolderFactoryId);
+
 const adminAddress: string = clientsInfo.operatorId.toSolidityAddress();
 
 const toAccount: AccountId = clientsInfo.treasureId;
 const fromAccount: AccountId = clientsInfo.operatorId;
 const fromAccountPrivateKey: PrivateKey = clientsInfo.operatorKey;
 const tokenId: TokenId = TokenId.fromString(dex.TOKEN_LAB49_1);
-const daoTokenId: TokenId = dex.GOVERNANCE_DAO_ONE_TOKEN_ID;
+const daoTokenId: TokenId = TokenId.fromString(dex.GOD_TOKEN_ID);
 
 const proposalCreatorClient: Client = clientsInfo.operatorClient;
-const withPrecision = 1e8;
-const DEFAULT_QUORUM_THRESHOLD_IN_BSP = 1;
-const DEFAULT_VOTING_DELAY = 2;
-const DEFAULT_VOTING_PERIOD = 4;
 
 let proposalId: string;
 let balance: BigNumber;
 let tokens: BigNumber;
 let errorMsg: string = "";
 let daoAddress: any;
+let fromAcctBal: BigNumber;
+let factoryGODHolderContractId: string;
 
 @binding()
 export class DAOGovernorTokenTransfer extends CommonSteps {
@@ -75,9 +86,9 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
         governorTokenTransfer,
         godHolder,
         clientsInfo.operatorClient,
-        DEFAULT_QUORUM_THRESHOLD_IN_BSP,
-        DEFAULT_VOTING_DELAY,
-        DEFAULT_VOTING_PERIOD
+        CommonSteps.DEFAULT_QUORUM_THRESHOLD_IN_BSP,
+        CommonSteps.DEFAULT_VOTING_DELAY,
+        CommonSteps.DEFAULT_VOTING_PERIOD
       );
     } catch (e: any) {
       if (blankTitleOrURL) {
@@ -102,14 +113,15 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
       governorTokenTransfer,
       godHolder,
       clientsInfo.operatorClient,
-      DEFAULT_QUORUM_THRESHOLD_IN_BSP,
-      DEFAULT_VOTING_DELAY,
-      DEFAULT_VOTING_PERIOD
+      CommonSteps.DEFAULT_QUORUM_THRESHOLD_IN_BSP,
+      CommonSteps.DEFAULT_VOTING_DELAY,
+      CommonSteps.DEFAULT_VOTING_PERIOD
     );
   }
 
   @given(/User initialize DAO factory contract/, undefined, 60000)
   public async initializeDAOFactory() {
+    await godTokenHolderFactory.initialize(clientsInfo.operatorClient);
     await daoFactory.initialize(clientsInfo.operatorClient);
   }
 
@@ -126,9 +138,9 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
         daoName,
         daoURL,
         daoTokenId.toSolidityAddress(),
-        DEFAULT_QUORUM_THRESHOLD_IN_BSP,
-        DEFAULT_VOTING_DELAY,
-        DEFAULT_VOTING_PERIOD,
+        CommonSteps.DEFAULT_QUORUM_THRESHOLD_IN_BSP,
+        CommonSteps.DEFAULT_VOTING_DELAY,
+        CommonSteps.DEFAULT_VOTING_PERIOD,
         false,
         adminAddress,
         clientsInfo.operatorClient
@@ -154,6 +166,7 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
       governorTokenDao
     );
     godHolder = await daoFactory.getGodHolderInstance(governorTokenTransfer);
+    factoryGODHolderContractId = godHolder.contractId;
   }
 
   @when(
@@ -167,14 +180,14 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
     console.log(
       `value of negativeAmt ${negativeAmt} and tokenAmt is ${tokenAmount}`
     );
-    tokens = new BigNumber(tokenAmount * withPrecision);
+    tokens = new BigNumber(tokenAmount * CommonSteps.withPrecision);
     try {
       proposalId = await governorTokenDao.createTokenTransferProposal(
         title,
         fromAccount.toSolidityAddress(),
         toAccount.toSolidityAddress(),
         tokenId.toSolidityAddress(),
-        tokenAmount * withPrecision,
+        tokenAmount * CommonSteps.withPrecision,
         proposalCreatorClient
       );
     } catch (e: any) {
@@ -203,39 +216,13 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
     undefined,
     60000
   )
-  public async waitForProposalState(state: string, seconds: number) {
-    let revertRequired: boolean = false;
-    if (state === "Executed") {
-      revertRequired = true;
-    }
-    const requiredState = await governorTokenTransfer.getProposalNumericState(
-      state
+  public async waitForState(state: string, seconds: number) {
+    await this.waitForProposalState(
+      governorTokenTransfer,
+      state,
+      proposalId,
+      seconds
     );
-    try {
-      await governorTokenTransfer.getStateWithTimeout(
-        proposalId,
-        requiredState,
-        seconds * 1000,
-        1000
-      );
-
-      if (revertRequired) {
-        console.log(
-          `State of proposal is - ${state} revert of god token required is- ${revertRequired}`
-        );
-        await godHolder.checkAndClaimGodTokens(clientsInfo.operatorClient);
-      }
-    } catch (e: any) {
-      console.log("Something went wrong while getting the state with timeout ");
-      console.log(e);
-      await this.cancelProposalInternally(
-        governorTokenTransfer,
-        proposalId,
-        clientsInfo.operatorClient,
-        godHolder
-      );
-      throw e;
-    }
   }
 
   @when(
@@ -255,50 +242,23 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
     30000
   )
   public async verifyProposalState(proposalState: string): Promise<void> {
-    try {
-      const currentState = await governorTokenTransfer.state(
-        proposalId,
-        clientsInfo.operatorClient
-      );
-      const proposalStateNumeric =
-        await governorTokenTransfer.getProposalNumericState(proposalState);
-      expect(Number(currentState)).to.eql(proposalStateNumeric);
-    } catch (e: any) {
-      console.log("Something went wrong while verifying the state of proposal");
-      console.log(e);
-      await this.cancelProposalInternally(
-        governorTokenTransfer,
-        proposalId,
-        clientsInfo.operatorClient,
-        godHolder
-      );
-      throw e;
-    }
+    const { currentState, proposalStateNumeric } = await this.getProposalState(
+      governorTokenTransfer,
+      proposalId,
+      clientsInfo.operatorClient,
+      proposalState
+    );
+    expect(Number(currentState)).to.eql(proposalStateNumeric);
   }
 
   @when(/User vote "([^"]*)" token transfer proposal/, undefined, 60000)
   public async voteToProposal(vote: string): Promise<void> {
-    try {
-      const voteVal = await governorTokenTransfer.getProposalVoteNumeric(vote);
-      await governorTokenTransfer.vote(
-        proposalId,
-        voteVal,
-        0,
-        clientsInfo.operatorClient
-      );
-    } catch (e: any) {
-      console.log(
-        "Something went wrong while voting to proposal now cancelling the proposal"
-      );
-      console.log(e);
-      await this.cancelProposalInternally(
-        governorTokenTransfer,
-        proposalId,
-        clientsInfo.operatorClient,
-        godHolder
-      );
-      throw e;
-    }
+    await this.vote(
+      governorTokenTransfer,
+      vote,
+      proposalId,
+      clientsInfo.operatorClient
+    );
   }
 
   @when(
@@ -306,41 +266,43 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
     undefined,
     30000
   )
-  public async executeProposal(title: string) {
-    try {
-      await governorTokenTransfer.executeProposal(
-        title,
-        clientsInfo.operatorKey,
-        clientsInfo.operatorClient
-      );
-    } catch (e: any) {
-      console.log(
-        "Something went wrong while executing proposal cancelling the proposal"
-      );
-      console.log(e);
-      await this.cancelProposalInternally(
-        governorTokenTransfer,
-        proposalId,
-        clientsInfo.operatorClient,
-        godHolder
-      );
-      throw e;
-    }
+  public async execute(title: string) {
+    await this.executeProposal(
+      governorTokenTransfer,
+      title,
+      clientsInfo.operatorKey,
+      clientsInfo.operatorClient
+    );
   }
 
   @when(
-    /User fetches balance of token which user wants to transfer/,
+    /User fetches target token balance of account to which user wants to transfer/,
     undefined,
     30000
   )
   public async getTokenBalance() {
     balance = await Common.fetchTokenBalanceFromMirrorNode(
-      fromAccount.toString(),
+      toAccount.toString(),
       tokenId.toString()
     );
     console.log(
       `DAOGovernorTokenTransfer#getTokenBalance() balance = ${balance}`
     );
+  }
+
+  @then(
+    /User checks that target token balance in the payer account is more than transfer amount (\d+\.?\d*)/,
+    undefined,
+    30000
+  )
+  public async verifyTokenBalanceIsGreaterThanTransferAmt(transferAmt: number) {
+    fromAcctBal = await Common.fetchTokenBalanceFromMirrorNode(
+      fromAccount.toString(),
+      tokenId.toString()
+    );
+    expect(
+      Number(fromAcctBal.dividedBy(CommonSteps.withPrecision))
+    ).greaterThan(Number(transferAmt));
   }
 
   @then(
@@ -361,23 +323,20 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
     /User create a new token transfer proposal with title "([^"]*)" and token amount higher than current balance/
   )
   public async createTokenTransferProposalWithHigherAmt(title: string) {
-    const amt = Number(balance.plus(new BigNumber(1 * withPrecision)));
+    const amt = Number(
+      fromAcctBal.plus(new BigNumber(1 * CommonSteps.withPrecision))
+    );
     console.log(
       `DAOGovernorTokenTransfer#createTokenTransferProposalWithHigherAmt() transfer amount  = ${amt}`
     );
-    try {
-      proposalId = await governorTokenDao.createTokenTransferProposal(
-        title,
-        fromAccount.toSolidityAddress(),
-        toAccount.toSolidityAddress(),
-        tokenId.toSolidityAddress(),
-        amt,
-        proposalCreatorClient
-      );
-    } catch (e: any) {
-      console.log(e);
-      throw e;
-    }
+    proposalId = await governorTokenDao.createTokenTransferProposal(
+      title,
+      fromAccount.toSolidityAddress(),
+      toAccount.toSolidityAddress(),
+      tokenId.toSolidityAddress(),
+      amt,
+      proposalCreatorClient
+    );
   }
 
   @when(
@@ -394,12 +353,6 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
       );
     } catch (e: any) {
       errorMsg = e.message;
-      await this.cancelProposalInternally(
-        governorTokenTransfer,
-        proposalId,
-        clientsInfo.operatorClient,
-        godHolder
-      );
     }
   }
 
@@ -407,5 +360,48 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
   public async verifyErrorMessage(msg: string) {
     expect(errorMsg).contains(msg);
     errorMsg = "";
+  }
+
+  @when(/User get GOD tokens back from GOD holder/, undefined, 30000)
+  public async revertGOD() {
+    await this.revertTokens(
+      ContractId.fromString(godHolderProxyContractId),
+      clientsInfo.operatorId,
+      AccountId.fromString(godHolderProxyContractId),
+      clientsInfo.operatorKey,
+      TokenId.fromString(dex.GOD_TOKEN_ID),
+      clientsInfo.operatorClient
+    );
+  }
+
+  @when(
+    /User lock (\d+\.?\d*) GOD token before voting to token transfer proposal/,
+    undefined,
+    30000
+  )
+  public async lockGOD(tokenAmt: number) {
+    await this.lockTokens(
+      godHolder,
+      tokenAmt * CommonSteps.withPrecision,
+      clientsInfo.operatorId,
+      clientsInfo.operatorKey,
+      clientsInfo.operatorClient
+    );
+  }
+
+  @when(
+    /User receive GOD tokens back from GOD holder created via DAO factory/,
+    undefined,
+    30000
+  )
+  public async getGODTokensBack() {
+    await this.revertTokens(
+      ContractId.fromString(factoryGODHolderContractId),
+      clientsInfo.operatorId,
+      AccountId.fromString(factoryGODHolderContractId),
+      clientsInfo.operatorKey,
+      TokenId.fromString(dex.GOD_TOKEN_ID),
+      clientsInfo.operatorClient
+    );
   }
 }

@@ -81,6 +81,18 @@ export class PairTestSteps {
     precision = await pair.getPrecisionValue(client);
   }
 
+  @when(/User associate the LPToken with the account/, undefined, 30000)
+  public async associateLPToken() {
+    const lpTokenAddress = await lpToken.getLpTokenAddress();
+    const tokenId = TokenId.fromSolidityAddress(lpTokenAddress);
+    await Common.associateTokensToAccount(
+      clientsInfo.operatorId,
+      [tokenId],
+      clientsInfo.operatorClient,
+      clientsInfo.operatorKey
+    );
+  }
+
   @when(
     /User adds (-?\d+\.\d+) units of PairToken1 and (-?\d+\.\d+) units of PairToken2/,
     undefined,
