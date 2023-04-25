@@ -2,6 +2,7 @@
 pragma solidity >=0.5.0 <0.9.0;
 
 import "./IERC20.sol";
+import "./IERC721.sol";
 import "./IBaseHTS.sol";
 
 contract TokenOperations {
@@ -37,6 +38,15 @@ contract TokenOperations {
             isTransferSuccessful
                 ? HederaResponseCodes.SUCCESS
                 : HederaResponseCodes.UNKNOWN;
+    }
+
+    function _transferNFTToken(
+        address _token,
+        address _sender,
+        address _receiver,
+        int256 _amount
+    ) internal {
+        IERC721(_token).transferFrom(_sender, _receiver, uint256(_amount));
     }
 
     function isContract(address _account) private view returns (bool) {
