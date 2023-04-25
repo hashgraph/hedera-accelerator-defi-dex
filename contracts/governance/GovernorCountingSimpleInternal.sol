@@ -304,7 +304,6 @@ abstract contract GovernorCountingSimpleInternal is
 
     function _getGODToken(address creator) private {
         int256 code = _transferToken(
-            tokenService,
             address(token),
             creator,
             address(this),

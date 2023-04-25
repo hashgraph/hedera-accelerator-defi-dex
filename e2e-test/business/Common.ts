@@ -18,6 +18,7 @@ import {
   TokenMintTransaction,
   TokenAssociateTransaction,
   AccountAllowanceApproveTransaction,
+  Hbar,
 } from "@hashgraph/sdk";
 import { BigNumber } from "bignumber.js";
 import { clientsInfo } from "../../utils/ClientManagement";
@@ -51,6 +52,32 @@ export default class Common {
   };
 
   static setTokenAllowance = async (
+    tokenId: TokenId,
+    spenderAccountId: string | AccountId,
+    amount: number,
+    ownerAccount: string | AccountId,
+    ownerAccountPrivateKey: PrivateKey,
+    client: Client
+  ) => {
+    dex.HBARX_TOKEN_ID === tokenId.toString()
+      ? Common.approveHbarAllowance(
+          spenderAccountId,
+          amount,
+          ownerAccount,
+          ownerAccountPrivateKey,
+          client
+        )
+      : Common.approveTokenAllowance(
+          tokenId,
+          spenderAccountId,
+          amount,
+          ownerAccount,
+          ownerAccountPrivateKey,
+          client
+        );
+  };
+
+  static approveTokenAllowance = async (
     tokenId: string | TokenId,
     spenderAccountId: string | AccountId,
     amount: number,
@@ -72,7 +99,31 @@ export default class Common {
     const receipt = await txResponse.getReceipt(client);
     const transactionStatus = receipt.status;
     console.log(
-      `- Common#setTokenAllowance(): status = ${transactionStatus.toString()}, tokenId = ${tokenId.toString()},spenderAccountId =  ${spenderAccountId.toString()}, ownerAccount =  ${ownerAccount.toString()} amount = ${amount}\n`
+      `- Common#approveTokenAllowance(): status = ${transactionStatus.toString()}, tokenId = ${tokenId.toString()},  spenderAccountId =  ${spenderAccountId.toString()}, ownerAccount =  ${ownerAccount.toString()} amount = ${amount}\n`
+    );
+  };
+
+  static approveHbarAllowance = async (
+    spenderAccountId: string | AccountId,
+    amount: number,
+    ownerAccount: string | AccountId,
+    ownerAccountPrivateKey: PrivateKey,
+    client: Client
+  ) => {
+    const allowanceTxn =
+      new AccountAllowanceApproveTransaction().approveHbarAllowance(
+        ownerAccount,
+        spenderAccountId,
+        amount
+      );
+    const signTx = await allowanceTxn
+      .freezeWith(client)
+      .sign(ownerAccountPrivateKey);
+    const txResponse = await signTx.execute(client);
+    const receipt = await txResponse.getReceipt(client);
+    const transactionStatus = receipt.status;
+    console.log(
+      `- Common#approveHbarAllowance(): status = ${transactionStatus.toString()}, hbar, spenderAccountId =  ${spenderAccountId.toString()}, ownerAccount =  ${ownerAccount.toString()} amount = ${amount}\n`
     );
   };
 
@@ -283,11 +334,17 @@ export default class Common {
       .setTokenIds(tokenIds)
       .freezeWith(client);
     const signTx = await transaction.sign(accountKey);
-    const txResponse = await signTx.execute(client);
-    const receipt = await txResponse.getReceipt(client);
-    const transactionStatus = receipt.status;
-    console.log(
-      `Common#associateTokensToAccount(): TokenIds = ${tokenIds},  accountId = ${accountId}, transaction status is: ${transactionStatus.toString()}`
-    );
+    try {
+      const txResponse = await signTx.execute(client);
+      const receipt = await txResponse.getReceipt(client);
+      const transactionStatus = receipt.status;
+      console.log(
+        `Common#associateTokensToAccount(): TokenIds = ${tokenIds},  accountId = ${accountId}, transaction status is: ${transactionStatus.toString()} \n`
+      );
+    } catch (error) {
+      console.log(
+        `Common#associateTokensToAccount(): TokenIds = ${tokenIds},  accountId = ${accountId}, transaction status is: ${error.toString()} \n`
+      );
+    }
   };
 }

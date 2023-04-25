@@ -266,5 +266,41 @@
     "hash": "66a7ddd9cc3475d3f866cff82ed53ead",
     "transparentProxyAddress": "0x000000000000000000000000000000000042d9a9",
     "transparentProxyId": "0.0.4381097"
+  },
+  {
+    "name": "factory",
+    "id": "0.0.4387993",
+    "address": "0x000000000000000000000000000000000042f499",
+    "timestamp": "2023-04-25T08:44:53.547Z",
+    "hash": "e6179a08b70b0b678778f4aad4a0322c",
+    "transparentProxyAddress": "0x000000000000000000000000000000000042f49d",
+    "transparentProxyId": "0.0.4387997"
+  },
+  {
+    "name": "lptoken",
+    "id": "0.0.4388156",
+    "address": "0x000000000000000000000000000000000042f53c",
+    "timestamp": "2023-04-25T08:56:33.982Z",
+    "hash": "db513ac1505b04c206ca918195bd49b4",
+    "transparentProxyAddress": "0x000000000000000000000000000000000042f53f",
+    "transparentProxyId": "0.0.4388159"
+  },
+  {
+    "name": "pair",
+    "id": "0.0.4388185",
+    "address": "0x000000000000000000000000000000000042f559",
+    "timestamp": "2023-04-25T08:57:31.901Z",
+    "hash": "49612941e07ba81e09fdbfab734d4080",
+    "transparentProxyAddress": "0x000000000000000000000000000000000042f55b",
+    "transparentProxyId": "0.0.4388187"
+  },
+  {
+    "name": "lptoken",
+    "id": "0.0.4388263",
+    "address": "0x000000000000000000000000000000000042f5a7",
+    "timestamp": "2023-04-25T09:03:58.269Z",
+    "hash": "db513ac1505b04c206ca918195bd49b4",
+    "transparentProxyAddress": "0x000000000000000000000000000000000042f5b0",
+    "transparentProxyId": "0.0.4388272"
   }
 ]

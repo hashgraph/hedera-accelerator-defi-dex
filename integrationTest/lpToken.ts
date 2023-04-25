@@ -77,6 +77,9 @@ async function main() {
     clientsInfo.treasureKey,
     clientsInfo.treasureClient
   );
+
+  await Helper.delay(1 * 1000);
+
   await allotLPToken();
   await Common.setTokenAllowance(
     tokenId,
@@ -86,6 +89,7 @@ async function main() {
     clientsInfo.treasureKey,
     clientsInfo.treasureClient
   );
+  await Helper.delay(1 * 1000);
   await removeLPToken();
   await getAllLPTokenCount();
   await getLpTokenCountForUser();

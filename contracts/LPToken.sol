@@ -105,7 +105,10 @@ contract LPToken is ILPToken, Initializable {
             uint256(lpAmount)
         );
 
-        require(isTransferSuccessful, "LPToken: token transfer failed to contract.");
+        require(
+            isTransferSuccessful,
+            "LPToken: token transfer failed to contract."
+        );
         // burn old amount of LP
         (int response, ) = tokenService.burnTokenPublic(
             address(lpToken),

@@ -56,8 +56,6 @@ contract Pair is IPair, Initializable, TokenOperations {
         pair = Pair(Token(_tokenA, int256(0)), Token(_tokenB, int256(0)));
         _associateToken(address(this), _tokenA);
         _associateToken(address(this), _tokenB);
-        _associateToken(treasury, _tokenA);
-        _associateToken(treasury, _tokenB);
     }
 
     function getPair() external view override returns (Pair memory) {
@@ -120,7 +118,6 @@ contract Pair is IPair, Initializable, TokenOperations {
         (int256 _tokenAQty, int256 _tokenBQty) = calculateTokenstoGetBack(
             _lpToken
         );
-        //Assumption - toAccount must be associated with tokenA and tokenB other transaction fails.
         transferTokensInternally(
             address(this),
             toAccount,
@@ -422,8 +419,6 @@ contract Pair is IPair, Initializable, TokenOperations {
         pair.tokenB.tokenQty -= _actualSwapBValue + _tokenBTreasureFee;
 
         //Token B transfer
-        _associateToken(to, pair.tokenB.tokenAddress);
-
         transferTokenInternally(
             address(this),
             to,
@@ -482,8 +477,6 @@ contract Pair is IPair, Initializable, TokenOperations {
         pair.tokenA.tokenQty -= _actualSwapAValue + _tokenATreasureFee;
 
         //Token B transfer
-        _associateToken(to, pair.tokenA.tokenAddress);
-
         transferTokenInternally(
             address(this),
             to,
@@ -559,7 +552,7 @@ contract Pair is IPair, Initializable, TokenOperations {
 
     function transferTokenInternally(
         address sender,
-        address reciever,
+        address receiver,
         address token,
         int256 tokenQty,
         string memory errorMessage
@@ -570,26 +563,17 @@ contract Pair is IPair, Initializable, TokenOperations {
             } else {
                 _checkIfCallerSentCorrectHBARs(tokenQty);
             }
-            if (!_isContractRecievingTokens(reciever)) {
-                _transferHbars(tokenQty, reciever, errorMessage);
+            if (!_isContractRecievingTokens(receiver)) {
+                _transferHbars(tokenQty, receiver, errorMessage);
             }
         } else {
-            if (_isContractSendingTokens(sender)) {
-                _transferTokenFromContract(
-                    token,
-                    tokenQty,
-                    reciever,
-                    errorMessage
-                );
-            } else {
-                _transferTokenFromSender(
-                    token,
-                    tokenQty,
-                    sender,
-                    reciever,
-                    errorMessage
-                );
-            }
+            int256 responseCode = _transferToken(
+                token,
+                sender,
+                receiver,
+                tokenQty
+            );
+            require(responseCode == HederaResponseCodes.SUCCESS, errorMessage);
         }
     }
 
@@ -634,32 +618,6 @@ contract Pair is IPair, Initializable, TokenOperations {
             payable(reciever)
         );
         require(sent, errorMessage);
-    }
-
-    function _transferTokenFromContract(
-        address token,
-        int256 tokenQty,
-        address reciever,
-        string memory errorMessage
-    ) private {
-        bool isSuccess = IERC20(token).transfer(reciever, uint(tokenQty));
-        require(isSuccess, errorMessage);
-    }
-
-    function _transferTokenFromSender(
-        address token,
-        int256 tokenQty,
-        address sender,
-        address reciever,
-        string memory errorMessage
-    ) private {
-        int256 response = tokenService.transferTokenPublic(
-            token,
-            sender,
-            reciever,
-            tokenQty
-        );
-        require(response == HederaResponseCodes.SUCCESS, errorMessage);
     }
 
     function _tokenQuantity(
