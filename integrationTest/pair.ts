@@ -17,14 +17,14 @@ const tokenHBARX = TokenId.fromString(dex.HBARX_TOKEN_ID);
 
 const csDev = new ContractService();
 
-const lpTokenContracts = [
-  csDev.getContractWithProxyAtIndex(csDev.lpTokenContractName, 0),
-  csDev.getContractWithProxyAtIndex(csDev.lpTokenContractName, 1),
-];
-const pairContracts = [
-  csDev.getContractWithProxyAtIndex(csDev.pairContractName, 0),
-  csDev.getContractWithProxyAtIndex(csDev.pairContractName, 1),
-];
+const lpTokenContract = csDev.getContractWithProxyAtIndex(
+  csDev.lpTokenContractName,
+  0
+);
+const pairContract = csDev.getContractWithProxyAtIndex(
+  csDev.pairContractName,
+  0
+);
 
 let tokenA: TokenId;
 let tokenB: TokenId;
@@ -110,34 +110,86 @@ const slippageInGivenOut = async () => {
   await pair.slippageInGivenOut(tokenBQty);
 };
 
-const addLiquidity = async () => {
-  await pair.addLiquidity(
-    clientsInfo.treasureId,
-    clientsInfo.treasureKey,
+const addLiquidity = async (lpTokenAddress: string) => {
+  const tokenAQty = 2.1;
+  const tokenBQty = 2.3;
+  const userId = clientsInfo.treasureId;
+  const userKey = clientsInfo.treasureKey;
+  const userClient = clientsInfo.treasureClient;
+
+  await Common.setTokenAllowance(
     tokenA,
-    2.1,
+    pairContract.transparentProxyId!,
+    Number(Common.withPrecision(tokenAQty, precision)),
+    userId,
+    userKey,
+    userClient
+  );
+
+  await Common.setTokenAllowance(
     tokenB,
-    2.3,
+    pairContract.transparentProxyId!,
+    Number(Common.withPrecision(tokenBQty, precision)),
+    userId,
+    userKey,
+    userClient
+  );
+
+  await Common.associateTokensToAccount(
+    userId,
+    [TokenId.fromSolidityAddress(lpTokenAddress)],
+    userClient
+  );
+
+  await pair.addLiquidity(
+    userId,
+    userKey,
+    tokenA,
+    tokenAQty,
+    tokenB,
+    tokenBQty,
     precision,
-    clientsInfo.treasureClient
+    userClient
   );
   await pair.getPairQty();
 };
 
-const removeLiquidity = async () => {
+const removeLiquidity = async (lpTokenAddress: string) => {
   const lpTokenQty = Common.withPrecision(0.05, precision);
+
+  await Common.setTokenAllowance(
+    TokenId.fromSolidityAddress(lpTokenAddress),
+    lpTokenContract.transparentProxyId!,
+    Number(lpTokenQty),
+    clientsInfo.treasureId,
+    clientsInfo.treasureKey,
+    clientsInfo.treasureClient
+  );
+
   await pair.removeLiquidity(
     lpTokenQty,
     clientsInfo.treasureId,
     clientsInfo.treasureKey
   );
+
   await pair.getPairQty();
 };
 
 const swapTokenA = async () => {
+  const swapTokenAQty = 0.01;
+
+  await Common.setTokenAllowance(
+    tokenA,
+    pairContract.transparentProxyId!,
+    Number(Common.withPrecision(swapTokenAQty, precision)),
+    clientsInfo.treasureId,
+    clientsInfo.treasureKey,
+    clientsInfo.treasureClient
+  );
+
   await pair.swapToken(
     tokenA,
-    0.01,
+    swapTokenAQty,
     clientsInfo.treasureId,
     clientsInfo.treasureKey,
     precision,
@@ -147,14 +199,10 @@ const swapTokenA = async () => {
 };
 
 async function main() {
-  const tokens = [tokenHBARX, token0, token1, token2];
-  let index = 0;
-  for (const contract of pairContracts) {
-    tokenA = tokens[index];
-    tokenB = tokens[index + 1];
-    await testForSinglePair(contract, lpTokenContracts[index]);
-    index++;
-  }
+  const tokens = [tokenHBARX, token0];
+  tokenA = tokens[0];
+  tokenB = tokens[1];
+  await testForSinglePair(pairContract, lpTokenContract);
   console.log(`Done`);
 }
 
@@ -171,16 +219,16 @@ async function testForSinglePair(
   pair = new Pair(pairContract.transparentProxyId!);
 
   await initializeLPTokenContract();
-  await getLpTokenAddress();
+  const lpTokenAddress = await getLpTokenAddress();
 
   await initializePairContract();
   await getPrecisionValue();
   await getTokenPairAddress();
   await getAccountTokensBalance();
-  await addLiquidity();
+  await addLiquidity(lpTokenAddress);
   await pair.getPairInfo();
   await getAccountTokensBalance();
-  await removeLiquidity();
+  await removeLiquidity(lpTokenAddress);
   await getAccountTokensBalance();
   await setSlippage(new BigNumber(50000000));
   await swapTokenA();

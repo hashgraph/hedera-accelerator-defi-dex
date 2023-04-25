@@ -232,7 +232,7 @@ describe("MultiSig tests", function () {
         daoAdminOne,
       } = await loadFixture(deployFixture);
 
-      await bastHTS.setPassTransactionCount(0);
+      await tokenInstance.setTransaferFailed(true);
       await expect(
         hederaGnosisSafeProxyContract.transferToSafe(
           bastHTS.address,

@@ -418,7 +418,7 @@ describe("Governor Tests", function () {
       await token.setUserBalance(creator.address, 0);
       await verifyAccountBalance(token, creator.address, 0);
 
-      await baseHTS.setPassTransactionCount(1);
+      await token.setTransaferFailed(true);
       await expect(getTextProposalId(governorText, creator)).revertedWith(
         "GovernorCountingSimpleInternal: token transfer failed to contract."
       );

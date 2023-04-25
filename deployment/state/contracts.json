@@ -266,5 +266,32 @@
     "hash": "66a7ddd9cc3475d3f866cff82ed53ead",
     "transparentProxyAddress": "0x000000000000000000000000000000000042d9a9",
     "transparentProxyId": "0.0.4381097"
+  },
+  {
+    "name": "lptoken",
+    "id": "0.0.4391210",
+    "address": "0x000000000000000000000000000000000043012a",
+    "timestamp": "2023-04-25T10:39:39.616Z",
+    "hash": "db513ac1505b04c206ca918195bd49b4",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000430137",
+    "transparentProxyId": "0.0.4391223"
+  },
+  {
+    "name": "pair",
+    "id": "0.0.4391282",
+    "address": "0x0000000000000000000000000000000000430172",
+    "timestamp": "2023-04-25T10:41:18.345Z",
+    "hash": "49612941e07ba81e09fdbfab734d4080",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000430179",
+    "transparentProxyId": "0.0.4391289"
+  },
+  {
+    "name": "factory",
+    "id": "0.0.4391357",
+    "address": "0x00000000000000000000000000000000004301bd",
+    "timestamp": "2023-04-25T10:43:27.248Z",
+    "hash": "1bc7fd44dacc8c9c8092152043d38aa6",
+    "transparentProxyAddress": "0x00000000000000000000000000000000004301c6",
+    "transparentProxyId": "0.0.4391366"
   }
 ]

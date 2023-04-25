@@ -54,7 +54,6 @@ contract HederaGnosisSafe is GnosisSafe, TokenOperations {
             emit TokenAssociated(_token);
         }
         code = _transferToken(
-            _baseHTS,
             _token,
             _sender,
             address(this),

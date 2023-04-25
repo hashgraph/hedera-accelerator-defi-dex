@@ -17,26 +17,26 @@ contract TokenOperations {
     }
 
     function _transferToken(
-        IBaseHTS _baseHTS,
         address _token,
         address _sender,
         address _receiver,
         int256 _amount
     ) internal returns (int256 responseCode) {
-        if (_sender == address(this)) {
-            bool success = IERC20(_token).transfer(_receiver, uint256(_amount));
-            return
-                success
-                    ? HederaResponseCodes.SUCCESS
-                    : HederaResponseCodes.UNKNOWN;
-        }
+        
+        bool isTransferSuccessful = isContractSendingTokens(_sender)
+            ? IERC20(_token).transfer(_receiver, uint256(_amount))
+            : IERC20(_token).transferFrom(_sender, _receiver, uint256(_amount));
+
         return
-            _baseHTS.transferTokenPublic(_token, _sender, _receiver, _amount);
+            isTransferSuccessful
+                ? HederaResponseCodes.SUCCESS
+                : HederaResponseCodes.UNKNOWN;
     }
 
     function isContract(address _account) private view returns (bool) {
         return _account.code.length > 0;
     }
+
     /// @custom:oz-upgrades-unsafe-allow delegatecall
     function associateTokenViaDelegation(
         IBaseHTS _baseHTS,
@@ -53,5 +53,11 @@ contract TokenOperations {
         code = success
             ? abi.decode(result, (int256))
             : HederaResponseCodes.UNKNOWN;
+    }
+
+    function isContractSendingTokens(
+        address sender
+    ) private view returns (bool) {
+        return sender == address(this);
     }
 }

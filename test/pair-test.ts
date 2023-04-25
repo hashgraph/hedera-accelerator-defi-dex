@@ -6,7 +6,7 @@ import { ethers, upgrades } from "hardhat";
 import { BigNumber } from "ethers";
 import { Helper } from "../utils/Helper";
 
-describe("All Tests", function () {
+describe("LPToken, Pair and Factory tests", function () {
   const tokenBAddress = "0x0000000000000000000000000000000000010001";
   const tokenAAddress = "0x0000000000000000000000000000000000020002";
   const tokenCAddress = "0x0000000000000000000000000000000000020003";
@@ -1163,8 +1163,9 @@ describe("All Tests", function () {
 
     // ----------------------------------------------------------------------
     it("Swap Token A with Fail A transfer", async function () {
-      const { pair, mockBaseHTS, token1Address, token2Address } =
-        await loadFixture(deployFixture);
+      const { pair, token1Address, token2Address } = await loadFixture(
+        deployFixture
+      );
       await pair.addLiquidity(
         zeroAddress,
         token1Address,
@@ -1172,7 +1173,8 @@ describe("All Tests", function () {
         precision.mul(100),
         precision.mul(100)
       );
-      await mockBaseHTS.setPassTransactionCount(1);
+      const tokenA = await ethers.getContractAt("ERC20Mock", token1Address);
+      await tokenA.setTransaferFailed(true);
       await expect(
         pair.swapToken(zeroAddress, token1Address, 30, defaultSlippageInput)
       ).to.revertedWith(
@@ -1206,8 +1208,9 @@ describe("All Tests", function () {
 
     // ----------------------------------------------------------------------
     it("Swap Token B with Fail B transfer", async function () {
-      const { pair, mockBaseHTS, token1Address, token2Address } =
-        await loadFixture(deployFixture);
+      const { pair, token1Address, token2Address } = await loadFixture(
+        deployFixture
+      );
       const totalQtyA = precision.mul(1000);
       await pair.addLiquidity(
         zeroAddress,
@@ -1218,7 +1221,8 @@ describe("All Tests", function () {
       );
       const tokenBeforeQty = await pair.getPairQty();
       expect(Number(tokenBeforeQty[0])).to.be.equals(precision.mul(1000));
-      mockBaseHTS.setPassTransactionCount(1);
+      const tokenB = await ethers.getContractAt("ERC20Mock", token2Address);
+      await tokenB.setTransaferFailed(true); //Forcing transfer to fail
       await expect(
         pair.swapToken(zeroAddress, token2Address, precision.mul(1), 1200000)
       ).to.revertedWith(
@@ -1249,24 +1253,30 @@ describe("All Tests", function () {
 
     // ----------------------------------------------------------------------
     it("Add liquidity Fail A Transfer", async function () {
-      const { pair, mockBaseHTS } = await loadFixture(deployFixture);
-      mockBaseHTS.setPassTransactionCount(1);
+      const { pair, token1Address, token2Address } = await loadFixture(
+        deployFixture
+      );
+      const tokenA = await ethers.getContractAt("ERC20Mock", token1Address);
+      await tokenA.setTransaferFailed(true);
       const tokenBeforeQty = await pair.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
       await expect(
-        pair.addLiquidity(zeroAddress, tokenAAddress, tokenBAddress, 30, 30)
+        pair.addLiquidity(zeroAddress, token1Address, token2Address, 30, 30)
       ).to.revertedWith(
         "Add liquidity: Transfering token A to contract failed with status code"
       );
     });
 
     it("Add liquidity Fail B Transfer", async function () {
-      const { pair, mockBaseHTS } = await loadFixture(deployFixture);
-      mockBaseHTS.setPassTransactionCount(2);
+      const { pair, token1Address, token2Address } = await loadFixture(
+        deployFixture
+      );
+      const tokenB = await ethers.getContractAt("ERC20Mock", token2Address);
+      await tokenB.setTransaferFailed(true);
       const tokenBeforeQty = await pair.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
       await expect(
-        pair.addLiquidity(zeroAddress, tokenAAddress, tokenBAddress, 30, 30)
+        pair.addLiquidity(zeroAddress, token1Address, token2Address, 30, 30)
       ).to.revertedWith(
         "Add liquidity: Transfering token B to contract failed with status code"
       );
@@ -1329,7 +1339,7 @@ describe("All Tests", function () {
         await loadFixture(deployFixture);
       const tokenBeforeQty = await pair.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
-      await mockBaseHTS.setPassTransactionCount(3);
+      await mockBaseHTS.setPassTransactionCount(1);
       await expect(
         pair.addLiquidity(zeroAddress, token1Address, token2Address, 30, 30)
       ).to.revertedWith("LP token minting failed.");
