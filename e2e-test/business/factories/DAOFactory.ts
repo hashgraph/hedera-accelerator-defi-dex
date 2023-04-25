@@ -32,11 +32,12 @@ export default class DAOFactory extends Base {
     this._isNFTType = isNFTType;
   }
 
-  private getDAOFactoryAddress() {
-    const factoryName = this._isNFTType
-      ? ContractService.NFT_DAO_FACTORY
-      : ContractService.FT_DAO_FACTORY;
-    return csDev.getContractWithProxy(factoryName).transparentProxyAddress!;
+  private getTokenHolderFactoryAddressFromJson() {
+    const holderFactoryName = this._isNFTType
+      ? csDev.nftTokenHolderFactory
+      : csDev.godTokenHolderFactory;
+    return csDev.getContractWithProxy(holderFactoryName)
+      .transparentProxyAddress!;
   }
 
   private getPrefix() {
@@ -56,7 +57,7 @@ export default class DAOFactory extends Base {
         .addAddress(proxyAdmin)
         .addAddress(this.htsAddress)
         .addAddress(governorTokenDao.address)
-        .addAddress(this.getDAOFactoryAddress())
+        .addAddress(this.getTokenHolderFactoryAddressFromJson())
         .addAddress(governorTT.address);
       await this.execute(800000, INITIALIZE, client, args);
       console.log(`- ${this.getPrefix()}DAOFactory#${INITIALIZE}(): done\n`);

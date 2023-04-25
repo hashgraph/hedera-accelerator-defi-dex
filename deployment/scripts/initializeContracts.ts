@@ -57,12 +57,11 @@ export async function main() {
   }
 
   await provider.getFungibleTokenHolder().initialize();
-  await provider.getNonFungibleTokenHolder().initialize();
-
   await provider.getFungibleTokenHolderFactory().initialize();
-  await provider.getNonFungibleTokenHolderFactory().initialize();
-
   await provider.getFungibleTokenDAOFactory().initialize();
+
+  await provider.getNonFungibleTokenHolder().initialize();
+  await provider.getNonFungibleTokenHolderFactory().initialize();
   await provider.getNonFungibleTokenDAOFactory().initialize();
 
   await provider.getMultiSigDAOFactory().initialize();

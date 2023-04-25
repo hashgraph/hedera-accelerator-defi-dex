@@ -167,15 +167,6 @@
     "transparentProxyId": "0.0.4393128"
   },
   {
-    "name": "godtokenholderfactory",
-    "id": "0.0.4393109",
-    "address": "0x0000000000000000000000000000000000430895",
-    "timestamp": "2023-04-25T11:31:21.319Z",
-    "hash": "30d5e2977c6296934fa82739b33fe912",
-    "transparentProxyAddress": "0x00000000000000000000000000000000004308aa",
-    "transparentProxyId": "0.0.4393130"
-  },
-  {
     "name": "governortokendao",
     "id": "0.0.4393111",
     "address": "0x0000000000000000000000000000000000430897",
@@ -183,15 +174,6 @@
     "hash": "f593b0e59b300ec6b9dc0011a741e0ce",
     "transparentProxyAddress": "0x00000000000000000000000000000000004308ab",
     "transparentProxyId": "0.0.4393131"
-  },
-  {
-    "name": "nfttokenholderfactory",
-    "id": "0.0.4393110",
-    "address": "0x0000000000000000000000000000000000430896",
-    "timestamp": "2023-04-25T11:31:21.899Z",
-    "hash": "716d24e6f92d31594f5d584f154ffa6f",
-    "transparentProxyAddress": "0x00000000000000000000000000000000004308ac",
-    "transparentProxyId": "0.0.4393132"
   },
   {
     "name": "multisigdaofactory",
@@ -210,24 +192,6 @@
     "hash": "b8b3eeced15ff31e1813f0dc0eb0d411",
     "transparentProxyAddress": "0x00000000000000000000000000000000004308ad",
     "transparentProxyId": "0.0.4393133"
-  },
-  {
-    "name": "nftdaofactory",
-    "id": "0.0.4393119",
-    "address": "0x000000000000000000000000000000000043089f",
-    "timestamp": "2023-04-25T11:31:23.790Z",
-    "hash": "ae29fcbdb639bdc3a1077c1beb9a059a",
-    "transparentProxyAddress": "0x00000000000000000000000000000000004308b1",
-    "transparentProxyId": "0.0.4393137"
-  },
-  {
-    "name": "governancedaofactory",
-    "id": "0.0.4393118",
-    "address": "0x000000000000000000000000000000000043089e",
-    "timestamp": "2023-04-25T11:31:24.015Z",
-    "hash": "66a7ddd9cc3475d3f866cff82ed53ead",
-    "transparentProxyAddress": "0x00000000000000000000000000000000004308b2",
-    "transparentProxyId": "0.0.4393138"
   },
   {
     "name": "governortextproposal",
@@ -264,5 +228,41 @@
     "hash": "e366ef07885d0ef60345fbee56b2eb16",
     "transparentProxyAddress": "0x00000000000000000000000000000000004308c3",
     "transparentProxyId": "0.0.4393155"
+  },
+  {
+    "name": "godtokenholderfactory",
+    "id": "0.0.4395637",
+    "address": "0x0000000000000000000000000000000000431275",
+    "timestamp": "2023-04-25T12:47:29.508Z",
+    "hash": "30d5e2977c6296934fa82739b33fe912",
+    "transparentProxyAddress": "0x000000000000000000000000000000000043127f",
+    "transparentProxyId": "0.0.4395647"
+  },
+  {
+    "name": "nfttokenholderfactory",
+    "id": "0.0.4395638",
+    "address": "0x0000000000000000000000000000000000431276",
+    "timestamp": "2023-04-25T12:47:29.821Z",
+    "hash": "716d24e6f92d31594f5d584f154ffa6f",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000431280",
+    "transparentProxyId": "0.0.4395648"
+  },
+  {
+    "name": "nftdaofactory",
+    "id": "0.0.4395643",
+    "address": "0x000000000000000000000000000000000043127b",
+    "timestamp": "2023-04-25T12:47:31.575Z",
+    "hash": "ae29fcbdb639bdc3a1077c1beb9a059a",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000431282",
+    "transparentProxyId": "0.0.4395650"
+  },
+  {
+    "name": "governancedaofactory",
+    "id": "0.0.4395644",
+    "address": "0x000000000000000000000000000000000043127c",
+    "timestamp": "2023-04-25T12:47:32.815Z",
+    "hash": "66a7ddd9cc3475d3f866cff82ed53ead",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000431284",
+    "transparentProxyId": "0.0.4395652"
   }
 ]
