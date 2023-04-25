@@ -60,14 +60,14 @@ export default class Common {
     client: Client
   ) => {
     dex.HBARX_TOKEN_ID === tokenId.toString()
-      ? Common.approveHbarAllowance(
+      ? await Common.approveHbarAllowance(
           spenderAccountId,
           amount,
           ownerAccount,
           ownerAccountPrivateKey,
           client
         )
-      : Common.approveTokenAllowance(
+      : await Common.approveTokenAllowance(
           tokenId,
           spenderAccountId,
           amount,

@@ -141,8 +141,6 @@ const addLiquidity = async (lpTokenAddress: string) => {
     userClient
   );
 
-  await Helper.delay(1 * 1000);
-
   await pair.addLiquidity(
     userId,
     userKey,
@@ -168,8 +166,6 @@ const removeLiquidity = async (lpTokenAddress: string) => {
     clientsInfo.treasureClient
   );
 
-  await Helper.delay(1 * 1000);
-
   await pair.removeLiquidity(
     lpTokenQty,
     clientsInfo.treasureId,
@@ -190,8 +186,6 @@ const swapTokenA = async () => {
     clientsInfo.treasureKey,
     clientsInfo.treasureClient
   );
-
-  await Helper.delay(1 * 1000);
 
   await pair.swapToken(
     tokenA,
