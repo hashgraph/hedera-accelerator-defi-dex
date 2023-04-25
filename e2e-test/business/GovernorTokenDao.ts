@@ -5,7 +5,13 @@ import Governor from "./Governor";
 
 import { clientsInfo } from "../../utils/ClientManagement";
 import { BigNumber } from "bignumber.js";
-import { Client, ContractId, ContractFunctionParameters } from "@hashgraph/sdk";
+import {
+  Client,
+  AccountId,
+  PrivateKey,
+  ContractId,
+  ContractFunctionParameters,
+} from "@hashgraph/sdk";
 
 const INITIALIZE = "initialize";
 const CREATE_PROPOSAL = "createProposal";
@@ -16,8 +22,8 @@ const GET_WEB_LINKS = "getWebLinks";
 const GET_GOVERNOR_TOKEN_TRANSFER_CONTRACT_ADDRESS =
   "getGovernorTokenTransferContractAddress";
 
-const DEFAULT_DESCRIPTION = "description";
-const DEFAULT_LINK = "https://defi-ui.hedera.com/governance";
+export const DEFAULT_DESCRIPTION = "description";
+export const DEFAULT_LINK = "https://defi-ui.hedera.com/governance";
 const DEFAULT_QUORUM_THRESHOLD_IN_BSP = 500;
 const DEFAULT_VOTING_DELAY = 0; // blocks
 const DEFAULT_VOTING_PERIOD = 100; // blocks means 3 minutes as per test
@@ -66,8 +72,16 @@ export default class GovernorTokenDao extends Base {
     tokenAmount: number,
     client: Client = clientsInfo.operatorClient,
     description: string = DEFAULT_DESCRIPTION,
-    link: string = DEFAULT_LINK
+    link: string = DEFAULT_LINK,
+    creatorAccountId: AccountId = clientsInfo.operatorId,
+    creatorPrivateKey: PrivateKey = clientsInfo.operatorKey,
+    governorTokenTransfer: Governor
   ) => {
+    await governorTokenTransfer.setupAllowanceForProposalCreation(
+      client,
+      creatorAccountId,
+      creatorPrivateKey
+    );
     const args = new ContractFunctionParameters()
       .addString(title)
       .addString(description)

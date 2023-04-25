@@ -1,3 +1,4 @@
+import { Helper } from "../../utils/Helper";
 import { BigNumber } from "bignumber.js";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { ContractService } from "../../deployment/service/ContractService";
@@ -5,7 +6,6 @@ import { MirrorNodeService } from "../../utils/MirrorNodeService";
 import {
   Client,
   PrivateKey,
-  Transaction,
   ContractExecuteTransaction,
   ContractFunctionParameters,
 } from "@hashgraph/sdk";
@@ -53,7 +53,7 @@ export default class Base {
       .setGas(gas)
       .setFunction(functionName, functionParams)
       .setPayableAmount(amount);
-    const txnToExecute = await this.signTxnIfNeeded(txn, keys, client);
+    const txnToExecute = await Helper.signTxnIfNeeded(txn, keys, client);
     const txnResponse = await txnToExecute.execute(client);
     const txnReceipt = await txnResponse.getReceipt(client);
     const txnRecord = await txnResponse.getRecord(client);
@@ -68,22 +68,6 @@ export default class Base {
     return await MirrorNodeService.getInstance().isInitializationPending(
       this.contractId
     );
-  };
-
-  private signTxnIfNeeded = async (
-    txn: Transaction,
-    keys: PrivateKey | PrivateKey[] | undefined = undefined,
-    client: Client
-  ) => {
-    if (!keys) return txn;
-
-    if (!Array.isArray(keys)) keys = [keys];
-
-    txn.freezeWith(client);
-    for (const key of keys) {
-      txn = await txn.sign(key);
-    }
-    return txn;
   };
 
   private getBaseHTSContractAddress(): string {

@@ -5,6 +5,13 @@ import "./IERC20.sol";
 import "./IBaseHTS.sol";
 
 contract TokenOperations {
+    function _balanceOf(
+        address token,
+        address account
+    ) internal view returns (uint256) {
+        return IERC20(token).balanceOf(account);
+    }
+
     function _associateToken(
         IBaseHTS _baseHTS,
         address _account,
@@ -22,7 +29,6 @@ contract TokenOperations {
         address _receiver,
         int256 _amount
     ) internal returns (int256 responseCode) {
-        
         bool isTransferSuccessful = isContractSendingTokens(_sender)
             ? IERC20(_token).transfer(_receiver, uint256(_amount))
             : IERC20(_token).transferFrom(_sender, _receiver, uint256(_amount));

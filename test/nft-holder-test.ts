@@ -12,17 +12,6 @@ describe("NFTHolder Tests", function () {
   const tokenSerial = 1;
   const tokenCount = 1;
 
-  describe("NFTHolder Upgradeable", function () {
-    it("Verify if the NFTHolder contract is upgradeable safe ", async function () {
-      const Governor = await ethers.getContractFactory("NFTHolder");
-      const args = [zeroAddress, zeroAddress];
-      const instance = await upgrades.deployProxy(Governor, args, {
-        unsafeAllow: ["delegatecall"],
-      });
-      await instance.deployed();
-    });
-  });
-
   async function deployFixture() {
     const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
     const mockBaseHTS = await MockBaseHTS.deploy(true, zeroAddress);

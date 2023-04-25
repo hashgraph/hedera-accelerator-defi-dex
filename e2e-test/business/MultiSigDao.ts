@@ -1,4 +1,6 @@
+import Base from "./Base";
 import BaseDao from "./BaseDao";
+import Common from "./Common";
 
 import { ethers } from "ethers";
 import { Helper } from "../../utils/Helper";
@@ -11,8 +13,9 @@ import {
   AccountId,
   ContractId,
   ContractFunctionParameters,
+  PrivateKey,
 } from "@hashgraph/sdk";
-import Base from "./Base";
+import HederaGnosisSafe from "./HederaGnosisSafe";
 
 const STATE = "state";
 const INITIALIZE = "initialize";
@@ -155,8 +158,21 @@ export default class MultiSigDao extends BaseDao {
     token: TokenId,
     receiver: AccountId | ContractId,
     amount: number,
-    client: Client = clientsInfo.uiUserClient
+    allowanceAmount: number,
+    tokenSenderClient: Client = clientsInfo.uiUserClient,
+    tokenSenderAccountId: AccountId = clientsInfo.uiUserId,
+    tokenSenderPrivateKey: PrivateKey = clientsInfo.uiUserKey,
+    gnosisSafe: HederaGnosisSafe
   ) => {
+    await Common.setAllowance(
+      token,
+      allowanceAmount,
+      undefined,
+      gnosisSafe.contractId,
+      tokenSenderAccountId,
+      tokenSenderPrivateKey,
+      tokenSenderClient
+    );
     const args = new ContractFunctionParameters()
       .addAddress(token.toSolidityAddress())
       .addAddress(receiver.toSolidityAddress())
@@ -164,7 +180,7 @@ export default class MultiSigDao extends BaseDao {
     const { result } = await this.execute(
       9_90_000,
       PROPOSE_TRANSFER_TRANSACTION,
-      client,
+      tokenSenderClient,
       args
     );
     const txnHash = result.getBytes32(0);

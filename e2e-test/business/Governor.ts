@@ -1,5 +1,6 @@
 import dex from "../../deployment/model/dex";
 import Base from "./Base";
+import Common from "./Common";
 import GodHolder from "../../e2e-test/business/GodHolder";
 
 import { Helper } from "../../utils/Helper";
@@ -94,8 +95,15 @@ export default class Governor extends Base {
     title: string,
     client: Client = clientsInfo.operatorClient,
     description: string = DEFAULT_DESCRIPTION,
-    link: string = DEFAULT_LINK
+    link: string = DEFAULT_LINK,
+    creatorAccountId: AccountId = clientsInfo.operatorId,
+    creatorPrivateKey: PrivateKey = clientsInfo.operatorKey
   ) => {
+    await this.setupAllowanceForProposalCreation(
+      client,
+      creatorAccountId,
+      creatorPrivateKey
+    );
     const args = new ContractFunctionParameters()
       .addString(title)
       .addString(description)
@@ -122,8 +130,15 @@ export default class Governor extends Base {
     client: Client = clientsInfo.operatorClient,
     description: string = DEFAULT_DESCRIPTION,
     link: string = DEFAULT_LINK,
-    creater: string = clientsInfo.operatorId.toSolidityAddress()
+    creator: string = clientsInfo.operatorId.toSolidityAddress(),
+    creatorAccountId: AccountId = clientsInfo.operatorId,
+    creatorPrivateKey: PrivateKey = clientsInfo.operatorKey
   ) => {
+    await this.setupAllowanceForProposalCreation(
+      client,
+      creatorAccountId,
+      creatorPrivateKey
+    );
     const args = new ContractFunctionParameters()
       .addString(title)
       .addString(description)
@@ -132,7 +147,7 @@ export default class Governor extends Base {
       .addAddress(toAddress) // to
       .addAddress(tokenId) // tokenToTransfer
       .addInt256(BigNumber(tokenAmount)) // amountToTransfer
-      .addAddress(creater); // proposal creater
+      .addAddress(creator); // proposal creator
     const { result } = await this.execute(
       9000000,
       CREATE_PROPOSAL,
@@ -152,8 +167,15 @@ export default class Governor extends Base {
     title: string,
     client: Client = clientsInfo.operatorClient,
     description: string = DEFAULT_DESCRIPTION,
-    link: string = DEFAULT_LINK
+    link: string = DEFAULT_LINK,
+    creatorAccountId: AccountId = clientsInfo.operatorId,
+    creatorPrivateKey: PrivateKey = clientsInfo.operatorKey
   ) => {
+    await this.setupAllowanceForProposalCreation(
+      client,
+      creatorAccountId,
+      creatorPrivateKey
+    );
     const args = new ContractFunctionParameters()
       .addString(title)
       .addString(description)
@@ -283,6 +305,27 @@ export default class Governor extends Base {
     return requiredState === state;
   };
 
+  setAllowanceAndExecuteTTProposal = async (
+    title: string,
+    tokenId: string | TokenId,
+    tokenAmount: number,
+    spenderAccountId: string | AccountId,
+    tokenSenderAccountId: string | AccountId,
+    tokenSenderPrivateKey: PrivateKey,
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    await Common.setAllowance(
+      tokenId,
+      tokenAmount,
+      undefined,
+      spenderAccountId,
+      tokenSenderAccountId,
+      tokenSenderPrivateKey,
+      client
+    );
+    return await this.executeProposal(title, tokenSenderPrivateKey, client);
+  };
+
   executeProposal = async (
     title: string,
     fromPrivateKey: PrivateKey | PrivateKey[] | undefined = undefined,
@@ -401,8 +444,15 @@ export default class Governor extends Base {
     tokenAdminPublicKey: PublicKey,
     client: Client = clientsInfo.operatorClient,
     description: string = DEFAULT_DESCRIPTION,
-    link: string = DEFAULT_LINK
+    link: string = DEFAULT_LINK,
+    creatorAccountId: AccountId = clientsInfo.operatorId,
+    creatorPrivateKey: PrivateKey = clientsInfo.operatorKey
   ) => {
+    await this.setupAllowanceForProposalCreation(
+      client,
+      creatorAccountId,
+      creatorPrivateKey
+    );
     const args = new ContractFunctionParameters()
       .addString(title)
       .addString(description)
@@ -447,6 +497,24 @@ export default class Governor extends Base {
 
   private createParams(proposalId: string) {
     return new ContractFunctionParameters().addUint256(BigNumber(proposalId));
+  }
+
+  async setupAllowanceForProposalCreation(
+    creatorClient: Client,
+    creatorAccountId: AccountId,
+    creatorPrivateKey: PrivateKey
+  ) {
+    const godTokenId = await this.getGODTokenAddress();
+    await Common.setAllowance(
+      godTokenId,
+      1e8,
+      undefined,
+      this.contractId,
+      creatorAccountId,
+      creatorPrivateKey,
+      creatorClient,
+      false
+    );
   }
 
   public getStateWithTimeout = async (

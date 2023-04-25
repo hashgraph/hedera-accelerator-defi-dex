@@ -298,7 +298,7 @@ describe("GovernanceDAOFactory contract tests", function () {
     expect(event3.args.newImplementation).to.be.equal(oneAddress);
   });
 
-  it("Verify getGODTokenHolderFactoryAddress guard check ", async function () {
+  it("Verify getTokenHolderFactoryAddress guard check ", async function () {
     const {
       governorDAOFactoryInstance,
       daoAdminOne,

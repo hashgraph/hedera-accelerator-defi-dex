@@ -63,15 +63,16 @@ contract GovernorTransferToken is
 
     function transferToken(uint256 proposalId) internal {
         TokenTransferData storage tokenTransferData = _proposalData[proposalId];
-        tokenService.associateTokenPublic(
+        _associateToken(
+            tokenService,
             tokenTransferData.transferToAccount,
             tokenTransferData.tokenToTransfer
         );
-        int responseCode = tokenService.transferTokenPublic(
+        int responseCode = _transferToken(
             tokenTransferData.tokenToTransfer,
             tokenTransferData.transferFromAccount,
             tokenTransferData.transferToAccount,
-            int64(tokenTransferData.transferTokenAmount)
+            tokenTransferData.transferTokenAmount
         );
         if (responseCode != HederaResponseCodes.SUCCESS) {
             revert("GovernorTransferToken: transfer token failed.");

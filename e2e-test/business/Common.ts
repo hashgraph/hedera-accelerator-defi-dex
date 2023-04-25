@@ -1,7 +1,10 @@
 import Base from "./Base";
 import Long from "long";
 import dex from "../../deployment/model/dex";
+
+import { Helper } from "../../utils/Helper";
 import {
+  Hbar,
   Client,
   TokenId,
   TokenType,
@@ -22,10 +25,63 @@ import {
 } from "@hashgraph/sdk";
 import { BigNumber } from "bignumber.js";
 import { clientsInfo } from "../../utils/ClientManagement";
-import axios from "axios";
+import { MirrorNodeService } from "../../utils/MirrorNodeService";
 
 export default class Common {
   static baseUrl: string = "https://testnet.mirrornode.hedera.com/";
+
+  static setAllowance = async (
+    tokenId: string | TokenId | undefined,
+    tokenAmount: number | undefined,
+    hBarAmount: number | string | Long | BigNumber | Hbar | undefined,
+    spenderAccountId: string | AccountId,
+    ownerAccountId: string | AccountId,
+    ownerAccountPrivateKey: PrivateKey,
+    client: Client,
+    isNFTType: boolean = false
+  ) => {
+    let info = "";
+    let transaction = new AccountAllowanceApproveTransaction();
+
+    if (tokenId) {
+      info += `, tokenId = ${tokenId.toString()}`;
+      if (isNFTType) {
+        transaction = transaction.approveTokenNftAllowanceAllSerials(
+          tokenId,
+          ownerAccountId,
+          spenderAccountId
+        );
+      } else if (tokenAmount) {
+        transaction = transaction.approveTokenAllowance(
+          tokenId,
+          ownerAccountId,
+          spenderAccountId,
+          tokenAmount
+        );
+        info += `, tokenAmount = ${tokenAmount}`;
+      }
+    }
+    if (hBarAmount) {
+      transaction = transaction.approveHbarAllowance(
+        ownerAccountId,
+        spenderAccountId,
+        hBarAmount
+      );
+      info += `, hBarAmount = ${hBarAmount}`;
+    }
+    const signedTx = await Helper.signTxnIfNeeded(
+      transaction,
+      ownerAccountPrivateKey,
+      client
+    );
+    const response = await signedTx.execute(client);
+    const receipt = await response.getReceipt(client);
+    const record = await response.getRecord(client);
+    const status = receipt.status;
+    console.log(
+      `- Common#setTokenAllowance(): status = ${status.toString()}, txnId = ${record.transactionId.toString()}, spenderId = ${spenderAccountId}, ownerId = ${ownerAccountId}${info}\n`
+    );
+  };
 
   static setNFTTokenAllowance = async (
     tokenId: string | TokenId,
@@ -218,7 +274,13 @@ export default class Common {
     client: Client = clientsInfo.operatorClient
   ) => {
     const response = await this.getBalanceInternally(id, client);
-    const tokenBalance = response.tokens?.get(tokenId) ?? new Long(0);
+    let tokenBalance = response.tokens?.get(tokenId);
+    if (!tokenBalance) {
+      const mirrorNodeService = MirrorNodeService.getInstance();
+      const tokens = await mirrorNodeService.getTokenBalance(id, [tokenId]);
+      tokenBalance = tokens.get(tokenId.toString());
+    }
+    tokenBalance = tokenBalance ?? new Long(0);
     console.log(
       `- Common#getTokenBalance(): id = ${id}, TokenId = ${tokenId}, Balance = ${tokenBalance}\n`
     );

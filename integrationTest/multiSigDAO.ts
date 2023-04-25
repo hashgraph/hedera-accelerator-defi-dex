@@ -5,7 +5,13 @@ import HederaGnosisSafe from "../e2e-test/business/HederaGnosisSafe";
 import { Helper } from "../utils/Helper";
 import { clientsInfo } from "../utils/ClientManagement";
 import { ContractService } from "../deployment/service/ContractService";
-import { AccountId, Client, ContractId, TokenId } from "@hashgraph/sdk";
+import {
+  Client,
+  TokenId,
+  AccountId,
+  ContractId,
+  PrivateKey,
+} from "@hashgraph/sdk";
 
 const csDev = new ContractService();
 
@@ -55,20 +61,27 @@ export async function executeDAO(
   tokenQty: number = TOKEN_QTY,
   tokenReceiver: AccountId | ContractId = clientsInfo.treasureId,
   tokenSenderClient: Client = clientsInfo.uiUserClient,
+  tokenSenderAccountId: AccountId = clientsInfo.uiUserId,
+  tokenSenderPrivateKey: PrivateKey = clientsInfo.uiUserKey,
   safeTxnExecutionClient: Client = clientsInfo.dexOwnerClient
 ) {
   console.log(`- executing Multi-sig DAO = ${multiSigDAO.contractId}\n`);
+
+  const gnosisSafe = await getGnosisSafeInstance(multiSigDAO);
+
   const transferTxnHash = await multiSigDAO.proposeTransferTransaction(
     token,
     tokenReceiver,
     tokenQty,
-    tokenSenderClient
+    tokenQty,
+    tokenSenderClient,
+    tokenSenderAccountId,
+    tokenSenderPrivateKey,
+    gnosisSafe
   );
   const transferTxnInfo = await multiSigDAO.getTransactionInfo(transferTxnHash);
 
   await multiSigDAO.state(transferTxnHash);
-
-  const gnosisSafe = await getGnosisSafeInstance(multiSigDAO);
 
   await gnosisSafe.getOwners();
 

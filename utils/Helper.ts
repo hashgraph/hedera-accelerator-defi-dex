@@ -5,7 +5,13 @@ import ContractMetadata from "./ContractMetadata";
 
 import { execSync } from "child_process";
 import { BigNumber } from "bignumber.js";
-import { ContractFunctionResult, TransactionId } from "@hashgraph/sdk";
+import {
+  Client,
+  PrivateKey,
+  Transaction,
+  TransactionId,
+  ContractFunctionResult,
+} from "@hashgraph/sdk";
 import { MirrorNodeService } from "../utils/MirrorNodeService";
 import { ContractService } from "../deployment/service/ContractService";
 
@@ -146,4 +152,20 @@ export class Helper {
   static currentTimeInMills() {
     return Date.now();
   }
+
+  static signTxnIfNeeded = async (
+    txn: Transaction,
+    keys: PrivateKey | PrivateKey[] | undefined = undefined,
+    client: Client
+  ) => {
+    if (!keys) return txn;
+
+    if (!Array.isArray(keys)) keys = [keys];
+
+    txn.freezeWith(client);
+    for (const key of keys) {
+      txn = await txn.sign(key);
+    }
+    return txn;
+  };
 }

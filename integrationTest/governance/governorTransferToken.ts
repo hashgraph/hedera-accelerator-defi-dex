@@ -19,7 +19,7 @@ const governorTransferTokenId = csDev.getContractWithProxy(
 const governor = new Governor(governorTransferTokenId);
 const godHolder = new GodHolder(godHolderProxyId);
 
-const TOKEN_ID = TokenId.fromString(dex.TOKEN_LAB49_1).toSolidityAddress();
+const TOKEN_ID = TokenId.fromString(dex.TOKEN_LAB49_1);
 const TOKEN_QTY = 1e8;
 
 async function main() {
@@ -30,7 +30,7 @@ async function main() {
     title,
     clientsInfo.treasureId.toSolidityAddress(),
     clientsInfo.operatorId.toSolidityAddress(),
-    TOKEN_ID,
+    TOKEN_ID.toSolidityAddress(),
     TOKEN_QTY
   );
   await governor.getProposalDetails(proposalId);
@@ -39,7 +39,15 @@ async function main() {
   await governor.isVoteSucceeded(proposalId);
   await governor.proposalVotes(proposalId);
   if (await governor.isSucceeded(proposalId)) {
-    await governor.executeProposal(title, clientsInfo.treasureKey);
+    await governor.setAllowanceAndExecuteTTProposal(
+      title,
+      TOKEN_ID,
+      TOKEN_QTY,
+      governor.contractId,
+      clientsInfo.treasureId,
+      clientsInfo.treasureKey,
+      clientsInfo.treasureClient
+    );
   } else {
     await governor.cancelProposal(title, clientsInfo.operatorClient);
   }
