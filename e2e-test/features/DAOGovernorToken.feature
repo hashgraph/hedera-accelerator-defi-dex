@@ -21,8 +21,8 @@ Scenario: Verify proposal is not created if user gives -ve transfer amount
 
 Scenario: Verify user can create a DAO and then transfer token with help of proposal    
     When User fetches target token balance of account to which user wants to transfer 
-    When User create a new token transfer proposal with title "tokentransferproposaltitle1" and token amount 1 with the help of DAO
     Then User checks that target token balance in the payer account is more than transfer amount 1
+    When User create a new token transfer proposal with title "tokentransferproposaltitle1" and token amount 1 with the help of DAO    
     When User wait for token transfer proposal state to be "Active" for maximum 15 seconds
     Then User verify token transfer proposal state is "Active"
     When User lock 10001 GOD token before voting to token transfer proposal
@@ -50,8 +50,8 @@ Scenario: Verify DAO and proposal flow with factory DAO
     When User create a DAO with name "factorydao1" and url "factorydao1url"   
     When User initialize the governor token dao and governor token transfer and god holder contract via dao factory
     When User fetches target token balance of account to which user wants to transfer 
-    When User create a new token transfer proposal with title "factorytesttitle11abxz" and token amount 1 with the help of DAO
     Then User checks that target token balance in the payer account is more than transfer amount 1
+    When User create a new token transfer proposal with title "factorytesttitle11abxz" and token amount 1 with the help of DAO    
     When User wait for token transfer proposal state to be "Active" for maximum 15 seconds
     Then User verify token transfer proposal state is "Active"
     When User lock 10001 GOD token before voting to token transfer proposal
