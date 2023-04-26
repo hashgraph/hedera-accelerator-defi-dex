@@ -2,6 +2,8 @@ import { Helper } from "../../utils/Helper";
 import { AccountId, Client, PrivateKey, TokenId } from "@hashgraph/sdk";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { ContractService } from "../../deployment/service/ContractService";
+import { InstanceProvider } from "../../utils/InstanceProvider";
+import { main as deployContracts } from "../../deployment/scripts/createContractsE2E";
 
 import dex from "../../deployment/model/dex";
 import Governor from "../../e2e-test/business/Governor";
@@ -9,25 +11,36 @@ import NFTHolder from "../../e2e-test/business/NFTHolder";
 import GovernorTokenDao from "../../e2e-test/business/GovernorTokenDao";
 import * as GovernorTokenMetaData from "../../e2e-test/business/GovernorTokenDao";
 
-import { InstanceProvider } from "../../utils/InstanceProvider";
-
-const TOKEN_ID = TokenId.fromString(dex.TOKEN_LAB49_1);
 const TOKEN_QTY = 1 * 1e8;
-
+const TOKEN_ID = TokenId.fromString(dex.TOKEN_LAB49_1);
 const adminAddress: string = clientsInfo.operatorId.toSolidityAddress();
 
 async function main() {
+  const csDev = new ContractService();
+  await deployContracts([
+    csDev.governorTTContractName,
+    csDev.governorTokenDao,
+    csDev.nftHolderContract,
+  ]);
+
   const provider = InstanceProvider.getInstance();
+
   const nftHolder = provider.getNonFungibleTokenHolder();
   const governorTT = provider.getGovernor(ContractService.GOVERNOR_TT);
-  const governorTokenDao = provider.getGovernorTokenDao();
 
+  const governorTokenDao = provider.getGovernorTokenDao();
   await governorTokenDao.initialize(
     adminAddress,
     "Governor Token Dao",
     "dao url",
     governorTT,
-    nftHolder
+    nftHolder,
+    clientsInfo.operatorClient,
+    GovernorTokenMetaData.DEFAULT_QUORUM_THRESHOLD_IN_BSP,
+    GovernorTokenMetaData.DEFAULT_VOTING_DELAY,
+    GovernorTokenMetaData.DEFAULT_VOTING_PERIOD,
+    GovernorTokenMetaData.GOD_TOKEN_ID,
+    GovernorTokenMetaData.NFT_TOKEN_ID
   );
 
   await executeGovernorTokenTransferFlow(
@@ -45,10 +58,7 @@ async function main() {
 if (require.main === module) {
   main()
     .then(() => process.exit(0))
-    .catch((error) => {
-      console.error(error);
-      process.exit(1);
-    });
+    .catch(Helper.processError);
 }
 
 export async function executeGovernorTokenTransferFlow(

@@ -68,9 +68,10 @@ export default class Governor extends Base {
     defaultQuorumThresholdValue: number = DEFAULT_QUORUM_THRESHOLD_IN_BSP,
     votingDelay: number = DEFAULT_VOTING_DELAY,
     votingPeriod: number = DEFAULT_VOTING_PERIOD,
-    tokenId: TokenId = GOD_TOKEN_ID
+    governorTokenId: TokenId = GOD_TOKEN_ID,
+    holderTokenId: TokenId = GOD_TOKEN_ID
   ) {
-    await tokenHolder.initialize(client, tokenId.toSolidityAddress());
+    await tokenHolder.initialize(client, holderTokenId.toSolidityAddress());
 
     const godHolderContractId = tokenHolder.contractId;
     const godHolderProxyAddress =
@@ -78,7 +79,7 @@ export default class Governor extends Base {
 
     if (await this.isInitializationPending()) {
       const args = new ContractFunctionParameters()
-        .addAddress(tokenId.toSolidityAddress())
+        .addAddress(governorTokenId.toSolidityAddress())
         .addUint256(votingDelay)
         .addUint256(votingPeriod)
         .addAddress(this.htsAddress)
@@ -307,18 +308,17 @@ export default class Governor extends Base {
 
   setAllowanceAndExecuteTTProposal = async (
     title: string,
-    tokenId: string | TokenId,
+    tokenId: TokenId,
     tokenAmount: number,
     spenderAccountId: string | AccountId,
     tokenSenderAccountId: string | AccountId,
     tokenSenderPrivateKey: PrivateKey,
     client: Client = clientsInfo.operatorClient
   ) => {
-    await Common.setAllowance(
+    await Common.setTokenAllowance(
       tokenId,
-      tokenAmount,
-      undefined,
       spenderAccountId,
+      tokenAmount,
       tokenSenderAccountId,
       tokenSenderPrivateKey,
       client
@@ -505,15 +505,13 @@ export default class Governor extends Base {
     creatorPrivateKey: PrivateKey
   ) {
     const godTokenId = await this.getGODTokenAddress();
-    await Common.setAllowance(
+    await Common.setTokenAllowance(
       godTokenId,
-      1e8,
-      undefined,
       this.contractId,
+      1e8,
       creatorAccountId,
       creatorPrivateKey,
-      creatorClient,
-      false
+      creatorClient
     );
   }
 

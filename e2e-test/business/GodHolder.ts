@@ -110,15 +110,13 @@ export default class GodHolder extends Base {
   ) => {
     const tokenId = await this.getToken(client);
     await Common.getTokenBalance(accountId, tokenId, client);
-    await Common.setAllowance(
+    await Common.setTokenAllowance(
       tokenId,
-      allowanceAmount,
-      undefined,
       this.contractId,
+      allowanceAmount,
       accountId,
       accountPrivateKey,
-      client,
-      false
+      client
     );
 
     const args = new ContractFunctionParameters()

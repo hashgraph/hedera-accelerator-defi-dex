@@ -164,11 +164,10 @@ export default class MultiSigDao extends BaseDao {
     tokenSenderPrivateKey: PrivateKey = clientsInfo.uiUserKey,
     gnosisSafe: HederaGnosisSafe
   ) => {
-    await Common.setAllowance(
+    await Common.setTokenAllowance(
       token,
-      allowanceAmount,
-      undefined,
       gnosisSafe.contractId,
+      allowanceAmount,
       tokenSenderAccountId,
       tokenSenderPrivateKey,
       tokenSenderClient

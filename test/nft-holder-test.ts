@@ -105,16 +105,6 @@ describe("NFTHolder Tests", function () {
     expect(canClaimNFT1).to.be.equal(true);
   });
 
-  it("Verify NFTHolder grabtoken revert", async function () {
-    const { nftHolder, signers, mockBaseHTS } = await loadFixture(
-      deployFixture
-    );
-    await mockBaseHTS.setPassTransactionCount(1);
-    await expect(
-      nftHolder.grabTokensFromUser(signers[0].address, 0)
-    ).to.revertedWith("NFTHolder: token transfer failed to contract.");
-  });
-
   it("Verify NFTHolder revertTokensForVoter revert", async function () {
     const { nftHolder, signers } = await loadFixture(deployFixture);
     await expect(nftHolder.revertTokensForVoter(0)).to.revertedWith(

@@ -17,6 +17,7 @@ const GET_TOKEN = "getToken";
 const GRAB_TOKENS_FOR_VOTER = "grabTokensFromUser";
 const REVERT_TOKENS_FOR_VOTER = "revertTokensForVoter";
 const CAN_USER_CLAIM_TOKEN = "canUserClaimTokens";
+const BALANCE_OF_VOTER = "balanceOfVoter";
 
 export default class NFTHolder extends Base {
   initialize = async (
@@ -42,6 +43,23 @@ export default class NFTHolder extends Base {
       (await this.canUserClaimTokens(client)) &&
       (await this.revertTokensForVoter(client))
     );
+  };
+
+  balanceOfVoter = async (accountId: AccountId, client: Client) => {
+    const args = new ContractFunctionParameters().addAddress(
+      accountId.toSolidityAddress()
+    );
+    const { result } = await this.execute(
+      50_000,
+      BALANCE_OF_VOTER,
+      client,
+      args
+    );
+    const balance = result.getUint256(0);
+    console.log(
+      `- NFTHolder#${BALANCE_OF_VOTER}(): accountId = ${accountId.toString()}, balance = ${balance}\n`
+    );
+    return balance.toNumber();
   };
 
   canUserClaimTokens = async (client: Client) => {
@@ -83,15 +101,12 @@ export default class NFTHolder extends Base {
     client: Client = clientsInfo.operatorClient
   ) => {
     const tokenId = await this.getToken(client);
-    await Common.setAllowance(
+    await Common.setNFTTokenAllowance(
       tokenId,
-      undefined,
-      undefined,
       this.contractId,
       accountId,
       accountPrivateKey,
-      client,
-      true
+      client
     );
     const args = new ContractFunctionParameters()
       .addAddress(accountId.toSolidityAddress())

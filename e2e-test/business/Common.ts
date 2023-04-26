@@ -2,9 +2,7 @@ import Base from "./Base";
 import Long from "long";
 import dex from "../../deployment/model/dex";
 
-import { Helper } from "../../utils/Helper";
 import {
-  Hbar,
   Client,
   TokenId,
   TokenType,
@@ -21,7 +19,6 @@ import {
   TokenMintTransaction,
   TokenAssociateTransaction,
   AccountAllowanceApproveTransaction,
-  Hbar,
 } from "@hashgraph/sdk";
 import { BigNumber } from "bignumber.js";
 import { clientsInfo } from "../../utils/ClientManagement";
@@ -29,59 +26,6 @@ import { MirrorNodeService } from "../../utils/MirrorNodeService";
 
 export default class Common {
   static baseUrl: string = "https://testnet.mirrornode.hedera.com/";
-
-  static setAllowance = async (
-    tokenId: string | TokenId | undefined,
-    tokenAmount: number | undefined,
-    hBarAmount: number | string | Long | BigNumber | Hbar | undefined,
-    spenderAccountId: string | AccountId,
-    ownerAccountId: string | AccountId,
-    ownerAccountPrivateKey: PrivateKey,
-    client: Client,
-    isNFTType: boolean = false
-  ) => {
-    let info = "";
-    let transaction = new AccountAllowanceApproveTransaction();
-
-    if (tokenId) {
-      info += `, tokenId = ${tokenId.toString()}`;
-      if (isNFTType) {
-        transaction = transaction.approveTokenNftAllowanceAllSerials(
-          tokenId,
-          ownerAccountId,
-          spenderAccountId
-        );
-      } else if (tokenAmount) {
-        transaction = transaction.approveTokenAllowance(
-          tokenId,
-          ownerAccountId,
-          spenderAccountId,
-          tokenAmount
-        );
-        info += `, tokenAmount = ${tokenAmount}`;
-      }
-    }
-    if (hBarAmount) {
-      transaction = transaction.approveHbarAllowance(
-        ownerAccountId,
-        spenderAccountId,
-        hBarAmount
-      );
-      info += `, hBarAmount = ${hBarAmount}`;
-    }
-    const signedTx = await Helper.signTxnIfNeeded(
-      transaction,
-      ownerAccountPrivateKey,
-      client
-    );
-    const response = await signedTx.execute(client);
-    const receipt = await response.getReceipt(client);
-    const record = await response.getRecord(client);
-    const status = receipt.status;
-    console.log(
-      `- Common#setTokenAllowance(): status = ${status.toString()}, txnId = ${record.transactionId.toString()}, spenderId = ${spenderAccountId}, ownerId = ${ownerAccountId}${info}\n`
-    );
-  };
 
   static setNFTTokenAllowance = async (
     tokenId: string | TokenId,
@@ -103,7 +47,7 @@ export default class Common {
     const receipt = await txResponse.getReceipt(client);
     const transactionStatus = receipt.status;
     console.log(
-      `- Common#setTokenAllowance(): status = ${transactionStatus.toString()}, tokenId = ${tokenId.toString()},spenderAccountId =  ${spenderAccountId.toString()}, ownerAccount =  ${ownerAccount.toString()}\n`
+      `- Common#setNFTTokenAllowance(): status = ${transactionStatus.toString()}, tokenId = ${tokenId.toString()}, spenderAccountId = ${spenderAccountId.toString()}, ownerAccount = ${ownerAccount.toString()}\n`
     );
   };
 
@@ -155,7 +99,7 @@ export default class Common {
     const receipt = await txResponse.getReceipt(client);
     const transactionStatus = receipt.status;
     console.log(
-      `- Common#approveTokenAllowance(): status = ${transactionStatus.toString()}, tokenId = ${tokenId.toString()},  spenderAccountId =  ${spenderAccountId.toString()}, ownerAccount =  ${ownerAccount.toString()} amount = ${amount}\n`
+      `- Common#approveTokenAllowance(): status = ${transactionStatus.toString()}, tokenId = ${tokenId.toString()}, spenderAccountId = ${spenderAccountId.toString()}, ownerAccount = ${ownerAccount.toString()}, amount = ${amount}\n`
     );
   };
 
@@ -179,7 +123,7 @@ export default class Common {
     const receipt = await txResponse.getReceipt(client);
     const transactionStatus = receipt.status;
     console.log(
-      `- Common#approveHbarAllowance(): status = ${transactionStatus.toString()}, hbar, spenderAccountId =  ${spenderAccountId.toString()}, ownerAccount =  ${ownerAccount.toString()} amount = ${amount}\n`
+      `- Common#approveHbarAllowance(): status = ${transactionStatus.toString()}, spenderAccountId = ${spenderAccountId.toString()}, ownerAccount = ${ownerAccount.toString()}, hbar = ${amount}\n`
     );
   };
 
