@@ -42,6 +42,12 @@ async function createProposal(
     oldVersion.name
   }, New Logic Id =  ${newVersionContractId}, Old Logic Id = ${oldVersion.id!}, Proxy Id = ${oldVersion.transparentProxyId!}`;
 
+  await governor.setupAllowanceForProposalCreation(
+    clientsInfo.operatorClient,
+    clientsInfo.operatorId,
+    clientsInfo.operatorKey
+  );
+
   const result = await governor.createContractUpgradeProposal(
     ContractId.fromString(oldVersion.transparentProxyId!),
     ContractId.fromString(newVersionContractId!),

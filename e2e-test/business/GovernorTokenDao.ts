@@ -1,11 +1,19 @@
+import dex from "../../deployment/model/dex";
 import Base from "./Base";
+import Governor from "./Governor";
 import GodHolder from "../../e2e-test/business/GodHolder";
 import NFTHolder from "../../e2e-test/business/NFTHolder";
-import Governor from "./Governor";
 
 import { clientsInfo } from "../../utils/ClientManagement";
 import { BigNumber } from "bignumber.js";
-import { Client, ContractId, ContractFunctionParameters } from "@hashgraph/sdk";
+import {
+  Client,
+  TokenId,
+  AccountId,
+  PrivateKey,
+  ContractId,
+  ContractFunctionParameters,
+} from "@hashgraph/sdk";
 
 const INITIALIZE = "initialize";
 const CREATE_PROPOSAL = "createProposal";
@@ -16,11 +24,13 @@ const GET_WEB_LINKS = "getWebLinks";
 const GET_GOVERNOR_TOKEN_TRANSFER_CONTRACT_ADDRESS =
   "getGovernorTokenTransferContractAddress";
 
-const DEFAULT_DESCRIPTION = "description";
-const DEFAULT_LINK = "https://defi-ui.hedera.com/governance";
-const DEFAULT_QUORUM_THRESHOLD_IN_BSP = 500;
-const DEFAULT_VOTING_DELAY = 0; // blocks
-const DEFAULT_VOTING_PERIOD = 100; // blocks means 3 minutes as per test
+export const DEFAULT_DESCRIPTION = "description";
+export const DEFAULT_LINK = "https://defi-ui.hedera.com/governance";
+export const DEFAULT_QUORUM_THRESHOLD_IN_BSP = 500;
+export const DEFAULT_VOTING_DELAY = 0; // blocks
+export const DEFAULT_VOTING_PERIOD = 100; // blocks means 3 minutes as per test
+export const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
+export const NFT_TOKEN_ID = TokenId.fromString(dex.NFT_TOKEN_ID);
 
 export default class GovernorTokenDao extends Base {
   async initialize(
@@ -32,14 +42,18 @@ export default class GovernorTokenDao extends Base {
     client: Client = clientsInfo.operatorClient,
     defaultQuorumThresholdValue: number = DEFAULT_QUORUM_THRESHOLD_IN_BSP,
     votingDelay: number = DEFAULT_VOTING_DELAY,
-    votingPeriod: number = DEFAULT_VOTING_PERIOD
+    votingPeriod: number = DEFAULT_VOTING_PERIOD,
+    tokenId: TokenId = GOD_TOKEN_ID,
+    holderTokenId: TokenId = GOD_TOKEN_ID
   ) {
     await governor.initialize(
       tokenHolder,
       client,
       defaultQuorumThresholdValue,
       votingDelay,
-      votingPeriod
+      votingPeriod,
+      tokenId,
+      holderTokenId
     );
 
     if (await this.isInitializationPending()) {

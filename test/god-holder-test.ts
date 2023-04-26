@@ -60,7 +60,7 @@ describe("GODHolder tests", function () {
       ).revertedWith("GODHolder: balance amount must be a positive number");
 
       await token.setUserBalance(voter, TOTAL_AMOUNT);
-      await baseHTS.setPassTransactionCount(0);
+      await token.setTransaferFailed(true);
       await expect(
         godHolder.grabTokensFromUser(voter, TestHelper.toPrecision(1))
       ).revertedWith("GODHolder: token transfer failed to contract.");

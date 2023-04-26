@@ -102,16 +102,14 @@ export default class GodHolder extends Base {
   };
 
   lock = async (
-    amount: number = 50001e8, // 50001 tokens
+    lockedAmount: number = 50001e8, // 50001 tokens
     accountId: AccountId = clientsInfo.uiUserId,
     accountPrivateKey: PrivateKey = clientsInfo.uiUserKey,
     client: Client = clientsInfo.uiUserClient
   ) => {
-    const tokenId = await this.getToken(client);
-    await Common.getTokenBalance(accountId, tokenId, client);
     const args = new ContractFunctionParameters()
       .addAddress(accountId.toSolidityAddress())
-      .addUint256(amount);
+      .addUint256(lockedAmount);
     const { result } = await this.execute(
       5_00_000,
       GRAB_TOKEN_FROM_USER,
@@ -120,7 +118,27 @@ export default class GodHolder extends Base {
       accountPrivateKey
     );
     const code = result.getUint256(0);
-    console.log(`- GodHolder#${GRAB_TOKEN_FROM_USER}(): amount = ${amount}\n`);
+    console.log(
+      `- GodHolder#${GRAB_TOKEN_FROM_USER}(): amount = ${lockedAmount}\n`
+    );
     return code;
+  };
+
+  setupAllowanceForTokenLocking = async (
+    allowanceAmount: number = 50001e8, // 50001 tokens,
+    accountId: AccountId = clientsInfo.uiUserId,
+    accountPrivateKey: PrivateKey = clientsInfo.uiUserKey,
+    client: Client = clientsInfo.uiUserClient
+  ) => {
+    const tokenId = await this.getToken(client);
+    await Common.getTokenBalance(accountId, tokenId, client);
+    await Common.setTokenAllowance(
+      tokenId,
+      this.contractId,
+      allowanceAmount,
+      accountId,
+      accountPrivateKey,
+      client
+    );
   };
 }

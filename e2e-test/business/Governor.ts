@@ -1,5 +1,7 @@
 import dex from "../../deployment/model/dex";
 import Base from "./Base";
+import Common from "./Common";
+import NFTHolder from "./NFTHolder";
 import GodHolder from "../../e2e-test/business/GodHolder";
 
 import { Helper } from "../../utils/Helper";
@@ -15,7 +17,6 @@ import {
   ContractId,
   ContractFunctionParameters,
 } from "@hashgraph/sdk";
-import NFTHolder from "./NFTHolder";
 
 const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
 const DEFAULT_QUORUM_THRESHOLD_IN_BSP = 500;
@@ -67,9 +68,10 @@ export default class Governor extends Base {
     defaultQuorumThresholdValue: number = DEFAULT_QUORUM_THRESHOLD_IN_BSP,
     votingDelay: number = DEFAULT_VOTING_DELAY,
     votingPeriod: number = DEFAULT_VOTING_PERIOD,
-    tokenId: TokenId = GOD_TOKEN_ID
+    governorTokenId: TokenId = GOD_TOKEN_ID,
+    holderTokenId: TokenId = GOD_TOKEN_ID
   ) {
-    await tokenHolder.initialize(client, tokenId.toSolidityAddress());
+    await tokenHolder.initialize(client, holderTokenId.toSolidityAddress());
 
     const godHolderContractId = tokenHolder.contractId;
     const godHolderProxyAddress =
@@ -77,7 +79,7 @@ export default class Governor extends Base {
 
     if (await this.isInitializationPending()) {
       const args = new ContractFunctionParameters()
-        .addAddress(tokenId.toSolidityAddress())
+        .addAddress(governorTokenId.toSolidityAddress())
         .addUint256(votingDelay)
         .addUint256(votingPeriod)
         .addAddress(this.htsAddress)
@@ -122,7 +124,7 @@ export default class Governor extends Base {
     client: Client = clientsInfo.operatorClient,
     description: string = DEFAULT_DESCRIPTION,
     link: string = DEFAULT_LINK,
-    creater: string = clientsInfo.operatorId.toSolidityAddress()
+    creator: string = clientsInfo.operatorId.toSolidityAddress()
   ) => {
     const args = new ContractFunctionParameters()
       .addString(title)
@@ -132,7 +134,7 @@ export default class Governor extends Base {
       .addAddress(toAddress) // to
       .addAddress(tokenId) // tokenToTransfer
       .addInt256(BigNumber(tokenAmount)) // amountToTransfer
-      .addAddress(creater); // proposal creater
+      .addAddress(creator); // proposal creator
     const { result } = await this.execute(
       9000000,
       CREATE_PROPOSAL,
@@ -447,6 +449,40 @@ export default class Governor extends Base {
 
   private createParams(proposalId: string) {
     return new ContractFunctionParameters().addUint256(BigNumber(proposalId));
+  }
+
+  async setupAllowanceForProposalCreation(
+    creatorClient: Client,
+    creatorAccountId: AccountId,
+    creatorPrivateKey: PrivateKey
+  ) {
+    const godTokenId = await this.getGODTokenAddress();
+    await Common.setTokenAllowance(
+      godTokenId,
+      this.contractId,
+      1e8,
+      creatorAccountId,
+      creatorPrivateKey,
+      creatorClient
+    );
+  }
+
+  async setAllowanceForTransferTokenProposal(
+    tokenId: TokenId,
+    tokenAmount: number,
+    spenderAccountId: string | AccountId,
+    tokenSenderAccountId: string | AccountId,
+    tokenSenderPrivateKey: PrivateKey,
+    client: Client = clientsInfo.operatorClient
+  ) {
+    await Common.setTokenAllowance(
+      tokenId,
+      spenderAccountId,
+      tokenAmount,
+      tokenSenderAccountId,
+      tokenSenderPrivateKey,
+      client
+    );
   }
 
   public getStateWithTimeout = async (

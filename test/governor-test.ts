@@ -412,9 +412,7 @@ describe("Governor Tests", function () {
     });
 
     it("Verify proposal creation should be reverted when creator having zero GOD token", async function () {
-      const { governorText, token, creator, baseHTS } = await loadFixture(
-        deployFixture
-      );
+      const { governorText, token, creator } = await loadFixture(deployFixture);
       await token.setUserBalance(creator.address, 0);
       await verifyAccountBalance(token, creator.address, 0);
 
@@ -667,7 +665,7 @@ describe("Governor Tests", function () {
     });
 
     it("Verify transfer token proposal should be failed during execution", async function () {
-      const { governorTT, godHolder, token, signers, creator, baseHTS } =
+      const { governorTT, godHolder, token, signers, creator } =
         await loadFixture(deployFixture);
       await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
 
@@ -681,7 +679,7 @@ describe("Governor Tests", function () {
 
       await governorTT.castVotePublic(proposalId, 0, 1);
       await TestHelper.mineNBlocks(BLOCKS_COUNT);
-      await baseHTS.setPassTransactionCount(1);
+      await token.setTransaferFailed(true);
       await expect(governorTT.executeProposal(TITLE)).revertedWith(
         "GovernorTransferToken: transfer token failed."
       );

@@ -2,70 +2,51 @@ import { Helper } from "../../utils/Helper";
 import { AccountId, Client, PrivateKey, TokenId } from "@hashgraph/sdk";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { ContractService } from "../../deployment/service/ContractService";
+import { InstanceProvider } from "../../utils/InstanceProvider";
+import { main as deployContracts } from "../../deployment/scripts/createContractsE2E";
 
 import dex from "../../deployment/model/dex";
 import Governor from "../../e2e-test/business/Governor";
 import NFTHolder from "../../e2e-test/business/NFTHolder";
 import GovernorTokenDao from "../../e2e-test/business/GovernorTokenDao";
-import Common from "../../e2e-test/business/Common";
+import * as GovernorTokenMetaData from "../../e2e-test/business/GovernorTokenDao";
 
-const csDev = new ContractService();
-
-const governorTokenDaoProxyContractId = csDev.getContractWithProxy(
-  csDev.governorTokenDao
-).transparentProxyId!;
-const governorTokenDao = new GovernorTokenDao(governorTokenDaoProxyContractId);
-
-const governorTokenTransferProxyContractId = csDev.getContractWithProxy(
-  csDev.governorTTContractName
-).transparentProxyId!;
-const governorTokenTransfer = new Governor(
-  governorTokenTransferProxyContractId
-);
-
-const nftHolderProxyContractId = csDev.getContractWithProxy(
-  csDev.nftHolderContract
-).transparentProxyId!;
-const baseHTSContractId = csDev.getContract(csDev.baseContractName).id!;
-
-const nftHolder = new NFTHolder(nftHolderProxyContractId);
-
+const TOKEN_QTY = 1 * 1e8;
+const TOKEN_ID = TokenId.fromString(dex.TOKEN_LAB49_1);
 const adminAddress: string = clientsInfo.operatorId.toSolidityAddress();
 
-const TOKEN_ID = TokenId.fromString(dex.TOKEN_LAB49_1);
-const TOKEN_QTY = 1 * 1e8;
-
 async function main() {
-  try {
-    await governorTokenDao.initialize(
-      adminAddress,
-      "Governor Token Dao",
-      "dao url",
-      governorTokenTransfer,
-      nftHolder
-    );
-  } catch (error) {
-    console.log("governorTokenDao.initialize catch");
-    console.log(error);
-  }
-  await Common.setNFTTokenAllowance(
-    dex.NFT_TOKEN_ID,
-    baseHTSContractId,
-    clientsInfo.operatorId,
-    clientsInfo.operatorKey,
-    clientsInfo.operatorClient
-  );
+  const csDev = new ContractService();
+  await deployContracts([
+    csDev.governorTTContractName,
+    csDev.governorTokenDao,
+    csDev.nftHolderContract,
+  ]);
 
-  await nftHolder.grabTokensForVoter(
-    clientsInfo.operatorId.toSolidityAddress(),
-    12,
-    clientsInfo.operatorClient
+  const provider = InstanceProvider.getInstance();
+
+  const nftHolder = provider.getNonFungibleTokenHolder();
+  const governorTT = provider.getGovernor(ContractService.GOVERNOR_TT);
+
+  const governorTokenDao = provider.getGovernorTokenDao();
+  await governorTokenDao.initialize(
+    adminAddress,
+    "Governor Token Dao",
+    "dao url",
+    governorTT,
+    nftHolder,
+    clientsInfo.operatorClient,
+    GovernorTokenMetaData.DEFAULT_QUORUM_THRESHOLD_IN_BSP,
+    GovernorTokenMetaData.DEFAULT_VOTING_DELAY,
+    GovernorTokenMetaData.DEFAULT_VOTING_PERIOD,
+    GovernorTokenMetaData.GOD_TOKEN_ID,
+    GovernorTokenMetaData.NFT_TOKEN_ID
   );
 
   await executeGovernorTokenTransferFlow(
     nftHolder,
     governorTokenDao,
-    governorTokenTransfer
+    governorTT
   );
 
   await governorTokenDao.addWebLink();
@@ -77,10 +58,7 @@ async function main() {
 if (require.main === module) {
   main()
     .then(() => process.exit(0))
-    .catch((error) => {
-      console.error(error);
-      process.exit(1);
-    });
+    .catch(Helper.processError);
 }
 
 export async function executeGovernorTokenTransferFlow(
@@ -93,24 +71,39 @@ export async function executeGovernorTokenTransferFlow(
   tokenId: TokenId = TOKEN_ID,
   tokenAmount: number = TOKEN_QTY,
   proposalCreatorClient: Client = clientsInfo.operatorClient,
-  voterClient: Client = clientsInfo.operatorClient
+  proposalCreatorAccountId: AccountId = clientsInfo.operatorId,
+  proposalCreatorAccountPrivateKey: PrivateKey = clientsInfo.operatorKey,
+  voterClient: Client = clientsInfo.operatorClient,
+  voterAccountId: AccountId = clientsInfo.operatorId,
+  voterAccountPrivateKey: PrivateKey = clientsInfo.operatorKey
 ) {
-  const title = Helper.createProposalTitle("Transfer Token Proposal 7");
-  await Common.setTokenAllowance(
-    dex.GOD_TOKEN_ID,
-    baseHTSContractId,
-    10e8,
-    clientsInfo.operatorId,
-    clientsInfo.operatorKey,
-    clientsInfo.operatorClient
+  await nftHolder.setupAllowanceForTokenLocking(
+    voterAccountId,
+    voterAccountPrivateKey,
+    voterClient
   );
+  await nftHolder.grabTokensForVoter(
+    12,
+    voterAccountId,
+    voterAccountPrivateKey,
+    voterClient
+  );
+  await governorTokenTransfer.setupAllowanceForProposalCreation(
+    proposalCreatorClient,
+    proposalCreatorAccountId,
+    proposalCreatorAccountPrivateKey
+  );
+
+  const title = Helper.createProposalTitle("Token Transfer Proposal");
   const proposalId = await governorTokenDao.createTokenTransferProposal(
     title,
     fromAccount.toSolidityAddress(),
     toAccount.toSolidityAddress(),
     tokenId.toSolidityAddress(),
     tokenAmount,
-    proposalCreatorClient
+    proposalCreatorClient,
+    GovernorTokenMetaData.DEFAULT_LINK,
+    GovernorTokenMetaData.DEFAULT_DESCRIPTION
   );
 
   await governorTokenTransfer.getProposalDetails(proposalId);
@@ -119,13 +112,12 @@ export async function executeGovernorTokenTransferFlow(
   await governorTokenTransfer.isVoteSucceeded(proposalId);
   await governorTokenTransfer.proposalVotes(proposalId);
   if (await governorTokenTransfer.isSucceeded(proposalId)) {
-    await Common.setTokenAllowance(
-      dex.TOKEN_LAB49_1,
-      baseHTSContractId,
-      10e8,
-      clientsInfo.treasureId,
-      clientsInfo.treasureKey,
-      clientsInfo.operatorClient
+    await governorTokenTransfer.setAllowanceForTransferTokenProposal(
+      tokenId,
+      tokenAmount,
+      governorTokenTransfer.contractId,
+      fromAccount,
+      fromAccountPrivateKey
     );
     await governorTokenTransfer.executeProposal(title, fromAccountPrivateKey);
   } else {

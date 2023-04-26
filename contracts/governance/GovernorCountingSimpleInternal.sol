@@ -309,17 +309,21 @@ abstract contract GovernorCountingSimpleInternal is
             address(this),
             int256(PROPOSAL_CREATION_AMOUNT)
         );
-        if (code != HederaResponseCodes.SUCCESS) {
-            revert(
-                "GovernorCountingSimpleInternal: token transfer failed to contract."
-            );
-        }
+        require(
+            code == HederaResponseCodes.SUCCESS,
+            "GovernorCountingSimpleInternal: token transfer failed to contract."
+        );
     }
 
     function _returnGODToken(address creator) private {
-        bool tranferStatus = token.transfer(creator, PROPOSAL_CREATION_AMOUNT);
+        int256 code = _transferToken(
+            address(token),
+            address(this),
+            creator,
+            int256(PROPOSAL_CREATION_AMOUNT)
+        );
         require(
-            tranferStatus,
+            code == HederaResponseCodes.SUCCESS,
             "GovernorCountingSimpleInternal: token transfer failed from contract."
         );
     }

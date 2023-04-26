@@ -79,6 +79,9 @@ export class MirrorNodeService {
     const r = response.pop();
     const message: string = r.error_message;
     const timestamp = r.timestamp;
+    if (!message) {
+      return { message: r.result, timestamp };
+    }
     if (message === "0x" || !this.web3.utils.isHex(message)) {
       return { message, timestamp };
     }

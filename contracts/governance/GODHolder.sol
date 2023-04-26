@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.4;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "../common/IERC20.sol";
 import "../common/IBaseHTS.sol";
 import "../common/hedera/HederaResponseCodes.sol";
 import "./TokenHolder.sol";
@@ -32,8 +31,14 @@ contract GODHolder is TokenHolder {
             "GODHolder: unlock amount can't be greater to the locked amount"
         );
         godTokenForUsers[msg.sender] -= _amount;
+        int256 code = _transferToken(
+            address(_token),
+            address(this),
+            msg.sender,
+            int256(_amount)
+        );
         require(
-            IERC20(_token).transfer(msg.sender, _amount),
+            code == HederaResponseCodes.SUCCESS,
             "GODHolder: token transfer failed from contract."
         );
         if (godTokenForUsers[msg.sender] == 0) {
@@ -50,7 +55,7 @@ contract GODHolder is TokenHolder {
             _amount > 0,
             "GODHolder: lock amount must be a positive number"
         );
-        uint256 balance = IERC20(_token).balanceOf(user);
+        uint256 balance = _balanceOf(_token, user);
         require(
             balance > 0,
             "GODHolder: balance amount must be a positive number"
@@ -60,7 +65,7 @@ contract GODHolder is TokenHolder {
             "GODHolder: lock amount can't be greater to the balance amount"
         );
         godTokenForUsers[user] += _amount;
-        int256 code = _tokenService.transferTokenPublic(
+        int256 code = _transferToken(
             address(_token),
             address(user),
             address(this),

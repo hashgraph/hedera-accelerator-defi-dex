@@ -32,16 +32,26 @@ async function main() {
 
 async function createTokenViaProposal(name: string, symbol: string) {
   let tokenId: TokenId | null = null;
+
+  await godHolder.setupAllowanceForTokenLocking();
   await godHolder.lock();
+
+  await governor.setupAllowanceForProposalCreation(
+    clientsInfo.operatorClient,
+    clientsInfo.operatorId,
+    clientsInfo.operatorKey
+  );
+
   const title = Helper.createProposalTitle("Create Token Proposal");
   const proposalId = await governor.createTokenProposal(
     title,
-    "TEST-A",
-    "TEST-A1",
+    name,
+    symbol,
     clientsInfo.treasureId,
     clientsInfo.treasureKey.publicKey,
     clientsInfo.treasureId,
-    clientsInfo.treasureKey.publicKey
+    clientsInfo.treasureKey.publicKey,
+    clientsInfo.operatorClient
   );
 
   await governor.getProposalDetails(proposalId);

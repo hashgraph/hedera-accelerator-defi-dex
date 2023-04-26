@@ -7,6 +7,9 @@ export class ContractService {
   public static MULTI_SIG_FACTORY = "multisigdaofactory";
   public static SAFE = "hederagnosissafe";
   public static SAFE_FACTORY = "hederagnosissafeproxyfactory";
+  public static NFT_DAO_FACTORY = "nftdaofactory";
+  public static FT_DAO_FACTORY = "governancedaofactory";
+  public static GOVERNOR_TT = "governortransfertoken";
 
   public governanceDaoFactory = "governancedaofactory";
   public factoryContractName = "factory";

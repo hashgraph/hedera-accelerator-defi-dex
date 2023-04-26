@@ -1,15 +1,23 @@
 import dex from "../../deployment/model/dex";
 import Base from "./Base";
-import BigNumber from "bignumber.js";
+import Common from "./Common";
 
 import { clientsInfo } from "../../utils/ClientManagement";
-import { Client, TokenId, ContractFunctionParameters } from "@hashgraph/sdk";
+import {
+  Client,
+  TokenId,
+  AccountId,
+  PrivateKey,
+  ContractFunctionParameters,
+} from "@hashgraph/sdk";
 
 const NFT_TOKEN_ID = TokenId.fromString(dex.NFT_TOKEN_ID);
 const INITIALIZE = "initialize";
+const GET_TOKEN = "getToken";
 const GRAB_TOKENS_FOR_VOTER = "grabTokensFromUser";
 const REVERT_TOKENS_FOR_VOTER = "revertTokensForVoter";
 const CAN_USER_CLAIM_TOKEN = "canUserClaimTokens";
+const BALANCE_OF_VOTER = "balanceOfVoter";
 
 export default class NFTHolder extends Base {
   initialize = async (
@@ -35,6 +43,23 @@ export default class NFTHolder extends Base {
       (await this.canUserClaimTokens(client)) &&
       (await this.revertTokensForVoter(client))
     );
+  };
+
+  balanceOfVoter = async (accountId: AccountId, client: Client) => {
+    const args = new ContractFunctionParameters().addAddress(
+      accountId.toSolidityAddress()
+    );
+    const { result } = await this.execute(
+      50_000,
+      BALANCE_OF_VOTER,
+      client,
+      args
+    );
+    const balance = result.getUint256(0);
+    console.log(
+      `- NFTHolder#${BALANCE_OF_VOTER}(): accountId = ${accountId.toString()}, balance = ${balance}\n`
+    );
+    return balance.toNumber();
   };
 
   canUserClaimTokens = async (client: Client) => {
@@ -70,25 +95,58 @@ export default class NFTHolder extends Base {
   };
 
   grabTokensForVoter = async (
-    user: string,
-    tokenId: number,
-    client: Client
+    tokenSerialId: number,
+    accountId: AccountId = clientsInfo.operatorId,
+    accountPrivateKey: PrivateKey = clientsInfo.operatorKey,
+    client: Client = clientsInfo.operatorClient
   ) => {
+    const tokenId = await this.getToken(client);
+    await Common.setNFTTokenAllowance(
+      tokenId,
+      this.contractId,
+      accountId,
+      accountPrivateKey,
+      client
+    );
     const args = new ContractFunctionParameters()
-      .addAddress(user)
-      .addUint256(new BigNumber(tokenId));
-
+      .addAddress(accountId.toSolidityAddress())
+      .addUint256(tokenSerialId);
     const { result } = await this.execute(
-      9999999,
+      5_00_000,
       GRAB_TOKENS_FOR_VOTER,
       client,
       args,
-      clientsInfo.operatorKey
+      accountPrivateKey
     );
-    const responseCode = result.getUint256(0);
+    const code = result.getUint256(0);
     console.log(
-      `- NFTHolder#${GRAB_TOKENS_FOR_VOTER}(): response-code = ${responseCode}\n`
+      `- NFTHolder#${GRAB_TOKENS_FOR_VOTER}(): TokenId = ${tokenId.toString()}, serial id = ${tokenSerialId}\n`
     );
-    return responseCode;
+    return code;
+  };
+
+  setupAllowanceForTokenLocking = async (
+    accountId: AccountId = clientsInfo.operatorId,
+    accountPrivateKey: PrivateKey = clientsInfo.operatorKey,
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    const tokenId = await this.getToken(client);
+    await Common.setNFTTokenAllowance(
+      tokenId,
+      this.contractId,
+      accountId,
+      accountPrivateKey,
+      client
+    );
+  };
+
+  getToken = async (client: Client) => {
+    const { result } = await this.execute(35_000, GET_TOKEN, client);
+    const address = result.getAddress(0);
+    const token = TokenId.fromSolidityAddress(address);
+    console.log(
+      `- NFTHolder#${GET_TOKEN}(): address = ${address}, token = ${token.toString()}\n`
+    );
+    return token;
   };
 }

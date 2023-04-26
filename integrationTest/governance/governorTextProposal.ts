@@ -15,10 +15,22 @@ const governor = new Governor(governorTextContract.transparentProxyId!);
 const godHolder = new GodHolder(godHolderContract.transparentProxyId!);
 
 async function main() {
-  const title = Helper.createProposalTitle("Text Proposal");
   await governor.initialize(godHolder);
+
+  await godHolder.setupAllowanceForTokenLocking();
   await godHolder.lock();
-  const proposalId = await governor.createTextProposal(title);
+
+  await governor.setupAllowanceForProposalCreation(
+    clientsInfo.operatorClient,
+    clientsInfo.operatorId,
+    clientsInfo.operatorKey
+  );
+
+  const title = Helper.createProposalTitle("Text Proposal");
+  const proposalId = await governor.createTextProposal(
+    title,
+    clientsInfo.operatorClient
+  );
   await governor.getProposalDetails(proposalId);
   await governor.forVote(proposalId, 0, clientsInfo.uiUserClient);
   await governor.isQuorumReached(proposalId);

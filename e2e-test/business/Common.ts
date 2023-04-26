@@ -1,6 +1,7 @@
 import Base from "./Base";
 import Long from "long";
 import dex from "../../deployment/model/dex";
+
 import {
   Client,
   TokenId,
@@ -18,11 +19,10 @@ import {
   TokenMintTransaction,
   TokenAssociateTransaction,
   AccountAllowanceApproveTransaction,
-  Hbar,
 } from "@hashgraph/sdk";
 import { BigNumber } from "bignumber.js";
 import { clientsInfo } from "../../utils/ClientManagement";
-import axios from "axios";
+import { MirrorNodeService } from "../../utils/MirrorNodeService";
 
 export default class Common {
   static baseUrl: string = "https://testnet.mirrornode.hedera.com/";
@@ -47,7 +47,7 @@ export default class Common {
     const receipt = await txResponse.getReceipt(client);
     const transactionStatus = receipt.status;
     console.log(
-      `- Common#setTokenAllowance(): status = ${transactionStatus.toString()}, tokenId = ${tokenId.toString()},spenderAccountId =  ${spenderAccountId.toString()}, ownerAccount =  ${ownerAccount.toString()}\n`
+      `- Common#setNFTTokenAllowance(): status = ${transactionStatus.toString()}, tokenId = ${tokenId.toString()}, spenderAccountId = ${spenderAccountId.toString()}, ownerAccount = ${ownerAccount.toString()}\n`
     );
   };
 
@@ -99,7 +99,7 @@ export default class Common {
     const receipt = await txResponse.getReceipt(client);
     const transactionStatus = receipt.status;
     console.log(
-      `- Common#approveTokenAllowance(): status = ${transactionStatus.toString()}, tokenId = ${tokenId.toString()},  spenderAccountId =  ${spenderAccountId.toString()}, ownerAccount =  ${ownerAccount.toString()} amount = ${amount}\n`
+      `- Common#approveTokenAllowance(): status = ${transactionStatus.toString()}, tokenId = ${tokenId.toString()}, spenderAccountId = ${spenderAccountId.toString()}, ownerAccount = ${ownerAccount.toString()}, amount = ${amount}\n`
     );
   };
 
@@ -123,7 +123,7 @@ export default class Common {
     const receipt = await txResponse.getReceipt(client);
     const transactionStatus = receipt.status;
     console.log(
-      `- Common#approveHbarAllowance(): status = ${transactionStatus.toString()}, hbar, spenderAccountId =  ${spenderAccountId.toString()}, ownerAccount =  ${ownerAccount.toString()} amount = ${amount}\n`
+      `- Common#approveHbarAllowance(): status = ${transactionStatus.toString()}, spenderAccountId = ${spenderAccountId.toString()}, ownerAccount = ${ownerAccount.toString()}, hbar = ${amount}\n`
     );
   };
 
@@ -218,7 +218,13 @@ export default class Common {
     client: Client = clientsInfo.operatorClient
   ) => {
     const response = await this.getBalanceInternally(id, client);
-    const tokenBalance = response.tokens?.get(tokenId) ?? new Long(0);
+    let tokenBalance = response.tokens?.get(tokenId);
+    if (!tokenBalance) {
+      const mirrorNodeService = MirrorNodeService.getInstance();
+      const tokens = await mirrorNodeService.getTokenBalance(id, [tokenId]);
+      tokenBalance = tokens.get(tokenId.toString());
+    }
+    tokenBalance = tokenBalance ?? new Long(0);
     console.log(
       `- Common#getTokenBalance(): id = ${id}, TokenId = ${tokenId}, Balance = ${tokenBalance}\n`
     );

@@ -2,9 +2,11 @@ import { Helper } from "../../utils/Helper";
 import { main as deployContract } from "./logic";
 import { main as createProxy } from "./transparentUpgradeableProxy";
 
-async function main() {
-  const inputs = Helper.readWorkflowInputs();
-  const contracts = String(inputs.contracts).split(",");
+export async function main(contracts: string[]) {
+  if (contracts.length === 0) {
+    const inputs = Helper.readWorkflowInputs();
+    contracts = String(inputs.contracts).split(",");
+  }
   console.log("- Contracts for deployment are:", contracts);
 
   const startTime = Helper.currentTimeInMills();
@@ -19,9 +21,8 @@ async function main() {
   );
 }
 
-main()
-  .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
+if (require.main === module) {
+  main([])
+    .then(() => process.exit(0))
+    .catch(Helper.processError);
+}
