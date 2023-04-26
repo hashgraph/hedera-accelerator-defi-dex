@@ -1,4 +1,4 @@
-import { ContractId } from "@hashgraph/sdk";
+import { ContractId, AccountId, TokenId } from "@hashgraph/sdk";
 import { ContractService } from "../../deployment/service/ContractService";
 import Governor from "../business/Governor";
 import Common from "../business/Common";
@@ -9,9 +9,13 @@ import { expect } from "chai";
 import Factory from "../business/Factory";
 import { main as deployContract } from "../../deployment/scripts/logic";
 import { CommonSteps } from "./CommonSteps";
+import dex from "../../deployment/model/dex";
 
 const csDev = new ContractService();
 const godHolderContract = csDev.getContractWithProxy(csDev.godHolderContract);
+const godHolderProxyContractId = csDev.getContractWithProxy(
+  csDev.godHolderContract
+).transparentProxyId!;
 const governorUpgradeContract = csDev.getContractWithProxy(
   csDev.governorUpgradeContract
 );
@@ -25,9 +29,6 @@ const godHolder = new GodHolder(godHolderContractId);
 
 let proposalId: string;
 let upgradeResponse: any;
-const DEFAULT_QUORUM_THRESHOLD_IN_BSP = 1;
-const DEFAULT_VOTING_DELAY = 2;
-const DEFAULT_VOTING_PERIOD = 4;
 let afterUpgradeResponse: any;
 let factoryLogicIdOld: string;
 let factoryLogicIdNew: string;
@@ -47,12 +48,10 @@ export class GovernorUpgradeSteps extends CommonSteps {
     console.log("godHolderContractId :", godHolderContractId);
     console.log("treasureId :", clientsInfo.treasureId.toString());
     console.log("operatorId :", clientsInfo.operatorId.toString());
-    await governor.initialize(
+    await this.initializeGovernorContract(
+      governor,
       godHolder,
-      clientsInfo.operatorClient,
-      DEFAULT_QUORUM_THRESHOLD_IN_BSP,
-      DEFAULT_VOTING_DELAY,
-      DEFAULT_VOTING_PERIOD
+      clientsInfo.operatorClient
     );
   }
 
@@ -79,36 +78,7 @@ export class GovernorUpgradeSteps extends CommonSteps {
     30000
   )
   public async userWaitForState(state: string, seconds: number) {
-    let revertRequired: boolean = false;
-    if (state === "Executed") {
-      revertRequired = true;
-    }
-    const requiredState = await governor.getProposalNumericState(state);
-    try {
-      await governor.getStateWithTimeout(
-        proposalId,
-        requiredState,
-        seconds * 1000,
-        1000
-      );
-
-      if (revertRequired) {
-        console.log(
-          `State of proposal is - ${state} revert of god token required is- ${revertRequired}`
-        );
-        await godHolder.checkAndClaimGodTokens(clientsInfo.operatorClient);
-      }
-    } catch (e: any) {
-      console.log("Something went wrong while getting the state with timeout ");
-      console.log(e);
-      await this.cancelProposalInternally(
-        governor,
-        proposalId,
-        clientsInfo.operatorClient,
-        godHolder
-      );
-      throw e;
-    }
+    await this.waitForProposalState(governor, state, proposalId, seconds);
   }
 
   @then(
@@ -117,46 +87,18 @@ export class GovernorUpgradeSteps extends CommonSteps {
     30000
   )
   public async verifyProposalState(proposalState: string): Promise<void> {
-    try {
-      const currentState = await governor.state(
-        proposalId,
-        clientsInfo.operatorClient
-      );
-      const proposalStateNumeric = await governor.getProposalNumericState(
-        proposalState
-      );
-      expect(Number(currentState)).to.eql(proposalStateNumeric);
-    } catch (e: any) {
-      console.log("Something went wrong while verifying the state of proposal");
-      console.log(e);
-      await this.cancelProposalInternally(
-        governor,
-        proposalId,
-        clientsInfo.operatorClient,
-        godHolder
-      );
-      throw e;
-    }
+    const { currentState, proposalStateNumeric } = await this.getProposalState(
+      governor,
+      proposalId,
+      clientsInfo.operatorClient,
+      proposalState
+    );
+    expect(Number(currentState)).to.eql(proposalStateNumeric);
   }
 
   @when(/User vote "([^"]*)" contract upgrade proposal/, undefined, 30000)
   public async voteToProposal(vote: string): Promise<void> {
-    try {
-      const voteVal = await governor.getProposalVoteNumeric(vote);
-      await governor.vote(proposalId, voteVal, 0, clientsInfo.operatorClient);
-    } catch (e: any) {
-      console.log(
-        "Something went wrong while voting to proposal now cancelling the proposal"
-      );
-      console.log(e);
-      await this.cancelProposalInternally(
-        governor,
-        proposalId,
-        clientsInfo.operatorClient,
-        godHolder
-      );
-      throw e;
-    }
+    await this.vote(governor, vote, proposalId, clientsInfo.operatorClient);
   }
 
   @when(
@@ -164,26 +106,13 @@ export class GovernorUpgradeSteps extends CommonSteps {
     undefined,
     30000
   )
-  public async executeProposal(title: string) {
-    try {
-      await governor.executeProposal(
-        title,
-        clientsInfo.treasureKey,
-        clientsInfo.operatorClient
-      );
-    } catch (e: any) {
-      console.log(
-        "Something went wrong while executing proposal cancelling the proposal"
-      );
-      console.log(e);
-      await this.cancelProposalInternally(
-        governor,
-        proposalId,
-        clientsInfo.operatorClient,
-        godHolder
-      );
-      throw e;
-    }
+  public async execute(title: string) {
+    await this.executeProposal(
+      governor,
+      title,
+      clientsInfo.treasureKey,
+      clientsInfo.operatorClient
+    );
   }
 
   @when(
@@ -192,25 +121,11 @@ export class GovernorUpgradeSteps extends CommonSteps {
     30000
   )
   public async getContractAddressToUpgrade() {
-    try {
-      upgradeResponse =
-        await governor.getContractAddressesFromGovernorUpgradeContract(
-          proposalId,
-          clientsInfo.operatorClient
-        );
-    } catch (e: any) {
-      console.log(
-        "Something went wrong while getting the address of target contract from governor upgrade contract"
-      );
-      console.log(e);
-      await this.cancelProposalInternally(
-        governor,
+    upgradeResponse =
+      await governor.getContractAddressesFromGovernorUpgradeContract(
         proposalId,
-        clientsInfo.operatorClient,
-        godHolder
+        clientsInfo.operatorClient
       );
-      throw e;
-    }
   }
 
   @when(/User upgrade the contract/, undefined, 30000)
@@ -284,10 +199,29 @@ export class GovernorUpgradeSteps extends CommonSteps {
     await governor.cancelProposal(title, clientsInfo.operatorClient);
   }
 
-  @when(/User revert the god tokens for contract upgrade/, undefined, 30000)
-  public async revertGODToken() {
-    await this.revertGODTokensFromGodHolder(
+  @when(
+    /User lock (\d+\.?\d*) GOD token before voting to contract upgrade proposal/,
+    undefined,
+    30000
+  )
+  public async lockGOD(tokenAmt: number) {
+    await this.lockTokens(
       godHolder,
+      tokenAmt * CommonSteps.withPrecision,
+      clientsInfo.operatorId,
+      clientsInfo.operatorKey,
+      clientsInfo.operatorClient
+    );
+  }
+
+  @when(/User fetch GOD tokens back from GOD holder/, undefined, 30000)
+  public async revertGOD() {
+    await this.revertTokens(
+      ContractId.fromString(godHolderProxyContractId),
+      clientsInfo.operatorId,
+      AccountId.fromString(godHolderProxyContractId),
+      clientsInfo.operatorKey,
+      TokenId.fromString(dex.GOD_TOKEN_ID),
       clientsInfo.operatorClient
     );
   }

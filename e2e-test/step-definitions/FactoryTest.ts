@@ -10,6 +10,7 @@ import Factory from "../business/Factory";
 import { BigNumber } from "bignumber.js";
 import { httpRequest } from "../../deployment/api/HttpsService";
 import { Helper } from "../../utils/Helper";
+import { clientsInfo } from "../../utils/ClientManagement";
 
 const clientManagement = new ClientManagement();
 const client = clientManagement.createOperatorClient();
@@ -48,6 +49,7 @@ let pairContractId: any;
 let errorMsg: string = "";
 let sportPrice: BigNumber;
 let tokenNameIdMap = new Map();
+let pairAdd: any;
 
 @binding()
 export class FactorySteps {
@@ -208,7 +210,7 @@ export class FactorySteps {
   ): Promise<void> {
     tokenOne = tokenNameIdMap.get(firstTokenName);
     const tokensBeforeFetched = await pair.getPairQty(client);
-    const pairAdd = await pair.getTokenPairAddress();
+    pairAdd = await pair.getTokenPairAddress();
     tokensBefore =
       pairAdd.tokenAAddress == tokenOne.toSolidityAddress()
         ? tokensBeforeFetched
@@ -223,6 +225,17 @@ export class FactorySteps {
       tokenBCount,
       precision,
       client
+    );
+  }
+
+  @when(/User associate LPToken with account/, undefined, 30000)
+  public async associateLPToken() {
+    pairAdd = await pair.getTokenPairAddress();
+    await Common.associateTokensToAccount(
+      clientsInfo.operatorId,
+      [TokenId.fromSolidityAddress(pairAdd.lpTokenAddress)],
+      clientsInfo.operatorClient,
+      clientsInfo.operatorKey
     );
   }
 

@@ -341,7 +341,7 @@ export default class Common {
       console.log(
         `Common#associateTokensToAccount(): TokenIds = ${tokenIds},  accountId = ${accountId}, transaction status is: ${transactionStatus.toString()} \n`
       );
-    } catch (error) {
+    } catch (error: any) {
       console.log(
         `Common#associateTokensToAccount(): TokenIds = ${tokenIds},  accountId = ${accountId}, transaction status is: ${error.toString()} \n`
       );

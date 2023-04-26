@@ -10,6 +10,7 @@ Feature: Pair contract e2e test
         When User initialize lptoken contract
         When User initialize pair contract with swap transaction fee as 1.0%      
         Then Balance of "PairToken1" and "PairToken2" in user account is 200000 and 200000 respectively   
+        When User associate the LPToken with the account
         When User adds 210.00 units of PairToken1 and 230.00 units of PairToken2
         Then PairToken1 and PairToken2 balances in the pool are 210.00 units and 230.00 units respectively   
         Then Balance of "PairToken1" and "PairToken2" in user account is 199790.00 and 199770.00 respectively

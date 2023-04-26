@@ -11,6 +11,7 @@ Feature: Governor Contract Upgrade E2E Test
         When User create a new contract upgrade proposal with title "proposalforcontractupgrade1xy"
         When User wait for upgrade proposal state to be "Active" for max 5 seconds
         Then User verify that proposal current state is "Active"
+        When User lock 10001 GOD token before voting to contract upgrade proposal
         When User vote "For" contract upgrade proposal
         When User wait for upgrade proposal state to be "Succeeded" for max 5 seconds    
         When User execute the upgrade proposal with title "proposalforcontractupgrade1xy"
@@ -24,6 +25,7 @@ Feature: Governor Contract Upgrade E2E Test
         When User create a new contract upgrade proposal with title "proposalforcontractupgrade2xy"
         When User wait for upgrade proposal state to be "Active" for max 5 seconds
         Then User verify that proposal current state is "Active"
+        When User lock 10001 GOD token before voting to contract upgrade proposal
         When User vote "For" contract upgrade proposal
         When User wait for upgrade proposal state to be "Succeeded" for max 5 seconds    
         When User execute the upgrade proposal with title "proposalforcontractupgrade2xy"
@@ -38,10 +40,10 @@ Feature: Governor Contract Upgrade E2E Test
         When User create a new contract upgrade proposal with title "proposalforcontractupgrade4w42xy"
         When User wait for upgrade proposal state to be "Active" for max 5 seconds
         Then User verify that proposal current state is "Active"
+        When User lock 10001 GOD token before voting to contract upgrade proposal
         When User vote "Against" contract upgrade proposal
         When User wait for upgrade proposal state to be "Defeated" for max 15 seconds    
         When User cancel the contract upgrade proposal with title "proposalforcontractupgrade4w42xy" 
-        When User revert the god tokens for contract upgrade
         Then User verify logic address of target contract is not changed        
 
     Scenario: Verify contract is not upgraded if no body voted on it 
@@ -62,3 +64,6 @@ Feature: Governor Contract Upgrade E2E Test
         Then User verify that proposal current state is "Active"
         When User cancel the contract upgrade proposal with title "proposalforcontractupgrade2427xwy"
         Then User verify logic address of target contract is not changed
+
+     Scenario: Verify user gets back locked GOD tokens
+        When User fetch GOD tokens back from GOD holder
