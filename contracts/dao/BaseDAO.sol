@@ -23,9 +23,6 @@ abstract contract BaseDAO is OwnableUpgradeable, IErrors {
         if (bytes(name).length == 0) {
             revert InvalidInput("BaseDAO: name is empty");
         }
-        if (bytes(logoUrl).length == 0) {
-            revert InvalidInput("BaseDAO: url is empty");
-        }
         if (address(admin) == address(0)) {
             revert InvalidInput("BaseDAO: admin address is zero");
         }

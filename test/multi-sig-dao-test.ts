@@ -407,23 +407,6 @@ describe("MultiSig tests", function () {
         .withArgs("BaseDAO: name is empty");
     });
 
-    it("Verify createDAO should be reverted when dao url is empty", async function () {
-      const { multiSigDAOFactoryInstance, doaSignersAddresses, daoAdminOne } =
-        await loadFixture(deployFixture);
-      await expect(
-        multiSigDAOFactoryInstance.createDAO(
-          daoAdminOne.address,
-          DAO_NAME,
-          "",
-          doaSignersAddresses,
-          doaSignersAddresses.length,
-          true
-        )
-      )
-        .to.revertedWithCustomError(multiSigDAOFactoryInstance, "InvalidInput")
-        .withArgs("BaseDAO: url is empty");
-    });
-
     it("Verify createDAO should add new dao into list when the dao is public", async function () {
       const { multiSigDAOFactoryInstance, doaSignersAddresses, daoAdminOne } =
         await loadFixture(deployFixture);
