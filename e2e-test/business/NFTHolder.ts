@@ -125,6 +125,21 @@ export default class NFTHolder extends Base {
     return code;
   };
 
+  setupAllowanceForTokenLocking = async (
+    accountId: AccountId = clientsInfo.operatorId,
+    accountPrivateKey: PrivateKey = clientsInfo.operatorKey,
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    const tokenId = await this.getToken(client);
+    await Common.setNFTTokenAllowance(
+      tokenId,
+      this.contractId,
+      accountId,
+      accountPrivateKey,
+      client
+    );
+  };
+
   getToken = async (client: Client) => {
     const { result } = await this.execute(35_000, GET_TOKEN, client);
     const address = result.getAddress(0);

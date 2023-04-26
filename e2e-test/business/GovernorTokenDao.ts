@@ -80,16 +80,8 @@ export default class GovernorTokenDao extends Base {
     tokenAmount: number,
     client: Client = clientsInfo.operatorClient,
     description: string = DEFAULT_DESCRIPTION,
-    link: string = DEFAULT_LINK,
-    creatorAccountId: AccountId = clientsInfo.operatorId,
-    creatorPrivateKey: PrivateKey = clientsInfo.operatorKey,
-    governorTokenTransfer: Governor
+    link: string = DEFAULT_LINK
   ) => {
-    await governorTokenTransfer.setupAllowanceForProposalCreation(
-      client,
-      creatorAccountId,
-      creatorPrivateKey
-    );
     const args = new ContractFunctionParameters()
       .addString(title)
       .addString(description)

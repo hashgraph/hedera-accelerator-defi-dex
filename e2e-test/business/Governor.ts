@@ -1,6 +1,7 @@
 import dex from "../../deployment/model/dex";
 import Base from "./Base";
 import Common from "./Common";
+import NFTHolder from "./NFTHolder";
 import GodHolder from "../../e2e-test/business/GodHolder";
 
 import { Helper } from "../../utils/Helper";
@@ -16,7 +17,6 @@ import {
   ContractId,
   ContractFunctionParameters,
 } from "@hashgraph/sdk";
-import NFTHolder from "./NFTHolder";
 
 const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
 const DEFAULT_QUORUM_THRESHOLD_IN_BSP = 500;
@@ -96,15 +96,8 @@ export default class Governor extends Base {
     title: string,
     client: Client = clientsInfo.operatorClient,
     description: string = DEFAULT_DESCRIPTION,
-    link: string = DEFAULT_LINK,
-    creatorAccountId: AccountId = clientsInfo.operatorId,
-    creatorPrivateKey: PrivateKey = clientsInfo.operatorKey
+    link: string = DEFAULT_LINK
   ) => {
-    await this.setupAllowanceForProposalCreation(
-      client,
-      creatorAccountId,
-      creatorPrivateKey
-    );
     const args = new ContractFunctionParameters()
       .addString(title)
       .addString(description)
@@ -131,15 +124,8 @@ export default class Governor extends Base {
     client: Client = clientsInfo.operatorClient,
     description: string = DEFAULT_DESCRIPTION,
     link: string = DEFAULT_LINK,
-    creator: string = clientsInfo.operatorId.toSolidityAddress(),
-    creatorAccountId: AccountId = clientsInfo.operatorId,
-    creatorPrivateKey: PrivateKey = clientsInfo.operatorKey
+    creator: string = clientsInfo.operatorId.toSolidityAddress()
   ) => {
-    await this.setupAllowanceForProposalCreation(
-      client,
-      creatorAccountId,
-      creatorPrivateKey
-    );
     const args = new ContractFunctionParameters()
       .addString(title)
       .addString(description)
@@ -168,15 +154,8 @@ export default class Governor extends Base {
     title: string,
     client: Client = clientsInfo.operatorClient,
     description: string = DEFAULT_DESCRIPTION,
-    link: string = DEFAULT_LINK,
-    creatorAccountId: AccountId = clientsInfo.operatorId,
-    creatorPrivateKey: PrivateKey = clientsInfo.operatorKey
+    link: string = DEFAULT_LINK
   ) => {
-    await this.setupAllowanceForProposalCreation(
-      client,
-      creatorAccountId,
-      creatorPrivateKey
-    );
     const args = new ContractFunctionParameters()
       .addString(title)
       .addString(description)
@@ -306,26 +285,6 @@ export default class Governor extends Base {
     return requiredState === state;
   };
 
-  setAllowanceAndExecuteTTProposal = async (
-    title: string,
-    tokenId: TokenId,
-    tokenAmount: number,
-    spenderAccountId: string | AccountId,
-    tokenSenderAccountId: string | AccountId,
-    tokenSenderPrivateKey: PrivateKey,
-    client: Client = clientsInfo.operatorClient
-  ) => {
-    await Common.setTokenAllowance(
-      tokenId,
-      spenderAccountId,
-      tokenAmount,
-      tokenSenderAccountId,
-      tokenSenderPrivateKey,
-      client
-    );
-    return await this.executeProposal(title, tokenSenderPrivateKey, client);
-  };
-
   executeProposal = async (
     title: string,
     fromPrivateKey: PrivateKey | PrivateKey[] | undefined = undefined,
@@ -444,15 +403,8 @@ export default class Governor extends Base {
     tokenAdminPublicKey: PublicKey,
     client: Client = clientsInfo.operatorClient,
     description: string = DEFAULT_DESCRIPTION,
-    link: string = DEFAULT_LINK,
-    creatorAccountId: AccountId = clientsInfo.operatorId,
-    creatorPrivateKey: PrivateKey = clientsInfo.operatorKey
+    link: string = DEFAULT_LINK
   ) => {
-    await this.setupAllowanceForProposalCreation(
-      client,
-      creatorAccountId,
-      creatorPrivateKey
-    );
     const args = new ContractFunctionParameters()
       .addString(title)
       .addString(description)
@@ -512,6 +464,24 @@ export default class Governor extends Base {
       creatorAccountId,
       creatorPrivateKey,
       creatorClient
+    );
+  }
+
+  async setAllowanceForTransferTokenProposal(
+    tokenId: TokenId,
+    tokenAmount: number,
+    spenderAccountId: string | AccountId,
+    tokenSenderAccountId: string | AccountId,
+    tokenSenderPrivateKey: PrivateKey,
+    client: Client = clientsInfo.operatorClient
+  ) {
+    await Common.setTokenAllowance(
+      tokenId,
+      spenderAccountId,
+      tokenAmount,
+      tokenSenderAccountId,
+      tokenSenderPrivateKey,
+      client
     );
   }
 

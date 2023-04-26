@@ -23,15 +23,23 @@ const godHolder = new GodHolder(godHolderContract.transparentProxyId!);
 
 async function main() {
   const { id } = await deployment.deploy(csDev.factoryContractName);
-
   await governor.initialize(godHolder);
+
+  await godHolder.setupAllowanceForTokenLocking();
   await godHolder.lock();
+
+  await governor.setupAllowanceForProposalCreation(
+    clientsInfo.operatorClient,
+    clientsInfo.operatorId,
+    clientsInfo.operatorKey
+  );
 
   const title = Helper.createProposalTitle("Upgrade Proposal");
   const { proposalId } = await governor.createContractUpgradeProposal(
     ContractId.fromString(factoryProxyId),
     ContractId.fromString(id),
-    title
+    title,
+    clientsInfo.operatorClient
   );
 
   await governor.getProposalDetails(proposalId);

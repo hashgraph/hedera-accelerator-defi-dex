@@ -69,15 +69,19 @@ export async function executeDAO(
 
   const gnosisSafe = await getGnosisSafeInstance(multiSigDAO);
 
-  const transferTxnHash = await multiSigDAO.proposeTransferTransaction(
+  await multiSigDAO.setupAllowanceForTransferTransaction(
     token,
-    tokenReceiver,
-    tokenQty,
     tokenQty,
     tokenSenderClient,
     tokenSenderAccountId,
     tokenSenderPrivateKey,
     gnosisSafe
+  );
+  const transferTxnHash = await multiSigDAO.proposeTransferTransaction(
+    token,
+    tokenReceiver,
+    tokenQty,
+    tokenSenderClient
   );
   const transferTxnInfo = await multiSigDAO.getTransactionInfo(transferTxnHash);
 

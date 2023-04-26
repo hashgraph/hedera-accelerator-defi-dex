@@ -73,14 +73,27 @@ export async function executeGovernorTokenTransferFlow(
   proposalCreatorClient: Client = clientsInfo.operatorClient,
   proposalCreatorAccountId: AccountId = clientsInfo.operatorId,
   proposalCreatorAccountPrivateKey: PrivateKey = clientsInfo.operatorKey,
-  voterClient: Client = clientsInfo.operatorClient
+  voterClient: Client = clientsInfo.operatorClient,
+  voterAccountId: AccountId = clientsInfo.operatorId,
+  voterAccountPrivateKey: PrivateKey = clientsInfo.operatorKey
 ) {
+  await nftHolder.setupAllowanceForTokenLocking(
+    voterAccountId,
+    voterAccountPrivateKey,
+    voterClient
+  );
   await nftHolder.grabTokensForVoter(
     12,
-    clientsInfo.operatorId,
-    clientsInfo.operatorKey,
-    clientsInfo.operatorClient
+    voterAccountId,
+    voterAccountPrivateKey,
+    voterClient
   );
+  await governorTokenTransfer.setupAllowanceForProposalCreation(
+    proposalCreatorClient,
+    proposalCreatorAccountId,
+    proposalCreatorAccountPrivateKey
+  );
+
   const title = Helper.createProposalTitle("Token Transfer Proposal");
   const proposalId = await governorTokenDao.createTokenTransferProposal(
     title,
@@ -90,10 +103,7 @@ export async function executeGovernorTokenTransferFlow(
     tokenAmount,
     proposalCreatorClient,
     GovernorTokenMetaData.DEFAULT_LINK,
-    GovernorTokenMetaData.DEFAULT_DESCRIPTION,
-    proposalCreatorAccountId,
-    proposalCreatorAccountPrivateKey,
-    governorTokenTransfer
+    GovernorTokenMetaData.DEFAULT_DESCRIPTION
   );
 
   await governorTokenTransfer.getProposalDetails(proposalId);
@@ -102,14 +112,14 @@ export async function executeGovernorTokenTransferFlow(
   await governorTokenTransfer.isVoteSucceeded(proposalId);
   await governorTokenTransfer.proposalVotes(proposalId);
   if (await governorTokenTransfer.isSucceeded(proposalId)) {
-    await governorTokenTransfer.setAllowanceAndExecuteTTProposal(
-      title,
+    await governorTokenTransfer.setAllowanceForTransferTokenProposal(
       tokenId,
       tokenAmount,
       governorTokenTransfer.contractId,
       fromAccount,
       fromAccountPrivateKey
     );
+    await governorTokenTransfer.executeProposal(title, fromAccountPrivateKey);
   } else {
     await governorTokenTransfer.cancelProposal(title, proposalCreatorClient);
   }

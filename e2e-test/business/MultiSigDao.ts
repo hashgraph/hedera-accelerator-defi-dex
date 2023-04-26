@@ -154,10 +154,8 @@ export default class MultiSigDao extends BaseDao {
     return txnHash;
   };
 
-  proposeTransferTransaction = async (
+  setupAllowanceForTransferTransaction = async (
     token: TokenId,
-    receiver: AccountId | ContractId,
-    amount: number,
     allowanceAmount: number,
     tokenSenderClient: Client = clientsInfo.uiUserClient,
     tokenSenderAccountId: AccountId = clientsInfo.uiUserId,
@@ -172,6 +170,14 @@ export default class MultiSigDao extends BaseDao {
       tokenSenderPrivateKey,
       tokenSenderClient
     );
+  };
+
+  proposeTransferTransaction = async (
+    token: TokenId,
+    receiver: AccountId | ContractId,
+    amount: number,
+    tokenSenderClient: Client = clientsInfo.uiUserClient
+  ) => {
     const args = new ContractFunctionParameters()
       .addAddress(token.toSolidityAddress())
       .addAddress(receiver.toSolidityAddress())
