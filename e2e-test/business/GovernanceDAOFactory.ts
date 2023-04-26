@@ -62,8 +62,8 @@ export default class GovernanceDAOFactory extends Base {
     votingDelay: number,
     votingPeriod: number,
     isPrivate: boolean,
-    admin: string = clientsInfo.uiUserId.toSolidityAddress(),
-    client: Client = clientsInfo.uiUserClient
+    admin: string = clientsInfo.operatorId.toSolidityAddress(),
+    client: Client = clientsInfo.operatorClient
   ) => {
     const params = {
       admin,

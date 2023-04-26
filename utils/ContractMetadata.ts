@@ -22,9 +22,9 @@ export default class ContractMetadata {
     "GovernorTokenCreate",
     "Splitter",
     "Configuration",
-    "GODTokenHolderFactory",
     "GovernanceDAOFactory",
     "NFTDAOFactory",
+    "MultisigDAOFactory",
   ];
 
   static SUPPORTED_CONTRACTS_FOR_DEPLOYMENT = [
