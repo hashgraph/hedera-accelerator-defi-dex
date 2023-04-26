@@ -109,17 +109,6 @@ describe("GovernorTokenDAO Tests", function () {
 
     await expect(
       governorTokenDAOInstance.initialize(
-        signers[0].address,
-        daoName,
-        "",
-        GovernorTransferToken.address
-      )
-    )
-      .to.revertedWithCustomError(governorTokenDAOInstance, "InvalidInput")
-      .withArgs("BaseDAO: url is empty");
-
-    await expect(
-      governorTokenDAOInstance.initialize(
         TestHelper.ZERO_ADDRESS,
         daoName,
         daoLogoUrl,

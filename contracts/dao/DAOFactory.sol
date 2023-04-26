@@ -126,9 +126,6 @@ contract DAOFactory is OwnableUpgradeable, IEvents, IErrors {
         if (bytes(_name).length == 0) {
             revert InvalidInput("DAOFactory: name is empty");
         }
-        if (bytes(_logoUrl).length == 0) {
-            revert InvalidInput("DAOFactory: url is empty");
-        }
         if (address(_tokenAddress) == address(0)) {
             revert InvalidInput("DAOFactory: token address is zero");
         }

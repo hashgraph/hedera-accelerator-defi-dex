@@ -126,25 +126,6 @@ describe("GovernanceDAOFactory contract tests", function () {
       .withArgs("DAOFactory: name is empty");
   });
 
-  it("Verify createDAO should be reverted when dao url is empty", async function () {
-    const { governorDAOFactoryInstance, daoAdminOne, token } =
-      await loadFixture(deployFixture);
-    await expect(
-      governorDAOFactoryInstance.createDAO(
-        daoAdminOne.address,
-        DAO_NAME,
-        "",
-        token.address,
-        BigNumber.from(500),
-        BigNumber.from(0),
-        BigNumber.from(100),
-        true
-      )
-    )
-      .to.revertedWithCustomError(governorDAOFactoryInstance, "InvalidInput")
-      .withArgs("DAOFactory: url is empty");
-  });
-
   it("Verify createDAO should be reverted when token address is zero", async function () {
     const { governorDAOFactoryInstance, daoAdminOne } = await loadFixture(
       deployFixture
