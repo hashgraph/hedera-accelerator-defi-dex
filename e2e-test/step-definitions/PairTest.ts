@@ -2,13 +2,14 @@ import { binding, given, then, when } from "cucumber-tsflow";
 import { expect } from "chai";
 import { ContractService } from "../../deployment/service/ContractService";
 import ClientManagement, { clientsInfo } from "../../utils/ClientManagement";
-import { TokenId, ContractId } from "@hashgraph/sdk";
+import { TokenId, ContractId, AccountId } from "@hashgraph/sdk";
 import { BigNumber } from "bignumber.js";
 import Pair from "../business/Pair";
 import LpToken from "../business/LpToken";
 import Common from "../business/Common";
 import exp from "constants";
 import { Helper } from "../../utils/Helper";
+import { CommonSteps } from "./CommonSteps";
 
 const clientManagement = new ClientManagement();
 const contractService = new ContractService();
@@ -85,6 +86,7 @@ export class PairTestSteps {
   public async associateLPToken() {
     const lpTokenAddress = await lpToken.getLpTokenAddress();
     const tokenId = TokenId.fromSolidityAddress(lpTokenAddress);
+    tokenNameIdMap.set("lptoken", tokenId);
     await Common.associateTokensToAccount(
       clientsInfo.operatorId,
       [tokenId],
@@ -413,6 +415,27 @@ export class PairTestSteps {
     expect(firstTokenBalance / Number(precision)).to.eql(Number(firstTokenAmt));
     expect(secondTokenBalance / Number(precision)).to.eql(
       Number(secondTokenAmt)
+    );
+  }
+
+  @when(
+    /User set allowance amount as (\d+\.?\d*) for token "([^"]*)"/,
+    undefined,
+    30000
+  )
+  public async setAllowanceForToken(allowanceAmt: number, tokenName: string) {
+    const tokenId = tokenNameIdMap.get(tokenName);
+    const contractId =
+      tokenName === "lptoken"
+        ? lpTokenContract.transparentProxyId!
+        : pairContract.transparentProxyId!;
+    await Common.setTokenAllowance(
+      tokenId,
+      contractId,
+      allowanceAmt * CommonSteps.withPrecision,
+      id,
+      key,
+      client
     );
   }
 }

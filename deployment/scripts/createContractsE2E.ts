@@ -4,8 +4,8 @@ import { main as createProxy } from "./transparentUpgradeableProxy";
 
 export async function main(contracts: string[]) {
   if (contracts.length === 0) {
-    const inputs = Helper.readWorkflowInputs();
-    contracts = String(inputs.contracts).split(",");
+    // const inputs = Helper.readWorkflowInputs();
+    contracts = String("LPToken,Pair").split(",");
   }
   console.log("- Contracts for deployment are:", contracts);
 
