@@ -404,4 +404,50 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
       clientsInfo.operatorClient
     );
   }
+
+  @when(
+    /User set (\d+\.?\d*) as allowance amount for token locking for transfer token proposal via DAO/,
+    undefined,
+    30000
+  )
+  public async setAllowanceForTokenLocking(allowanceAmt: number) {
+    await this.setupAllowanceForTokenLocking(
+      godHolder,
+      allowanceAmt * CommonSteps.withPrecision,
+      clientsInfo.operatorId,
+      clientsInfo.operatorKey,
+      clientsInfo.operatorClient
+    );
+  }
+
+  @when(
+    /User set default allowance for token transfer proposal creation via DAO/,
+    undefined,
+    30000
+  )
+  public async setAllowanceForProposalCreation() {
+    await this.setupAllowanceForProposalCreation(
+      governorTokenTransfer,
+      clientsInfo.operatorClient,
+      clientsInfo.operatorId,
+      clientsInfo.operatorKey
+    );
+  }
+
+  @when(
+    /User set (\d+\.?\d*) as allowance amount of token which needs to be transferred via DAO/,
+    undefined,
+    30000
+  )
+  public async setAllowanceForTransferToken(allowanceAmt: number) {
+    await this.setupAllowanceForToken(
+      governorTokenTransfer,
+      tokenId,
+      allowanceAmt * CommonSteps.withPrecision,
+      governorTokenTransfer.contractId,
+      clientsInfo.operatorId,
+      clientsInfo.operatorKey,
+      clientsInfo.operatorClient
+    );
+  }
 }

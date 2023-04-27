@@ -3,6 +3,7 @@ let common = [
   '--require-module ts-node/register',
   '--require e2e-test/step-definitions/**/*.ts',
   '--publish',
+  '--tags=@Pair'
 ].join(' ');
 
 let testSuite1 = [
