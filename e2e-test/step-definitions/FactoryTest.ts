@@ -11,6 +11,7 @@ import { BigNumber } from "bignumber.js";
 import { httpRequest } from "../../deployment/api/HttpsService";
 import { Helper } from "../../utils/Helper";
 import { clientsInfo } from "../../utils/ClientManagement";
+import { CommonSteps } from "./CommonSteps";
 
 const clientManagement = new ClientManagement();
 const client = clientManagement.createOperatorClient();
@@ -50,6 +51,8 @@ let errorMsg: string = "";
 let sportPrice: BigNumber;
 let tokenNameIdMap = new Map();
 let pairAdd: any;
+let lpTokenAdd: string;
+let pairWithSameTokenAndFeeAddress: string;
 
 @binding()
 export class FactorySteps {
@@ -194,7 +197,27 @@ export class FactorySteps {
     const pairAddress = await factory.getPair(tokenOne, tokenHBARX);
     pairContractId = await this.fetchContractID(pairAddress);
     pair = new Pair(pairContractId);
+    lpTokenAdd = await pair.getLpContractAddress();
     precision = await pair.getPrecisionValue(client);
+  }
+
+  @when(/User associate token "([^"]*)" to account/)
+  public async associateToken(tokenName: string) {
+    const tokenId = tokenNameIdMap.get(tokenName);
+    Common.associateTokensToAccount(treasureId, [tokenId], client, treasureKey);
+  }
+
+  @when(/User associate LPToken with account/, undefined, 30000)
+  public async associateLPToken() {
+    pairAdd = await pair.getTokenPairAddress();
+    const tokenId = TokenId.fromSolidityAddress(pairAdd.lpTokenAddress);
+    tokenNameIdMap.set("lptoken", tokenId);
+    await Common.associateTokensToAccount(
+      clientsInfo.operatorId,
+      [TokenId.fromSolidityAddress(pairAdd.lpTokenAddress)],
+      clientsInfo.operatorClient,
+      clientsInfo.operatorKey
+    );
   }
 
   @when(
@@ -225,17 +248,6 @@ export class FactorySteps {
       tokenBCount,
       precision,
       client
-    );
-  }
-
-  @when(/User associate LPToken with account/, undefined, 30000)
-  public async associateLPToken() {
-    pairAdd = await pair.getTokenPairAddress();
-    await Common.associateTokensToAccount(
-      clientsInfo.operatorId,
-      [TokenId.fromSolidityAddress(pairAdd.lpTokenAddress)],
-      clientsInfo.operatorClient,
-      clientsInfo.operatorKey
     );
   }
 
@@ -478,6 +490,36 @@ export class FactorySteps {
     }
   }
 
+  @when(
+    /User create pair with tokens "([^"]*)" and "([^"]*)" and with fee as (\d+\.?\d*)%/,
+    undefined,
+    30000
+  )
+  public async createPairWithSameTokenAndSameFee(
+    firstTokenName: string,
+    secondTokenName: string,
+    feeAmt: number
+  ) {
+    const tokenOne = tokenNameIdMap.get(firstTokenName);
+    const tokenTwo = tokenNameIdMap.get(secondTokenName);
+    fees = new BigNumber(feeAmt * 100);
+    pairWithSameTokenAndFeeAddress = await factory.createPair(
+      tokenOne,
+      tokenTwo,
+      id,
+      key,
+      client,
+      fees
+    );
+  }
+
+  @then(
+    /User verify address received is same as of already created pair address/
+  )
+  public async verifyAddressIsSame() {
+    expect(actualPairAddress).to.eql(pairWithSameTokenAndFeeAddress);
+  }
+
   @then(/User receive error message "([^"]*)"/, undefined, 30000)
   public async verifyErrorMsg(msg: string) {
     expect(errorMsg).contains(msg);
@@ -493,6 +535,28 @@ export class FactorySteps {
   @then(/Expected spot price should be (\d+\.?\d*)/, undefined, 30000)
   public async verifySportPriceISNotZero(expectedSpotPrice: string) {
     expect(Number(sportPrice)).to.eql(Number(expectedSpotPrice));
+  }
+
+  @when(
+    /User sets allowance amount as (\d+\.?\d*) for token "([^"]*)"/,
+    undefined,
+    30000
+  )
+  public async setAllowanceForToken(allowanceAmt: number, tokenName: string) {
+    const tokenId = tokenNameIdMap.get(tokenName);
+
+    const contractId =
+      tokenName === "lptoken"
+        ? ContractId.fromSolidityAddress(lpTokenAdd).toString()
+        : pairContractId;
+    await Common.setTokenAllowance(
+      tokenId,
+      contractId,
+      allowanceAmt * CommonSteps.withPrecision,
+      id,
+      key,
+      client
+    );
   }
 
   private async fetchContractID(pairAddress: string): Promise<ContractId> {

@@ -8,10 +8,6 @@ Scenario: Verify user cann't create a DAO with empty name
     Given User tries to initialize the DAO governor token contract with name "" and url "testurl"
     Then User verify user receives error message "CONTRACT_REVERT_EXECUTED" 
 
-# Scenario: Verify user cann't create a DAO with empty url 
-#     Given User tries to initialize the DAO governor token contract with name "daoname" and url ""
-#     Then User verify user receives error message "CONTRACT_REVERT_EXECUTED" 
-
 Scenario: Verify user can create a DAO with same name 
     Given User initialize the DAO governor token contract with name "daoname" and url "DAOUrl11"
 
@@ -71,10 +67,6 @@ Scenario: Verify DAO and proposal flow with factory DAO
     When User wait for token transfer proposal state to be "Executed" for maximum 10 seconds
     When User receive GOD tokens back from GOD holder created via DAO factory
     Then User verify target token is transferred to payee account 
-
-# Scenario: Verify user can not create DAO with empty url via factory
-#      When User create a DAO with name "daonametest" and url ""
-#      Then User verify user receives error message "CONTRACT_REVERT_EXECUTED" 
 
 Scenario: Verify user can not create DAO with empty name via factory
      When User create a DAO with name "" and url "daoUrltest"

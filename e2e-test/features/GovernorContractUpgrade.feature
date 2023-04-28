@@ -4,6 +4,8 @@ Feature: Governor Contract Upgrade E2E Test
 
     This feature file contains e2e test for governor upgrade contract
 
+    #  default allowance for proposal creation is 1 token 
+
     Scenario: Verify contract is upgraded on proposal execution
         Given User have initialized the governor upgrade contract
         When User setup 10001 as allowance amount for token locking for contract upgrade proposal

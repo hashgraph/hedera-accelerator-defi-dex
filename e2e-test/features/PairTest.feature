@@ -9,7 +9,9 @@ Feature: Pair contract e2e test
         When User define lptoken name and symbol for newly created tokens 
         When User initialize lptoken contract
         When User initialize pair contract with swap transaction fee as 1.0%      
-        Then Balance of "PairToken1" and "PairToken2" in user account is 200000 and 200000 respectively   
+        Then Balance of "PairToken1" and "PairToken2" in user account is 200000 and 200000 respectively  
+        When User associate the token "PairToken1" to account 
+        When User associate the token "PairToken2" to account 
         When User associate the LPToken with the account
         When User set allowance amount as 250.00 for token "PairToken1"
         When User set allowance amount as 250.00 for token "PairToken2"
@@ -33,31 +35,31 @@ Feature: Pair contract e2e test
         Then User verify balance of "PairToken2" token with contract is 220.75786165
         Then Balance of "PairToken1" and "PairToken2" in user account is 199784.77766542 and 199777.90565263 respectively
 
-    # Scenario: Verify swapping PairToken2 increase the PairToken2 quantity and decreases PairToken1 quantity
-    #     Given PairToken1 and PairToken2 are present in pool
-    #     When User swap 10 unit of token "PairToken2" with slippage as 200.0
-    #     Then PairToken1 quantity is 209.18886403 and PairToken2 quantity is 228.25786165 in pool
-    #     Then User verify balance of "PairToken1" token with contract is 209.18886403
-    #     Then User verify balance of "PairToken2" token with contract is 228.25786165
-    #     Then Balance of "PairToken1" and "PairToken2" in user account is 199787.13331246 and 199767.90565263 respectively
+    Scenario: Verify swapping PairToken2 increase the PairToken2 quantity and decreases PairToken1 quantity
+        Given PairToken1 and PairToken2 are present in pool
+        When User swap 10 unit of token "PairToken2" with slippage as 200.0
+        Then PairToken1 quantity is 209.18886403 and PairToken2 quantity is 228.25786165 in pool
+        Then User verify balance of "PairToken1" token with contract is 209.18886403
+        Then User verify balance of "PairToken2" token with contract is 228.25786165
+        Then Balance of "PairToken1" and "PairToken2" in user account is 199787.13331246 and 199767.90565263 respectively
 
-    # Scenario: Verify spot price for PairToken1 
-    #     Given PairToken1 and PairToken2 are present in pool
-    #     When User fetch spot price for "PairToken1"
-    #     Then Expected spot price for PairToken1 should be 91645852
+    Scenario: Verify spot price for PairToken1 
+        Given PairToken1 and PairToken2 are present in pool
+        When User fetch spot price for "PairToken1"
+        Then Expected spot price for PairToken1 should be 91645852
 
-    # Scenario: Verify PairToken1 quantity for the given PairToken2 quantity
-    #     Given PairToken1 and PairToken2 are present in pool
-    #     When User gives 10 units of PairToken2 to the pool
-    #     Then Expected PairToken1 quantity should be 2.5
+    Scenario: Verify PairToken1 quantity for the given PairToken2 quantity
+        Given PairToken1 and PairToken2 are present in pool
+        When User gives 10 units of PairToken2 to the pool
+        Then Expected PairToken1 quantity should be 2.5
 
-    # Scenario: Verify slippage out value for given in PairToken2 quantity
-    #     Given PairToken1 and PairToken2 are present in pool
-    #     When User gives 10 units of PairToken1 for calculating slippage out
-    #     Then Expected slippage out value should be 63375395
+    Scenario: Verify slippage out value for given in PairToken2 quantity
+        Given PairToken1 and PairToken2 are present in pool
+        When User gives 10 units of PairToken1 for calculating slippage out
+        Then Expected slippage out value should be 63375395
 
-    #  Scenario: Verify slippage in value for given out PairToken2 quantity
-    #     Given PairToken1 and PairToken2 are present in pool
-    #     When User gives 10 units of PairToken2 for calculating slippage in
-    #     Then Expected slippage in value should be 63303831    
+     Scenario: Verify slippage in value for given out PairToken2 quantity
+        Given PairToken1 and PairToken2 are present in pool
+        When User gives 10 units of PairToken2 for calculating slippage in
+        Then Expected slippage in value should be 63303831    
       
