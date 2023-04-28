@@ -95,6 +95,12 @@ export class PairTestSteps {
     );
   }
 
+  @when(/User associate the token "([^"]*)" to account/)
+  public async associateToken(tokenName: string) {
+    const tokenId = tokenNameIdMap.get(tokenName);
+    Common.associateTokensToAccount(treasureId, [tokenId], client, treasureKey);
+  }
+
   @when(
     /User adds (-?\d+\.\d+) units of PairToken1 and (-?\d+\.\d+) units of PairToken2/,
     undefined,

@@ -68,10 +68,6 @@ Scenario: Verify DAO and proposal flow with factory DAO
     When User receive GOD tokens back from GOD holder created via DAO factory
     Then User verify target token is transferred to payee account 
 
-# Scenario: Verify user can not create DAO with empty url via factory
-#      When User create a DAO with name "daonametest" and url ""
-#      Then User verify user receives error message "CONTRACT_REVERT_EXECUTED" 
-
 Scenario: Verify user can not create DAO with empty name via factory
      When User create a DAO with name "" and url "daoUrltest"
      Then User verify user receives error message "CONTRACT_REVERT_EXECUTED" 
