@@ -5,7 +5,6 @@ pragma experimental ABIEncoderV2;
 import "./HederaTokenService.sol";
 
 abstract contract ExpiryHelper {
-
     function createAutoRenewExpiry(
         address autoRenewAccount,
         int64 autoRenewPeriod
@@ -14,7 +13,9 @@ abstract contract ExpiryHelper {
         expiry.autoRenewPeriod = autoRenewPeriod;
     }
 
-    function createSecondExpiry(int64 second) internal pure returns (IHederaTokenService.Expiry memory expiry) {
+    function createSecondExpiry(
+        int64 second
+    ) internal pure returns (IHederaTokenService.Expiry memory expiry) {
         expiry.second = second;
     }
 }
