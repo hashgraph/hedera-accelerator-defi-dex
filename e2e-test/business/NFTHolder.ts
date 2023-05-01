@@ -28,9 +28,12 @@ export default class NFTHolder extends Base {
       const args = new ContractFunctionParameters()
         .addAddress(this.htsAddress)
         .addAddress(tokenAddress);
-
-      await this.execute(900000, INITIALIZE, client, args);
-      console.log(`- NFTHolder#${INITIALIZE}(): done\n`);
+      try {
+        await this.execute(900000, INITIALIZE, client, args);
+        console.log(`- NFTHolder#${INITIALIZE}(): done\n`);
+      } catch (error: any) {
+        console.log(`- NFTHolder#${INITIALIZE}(): error, ${error.message}\n`);
+      }
       return;
     }
     console.log(`- NFTHolder#${INITIALIZE}(): already done\n`);

@@ -85,8 +85,12 @@ export default class Governor extends Base {
         .addAddress(this.htsAddress)
         .addAddress(godHolderProxyAddress)
         .addUint256(defaultQuorumThresholdValue);
-      await this.execute(1_500_000, INITIALIZE, client, args);
-      console.log(`- Governor#${INITIALIZE}(): done\n`);
+      try {
+        await this.execute(1_500_000, INITIALIZE, client, args);
+        console.log(`- Governor#${INITIALIZE}(): done\n`);
+      } catch (error: any) {
+        console.log(`- Governor#${INITIALIZE}(): error, ${error.message}\n`);
+      }
       return;
     }
     console.log(`- Governor#${INITIALIZE}(): already done\n`);

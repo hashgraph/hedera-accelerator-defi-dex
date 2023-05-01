@@ -27,8 +27,12 @@ export default class GodHolder extends Base {
       const args = new ContractFunctionParameters()
         .addAddress(this.htsAddress)
         .addAddress(tokenAddress);
-      await this.execute(9_00_000, INITIALIZE, client, args);
-      console.log(`- GodHolder#${INITIALIZE}(): done\n`);
+      try {
+        await this.execute(9_00_000, INITIALIZE, client, args);
+        console.log(`- GodHolder#${INITIALIZE}(): done\n`);
+      } catch (error: any) {
+        console.log(`- GodHolder#${INITIALIZE}(): error, ${error.message}\n`);
+      }
       return;
     }
     console.log(`- GodHolder#${INITIALIZE}(): already done\n`);
