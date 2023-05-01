@@ -3,9 +3,13 @@ import { main as deployContract } from "./logic";
 import { main as createProxy } from "./transparentUpgradeableProxy";
 
 export async function main(contracts: string[]) {
+  try {
+    console.log(process.env.CONTRACTS);
+  } catch (error) {
+    console.log(error);
+  }
   if (contracts.length === 0) {
-    const inputs = Helper.readWorkflowInputs();
-    contracts = String(inputs.contracts).split(",");
+    contracts = String(process.env.CONTRACTS).split(",");
   }
   console.log("- Contracts for deployment are:", contracts);
 
