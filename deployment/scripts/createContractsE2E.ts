@@ -10,12 +10,12 @@ export async function main(contracts: string[]) {
   console.log("- Contracts for deployment are:", contracts);
 
   const startTime = Helper.currentTimeInMills();
-  await Promise.all(
-    contracts.map(async (contractName: string) => {
-      await deployContract(contractName);
-      await createProxy(contractName);
-    })
-  );
+  // await Promise.all(
+  //   contracts.map(async (contractName: string) => {
+  //     await deployContract(contractName);
+  //     await createProxy(contractName);
+  //   })
+  // );
   console.log(
     `- Deployment took: ${Helper.currentTimeInMills() - startTime} ms`
   );

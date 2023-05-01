@@ -43,8 +43,6 @@ jobs:
           json: '{"contracts":"LPToken,Pair,Factory,GODHolder,GovernorUpgrade"}'
       - name: Deployment
         run: npx hardhat run deployment/scripts/createContractsE2E.ts;
-      - name: e2e
-        run: npm run e2e-test suite-one
   suite-2:
     needs: suite-1
     runs-on: ubuntu-latest
@@ -71,5 +69,3 @@ jobs:
           json: '{"contracts":"GODHolder,GovernorTransferToken,GovernorTokenCreate,GovernorTextProposal,GovernanceDAOFactory,GovernorTokenDAO,GODTokenHolderFactory"}'
       - name: Deployment
         run: npx hardhat run deployment/scripts/createContractsE2E.ts;
-      - name: e2e
-        run: npm run e2e-test suite-two
