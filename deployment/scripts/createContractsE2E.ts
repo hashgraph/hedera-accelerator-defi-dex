@@ -2,6 +2,7 @@ import { Helper } from "../../utils/Helper";
 import { main as deployContract } from "./logic";
 import { main as createProxy } from "./transparentUpgradeableProxy";
 
+console.log("inside file");
 export async function main(contracts: string[]) {
   try {
     console.log(process.env.CONTRACTS);
@@ -27,6 +28,9 @@ export async function main(contracts: string[]) {
 
 if (require.main === module) {
   main([])
-    .then(() => process.exit(0))
+    .then((env) => {
+      console.log(env);
+      process.exit(0);
+    })
     .catch(Helper.processError);
 }
