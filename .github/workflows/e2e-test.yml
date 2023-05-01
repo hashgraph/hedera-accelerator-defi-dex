@@ -37,6 +37,10 @@ jobs:
         with:
           node-version: "18.x"
       - run: npm ci
+      - name: Sleep for 30 seconds
+        uses: jakejarvis/wait-action@master
+        with:
+          time: "15s"
       - name: Deployment
         run: npx hardhat run deployment/scripts/createContractsE2E.ts;
   suite-2:
@@ -58,9 +62,5 @@ jobs:
         with:
           node-version: "18.x"
       - run: npm ci
-      - name: Sleep for 30 seconds
-        uses: jakejarvis/wait-action@master
-        with:
-          time: "15s"
       - name: Deployment
         run: npx hardhat run deployment/scripts/createContractsE2E.ts;
