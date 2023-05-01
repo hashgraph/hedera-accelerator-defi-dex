@@ -41,7 +41,7 @@ jobs:
         run: npx hardhat run deployment/scripts/createContractsE2E.ts;
   suite-2:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     env:
       OPERATOR_ID: 0.0.6883
       OPERATOR_KEY: 2cc790b009e400a3ed97363980ae27ddfb58102fa8fb7c1a7b69e212f756c084
