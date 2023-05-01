@@ -46,6 +46,7 @@ jobs:
       - name: e2e
         run: npm run e2e-test suite-one
   suite-2:
+    needs: suite-1
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     env:
