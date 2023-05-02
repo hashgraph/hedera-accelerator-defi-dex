@@ -16,7 +16,7 @@ export async function main(contracts: string[]) {
     console.log(`- Contracts compilation delayed by: ${delay} ms`);
     await Helper.delay(delay);
   }
-  // await hre.run("compile");
+  await hre.run("compile");
   const startTime = Helper.currentTimeInMills();
   await Promise.all(
     contracts.map(async (contractName: string) => {

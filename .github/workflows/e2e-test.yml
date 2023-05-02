@@ -42,7 +42,7 @@ jobs:
           name: "deployment/scripts/workflow-inputs.json"
           json: '{"contracts":"LPToken,Pair,Factory,GODHolder,GovernorUpgrade","delay":0}'
       - name: Deployment
-        run: npx hardhat run deployment/scripts/createContractsE2E.ts
+        run: npx ts-node deployment/scripts/createContractsE2E.ts
       - name: e2e
         run: npm run e2e-test suite-one
   suite-2:
@@ -70,6 +70,6 @@ jobs:
           name: "deployment/scripts/workflow-inputs.json"
           json: '{"contracts":"GODHolder,GovernorTransferToken,GovernorTokenCreate,GovernorTextProposal,GovernanceDAOFactory,GovernorTokenDAO,GODTokenHolderFactory","delay":0}'
       - name: Deployment
-        run: npx hardhat run deployment/scripts/createContractsE2E.ts
+        run: npx ts-node deployment/scripts/createContractsE2E.ts;
       - name: e2e
         run: npm run e2e-test suite-two
