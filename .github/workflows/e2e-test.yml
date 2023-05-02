@@ -26,7 +26,7 @@ env:
 jobs:
   suite-1:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
       - uses: actions/checkout@v3
@@ -40,7 +40,7 @@ jobs:
         id: create-json
         with:
           name: "deployment/scripts/workflow-inputs.json"
-          json: '{"contracts":"LPToken,Pair,Factory,GODHolder,GovernorUpgrade","delayRequired":false}'
+          json: '{"contracts":"LPToken,Pair,Factory,GODHolder,GovernorUpgrade","delay":0}'
       - name: Deployment
         run: npx ts-node deployment/scripts/createContractsE2E.ts
       - name: e2e
@@ -68,7 +68,7 @@ jobs:
         id: create-json
         with:
           name: "deployment/scripts/workflow-inputs.json"
-          json: '{"contracts":"GODHolder,GovernorTransferToken,GovernorTokenCreate,GovernorTextProposal,GovernanceDAOFactory,GovernorTokenDAO,GODTokenHolderFactory","delayRequired":true}'
+          json: '{"contracts":"GODHolder,GovernorTransferToken,GovernorTokenCreate,GovernorTextProposal,GovernanceDAOFactory,GovernorTokenDAO,GODTokenHolderFactory","delay":0}'
       - name: Deployment
         run: npx ts-node deployment/scripts/createContractsE2E.ts;
       - name: e2e

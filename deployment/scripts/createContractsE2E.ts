@@ -5,16 +5,16 @@ import { main as deployContract } from "./logic";
 import { main as createProxy } from "./transparentUpgradeableProxy";
 
 export async function main(contracts: string[]) {
-  let delayRequired = false;
+  let delay = 0;
   if (contracts.length === 0) {
     const inputs = Helper.readWorkflowInputs();
-    delayRequired = inputs.delayRequired;
+    delay = inputs.delay;
     contracts = String(inputs.contracts).split(",");
   }
   console.log("- Contracts for deployment are:", contracts);
-  if (delayRequired) {
-    console.log("- Contracts compilation delayed");
-    await Helper.delay(20e3);
+  if (delay > 0) {
+    console.log(`- Contracts compilation delayed by: ${delay} ms`);
+    await Helper.delay(delay);
   }
   await hre.run("compile");
   const startTime = Helper.currentTimeInMills();
