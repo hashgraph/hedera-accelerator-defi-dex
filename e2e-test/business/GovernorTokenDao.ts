@@ -100,7 +100,7 @@ export default class GovernorTokenDao extends Base {
       .addAddress(tokenId) // tokenToTransfer
       .addInt256(BigNumber(tokenAmount)); // amountToTransfer
     const { result } = await this.execute(
-      9999999,
+      1_000_000,
       CREATE_PROPOSAL,
       client,
       args,
