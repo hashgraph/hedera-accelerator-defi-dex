@@ -17,7 +17,7 @@ Feature: Governor Contract Upgrade E2E Test
         Then User verify that proposal current state is "Active"
         When User lock 10001 GOD token before voting to contract upgrade proposal
         When User vote "For" contract upgrade proposal
-        When User wait for upgrade proposal state to be "Succeeded" for max 5 seconds    
+        When User wait for upgrade proposal state to be "Succeeded" for max 15 seconds    
         When User execute the upgrade proposal with title "proposalforcontractupgrade1xy"
         When User wait for upgrade proposal state to be "Executed" for max 5 seconds  
         When User get the address of target contract from governor upgrade contract
@@ -33,7 +33,7 @@ Feature: Governor Contract Upgrade E2E Test
         Then User verify that proposal current state is "Active"
         When User lock 10001 GOD token before voting to contract upgrade proposal
         When User vote "For" contract upgrade proposal
-        When User wait for upgrade proposal state to be "Succeeded" for max 5 seconds    
+        When User wait for upgrade proposal state to be "Succeeded" for max 15 seconds    
         When User execute the upgrade proposal with title "proposalforcontractupgrade2xy"
         When User wait for upgrade proposal state to be "Executed" for max 5 seconds  
         When User get the address of target contract from governor upgrade contract
