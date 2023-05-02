@@ -1,21 +1,24 @@
-name: E2E-Test (Suite2)
+name: Reusable e2e test workflow
+
 on:
-  workflow_dispatch:
-  pull_request:
-    types: [opened]
-    branches: [develop]
-  push:
-    branches: [develop]
+  workflow_call:
+    inputs:
+      userInputs:
+        required: true
+        type: string
+      suiteName:
+        required: true
+        type: string
 
 env:
-  OPERATOR_ID: 0.0.6883
-  OPERATOR_KEY: 2cc790b009e400a3ed97363980ae27ddfb58102fa8fb7c1a7b69e212f756c084
-  TOKEN_USER_ID: 0.0.2375093
-  TOKEN_USER_KEY: 805a0b26c8ecee83e903076eebb86928c612590f32afc6d272ced4c73db6d466
-  TREASURE_ID: 0.0.6948
-  TREASURE_KEY: c8cb72a0addffcbd898689e5b5641c0abff4399ddeb90a04071433e3724e14dd
+  OPERATOR_ID: 0.0.6948
+  OPERATOR_KEY: c8cb72a0addffcbd898689e5b5641c0abff4399ddeb90a04071433e3724e14dd
   ADMIN_ID: 0.0.6948
   ADMIN_KEY: c8cb72a0addffcbd898689e5b5641c0abff4399ddeb90a04071433e3724e14dd
+  TREASURE_ID: 0.0.2375093
+  TREASURE_KEY: 805a0b26c8ecee83e903076eebb86928c612590f32afc6d272ced4c73db6d466
+  TOKEN_USER_ID: 0.0.6883
+  TOKEN_USER_KEY: 2cc790b009e400a3ed97363980ae27ddfb58102fa8fb7c1a7b69e212f756c084
   DEX_CONTRACT_OWNER_ID: 0.0.6950
   DEX_CONTRACT_OWNER_KEY: b936fa8294df98d66e36eb20094fb12a8c69735a995fdf5e9da478642d28305a
   TOKEN_USER_ID_WITH_NO_GOD_TOKEN: 0.0.3065652
@@ -24,24 +27,31 @@ env:
   UI_USER_KEY: 899ec4fb7e8153a36bd37dd9500b9057982bf76bc1f0efa5b8cb170ee2329997
 
 jobs:
-  Suite2:
+  acceptance-workflow:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
-      - name: Use Node.js 18.x
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Use Node.js [18.x]
         uses: actions/setup-node@v3
         with:
           node-version: "18.x"
-      - run: npm ci
+
+      - name: Install dependencies
+        run: npm ci
+
       - name: Save user inputs
         uses: jsdaniell/create-json@v1.2.2
         id: create-json
         with:
           name: "deployment/scripts/workflow-inputs.json"
-          json: '{"contracts":"GODHolder,GovernorTransferToken,GovernorTokenCreate,GovernorTextProposal,GovernanceDAOFactory,GovernorTokenDAO,GODTokenHolderFactory","delay":0}'
+          json: ${{ inputs.userInputs }}
+
       - name: Deployment
-        run: npx hardhat run deployment/scripts/createContractsE2E.ts;
-      - name: e2e
-        run: npm run e2e-test suite-two
+        run: npx hardhat run deployment/scripts/createContractsE2E.ts
+
+      - name: Test
+        run: npm run e2e-test ${{ inputs.suiteName }}

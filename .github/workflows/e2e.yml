@@ -1,0 +1,24 @@
+name: e2e Test
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [opened]
+    branches: [develop]
+  push:
+    branches: [develop]
+
+jobs:
+  Suite-1:
+    name: Test Suite - 1
+    uses: ./.github/workflows/e2e-test.yml
+    with:
+      userInputs: '{"contracts":"GODHolder,GovernorTransferToken,GovernorTokenCreate,GovernorTextProposal,GovernanceDAOFactory,GovernorTokenDAO,GODTokenHolderFactory","delay":0}'
+      suiteName: suite-one
+
+  Suite-2:
+    name: Test Suite - 2
+    uses: ./.github/workflows/e2e-test.yml
+    with:
+      userInputs: '{"contracts":"LPToken,Pair,Factory,GODHolder,GovernorUpgrade","delay":0}'
+      suiteName: suite-two
