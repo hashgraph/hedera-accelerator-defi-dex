@@ -27,9 +27,6 @@ jobs:
   suite-1:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
-    env:
-      CONTRACTS: "LPToken,Pair,Factory,GODHolder,GovernorUpgrade"
-      WAIT: "false"
 
     steps:
       - uses: actions/checkout@v3
@@ -38,8 +35,16 @@ jobs:
         with:
           node-version: "18.x"
       - run: npm ci
+      - name: Save user inputs
+        uses: jsdaniell/create-json@v1.2.2
+        id: create-json
+        with:
+          name: "deployment/scripts/workflow-inputs.json"
+          json: '{"contracts":"LPToken,Pair,Factory,GODHolder,GovernorUpgrade","delayRequired":false}'
       - name: Deployment
         run: npx ts-node deployment/scripts/createContractsE2E.ts
+      - name: e2e
+        run: npm run e2e-test suite-one
   suite-2:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
@@ -50,8 +55,6 @@ jobs:
       TOKEN_USER_KEY: 805a0b26c8ecee83e903076eebb86928c612590f32afc6d272ced4c73db6d466
       TREASURE_ID: 0.0.6948
       TREASURE_KEY: c8cb72a0addffcbd898689e5b5641c0abff4399ddeb90a04071433e3724e14dd
-      CONTRACTS: "GODHolder,GovernorTransferToken,GovernorTokenCreate,GovernorTextProposal,GovernanceDAOFactory,GovernorTokenDAO,GODTokenHolderFactory"
-      WAIT: "true"
 
     steps:
       - uses: actions/checkout@v3
@@ -60,5 +63,13 @@ jobs:
         with:
           node-version: "18.x"
       - run: npm ci
+      - name: Save user inputs
+        uses: jsdaniell/create-json@v1.2.2
+        id: create-json
+        with:
+          name: "deployment/scripts/workflow-inputs.json"
+          json: '{"contracts":"GODHolder,GovernorTransferToken,GovernorTokenCreate,GovernorTextProposal,GovernanceDAOFactory,GovernorTokenDAO,GODTokenHolderFactory","delayRequired":true}'
       - name: Deployment
-        run: npx ts-node deployment/scripts/createContractsE2E.ts
+        run: npx ts-node deployment/scripts/createContractsE2E.ts;
+      - name: e2e
+        run: npm run e2e-test suite-two
