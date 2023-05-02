@@ -1,4 +1,4 @@
-name: Deploy contract to testnet and run e2e-test
+name: E2E-Test (Suite1)
 on:
   workflow_dispatch:
   pull_request:
@@ -24,52 +24,31 @@ env:
   UI_USER_KEY: 899ec4fb7e8153a36bd37dd9500b9057982bf76bc1f0efa5b8cb170ee2329997
 
 jobs:
-  suite-1:
+  Test:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
-      - name: Use Node.js 18.x
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Use Node.js [18.x]
         uses: actions/setup-node@v3
         with:
           node-version: "18.x"
-      - run: npm ci
+
+      - name: Install dependencies
+        run: npm ci
+
       - name: Save user inputs
         uses: jsdaniell/create-json@v1.2.2
         id: create-json
         with:
           name: "deployment/scripts/workflow-inputs.json"
           json: '{"contracts":"LPToken,Pair,Factory,GODHolder,GovernorUpgrade"}'
+
       - name: Deployment
-        run: npx hardhat run deployment/scripts/createContractsE2E.ts;
+        run: npx hardhat run deployment/scripts/createContractsE2E.ts
+
       - name: e2e
         run: npm run e2e-test suite-one
-  suite-2:
-    if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    env:
-      OPERATOR_ID: 0.0.6883
-      OPERATOR_KEY: 2cc790b009e400a3ed97363980ae27ddfb58102fa8fb7c1a7b69e212f756c084
-      TOKEN_USER_ID: 0.0.2375093
-      TOKEN_USER_KEY: 805a0b26c8ecee83e903076eebb86928c612590f32afc6d272ced4c73db6d466
-      TREASURE_ID: 0.0.6948
-      TREASURE_KEY: c8cb72a0addffcbd898689e5b5641c0abff4399ddeb90a04071433e3724e14dd
-
-    steps:
-      - uses: actions/checkout@v3
-      - name: Use Node.js 18.x
-        uses: actions/setup-node@v3
-        with:
-          node-version: "18.x"
-      - run: npm ci
-      - name: Save user inputs
-        uses: jsdaniell/create-json@v1.2.2
-        id: create-json
-        with:
-          name: "deployment/scripts/workflow-inputs.json"
-          json: '{"contracts":"GODHolder,GovernorTransferToken,GovernorTokenCreate,GovernorTextProposal,GovernanceDAOFactory,GovernorTokenDAO,GODTokenHolderFactory"}'
-      - name: Deployment
-        run: npx hardhat run deployment/scripts/createContractsE2E.ts;
-      - name: e2e
-        run: npm run e2e-test suite-two
