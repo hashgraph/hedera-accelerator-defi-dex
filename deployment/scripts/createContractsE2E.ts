@@ -1,9 +1,11 @@
 import { Helper } from "../../utils/Helper";
 import { main as deployContract } from "./logic";
 import { main as createProxy } from "./transparentUpgradeableProxy";
+import hre from "hardhat";
 
 console.log("inside file");
 export async function main(contracts: string[]) {
+  await hre.run("compile");
   try {
     console.log(process.env.CONTRACTS);
   } catch (error) {
