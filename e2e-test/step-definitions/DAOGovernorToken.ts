@@ -308,7 +308,7 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
     30000
   )
   public async verifyTokenBalance() {
-    await Helper.delay(6000);
+    await Helper.delay(10000);
     const updatedBalance = await Common.fetchTokenBalanceFromMirrorNode(
       toAccount.toString(),
       tokenId.toString()
