@@ -15,4 +15,4 @@ jobs:
           node-version: "18.x"
       - run: npm ci
       - name: Run coverage
-        run: npx hardhat coverage
+        run: npx hardhat coverage --verbose
