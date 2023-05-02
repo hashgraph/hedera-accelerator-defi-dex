@@ -29,6 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CONTRACTS: "LPToken,Pair,Factory,GODHolder,GovernorUpgrade"
+      WAIT: "false"
 
     steps:
       - uses: actions/checkout@v3
@@ -50,6 +51,7 @@ jobs:
       TREASURE_ID: 0.0.6948
       TREASURE_KEY: c8cb72a0addffcbd898689e5b5641c0abff4399ddeb90a04071433e3724e14dd
       CONTRACTS: "GODHolder,GovernorTransferToken,GovernorTokenCreate,GovernorTextProposal,GovernanceDAOFactory,GovernorTokenDAO,GODTokenHolderFactory"
+      WAIT: "true"
 
     steps:
       - uses: actions/checkout@v3

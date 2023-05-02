@@ -5,7 +5,6 @@ import hre from "hardhat";
 
 console.log("inside file");
 export async function main(contracts: string[]) {
-  await hre.run("compile");
   try {
     console.log(process.env.CONTRACTS);
   } catch (error) {
@@ -15,6 +14,12 @@ export async function main(contracts: string[]) {
     contracts = String(process.env.CONTRACTS).split(",");
   }
   console.log("- Contracts for deployment are:", contracts);
+
+  if (process.env.WAIT === "true") {
+    console.log("- waiting");
+    await Helper.delay(40000);
+  }
+  await hre.run("compile");
 
   const startTime = Helper.currentTimeInMills();
   // await Promise.all(
