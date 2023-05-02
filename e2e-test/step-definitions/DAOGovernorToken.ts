@@ -76,19 +76,20 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
     30000
   )
   public async initializeFail(name: string, url: string) {
+    await this.initializeGovernorContract(
+      governorTokenTransfer,
+      godHolder,
+      clientsInfo.operatorClient
+    );
     let blankTitleOrURL: boolean = false;
     try {
       if (name === "" || url === "") blankTitleOrURL = true;
-      await governorTokenDao.initialize(
+      await governorTokenDao.initializeDAO(
         adminAddress,
         name,
         url,
         governorTokenTransfer,
-        godHolder,
-        clientsInfo.operatorClient,
-        CommonSteps.DEFAULT_QUORUM_THRESHOLD_IN_BSP,
-        CommonSteps.DEFAULT_VOTING_DELAY,
-        CommonSteps.DEFAULT_VOTING_PERIOD
+        clientsInfo.operatorClient
       );
     } catch (e: any) {
       if (blankTitleOrURL) {
@@ -106,16 +107,12 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
     30000
   )
   public async initializeSafe(name: string, url: string) {
-    await governorTokenDao.initialize(
+    await governorTokenDao.initializeDAO(
       adminAddress,
       name,
       url,
       governorTokenTransfer,
-      godHolder,
-      clientsInfo.operatorClient,
-      CommonSteps.DEFAULT_QUORUM_THRESHOLD_IN_BSP,
-      CommonSteps.DEFAULT_VOTING_DELAY,
-      CommonSteps.DEFAULT_VOTING_PERIOD
+      clientsInfo.operatorClient
     );
   }
 
@@ -311,7 +308,7 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
     30000
   )
   public async verifyTokenBalance() {
-    await Helper.delay(6000);
+    await Helper.delay(10000);
     const updatedBalance = await Common.fetchTokenBalanceFromMirrorNode(
       toAccount.toString(),
       tokenId.toString()

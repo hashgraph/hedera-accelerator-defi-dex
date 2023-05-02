@@ -103,7 +103,7 @@ export default class Governor extends Base {
       .addString(description)
       .addString(link);
     const { result } = await this.execute(
-      9000000,
+      1_000_000,
       CREATE_PROPOSAL,
       client,
       args
@@ -136,7 +136,7 @@ export default class Governor extends Base {
       .addInt256(BigNumber(tokenAmount)) // amountToTransfer
       .addAddress(creator); // proposal creator
     const { result } = await this.execute(
-      9000000,
+      1_000_000,
       CREATE_PROPOSAL,
       client,
       args
@@ -164,7 +164,7 @@ export default class Governor extends Base {
       .addAddress(targetLogicId.toSolidityAddress());
 
     const { result, receipt } = await this.execute(
-      9000000,
+      1_000_000,
       CREATE_PROPOSAL,
       client,
       args
@@ -207,7 +207,7 @@ export default class Governor extends Base {
     const args = this.createParams(proposalId)
       .addUint256(BigNumber(tokenId))
       .addUint8(support);
-    await this.execute(9900000, CAST_VOTE, client, args);
+    await this.execute(5_00_000, CAST_VOTE, client, args);
     console.log(
       `- Governor#${CAST_VOTE}(): proposal-id = ${proposalId}, support = ${support}\n`
     );
@@ -215,7 +215,7 @@ export default class Governor extends Base {
 
   getGODTokenAddress = async (client: Client = clientsInfo.operatorClient) => {
     const { result } = await this.execute(
-      200000,
+      2_00_000,
       GET_GOD_TOKEN_ADDRESSES,
       client
     );
@@ -231,7 +231,12 @@ export default class Governor extends Base {
     client: Client = clientsInfo.operatorClient
   ) => {
     const args = this.createParams(proposalId);
-    const { result } = await this.execute(500000, QUORUM_REACHED, client, args);
+    const { result } = await this.execute(
+      5_00_000,
+      QUORUM_REACHED,
+      client,
+      args
+    );
     const isQuorumReached = result.getBool(0);
     console.log(
       `- Governor#${QUORUM_REACHED}(): proposal-id = ${proposalId}, isQuorumReached = ${isQuorumReached}\n`
@@ -244,7 +249,12 @@ export default class Governor extends Base {
     client: Client = clientsInfo.operatorClient
   ) => {
     const args = this.createParams(proposalId);
-    const { result } = await this.execute(500000, VOTE_SUCCEEDED, client, args);
+    const { result } = await this.execute(
+      5_00_000,
+      VOTE_SUCCEEDED,
+      client,
+      args
+    );
     const isVoteSucceeded = result.getBool(0);
     console.log(
       `- Governor#${VOTE_SUCCEEDED}(): proposal-id = ${proposalId}, isVoteSucceeded = ${isVoteSucceeded}\n`
@@ -257,7 +267,12 @@ export default class Governor extends Base {
     client: Client = clientsInfo.operatorClient
   ) => {
     const args = this.createParams(proposalId);
-    const { result } = await this.execute(500000, PROPOSAL_VOTES, client, args);
+    const { result } = await this.execute(
+      5_00_000,
+      PROPOSAL_VOTES,
+      client,
+      args
+    );
     const against = result.getInt256(0);
     const forVote = result.getInt256(1);
     const abstain = result.getInt256(2);
@@ -272,7 +287,7 @@ export default class Governor extends Base {
     client: Client = clientsInfo.operatorClient
   ) => {
     const args = this.createParams(proposalId);
-    const { result } = await this.execute(500000, STATE, client, args);
+    const { result } = await this.execute(5_00_000, STATE, client, args);
     const state = result.getInt256(0);
     console.log(
       `- Governor#${STATE}(): proposal-id = ${proposalId}, state = ${state}\n`
@@ -292,7 +307,7 @@ export default class Governor extends Base {
   ) => {
     const args = new ContractFunctionParameters().addString(title);
     const { receipt, result } = await this.execute(
-      999999,
+      1_000_000,
       EXECUTE_PROPOSAL,
       client,
       args,
@@ -309,7 +324,7 @@ export default class Governor extends Base {
   cancelProposal = async (title: string, client: Client) => {
     const args = new ContractFunctionParameters().addString(title);
     const { result } = await this.execute(
-      900000,
+      9_00_000,
       CANCEL_PROPOSAL,
       client,
       args
@@ -326,7 +341,7 @@ export default class Governor extends Base {
   ) => {
     const args = this.createParams(proposalId);
     const { result } = await this.execute(
-      500000,
+      5_00_000,
       PROPOSAL_DETAILS,
       client,
       args
@@ -368,7 +383,7 @@ export default class Governor extends Base {
   ) => {
     const args = this.createParams(proposalId);
     const { result } = await this.execute(
-      500000,
+      5_00_000,
       GET_CONTRACT_ADDRESSES,
       client,
       args
@@ -417,7 +432,7 @@ export default class Governor extends Base {
       .addString(tokenSymbol);
 
     const { result } = await this.execute(
-      9000000,
+      1_000_000,
       CREATE_PROPOSAL,
       client,
       args
@@ -435,7 +450,7 @@ export default class Governor extends Base {
   ) => {
     const args = this.createParams(proposalId);
     const { result } = await this.execute(
-      500000,
+      5_00_000,
       GET_TOKEN_ADDRESSES,
       client,
       args

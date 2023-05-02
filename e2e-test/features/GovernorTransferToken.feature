@@ -34,7 +34,7 @@ Feature: GovernorTransferToken e2e test
         Then User verify that proposal state is "Active"
         When User lock 10001 GOD token before voting to transfer token proposal
         When User vote "For" proposal  
-        When User wait for proposal state to be "Succeeded" for max 5 seconds 
+        When User wait for proposal state to be "Succeeded" for max 15 seconds 
         Then User verify that proposal state is "Succeeded"
         When User setup 1 as allowance amount of token which needs to be transferred
         When User execute the proposal with title "sampletitle"
@@ -57,7 +57,7 @@ Feature: GovernorTransferToken e2e test
         Then User verify that proposal state is "Active"
         When User lock 10001 GOD token before voting to transfer token proposal
         When User vote "Against" proposal
-        When User wait for proposal state to be "Defeated" for max 10 seconds 
+        When User wait for proposal state to be "Defeated" for max 15 seconds 
         Then User verify that proposal state is "Defeated"
         When User cancel the proposal with title "sampletesttitle"
         
