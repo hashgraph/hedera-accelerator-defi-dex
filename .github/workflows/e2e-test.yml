@@ -59,4 +59,4 @@ jobs:
           node-version: "18.x"
       - run: npm ci
       - name: Deployment
-        run: npx hardhat run deployment/scripts/createContractsE2E1.ts;
+        run: npx hardhat run deployment/scripts/createContractsE2E.ts;
