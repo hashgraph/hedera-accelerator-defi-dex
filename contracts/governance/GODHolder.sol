@@ -31,6 +31,9 @@ contract GODHolder is TokenHolder {
             "GODHolder: unlock amount can't be greater to the locked amount"
         );
         godTokenForUsers[msg.sender] -= _amount;
+        if (godTokenForUsers[msg.sender] == 0) {
+            delete (godTokenForUsers[msg.sender]);
+        }
         int256 code = _transferToken(
             address(_token),
             address(this),
@@ -41,9 +44,6 @@ contract GODHolder is TokenHolder {
             code == HederaResponseCodes.SUCCESS,
             "GODHolder: token transfer failed from contract."
         );
-        if (godTokenForUsers[msg.sender] == 0) {
-            delete (godTokenForUsers[msg.sender]);
-        }
         return HederaResponseCodes.SUCCESS;
     }
 
