@@ -6,7 +6,7 @@ typechain
 typechain-types
 .openzeppelin/*
 .scannerwork
-
+contracts/ERC1400.sol
 
 #Hardhat files
 cache
