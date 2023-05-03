@@ -29,10 +29,6 @@ const godHolderProxyId = csDev.getContract(csDev.godHolderContract)
 const governor = new Governor(tokenTransferProxyId);
 const godHolder = new GodHolder(godHolderProxyId);
 
-const DEFAULT_QUORUM_THRESHOLD_IN_BSP = 1;
-const DEFAULT_VOTING_DELAY = 2;
-const DEFAULT_VOTING_PERIOD = 4;
-
 let proposalId: string;
 let msg: string;
 let balance: Long;
@@ -87,7 +83,7 @@ export class GovernorSteps extends CommonSteps {
     link: string,
     tokenAmount: number
   ): Promise<string> {
-    const tokenQty = tokenAmount * 100000000;
+    const tokenQty = tokenAmount * CommonSteps.withPrecision;
     tokens = new BigNumber(tokenQty);
     proposalId = await governor.createTokenTransferProposal(
       title,
@@ -116,7 +112,7 @@ export class GovernorSteps extends CommonSteps {
     tokenAmount: number
   ): Promise<void> {
     try {
-      const tokenQty = tokenAmount * 100000000;
+      const tokenQty = tokenAmount * CommonSteps.withPrecision;
       proposalId = await governor.createTokenTransferProposal(
         title,
         clientsInfo.operatorId.toSolidityAddress(),
@@ -158,7 +154,7 @@ export class GovernorSteps extends CommonSteps {
     link: string,
     tokenAmount: number
   ): Promise<void> {
-    const tokenQty = tokenAmount * 100000000;
+    const tokenQty = tokenAmount * CommonSteps.withPrecision;
     try {
       await governor.createTokenTransferProposal(
         title,
@@ -261,6 +257,52 @@ export class GovernorSteps extends CommonSteps {
       AccountId.fromString(godHolderProxyId),
       clientsInfo.operatorKey,
       TokenId.fromString(dex.GOD_TOKEN_ID),
+      clientsInfo.operatorClient
+    );
+  }
+
+  @when(
+    /User setup (\d+\.?\d*) as allowance amount for token locking for transfer token proposal/,
+    undefined,
+    30000
+  )
+  public async setAllowanceForTokenLocking(allowanceAmt: number) {
+    await this.setupAllowanceForTokenLocking(
+      godHolder,
+      allowanceAmt * CommonSteps.withPrecision,
+      clientsInfo.operatorId,
+      clientsInfo.operatorKey,
+      clientsInfo.operatorClient
+    );
+  }
+
+  @when(
+    /User setup default allowance for token transfer proposal creation/,
+    undefined,
+    30000
+  )
+  public async setAllowanceForProposalCreation() {
+    await this.setupAllowanceForProposalCreation(
+      governor,
+      clientsInfo.operatorClient,
+      clientsInfo.operatorId,
+      clientsInfo.operatorKey
+    );
+  }
+
+  @when(
+    /User setup (\d+\.?\d*) as allowance amount of token which needs to be transferred/,
+    undefined,
+    30000
+  )
+  public async setAllowanceForTransferToken(allowanceAmt: number) {
+    await this.setupAllowanceForToken(
+      governor,
+      TRANSFER_TOKEN_ID,
+      allowanceAmt * CommonSteps.withPrecision,
+      governor.contractId,
+      clientsInfo.operatorId,
+      clientsInfo.operatorKey,
       clientsInfo.operatorClient
     );
   }

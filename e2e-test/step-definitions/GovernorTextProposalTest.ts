@@ -22,9 +22,6 @@ const governor = new Governor(governorContractId);
 const godHolder = new GodHolder(godHolderContractId);
 const tokenGOD = dex.GOD_TOKEN_ID;
 
-const DEFAULT_QUORUM_THRESHOLD_IN_BSP = 1;
-const DEFAULT_VOTING_DELAY = 2;
-const DEFAULT_VOTING_PERIOD = 7;
 let errorMsg: string = "";
 let proposalId: string;
 let godToken: BigNumber;
@@ -120,7 +117,7 @@ export class GovernorTextProposal extends CommonSteps {
 
   @then(/User verify GOD tokens are returned to user/, undefined, 30000)
   public async verifyGODTokensAreReturned() {
-    await Helper.delay(3000);
+    await Helper.delay(10000);
     const updatedGODToken = await Common.fetchTokenBalanceFromMirrorNode(
       clientsInfo.operatorId.toString(),
       tokenGOD
@@ -157,6 +154,35 @@ export class GovernorTextProposal extends CommonSteps {
       clientsInfo.operatorKey,
       TokenId.fromString(dex.GOD_TOKEN_ID),
       clientsInfo.operatorClient
+    );
+  }
+
+  @when(
+    /User setup (\d+\.?\d*) as allowance amount for token locking for text proposal/,
+    undefined,
+    30000
+  )
+  public async setAllowanceForTokenLocking(allowanceAmt: number) {
+    await this.setupAllowanceForTokenLocking(
+      godHolder,
+      allowanceAmt * CommonSteps.withPrecision,
+      clientsInfo.operatorId,
+      clientsInfo.operatorKey,
+      clientsInfo.operatorClient
+    );
+  }
+
+  @when(
+    /User setup default allowance for text proposal creation/,
+    undefined,
+    30000
+  )
+  public async setAllowanceForProposalCreation() {
+    await this.setupAllowanceForProposalCreation(
+      governor,
+      clientsInfo.operatorClient,
+      clientsInfo.operatorId,
+      clientsInfo.operatorKey
     );
   }
 }

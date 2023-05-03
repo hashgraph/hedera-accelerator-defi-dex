@@ -121,6 +121,52 @@ export class CommonSteps {
     await godHolder.lock(tokenAmt, voterAcctId, voterAcctPvtKey, client);
   }
 
+  public async setupAllowanceForTokenLocking(
+    godHolder: GodHolder,
+    allowanceAmount: number,
+    accountId: AccountId,
+    accountPrivateKey: PrivateKey,
+    client: Client
+  ) {
+    await godHolder.setupAllowanceForTokenLocking(
+      allowanceAmount,
+      accountId,
+      accountPrivateKey,
+      client
+    );
+  }
+
+  public async setupAllowanceForProposalCreation(
+    governor: Governor,
+    creatorClient: Client,
+    creatorAccountId: AccountId,
+    creatorPrivateKey: PrivateKey
+  ) {
+    await governor.setupAllowanceForProposalCreation(
+      creatorClient,
+      creatorAccountId,
+      creatorPrivateKey
+    );
+  }
+
+  public async setupAllowanceForToken(
+    governor: Governor,
+    tokenId: TokenId,
+    tokenAmount: number,
+    spenderAccountId: string | AccountId,
+    tokenSenderAccountId: string | AccountId,
+    tokenSenderPrivateKey: PrivateKey,
+    client: Client
+  ) {
+    await governor.setAllowanceForTransferTokenProposal(
+      tokenId,
+      tokenAmount,
+      spenderAccountId,
+      tokenSenderAccountId,
+      tokenSenderPrivateKey
+    );
+  }
+
   private async transferTokens(
     receiverAccountId: AccountId,
     senderAccountId: AccountId,
