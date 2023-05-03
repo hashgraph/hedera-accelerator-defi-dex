@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity >=0.5.0 <0.9.0;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+
 import "./common/hedera/HederaResponseCodes.sol";
 import "./common/IBaseHTS.sol";
 import "./common/TokenOperations.sol";
@@ -28,7 +29,12 @@ error WrongPairPassed(
     address expectedTokenB
 );
 
-contract Pair is IPair, Initializable, TokenOperations {
+contract Pair is
+    IPair,
+    Initializable,
+    TokenOperations,
+    ReentrancyGuardUpgradeable
+{
     IBaseHTS internal tokenService;
     ILPToken internal lpTokenContract;
 
@@ -48,6 +54,7 @@ contract Pair is IPair, Initializable, TokenOperations {
         address _treasury,
         int256 _fee
     ) public override initializer {
+        __ReentrancyGuard_init();
         require(_fee > 0, "Pair: Fee should be greater than zero.");
         tokenService = _tokenService;
         lpTokenContract = _lpTokenContract;
@@ -68,7 +75,7 @@ contract Pair is IPair, Initializable, TokenOperations {
         address _tokenB,
         int256 _tokenAQty,
         int256 _tokenBQty
-    ) external payable virtual override {
+    ) external payable virtual override nonReentrant {
         _tokenAQty = _tokenQuantity(_tokenA, _tokenAQty);
         _tokenBQty = _tokenQuantity(_tokenB, _tokenBQty);
 
@@ -110,7 +117,7 @@ contract Pair is IPair, Initializable, TokenOperations {
     function removeLiquidity(
         address payable toAccount,
         int256 _lpToken
-    ) external virtual override {
+    ) external virtual override nonReentrant {
         require(
             lpTokenContract.lpTokenForUser(toAccount) >= _lpToken,
             "user does not have sufficient lpTokens"
@@ -356,7 +363,7 @@ contract Pair is IPair, Initializable, TokenOperations {
         address _token,
         int256 _deltaQty,
         int256 _slippage
-    ) external payable virtual override {
+    ) external payable virtual override nonReentrant {
         require(
             _token == pair.tokenA.tokenAddress ||
                 _token == pair.tokenB.tokenAddress,

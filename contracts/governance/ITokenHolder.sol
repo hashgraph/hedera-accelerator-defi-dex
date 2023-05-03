@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.0;
 import "../common/IERC20.sol";
 import "../common/IBaseHTS.sol";
 
 interface ITokenHolder {
     function initialize(IBaseHTS tokenService, address token) external;
 
-    function revertTokensForVoter(uint256 idOrAmount) external payable returns (int32);
+    function revertTokensForVoter(uint256 idOrAmount) external returns (int32);
 
     function balanceOfVoter(address voter) external view returns (uint256);
 

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.0;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "../common/IERC721.sol";
 import "../common/IBaseHTS.sol";
@@ -15,22 +15,20 @@ contract NFTHolder is TokenHolder {
         return nftTokenForUsers[voter] > 0 ? 1 : 0;
     }
 
-    function revertTokensForVoter(
-        uint256
-    ) external payable override returns (int32) {
+    function revertTokensForVoter(uint256) external override returns (int32) {
         require(
             activeProposalsForUsers[msg.sender].length == 0,
             "User's Proposals are active"
         );
         uint256 tokenId = nftTokenForUsers[msg.sender];
         require(tokenId > 0, "NFTHolder: No amount for the Voter.");
+        delete (nftTokenForUsers[msg.sender]);
         _transferNFTToken(
             address(_token),
             address(this),
             msg.sender,
             int64(int256(tokenId))
         );
-        delete (nftTokenForUsers[msg.sender]);
         return HederaResponseCodes.SUCCESS;
     }
 

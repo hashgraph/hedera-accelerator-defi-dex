@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.0;
 import "./GovernorCountingSimpleInternal.sol";
 import "../common/hedera/HederaTokenService.sol";
 import "../common/IErrors.sol";

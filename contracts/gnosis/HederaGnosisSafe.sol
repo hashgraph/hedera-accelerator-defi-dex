@@ -1,13 +1,18 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity >=0.7.0 <0.9.0;
+pragma solidity ^0.8.0;
 
 import "../common/IBaseHTS.sol";
 import "../common/TokenOperations.sol";
 
 import "@gnosis.pm/safe-contracts/contracts/GnosisSafe.sol";
 import "@gnosis.pm/safe-contracts/contracts/external/GnosisSafeMath.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
-contract HederaGnosisSafe is GnosisSafe, TokenOperations {
+contract HederaGnosisSafe is
+    GnosisSafe,
+    ReentrancyGuardUpgradeable,
+    TokenOperations
+{
     using GnosisSafeMath for uint256;
 
     event TokenAssociated(address token);
@@ -97,7 +102,7 @@ contract HederaGnosisSafe is GnosisSafe, TokenOperations {
         bytes calldata data,
         Enum.Operation operation,
         uint256 nonce
-    ) external payable returns (bool success) {
+    ) external payable nonReentrant returns (bool success) {
         bytes32 txHash;
         // Use scope here to limit variable lifetime and prevent `stack too deep` errors
         {

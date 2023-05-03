@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.0;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "../common/IBaseHTS.sol";
 import "../common/hedera/HederaResponseCodes.sol";
@@ -16,7 +16,7 @@ contract GODHolder is TokenHolder {
 
     function revertTokensForVoter(
         uint256 _amount
-    ) external payable override returns (int32) {
+    ) external override returns (int32) {
         require(
             _amount > 0,
             "GODHolder: unlock amount must be a positive number"

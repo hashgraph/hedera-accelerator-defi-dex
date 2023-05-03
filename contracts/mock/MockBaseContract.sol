@@ -9,7 +9,7 @@ import "./ERC20Mock.sol";
 import "hardhat/console.sol";
 
 contract MockBaseHTS is IBaseHTS {
-    address private hbarx;
+    address private immutable hbarx;
     uint256 private constant PASS_TXN_COUNT = 100;
     bytes32 revertCreateTokenSlot = keccak256("revertCreateTokenSlot");
     bytes32 passTransactionCountSlot = keccak256("passTransactionCountSlot");
