@@ -1,9 +1,9 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
-import "./IGovernorTokenDAO.sol";
+import "./ITokenDAO.sol";
 import "./BaseDAO.sol";
 
-contract GovernorTokenDAO is IGovernorTokenDAO, BaseDAO {
+contract GovernorTokenDAO is ITokenDAO, BaseDAO {
     IGovernorTransferToken private governorTokenTransferAddress;
     uint256[] private _proposals;
 

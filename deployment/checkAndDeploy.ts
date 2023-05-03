@@ -23,7 +23,7 @@ const upgradeGovernor = contractDevService.getContract(
 const governor = new Governor(upgradeGovernor.transparentProxyId!);
 
 async function main() {
-  const contractsToDeploy = contractMetadata.getAllChangedContractNames();
+  const contractsToDeploy = await contractMetadata.getAllChangedContractNames();
   console.log(`Eligible contracts for upgrade: [${contractsToDeploy}]\n`);
   for (const contractName of contractsToDeploy) {
     const oldVersion = contractUATService.getContractWithProxy(contractName);
@@ -41,6 +41,12 @@ async function createProposal(
   const desc = `Contract Name - ${
     oldVersion.name
   }, New Logic Id =  ${newVersionContractId}, Old Logic Id = ${oldVersion.id!}, Proxy Id = ${oldVersion.transparentProxyId!}`;
+
+  await governor.setupAllowanceForProposalCreation(
+    clientsInfo.operatorClient,
+    clientsInfo.operatorId,
+    clientsInfo.operatorKey
+  );
 
   const result = await governor.createContractUpgradeProposal(
     ContractId.fromString(oldVersion.transparentProxyId!),

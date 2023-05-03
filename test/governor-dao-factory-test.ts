@@ -104,7 +104,7 @@ describe("GovernanceDAOFactory contract tests", function () {
       )
     )
       .to.revertedWithCustomError(governorDAOFactoryInstance, "InvalidInput")
-      .withArgs("GovernanceDAOFactory: admin address is zero");
+      .withArgs("DAOFactory: admin address is zero");
   });
 
   it("Verify createDAO should be reverted when dao name is empty", async function () {
@@ -123,26 +123,7 @@ describe("GovernanceDAOFactory contract tests", function () {
       )
     )
       .to.revertedWithCustomError(governorDAOFactoryInstance, "InvalidInput")
-      .withArgs("GovernanceDAOFactory: name is empty");
-  });
-
-  it("Verify createDAO should be reverted when dao url is empty", async function () {
-    const { governorDAOFactoryInstance, daoAdminOne, token } =
-      await loadFixture(deployFixture);
-    await expect(
-      governorDAOFactoryInstance.createDAO(
-        daoAdminOne.address,
-        DAO_NAME,
-        "",
-        token.address,
-        BigNumber.from(500),
-        BigNumber.from(0),
-        BigNumber.from(100),
-        true
-      )
-    )
-      .to.revertedWithCustomError(governorDAOFactoryInstance, "InvalidInput")
-      .withArgs("GovernanceDAOFactory: url is empty");
+      .withArgs("DAOFactory: name is empty");
   });
 
   it("Verify createDAO should be reverted when token address is zero", async function () {
@@ -162,7 +143,7 @@ describe("GovernanceDAOFactory contract tests", function () {
       )
     )
       .to.revertedWithCustomError(governorDAOFactoryInstance, "InvalidInput")
-      .withArgs("GovernanceDAOFactory: token address is zero");
+      .withArgs("DAOFactory: token address is zero");
   });
 
   it("Verify createDAO should be reverted when voting period is zero", async function () {
@@ -181,7 +162,7 @@ describe("GovernanceDAOFactory contract tests", function () {
       )
     )
       .to.revertedWithCustomError(governorDAOFactoryInstance, "InvalidInput")
-      .withArgs("GovernanceDAOFactory: voting period is zero");
+      .withArgs("DAOFactory: voting period is zero");
   });
 
   it("Verify createDAO should add new dao into list when the dao is public", async function () {
@@ -203,7 +184,7 @@ describe("GovernanceDAOFactory contract tests", function () {
     );
 
     const lastEvent = (await txn.wait()).events.pop();
-    expect(lastEvent.event).to.be.equal("PublicDaoCreated");
+    expect(lastEvent.event).to.be.equal("DAOCreated");
     expect(lastEvent.args.daoAddress).not.to.be.equal("0x0");
 
     const updatedList = await governorDAOFactoryInstance.getDAOs();
@@ -229,7 +210,7 @@ describe("GovernanceDAOFactory contract tests", function () {
     );
 
     const lastEvent = (await txn.wait()).events.pop();
-    expect(lastEvent.event).to.be.equal("PrivateDaoCreated");
+    expect(lastEvent.event).to.be.equal("DAOCreated");
     expect(lastEvent.args.daoAddress).not.to.be.equal("0x0");
 
     const updatedList = await governorDAOFactoryInstance.getDAOs();
@@ -243,26 +224,26 @@ describe("GovernanceDAOFactory contract tests", function () {
     await expect(
       governorDAOFactoryInstance
         .connect(daoAdminOne)
-        .upgradeGovernorTokenDaoLogicImplementation(zeroAddress)
+        .upgradeTokenDaoLogicImplementation(zeroAddress)
     )
       .to.revertedWithCustomError(governorDAOFactoryInstance, "NotAdmin")
-      .withArgs("GovernanceDAOFactory: auth failed");
+      .withArgs("DAOFactory: auth failed");
 
     await expect(
       governorDAOFactoryInstance
         .connect(daoAdminTwo)
-        .upgradeGovernorTokenTransferLogicImplementation(zeroAddress)
+        .upgradeTokenTransferLogicImplementation(zeroAddress)
     )
       .to.revertedWithCustomError(governorDAOFactoryInstance, "NotAdmin")
-      .withArgs("GovernanceDAOFactory: auth failed");
+      .withArgs("DAOFactory: auth failed");
 
     await expect(
       governorDAOFactoryInstance
         .connect(daoAdminTwo)
-        .upgradeGODTokenHolderFactory(zeroAddress)
+        .upgradeTokenHolderFactory(zeroAddress)
     )
       .to.revertedWithCustomError(governorDAOFactoryInstance, "NotAdmin")
-      .withArgs("GovernanceDAOFactory: auth failed");
+      .withArgs("DAOFactory: auth failed");
   });
 
   it("Verify upgrade logic call should be proceeded for dex owner", async function () {
@@ -272,33 +253,33 @@ describe("GovernanceDAOFactory contract tests", function () {
 
     const txn1 = await governorDAOFactoryInstance
       .connect(dexOwner)
-      .upgradeGovernorTokenDaoLogicImplementation(oneAddress);
+      .upgradeTokenDaoLogicImplementation(oneAddress);
 
     const event1 = (await txn1.wait()).events.pop();
     expect(event1.event).to.be.equal("LogicUpdated");
-    expect(event1.args.name).to.be.equal("GovernorTokenDAO");
+    expect(event1.args.name).to.be.equal("TokenDAO");
     expect(event1.args.newImplementation).to.be.equal(oneAddress);
 
     const txn2 = await governorDAOFactoryInstance
       .connect(dexOwner)
-      .upgradeGovernorTokenTransferLogicImplementation(oneAddress);
+      .upgradeTokenTransferLogicImplementation(oneAddress);
 
     const event2 = (await txn2.wait()).events.pop();
     expect(event2.event).to.be.equal("LogicUpdated");
-    expect(event2.args.name).to.be.equal("GovernorTransferToken");
+    expect(event2.args.name).to.be.equal("TransferToken");
     expect(event2.args.newImplementation).to.be.equal(oneAddress);
 
     const txn3 = await governorDAOFactoryInstance
       .connect(dexOwner)
-      .upgradeGODTokenHolderFactory(oneAddress);
+      .upgradeTokenHolderFactory(oneAddress);
 
     const event3 = (await txn3.wait()).events.pop();
     expect(event3.event).to.be.equal("LogicUpdated");
-    expect(event3.args.name).to.be.equal("GODTokenHolderFactory");
+    expect(event3.args.name).to.be.equal("TokenHolderFactory");
     expect(event3.args.newImplementation).to.be.equal(oneAddress);
   });
 
-  it("Verify getGODTokenHolderFactoryAddress guard check ", async function () {
+  it("Verify getTokenHolderFactoryAddress guard check ", async function () {
     const {
       governorDAOFactoryInstance,
       daoAdminOne,
@@ -309,14 +290,14 @@ describe("GovernanceDAOFactory contract tests", function () {
     await expect(
       governorDAOFactoryInstance
         .connect(daoAdminOne)
-        .getGODTokenHolderFactoryAddress()
+        .getTokenHolderFactoryAddress()
     )
       .to.revertedWithCustomError(governorDAOFactoryInstance, "NotAdmin")
-      .withArgs("GovernanceDAOFactory: auth failed");
+      .withArgs("DAOFactory: auth failed");
 
     const address = await governorDAOFactoryInstance
       .connect(dexOwner)
-      .getGODTokenHolderFactoryAddress();
+      .getTokenHolderFactoryAddress();
 
     expect(address).to.be.equals(godHolderFactory.address);
   });

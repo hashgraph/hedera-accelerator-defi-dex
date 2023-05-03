@@ -8,21 +8,28 @@ import "./TokenHolder.sol";
 
 contract NFTHolder is TokenHolder {
     mapping(address => uint256) nftTokenForUsers;
-    
+
     function balanceOfVoter(
         address voter
     ) external view override returns (uint256) {
-        return nftTokenForUsers[voter];
+        return nftTokenForUsers[voter] > 0 ? 1 : 0;
     }
 
-    function revertTokensForVoter() external override returns (int32) {
+    function revertTokensForVoter(
+        uint256
+    ) external payable override returns (int32) {
         require(
             activeProposalsForUsers[msg.sender].length == 0,
             "User's Proposals are active"
         );
         uint256 tokenId = nftTokenForUsers[msg.sender];
         require(tokenId > 0, "NFTHolder: No amount for the Voter.");
-        IERC721(_token).transferFrom(address(this), msg.sender, tokenId);
+        _transferNFTToken(
+            address(_token),
+            address(this),
+            msg.sender,
+            int64(int256(tokenId))
+        );
         delete (nftTokenForUsers[msg.sender]);
         return HederaResponseCodes.SUCCESS;
     }
@@ -35,16 +42,15 @@ contract NFTHolder is TokenHolder {
             return;
         }
         nftTokenForUsers[user] = uint256(tokenId);
-        _tokenService.associateTokenPublic(address(this), address(_token));
-        int256 responseCode = _tokenService.transferNFTPublic(
+        _transferNFTToken(
             address(_token),
             address(user),
             address(this),
             int64(int256(tokenId))
         );
-        require(
-            responseCode == HederaResponseCodes.SUCCESS,
-            "NFTHolder: token transfer failed to contract."
-        );
+    }
+
+    function isNFTType() external pure returns (bool) {
+        return true;
     }
 }

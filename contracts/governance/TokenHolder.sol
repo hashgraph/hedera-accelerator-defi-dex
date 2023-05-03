@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.4;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "../common/IERC20.sol";
+
 import "../common/IBaseHTS.sol";
+import "../common/TokenOperations.sol";
 import "../common/hedera/HederaResponseCodes.sol";
+
 import "./ITokenHolder.sol";
 
-abstract contract TokenHolder is ITokenHolder, Initializable {
+abstract contract TokenHolder is ITokenHolder, Initializable, TokenOperations {
     mapping(address => uint256[]) activeProposalsForUsers;
     IBaseHTS internal _tokenService;
     address internal _token;
@@ -17,22 +19,7 @@ abstract contract TokenHolder is ITokenHolder, Initializable {
     ) public initializer {
         _tokenService = tokenService;
         _token = token;
-        _associateToken(address(this), address(_token));
-    }
-
-    /// @custom:oz-upgrades-unsafe-allow delegatecall
-    function _associateToken(address account, address token) private {
-        (bool success, ) = address(_tokenService).delegatecall(
-            abi.encodeWithSelector(
-                IBaseHTS.associateTokenPublic.selector,
-                account,
-                token
-            )
-        );
-        //Its done to silent the not-used return value. Intentionally not putting
-        //requires check as it fails the unit test. We need to investigate more to
-        //find the root cause.
-        success = success || true;
+        _associateToken(tokenService, address(this), address(_token));
     }
 
     function getToken() public view override returns (address) {
@@ -67,7 +54,7 @@ abstract contract TokenHolder is ITokenHolder, Initializable {
         return HederaResponseCodes.SUCCESS;
     }
 
-    function canUserClaimTokens() external view returns (bool) {
+    function canUserClaimTokens() public view virtual returns (bool) {
         return activeProposalsForUsers[msg.sender].length == 0;
     }
 

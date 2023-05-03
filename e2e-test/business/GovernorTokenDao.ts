@@ -1,10 +1,19 @@
+import dex from "../../deployment/model/dex";
 import Base from "./Base";
+import Governor from "./Governor";
 import GodHolder from "../../e2e-test/business/GodHolder";
+import NFTHolder from "../../e2e-test/business/NFTHolder";
+
 import { clientsInfo } from "../../utils/ClientManagement";
 import { BigNumber } from "bignumber.js";
-
-import { Client, ContractId, ContractFunctionParameters } from "@hashgraph/sdk";
-import Governor from "./Governor";
+import {
+  Client,
+  TokenId,
+  AccountId,
+  PrivateKey,
+  ContractId,
+  ContractFunctionParameters,
+} from "@hashgraph/sdk";
 
 const INITIALIZE = "initialize";
 const CREATE_PROPOSAL = "createProposal";
@@ -15,11 +24,13 @@ const GET_WEB_LINKS = "getWebLinks";
 const GET_GOVERNOR_TOKEN_TRANSFER_CONTRACT_ADDRESS =
   "getGovernorTokenTransferContractAddress";
 
-const DEFAULT_DESCRIPTION = "description";
-const DEFAULT_LINK = "https://defi-ui.hedera.com/governance";
-const DEFAULT_QUORUM_THRESHOLD_IN_BSP = 500;
-const DEFAULT_VOTING_DELAY = 0; // blocks
-const DEFAULT_VOTING_PERIOD = 100; // blocks means 3 minutes as per test
+export const DEFAULT_DESCRIPTION = "description";
+export const DEFAULT_LINK = "https://defi-ui.hedera.com/governance";
+export const DEFAULT_QUORUM_THRESHOLD_IN_BSP = 500;
+export const DEFAULT_VOTING_DELAY = 0; // blocks
+export const DEFAULT_VOTING_PERIOD = 100; // blocks means 3 minutes as per test
+export const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
+export const NFT_TOKEN_ID = TokenId.fromString(dex.NFT_TOKEN_ID);
 
 export default class GovernorTokenDao extends Base {
   async initialize(
@@ -27,54 +38,48 @@ export default class GovernorTokenDao extends Base {
     name: string,
     url: string,
     governor: Governor,
-    godHolder: GodHolder,
+    tokenHolder: GodHolder | NFTHolder,
     client: Client = clientsInfo.operatorClient,
     defaultQuorumThresholdValue: number = DEFAULT_QUORUM_THRESHOLD_IN_BSP,
     votingDelay: number = DEFAULT_VOTING_DELAY,
-    votingPeriod: number = DEFAULT_VOTING_PERIOD
+    votingPeriod: number = DEFAULT_VOTING_PERIOD,
+    tokenId: TokenId = GOD_TOKEN_ID,
+    holderTokenId: TokenId = GOD_TOKEN_ID
   ) {
-    try {
-      await governor.initialize(
-        godHolder,
-        client,
-        defaultQuorumThresholdValue,
-        votingDelay,
-        votingPeriod
-      );
-    } catch (error) {
-      throw error;
-    }
-
-    try {
-      await this.initializeInternally(
-        admin,
-        name,
-        url,
-        ContractId.fromString(governor.contractId).toSolidityAddress(),
-        client
-      );
-      console.log("Initialize done");
-    } catch (error) {
-      throw error;
-    }
+    await governor.initialize(
+      tokenHolder,
+      client,
+      defaultQuorumThresholdValue,
+      votingDelay,
+      votingPeriod,
+      tokenId,
+      holderTokenId
+    );
+    await this.initializeDAO(admin, name, url, governor, client);
   }
 
-  private initializeInternally = async (
+  async initializeDAO(
     admin: string,
     name: string,
     url: string,
-    governorTokenTransfer: string,
-    client: Client
-  ) => {
-    const args = new ContractFunctionParameters()
-      // token that define the voting weight, to vote user should have % of this token.
-      .addAddress(admin)
-      .addString(name)
-      .addString(url)
-      .addAddress(governorTokenTransfer);
-    await this.execute(900000, INITIALIZE, client, args);
-    console.log(`- GovernorTokenDao#${INITIALIZE}(): done\n`);
-  };
+    governor: Governor,
+    client: Client = clientsInfo.operatorClient
+  ) {
+    if (await this.isInitializationPending()) {
+      const governorId = governor.contractId;
+      const governorAddress =
+        ContractId.fromString(governorId).toSolidityAddress();
+      const args = new ContractFunctionParameters()
+        .addAddress(admin)
+        .addString(name)
+        .addString(url)
+        .addAddress(governorAddress);
+      await this.execute(9_00_000, INITIALIZE, client, args);
+      console.log(`- GovernorTokenDao#${INITIALIZE}(): done\n`);
+      return;
+    }
+    console.log(`- GovernorTokenDao#${INITIALIZE}(): already done\n`);
+  }
 
   createTokenTransferProposal = async (
     title: string,
@@ -82,7 +87,7 @@ export default class GovernorTokenDao extends Base {
     toAddress: string,
     tokenId: string,
     tokenAmount: number,
-    client: Client = clientsInfo.uiUserClient,
+    client: Client = clientsInfo.operatorClient,
     description: string = DEFAULT_DESCRIPTION,
     link: string = DEFAULT_LINK
   ) => {
@@ -95,7 +100,7 @@ export default class GovernorTokenDao extends Base {
       .addAddress(tokenId) // tokenToTransfer
       .addInt256(BigNumber(tokenAmount)); // amountToTransfer
     const { result } = await this.execute(
-      9999999,
+      1_000_000,
       CREATE_PROPOSAL,
       client,
       args,
@@ -125,7 +130,7 @@ export default class GovernorTokenDao extends Base {
   addWebLink = async (
     webLinkName: string = "GIT",
     webLink: string = "git_url",
-    client: Client = clientsInfo.uiUserClient
+    client: Client = clientsInfo.operatorClient
   ) => {
     const args = new ContractFunctionParameters()
       .addString(webLinkName)

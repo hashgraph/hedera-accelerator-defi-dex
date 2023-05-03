@@ -1,4 +1,6 @@
+import Base from "./Base";
 import BaseDao from "./BaseDao";
+import Common from "./Common";
 
 import { ethers } from "ethers";
 import { Helper } from "../../utils/Helper";
@@ -11,8 +13,9 @@ import {
   AccountId,
   ContractId,
   ContractFunctionParameters,
+  PrivateKey,
 } from "@hashgraph/sdk";
-import Base from "./Base";
+import HederaGnosisSafe from "./HederaGnosisSafe";
 
 const STATE = "state";
 const INITIALIZE = "initialize";
@@ -38,7 +41,7 @@ export default class MultiSigDao extends BaseDao {
     client: Client = clientsInfo.operatorClient,
     threshold: number = owners.length
   ) {
-    if (await this.isInitializationPending(ContractService.MULTI_SIG)) {
+    if (await this.isInitializationPending()) {
       const deployedItems = await deployment.deployContracts([
         ContractService.SAFE,
         ContractService.SAFE_FACTORY,
@@ -151,11 +154,29 @@ export default class MultiSigDao extends BaseDao {
     return txnHash;
   };
 
+  setupAllowanceForTransferTransaction = async (
+    token: TokenId,
+    allowanceAmount: number,
+    tokenSenderClient: Client = clientsInfo.uiUserClient,
+    tokenSenderAccountId: AccountId = clientsInfo.uiUserId,
+    tokenSenderPrivateKey: PrivateKey = clientsInfo.uiUserKey,
+    gnosisSafe: HederaGnosisSafe
+  ) => {
+    await Common.setTokenAllowance(
+      token,
+      gnosisSafe.contractId,
+      allowanceAmount,
+      tokenSenderAccountId,
+      tokenSenderPrivateKey,
+      tokenSenderClient
+    );
+  };
+
   proposeTransferTransaction = async (
     token: TokenId,
     receiver: AccountId | ContractId,
     amount: number,
-    client: Client = clientsInfo.uiUserClient
+    tokenSenderClient: Client = clientsInfo.uiUserClient
   ) => {
     const args = new ContractFunctionParameters()
       .addAddress(token.toSolidityAddress())
@@ -164,7 +185,7 @@ export default class MultiSigDao extends BaseDao {
     const { result } = await this.execute(
       9_90_000,
       PROPOSE_TRANSFER_TRANSACTION,
-      client,
+      tokenSenderClient,
       args
     );
     const txnHash = result.getBytes32(0);

@@ -10,7 +10,9 @@ contract NFTHolderMock is ITokenHolder {
         address token
     ) external override {}
 
-    function revertTokensForVoter() external override returns (int32) {}
+    function revertTokensForVoter(
+        uint256
+    ) external payable override returns (int32) {}
 
     function balanceOfVoter(
         address voter
@@ -29,4 +31,8 @@ contract NFTHolderMock is ITokenHolder {
     ) external override returns (int32) {}
 
     function getToken() external view override returns (address) {}
+
+    function isNFTType() external pure returns (bool) {
+        return true;
+    }
 }

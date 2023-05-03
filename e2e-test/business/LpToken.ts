@@ -14,6 +14,7 @@ const REMOVE_LP_TOKEN = "removeLPTokenFor";
 const LP_TOKEN_FOR_USER = "lpTokenForUser";
 const GET_LP_TOKEN_COUNT = "getAllLPTokenCount";
 const GET_LP_TOKEN_ADDRESS = "getLpTokenAddress";
+const LPTOKEN_COUNT_FOR_GIVEN_TOKENS_QTY = "lpTokenCountForGivenTokensQty";
 
 export default class LpToken extends Base {
   initialize = async (
@@ -21,12 +22,16 @@ export default class LpToken extends Base {
     tokenSymbol: string,
     client: Client = clientsInfo.operatorClient
   ) => {
-    const args = new ContractFunctionParameters()
-      .addAddress(this.htsAddress)
-      .addString(tokenSymbol)
-      .addString(tokenName);
-    await this.execute(500000, INITIALIZE, client, args, undefined, 60);
-    console.log(`- LpToken#${INITIALIZE}(): done\n`);
+    if (await this.isInitializationPending()) {
+      const args = new ContractFunctionParameters()
+        .addAddress(this.htsAddress)
+        .addString(tokenSymbol)
+        .addString(tokenName);
+      await this.execute(5_00_000, INITIALIZE, client, args, undefined, 60);
+      console.log(`- LpToken#${INITIALIZE}(): done\n`);
+      return;
+    }
+    console.log(`- LpToken#${INITIALIZE}(): already done\n`);
   };
 
   getLpTokenAddress = async (client: Client = clientsInfo.operatorClient) => {
@@ -52,6 +57,29 @@ export default class LpToken extends Base {
     );
     const count = result.getInt256(0);
     console.log(`- LpToken#${GET_LP_TOKEN_COUNT}(): count = ${count}\n`);
+    return count;
+  };
+
+  lpTokenCountForGivenTokensQty = async (
+    tokenAQty: BigNumber,
+    tokenBQty: BigNumber,
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    const args = new ContractFunctionParameters()
+      .addInt256(tokenAQty)
+      .addInt256(tokenBQty);
+
+    const { result } = await this.execute(
+      2000000,
+      LPTOKEN_COUNT_FOR_GIVEN_TOKENS_QTY,
+      client,
+      args
+    );
+
+    const count = result.getInt256(0);
+    console.log(
+      `- LpToken#${LPTOKEN_COUNT_FOR_GIVEN_TOKENS_QTY}(): count = ${count}\n`
+    );
     return count;
   };
 

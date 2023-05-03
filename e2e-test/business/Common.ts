@@ -1,6 +1,7 @@
 import Base from "./Base";
 import Long from "long";
 import dex from "../../deployment/model/dex";
+
 import {
   Client,
   TokenId,
@@ -17,24 +18,125 @@ import {
   TokenDeleteTransaction,
   TokenMintTransaction,
   TokenAssociateTransaction,
+  AccountAllowanceApproveTransaction,
 } from "@hashgraph/sdk";
 import { BigNumber } from "bignumber.js";
 import { clientsInfo } from "../../utils/ClientManagement";
-import axios from "axios";
+import { MirrorNodeService } from "../../utils/MirrorNodeService";
 
 export default class Common {
   static baseUrl: string = "https://testnet.mirrornode.hedera.com/";
+
+  static setNFTTokenAllowance = async (
+    tokenId: string | TokenId,
+    spenderAccountId: string | AccountId,
+    ownerAccount: string | AccountId,
+    ownerAccountPrivateKey: PrivateKey,
+    client: Client
+  ) => {
+    const allowanceTxn =
+      new AccountAllowanceApproveTransaction().approveTokenNftAllowanceAllSerials(
+        tokenId,
+        ownerAccount,
+        spenderAccountId
+      );
+    const signTx = await allowanceTxn
+      .freezeWith(client)
+      .sign(ownerAccountPrivateKey);
+    const txResponse = await signTx.execute(client);
+    const receipt = await txResponse.getReceipt(client);
+    const transactionStatus = receipt.status;
+    console.log(
+      `- Common#setNFTTokenAllowance(): status = ${transactionStatus.toString()}, tokenId = ${tokenId.toString()}, spenderAccountId = ${spenderAccountId.toString()}, ownerAccount = ${ownerAccount.toString()}\n`
+    );
+  };
+
+  static setTokenAllowance = async (
+    tokenId: TokenId,
+    spenderAccountId: string | AccountId,
+    amount: number,
+    ownerAccount: string | AccountId,
+    ownerAccountPrivateKey: PrivateKey,
+    client: Client
+  ) => {
+    dex.HBARX_TOKEN_ID === tokenId.toString()
+      ? await Common.approveHbarAllowance(
+          spenderAccountId,
+          amount,
+          ownerAccount,
+          ownerAccountPrivateKey,
+          client
+        )
+      : await Common.approveTokenAllowance(
+          tokenId,
+          spenderAccountId,
+          amount,
+          ownerAccount,
+          ownerAccountPrivateKey,
+          client
+        );
+  };
+
+  static approveTokenAllowance = async (
+    tokenId: string | TokenId,
+    spenderAccountId: string | AccountId,
+    amount: number,
+    ownerAccount: string | AccountId,
+    ownerAccountPrivateKey: PrivateKey,
+    client: Client
+  ) => {
+    const allowanceTxn =
+      new AccountAllowanceApproveTransaction().approveTokenAllowance(
+        tokenId,
+        ownerAccount,
+        spenderAccountId,
+        amount
+      );
+    const signTx = await allowanceTxn
+      .freezeWith(client)
+      .sign(ownerAccountPrivateKey);
+    const txResponse = await signTx.execute(client);
+    const receipt = await txResponse.getReceipt(client);
+    const transactionStatus = receipt.status;
+    console.log(
+      `- Common#approveTokenAllowance(): status = ${transactionStatus.toString()}, tokenId = ${tokenId.toString()}, spenderAccountId = ${spenderAccountId.toString()}, ownerAccount = ${ownerAccount.toString()}, amount = ${amount}\n`
+    );
+  };
+
+  static approveHbarAllowance = async (
+    spenderAccountId: string | AccountId,
+    amount: number,
+    ownerAccount: string | AccountId,
+    ownerAccountPrivateKey: PrivateKey,
+    client: Client
+  ) => {
+    const allowanceTxn =
+      new AccountAllowanceApproveTransaction().approveHbarAllowance(
+        ownerAccount,
+        spenderAccountId,
+        amount
+      );
+    const signTx = await allowanceTxn
+      .freezeWith(client)
+      .sign(ownerAccountPrivateKey);
+    const txResponse = await signTx.execute(client);
+    const receipt = await txResponse.getReceipt(client);
+    const transactionStatus = receipt.status;
+    console.log(
+      `- Common#approveHbarAllowance(): status = ${transactionStatus.toString()}, spenderAccountId = ${spenderAccountId.toString()}, ownerAccount = ${ownerAccount.toString()}, hbar = ${amount}\n`
+    );
+  };
 
   static upgradeTo = async (
     proxyAddress: string,
     logicAddress: string,
     adminKey: PrivateKey = clientsInfo.adminKey,
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.adminClient
   ) => {
     const proxyContractId = ContractId.fromSolidityAddress(proxyAddress);
     const args = new ContractFunctionParameters().addAddress(logicAddress);
     await new Base(proxyContractId.toString()).execute(
-      4000000,
+      2_00_000,
       "upgradeTo",
       client,
       args,
@@ -116,7 +218,13 @@ export default class Common {
     client: Client = clientsInfo.operatorClient
   ) => {
     const response = await this.getBalanceInternally(id, client);
-    const tokenBalance = response.tokens?.get(tokenId) ?? new Long(0);
+    let tokenBalance = response.tokens?.get(tokenId);
+    if (!tokenBalance) {
+      const mirrorNodeService = MirrorNodeService.getInstance();
+      const tokens = await mirrorNodeService.getTokenBalance(id, [tokenId]);
+      tokenBalance = tokens.get(tokenId.toString());
+    }
+    tokenBalance = tokenBalance ?? new Long(0);
     console.log(
       `- Common#getTokenBalance(): id = ${id}, TokenId = ${tokenId}, Balance = ${tokenBalance}\n`
     );
@@ -232,11 +340,17 @@ export default class Common {
       .setTokenIds(tokenIds)
       .freezeWith(client);
     const signTx = await transaction.sign(accountKey);
-    const txResponse = await signTx.execute(client);
-    const receipt = await txResponse.getReceipt(client);
-    const transactionStatus = receipt.status;
-    console.log(
-      `Common#associateTokensToAccount(): TokenIds = ${tokenIds},  accountId = ${accountId}, transaction status is: ${transactionStatus.toString()}`
-    );
+    try {
+      const txResponse = await signTx.execute(client);
+      const receipt = await txResponse.getReceipt(client);
+      const transactionStatus = receipt.status;
+      console.log(
+        `Common#associateTokensToAccount(): TokenIds = ${tokenIds},  accountId = ${accountId}, transaction status is: ${transactionStatus.toString()} \n`
+      );
+    } catch (error: any) {
+      console.log(
+        `Common#associateTokensToAccount(): TokenIds = ${tokenIds},  accountId = ${accountId}, transaction status is: ${error.toString()} \n`
+      );
+    }
   };
 }

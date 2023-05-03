@@ -1,5 +1,6 @@
 import Governor from "../../e2e-test/business/Governor";
 import GodHolder from "../../e2e-test/business/GodHolder";
+
 import { Helper } from "../../utils/Helper";
 import { ContractService } from "../../deployment/service/ContractService";
 import { clientsInfo } from "../../utils/ClientManagement";
@@ -14,23 +15,39 @@ const governor = new Governor(governorTextContract.transparentProxyId!);
 const godHolder = new GodHolder(godHolderContract.transparentProxyId!);
 
 async function main() {
-  const title = Helper.createProposalTitle("Text Proposal");
   await governor.initialize(godHolder);
-  const proposalId = await governor.createTextProposal(title);
+
+  await godHolder.setupAllowanceForTokenLocking();
+  await godHolder.lock();
+
+  await governor.setupAllowanceForProposalCreation(
+    clientsInfo.operatorClient,
+    clientsInfo.operatorId,
+    clientsInfo.operatorKey
+  );
+
+  const title = Helper.createProposalTitle("Text Proposal");
+  const proposalId = await governor.createTextProposal(
+    title,
+    clientsInfo.operatorClient
+  );
   await governor.getProposalDetails(proposalId);
-  await governor.forVote(proposalId, clientsInfo.uiUserClient);
+  await governor.forVote(proposalId, 0, clientsInfo.uiUserClient);
   await governor.isQuorumReached(proposalId);
   await governor.isVoteSucceeded(proposalId);
   await governor.proposalVotes(proposalId);
-  await governor.delay(proposalId);
-  await governor.executeProposal(title);
-  await godHolder.checkAndClaimedGodTokens(clientsInfo.uiUserClient);
+  if (await governor.isSucceeded(proposalId)) {
+    await governor.executeProposal(title);
+  } else {
+    await governor.cancelProposal(title, clientsInfo.operatorClient);
+  }
+  await godHolder.checkAndClaimGodTokens(
+    clientsInfo.uiUserClient,
+    clientsInfo.uiUserId
+  );
   console.log(`\nDone`);
 }
 
 main()
   .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
+  .catch(Helper.processError);

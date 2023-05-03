@@ -12,14 +12,12 @@ const GET_URL_KEYS = "getCommaSeparatedUrlKeys";
 
 export default class Configuration extends Base {
   initialize = async (client: Client = clientsInfo.operatorClient) => {
-    try {
-      await this.execute(800000, INITIALIZE, client);
+    if (await this.isInitializationPending()) {
+      await this.execute(8_00_000, INITIALIZE, client);
       console.log(`- Configuration#${INITIALIZE}(): done\n`);
-      return true;
-    } catch (error) {
-      console.error(`- Configuration#${INITIALIZE}(): error ${error}\n`);
-      return false;
+      return;
     }
+    console.log(`- Configuration#${INITIALIZE}(): already done\n`);
   };
 
   setTransactionFee = async (

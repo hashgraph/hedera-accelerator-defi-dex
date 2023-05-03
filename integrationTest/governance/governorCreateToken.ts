@@ -1,11 +1,11 @@
-import dex from "../../deployment/model/dex";
-import Common from "../../e2e-test/business/Common";
 import Factory from "../../e2e-test/business/Factory";
 import Governor from "../../e2e-test/business/Governor";
 import GodHolder from "../../e2e-test/business/GodHolder";
 
+import { Helper } from "../../utils/Helper";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { ContractService } from "../../deployment/service/ContractService";
+import { TokenId } from "@hashgraph/sdk";
 
 const csDev = new ContractService();
 const factoryContractId = csDev.getContractWithProxy(csDev.factoryContractName)
@@ -24,67 +24,58 @@ const godHolder = new GodHolder(godHolderContractId);
 
 async function main() {
   await governor.initialize(godHolder);
+  const token1 = await createTokenViaProposal("TEST-A", "TEST-A");
+  const token2 = await createTokenViaProposal("TEST-B", "TEST-B");
+  await runFactoryTest(token1, token2);
+  console.log(`Done`);
+}
 
-  const title = "Create Token Proposal - 101";
+async function createTokenViaProposal(name: string, symbol: string) {
+  let tokenId: TokenId | null = null;
+
+  await godHolder.setupAllowanceForTokenLocking();
+  await godHolder.lock();
+
+  await governor.setupAllowanceForProposalCreation(
+    clientsInfo.operatorClient,
+    clientsInfo.operatorId,
+    clientsInfo.operatorKey
+  );
+
+  const title = Helper.createProposalTitle("Create Token Proposal");
   const proposalId = await governor.createTokenProposal(
     title,
-    "TEST-A",
-    "TEST-A1",
+    name,
+    symbol,
     clientsInfo.treasureId,
     clientsInfo.treasureKey.publicKey,
     clientsInfo.treasureId,
-    clientsInfo.treasureKey.publicKey
-  );
-
-  const title1 = "Create Token Proposal - 201";
-  const proposalId1 = await governor.createTokenProposal(
-    title1,
-    "TEST-B",
-    "TEST-B1",
-    clientsInfo.treasureId,
     clientsInfo.treasureKey.publicKey,
-    clientsInfo.treasureId,
-    clientsInfo.treasureKey.publicKey
+    clientsInfo.operatorClient
   );
 
-  await governor.forVote(proposalId, clientsInfo.treasureClient);
-  await Common.transferTokens(
-    clientsInfo.operatorId,
-    clientsInfo.treasureId,
-    clientsInfo.treasureKey,
-    dex.GOD_DEV_TOKEN_ID,
-    1000 * 1e8
-  );
-  await governor.forVote(proposalId, clientsInfo.operatorClient);
-
-  await governor.forVote(proposalId1, clientsInfo.treasureClient);
-  await governor.forVote(proposalId1, clientsInfo.operatorClient);
-
-  await governor.proposalVotes(proposalId);
-  await governor.proposalVotes(proposalId1);
-
+  await governor.getProposalDetails(proposalId);
+  await governor.forVote(proposalId, 0, clientsInfo.uiUserClient);
   await governor.isQuorumReached(proposalId);
-  await governor.isQuorumReached(proposalId1);
-
   await governor.isVoteSucceeded(proposalId);
-  await governor.isVoteSucceeded(proposalId1);
-
-  await governor.delay(proposalId);
-  await governor.delay(proposalId1);
-
-  await governor.executeProposal(title, clientsInfo.treasureKey);
-  await governor.executeProposal(title1, clientsInfo.treasureKey);
-
-  await godHolder.checkAndClaimedGodTokens(clientsInfo.treasureClient);
-  await godHolder.checkAndClaimedGodTokens(clientsInfo.operatorClient);
-
-  const token1 = await governor.getTokenAddressFromGovernorTokenCreate(
-    proposalId
+  await governor.proposalVotes(proposalId);
+  if (await governor.isSucceeded(proposalId)) {
+    await governor.executeProposal(title, clientsInfo.treasureKey);
+    tokenId = await governor.getTokenAddressFromGovernorTokenCreate(proposalId);
+  } else {
+    await governor.cancelProposal(title, clientsInfo.operatorClient);
+  }
+  await godHolder.checkAndClaimGodTokens(
+    clientsInfo.uiUserClient,
+    clientsInfo.uiUserId
   );
-  const token2 = await governor.getTokenAddressFromGovernorTokenCreate(
-    proposalId1
-  );
+  if (!tokenId) {
+    throw Error("failed to created token inside integration test");
+  }
+  return tokenId;
+}
 
+async function runFactoryTest(token1: TokenId, token2: TokenId) {
   await factory.setupFactory();
   await factory.createPair(
     token1,
@@ -93,12 +84,8 @@ async function main() {
     clientsInfo.treasureKey
   );
   await factory.getPair(token1, token2);
-  console.log(`\nDone`);
 }
 
 main()
   .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
+  .catch(Helper.processError);

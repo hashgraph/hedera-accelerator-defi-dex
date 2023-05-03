@@ -31,6 +31,13 @@ contract LPToken is ILPToken, Initializable {
         return int256(lpToken.totalSupply());
     }
 
+    function lpTokenCountForGivenTokensQty(
+        int256 tokenAQuantity,
+        int256 tokenBQuantity
+    ) external pure override returns (int256) {
+        return sqrt(tokenAQuantity * tokenBQuantity);
+    }
+
     function initialize(
         IBaseHTS _tokenService,
         string memory tokenName,
@@ -55,12 +62,14 @@ contract LPToken is ILPToken, Initializable {
             (amountA > 0 && amountB > 0),
             "Please provide positive token counts"
         );
-        int256 mintingAmount = sqrt(amountA * amountB);
+        int256 mintingAmount = this.lpTokenCountForGivenTokensQty(
+            amountA,
+            amountB
+        );
         require(
             address(lpToken) > address(0x0),
             "Liquidity Token not initialized"
         );
-        tokenService.associateTokenPublic(_toUser, address(lpToken));
         (int256 response, ) = tokenService.mintTokenPublic(
             address(lpToken),
             mintingAmount
@@ -89,19 +98,22 @@ contract LPToken is ILPToken, Initializable {
             this.lpTokenForUser(fromUser) >= lpAmount,
             "User Does not have lp amount"
         );
-        // transfer Lp from users account to contract
-        int256 response = tokenService.transferTokenPublic(
-            address(lpToken),
+
+        bool isTransferSuccessful = IERC20(lpToken).transferFrom(
             fromUser,
             address(this),
-            lpAmount
+            uint256(lpAmount)
         );
+
         require(
-            response == HederaResponseCodes.SUCCESS,
+            isTransferSuccessful,
             "LPToken: token transfer failed to contract."
         );
         // burn old amount of LP
-        (response, ) = tokenService.burnTokenPublic(address(lpToken), lpAmount);
+        (int response, ) = tokenService.burnTokenPublic(
+            address(lpToken),
+            lpAmount
+        );
         require(
             response == HederaResponseCodes.SUCCESS,
             "LP token burn failed."

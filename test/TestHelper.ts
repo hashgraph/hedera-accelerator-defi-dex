@@ -4,6 +4,17 @@ import { ethers, upgrades } from "hardhat";
 export class TestHelper {
   static ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
   static ONE_ADDRESS = "0x0000000000000000000000000000000000000001";
+  static TWO_ADDRESS = "0x0000000000000000000000000000000000000002";
+
+  static async mineNBlocks(n: number) {
+    for (let index = 0; index < n; index++) {
+      await ethers.provider.send("evm_mine", []);
+    }
+  }
+
+  static toPrecision(targetAmount: number) {
+    return targetAmount * 1e8;
+  }
 
   static async readLastEvent(transaction: any) {
     const lastEvent = (await transaction.wait()).events.pop();
@@ -32,6 +43,37 @@ export class TestHelper {
 
   static async getDAOSigners() {
     return (await ethers.getSigners()).slice(4, 6)!;
+  }
+
+  static async deployGodHolder(baseHTS: Contract, token: Contract) {
+    const instance = await this.deployLogic("GODHolder");
+    await instance.initialize(baseHTS.address, token.address);
+    return instance;
+  }
+
+  static async deployGodTokenHolderFactory(
+    baseHTS: Contract,
+    godHolder: Contract,
+    admin: string
+  ) {
+    const instance = await this.deployLogic("GODTokenHolderFactory");
+    await instance.initialize(baseHTS.address, godHolder.address, admin);
+    return instance;
+  }
+
+  static async deployERC20Mock(
+    total: number = this.toPrecision(100),
+    name: String = "TEST",
+    symbol: String = "TEST"
+  ) {
+    return await this.deployLogic("ERC20Mock", name, symbol, total, 0);
+  }
+
+  static async deployMockBaseHTS(
+    tokenTesting: boolean = true,
+    hBarAddress: string = this.ZERO_ADDRESS
+  ) {
+    return await this.deployLogic("MockBaseHTS", tokenTesting, hBarAddress);
   }
 
   static async deployLogic(name: string, ...args: any) {

@@ -1,15 +1,10 @@
 import dex from "../model/dex";
 import Factory from "../../e2e-test/business/Factory";
-import Governor from "../../e2e-test/business/Governor";
-import GodHolder from "../../e2e-test/business/GodHolder";
-import Configuration from "../../e2e-test/business/Configuration";
-import GODTokenHolderFactory from "../../e2e-test/business/GODTokenHolderFactory";
-import GovernanceDAOFactory from "../../e2e-test/business/GovernanceDAOFactory";
-import MultiSigDAOFactory from "../../e2e-test/business/factories/MultiSigDAOFactory";
 
 import { TokenId } from "@hashgraph/sdk";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { ContractService } from "../service/ContractService";
+import { InstanceProvider } from "../../utils/InstanceProvider";
 
 const tokenA = TokenId.fromString(dex.TOKEN_LAB49_1);
 const tokenB = TokenId.fromString(dex.TOKEN_LAB49_2);
@@ -34,65 +29,12 @@ const createPair = async (
   );
 };
 
-function createInstances() {
-  const factoryContractId = csDev.getContractWithProxy(
-    csDev.factoryContractName
-  ).transparentProxyId!;
-
-  const godHolderContractId = csDev.getContractWithProxy(
-    csDev.godHolderContract
-  ).transparentProxyId!;
-
-  const configurationContractId = csDev.getContractWithProxy(
-    csDev.configuration
-  ).transparentProxyId!;
-
-  const governanceDaoFactoryContractId = csDev.getContractWithProxy(
-    csDev.governanceDaoFactory
-  ).transparentProxyId!;
-
-  const godHolderFactory = csDev.getContractWithProxy(
-    csDev.godTokenHolderFactory
-  ).transparentProxyId!;
-
-  const multiSigDaoFactoryContractId = csDev.getContractWithProxy(
-    ContractService.MULTI_SIG_FACTORY
-  ).transparentProxyId!;
-
-  const factory = new Factory(factoryContractId);
-  const godHolder = new GodHolder(godHolderContractId);
-  const configuration = new Configuration(configurationContractId);
-  const governanceDaoFactory = new GovernanceDAOFactory(
-    governanceDaoFactoryContractId
-  );
-  const godHolderFactoryInstance = new GODTokenHolderFactory(godHolderFactory);
-  const multiSigDaoFactoryInstance = new MultiSigDAOFactory(
-    multiSigDaoFactoryContractId
-  );
-  return {
-    factory,
-    godHolder,
-    configuration,
-    governanceDaoFactory,
-    godHolderFactoryInstance,
-    multiSigDaoFactoryInstance,
-  };
-}
-
 export async function main() {
-  const {
-    factory,
-    godHolder,
-    configuration,
-    governanceDaoFactory,
-    godHolderFactoryInstance,
-    multiSigDaoFactoryInstance,
-  } = createInstances();
+  const provider = InstanceProvider.getInstance();
+  await provider.getConfiguration().initialize();
 
-  await configuration.initialize();
-  await governanceDaoFactory.initialize(csDev.governanceDaoFactory);
-
-  await factory.setupFactory();
+  const factory = provider.getFactory();
+  await provider.getFactory().setupFactory();
   try {
     await createPair(factory, tokenB, tokenHBARX);
   } catch (error) {
@@ -114,19 +56,15 @@ export async function main() {
     console.error(error);
   }
 
-  try {
-    await godHolder.initialize(clientsInfo.operatorClient);
-  } catch (error) {
-    console.log(`- GODHolder initialization failed.`);
-    console.error(error);
-  }
+  await provider.getFungibleTokenHolder().initialize();
+  await provider.getFungibleTokenHolderFactory().initialize();
+  await provider.getFungibleTokenDAOFactory().initialize();
 
-  try {
-    await godHolderFactoryInstance.initializeWithGodNewHolder();
-  } catch (error) {
-    console.log(`- GODHolder initialization failed.`);
-    console.error(error);
-  }
+  await provider.getNonFungibleTokenHolder().initialize();
+  await provider.getNonFungibleTokenHolderFactory().initialize();
+  await provider.getNonFungibleTokenDAOFactory().initialize();
+
+  await provider.getMultiSigDAOFactory().initialize();
 
   for (const contractName of csDev.allGovernorContracts) {
     const contract = csDev.getContractWithProxy(contractName);
@@ -134,7 +72,9 @@ export async function main() {
       `\n${contractName} transparent proxy contractId: ${contract.transparentProxyId!}`
     );
     try {
-      await new Governor(contract.transparentProxyId!).initialize(godHolder);
+      await provider
+        .getGovernor(contractName)
+        .initialize(provider.getFungibleTokenHolder());
     } catch (error) {
       console.log(
         `Initialization failed ${contractName} ${contract.transparentProxyId} `
@@ -142,8 +82,6 @@ export async function main() {
       console.error(error);
     }
   }
-
-  await multiSigDaoFactoryInstance.initialize();
 }
 
 if (require.main === module) {

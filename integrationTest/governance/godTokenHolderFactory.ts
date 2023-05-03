@@ -1,14 +1,15 @@
 import dex from "../../deployment/model/dex";
 import GODTokenHolderFactory from "../../e2e-test/business/GODTokenHolderFactory";
-import GodHolder from "../../e2e-test/business/GodHolder";
 
+import { Helper } from "../../utils/Helper";
 import { TokenId } from "@hashgraph/sdk";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { ContractService } from "../../deployment/service/ContractService";
 
-const csDev = new ContractService();
+const TOKEN_ID = TokenId.fromString(dex.TOKEN_LAB49_1);
+const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
 
-const godHolderLogic = csDev.getContract(csDev.godHolderContract);
+const csDev = new ContractService();
 
 const godTokenHolderFactoryProxyId = csDev.getContractWithProxy(
   csDev.godTokenHolderFactory
@@ -18,15 +19,8 @@ const godTokenHolderFactory = new GODTokenHolderFactory(
   godTokenHolderFactoryProxyId
 );
 
-const TOKEN_ID = TokenId.fromString(dex.TOKEN_LAB49_1);
-const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
-
 async function main() {
-  await godTokenHolderFactory.initialize(
-    godHolderLogic.address,
-    clientsInfo.adminId.toSolidityAddress(),
-    clientsInfo.operatorClient
-  );
+  await godTokenHolderFactory.initialize();
   await godTokenHolderFactory.getTokenHolder(
     GOD_TOKEN_ID.toSolidityAddress(),
     clientsInfo.operatorClient
@@ -39,7 +33,4 @@ async function main() {
 
 main()
   .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
+  .catch(Helper.processError);

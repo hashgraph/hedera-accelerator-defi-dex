@@ -33,7 +33,7 @@ jobs:
       - name: Use Node.js 18.x
         uses: actions/setup-node@v3
         with:
-          node-version: "18.x"
+          node-version: "18.15.0"
       - run: npm ci
       - name: Save user inputs
         uses: jsdaniell/create-json@v1.2.2
@@ -61,14 +61,14 @@ jobs:
       - name: Use Node.js 18.x
         uses: actions/setup-node@v3
         with:
-          node-version: "18.x"
+          node-version: "18.15.0"
       - run: npm ci
       - name: Save user inputs
         uses: jsdaniell/create-json@v1.2.2
         id: create-json
         with:
           name: "deployment/scripts/workflow-inputs.json"
-          json: '{"contracts":"GODHolder,GovernorTransferToken,GovernorTokenCreate,GovernorTextProposal,GovernanceDAOFactory,GovernorTokenDAO"}'
+          json: '{"contracts":"GODHolder,GovernorTransferToken,GovernorTokenCreate,GovernorTextProposal,GovernanceDAOFactory,GovernorTokenDAO,GODTokenHolderFactory"}'
       - name: Deployment
         run: npx hardhat run deployment/scripts/createContractsE2E.ts;
       - name: e2e

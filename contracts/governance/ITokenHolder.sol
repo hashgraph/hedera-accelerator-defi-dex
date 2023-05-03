@@ -6,11 +6,11 @@ import "../common/IBaseHTS.sol";
 interface ITokenHolder {
     function initialize(IBaseHTS tokenService, address token) external;
 
-    function revertTokensForVoter() external returns (int32);
+    function revertTokensForVoter(uint256 idOrAmount) external payable returns (int32);
 
     function balanceOfVoter(address voter) external view returns (uint256);
 
-    function grabTokensFromUser(address user, uint256 tokenId) external;
+    function grabTokensFromUser(address user, uint256 idOrAmount) external;
 
     function addProposalForVoter(
         address voter,
@@ -23,4 +23,6 @@ interface ITokenHolder {
     ) external returns (int32);
 
     function getToken() external view returns (address);
+
+    function isNFTType() external view returns (bool);
 }

@@ -7,7 +7,7 @@ import { given, binding, when, then } from "cucumber-tsflow/dist";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { expect } from "chai";
 import { ContractService } from "../../deployment/service/ContractService";
-import { TokenId } from "@hashgraph/sdk";
+import { TokenId, AccountId, ContractId, Client } from "@hashgraph/sdk";
 import { httpRequest } from "../../deployment/api/HttpsService";
 import { Helper } from "../../utils/Helper";
 import Pair from "../business/Pair";
@@ -30,10 +30,6 @@ const factory = new Factory(factoryContractId);
 const governor = new Governor(tokenCreateContractId);
 const godHolder = new GodHolder(godHolderContractId);
 const baseHTS = new BaseHTS(csDev.getContract(csDev.baseContractName).id);
-
-const DEFAULT_QUORUM_THRESHOLD_IN_BSP = 1;
-const DEFAULT_VOTING_DELAY = 2;
-const DEFAULT_VOTING_PERIOD = 4;
 const tokenHBARX = TokenId.fromString(dex.HBARX_TOKEN_ID);
 
 let proposalId: string;
@@ -44,6 +40,7 @@ let pair: any;
 let precision: BigNumber;
 let tokensBefore: BigNumber[];
 let tokensAfter: BigNumber[];
+let pairAdd: any;
 
 @binding()
 export class GovernorCreateToken extends CommonSteps {
@@ -61,12 +58,10 @@ export class GovernorCreateToken extends CommonSteps {
     console.log("factoryContractId :", factoryContractId);
     console.log("treasureId :", clientsInfo.treasureId.toString());
     console.log("operatorId :", clientsInfo.operatorId.toString());
-    await governor.initialize(
+    await this.initializeGovernorContract(
+      governor,
       godHolder,
-      clientsInfo.operatorClient,
-      DEFAULT_QUORUM_THRESHOLD_IN_BSP,
-      DEFAULT_VOTING_DELAY,
-      DEFAULT_VOTING_PERIOD
+      clientsInfo.operatorClient
     );
   }
 
@@ -91,7 +86,7 @@ export class GovernorCreateToken extends CommonSteps {
         clientsInfo.operatorKey.publicKey
       );
     } catch (e: any) {
-      await godHolder.revertTokensForVoter(clientsInfo.operatorClient);
+      await godHolder.checkAndClaimGodTokens(clientsInfo.operatorClient);
       throw e;
     }
   }
@@ -101,37 +96,8 @@ export class GovernorCreateToken extends CommonSteps {
     undefined,
     30000
   )
-  public async waitForProposalState(state: string, seconds: number) {
-    let revertRequired: boolean = false;
-    if (state === "Executed") {
-      revertRequired = true;
-    }
-    const requiredState = await governor.getProposalNumericState(state);
-    try {
-      await governor.getStateWithTimeout(
-        proposalId,
-        requiredState,
-        seconds * 1000,
-        1000
-      );
-
-      if (revertRequired) {
-        console.log(
-          `State of proposal is - ${state} revert of god token required is- ${revertRequired}`
-        );
-        await godHolder.revertTokensForVoter(clientsInfo.operatorClient);
-      }
-    } catch (e: any) {
-      console.log("Something went wrong while getting the state with timeout ");
-      console.log(e);
-      await this.cancelProposalInternally(
-        governor,
-        proposalId,
-        clientsInfo.operatorClient,
-        godHolder
-      );
-      throw e;
-    }
+  public async waitForState(state: string, seconds: number) {
+    await this.waitForProposalState(governor, state, proposalId, seconds);
   }
 
   @when(
@@ -149,46 +115,18 @@ export class GovernorCreateToken extends CommonSteps {
     30000
   )
   public async verifyProposalState(proposalState: string): Promise<void> {
-    try {
-      const currentState = await governor.state(
-        proposalId,
-        clientsInfo.operatorClient
-      );
-      const proposalStateNumeric = await governor.getProposalNumericState(
-        proposalState
-      );
-      expect(Number(currentState)).to.eql(proposalStateNumeric);
-    } catch (e: any) {
-      console.log("Something went wrong while verifying the state of proposal");
-      console.log(e);
-      await this.cancelProposalInternally(
-        governor,
-        proposalId,
-        clientsInfo.operatorClient,
-        godHolder
-      );
-      throw e;
-    }
+    const { currentState, proposalStateNumeric } = await this.getProposalState(
+      governor,
+      proposalId,
+      clientsInfo.operatorClient,
+      proposalState
+    );
+    expect(Number(currentState)).to.eql(proposalStateNumeric);
   }
 
   @when(/User vote "([^"]*)" create token proposal/, undefined, 30000)
   public async voteToProposal(vote: string): Promise<void> {
-    try {
-      const voteVal = await governor.getProposalVoteNumeric(vote);
-      await governor.vote(proposalId, voteVal, clientsInfo.operatorClient);
-    } catch (e: any) {
-      console.log(
-        "Something went wrong while voting to proposal now cancelling the proposal"
-      );
-      console.log(e);
-      await this.cancelProposalInternally(
-        governor,
-        proposalId,
-        clientsInfo.operatorClient,
-        godHolder
-      );
-      throw e;
-    }
+    await this.vote(governor, vote, proposalId, clientsInfo.operatorClient);
   }
 
   @when(
@@ -196,26 +134,13 @@ export class GovernorCreateToken extends CommonSteps {
     undefined,
     30000
   )
-  public async executeProposal(title: string) {
-    try {
-      await governor.executeProposal(
-        title,
-        clientsInfo.operatorKey,
-        clientsInfo.operatorClient
-      );
-    } catch (e: any) {
-      console.log(
-        "Something went wrong while executing proposal cancelling the proposal"
-      );
-      console.log(e);
-      await this.cancelProposalInternally(
-        governor,
-        proposalId,
-        clientsInfo.operatorClient,
-        godHolder
-      );
-      throw e;
-    }
+  public async execute(title: string) {
+    await this.executeProposal(
+      governor,
+      title,
+      clientsInfo.operatorKey,
+      clientsInfo.operatorClient
+    );
   }
 
   @then(
@@ -317,7 +242,7 @@ export class GovernorCreateToken extends CommonSteps {
     const tokensBeforeFetched = await pair.getPairQty(
       clientsInfo.operatorClient
     );
-    const pairAdd = await pair.getTokenPairAddress();
+    pairAdd = await pair.getTokenPairAddress();
     tokensBefore =
       pairAdd.tokenAAddress == tokenOne.toSolidityAddress()
         ? tokensBeforeFetched
@@ -335,6 +260,16 @@ export class GovernorCreateToken extends CommonSteps {
     );
   }
 
+  @when(/User associate the LPToken with account/, undefined, 30000)
+  public async associateLPToken() {
+    pairAdd = await pair.getTokenPairAddress();
+    await Common.associateTokensToAccount(
+      clientsInfo.operatorId,
+      [TokenId.fromSolidityAddress(pairAdd.lpTokenAddress)],
+      clientsInfo.operatorClient,
+      clientsInfo.operatorKey
+    );
+  }
   @then(
     /User verify "([^"]*)" and "([^"]*)" balances in the pool are (\d*) units and (\d*) units respectively/,
     undefined,
@@ -417,13 +352,28 @@ export class GovernorCreateToken extends CommonSteps {
   }
 
   @when(
-    /User revert the god tokens for create token contract/,
+    /User lock (\d+\.?\d*) GOD token before voting to create token proposal/,
     undefined,
     30000
   )
-  public async revertGODToken() {
-    await this.revertGODTokensFromGodHolder(
+  public async lockGOD(tokenAmt: number) {
+    await this.lockTokens(
       godHolder,
+      tokenAmt * CommonSteps.withPrecision,
+      clientsInfo.operatorId,
+      clientsInfo.operatorKey,
+      clientsInfo.operatorClient
+    );
+  }
+
+  @when(/User fetch GOD tokens back from GOD holder/, undefined, 30000)
+  public async revertGOD() {
+    await this.revertTokens(
+      ContractId.fromString(godHolderContractId),
+      clientsInfo.operatorId,
+      AccountId.fromString(godHolderContractId),
+      clientsInfo.operatorKey,
+      TokenId.fromString(dex.GOD_TOKEN_ID),
       clientsInfo.operatorClient
     );
   }

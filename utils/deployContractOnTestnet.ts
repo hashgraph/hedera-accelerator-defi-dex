@@ -7,7 +7,6 @@ import {
   ContractCreateTransaction,
   Client,
   ContractFunctionParameters,
-  ContractExecuteTransaction,
   Key,
   ContractCreateFlow,
 } from "@hashgraph/sdk";
@@ -16,7 +15,6 @@ import { ContractService } from "../deployment/service/ContractService";
 import ClientManagement from "../utils/ClientManagement";
 import { clientsInfo } from "../utils/ClientManagement";
 import ContractMetadata from "../utils/ContractMetadata";
-import dex from "../deployment/model/dex";
 
 dotenv.config();
 
@@ -148,9 +146,9 @@ export class Deployment {
     client: Client = clientsInfo.operatorClient
   ) => {
     console.log(`- Deployment#deploy(): ${contractName} deploying...\n`);
-    const contractABI = this.contractMetadata.getContractABI(contractName);
+    const info = await this.contractMetadata.getContractInfo(contractName);
     const txn = new ContractCreateFlow()
-      .setBytecode(contractABI.bytecode)
+      .setBytecode(info.artifact.bytecode)
       .setGas(2000000)
       .setAdminKey(adminKey);
 
@@ -238,53 +236,15 @@ export class Deployment {
       contractId?.toString()!,
       contractId?.toSolidityAddress()!,
       compiledContract.contractName,
-      this.contractMetadata.calculateHash(compiledContract.contractName)
+      await this.contractMetadata.calculateHash(compiledContract.contractName)
     );
 
     const contractEvmAddress = "0x" + contractId?.toSolidityAddress()!;
-    const baseContract = this.contractService.getContract(
-      this.contractService.baseContractName
-    );
-
-    await this.associateTokenPublic(
-      baseContract.id,
-      contractEvmAddress,
-      operatorKey,
-      dex.GOD_TOKEN_ADDRESS,
-      clientArg
-    );
-
     clientArg.close();
 
     return {
       id: contractId?.toString()!,
       address: contractEvmAddress,
     };
-  };
-
-  private associateTokenPublic = async (
-    contractId: string,
-    userAccountAddress: string,
-    userAccountPrivateKey: PrivateKey,
-    tokenAddress: string,
-    client: Client
-  ) => {
-    const args = new ContractFunctionParameters()
-      .addAddress(userAccountAddress)
-      .addAddress(tokenAddress);
-
-    const txn = await new ContractExecuteTransaction()
-      .setContractId(contractId)
-      .setGas(3000000)
-      .setFunction("associateTokenPublic", args)
-      .freezeWith(client)
-      .sign(userAccountPrivateKey);
-
-    const txnResponse = await txn.execute(client);
-    const txnRecord = await txnResponse.getRecord(client);
-    const responseCode = txnRecord.contractFunctionResult!.getInt256(0).c![0];
-    console.log(
-      `- Token association (response-code => 22 means success : ${responseCode}`
-    );
   };
 }

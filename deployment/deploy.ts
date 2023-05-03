@@ -4,10 +4,8 @@ import { main as deployContract } from "./scripts/logic";
 import { main as createContractProxy } from "./scripts/transparentUpgradeableProxy";
 import { main as updateContractProxy } from "./scripts/upgradeProxy";
 
-const helper = new Helper();
-
 async function main() {
-  const contractName = await helper.prompt(
+  const contractName = await Helper.prompt(
     ContractMetadata.SUPPORTED_CONTRACTS_FOR_DEPLOYMENT,
     "Please select which contract you want to deploy ?"
   );
@@ -15,7 +13,7 @@ async function main() {
     return "nothing to execute";
   }
   await deployContract(contractName);
-  const proxyOption = await helper.prompt(
+  const proxyOption = await Helper.prompt(
     ContractMetadata.SUPPORTED_PROXY_OPTIONS,
     "Please select any option for proxy operation from menu !"
   );

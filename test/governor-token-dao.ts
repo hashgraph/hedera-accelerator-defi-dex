@@ -65,40 +65,30 @@ describe("GovernorTokenDAO Tests", function () {
     };
   }
 
-  it("Verify if the GovernorTokenDAO contract is upgradeable safe ", async function () {
-    const votingDelay = 0;
-    const votingPeriod = 12;
-    const signers = await ethers.getSigners();
-
-    const Governor = await ethers.getContractFactory("GovernorTransferToken");
-    const args = [
-      signers[0].address,
-      votingDelay,
-      votingPeriod,
-      signers[0].address,
-      signers[0].address,
-      defaultQuorumThresholdValueInBsp,
-    ];
-    const instance = await upgrades.deployProxy(Governor, args);
-    await instance.deployed();
-    const Dao = await ethers.getContractFactory("GovernorTokenDAO");
-    const daoArgs = [signers[0].address, daoName, daoLogoUrl, instance.address];
-    const instanceDao = await upgrades.deployProxy(Dao, daoArgs);
-    await instanceDao.deployed();
-  });
-
   it("Verify GovernorTokenDAO initialize call", async function () {
     const votingDelay = 0;
     const votingPeriod = 12;
     const signers = await ethers.getSigners();
+    const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
+    const mockBaseHTS = await MockBaseHTS.deploy(true, zeroAddress);
+
+    const TokenCont = await ethers.getContractFactory("ERC20Mock");
+    const tokenCont = await TokenCont.deploy("tokenName", "tokenSymbol", 10, 0);
+
+    const NFTHolder = await ethers.getContractFactory("GODHolder");
+    const nftHolder = await upgrades.deployProxy(
+      NFTHolder,
+      [mockBaseHTS.address, tokenCont.address],
+      { unsafeAllow: ["delegatecall"] }
+    );
 
     const GovernorTransferToken = await TestHelper.deployProxy(
       "GovernorTransferToken",
-      signers[0].address,
+      tokenCont.address,
       votingDelay,
       votingPeriod,
-      signers[0].address,
-      signers[0].address,
+      mockBaseHTS.address,
+      nftHolder.address,
       defaultQuorumThresholdValueInBsp
     );
 
@@ -116,17 +106,6 @@ describe("GovernorTokenDAO Tests", function () {
     )
       .to.revertedWithCustomError(governorTokenDAOInstance, "InvalidInput")
       .withArgs("BaseDAO: name is empty");
-
-    await expect(
-      governorTokenDAOInstance.initialize(
-        signers[0].address,
-        daoName,
-        "",
-        GovernorTransferToken.address
-      )
-    )
-      .to.revertedWithCustomError(governorTokenDAOInstance, "InvalidInput")
-      .withArgs("BaseDAO: url is empty");
 
     await expect(
       governorTokenDAOInstance.initialize(

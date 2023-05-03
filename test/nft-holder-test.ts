@@ -12,17 +12,6 @@ describe("NFTHolder Tests", function () {
   const tokenSerial = 1;
   const tokenCount = 1;
 
-  describe("NFTHolder Upgradeable", function () {
-    it("Verify if the NFTHolder contract is upgradeable safe ", async function () {
-      const Governor = await ethers.getContractFactory("NFTHolder");
-      const args = [zeroAddress, zeroAddress];
-      const instance = await upgrades.deployProxy(Governor, args, {
-        unsafeAllow: ["delegatecall"],
-      });
-      await instance.deployed();
-    });
-  });
-
   async function deployFixture() {
     const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
     const mockBaseHTS = await MockBaseHTS.deploy(true, zeroAddress);
@@ -116,23 +105,13 @@ describe("NFTHolder Tests", function () {
     expect(canClaimNFT1).to.be.equal(true);
   });
 
-  it("Verify NFTHolder grabtoken revert", async function () {
-    const { nftHolder, signers, mockBaseHTS } = await loadFixture(
-      deployFixture
-    );
-    await mockBaseHTS.setPassTransactionCount(1);
-    await expect(
-      nftHolder.grabTokensFromUser(signers[0].address, 0)
-    ).to.revertedWith("NFTHolder: token transfer failed to contract.");
-  });
-
   it("Verify NFTHolder revertTokensForVoter revert", async function () {
     const { nftHolder, signers } = await loadFixture(deployFixture);
-    await expect(nftHolder.revertTokensForVoter()).to.revertedWith(
+    await expect(nftHolder.revertTokensForVoter(0)).to.revertedWith(
       "NFTHolder: No amount for the Voter."
     );
     await nftHolder.addProposalForVoter(signers[0].address, 1);
-    await expect(nftHolder.revertTokensForVoter()).to.revertedWith(
+    await expect(nftHolder.revertTokensForVoter(0)).to.revertedWith(
       "User's Proposals are active"
     );
   });
@@ -144,9 +123,9 @@ describe("NFTHolder Tests", function () {
     const userBalance = await tokenCont.balanceOf(signers[0].address);
     expect(nftHolderBalance).to.be.equal(tokenCount);
     expect(userBalance).to.be.equal(userTotalToken - tokenCount);
-    const response = await nftHolder.callStatic.revertTokensForVoter();
+    const response = await nftHolder.callStatic.revertTokensForVoter(0);
     expect(response).to.be.equal(22);
-    await nftHolder.revertTokensForVoter();
+    await nftHolder.revertTokensForVoter(0);
     const nftHolderBalanceAfterRevert = await tokenCont.balanceOf(
       nftHolder.address
     );

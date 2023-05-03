@@ -1,12 +1,11 @@
-import ContractMetadata from "../../utils/ContractMetadata";
+import { Helper } from "../../utils/Helper";
 import { BigNumber } from "bignumber.js";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { ContractService } from "../../deployment/service/ContractService";
-import { EventConsumer } from "../../utils/EventConsumer";
+import { MirrorNodeService } from "../../utils/MirrorNodeService";
 import {
   Client,
   PrivateKey,
-  Transaction,
   ContractExecuteTransaction,
   ContractFunctionParameters,
 } from "@hashgraph/sdk";
@@ -14,10 +13,12 @@ import {
 export default class Base {
   private csDev: ContractService = new ContractService();
   protected htsAddress: string;
+  protected configuration: string;
   contractId: string;
 
   constructor(_contractId: string) {
     this.htsAddress = this.getBaseHTSContractAddress();
+    this.configuration = this.getConfigurationContractAddress();
     this.contractId = _contractId;
   }
 
@@ -52,7 +53,7 @@ export default class Base {
       .setGas(gas)
       .setFunction(functionName, functionParams)
       .setPayableAmount(amount);
-    const txnToExecute = await this.signTxnIfNeeded(txn, keys, client);
+    const txnToExecute = await Helper.signTxnIfNeeded(txn, keys, client);
     const txnResponse = await txnToExecute.execute(client);
     const txnReceipt = await txnResponse.getReceipt(client);
     const txnRecord = await txnResponse.getRecord(client);
@@ -63,31 +64,18 @@ export default class Base {
     };
   };
 
-  protected isInitializationPending = async (contractName: string) => {
-    const path = new ContractMetadata().getFilePath(contractName);
-    const map = await new EventConsumer(path).getEventsFromMirror(
+  protected isInitializationPending = async () => {
+    return await MirrorNodeService.getInstance().isInitializationPending(
       this.contractId
     );
-    return !map.has("Initialized");
-  };
-
-  private signTxnIfNeeded = async (
-    txn: Transaction,
-    keys: PrivateKey | PrivateKey[] | undefined = undefined,
-    client: Client
-  ) => {
-    if (!keys) return txn;
-
-    if (!Array.isArray(keys)) keys = [keys];
-
-    txn.freezeWith(client);
-    for (const key of keys) {
-      txn = await txn.sign(key);
-    }
-    return txn;
   };
 
   private getBaseHTSContractAddress(): string {
     return this.csDev.getContract(this.csDev.baseContractName).address;
+  }
+
+  private getConfigurationContractAddress(): string {
+    return this.csDev.getContractWithProxy(this.csDev.configuration)
+      .transparentProxyAddress!!;
   }
 }
