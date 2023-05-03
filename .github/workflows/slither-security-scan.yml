@@ -1,10 +1,9 @@
 name: Slither Analysis
 
 on:
-  push:
-    branches: [develop]
-    
   workflow_dispatch:
+  push:
+    branches: [develop]    
 jobs:
   analyze:
     runs-on: ubuntu-latest
