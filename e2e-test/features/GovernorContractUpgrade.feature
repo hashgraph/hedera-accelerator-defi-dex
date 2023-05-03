@@ -79,3 +79,6 @@ Feature: Governor Contract Upgrade E2E Test
 
      Scenario: Verify user gets back locked GOD tokens
         When User fetch GOD tokens back from GOD holder
+    
+    Scenario: User reset allowance
+        When User setup 0 as allowance amount for token locking for contract upgrade proposal 

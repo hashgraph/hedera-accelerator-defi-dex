@@ -75,6 +75,9 @@ Scenario: Verify user can not create DAO with empty name via factory
 Scenario: Verify user gets back locked GOD tokens
     When User get GOD tokens back from GOD holder
 
+Scenario: User reset allowance
+    When User set 0 as allowance amount for token locking for transfer token proposal via DAO
+    When  User set 0 as allowance amount of token which needs to be transferred via DAO
 
 
 

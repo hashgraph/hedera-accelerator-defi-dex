@@ -44,8 +44,8 @@ Feature: Factory contract e2e test
         When User create pair of "Factory9" and HBAR  
         When User associate LPToken with account  
         When User associate token "Factory9" to account   
-        When User sets allowance amount as 500.00 for token "Factory9" 
-        When User sets allowance amount as 200.00 for token "HBAR"       
+        When User sets allowance amount as 300.00 for token "Factory9" 
+        When User sets allowance amount as 150.00 for token "HBAR"       
         When User adds 300 units of "Factory9" and 150 units of "HBAR" token      
         Then HBAR and Factory9 balances in the pool are 150.00 units and 300.00 units respectively    
         Then User verifies balance of "HBAR" token from contract is 150.00    
@@ -54,7 +54,7 @@ Feature: Factory contract e2e test
 
      Scenario: Verify token balance after removing liquidity for HBAR and some other token
         Given User fetches the count of lptokens from pool
-        When User sets allowance amount as 50.00 for token "lptoken" 
+        When User sets allowance amount as 5.00 for token "lptoken" 
         When User gives 5.00 units of lptoken to pool
         Then User verifies 146.4644661 units of HBAR and 292.92893219 units of Factory9 are left in pool
         Then User verifies balance of "HBAR" token from contract is 146.4644661    
@@ -64,7 +64,7 @@ Feature: Factory contract e2e test
         Given Factory9 and HBAR are present in pool with quantity 292.92893219 units and 146.4644661 units respectively
         When User update the slippage value to 200.00 
         Then HBAR token quantity is 146.4644661 and Factory9 quantity is 292.92893219 in pool  
-        When User sets allowance amount as 50.00 for token "Factory9" 
+        When User sets allowance amount as 10.00 for token "Factory9" 
         When User make swap of 10.00 unit of "Factory9" token with another token in pair with slippage as 200.00
         Then HBAR token quantity is 141.97869449 and Factory9 quantity is 302.67893219 in pool    
         Then User verifies balance of "HBAR" token from contract is 141.97869449    
@@ -73,7 +73,7 @@ Feature: Factory contract e2e test
     Scenario: Verify user is able to perform swap of HBAR with Factory9 Token
         Given Factory9 and HBAR are present in pool with quantity 302.67893219 units and 141.97869449 units respectively
         When User update the slippage value to 200.00 
-        When User sets allowance amount as 50.00 for token "HBAR" 
+        When User sets allowance amount as 10.00 for token "HBAR" 
         When User make swap of 10.00 unit of "HBAR" token with another token in pair with slippage as 200.00
         Then HBAR token quantity is 151.72869449 and Factory9 quantity is 284.17095904 in pool   
         Then User verifies balance of "HBAR" token from contract is 151.72869449    
@@ -100,6 +100,12 @@ Feature: Factory contract e2e test
     Scenario: Verify spot price for HBAR 
         When User get spot price for "HBAR"
         Then Expected spot price should be 53393455
+    
+    Scenario: User reset allowance
+        When User sets allowance amount as 0.00 for token "Factory9" 
+        When User sets allowance amount as 0.00 for token "HBAR"    
+        When User sets allowance amount as 0.00 for token "lptoken" 
+
     
     
 

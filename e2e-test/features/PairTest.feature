@@ -13,15 +13,15 @@ Feature: Pair contract e2e test
         When User associate the token "PairToken1" to account 
         When User associate the token "PairToken2" to account 
         When User associate the LPToken with the account
-        When User set allowance amount as 250.00 for token "PairToken1"
-        When User set allowance amount as 250.00 for token "PairToken2"
+        When User set allowance amount as 210.00 for token "PairToken1"
+        When User set allowance amount as 230.00 for token "PairToken2"
         When User adds 210.00 units of PairToken1 and 230.00 units of PairToken2
         Then PairToken1 and PairToken2 balances in the pool are 210.00 units and 230.00 units respectively   
         Then Balance of "PairToken1" and "PairToken2" in user account is 199790.00 and 199770.00 respectively
     
     Scenario: Verify token balance after removing liquidity
         Given User gets the count of lptokens from  pool
-        When User set allowance amount as 10.00 for token "lptoken"
+        When User set allowance amount as 5.00 for token "lptoken"
         When User returns 5.00 units of lptoken
         Then User verifies 205.22233458 units of PairToken1 and 224.76731882 units of PairToken2 are left in pool
     
@@ -37,6 +37,7 @@ Feature: Pair contract e2e test
 
     Scenario: Verify swapping PairToken2 increase the PairToken2 quantity and decreases PairToken1 quantity
         Given PairToken1 and PairToken2 are present in pool
+        When User set allowance amount as 10.00 for token "PairToken2"
         When User swap 10 unit of token "PairToken2" with slippage as 200.0
         Then PairToken1 quantity is 209.18886403 and PairToken2 quantity is 228.25786165 in pool
         Then User verify balance of "PairToken1" token with contract is 209.18886403
@@ -62,4 +63,11 @@ Feature: Pair contract e2e test
         Given PairToken1 and PairToken2 are present in pool
         When User gives 10 units of PairToken2 for calculating slippage in
         Then Expected slippage in value should be 63303831    
+
+    
+    Scenario: User reset allowance
+        When User set allowance amount as 0.00 for token "PairToken1" 
+        When User set allowance amount as 0.00 for token "PairToken2"
+        When User set allowance amount as 0.00 for token "lptoken"
+ 
       

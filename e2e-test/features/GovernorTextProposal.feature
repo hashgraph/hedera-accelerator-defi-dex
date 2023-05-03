@@ -55,4 +55,8 @@ Scenario: Verify GOD tokens are returned on text proposal cancellation
     Then User verify GOD tokens are returned to user
 
 
+Scenario: User reset allowance
+    When User setup 0 as allowance amount for token locking for text proposal
+
+
     

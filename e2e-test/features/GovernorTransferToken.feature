@@ -72,3 +72,7 @@ Feature: GovernorTransferToken e2e test
 
     Scenario: Verify user gets back locked GOD tokens
         When User fetches GOD token back from GOD holder
+
+    Scenario: User reset allowance
+        When User setup 0 as allowance amount for token locking for transfer token proposal
+        When User setup 0 as allowance amount of token which needs to be transferred
