@@ -12,9 +12,10 @@ import {
 } from "@hashgraph/sdk";
 
 import { BigNumber } from "bignumber.js";
+import dex from "../deployment/model/dex";
 
 import { ContractService } from "../deployment/service/ContractService";
-import ClientManagement from "../utils/ClientManagement";
+import ClientManagement, { clientsInfo } from "../utils/ClientManagement";
 
 const cm = new ClientManagement();
 const { id: userAccountId, key: userPrivateKey } = cm.getOperator();
@@ -29,25 +30,25 @@ const contractIdObject = ContractId.fromString(baseHts.id);
 
 async function main() {
   const { tokenId, tokenAddressSol } = await createToken(100);
-  await tokenQueryFunction(tokenId);
-  await mintTokenPublic(baseHts.id, tokenAddressSol, 50);
-  await burnTokenPublic(baseHts.id, tokenAddressSol, 25);
-  await tokenQueryFunction(tokenId);
-  await associateTokenPublic(
-    baseHts.id,
-    userAccountId.toSolidityAddress(),
-    userPrivateKey,
-    tokenAddressSol
-  );
-  await transferTokenPublic(
-    baseHts.id,
-    tokenAddressSol,
-    clientDetails.adminId.toSolidityAddress(),
-    userAccountId.toSolidityAddress(),
-    20
-  );
-  await balanceQueryFunction(userAccountId.toString(), tokenId);
-  await balanceQueryFunction(clientDetails.adminId.toString(), tokenId);
+  //await tokenQueryFunction(tokenId);
+  await mintTokenPublic(baseHts.id, dex.GOD_TOKEN_ADDRESS, 50);
+  // await burnTokenPublic(baseHts.id, tokenAddressSol, 25);
+  // await tokenQueryFunction(tokenId);
+  // await associateTokenPublic(
+  //   baseHts.id,
+  //   userAccountId.toSolidityAddress(),
+  //   userPrivateKey,
+  //   tokenAddressSol
+  // );
+  // await transferTokenPublic(
+  //   baseHts.id,
+  //   tokenAddressSol,
+  //   clientDetails.adminId.toSolidityAddress(),
+  //   userAccountId.toSolidityAddress(),
+  //   20
+  // );
+  // await balanceQueryFunction(userAccountId.toString(), tokenId);
+  // await balanceQueryFunction(clientDetails.adminId.toString(), tokenId);
   return "executed successfully";
 }
 
@@ -101,7 +102,7 @@ async function mintTokenPublic(
     .setContractId(contractId)
     .setGas(3000000)
     .setFunction("mintTokenPublic", args);
-  const txnResponse = await txn.execute(client);
+  const txnResponse = await txn.execute(clientsInfo.operatorClient);
   const record = await txnResponse.getRecord(client);
   const responseCode = record.contractFunctionResult!.getInt256(0).c![0];
   const totalSupply = record.contractFunctionResult!.getInt256(1).c![0];

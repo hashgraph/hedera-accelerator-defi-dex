@@ -21,7 +21,7 @@ import {
 const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
 const DEFAULT_QUORUM_THRESHOLD_IN_BSP = 500;
 const DEFAULT_VOTING_DELAY = 0; // blocks
-const DEFAULT_VOTING_PERIOD = 100; // blocks means 3 minutes as per test
+const DEFAULT_VOTING_PERIOD = 50; // blocks means 3 minutes as per test
 const DEFAULT_MAX_WAITING_TIME = DEFAULT_VOTING_PERIOD * 12 * 300;
 const EACH_ITERATION_DELAY = DEFAULT_VOTING_PERIOD * 0.3 * 1000;
 const DEFAULT_DESCRIPTION = "description";
@@ -43,6 +43,8 @@ const PROPOSAL_DETAILS = "getProposalDetails";
 const GET_CONTRACT_ADDRESSES = "getContractAddresses";
 const GET_TOKEN_ADDRESSES = "getTokenAddress";
 const GET_GOD_TOKEN_ADDRESSES = "getGODTokenAddress";
+const MINT_TOKEN = "mintToken";
+const BURN_TOKEN = "burnToken";
 
 enum ProposalState {
   Pending,
@@ -483,6 +485,44 @@ export default class Governor extends Base {
       tokenSenderPrivateKey,
       client
     );
+  }
+
+  async mintToken(
+    proposalId: string,
+    amount: BigNumber,
+    client: Client = clientsInfo.operatorClient
+  ) {
+    const args = new ContractFunctionParameters()
+      .addUint256(BigNumber(proposalId))
+      .addInt256(amount);
+
+    const { result } = await this.execute(9000000, MINT_TOKEN, client, args);
+
+    const newTokenSupply = result.getInt256(0).toFixed();
+    console.log(
+      `- GovernorTokenCreate#${MINT_TOKEN}(): proposal-id = ${newTokenSupply}\n`
+    );
+
+    return newTokenSupply;
+  }
+
+  async burnToken(
+    proposalId: string,
+    amount: BigNumber,
+    client: Client = clientsInfo.operatorClient
+  ) {
+    const args = new ContractFunctionParameters()
+      .addUint256(BigNumber(proposalId))
+      .addInt256(amount);
+
+    const { result } = await this.execute(9000000, BURN_TOKEN, client, args);
+
+    const newTokenSupply = result.getInt256(0).toFixed();
+    console.log(
+      `- GovernorTokenCreate#${BURN_TOKEN}(): proposal-id = ${newTokenSupply}\n`
+    );
+
+    return newTokenSupply;
   }
 
   public getStateWithTimeout = async (
