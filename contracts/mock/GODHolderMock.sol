@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: Unlicense
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.18;
 import "../common/IERC20.sol";
 
 import "../governance/ITokenHolderFactory.sol";
@@ -10,7 +10,7 @@ contract GODHolderMock is ITokenHolder {
         address token
     ) external override {}
 
-    function revertTokensForVoter(uint256) external payable override returns (int32) {}
+    function revertTokensForVoter(uint256) external override returns (int32) {}
 
     function balanceOfVoter(
         address voter
