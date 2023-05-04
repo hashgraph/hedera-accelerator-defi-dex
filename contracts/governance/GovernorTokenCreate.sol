@@ -64,15 +64,21 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
     ) internal returns (int256 responseCode, address tokenAddress) {
         TokenCreateData storage tokenCreateData = _proposalData[proposalId];
         uint256 supplyKeyType;
+        uint256 adminKeyType;
 
         IHederaTokenService.KeyValue memory supplyKeyValue;
         supplyKeyType = supplyKeyType.setBit(4);
-        supplyKeyValue.contractId = address(this);
-        supplyKeyValue.delegatableContractId = address(tokenService);
+        supplyKeyValue.delegatableContractId = address(this);
+
+        IHederaTokenService.KeyValue memory adminKeyValue;
+        adminKeyType = adminKeyType.setBit(0);
+        adminKeyValue.delegatableContractId = address(this);
 
         IHederaTokenService.TokenKey[]
-            memory keys = new IHederaTokenService.TokenKey[](1);
+            memory keys = new IHederaTokenService.TokenKey[](2);
+
         keys[0] = IHederaTokenService.TokenKey(supplyKeyType, supplyKeyValue);
+        keys[1] = IHederaTokenService.TokenKey(adminKeyType, adminKeyValue);
 
         IHederaTokenService.Expiry memory expiry;
         expiry.autoRenewAccount = address(this);
@@ -130,8 +136,19 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
             "GovernorTokenCreate: Mint not allowed as token doesn't exist for this proposal."
         );
 
-        (int256 responseCode, int256 newTotalSupply) = tokenService
-            .mintTokenPublic(tokenCreateData.newTokenAddress, amount);
+        /// @custom:oz-upgrades-unsafe-allow delegatecall
+        (bool success, bytes memory result) = address(tokenService)
+            .delegatecall(
+                abi.encodeWithSelector(
+                    IBaseHTS.mintTokenPublic.selector,
+                    tokenCreateData.newTokenAddress,
+                    amount
+                )
+            );
+
+        (int256 responseCode, int256 newTotalSupply) = success
+            ? abi.decode(result, (int256, int256))
+            : (int256(HederaResponseCodes.UNKNOWN), int256(0));
 
         require(
             responseCode == HederaResponseCodes.SUCCESS,
@@ -154,8 +171,19 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
             "GovernorTokenCreate: Burn not allowed as token doesn't exist for this proposal."
         );
 
-        (int256 responseCode, int256 newTotalSupply) = tokenService
-            .burnTokenPublic(tokenCreateData.newTokenAddress, amount);
+        /// @custom:oz-upgrades-unsafe-allow delegatecall
+        (bool success, bytes memory result) = address(tokenService)
+            .delegatecall(
+                abi.encodeWithSelector(
+                    IBaseHTS.burnTokenPublic.selector,
+                    tokenCreateData.newTokenAddress,
+                    amount
+                )
+            );
+
+        (int256 responseCode, int256 newTotalSupply) = success
+            ? abi.decode(result, (int256, int256))
+            : (int256(HederaResponseCodes.UNKNOWN), int256(0));
 
         require(
             responseCode == HederaResponseCodes.SUCCESS,
