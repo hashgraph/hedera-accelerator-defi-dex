@@ -37,6 +37,8 @@ jobs:
       - run: npm ci
       - name: Execute proposals
         run: npx hardhat run deployment/scripts/proposalScript.ts
+      - name: Reformat code before auto commit
+        run: npm run code-format && git add -A
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
           file_pattern: deployment/state/*.json

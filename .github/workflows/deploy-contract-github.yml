@@ -62,6 +62,8 @@ jobs:
         run: npx hardhat run deployment/scripts/createContract.ts;
       - name: Clear user inputs
         run: rm "deployment/scripts/workflow-inputs.json"
+      - name: Reformat code before auto commit
+        run: npm run code-format && git add -A
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
           file_pattern: deployment/state/contracts.json

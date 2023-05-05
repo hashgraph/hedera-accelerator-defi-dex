@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.18;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "../common/IBaseHTS.sol";
 import "../common/hedera/HederaResponseCodes.sol";
@@ -16,7 +16,7 @@ contract GODHolder is TokenHolder {
 
     function revertTokensForVoter(
         uint256 _amount
-    ) external payable override returns (int32) {
+    ) external override returns (int32) {
         require(
             _amount > 0,
             "GODHolder: unlock amount must be a positive number"
@@ -31,6 +31,9 @@ contract GODHolder is TokenHolder {
             "GODHolder: unlock amount can't be greater to the locked amount"
         );
         godTokenForUsers[msg.sender] -= _amount;
+        if (godTokenForUsers[msg.sender] == 0) {
+            delete (godTokenForUsers[msg.sender]);
+        }
         int256 code = _transferToken(
             address(_token),
             address(this),
@@ -41,9 +44,6 @@ contract GODHolder is TokenHolder {
             code == HederaResponseCodes.SUCCESS,
             "GODHolder: token transfer failed from contract."
         );
-        if (godTokenForUsers[msg.sender] == 0) {
-            delete (godTokenForUsers[msg.sender]);
-        }
         return HederaResponseCodes.SUCCESS;
     }
 
