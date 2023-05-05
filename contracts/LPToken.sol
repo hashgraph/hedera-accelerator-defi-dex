@@ -5,16 +5,15 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./common/hedera/HederaResponseCodes.sol";
 import "./common/IBaseHTS.sol";
 import "./common/IERC20.sol";
+import "./common/TokenOperations.sol";
 import "./common/hedera/HederaTokenService.sol";
 import "./ILPToken.sol";
 
-contract LPToken is ILPToken, Initializable {
+contract LPToken is ILPToken, Initializable, TokenOperations {
     IBaseHTS tokenService;
     IERC20 lpToken;
 
     using Bits for uint256;
-
-    event SenderDetail(address indexed _from, string msg);
 
     function lpTokenForUser(
         address _user
@@ -43,10 +42,17 @@ contract LPToken is ILPToken, Initializable {
         string memory tokenSymbol
     ) external payable override initializer {
         tokenService = _tokenService;
-        (, address newToken) = createFungibleTokenPublic(
-            0,
-            tokenName,
-            tokenSymbol
+        (int256 responseCode, address newToken) = super
+            .createTokenWithContractAsOwner(
+                _tokenService,
+                tokenName,
+                tokenSymbol,
+                0,
+                8
+            );
+        require(
+            responseCode == HederaResponseCodes.SUCCESS,
+            "LPToken: Token creation failed."
         );
         lpToken = IERC20(newToken);
     }
@@ -56,7 +62,6 @@ contract LPToken is ILPToken, Initializable {
         int256 amountB,
         address _toUser
     ) external override returns (int256 responseCode) {
-        emit SenderDetail(msg.sender, "allotLPTokenFor");
         require(
             (amountA > 0 && amountB > 0),
             "Please provide positive token counts"
@@ -69,20 +74,23 @@ contract LPToken is ILPToken, Initializable {
             address(lpToken) > address(0x0),
             "Liquidity Token not initialized"
         );
-        (int256 response, ) = tokenService.mintTokenPublic(
+        (responseCode, ) = super.mintToken(
+            tokenService,
             address(lpToken),
             mintingAmount
         );
         require(
-            response == HederaResponseCodes.SUCCESS,
+            responseCode == HederaResponseCodes.SUCCESS,
             "LP token minting failed."
         );
-        bool isTransferSuccessful = lpToken.transfer(
+        responseCode = super._transferToken(
+            address(lpToken),
+            address(this),
             _toUser,
-            uint256(mintingAmount)
+            mintingAmount
         );
         require(
-            isTransferSuccessful,
+            responseCode == HederaResponseCodes.SUCCESS,
             "LPToken: token transfer failed from contract."
         );
         return HederaResponseCodes.SUCCESS;
@@ -98,72 +106,29 @@ contract LPToken is ILPToken, Initializable {
             "User Does not have lp amount"
         );
 
-        bool isTransferSuccessful = IERC20(lpToken).transferFrom(
+        responseCode = _transferToken(
+            address(lpToken),
             fromUser,
             address(this),
-            uint256(lpAmount)
+            lpAmount
         );
 
         require(
-            isTransferSuccessful,
+            responseCode == HederaResponseCodes.SUCCESS,
             "LPToken: token transfer failed to contract."
         );
+
         // burn old amount of LP
-        (int response, ) = tokenService.burnTokenPublic(
+        (responseCode, ) = super.burnToken(
+            tokenService,
             address(lpToken),
             lpAmount
         );
         require(
-            response == HederaResponseCodes.SUCCESS,
+            responseCode == HederaResponseCodes.SUCCESS,
             "LP token burn failed."
         );
         return HederaResponseCodes.SUCCESS;
-    }
-
-    function createFungibleTokenPublic(
-        int256 mintingAmount,
-        string memory tokenName,
-        string memory tokenSymbol
-    ) internal returns (int256 responseCode, address tokenAddress) {
-        uint256 supplyKeyType;
-        IHederaTokenService.KeyValue memory supplyKeyValue;
-
-        supplyKeyType = supplyKeyType.setBit(4);
-        supplyKeyValue.delegatableContractId = address(tokenService);
-
-        IHederaTokenService.TokenKey[]
-            memory keys = new IHederaTokenService.TokenKey[](1);
-        keys[0] = IHederaTokenService.TokenKey(supplyKeyType, supplyKeyValue);
-
-        IHederaTokenService.Expiry memory expiry;
-        expiry.autoRenewAccount = address(this);
-        expiry.autoRenewPeriod = 8000000;
-
-        IHederaTokenService.HederaToken memory myToken;
-        myToken.name = tokenName;
-        myToken.symbol = tokenSymbol;
-        myToken.treasury = address(this);
-        myToken.expiry = expiry;
-        myToken.tokenKeys = keys;
-        /// @custom:oz-upgrades-unsafe-allow delegatecall
-        (bool success, bytes memory result) = address(tokenService)
-            .delegatecall(
-                abi.encodeWithSelector(
-                    IBaseHTS.createFungibleTokenPublic.selector,
-                    myToken,
-                    uint256(mintingAmount),
-                    8
-                )
-            );
-
-        (responseCode, tokenAddress) = success
-            ? abi.decode(result, (int256, address))
-            : (int256(HederaResponseCodes.UNKNOWN), address(0x0));
-
-        require(
-            responseCode == HederaResponseCodes.SUCCESS,
-            "LPToken: Token creation failed."
-        );
     }
 
     function sqrt(int256 value) public pure returns (int256 output) {
@@ -173,15 +138,5 @@ contract LPToken is ILPToken, Initializable {
             output = modifiedValue;
             modifiedValue = (value / modifiedValue + modifiedValue) / 2;
         }
-    }
-}
-
-library Bits {
-    uint256 internal constant ONE = uint256(1);
-
-    // Sets the bit at the given 'index' in 'self' to '1'.
-    // Returns the modified value.
-    function setBit(uint256 self, uint8 index) internal pure returns (uint256) {
-        return self | (ONE << index);
     }
 }

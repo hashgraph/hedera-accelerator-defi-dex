@@ -604,7 +604,7 @@ contract Pair is
     function _contractHBARBalance() private returns (uint256) {
         return
             uint256(
-                pair.tokenA.tokenAddress == tokenService.hbarxAddress()
+                _tokenIsHBARX(pair.tokenA.tokenAddress)
                     ? pair.tokenA.tokenQty
                     : pair.tokenB.tokenQty
             );

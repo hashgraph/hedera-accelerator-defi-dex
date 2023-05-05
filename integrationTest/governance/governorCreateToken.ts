@@ -7,6 +7,7 @@ import { Helper } from "../../utils/Helper";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { ContractService } from "../../deployment/service/ContractService";
 import { TokenId } from "@hashgraph/sdk";
+import Common from "../../e2e-test/business/Common";
 
 const csDev = new ContractService();
 const factoryContractId = csDev.getContractWithProxy(csDev.factoryContractName)
@@ -26,8 +27,8 @@ const godHolder = new GodHolder(godHolderContractId);
 async function main() {
   await governor.initialize(godHolder);
   const token1 = await createTokenViaProposal("TEST-A", "TEST-A");
-  //const token2 = await createTokenViaProposal("TEST-B", "TEST-B");
-  //await runFactoryTest(token1, token2);
+  const token2 = await createTokenViaProposal("TEST-B", "TEST-B");
+  await runFactoryTest(token1, token2);
   console.log(`Done`);
 }
 
@@ -44,19 +45,14 @@ async function createTokenViaProposal(name: string, symbol: string) {
   );
 
   const title = Helper.createProposalTitle("Create Token Proposal");
-  //const title = "Create Token Proposal 0x2579e405dc393dcfffbb3cab60322596cb60dc77";
   const proposalId = await governor.createTokenProposal(
     title,
     name,
     symbol,
     clientsInfo.treasureId,
-    clientsInfo.treasureKey.publicKey,
-    clientsInfo.treasureId,
-    clientsInfo.treasureKey.publicKey,
     clientsInfo.operatorClient
   );
 
-  //const proposalId = "60582987365490624733715688346112975058902830155639671619887774238854816511204";
   await governor.getProposalDetails(proposalId);
   await governor.forVote(proposalId, 0, clientsInfo.uiUserClient);
   await governor.isQuorumReached(proposalId);
@@ -68,7 +64,6 @@ async function createTokenViaProposal(name: string, symbol: string) {
   } else {
     await governor.cancelProposal(title, clientsInfo.operatorClient);
   }
-  // await governor.cancelProposal(title, clientsInfo.operatorClient);
   await godHolder.checkAndClaimGodTokens(
     clientsInfo.uiUserClient,
     clientsInfo.uiUserId
@@ -76,8 +71,27 @@ async function createTokenViaProposal(name: string, symbol: string) {
   if (!tokenId) {
     throw Error("failed to created token inside integration test");
   }
-  await governor.mintToken(proposalId, new BigNumber(10));
-  await governor.burnToken(proposalId, new BigNumber(10));
+  await governor.mintToken(
+    proposalId,
+    new BigNumber(10),
+    clientsInfo.treasureClient
+  );
+  await governor.burnToken(
+    proposalId,
+    new BigNumber(9),
+    clientsInfo.treasureClient
+  );
+  await Common.associateTokensToAccount(
+    clientsInfo.treasureId,
+    [tokenId!],
+    clientsInfo.treasureClient
+  );
+  await governor.transferToken(
+    proposalId,
+    clientsInfo.treasureId.toSolidityAddress(),
+    new BigNumber(1),
+    clientsInfo.treasureClient
+  );
   return tokenId;
 }
 

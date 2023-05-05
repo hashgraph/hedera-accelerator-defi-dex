@@ -146,6 +146,7 @@ describe("Governor Tests", function () {
 
   async function getTokenCreateProposalId(
     governance: Contract,
+    tokenName: string = "Token",
     account: SignerWithAddress
   ) {
     const tx = await governance
@@ -155,10 +156,7 @@ describe("Governor Tests", function () {
         DESC,
         LINK,
         TestHelper.ONE_ADDRESS,
-        new Uint8Array(),
-        TestHelper.ONE_ADDRESS,
-        new Uint8Array(),
-        "Token",
+        tokenName,
         "Symbol"
       );
     return await verifyProposalCreationEvent(tx);
@@ -538,12 +536,13 @@ describe("Governor Tests", function () {
 
   describe("TokenCreateGovernor contract tests", async () => {
     it("Verify token creation should be executed", async function () {
-      const { governorToken, creator, godHolder } = await loadFixture(
+      const { governorToken, creator, godHolder, baseHTS } = await loadFixture(
         deployFixture
       );
       await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
       const { proposalId } = await getTokenCreateProposalId(
         governorToken,
+        "tokenName",
         creator
       );
       await governorToken.castVotePublic(proposalId, 0, 1);
@@ -564,6 +563,7 @@ describe("Governor Tests", function () {
       await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
       const { proposalId } = await getTokenCreateProposalId(
         governorToken,
+        "FAIL",
         creator
       );
       await governorToken.castVotePublic(proposalId, 0, 1);

@@ -1,0 +1,21 @@
+@startuml ERC1400FlowUpgradeability
+title ERC1400 basic flow with upgradeability
+SDK -> ERC1400: Deploy ERC1400 token
+ERC1400 -> SDK: Returns logic address 
+SDK -> ERC1400Proxy: Deploy Transparent proxy using logic address
+SDK -> ERC1400Proxy: Call proxy for admin functions using admin as signer
+SDK -> ERC1400Proxy: Call proxy for business functions using non-admin user as signer
+
+SDK -> RulesRegistryProxy: Deploys rules registry
+RulesRegistryProxy -> SDK: Returns address of proxy
+SDK -> Rule1: Deploy rule1
+Rule1 -> SDK: Returns rules proxy
+SDK -> RulesRegistry: Register rule by passing rule1's address
+SDK -> RulesRegistry: Can remove rule provided signer has proper role(RBAC)
+SDK -> ERC1400Proxy: sets rule's registry
+SDK -> ERC1400Proxy: Transfer token
+ERC1400Proxy -> ERC1400Proxy: Apply rules before transfer
+ERC1400Proxy -> ERC1400Proxy: Also ensure transfer pre-conditions are met
+ERC1400Proxy -> Recepient: Transfer token(or any business function) provided signer has signed it
+ERC1400Proxy -> ERC1400Proxy: Emits event that so that UI subscribe can show result
+@enduml

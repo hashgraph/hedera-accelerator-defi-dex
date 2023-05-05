@@ -70,6 +70,10 @@ contract ERC20Mock is IERC20 {
         return tokeName;
     }
 
+    function setName(string memory newName) external {
+        tokeName = newName;
+    }
+
     function symbol() external view override returns (string memory) {
         return tokenSymbol;
     }
