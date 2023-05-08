@@ -506,7 +506,7 @@ export default class Governor extends Base {
       .addUint256(BigNumber(proposalId))
       .addInt256(amount);
 
-    const { result } = await this.execute(9000000, MINT_TOKEN, client, args);
+    const { result } = await this.execute(3000000, MINT_TOKEN, client, args);
 
     const newTokenSupply = result.getInt256(0).toFixed();
     console.log(
@@ -525,7 +525,7 @@ export default class Governor extends Base {
       .addUint256(BigNumber(proposalId))
       .addInt256(amount);
 
-    const { result } = await this.execute(9000000, BURN_TOKEN, client, args);
+    const { result } = await this.execute(3000000, BURN_TOKEN, client, args);
 
     const newTokenSupply = result.getInt256(0).toFixed();
     console.log(
@@ -547,7 +547,7 @@ export default class Governor extends Base {
       .addInt256(amount);
 
     const { receipt } = await this.execute(
-      9000000,
+      3000000,
       TRANSFER_TOKEN,
       client,
       args,

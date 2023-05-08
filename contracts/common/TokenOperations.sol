@@ -135,7 +135,7 @@ contract TokenOperations {
         int256 amount
     ) internal returns (int256 responseCode, int256 newTotalSupply) {
         require(
-            amount >= 0,
+            amount > 0,
             "TokenOperations: Token quantity to mint should be greater than zero."
         );
         /// @custom:oz-upgrades-unsafe-allow delegatecall
@@ -158,7 +158,7 @@ contract TokenOperations {
         int256 amount
     ) internal returns (int256 responseCode, int256 newTotalSupply) {
         require(
-            amount >= 0,
+            amount > 0,
             "TokenOperations: Token quantity to burn should be greater than zero."
         );
 

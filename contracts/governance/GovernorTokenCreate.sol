@@ -143,7 +143,7 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
         int256 amount
     ) external {
         require(
-            amount >= 0,
+            amount > 0,
             "GovernorTokenCreate: Token quantity to transfer should be greater than zero."
         );
         TokenCreateData storage tokenCreateData = _proposalData[proposalId];
