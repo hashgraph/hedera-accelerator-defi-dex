@@ -50,7 +50,9 @@ async function main() {
   );
 
   await governorTokenDao.addWebLink();
-  await governorTokenDao.getWebLinks();
+  await governorTokenDao.getDaoDetail();
+  await governorTokenDao.updateName("Governor Token Dao - New");
+  await governorTokenDao.updateLogoURL("dao url - New");
   await governorTokenDao.getDaoDetail();
   console.log(`\nDone`);
 }

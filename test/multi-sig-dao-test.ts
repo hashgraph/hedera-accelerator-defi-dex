@@ -28,7 +28,8 @@ describe("MultiSig tests", function () {
     const transaction = await multiSigDAOInstance.proposeTransaction(
       token,
       createTransferTransactionABIData(receiver, amount),
-      operation
+      operation,
+      10
     );
     const { name, args } = await TestHelper.readLastEvent(transaction);
     const txnHash = args.txnHash;
@@ -39,6 +40,7 @@ describe("MultiSig tests", function () {
     expect(info.to).not.equals(TestHelper.ZERO_ADDRESS);
     expect(info.operation).equals(operation);
     expect(info.nonce).equals(1);
+    expect(info.transactionType).equals(10);
     return { txnHash, info };
   }
 
@@ -62,6 +64,7 @@ describe("MultiSig tests", function () {
     expect(info.to).not.equals(TestHelper.ZERO_ADDRESS);
     expect(info.operation).equals(0);
     expect(info.nonce).equals(1);
+    expect(info.transactionType).equals(1);
     return { txnHash, info };
   }
 

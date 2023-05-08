@@ -136,12 +136,14 @@ export default class MultiSigDao extends BaseDao {
     to: string,
     data: Uint8Array,
     operation: Operation,
+    transactionType: number = 10,
     client: Client = clientsInfo.operatorClient
   ) => {
     const args = new ContractFunctionParameters()
       .addAddress(to)
       .addBytes(data)
-      .addUint8(operation);
+      .addUint8(operation)
+      .addUint256(transactionType);
     const { result } = await this.execute(
       2_00_000,
       PROPOSE_TRANSACTION,

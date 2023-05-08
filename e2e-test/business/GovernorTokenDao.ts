@@ -1,5 +1,5 @@
 import dex from "../../deployment/model/dex";
-import Base from "./Base";
+import BaseDao from "./BaseDao";
 import Governor from "./Governor";
 import GodHolder from "../../e2e-test/business/GodHolder";
 import NFTHolder from "../../e2e-test/business/NFTHolder";
@@ -9,8 +9,6 @@ import { BigNumber } from "bignumber.js";
 import {
   Client,
   TokenId,
-  AccountId,
-  PrivateKey,
   ContractId,
   ContractFunctionParameters,
 } from "@hashgraph/sdk";
@@ -18,9 +16,6 @@ import {
 const INITIALIZE = "initialize";
 const CREATE_PROPOSAL = "createProposal";
 const GET_ALL_PROPOSALS = "getAllProposals";
-const ADD_WEB_LINK = "addWebLink";
-const GET_DAO_DETAILS = "getDaoDetail";
-const GET_WEB_LINKS = "getWebLinks";
 const GET_GOVERNOR_TOKEN_TRANSFER_CONTRACT_ADDRESS =
   "getGovernorTokenTransferContractAddress";
 
@@ -32,7 +27,7 @@ export const DEFAULT_VOTING_PERIOD = 100; // blocks means 3 minutes as per test
 export const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
 export const NFT_TOKEN_ID = TokenId.fromString(dex.NFT_TOKEN_ID);
 
-export default class GovernorTokenDao extends Base {
+export default class GovernorTokenDao extends BaseDao {
   async initialize(
     admin: string,
     name: string,
@@ -125,46 +120,6 @@ export default class GovernorTokenDao extends Base {
     console.log(
       `- GovernorTokenDao#${GET_ALL_PROPOSALS}(): proposal-id = ${proposalId}\n`
     );
-  };
-
-  addWebLink = async (
-    webLinkName: string = "GIT",
-    webLink: string = "git_url",
-    client: Client = clientsInfo.operatorClient
-  ) => {
-    const args = new ContractFunctionParameters()
-      .addString(webLinkName)
-      .addString(webLink);
-
-    const { result } = await this.execute(9000000, ADD_WEB_LINK, client, args);
-    console.log(`- GovernorTokenDao#${ADD_WEB_LINK}()\n`);
-  };
-
-  getDaoDetail = async (client: Client = clientsInfo.operatorClient) => {
-    const args = new ContractFunctionParameters();
-    const { result } = await this.execute(
-      9000000,
-      GET_DAO_DETAILS,
-      client,
-      args
-    );
-    const name = result.getString(0);
-    const logoUrl = result.getString(1);
-    console.log(
-      `- GovernorTokenDao#${GET_DAO_DETAILS}(): name = ${name}\nlogoUrls: ${logoUrl}`
-    );
-  };
-
-  getWebLinks = async (client: Client = clientsInfo.operatorClient) => {
-    const args = new ContractFunctionParameters();
-    const { result } = await this.execute(9000000, GET_WEB_LINKS, client, args);
-    const link = result.getString(1);
-    console.log(
-      `${result.getString(0)}\n${result.getString(1)}\n${result.getString(
-        2
-      )}\n${result.getString(3)}\n${result.getString(4)}`
-    );
-    console.log(`- GovernorTokenDao#${GET_WEB_LINKS}(): link = ${link}\n`);
   };
 
   getGovernorTokenTransferContractAddress = async (
