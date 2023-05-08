@@ -21,11 +21,12 @@ contract MultiSigDAO is BaseDAO {
         bytes data;
         Enum.Operation operation;
         uint256 nonce;
+        uint256 transactionType;
     }
 
     // HederaGnosisSafe#transferTokenViaSafe(address token, address receiver, uint256 amount)
-    // 0xbb34db5a - keccack("transferTokenViaSafe(address,address,uint256)")
-    bytes4 private constant TRANSFER_TOKEN_FROM_SAFE_SELECTOR = 0xbb34db5a;
+    bytes4 private constant TRANSFER_TOKEN_FROM_SAFE_SELECTOR =
+        bytes4(keccak256("transferTokenViaSafe(address,address,uint256)"));
 
     IBaseHTS private baseHTS;
     HederaGnosisSafe private hederaGnosisSafe;
@@ -74,7 +75,8 @@ contract MultiSigDAO is BaseDAO {
     function proposeTransaction(
         address _to,
         bytes memory _data,
-        Enum.Operation _operation
+        Enum.Operation _operation,
+        uint256 _type
     ) public payable returns (bytes32) {
         (bytes32 txnHash, uint256 txnNonce) = hederaGnosisSafe.getTxnHash(
             _to,
@@ -88,6 +90,7 @@ contract MultiSigDAO is BaseDAO {
         transactionInfo.data = _data;
         transactionInfo.operation = _operation;
         transactionInfo.nonce = txnNonce;
+        transactionInfo.transactionType = _type;
 
         emit TransactionCreated(txnHash, transactionInfo);
         return txnHash;
@@ -106,6 +109,6 @@ contract MultiSigDAO is BaseDAO {
             _amount
         );
         Enum.Operation call = Enum.Operation.Call;
-        return proposeTransaction(address(hederaGnosisSafe), data, call);
+        return proposeTransaction(address(hederaGnosisSafe), data, call, 1);
     }
 }

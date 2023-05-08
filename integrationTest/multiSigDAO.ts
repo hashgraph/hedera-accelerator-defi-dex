@@ -35,17 +35,24 @@ export const DAO_OWNERS_ADDRESSES = DAO_OWNERS_INFO.map(
   (item: any) => item.address
 );
 
+const DAO_ADMIN_ADDRESS = clientsInfo.dexOwnerId.toSolidityAddress();
+const DAO_ADMIN_CLIENT = clientsInfo.dexOwnerClient;
+
 async function main() {
   const contract = csDev.getContractWithProxy(ContractService.MULTI_SIG);
   const multiSigDAO = new MultiSigDao(contract.transparentProxyId!);
   await initDAO(multiSigDAO);
   await executeDAO(multiSigDAO);
+
+  await multiSigDAO.addWebLink("TWITTER", "https", DAO_ADMIN_CLIENT);
+  await multiSigDAO.updateName(DAO_NAME + "_NEW", DAO_ADMIN_CLIENT);
+  await multiSigDAO.updateLogoURL(DAO_LOGO + "daos", DAO_ADMIN_CLIENT);
+  await multiSigDAO.getDaoDetail();
 }
 
 async function initDAO(dao: MultiSigDao) {
-  const daoOwnerAddress = clientsInfo.dexOwnerId.toSolidityAddress();
   await dao.initialize(
-    daoOwnerAddress,
+    DAO_ADMIN_ADDRESS,
     DAO_NAME,
     DAO_LOGO,
     DAO_OWNERS_ADDRESSES,
