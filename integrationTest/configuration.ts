@@ -4,6 +4,7 @@ import { clientsInfo } from "../utils/ClientManagement";
 import { ContractService } from "../deployment/service/ContractService";
 
 import Configuration from "../e2e-test/business/Configuration";
+import dex from "../deployment/model/dex";
 
 const csDev = new ContractService();
 const configurationContractId = csDev.getContractWithProxy(csDev.configuration)
@@ -23,6 +24,11 @@ async function main() {
   await configuration.getCommaSeparatedUrlKeys();
   await configuration.addUrlKey("newKey");
   await configuration.getCommaSeparatedUrlKeys();
+  await configuration.getHbarxAddress();
+  await configuration.setHbarxAddress(
+    dex.HBARX_TOKEN_ADDRESS,
+    clientsInfo.operatorKey
+  );
 }
 
 main()

@@ -48,8 +48,6 @@ contract MockBaseHTSWithTokenCreationFail is IBaseHTS {
         return (23, address(0x0));
     }
 
-    function hbarxAddress() external override returns (address) {}
-
     function transferHBAR(
         address payable toAccount
     ) external payable override returns (bool) {}

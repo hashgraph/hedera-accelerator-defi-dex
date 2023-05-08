@@ -134,4 +134,27 @@ describe("Configuration contract tests", function () {
     const newUrlKeys = await configurationInstance.getCommaSeparatedUrlKeys();
     expect(newUrlKeys).contains(newKey);
   });
+
+  it("Verify user can get habrxAddress", async () => {
+    const { configurationInstance, signers } = await loadFixture(deployFixture);
+    const hbarxAdd = await configurationInstance.getHbarxAddress();
+    expect(hbarxAdd).not.equals("0x0");
+  });
+
+  it("Verify user can set habrxAddress after initialization", async () => {
+    const { configurationInstance, signers } = await loadFixture(deployFixture);
+    const anyAddress = signers[1].address;
+    await configurationInstance.setHbarxAddress(anyAddress);
+  });
+
+  it("When non-owner try to set hbarAddress then transaction should be reverted.", async () => {
+    const { configurationInstance, signers } = await loadFixture(deployFixture);
+    const nonOwner = signers[1];
+    const anyAddress = signers[2].address;
+    const oldOwner = await configurationInstance.owner();
+    expect(signers[0].address).to.be.equals(oldOwner);
+    await expect(
+      configurationInstance.connect(nonOwner).setHbarxAddress(anyAddress)
+    ).to.revertedWith("Ownable: caller is not the owner");
+  });
 });

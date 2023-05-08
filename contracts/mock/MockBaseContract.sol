@@ -131,10 +131,6 @@ contract MockBaseHTS is IBaseHTS {
         return int(23);
     }
 
-    function hbarxAddress() external pure override returns (address) {
-        return address(0x0);
-    }
-
     function transferHBAR(
         address payable
     ) external payable override returns (bool) {

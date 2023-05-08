@@ -60,10 +60,6 @@ contract Factory is Initializable, ReentrancyGuardUpgradeable {
         emit LogicUpdated(address(0), lpLogic, LP_TOKEN);
     }
 
-    function hbarxAddress() external returns (address) {
-        return service.hbarxAddress();
-    }
-
     function getPair(
         address _tokenA,
         address _tokenB,
@@ -211,7 +207,8 @@ contract Factory is Initializable, ReentrancyGuardUpgradeable {
             _tokenA,
             _tokenB,
             _treasury,
-            _fee
+            _fee,
+            configuration
         );
     }
 
