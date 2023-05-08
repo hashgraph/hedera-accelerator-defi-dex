@@ -74,7 +74,7 @@ export default class Factory extends Base {
       .addAddress(token2.toSolidityAddress())
       .addInt256(fee);
     const { result } = await this.execute(
-      9999999,
+      5_00_000,
       GET_PAIR,
       client,
       args,
@@ -89,7 +89,7 @@ export default class Factory extends Base {
     client: Client = clientsInfo.operatorClient
   ): Promise<string[]> => {
     const { result } = await this.execute(
-      9999999,
+      1_000_000,
       GET_PAIRS,
       client,
       undefined,
@@ -131,7 +131,7 @@ export default class Factory extends Base {
       .addInt256(qtyToSwap);
 
     const { result } = await this.execute(
-      9999999,
+      2_000_000,
       RECOMMENDED_PAIR_TO_SWAP,
       client,
       args,

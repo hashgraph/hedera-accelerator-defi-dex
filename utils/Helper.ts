@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import Web3 from "web3";
-import inquirer from "inquirer";
+import prompts from "prompts";
 import ContractMetadata from "./ContractMetadata";
 
 import { execSync } from "child_process";
@@ -111,16 +111,19 @@ export class Helper {
   };
 
   static async prompt(inputs: string[], userMessage: string) {
-    return (
-      await inquirer.prompt([
-        {
-          type: "rawlist",
+    const items = [...inputs, "exit"];
+    return items[
+      (
+        await prompts({
+          type: "select",
           name: "option",
           message: userMessage,
-          choices: [...inputs, "exit"],
-        },
-      ])
-    ).option;
+          choices: items.map((item: string) => {
+            return { title: item };
+          }),
+        })
+      ).option
+    ];
   }
 
   static async delay(ms: number) {

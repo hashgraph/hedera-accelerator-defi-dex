@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.18;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "../common/hedera/HederaResponseCodes.sol";
@@ -98,8 +98,7 @@ contract Splitter is ISplitter, Initializable {
         IVault vault,
         uint256 totalAmount,
         uint256 totalWeightForAllVaults
-    ) private       view
-returns (uint256 amountToTransfer) {
+    ) private view returns (uint256 amountToTransfer) {
         uint256 percentage = _calculateTokenRewardPercentage(
             vault,
             totalWeightForAllVaults

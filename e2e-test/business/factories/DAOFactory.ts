@@ -109,7 +109,7 @@ export default class DAOFactory extends Base {
   };
 
   getDAOs = async (client: Client = clientsInfo.operatorClient) => {
-    const { result } = await this.execute(9999999, GET_DAOS, client);
+    const { result } = await this.execute(1_000_000, GET_DAOS, client);
     const addresses = Helper.getAddressArray(result);
     console.log(
       `- ${this.getPrefix()}DAOFactory#${GET_DAOS}(): count = ${

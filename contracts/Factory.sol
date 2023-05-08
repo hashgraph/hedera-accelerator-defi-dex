@@ -1,14 +1,15 @@
 //SPDX-License-Identifier: Unlicense
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.18;
 import "./Pair.sol";
 import "./LPToken.sol";
 import "./ILPToken.sol";
 import "./common/IERC20.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "./Configuration.sol";
 
-contract Factory is Initializable {
+contract Factory is Initializable, ReentrancyGuardUpgradeable {
     event PairCreated(address indexed pairAddress);
     event LogicUpdated(
         address indexed oldImplementation,
@@ -49,6 +50,7 @@ contract Factory is Initializable {
         address _admin,
         Configuration _configuration
     ) public initializer {
+        __ReentrancyGuard_init();
         service = _service;
         admin = _admin;
         pairLogic = address(new Pair());
@@ -80,7 +82,7 @@ contract Factory is Initializable {
         address _tokenB,
         address _treasury,
         int256 _fee
-    ) external payable returns (address pair) {
+    ) external payable nonReentrant returns (address pair) {
         (address _token0, address _token1) = sortTokens(_tokenA, _tokenB);
         pair = pairs[_token0][_token1][_fee];
         if (pair == address(0)) {

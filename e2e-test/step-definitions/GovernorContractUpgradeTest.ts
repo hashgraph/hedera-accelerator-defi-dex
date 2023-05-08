@@ -225,4 +225,33 @@ export class GovernorUpgradeSteps extends CommonSteps {
       clientsInfo.operatorClient
     );
   }
+
+  @when(
+    /User setup (\d+\.?\d*) as allowance amount for token locking for contract upgrade proposal/,
+    undefined,
+    30000
+  )
+  public async setAllowanceForTokenLocking(allowanceAmt: number) {
+    await this.setupAllowanceForTokenLocking(
+      godHolder,
+      allowanceAmt * CommonSteps.withPrecision,
+      clientsInfo.operatorId,
+      clientsInfo.operatorKey,
+      clientsInfo.operatorClient
+    );
+  }
+
+  @when(
+    /User setup default allowance for contract upgrade proposal creation/,
+    undefined,
+    30000
+  )
+  public async setAllowanceForProposalCreation() {
+    await this.setupAllowanceForProposalCreation(
+      governor,
+      clientsInfo.operatorClient,
+      clientsInfo.operatorId,
+      clientsInfo.operatorKey
+    );
+  }
 }

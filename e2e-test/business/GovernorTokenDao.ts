@@ -55,7 +55,16 @@ export default class GovernorTokenDao extends Base {
       tokenId,
       holderTokenId
     );
+    await this.initializeDAO(admin, name, url, governor, client);
+  }
 
+  async initializeDAO(
+    admin: string,
+    name: string,
+    url: string,
+    governor: Governor,
+    client: Client = clientsInfo.operatorClient
+  ) {
     if (await this.isInitializationPending()) {
       const governorId = governor.contractId;
       const governorAddress =
@@ -91,7 +100,7 @@ export default class GovernorTokenDao extends Base {
       .addAddress(tokenId) // tokenToTransfer
       .addInt256(BigNumber(tokenAmount)); // amountToTransfer
     const { result } = await this.execute(
-      9999999,
+      1_000_000,
       CREATE_PROPOSAL,
       client,
       args,

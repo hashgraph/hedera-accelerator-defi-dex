@@ -31,12 +31,14 @@ jobs:
       - name: Use Node.js 18.x
         uses: actions/setup-node@v3
         with:
-          node-version: "18.x"
+          node-version: "18.15.0"
       - run: npm ci
       - name: Run code coverage
         run: npx hardhat coverage
       - name: Deploy if contract changed
         run: npx hardhat run deployment/checkAndDeploy.ts
+      - name: Reformat code before auto commit
+        run: npm run code-format && git add -A
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
           file_pattern: deployment/state/*.json
