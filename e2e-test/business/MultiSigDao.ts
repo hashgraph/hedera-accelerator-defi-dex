@@ -118,12 +118,14 @@ export default class MultiSigDao extends BaseDao {
     const bytes = Helper.getBytes(result, 3);
     const operation = result.getUint256(4);
     const nonce = result.getUint256(5);
+    const txnType = result.getUint256(6);
     const info = {
       to,
       value,
       operation,
       nonce,
       data: ethers.utils.hexlify(bytes),
+      type: txnType,
     };
     const _info = JSON.stringify(info);
     console.log(
@@ -185,7 +187,7 @@ export default class MultiSigDao extends BaseDao {
       .addAddress(receiver.toSolidityAddress())
       .addUint256(amount);
     const { result } = await this.execute(
-      9_90_000,
+      3_000_000,
       PROPOSE_TRANSFER_TRANSACTION,
       tokenSenderClient,
       args
