@@ -3,10 +3,9 @@ import { expect } from "chai";
 
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { ethers, upgrades } from "hardhat";
-import { BigNumber } from "ethers";
+import { BigNumber, Contract } from "ethers";
 import { Helper } from "../utils/Helper";
 import { TestHelper } from "./TestHelper";
-import { Contract } from "hardhat/internal/hardhat-network/stack-traces/model";
 
 describe("LPToken, Pair and Factory tests", function () {
   const tokenBAddress = "0x0000000000000000000000000000000000010001";
