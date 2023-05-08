@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.18;
 import "./IGovernorBase.sol";
 
-interface IGovernorTransferToken is IGovernorBase  {
+interface IGovernorTransferToken is IGovernorBase {
     function createProposal(
         string memory title,
         string memory description,
@@ -13,5 +13,4 @@ interface IGovernorTransferToken is IGovernorBase  {
         int256 transferTokenAmount,
         address creator
     ) external returns (uint256);
-
 }

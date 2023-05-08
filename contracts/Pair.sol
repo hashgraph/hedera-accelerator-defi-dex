@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity >=0.5.0 <0.9.0;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.18;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "./common/hedera/HederaResponseCodes.sol";
 import "./common/IBaseHTS.sol";
 import "./common/TokenOperations.sol";
@@ -28,7 +28,12 @@ error WrongPairPassed(
     address expectedTokenB
 );
 
-contract Pair is IPair, Initializable, TokenOperations {
+contract Pair is
+    IPair,
+    Initializable,
+    TokenOperations,
+    ReentrancyGuardUpgradeable
+{
     IBaseHTS internal tokenService;
     ILPToken internal lpTokenContract;
 
@@ -48,6 +53,7 @@ contract Pair is IPair, Initializable, TokenOperations {
         address _treasury,
         int256 _fee
     ) public override initializer {
+        __ReentrancyGuard_init();
         require(_fee > 0, "Pair: Fee should be greater than zero.");
         tokenService = _tokenService;
         lpTokenContract = _lpTokenContract;
@@ -68,20 +74,10 @@ contract Pair is IPair, Initializable, TokenOperations {
         address _tokenB,
         int256 _tokenAQty,
         int256 _tokenBQty
-    ) external payable virtual override {
+    ) external payable virtual override nonReentrant {
         _tokenAQty = _tokenQuantity(_tokenA, _tokenAQty);
         _tokenBQty = _tokenQuantity(_tokenB, _tokenBQty);
 
-        transferTokensInternally(
-            fromAccount,
-            address(this),
-            _tokenA,
-            _tokenB,
-            _tokenAQty,
-            _tokenBQty,
-            "Add liquidity: Transfering token A to contract failed with status code",
-            "Add liquidity: Transfering token B to contract failed with status code"
-        );
         if (
             _tokenA == pair.tokenA.tokenAddress &&
             _tokenB == pair.tokenB.tokenAddress
@@ -104,13 +100,24 @@ contract Pair is IPair, Initializable, TokenOperations {
             });
         }
 
+        transferTokensInternally(
+            fromAccount,
+            address(this),
+            _tokenA,
+            _tokenB,
+            _tokenAQty,
+            _tokenBQty,
+            "Add liquidity: Transfering token A to contract failed with status code",
+            "Add liquidity: Transfering token B to contract failed with status code"
+        );
+
         lpTokenContract.allotLPTokenFor(_tokenAQty, _tokenBQty, fromAccount);
     }
 
     function removeLiquidity(
         address payable toAccount,
         int256 _lpToken
-    ) external virtual override {
+    ) external virtual override nonReentrant {
         require(
             lpTokenContract.lpTokenForUser(toAccount) >= _lpToken,
             "user does not have sufficient lpTokens"
@@ -118,6 +125,8 @@ contract Pair is IPair, Initializable, TokenOperations {
         (int256 _tokenAQty, int256 _tokenBQty) = calculateTokenstoGetBack(
             _lpToken
         );
+        pair.tokenA.tokenQty -= _tokenAQty;
+        pair.tokenB.tokenQty -= _tokenBQty;
         transferTokensInternally(
             address(this),
             toAccount,
@@ -128,8 +137,6 @@ contract Pair is IPair, Initializable, TokenOperations {
             "Remove liquidity: Transferring token A to contract failed with status code",
             "Remove liquidity: Transferring token B to contract failed with status code"
         );
-        pair.tokenA.tokenQty -= _tokenAQty;
-        pair.tokenB.tokenQty -= _tokenBQty;
         lpTokenContract.removeLPTokenFor(_lpToken, toAccount);
     }
 
@@ -356,7 +363,7 @@ contract Pair is IPair, Initializable, TokenOperations {
         address _token,
         int256 _deltaQty,
         int256 _slippage
-    ) external payable virtual override {
+    ) external payable virtual override nonReentrant {
         require(
             _token == pair.tokenA.tokenAddress ||
                 _token == pair.tokenB.tokenAddress,
@@ -397,6 +404,7 @@ contract Pair is IPair, Initializable, TokenOperations {
         ) = getOutGivenIn(_deltaAQty);
 
         pair.tokenA.tokenQty += _tokenASwapQtyPlusContractTokenShare;
+        pair.tokenB.tokenQty -= _actualSwapBValue + _tokenBTreasureFee;
 
         //Token A transfer
         transferTokenInternally(
@@ -415,8 +423,6 @@ contract Pair is IPair, Initializable, TokenOperations {
             _tokenATreasureFee,
             "swapTokenAFee: Transferring fee as token A to treasuary failed with status code"
         );
-
-        pair.tokenB.tokenQty -= _actualSwapBValue + _tokenBTreasureFee;
 
         //Token B transfer
         transferTokenInternally(
@@ -455,6 +461,7 @@ contract Pair is IPair, Initializable, TokenOperations {
         //Token B Calculation
 
         pair.tokenB.tokenQty += _tokenBSwapQtyPlusContractTokenShare;
+        pair.tokenA.tokenQty -= _actualSwapAValue + _tokenATreasureFee;
 
         //Token A transfer
         transferTokenInternally(
@@ -473,8 +480,6 @@ contract Pair is IPair, Initializable, TokenOperations {
             _tokenBTreasureFee,
             "swapTokenBFee: Transferring fee as token B to treasuary failed with status code"
         );
-
-        pair.tokenA.tokenQty -= _actualSwapAValue + _tokenATreasureFee;
 
         //Token B transfer
         transferTokenInternally(

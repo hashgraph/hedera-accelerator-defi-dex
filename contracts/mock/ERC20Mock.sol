@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: Unlicense
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.18;
 import "../common/IERC20.sol";
 
 import "hardhat/console.sol";
@@ -63,7 +63,7 @@ contract ERC20Mock is IERC20 {
         address to,
         uint256 amount
     ) external override returns (bool) {
-       return transferInternal(msg.sender, to, amount);
+        return transferInternal(msg.sender, to, amount);
     }
 
     function name() external view override returns (string memory) {
@@ -86,7 +86,7 @@ contract ERC20Mock is IERC20 {
         address from,
         address to,
         uint256 amount
-    ) private returns(bool) {
+    ) private returns (bool) {
         if (
             transferFailed ||
             (isFailTransferAfterCountEnabled && failTransferAfterCount == 0)
