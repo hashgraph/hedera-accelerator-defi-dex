@@ -69,11 +69,8 @@ export class TestHelper {
     return await this.deployLogic("ERC20Mock", name, symbol, total, 0);
   }
 
-  static async deployMockBaseHTS(
-    tokenTesting: boolean = true,
-    hBarAddress: string = this.ZERO_ADDRESS
-  ) {
-    return await this.deployLogic("MockBaseHTS", tokenTesting, hBarAddress);
+  static async deployMockBaseHTS(tokenTesting: boolean = true) {
+    return await this.deployLogic("MockBaseHTS", tokenTesting);
   }
 
   static async deployLogic(name: string, ...args: any) {

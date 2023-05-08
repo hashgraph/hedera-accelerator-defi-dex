@@ -79,11 +79,7 @@ describe("MultiSig tests", function () {
     const signers = await TestHelper.getSigners();
     const daoAdminOne = await TestHelper.getDAOAdminOne();
 
-    const bastHTS = await TestHelper.deployLogic(
-      "MockBaseHTS",
-      true,
-      TestHelper.ZERO_ADDRESS
-    );
+    const bastHTS = await TestHelper.deployMockBaseHTS();
 
     const tokenInstance = await TestHelper.deployLogic(
       "ERC20Mock",

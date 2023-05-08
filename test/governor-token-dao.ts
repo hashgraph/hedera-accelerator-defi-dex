@@ -26,8 +26,7 @@ describe("GovernorTokenDAO Tests", function () {
       0
     );
 
-    const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-    const mockBaseHTS = await MockBaseHTS.deploy(true, zeroAddress);
+    const mockBaseHTS = await TestHelper.deployMockBaseHTS();
 
     const GODHolder = await ethers.getContractFactory("GODHolder");
     const godHolder = await upgrades.deployProxy(
@@ -69,8 +68,7 @@ describe("GovernorTokenDAO Tests", function () {
     const votingDelay = 0;
     const votingPeriod = 12;
     const signers = await ethers.getSigners();
-    const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-    const mockBaseHTS = await MockBaseHTS.deploy(true, zeroAddress);
+    const mockBaseHTS = await TestHelper.deployMockBaseHTS();
 
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
     const tokenCont = await TokenCont.deploy("tokenName", "tokenSymbol", 10, 0);
