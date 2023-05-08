@@ -13,7 +13,6 @@ contract MockBaseHTS is IBaseHTS {
     bytes32 revertCreateTokenSlot = keccak256("revertCreateTokenSlot");
     bytes32 passTransactionCountSlot = keccak256("passTransactionCountSlot");
     bytes32 tokenTestSlot = keccak256("tokenTestSlot");
-    int256 private constant FAIL_TOKEN_QTY = 999999;
 
     constructor(bool _tokenTest) {
         StorageSlot.Uint256Slot storage passTransactionCount = StorageSlot
@@ -66,8 +65,7 @@ contract MockBaseHTS is IBaseHTS {
     function mintTokenPublic(
         address tokenAddress,
         int256 amount
-    ) external       view
-override returns (int256, int256) {
+    ) external view override returns (int256, int256) {
         string memory tokenName = ERC20Mock(tokenAddress).name();
         if (isFailureToken(tokenName)) {
             return (23, amount);
@@ -79,8 +77,7 @@ override returns (int256, int256) {
     function burnTokenPublic(
         address tokenAddress,
         int256 amount
-    ) external       view
-override returns (int256, int256) {
+    ) external view override returns (int256, int256) {
         string memory tokenName = ERC20Mock(tokenAddress).name();
         if (isFailureToken(tokenName)) {
             return (23, amount);
@@ -99,11 +96,7 @@ override returns (int256, int256) {
         override
         returns (int256 responseCode, address tokenAddress)
     {
-        if (
-            keccak256(abi.encode(tokenToCreate.name)) ==
-            keccak256(abi.encode("FAIL"))
-        ) {
-            console.log("tokenToCreate.name", tokenToCreate.name);
+        if (isFailureToken(tokenToCreate.name)) {
             responseCode = 23;
             tokenAddress = address(0x0);
         } else {

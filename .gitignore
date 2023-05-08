@@ -6,6 +6,7 @@ typechain
 typechain-types
 .openzeppelin/*
 .scannerwork
+out
 
 #Hardhat files
 cache
