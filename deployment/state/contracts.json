@@ -307,5 +307,23 @@
     "hash": "f03dc451296505e4c92d0f2c5b31f0be",
     "transparentProxyAddress": "0x0000000000000000000000000000000000462829",
     "transparentProxyId": "0.0.4597801"
+  },
+  {
+    "name": "godholder",
+    "id": "0.0.4598812",
+    "address": "0x0000000000000000000000000000000000462c1c",
+    "timestamp": "2023-05-08T09:18:41.648Z",
+    "hash": "988e473bd6843069b31cd7fbf57ba248",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000462c20",
+    "transparentProxyId": "0.0.4598816"
+  },
+  {
+    "name": "governortokencreate",
+    "id": "0.0.4598822",
+    "address": "0x0000000000000000000000000000000000462c26",
+    "timestamp": "2023-05-08T09:19:39.493Z",
+    "hash": "1b8cbe167eccad6b6a5a5284976533c2",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000462c2a",
+    "transparentProxyId": "0.0.4598826"
   }
 ]
