@@ -445,11 +445,27 @@ describe("GovernanceTokenDAO tests", function () {
     });
 
     it("Verify getDaoDetail returns correct values", async function () {
-      const { governorTokenDAO } = await loadFixture(deployFixture);
-      const result = await governorTokenDAO.getDaoDetail();
-      expect(result[0]).equals(DAO_NAME);
-      expect(result[1]).equals(LOGO_URL);
-      expect(result[2]).equals("");
+      const { governorTokenDAO, daoAdminOne } = await loadFixture(
+        deployFixture
+      );
+      const daoDetails1 = await governorTokenDAO.getDaoDetail();
+      expect(daoDetails1[0]).equals(DAO_NAME);
+      expect(daoDetails1[1]).equals(LOGO_URL);
+      expect(daoDetails1[2]).equals("");
+
+      await governorTokenDAO.connect(daoAdminOne).addWebLink(WEB_KEY, WEB_URL);
+
+      const daoDetails2 = await governorTokenDAO.getDaoDetail();
+      expect(daoDetails2[2]).equals([WEB_KEY, WEB_URL].join(","));
+
+      await governorTokenDAO
+        .connect(daoAdminOne)
+        .addWebLink("WEB_KEY", "WEB_URL");
+
+      const daoDetails3 = await governorTokenDAO.getDaoDetail();
+      expect(daoDetails3[2]).equals(
+        [WEB_KEY, WEB_URL, "WEB_KEY", "WEB_URL"].join(",")
+      );
     });
 
     it("Verify updating dao details should be reverted for non-admin user", async function () {
@@ -471,7 +487,7 @@ describe("GovernanceTokenDAO tests", function () {
     });
 
     it("Verify addWebLink, updateName should be reverted for invalid inputs", async function () {
-      const { governorTokenDAO, daoAdminOne, daoAdminTwo } = await loadFixture(
+      const { governorTokenDAO, daoAdminOne } = await loadFixture(
         deployFixture
       );
 

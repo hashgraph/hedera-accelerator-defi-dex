@@ -14,28 +14,28 @@ abstract contract BaseDAO is OwnableUpgradeable, IErrors {
         string value;
     }
 
-    string private _name;
-    address private _admin;
-    string private _logoUrl;
-    Social[] private _webLinks;
+    string private name;
+    address private admin;
+    string private logoUrl;
+    Social[] private webLinks;
 
     function __BaseDAO_init(
-        address admin,
-        string calldata name,
-        string calldata logoUrl
+        address _admin,
+        string calldata _name,
+        string calldata _logoUrl
     ) public onlyInitializing {
-        if (bytes(name).length == 0) {
-            revert InvalidInput("BaseDAO: name is empty");
-        }
-        if (address(admin) == address(0)) {
+        if (address(_admin) == address(0)) {
             revert InvalidInput("BaseDAO: admin address is zero");
         }
-        _admin = admin;
-        _name = name;
-        _logoUrl = logoUrl;
+        if (bytes(_name).length == 0) {
+            revert InvalidInput("BaseDAO: name is empty");
+        }
+        admin = _admin;
+        name = _name;
+        logoUrl = _logoUrl;
         _transferOwnership(admin);
-        emit NameUpdated("", _name);
-        emit LogoUrlUpdated("", _logoUrl);
+        emit NameUpdated("", name);
+        emit LogoUrlUpdated("", logoUrl);
     }
 
     function addWebLink(
@@ -45,33 +45,33 @@ abstract contract BaseDAO is OwnableUpgradeable, IErrors {
         require(bytes(_key).length > 0, "BaseDAO: invalid key passed");
         require(bytes(_value).length > 0, "BaseDAO: invalid value passed");
         string memory previousLink = getCommaSeparatedSocialLinks();
-        _webLinks.push(Social(_key, _value));
+        webLinks.push(Social(_key, _value));
         emit WebLinkUpdated(previousLink, getCommaSeparatedSocialLinks());
     }
 
-    function updateLogoURL(string calldata logoUrl) external onlyOwner {
-        emit LogoUrlUpdated(_logoUrl, logoUrl);
-        _logoUrl = logoUrl;
+    function updateLogoURL(string calldata _logoUrl) external onlyOwner {
+        emit LogoUrlUpdated(logoUrl, _logoUrl);
+        logoUrl = _logoUrl;
     }
 
-    function updateName(string calldata name) external onlyOwner {
-        if (bytes(name).length == 0) {
+    function updateName(string calldata _name) external onlyOwner {
+        if (bytes(_name).length == 0) {
             revert InvalidInput("BaseDAO: name is empty");
         }
-        emit NameUpdated(_name, name);
-        _name = name;
+        emit NameUpdated(name, _name);
+        name = _name;
     }
 
     function getDaoDetail()
         public
         view
         returns (
-            string memory name,
-            string memory logoUrl,
-            string memory webLinks
+            string memory _name,
+            string memory _logoUrl,
+            string memory _webLinks
         )
     {
-        return (_name, _logoUrl, getCommaSeparatedSocialLinks());
+        return (name, logoUrl, getCommaSeparatedSocialLinks());
     }
 
     function getCommaSeparatedSocialLinks()
@@ -79,10 +79,10 @@ abstract contract BaseDAO is OwnableUpgradeable, IErrors {
         view
         returns (string memory result)
     {
-        uint256 count = _webLinks.length;
+        uint256 count = webLinks.length;
         for (uint i = 0; i < count; i++) {
             bool appendCommaAtLast = i < count - 1;
-            Social memory social = _webLinks[i];
+            Social memory social = webLinks[i];
             result = string.concat(
                 result,
                 social.key,
