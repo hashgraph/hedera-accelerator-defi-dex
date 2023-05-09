@@ -3,6 +3,7 @@ import Governor from "../e2e-test/business/Governor";
 import GodHolder from "../e2e-test/business/GodHolder";
 import NFTHolder from "../e2e-test/business/NFTHolder";
 import DAOFactory from "../e2e-test/business/factories/DAOFactory";
+import MultiSigDao from "../e2e-test/business/MultiSigDao";
 import Configuration from "../e2e-test/business/Configuration";
 import GovernorTokenDao from "../e2e-test/business/GovernorTokenDao";
 
@@ -48,6 +49,11 @@ export class InstanceProvider {
   public getMultiSigDAOFactory(id: string | null = null) {
     const _id = this.getProxyId(id, ContractService.MULTI_SIG_FACTORY);
     return new MultiSigDAOFactory(_id);
+  }
+
+  public getMultiSigDAO(id: string | null = null) {
+    const _id = this.getProxyId(id, ContractService.MULTI_SIG);
+    return new MultiSigDao(_id);
   }
 
   public getGovernorTokenDao(id: string | null = null) {

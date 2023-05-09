@@ -99,7 +99,7 @@ export default class MultiSigDao extends BaseDao {
     client: Client = clientsInfo.operatorClient
   ) => {
     const args = new ContractFunctionParameters().addBytes32(txnHash);
-    const { result } = await this.execute(80_000, STATE, client, args);
+    const { result } = await this.execute(5_00_000, STATE, client, args);
     const hash = ethers.utils.hexlify(txnHash);
     const state = result.getInt256(0);
     console.log(
@@ -150,7 +150,7 @@ export default class MultiSigDao extends BaseDao {
       .addBytes(data)
       .addUint8(operation);
     const { result } = await this.execute(
-      3_00_000,
+      9_00_000,
       PROPOSE_TRANSACTION,
       client,
       args
@@ -176,6 +176,46 @@ export default class MultiSigDao extends BaseDao {
       tokenSenderAccountId,
       tokenSenderPrivateKey,
       tokenSenderClient
+    );
+  };
+
+  proposeAddOwnerWithThreshold = async (
+    newOwnerAccountId: AccountId,
+    gnosisSafe: HederaGnosisSafe,
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    const threshold = await gnosisSafe.getThreshold(client);
+    const safeInterface = await gnosisSafe.getHederaGnosisSafeInterface();
+    const data = safeInterface.encodeFunctionData("addOwnerWithThreshold", [
+      newOwnerAccountId.toSolidityAddress(),
+      threshold,
+    ]);
+    return await this.proposeTransaction(
+      ContractId.fromString(gnosisSafe.contractId).toSolidityAddress(),
+      ethers.utils.arrayify(data),
+      Operation.CALL,
+      client
+    );
+  };
+
+  proposeRemoveOwnerWithThreshold = async (
+    previousOwnerAccountId: AccountId,
+    ownerAccountId: AccountId,
+    gnosisSafe: HederaGnosisSafe,
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    const threshold = await gnosisSafe.getThreshold(client);
+    const safeInterface = await gnosisSafe.getHederaGnosisSafeInterface();
+    const data = safeInterface.encodeFunctionData("removeOwner", [
+      previousOwnerAccountId.toSolidityAddress(),
+      ownerAccountId.toSolidityAddress(),
+      threshold,
+    ]);
+    return await this.proposeTransaction(
+      ContractId.fromString(gnosisSafe.contractId).toSolidityAddress(),
+      ethers.utils.arrayify(data),
+      Operation.CALL,
+      client
     );
   };
 
