@@ -325,5 +325,23 @@
     "hash": "1b8cbe167eccad6b6a5a5284976533c2",
     "transparentProxyAddress": "0x0000000000000000000000000000000000462c2a",
     "transparentProxyId": "0.0.4598826"
+  },
+  {
+    "name": "configuration",
+    "id": "0.0.4600519",
+    "address": "0x00000000000000000000000000000000004632c7",
+    "timestamp": "2023-05-08T11:25:04.477Z",
+    "hash": "ae75b72b1ee2bed8dbf98202cf0cde27",
+    "transparentProxyAddress": "0x00000000000000000000000000000000004632ce",
+    "transparentProxyId": "0.0.4600526"
+  },
+  {
+    "name": "factory",
+    "id": "0.0.4601977",
+    "address": "0x0000000000000000000000000000000000463879",
+    "timestamp": "2023-05-08T12:27:47.831Z",
+    "hash": "6a20db953b45ae39d9d4fcdb316f3f7f",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000463880",
+    "transparentProxyId": "0.0.4601984"
   }
 ]

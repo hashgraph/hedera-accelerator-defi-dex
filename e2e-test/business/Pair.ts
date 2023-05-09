@@ -50,7 +50,8 @@ export default class Pair extends Base {
         .addAddress(tokenA.toSolidityAddress())
         .addAddress(tokenB.toSolidityAddress())
         .addAddress(feeCollectionAccountId.toSolidityAddress())
-        .addInt256(fee);
+        .addInt256(fee)
+        .addAddress(this.configuration);
       await this.execute(9000000, INITIALIZE, client, args, tokensOwnerKey);
       console.log(`- Pair#${INITIALIZE}(): done\n`);
       return;

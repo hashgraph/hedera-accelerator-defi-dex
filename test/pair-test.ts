@@ -3,7 +3,7 @@ import { expect } from "chai";
 
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { ethers, upgrades } from "hardhat";
-import { BigNumber } from "ethers";
+import { BigNumber, Contract } from "ethers";
 import { Helper } from "../utils/Helper";
 import { TestHelper } from "./TestHelper";
 
@@ -34,7 +34,8 @@ describe("LPToken, Pair and Factory tests", function () {
   async function deployBasics(
     mockBaseHTS: any,
     tokenCont: any,
-    isLpTokenRequired: boolean
+    isLpTokenRequired: boolean,
+    configuration: Contract
   ) {
     const signers = await ethers.getSigners();
 
@@ -59,10 +60,6 @@ describe("LPToken, Pair and Factory tests", function () {
       await lpToken.setUserBalance(lpTokenCont.address, 100);
     }
 
-    const Configuration = await ethers.getContractFactory("Configuration");
-    const configuration = await Configuration.deploy();
-    await configuration.initialize();
-
     const Pair = await ethers.getContractFactory("Pair");
     const pair = await upgrades.deployProxy(
       Pair,
@@ -73,6 +70,7 @@ describe("LPToken, Pair and Factory tests", function () {
         token2Address,
         treasury,
         fee,
+        configuration.address,
       ],
       { unsafeAllow: ["delegatecall"] }
     );
@@ -101,9 +99,17 @@ describe("LPToken, Pair and Factory tests", function () {
     };
   }
 
+  async function deployConfiguration(): Promise<Contract> {
+    const Configuration = await ethers.getContractFactory("Configuration");
+    const configuration = await Configuration.deploy();
+    await configuration.initialize();
+    return configuration;
+  }
+
   describe("Pair Upgradeable", function () {
     it("Verify if the Pair contract is upgradeable safe ", async function () {
       const mockBaseHTS = await TestHelper.deployMockBaseHTS();
+      const configuration = await deployConfiguration();
       const Pair = await ethers.getContractFactory("Pair");
       const instance = await upgrades.deployProxy(
         Pair,
@@ -114,6 +120,7 @@ describe("LPToken, Pair and Factory tests", function () {
           tokenBAddress,
           treasury,
           fee,
+          configuration.address,
         ],
         { unsafeAllow: ["delegatecall"] }
       );
@@ -122,25 +129,29 @@ describe("LPToken, Pair and Factory tests", function () {
   });
 
   async function deployFixtureTokenTest() {
+    const configuration = await deployConfiguration();
     const mockBaseHTS = await TestHelper.deployMockBaseHTS();
     const tokenCont = await deployERC20Mock();
-    return deployBasics(mockBaseHTS, tokenCont, true);
+    return deployBasics(mockBaseHTS, tokenCont, true, configuration);
   }
 
   async function deployFixture() {
+    const configuration = await deployConfiguration();
     const mockBaseHTS = await TestHelper.deployMockBaseHTS();
     const tokenCont = await deployERC20Mock();
-    return deployBasics(mockBaseHTS, tokenCont, false);
+    return deployBasics(mockBaseHTS, tokenCont, false, configuration);
   }
 
   async function deployFixtureHBARX() {
+    const configuration = await deployConfiguration();
     const tokenCont = await deployERC20Mock();
     const mockBaseHTS = await TestHelper.deployMockBaseHTS();
-    return deployBasics(mockBaseHTS, tokenCont, false);
+    await configuration.setHbarxAddress(tokenCont.address);
+    return deployBasics(mockBaseHTS, tokenCont, false, configuration);
   }
 
   describe("HBAR pool test cases", async function () {
-    it.skip("Add liquidity for HBAR", async function () {
+    it("Add liquidity for HBAR", async function () {
       const { pair, token1Address, token2Address } = await loadFixture(
         deployFixtureHBARX
       );
@@ -160,7 +171,7 @@ describe("LPToken, Pair and Factory tests", function () {
       expect(tokenQty[1]).to.be.equals(precision.mul(50));
     });
 
-    it.skip("Given a pair of HBAR/TOKEN-B exists when user try to swap 1 unit of Hbar then swapped quantities should match the expectation ", async function () {
+    it("Given a pair of HBAR/TOKEN-B exists when user try to swap 1 unit of Hbar then swapped quantities should match the expectation ", async function () {
       const {
         pair,
         signers,
@@ -216,7 +227,7 @@ describe("LPToken, Pair and Factory tests", function () {
       expect(tokenBBalance).to.be.equals(tokenQty[1]);
     });
 
-    it.skip("Swap 1 units of token HBAR fail ", async function () {
+    it("Swap 1 units of token HBAR fail ", async function () {
       const { pair, signers, token1Address, token2Address } = await loadFixture(
         deployFixtureHBARX
       );
@@ -834,7 +845,8 @@ describe("LPToken, Pair and Factory tests", function () {
         tokenAAddress,
         tokenBAddress,
         treasury,
-        fee
+        fee,
+        zeroAddress
       )
     ).to.revertedWith("Initializable: contract is already initialized");
   });
@@ -1089,6 +1101,7 @@ describe("LPToken, Pair and Factory tests", function () {
           zeroAddress,
           treasury,
           negativeFee,
+          zeroAddress,
         ],
         { unsafeAllow: ["delegatecall"] }
       )

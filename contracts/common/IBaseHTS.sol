@@ -45,8 +45,6 @@ interface IBaseHTS {
         uint256 decimals
     ) external payable returns (int256 responseCode, address tokenAddress);
 
-    function hbarxAddress() external returns (address);
-
     function transferHBAR(
         address payable toAccount
     ) external payable returns (bool);
