@@ -49,7 +49,12 @@ export default class HederaGnosisSafe extends Base {
   approveHash = async (txnHash: Uint8Array, client: Client) => {
     const hash = ethers.utils.hexlify(txnHash);
     const args = new ContractFunctionParameters().addBytes32(txnHash);
-    const { receipt } = await this.execute(80_000, APPROVE_HASH, client, args);
+    const { receipt } = await this.execute(
+      9_00_000,
+      APPROVE_HASH,
+      client,
+      args
+    );
     console.log(
       `- GnosisSafe#${APPROVE_HASH}(): txnHash = ${hash}, status = ${receipt.status}\n`
     );
@@ -65,7 +70,7 @@ export default class HederaGnosisSafe extends Base {
   };
 
   getThreshold = async (client: Client = clientsInfo.operatorClient) => {
-    const { result } = await this.execute(50_000, GET_THRESHOLD, client);
+    const { result } = await this.execute(90_000, GET_THRESHOLD, client);
     const threshold = result.getUint256(0).toNumber();
     console.log(`- GnosisSafe#${GET_THRESHOLD}(): threshold = ${threshold}\n`);
     return threshold;

@@ -154,7 +154,7 @@ export default class MultiSigDao extends BaseDao {
       .addUint8(operation)
       .addUint256(transactionType);
     const { result } = await this.execute(
-      9_00_000,
+      3_000_000,
       PROPOSE_TRANSACTION,
       client,
       args
@@ -184,11 +184,11 @@ export default class MultiSigDao extends BaseDao {
   };
 
   proposeAddOwnerWithThreshold = async (
+    threshold: number,
     newOwnerAccountId: AccountId,
     gnosisSafe: HederaGnosisSafe,
     client: Client = clientsInfo.operatorClient
   ) => {
-    const threshold = await gnosisSafe.getThreshold(client);
     const safeInterface = await gnosisSafe.getHederaGnosisSafeInterface();
     const data = safeInterface.encodeFunctionData("addOwnerWithThreshold", [
       newOwnerAccountId.toSolidityAddress(),
@@ -198,17 +198,36 @@ export default class MultiSigDao extends BaseDao {
       ContractId.fromString(gnosisSafe.contractId).toSolidityAddress(),
       ethers.utils.arrayify(data),
       Operation.CALL,
+      10,
+      client
+    );
+  };
+
+  proposeChangeThreshold = async (
+    threshold: number,
+    gnosisSafe: HederaGnosisSafe,
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    const safeInterface = await gnosisSafe.getHederaGnosisSafeInterface();
+    const data = safeInterface.encodeFunctionData("changeThreshold", [
+      threshold,
+    ]);
+    return await this.proposeTransaction(
+      ContractId.fromString(gnosisSafe.contractId).toSolidityAddress(),
+      ethers.utils.arrayify(data),
+      Operation.CALL,
+      10,
       client
     );
   };
 
   proposeRemoveOwnerWithThreshold = async (
+    threshold: number,
     previousOwnerAccountId: AccountId,
     ownerAccountId: AccountId,
     gnosisSafe: HederaGnosisSafe,
     client: Client = clientsInfo.operatorClient
   ) => {
-    const threshold = await gnosisSafe.getThreshold(client);
     const safeInterface = await gnosisSafe.getHederaGnosisSafeInterface();
     const data = safeInterface.encodeFunctionData("removeOwner", [
       previousOwnerAccountId.toSolidityAddress(),
@@ -219,6 +238,29 @@ export default class MultiSigDao extends BaseDao {
       ContractId.fromString(gnosisSafe.contractId).toSolidityAddress(),
       ethers.utils.arrayify(data),
       Operation.CALL,
+      10,
+      client
+    );
+  };
+
+  proposeSwapOwnerWithThreshold = async (
+    previousOwnerAccountId: AccountId,
+    oldOwnerAccountId: AccountId,
+    newOwnerAccountId: AccountId,
+    gnosisSafe: HederaGnosisSafe,
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    const safeInterface = await gnosisSafe.getHederaGnosisSafeInterface();
+    const data = safeInterface.encodeFunctionData("swapOwner", [
+      previousOwnerAccountId.toSolidityAddress(),
+      oldOwnerAccountId.toSolidityAddress(),
+      newOwnerAccountId.toSolidityAddress(),
+    ]);
+    return await this.proposeTransaction(
+      ContractId.fromString(gnosisSafe.contractId).toSolidityAddress(),
+      ethers.utils.arrayify(data),
+      Operation.CALL,
+      10,
       client
     );
   };
