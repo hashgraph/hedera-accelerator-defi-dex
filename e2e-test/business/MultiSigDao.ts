@@ -30,6 +30,12 @@ export enum Operation {
   DELEGATE,
 }
 
+enum TransactionState {
+  Pending,
+  Approved,
+  Executed,
+}
+
 const deployment = new Deployment();
 
 export default class MultiSigDao extends BaseDao {
@@ -99,6 +105,7 @@ export default class MultiSigDao extends BaseDao {
     console.log(
       `- MultiSigDao#${STATE}(): txnHash = ${hash}, state = ${state}\n`
     );
+    return state;
   };
 
   getTransactionInfo = async (
@@ -143,7 +150,7 @@ export default class MultiSigDao extends BaseDao {
       .addBytes(data)
       .addUint8(operation);
     const { result } = await this.execute(
-      2_00_000,
+      3_00_000,
       PROPOSE_TRANSACTION,
       client,
       args
@@ -234,4 +241,8 @@ export default class MultiSigDao extends BaseDao {
     console.log(` - GnosisSafe#setup(): done\n`);
     return cId;
   }
+
+  getTransactionNumericState = async (transactionState: string) => {
+    return Object.values(TransactionState).indexOf(transactionState);
+  };
 }

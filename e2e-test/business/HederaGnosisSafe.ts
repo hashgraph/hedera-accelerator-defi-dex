@@ -8,6 +8,7 @@ import { Client, ContractFunctionParameters, TokenId } from "@hashgraph/sdk";
 
 const GET_OWNERS = "getOwners";
 const APPROVE_HASH = "approveHash";
+const GET_THRESHOLD = "getThreshold";
 const EXEC_TRANSACTION = "executeTransaction";
 const GET_TRANSACTION_HASH = "getTransactionHash";
 
@@ -60,6 +61,13 @@ export default class HederaGnosisSafe extends Base {
       `- GnosisSafe#${GET_OWNERS}(): count = ${owners.length}, addresses = [${owners}]\n`
     );
     return owners;
+  };
+
+  getThreshold = async (client: Client = clientsInfo.operatorClient) => {
+    const { result } = await this.execute(50_000, GET_THRESHOLD, client);
+    const threshold = result.getUint256(0).toNumber();
+    console.log(`- GnosisSafe#${GET_THRESHOLD}(): threshold = ${threshold}\n`);
+    return threshold;
   };
 
   getTransactionHash = async (
