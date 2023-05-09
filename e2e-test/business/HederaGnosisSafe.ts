@@ -1,10 +1,11 @@
 import Base from "./Base";
+import ContractMetadata from "../../utils/ContractMetadata";
 
 import { ethers } from "ethers";
 import { Helper } from "../../utils/Helper";
 import { BigNumber } from "bignumber.js";
 import { clientsInfo } from "../../utils/ClientManagement";
-import { Client, ContractFunctionParameters, TokenId } from "@hashgraph/sdk";
+import { Client, ContractFunctionParameters } from "@hashgraph/sdk";
 
 const GET_OWNERS = "getOwners";
 const APPROVE_HASH = "approveHash";
@@ -103,4 +104,10 @@ export default class HederaGnosisSafe extends Base {
     );
     return txnHash;
   };
+
+  public async getHederaGnosisSafeInterface() {
+    return await new ContractMetadata().getContractInterface(
+      "HederaGnosisSafe"
+    );
+  }
 }
