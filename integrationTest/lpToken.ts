@@ -1,96 +1,55 @@
 import Common from "../e2e-test/business/Common";
-import LpToken from "../e2e-test/business/LpToken";
 
 import { Helper } from "../utils/Helper";
-import { clientsInfo } from "../utils/ClientManagement";
-import { ContractService } from "../deployment/service/ContractService";
 import { TokenId } from "@hashgraph/sdk";
+import { clientsInfo } from "../utils/ClientManagement";
+import { InstanceProvider } from "../utils/InstanceProvider";
 
-const csDev = new ContractService();
-const lpContract = csDev.getContractWithProxy(csDev.lpTokenContractName);
+const TOKEN_A_QTY = Common.withPrecision(10, 1e8);
+const TOKEN_B_QTY = Common.withPrecision(10, 1e8);
+const TOKEN_LP_QTY = Common.withPrecision(5, 1e8);
 
-const precision = 1e8;
-let lpToken: LpToken;
-const tokenAQty = Common.withPrecision(10, precision);
-const tokenBQty = Common.withPrecision(10, precision);
-const removeTokenQty = Common.withPrecision(5, precision);
-
-const initialize = async (tokenName: string, tokenSymbol: string) => {
-  try {
-    await lpToken.initialize(tokenName, tokenSymbol);
-  } catch (error) {
-    console.error(error);
-  }
-};
-
-const allotLPToken = async () => {
-  await lpToken.allotLPToken(
-    tokenAQty,
-    tokenBQty,
-    clientsInfo.treasureId,
-    clientsInfo.treasureKey
-  );
-};
-
-const lpTokenCountForGivenTokensQty = async () => {
-  return await lpToken.lpTokenCountForGivenTokensQty(tokenAQty, tokenBQty);
-};
-
-const removeLPToken = async () => {
-  await lpToken.removeLPToken(
-    removeTokenQty,
-    clientsInfo.treasureId,
-    clientsInfo.treasureKey
-  );
-};
-
-const getLpTokenCountForUser = async () => {
-  return await lpToken.lpTokenForUser(clientsInfo.treasureId);
-};
-
-const getAllLPTokenCount = async () => {
-  return await lpToken.getAllLPTokenCount();
-};
-
-const getLpTokenAddress = async () => {
-  return await lpToken.getLpTokenAddress();
-};
+const TOKEN_NAME = "LP-Token-Name";
+const TOKEN_SYMBOL = "LP-Token-Symbol";
 
 async function main() {
-  lpToken = new LpToken(lpContract.transparentProxyId!);
-  await initialize("tokenName", "tokenSymbol");
-  const lpTokenAddress = await getLpTokenAddress();
-
-  const tokenId = TokenId.fromSolidityAddress(lpTokenAddress);
+  const lpToken = InstanceProvider.getInstance().getLpToken();
+  await lpToken.initialize(
+    TOKEN_NAME,
+    TOKEN_SYMBOL,
+    clientsInfo.operatorId,
+    clientsInfo.operatorClient
+  );
+  const tokenId = TokenId.fromSolidityAddress(
+    await lpToken.getLpTokenAddress(clientsInfo.treasureClient)
+  );
   await Common.associateTokensToAccount(
     clientsInfo.treasureId,
     [tokenId],
     clientsInfo.treasureClient,
     clientsInfo.treasureKey
   );
-  const lpTokenCountForAllowance = await lpTokenCountForGivenTokensQty();
+  await lpToken.allotLPToken(
+    TOKEN_A_QTY,
+    TOKEN_B_QTY,
+    clientsInfo.treasureId,
+    clientsInfo.operatorClient
+  );
   await Common.setTokenAllowance(
     tokenId,
-    clientsInfo.treasureId,
-    Number(lpTokenCountForAllowance),
+    lpToken.contractId,
+    TOKEN_LP_QTY.toNumber(),
     clientsInfo.treasureId,
     clientsInfo.treasureKey,
     clientsInfo.treasureClient
   );
-
-  await allotLPToken();
-  await Common.setTokenAllowance(
-    tokenId,
-    lpContract.transparentProxyId!,
-    Number(removeTokenQty),
+  await lpToken.removeLPToken(
+    TOKEN_LP_QTY,
     clientsInfo.treasureId,
-    clientsInfo.treasureKey,
-    clientsInfo.treasureClient
+    clientsInfo.operatorClient
   );
-
-  await removeLPToken();
-  await getAllLPTokenCount();
-  await getLpTokenCountForUser();
+  await lpToken.getAllLPTokenCount(clientsInfo.treasureClient);
+  await lpToken.lpTokenForUser(clientsInfo.treasureId);
 }
 
 main()

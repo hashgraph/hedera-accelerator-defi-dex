@@ -1,3 +1,4 @@
+import LpToken from "../e2e-test/business/LpToken";
 import Factory from "../e2e-test/business/Factory";
 import Governor from "../e2e-test/business/Governor";
 import GodHolder from "../e2e-test/business/GodHolder";
@@ -84,5 +85,10 @@ export class InstanceProvider {
   public getFactory(id: string | null = null) {
     const _id = this.getProxyId(id, this.csDev.factoryContractName);
     return new Factory(_id);
+  }
+
+  public getLpToken(id: string | null = null) {
+    const _id = this.getProxyId(id, this.csDev.lpTokenContractName);
+    return new LpToken(_id);
   }
 }

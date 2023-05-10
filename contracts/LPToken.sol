@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.18;
 
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./common/hedera/HederaResponseCodes.sol";
 import "./common/IBaseHTS.sol";
 import "./common/IERC20.sol";
@@ -9,7 +9,7 @@ import "./common/TokenOperations.sol";
 import "./common/hedera/HederaTokenService.sol";
 import "./ILPToken.sol";
 
-contract LPToken is ILPToken, Initializable, TokenOperations {
+contract LPToken is ILPToken, OwnableUpgradeable, TokenOperations {
     IBaseHTS tokenService;
     IERC20 lpToken;
 
@@ -38,9 +38,11 @@ contract LPToken is ILPToken, Initializable, TokenOperations {
 
     function initialize(
         IBaseHTS _tokenService,
+        address _owner,
         string memory tokenName,
         string memory tokenSymbol
     ) external payable override initializer {
+        _transferOwnership(_owner);
         tokenService = _tokenService;
         (int256 responseCode, address newToken) = super
             .createTokenWithContractAsOwner(
@@ -61,7 +63,7 @@ contract LPToken is ILPToken, Initializable, TokenOperations {
         int256 amountA,
         int256 amountB,
         address _toUser
-    ) external override returns (int256 responseCode) {
+    ) external override onlyOwner returns (int256 responseCode) {
         require(
             (amountA > 0 && amountB > 0),
             "Please provide positive token counts"
@@ -99,7 +101,7 @@ contract LPToken is ILPToken, Initializable, TokenOperations {
     function removeLPTokenFor(
         int256 lpAmount,
         address fromUser
-    ) external override returns (int256 responseCode) {
+    ) external override onlyOwner returns (int256 responseCode) {
         require((lpAmount > 0), "Please provide token counts");
         require(
             this.lpTokenForUser(fromUser) >= lpAmount,
@@ -131,7 +133,7 @@ contract LPToken is ILPToken, Initializable, TokenOperations {
         return HederaResponseCodes.SUCCESS;
     }
 
-    function sqrt(int256 value) public pure returns (int256 output) {
+    function sqrt(int256 value) private pure returns (int256 output) {
         int256 modifiedValue = (value + 1) / 2;
         output = value;
         while (modifiedValue < output) {
