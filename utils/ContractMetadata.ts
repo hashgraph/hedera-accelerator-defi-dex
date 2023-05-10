@@ -2,6 +2,7 @@ import Web3 from "web3";
 import hre from "hardhat";
 import md5File from "md5-file";
 
+import { ethers } from "ethers";
 import { Artifact } from "hardhat/types";
 import { ContractService } from "../deployment/service/ContractService";
 
@@ -122,6 +123,15 @@ export default class ContractMetadata {
         contract.artifact.contractName.toLowerCase() ===
         contractName.toLowerCase()
     )!;
+  };
+
+  public getContractInterface = async (contractName: string) => {
+    const info = (await this.getContractsInfo()).find(
+      (contract: ContractInfo) =>
+        contract.artifact.contractName.toLowerCase() ===
+        contractName.toLowerCase()
+    )!;
+    return new ethers.utils.Interface(info.artifact.abi);
   };
 
   public getSignatureToABIMap = async () => {

@@ -1,13 +1,15 @@
 import Base from "./Base";
+import ContractMetadata from "../../utils/ContractMetadata";
 
 import { ethers } from "ethers";
 import { Helper } from "../../utils/Helper";
 import { BigNumber } from "bignumber.js";
 import { clientsInfo } from "../../utils/ClientManagement";
-import { Client, ContractFunctionParameters, TokenId } from "@hashgraph/sdk";
+import { Client, ContractFunctionParameters } from "@hashgraph/sdk";
 
 const GET_OWNERS = "getOwners";
 const APPROVE_HASH = "approveHash";
+const GET_THRESHOLD = "getThreshold";
 const EXEC_TRANSACTION = "executeTransaction";
 const GET_TRANSACTION_HASH = "getTransactionHash";
 
@@ -47,7 +49,12 @@ export default class HederaGnosisSafe extends Base {
   approveHash = async (txnHash: Uint8Array, client: Client) => {
     const hash = ethers.utils.hexlify(txnHash);
     const args = new ContractFunctionParameters().addBytes32(txnHash);
-    const { receipt } = await this.execute(80_000, APPROVE_HASH, client, args);
+    const { receipt } = await this.execute(
+      9_00_000,
+      APPROVE_HASH,
+      client,
+      args
+    );
     console.log(
       `- GnosisSafe#${APPROVE_HASH}(): txnHash = ${hash}, status = ${receipt.status}\n`
     );
@@ -60,6 +67,13 @@ export default class HederaGnosisSafe extends Base {
       `- GnosisSafe#${GET_OWNERS}(): count = ${owners.length}, addresses = [${owners}]\n`
     );
     return owners;
+  };
+
+  getThreshold = async (client: Client = clientsInfo.operatorClient) => {
+    const { result } = await this.execute(90_000, GET_THRESHOLD, client);
+    const threshold = result.getUint256(0).toNumber();
+    console.log(`- GnosisSafe#${GET_THRESHOLD}(): threshold = ${threshold}\n`);
+    return threshold;
   };
 
   getTransactionHash = async (
@@ -95,4 +109,10 @@ export default class HederaGnosisSafe extends Base {
     );
     return txnHash;
   };
+
+  public async getHederaGnosisSafeInterface() {
+    return await new ContractMetadata().getContractInterface(
+      "HederaGnosisSafe"
+    );
+  }
 }
