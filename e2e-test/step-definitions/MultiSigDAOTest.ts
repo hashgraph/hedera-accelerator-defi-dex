@@ -189,7 +189,7 @@ export class MultiSigDAOSteps {
     targetTokenBalFromPayeeAcct = await Common.getTokenBalance(
       clientsInfo.treasureId,
       transferTokenId,
-      clientsInfo.uiUserClient
+      clientsInfo.treasureClient
     );
   }
 
@@ -202,7 +202,7 @@ export class MultiSigDAOSteps {
     const updatedBalance = await Common.getTokenBalance(
       clientsInfo.treasureId,
       transferTokenId,
-      clientsInfo.uiUserClient
+      clientsInfo.treasureClient
     );
     expect(Number(updatedBalance)).to.eql(
       Number(targetTokenBalFromPayeeAcct) +
