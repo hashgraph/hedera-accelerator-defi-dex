@@ -8,6 +8,7 @@ import { expect } from "chai";
 import { binding, given, then, when } from "cucumber-tsflow";
 import { TokenId, AccountId } from "@hashgraph/sdk";
 import { ethers } from "hardhat";
+import { Helper } from "../../utils/Helper";
 
 const csDev = new ContractService();
 const transferTokenId = TokenId.fromString(dex.TOKEN_LAB49_1);
@@ -199,6 +200,7 @@ export class MultiSigDAOSteps {
     60000
   )
   public async verifyTokenBalance() {
+    await Helper.delay(15000);
     const updatedBalance = await Common.getTokenBalance(
       clientsInfo.treasureId,
       transferTokenId,
