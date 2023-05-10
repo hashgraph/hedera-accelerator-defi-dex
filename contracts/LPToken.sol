@@ -72,10 +72,6 @@ contract LPToken is ILPToken, OwnableUpgradeable, TokenOperations {
             amountA,
             amountB
         );
-        require(
-            address(lpToken) > address(0x0),
-            "Liquidity Token not initialized"
-        );
         (responseCode, ) = super.mintToken(
             tokenService,
             address(lpToken),
