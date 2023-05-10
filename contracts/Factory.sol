@@ -229,7 +229,12 @@ contract Factory is Initializable, ReentrancyGuardUpgradeable {
         );
 
         lp = ILPToken(_createProxy(lpLogic));
-        lp.initialize(service, _owner, lpTokenName, lpTokenSymbol);
+        lp.initialize{value: msg.value}(
+            service,
+            _owner,
+            lpTokenName,
+            lpTokenSymbol
+        );
     }
 
     function _createProxy(address _logic) private returns (address) {
