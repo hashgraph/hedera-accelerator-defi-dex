@@ -284,7 +284,12 @@ export class PairTestSteps {
 
   @when(/User initialize lptoken contract/, undefined, 30000)
   public async initializeLPTokenContract(): Promise<void> {
-    await lpToken.initialize(lpTokenName, lpTokenSymbol, client);
+    await lpToken.initialize(
+      lpTokenName,
+      lpTokenSymbol,
+      AccountId.fromString(pair.contractId),
+      client
+    );
   }
 
   @when(
