@@ -14,7 +14,8 @@ contract GovernorTextProposal is GovernorCountingSimpleInternal {
             title,
             description,
             linkToDiscussion,
-            msg.sender
+            msg.sender,
+            bytes("")
         );
         return proposalId;
     }

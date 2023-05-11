@@ -25,7 +25,8 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
             title,
             description,
             linkToDiscussion,
-            msg.sender
+            msg.sender,
+            bytes("")
         );
         _proposalData[proposalId] = TokenCreateData(
             _treasurer,

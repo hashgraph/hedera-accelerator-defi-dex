@@ -1,3 +1,4 @@
+import { ethers } from "hardhat";
 import { expect } from "chai";
 import { Contract } from "ethers";
 import { TestHelper } from "./TestHelper";
@@ -90,10 +91,21 @@ describe("Governor Tests", function () {
     expect(balance).equals(targetBalance);
   };
 
-  const verifyProposalCreationEvent = async (tx: any) => {
+  const verifyProposalCreationEvent = async (
+    tx: any,
+    dataShouldEmpty: boolean
+  ) => {
     const { name, args } = await TestHelper.readLastEvent(tx);
+    expect(args.length).equals(8);
     expect(name).equals("ProposalDetails");
     expect(args.proposalId).not.equals("0");
+    expect(args.description).equals(DESC);
+    expect(args.link).equals(LINK);
+    expect(args.startBlock).greaterThan(0);
+    expect(args.endBlock).greaterThan(0);
+    expect(ethers.utils.arrayify(args.data).length === 0).equals(
+      dataShouldEmpty
+    );
     return { proposalId: args.proposalId };
   };
 
@@ -105,7 +117,7 @@ describe("Governor Tests", function () {
     const tx = await governance
       .connect(account)
       .createProposal(title, DESC, LINK);
-    return await verifyProposalCreationEvent(tx);
+    return await verifyProposalCreationEvent(tx, true);
   }
 
   async function getUpgradeProposalId(
@@ -121,7 +133,7 @@ describe("Governor Tests", function () {
         TestHelper.ONE_ADDRESS,
         TestHelper.TWO_ADDRESS
       );
-    return await verifyProposalCreationEvent(tx);
+    return await verifyProposalCreationEvent(tx, true);
   }
 
   async function getTransferTokenProposalId(
@@ -142,7 +154,7 @@ describe("Governor Tests", function () {
         amount,
         signers[0].address
       );
-    return await verifyProposalCreationEvent(tx);
+    return await verifyProposalCreationEvent(tx, false);
   }
 
   async function getTokenCreateProposalId(
@@ -153,7 +165,7 @@ describe("Governor Tests", function () {
     const tx = await governance
       .connect(account)
       .createProposal(TITLE, DESC, LINK, account.address, tokenName, "Symbol");
-    return await verifyProposalCreationEvent(tx);
+    return await verifyProposalCreationEvent(tx, true);
   }
 
   const createTokenCreateProposalAndExecute = async (
