@@ -3,6 +3,7 @@ import { Contract } from "ethers";
 import { TestHelper } from "./TestHelper";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { ethers } from "hardhat";
 
 describe("Governor Tests", function () {
   const QUORUM_THRESHOLD = 5;
@@ -151,14 +152,7 @@ describe("Governor Tests", function () {
   ) {
     const tx = await governance
       .connect(account)
-      .createProposal(
-        TITLE,
-        DESC,
-        LINK,
-        TestHelper.ONE_ADDRESS,
-        tokenName,
-        "Symbol"
-      );
+      .createProposal(TITLE, DESC, LINK, account.address, tokenName, "Symbol");
     return await verifyProposalCreationEvent(tx);
   }
 
@@ -536,7 +530,7 @@ describe("Governor Tests", function () {
 
   describe("TokenCreateGovernor contract tests", async () => {
     it("Verify token creation should be executed", async function () {
-      const { governorToken, creator, godHolder, baseHTS } = await loadFixture(
+      const { governorToken, creator, godHolder } = await loadFixture(
         deployFixture
       );
       await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
@@ -576,6 +570,382 @@ describe("Governor Tests", function () {
       await baseHTS.setRevertCreateToken(false);
       await expect(governorToken.executeProposal(TITLE)).to.revertedWith(
         "GovernorTokenCreate: Token creation failed."
+      );
+    });
+
+    describe("Minting scenarios ", async function () {
+      it("Given user executed token create proposal when user try to mint only treasurer is allowed", async function () {
+        const { governorToken, creator, godHolder } = await loadFixture(
+          deployFixture
+        );
+        await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
+        const { proposalId } = await getTokenCreateProposalId(
+          governorToken,
+          "tokenName",
+          creator
+        );
+        await governorToken.castVotePublic(proposalId, 0, 1);
+        await TestHelper.mineNBlocks(BLOCKS_COUNT);
+        await expect(governorToken.getTokenAddress(proposalId)).revertedWith(
+          "Contract not executed yet!"
+        );
+        await governorToken.executeProposal(TITLE);
+        expect(await governorToken.getTokenAddress(proposalId)).not.equals(
+          TestHelper.ZERO_ADDRESS
+        );
+        const qtyToMint = 1;
+        const newTokenSupply = await governorToken
+          .connect(creator)
+          .callStatic.mintToken(proposalId, qtyToMint);
+        expect(newTokenSupply).equals(qtyToMint);
+      });
+
+      it("Given user not executed token create proposal when treasurer try to mint then minting should fail", async function () {
+        const { governorToken, creator, godHolder } = await loadFixture(
+          deployFixture
+        );
+        await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
+        const { proposalId } = await getTokenCreateProposalId(
+          governorToken,
+          "tokenName",
+          creator
+        );
+        await governorToken.castVotePublic(proposalId, 0, 1);
+        await TestHelper.mineNBlocks(BLOCKS_COUNT);
+        const qtyToMint = 1;
+        await expect(
+          governorToken
+            .connect(creator)
+            .callStatic.mintToken(proposalId, qtyToMint)
+        ).revertedWith(
+          "GovernorTokenCreate: Mint not allowed as token doesn't exist for this proposal."
+        );
+      });
+
+      it("Given user executed token create proposal when minting fails from HTS then minting operation call should fail", async function () {
+        const { governorToken, creator, godHolder } = await loadFixture(
+          deployFixture
+        );
+        await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
+        const { proposalId } = await getTokenCreateProposalId(
+          governorToken,
+          "tokenName",
+          creator
+        );
+        await governorToken.castVotePublic(proposalId, 0, 1);
+        await TestHelper.mineNBlocks(BLOCKS_COUNT);
+        await expect(governorToken.getTokenAddress(proposalId)).revertedWith(
+          "Contract not executed yet!"
+        );
+        await governorToken.executeProposal(TITLE);
+        const tokenAddress = await governorToken.getTokenAddress(proposalId);
+        const tokenContract = await ethers.getContractAt(
+          "ERC20Mock",
+          tokenAddress
+        );
+        await tokenContract.setName("FAIL");
+        const qtyToMint = 1;
+        await expect(
+          governorToken
+            .connect(creator)
+            .callStatic.mintToken(proposalId, qtyToMint)
+        ).revertedWith("GovernorTokenCreate: Minting token failed");
+      });
+
+      it("Given user executed token create proposal when non-treasurer user try to mint then minting should fail", async function () {
+        const { governorToken, creator, godHolder, signers } =
+          await loadFixture(deployFixture);
+        await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
+        const { proposalId } = await getTokenCreateProposalId(
+          governorToken,
+          "tokenName",
+          creator
+        );
+        await governorToken.castVotePublic(proposalId, 0, 1);
+        await TestHelper.mineNBlocks(BLOCKS_COUNT);
+        await expect(governorToken.getTokenAddress(proposalId)).revertedWith(
+          "Contract not executed yet!"
+        );
+        await governorToken.executeProposal(TITLE);
+        const qtyToMint = 1;
+        const nonOwnerSigner = signers[3];
+        await expect(
+          governorToken
+            .connect(nonOwnerSigner)
+            .callStatic.mintToken(proposalId, qtyToMint)
+        ).revertedWith("GovernorTokenCreate: Only treasurer can mint tokens.");
+      });
+    });
+
+    describe("Burning scenarios ", async function () {
+      it("Given user executed token create proposal when user try to burn only treasurer is allowed", async function () {
+        const { governorToken, creator, godHolder } = await loadFixture(
+          deployFixture
+        );
+        await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
+        const { proposalId } = await getTokenCreateProposalId(
+          governorToken,
+          "tokenName",
+          creator
+        );
+        await governorToken.castVotePublic(proposalId, 0, 1);
+        await TestHelper.mineNBlocks(BLOCKS_COUNT);
+        await expect(governorToken.getTokenAddress(proposalId)).revertedWith(
+          "Contract not executed yet!"
+        );
+        await governorToken.executeProposal(TITLE);
+        expect(await governorToken.getTokenAddress(proposalId)).not.equals(
+          TestHelper.ZERO_ADDRESS
+        );
+        const qtyToMint = 2;
+        const totalSupply = await governorToken
+          .connect(creator)
+          .callStatic.mintToken(proposalId, qtyToMint);
+        expect(totalSupply).equals(qtyToMint);
+        const qtyToBurn = totalSupply - 1;
+        const newTokenSupply = await governorToken
+          .connect(creator)
+          .callStatic.burnToken(proposalId, qtyToBurn);
+        expect(newTokenSupply).equals(qtyToBurn);
+      });
+
+      it("Given user not executed token create proposal when treasurer try to burn then burning should fail", async function () {
+        const { governorToken, creator, godHolder } = await loadFixture(
+          deployFixture
+        );
+        await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
+        const { proposalId } = await getTokenCreateProposalId(
+          governorToken,
+          "tokenName",
+          creator
+        );
+        await governorToken.castVotePublic(proposalId, 0, 1);
+        await TestHelper.mineNBlocks(BLOCKS_COUNT);
+        const qtyToBurn = 1;
+        await expect(
+          governorToken
+            .connect(creator)
+            .callStatic.burnToken(proposalId, qtyToBurn)
+        ).revertedWith(
+          "GovernorTokenCreate: Burn not allowed as token doesn't exist for this proposal."
+        );
+      });
+
+      it("Given user executed token create proposal when burning fails from HTS then minting operation call should fail", async function () {
+        const { governorToken, creator, godHolder } = await loadFixture(
+          deployFixture
+        );
+        await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
+        const { proposalId } = await getTokenCreateProposalId(
+          governorToken,
+          "tokenName",
+          creator
+        );
+        await governorToken.castVotePublic(proposalId, 0, 1);
+        await TestHelper.mineNBlocks(BLOCKS_COUNT);
+        await expect(governorToken.getTokenAddress(proposalId)).revertedWith(
+          "Contract not executed yet!"
+        );
+        await governorToken.executeProposal(TITLE);
+        const tokenAddress = await governorToken.getTokenAddress(proposalId);
+        const tokenContract = await ethers.getContractAt(
+          "ERC20Mock",
+          tokenAddress
+        );
+        await tokenContract.setName("FAIL");
+        const qtyToBurn = 1;
+        await expect(
+          governorToken
+            .connect(creator)
+            .callStatic.burnToken(proposalId, qtyToBurn)
+        ).revertedWith("GovernorTokenCreate: Burn token failed");
+      });
+
+      it("Given user executed token create proposal when non-treasurer user try to burn then burning should fail", async function () {
+        const { governorToken, creator, godHolder, signers } =
+          await loadFixture(deployFixture);
+        await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
+        const { proposalId } = await getTokenCreateProposalId(
+          governorToken,
+          "tokenName",
+          creator
+        );
+        await governorToken.castVotePublic(proposalId, 0, 1);
+        await TestHelper.mineNBlocks(BLOCKS_COUNT);
+        await expect(governorToken.getTokenAddress(proposalId)).revertedWith(
+          "Contract not executed yet!"
+        );
+        await governorToken.executeProposal(TITLE);
+        const qtyToBurn = 1;
+        const nonOwnerSigner = signers[3];
+        await expect(
+          governorToken
+            .connect(nonOwnerSigner)
+            .callStatic.burnToken(proposalId, qtyToBurn)
+        ).revertedWith("GovernorTokenCreate: Only treasurer can burn tokens.");
+      });
+    });
+
+    describe("Transfer scenarios", async () => {
+      it("Given user executed token create proposal when user try to transfer zero or less than zero token then transfer should fail", async function () {
+        const { governorToken, creator, godHolder, signers } =
+          await loadFixture(deployFixture);
+        await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
+        const { proposalId } = await getTokenCreateProposalId(
+          governorToken,
+          "tokenName",
+          creator
+        );
+        await governorToken.castVotePublic(proposalId, 0, 1);
+        await TestHelper.mineNBlocks(BLOCKS_COUNT);
+        await expect(governorToken.getTokenAddress(proposalId)).revertedWith(
+          "Contract not executed yet!"
+        );
+        await governorToken.executeProposal(TITLE);
+        const qtyToTransfer = 0;
+
+        await expect(
+          governorToken
+            .connect(creator)
+            .transferToken(proposalId, signers[1].address, qtyToTransfer)
+        ).revertedWith(
+          "GovernorTokenCreate: Token quantity to transfer should be greater than zero."
+        );
+      });
+
+      it("Given user executed token create proposal when user try to transfer only treasurer is allowed", async function () {
+        const { governorToken, creator, godHolder, signers } =
+          await loadFixture(deployFixture);
+        await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
+        const { proposalId } = await getTokenCreateProposalId(
+          governorToken,
+          "tokenName",
+          creator
+        );
+        await governorToken.castVotePublic(proposalId, 0, 1);
+        await TestHelper.mineNBlocks(BLOCKS_COUNT);
+        await expect(governorToken.getTokenAddress(proposalId)).revertedWith(
+          "Contract not executed yet!"
+        );
+        await governorToken.executeProposal(TITLE);
+        const newToken = await governorToken.getTokenAddress(proposalId);
+        const qtyToTransfer = 2;
+        const token = await ethers.getContractAt("ERC20Mock", newToken);
+        await token.setUserBalance(governorToken.address, qtyToTransfer);
+        expect(await token.balanceOf(governorToken.address)).equals(
+          qtyToTransfer
+        );
+        await governorToken
+          .connect(creator)
+          .transferToken(proposalId, signers[1].address, qtyToTransfer);
+        const transferredQty = await token.balanceOf(signers[1].address);
+        expect(transferredQty).equals(qtyToTransfer);
+      });
+
+      it("Given user executed token create proposal when user try to transfer only treasurer is allowed", async function () {
+        const { governorToken, creator, godHolder, signers } =
+          await loadFixture(deployFixture);
+        await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
+        const { proposalId } = await getTokenCreateProposalId(
+          governorToken,
+          "tokenName",
+          creator
+        );
+        await governorToken.castVotePublic(proposalId, 0, 1);
+        await TestHelper.mineNBlocks(BLOCKS_COUNT);
+        await expect(governorToken.getTokenAddress(proposalId)).revertedWith(
+          "Contract not executed yet!"
+        );
+        await governorToken.executeProposal(TITLE);
+        const newToken = await governorToken.getTokenAddress(proposalId);
+        const qtyToTransfer = 2;
+        const token = await ethers.getContractAt("ERC20Mock", newToken);
+        await token.setUserBalance(governorToken.address, qtyToTransfer);
+        expect(await token.balanceOf(governorToken.address)).equals(
+          qtyToTransfer
+        );
+        await token.setTransaferFailed(true);
+        await expect(
+          governorToken
+            .connect(creator)
+            .transferToken(proposalId, signers[1].address, qtyToTransfer)
+        ).revertedWith("GovernorTokenCreate: Token transfer failed.");
+      });
+
+      it("Given user executed token create proposal when non-treasurer try to transfer then transfer should fail", async function () {
+        const { governorToken, creator, godHolder, signers } =
+          await loadFixture(deployFixture);
+        await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
+        const { proposalId } = await getTokenCreateProposalId(
+          governorToken,
+          "tokenName",
+          creator
+        );
+        await governorToken.castVotePublic(proposalId, 0, 1);
+        await TestHelper.mineNBlocks(BLOCKS_COUNT);
+        await expect(governorToken.getTokenAddress(proposalId)).revertedWith(
+          "Contract not executed yet!"
+        );
+        await governorToken.executeProposal(TITLE);
+        const nonTreasurer = signers[3];
+        const qtyToTransfer = 2;
+        await expect(
+          governorToken
+            .connect(nonTreasurer)
+            .transferToken(proposalId, signers[1].address, qtyToTransfer)
+        ).revertedWith(
+          "GovernorTokenCreate: Only treasurer can transfer tokens."
+        );
+      });
+
+      it("Given user not executed token create proposal when treasurer try to transfer then transfer should fail", async function () {
+        const { governorToken, creator, godHolder, signers } =
+          await loadFixture(deployFixture);
+        await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
+        const { proposalId } = await getTokenCreateProposalId(
+          governorToken,
+          "tokenName",
+          creator
+        );
+        await governorToken.castVotePublic(proposalId, 0, 1);
+        await TestHelper.mineNBlocks(BLOCKS_COUNT);
+        const qtyToTransfer = 2;
+        await expect(
+          governorToken
+            .connect(creator)
+            .transferToken(proposalId, signers[1].address, qtyToTransfer)
+        ).revertedWith(
+          "GovernorTokenCreate: Token transfer not allowed as token doesn't exist for this proposal."
+        );
+      });
+    });
+
+    it("Verify proposal is executed before minting and burning", async function () {
+      const { governorToken, creator, godHolder, signers } = await loadFixture(
+        deployFixture
+      );
+      await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
+      const { proposalId } = await getTokenCreateProposalId(
+        governorToken,
+        "tokenName",
+        creator
+      );
+      await governorToken.castVotePublic(proposalId, 0, 1);
+      await TestHelper.mineNBlocks(BLOCKS_COUNT);
+      await expect(governorToken.getTokenAddress(proposalId)).revertedWith(
+        "Contract not executed yet!"
+      );
+
+      await expect(
+        governorToken.connect(creator).callStatic.mintToken(proposalId, 2)
+      ).revertedWith(
+        "GovernorTokenCreate: Mint not allowed as token doesn't exist for this proposal."
+      );
+
+      await expect(
+        governorToken.connect(creator).callStatic.burnToken(proposalId, 1)
+      ).revertedWith(
+        "GovernorTokenCreate: Burn not allowed as token doesn't exist for this proposal."
       );
     });
 
