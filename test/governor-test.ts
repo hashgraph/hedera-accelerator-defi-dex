@@ -803,6 +803,34 @@ describe("Governor Tests", function () {
         expect(transferredQty).equals(qtyToTransfer);
       });
 
+      it("Given user executed token create proposal when treasurer try to transfer but has no sufficient balance then transfer should fail", async function () {
+        const { governorToken, creator, godHolder, signers } =
+          await loadFixture(deployFixture);
+        const proposalId = createTokenCreateProposalAndExecute(
+          godHolder,
+          governorToken,
+          creator
+        );
+        const newToken = await governorToken.getTokenAddress(proposalId);
+        const qtyToTransfer = 2;
+        const token = await ethers.getContractAt("ERC20Mock", newToken);
+        const contractBalanceLessThanQtyToTransfer = qtyToTransfer - 1;
+        await token.setUserBalance(
+          governorToken.address,
+          contractBalanceLessThanQtyToTransfer
+        );
+        expect(await token.balanceOf(governorToken.address)).equals(
+          contractBalanceLessThanQtyToTransfer
+        );
+        await expect(
+          governorToken
+            .connect(creator)
+            .transferToken(proposalId, signers[1].address, qtyToTransfer)
+        ).revertedWith(
+          "GovernorTokenCreate: Contract doesn't have sufficient balance please take treasurer help to mint it."
+        );
+      });
+
       it("Given user executed token create proposal when user try to transfer only treasurer is allowed", async function () {
         const { governorToken, creator, godHolder, signers } =
           await loadFixture(deployFixture);
