@@ -156,6 +156,29 @@ describe("Governor Tests", function () {
     return await verifyProposalCreationEvent(tx);
   }
 
+  const createTokenCreateProposalAndExecute = async (
+    godHolder: Contract,
+    governorToken: Contract,
+    creator: SignerWithAddress
+  ) => {
+    await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
+    const { proposalId } = await getTokenCreateProposalId(
+      governorToken,
+      "tokenName",
+      creator
+    );
+    await governorToken.castVotePublic(proposalId, 0, 1);
+    await TestHelper.mineNBlocks(BLOCKS_COUNT);
+    await expect(governorToken.getTokenAddress(proposalId)).revertedWith(
+      "Contract not executed yet!"
+    );
+    await governorToken.executeProposal(TITLE);
+    expect(await governorToken.getTokenAddress(proposalId)).not.equals(
+      TestHelper.ZERO_ADDRESS
+    );
+    return proposalId;
+  };
+
   describe("Common tests", async () => {
     it("Verify contract should be reverted for multiple initialization", async function () {
       const { governorText, ARGS } = await loadFixture(deployFixture);
@@ -578,20 +601,10 @@ describe("Governor Tests", function () {
         const { governorToken, creator, godHolder } = await loadFixture(
           deployFixture
         );
-        await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
-        const { proposalId } = await getTokenCreateProposalId(
+        const proposalId = createTokenCreateProposalAndExecute(
+          godHolder,
           governorToken,
-          "tokenName",
           creator
-        );
-        await governorToken.castVotePublic(proposalId, 0, 1);
-        await TestHelper.mineNBlocks(BLOCKS_COUNT);
-        await expect(governorToken.getTokenAddress(proposalId)).revertedWith(
-          "Contract not executed yet!"
-        );
-        await governorToken.executeProposal(TITLE);
-        expect(await governorToken.getTokenAddress(proposalId)).not.equals(
-          TestHelper.ZERO_ADDRESS
         );
         const qtyToMint = 1;
         const newTokenSupply = await governorToken
@@ -626,18 +639,11 @@ describe("Governor Tests", function () {
         const { governorToken, creator, godHolder } = await loadFixture(
           deployFixture
         );
-        await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
-        const { proposalId } = await getTokenCreateProposalId(
+        const proposalId = createTokenCreateProposalAndExecute(
+          godHolder,
           governorToken,
-          "tokenName",
           creator
         );
-        await governorToken.castVotePublic(proposalId, 0, 1);
-        await TestHelper.mineNBlocks(BLOCKS_COUNT);
-        await expect(governorToken.getTokenAddress(proposalId)).revertedWith(
-          "Contract not executed yet!"
-        );
-        await governorToken.executeProposal(TITLE);
         const tokenAddress = await governorToken.getTokenAddress(proposalId);
         const tokenContract = await ethers.getContractAt(
           "ERC20Mock",
@@ -655,18 +661,11 @@ describe("Governor Tests", function () {
       it("Given user executed token create proposal when non-treasurer user try to mint then minting should fail", async function () {
         const { governorToken, creator, godHolder, signers } =
           await loadFixture(deployFixture);
-        await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
-        const { proposalId } = await getTokenCreateProposalId(
+        const proposalId = createTokenCreateProposalAndExecute(
+          godHolder,
           governorToken,
-          "tokenName",
           creator
         );
-        await governorToken.castVotePublic(proposalId, 0, 1);
-        await TestHelper.mineNBlocks(BLOCKS_COUNT);
-        await expect(governorToken.getTokenAddress(proposalId)).revertedWith(
-          "Contract not executed yet!"
-        );
-        await governorToken.executeProposal(TITLE);
         const qtyToMint = 1;
         const nonOwnerSigner = signers[3];
         await expect(
@@ -682,20 +681,10 @@ describe("Governor Tests", function () {
         const { governorToken, creator, godHolder } = await loadFixture(
           deployFixture
         );
-        await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
-        const { proposalId } = await getTokenCreateProposalId(
+        const proposalId = createTokenCreateProposalAndExecute(
+          godHolder,
           governorToken,
-          "tokenName",
           creator
-        );
-        await governorToken.castVotePublic(proposalId, 0, 1);
-        await TestHelper.mineNBlocks(BLOCKS_COUNT);
-        await expect(governorToken.getTokenAddress(proposalId)).revertedWith(
-          "Contract not executed yet!"
-        );
-        await governorToken.executeProposal(TITLE);
-        expect(await governorToken.getTokenAddress(proposalId)).not.equals(
-          TestHelper.ZERO_ADDRESS
         );
         const qtyToMint = 2;
         const totalSupply = await governorToken
@@ -735,18 +724,11 @@ describe("Governor Tests", function () {
         const { governorToken, creator, godHolder } = await loadFixture(
           deployFixture
         );
-        await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
-        const { proposalId } = await getTokenCreateProposalId(
+        const proposalId = createTokenCreateProposalAndExecute(
+          godHolder,
           governorToken,
-          "tokenName",
           creator
         );
-        await governorToken.castVotePublic(proposalId, 0, 1);
-        await TestHelper.mineNBlocks(BLOCKS_COUNT);
-        await expect(governorToken.getTokenAddress(proposalId)).revertedWith(
-          "Contract not executed yet!"
-        );
-        await governorToken.executeProposal(TITLE);
         const tokenAddress = await governorToken.getTokenAddress(proposalId);
         const tokenContract = await ethers.getContractAt(
           "ERC20Mock",
@@ -764,18 +746,11 @@ describe("Governor Tests", function () {
       it("Given user executed token create proposal when non-treasurer user try to burn then burning should fail", async function () {
         const { governorToken, creator, godHolder, signers } =
           await loadFixture(deployFixture);
-        await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
-        const { proposalId } = await getTokenCreateProposalId(
+        const proposalId = createTokenCreateProposalAndExecute(
+          godHolder,
           governorToken,
-          "tokenName",
           creator
         );
-        await governorToken.castVotePublic(proposalId, 0, 1);
-        await TestHelper.mineNBlocks(BLOCKS_COUNT);
-        await expect(governorToken.getTokenAddress(proposalId)).revertedWith(
-          "Contract not executed yet!"
-        );
-        await governorToken.executeProposal(TITLE);
         const qtyToBurn = 1;
         const nonOwnerSigner = signers[3];
         await expect(
@@ -790,18 +765,11 @@ describe("Governor Tests", function () {
       it("Given user executed token create proposal when user try to transfer zero or less than zero token then transfer should fail", async function () {
         const { governorToken, creator, godHolder, signers } =
           await loadFixture(deployFixture);
-        await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
-        const { proposalId } = await getTokenCreateProposalId(
+        const proposalId = createTokenCreateProposalAndExecute(
+          godHolder,
           governorToken,
-          "tokenName",
           creator
         );
-        await governorToken.castVotePublic(proposalId, 0, 1);
-        await TestHelper.mineNBlocks(BLOCKS_COUNT);
-        await expect(governorToken.getTokenAddress(proposalId)).revertedWith(
-          "Contract not executed yet!"
-        );
-        await governorToken.executeProposal(TITLE);
         const qtyToTransfer = 0;
 
         await expect(
@@ -816,18 +784,11 @@ describe("Governor Tests", function () {
       it("Given user executed token create proposal when user try to transfer only treasurer is allowed", async function () {
         const { governorToken, creator, godHolder, signers } =
           await loadFixture(deployFixture);
-        await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
-        const { proposalId } = await getTokenCreateProposalId(
+        const proposalId = createTokenCreateProposalAndExecute(
+          godHolder,
           governorToken,
-          "tokenName",
           creator
         );
-        await governorToken.castVotePublic(proposalId, 0, 1);
-        await TestHelper.mineNBlocks(BLOCKS_COUNT);
-        await expect(governorToken.getTokenAddress(proposalId)).revertedWith(
-          "Contract not executed yet!"
-        );
-        await governorToken.executeProposal(TITLE);
         const newToken = await governorToken.getTokenAddress(proposalId);
         const qtyToTransfer = 2;
         const token = await ethers.getContractAt("ERC20Mock", newToken);
@@ -845,18 +806,11 @@ describe("Governor Tests", function () {
       it("Given user executed token create proposal when user try to transfer only treasurer is allowed", async function () {
         const { governorToken, creator, godHolder, signers } =
           await loadFixture(deployFixture);
-        await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
-        const { proposalId } = await getTokenCreateProposalId(
+        const proposalId = createTokenCreateProposalAndExecute(
+          godHolder,
           governorToken,
-          "tokenName",
           creator
         );
-        await governorToken.castVotePublic(proposalId, 0, 1);
-        await TestHelper.mineNBlocks(BLOCKS_COUNT);
-        await expect(governorToken.getTokenAddress(proposalId)).revertedWith(
-          "Contract not executed yet!"
-        );
-        await governorToken.executeProposal(TITLE);
         const newToken = await governorToken.getTokenAddress(proposalId);
         const qtyToTransfer = 2;
         const token = await ethers.getContractAt("ERC20Mock", newToken);
@@ -875,18 +829,11 @@ describe("Governor Tests", function () {
       it("Given user executed token create proposal when non-treasurer try to transfer then transfer should fail", async function () {
         const { governorToken, creator, godHolder, signers } =
           await loadFixture(deployFixture);
-        await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
-        const { proposalId } = await getTokenCreateProposalId(
+        const proposalId = createTokenCreateProposalAndExecute(
+          godHolder,
           governorToken,
-          "tokenName",
           creator
         );
-        await governorToken.castVotePublic(proposalId, 0, 1);
-        await TestHelper.mineNBlocks(BLOCKS_COUNT);
-        await expect(governorToken.getTokenAddress(proposalId)).revertedWith(
-          "Contract not executed yet!"
-        );
-        await governorToken.executeProposal(TITLE);
         const nonTreasurer = signers[3];
         const qtyToTransfer = 2;
         await expect(
