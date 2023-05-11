@@ -149,7 +149,7 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
         TokenCreateData storage tokenCreateData = _proposalData[proposalId];
         require(
             tokenCreateData.newTokenAddress != address(0x0),
-            "GovernorTokenCreate: Token tranfer not allowed as token doesn't exist for this proposal."
+            "GovernorTokenCreate: Token transfer not allowed as token doesn't exist for this proposal."
         );
         require(
             tokenCreateData.treasurer == msg.sender,
@@ -170,10 +170,9 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
             to,
             amount
         );
-
         require(
             responseCode == HederaResponseCodes.SUCCESS,
-            "GovernorTokenCreate: Token transfer done."
+            "GovernorTokenCreate: Token transfer failed."
         );
     }
 }

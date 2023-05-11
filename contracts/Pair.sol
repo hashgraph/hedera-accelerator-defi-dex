@@ -599,14 +599,14 @@ contract Pair is
         return reciever == address(this);
     }
 
-    function _checkIfContractHaveRequiredHBARBalance(int256 tokenQty) private {
+    function _checkIfContractHaveRequiredHBARBalance(int256 tokenQty) private view {
         require(
             _contractHBARBalance() >= uint256(tokenQty),
             "Contract does not have sufficient Hbars"
         );
     }
 
-    function _contractHBARBalance() private returns (uint256) {
+    function _contractHBARBalance() private view returns (uint256) {
         return
             uint256(
                 _tokenIsHBARX(pair.tokenA.tokenAddress)
@@ -647,7 +647,7 @@ contract Pair is
         }
     }
 
-    function _tokenIsHBARX(address token) private returns (bool) {
+    function _tokenIsHBARX(address token) private view returns (bool) {
         return token == configuration.getHbarxAddress();
     }
 
