@@ -1,9 +1,16 @@
+import { ethers } from "hardhat";
 import { expect } from "chai";
 import { Contract } from "ethers";
 import { TestHelper } from "./TestHelper";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { ethers } from "hardhat";
+
+interface TokenTransferData {
+  transferFromAccount: string;
+  transferToAccount: string;
+  tokenToTransfer: string;
+  transferTokenAmount: number;
+}
 
 describe("Governor Tests", function () {
   const QUORUM_THRESHOLD = 5;
@@ -90,11 +97,40 @@ describe("Governor Tests", function () {
     expect(balance).equals(targetBalance);
   };
 
-  const verifyProposalCreationEvent = async (tx: any) => {
+  const verifyTokenTransferProposalCreationEvent = async (
+    tx: any,
+    reqData: TokenTransferData
+  ) => {
+    const info = await verifyProposalCreationEvent(tx, false);
+    const eventData = ethers.utils.defaultAbiCoder.decode(
+      [
+        "address transferFromAccount",
+        "address transferToAccount",
+        "address tokenToTransfer",
+        "int256 transferTokenAmount",
+      ],
+      info.data
+    );
+    expect(eventData.transferFromAccount).equals(reqData.transferFromAccount);
+    expect(eventData.transferToAccount).equals(reqData.transferToAccount);
+    expect(eventData.tokenToTransfer).equals(reqData.tokenToTransfer);
+    expect(eventData.transferTokenAmount.toNumber()).equals(
+      reqData.transferTokenAmount
+    );
+    return info;
+  };
+
+  const verifyProposalCreationEvent = async (tx: any, empty: boolean) => {
     const { name, args } = await TestHelper.readLastEvent(tx);
+    expect(args.length).equals(8);
     expect(name).equals("ProposalDetails");
     expect(args.proposalId).not.equals("0");
-    return { proposalId: args.proposalId };
+    expect(args.description).equals(DESC);
+    expect(args.link).equals(LINK);
+    expect(args.startBlock).greaterThan(0);
+    expect(args.endBlock).greaterThan(0);
+    expect(ethers.utils.arrayify(args.data).length === 0).equals(empty);
+    return { proposalId: args.proposalId, data: args.data };
   };
 
   async function getTextProposalId(
@@ -105,7 +141,7 @@ describe("Governor Tests", function () {
     const tx = await governance
       .connect(account)
       .createProposal(title, DESC, LINK);
-    return await verifyProposalCreationEvent(tx);
+    return await verifyProposalCreationEvent(tx, true);
   }
 
   async function getUpgradeProposalId(
@@ -121,7 +157,7 @@ describe("Governor Tests", function () {
         TestHelper.ONE_ADDRESS,
         TestHelper.TWO_ADDRESS
       );
-    return await verifyProposalCreationEvent(tx);
+    return await verifyProposalCreationEvent(tx, true);
   }
 
   async function getTransferTokenProposalId(
@@ -130,19 +166,25 @@ describe("Governor Tests", function () {
     tokenAddress: string,
     amount: number
   ) {
+    const data: TokenTransferData = {
+      transferFromAccount: signers[1].address,
+      transferToAccount: signers[2].address,
+      tokenToTransfer: tokenAddress,
+      transferTokenAmount: amount,
+    };
     const tx = await instance
       .connect(signers[0])
       .createProposal(
         TITLE,
         DESC,
         LINK,
-        signers[1].address,
-        signers[2].address,
-        tokenAddress,
-        amount,
+        data.transferFromAccount,
+        data.transferToAccount,
+        data.tokenToTransfer,
+        data.transferTokenAmount,
         signers[0].address
       );
-    return await verifyProposalCreationEvent(tx);
+    return await verifyTokenTransferProposalCreationEvent(tx, data);
   }
 
   async function getTokenCreateProposalId(
@@ -153,7 +195,7 @@ describe("Governor Tests", function () {
     const tx = await governance
       .connect(account)
       .createProposal(TITLE, DESC, LINK, account.address, tokenName, "Symbol");
-    return await verifyProposalCreationEvent(tx);
+    return await verifyProposalCreationEvent(tx, true);
   }
 
   const createTokenCreateProposalAndExecute = async (

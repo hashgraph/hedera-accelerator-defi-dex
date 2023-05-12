@@ -25,25 +25,27 @@ contract GovernorTransferToken is
         address _transferToAccount,
         address _tokenToTransfer,
         int256 _transferTokenAmount,
-        address creater
+        address creator
     ) external returns (uint256) {
         if (_transferTokenAmount <= 0) {
             revert InvalidInput(
                 "GovernorTransferToken: Token transfer amount must be a positive number"
             );
         }
-        uint256 proposalId = _createProposal(
-            title,
-            description,
-            linkToDiscussion,
-            creater
-        );
-        _proposalData[proposalId] = TokenTransferData(
+        TokenTransferData memory tokenTransferData = TokenTransferData(
             _transferFromAccount,
             _transferToAccount,
             _tokenToTransfer,
             _transferTokenAmount
         );
+        uint256 proposalId = _createProposal(
+            title,
+            description,
+            linkToDiscussion,
+            creator,
+            abi.encode(tokenTransferData)
+        );
+        _proposalData[proposalId] = tokenTransferData;
         return proposalId;
     }
 
