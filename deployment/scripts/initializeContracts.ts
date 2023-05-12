@@ -1,4 +1,5 @@
 import dex from "../model/dex";
+import BigNumber from "bignumber.js";
 import Factory from "../../e2e-test/business/Factory";
 
 import { TokenId } from "@hashgraph/sdk";
@@ -17,44 +18,59 @@ const csDev = new ContractService();
 const createPair = async (
   factory: Factory,
   token0: TokenId,
-  token1: TokenId
+  token1: TokenId,
+  fee: BigNumber
 ) => {
   const feeCollectionAccountId = clientsInfo.operatorId;
-  const tokensOwnerKey = clientsInfo.treasureKey;
+
   return await factory.createPair(
     token0,
     token1,
     feeCollectionAccountId,
-    tokensOwnerKey
+    clientsInfo.uiUserKey,
+    clientsInfo.uiUserClient,
+    fee
   );
 };
 
 export async function main() {
   const provider = InstanceProvider.getInstance();
-  await provider.getConfiguration().initialize();
+
+  const configuration = provider.getConfiguration();
+  await configuration.initialize();
+  const fees = await configuration.getTransactionsFee();
 
   const factory = provider.getFactory();
-  await provider.getFactory().setupFactory();
+  await factory.setupFactory();
   try {
-    await createPair(factory, tokenB, tokenHBARX);
+    await createPair(factory, tokenB, tokenHBARX, fees[1]);
   } catch (error) {
-    console.log(`Create pair failed for ${tokenB} and ${tokenHBARX}`);
+    console.log(`Create pair failed for ${tokenB} and ${tokenHBARX}}`);
     console.error(error);
   }
 
   try {
-    await createPair(factory, tokenB, tokenC);
+    await createPair(factory, tokenA, tokenC, fees[3]);
   } catch (error) {
-    console.log(`Create pair failed for ${tokenB} and ${tokenC}`);
+    console.log(`Create pair failed for ${tokenA} and ${tokenC}`);
     console.error(error);
   }
 
   try {
-    await createPair(factory, tokenA, tokenGOD);
+    await createPair(factory, tokenA, tokenB, fees[1]);
+  } catch (error) {
+    console.log(`Create pair failed for ${tokenA} and ${tokenB}`);
+    console.error(error);
+  }
+
+  try {
+    await createPair(factory, tokenA, tokenGOD, fees[5]);
   } catch (error) {
     console.log(`Create pair failed for ${tokenA} and ${tokenGOD}`);
     console.error(error);
   }
+
+  await factory.getPairs();
 
   await provider.getFungibleTokenHolder().initialize();
   await provider.getFungibleTokenHolderFactory().initialize();
