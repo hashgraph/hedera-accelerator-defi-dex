@@ -1,8 +1,11 @@
 import Base from "./Base";
 import Pair from "./Pair";
-import { BigNumber } from "bignumber.js";
+
 import { Helper } from "../../utils/Helper";
+import { BigNumber } from "bignumber.js";
+import { Deployment } from "../../utils/deployContractOnTestnet";
 import { clientsInfo } from "../../utils/ClientManagement";
+import { ContractService } from "../../deployment/service/ContractService";
 import {
   ContractFunctionParameters,
   TokenId,
@@ -11,7 +14,6 @@ import {
   AccountId,
   ContractId,
 } from "@hashgraph/sdk";
-import { ContractService } from "../../deployment/service/ContractService";
 
 const GET_PAIR = "getPair";
 const GET_PAIRS = "getPairs";
@@ -24,11 +26,20 @@ export const METHOD_LP_IMPL = "upgradeLpTokenImplementation";
 export default class Factory extends Base {
   setupFactory = async (client: Client = clientsInfo.operatorClient) => {
     if (await this.isInitializationPending()) {
+      const deployment = new Deployment();
+      const deployedItems = await deployment.deployContracts([
+        ContractService.PAIR,
+        ContractService.LP_TOKEN,
+      ]);
+      const pair = deployedItems.get(ContractService.PAIR);
+      const lpToken = deployedItems.get(ContractService.LP_TOKEN);
       const args = new ContractFunctionParameters()
         .addAddress(this.htsAddress)
         .addAddress(clientsInfo.dexOwnerId.toSolidityAddress())
+        .addAddress(pair.address)
+        .addAddress(lpToken.address)
         .addAddress(this.configuration);
-      await this.execute(9_000_000, SETUP_FACTORY, client, args);
+      await this.execute(9_00_000, SETUP_FACTORY, client, args);
       console.log(`- Factory#${SETUP_FACTORY}(): done\n`);
       return;
     }
