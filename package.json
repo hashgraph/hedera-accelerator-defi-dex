@@ -45,6 +45,7 @@
     "ethers": "^5.7.2",
     "get-all-files": "^4.1.0",
     "hardhat": "^2.12.3",
+    "hardhat-contract-sizer": "^2.8.0",
     "husky": "^8.0.0",
     "md5-file": "^5.0.0",
     "prb-math": "^2.4.3",
