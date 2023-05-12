@@ -8,17 +8,6 @@ import "./IBaseHTS.sol";
 contract TokenOperations {
     using Bits for uint256;
 
-    function sortTokens(
-        address tokenA,
-        address tokenB
-    ) internal pure returns (address token0, address token1) {
-        require(tokenA != tokenB, "IDENTICAL_ADDRESSES");
-        require(tokenA != address(0), "ZERO_ADDRESS");
-        (token0, token1) = tokenA < tokenB
-            ? (tokenA, tokenB)
-            : (tokenB, tokenA);
-    }
-
     function _balanceOf(
         address token,
         address account

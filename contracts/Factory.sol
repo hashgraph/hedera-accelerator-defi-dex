@@ -7,18 +7,12 @@ import "./Configuration.sol";
 
 import "./common/IERC20.sol";
 import "./common/IEvents.sol";
-import "./common/TokenOperations.sol";
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
-contract Factory is
-    IEvents,
-    TokenOperations,
-    OwnableUpgradeable,
-    ReentrancyGuardUpgradeable
-{
+contract Factory is IEvents, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     struct PairDetail {
         address pair;
         address token;
@@ -172,6 +166,17 @@ contract Factory is
             }
         }
         return maxQtyPair;
+    }
+
+    function sortTokens(
+        address tokenA,
+        address tokenB
+    ) private pure returns (address token0, address token1) {
+        require(tokenA != tokenB, "IDENTICAL_ADDRESSES");
+        (token0, token1) = tokenA < tokenB
+            ? (tokenA, tokenB)
+            : (tokenB, tokenA);
+        require(token0 != address(0), "ZERO_ADDRESS");
     }
 
     function getLPTokenSymbol(
