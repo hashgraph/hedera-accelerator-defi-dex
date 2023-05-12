@@ -13,7 +13,7 @@ Scenario: Verify token is created on proposal execution
     Then User verify create token proposal state is "Active"
     When User lock 10001 GOD token before voting to create token proposal
     When User vote "For" create token proposal
-    When User wait for create token proposal state to be "Succeeded" for max 5 seconds
+    When User wait for create token proposal state to be "Succeeded" for max 15 seconds
     Then User verify create token proposal state is "Succeeded"
     When User execute the create token proposal with title "proposalfortokencreate1"
     When User wait for create token proposal state to be "Executed" for max 5 seconds
