@@ -51,7 +51,7 @@ export class GovernorCreateToken extends CommonSteps {
   )
   public async initialize() {
     console.log(
-      "*******************Starting governor contract upgrade test with following credentials*******************"
+      "*******************Starting governor token create test with following credentials*******************"
     );
     console.log("governorContractId :", tokenCreateContractId);
     console.log("godHolderContractId :", godHolderContractId);
@@ -80,10 +80,7 @@ export class GovernorCreateToken extends CommonSteps {
         proposalTitle,
         tokenName,
         tokenSymbol,
-        clientsInfo.operatorId,
-        clientsInfo.operatorKey.publicKey,
-        clientsInfo.operatorId,
-        clientsInfo.operatorKey.publicKey
+        clientsInfo.operatorId
       );
     } catch (e: any) {
       await godHolder.checkAndClaimGodTokens(clientsInfo.operatorClient);
@@ -188,13 +185,13 @@ export class GovernorCreateToken extends CommonSteps {
     const secondTokenId = this.getTokenId(secondTokenName);
     await baseHTS.associateTokenPublic(
       firstTokenId,
-      clientsInfo.treasureId,
-      clientsInfo.treasureKey
+      clientsInfo.operatorId,
+      clientsInfo.operatorKey
     );
     pairAddress = await factory.createPair(
       firstTokenId,
       secondTokenId,
-      clientsInfo.treasureId,
+      clientsInfo.operatorId,
       clientsInfo.operatorKey,
       clientsInfo.operatorClient
     );
@@ -324,9 +321,22 @@ export class GovernorCreateToken extends CommonSteps {
   @when(/User mints (\d*) units of "([^"]*)"/, undefined, 30000)
   public async mintToken(units: number, tokenName: string) {
     precision = await pair.getPrecisionValue(clientsInfo.operatorClient);
-    const tokenId = tokenIDNameMap.get(tokenName);
     const tokenQty = Common.withPrecision(units, precision);
-    await Common.mintToken(tokenId, Number(tokenQty));
+    await governor.mintToken(proposalId, tokenQty, clientsInfo.operatorClient);
+  }
+
+  @when(
+    /User transfer (\d*) units of Token-1 to user account/,
+    undefined,
+    30000
+  )
+  public async TransferToken(units: number) {
+    await governor.transferToken(
+      proposalId,
+      clientsInfo.operatorId.toSolidityAddress(),
+      new BigNumber(units * CommonSteps.withPrecision),
+      clientsInfo.operatorClient
+    );
   }
 
   @when(
@@ -375,6 +385,63 @@ export class GovernorCreateToken extends CommonSteps {
       clientsInfo.operatorKey,
       TokenId.fromString(dex.GOD_TOKEN_ID),
       clientsInfo.operatorClient
+    );
+  }
+
+  @when(
+    /User setup (\d+\.?\d*) as allowance amount for token locking for token create proposal/,
+    undefined,
+    30000
+  )
+  public async setAllowanceForTokenLocking(allowanceAmt: number) {
+    await this.setupAllowanceForTokenLocking(
+      godHolder,
+      allowanceAmt * CommonSteps.withPrecision,
+      clientsInfo.operatorId,
+      clientsInfo.operatorKey,
+      clientsInfo.operatorClient
+    );
+  }
+
+  @when(
+    /User set default allowance for token create proposal/,
+    undefined,
+    30000
+  )
+  public async setAllowanceForProposalCreation() {
+    await this.setupAllowanceForProposalCreation(
+      governor,
+      clientsInfo.operatorClient,
+      clientsInfo.operatorId,
+      clientsInfo.operatorKey
+    );
+  }
+
+  @when(
+    /User sets (\d+\.?\d*) as allowance amount for token "([^"]*)"/,
+    undefined,
+    30000
+  )
+  public async setAllowanceForToken(allowanceAmt: number, tokenName: string) {
+    const tokenId = this.getTokenId(tokenName);
+    await Common.setTokenAllowance(
+      tokenId,
+      pairContractId,
+      allowanceAmt * CommonSteps.withPrecision,
+      clientsInfo.operatorId,
+      clientsInfo.operatorKey,
+      clientsInfo.operatorClient
+    );
+  }
+
+  @when(/User associate "([^"]*)" token to account/)
+  public async associateToken(tokenName: string) {
+    const tokenId = this.getTokenId(tokenName);
+    await Common.associateTokensToAccount(
+      clientsInfo.operatorId,
+      [tokenId],
+      clientsInfo.operatorClient,
+      clientsInfo.operatorKey
     );
   }
 }

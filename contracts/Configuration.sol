@@ -14,6 +14,7 @@ contract Configuration is OwnableUpgradeable {
     using EnumerableMapUpgradeable for EnumerableMapUpgradeable.UintToUintMap;
     EnumerableMapUpgradeable.UintToUintMap private feeMap;
     string[] private urlsKeys;
+    address private hbarxAddress;
 
     error UrlKeyAlreadyExist(string key, string message);
 
@@ -25,6 +26,7 @@ contract Configuration is OwnableUpgradeable {
         urlsKeys.push(WEBSITE);
         urlsKeys.push(OTHERS);
         urlsKeys.push(LINKEDIN);
+        hbarxAddress = address(0x0000000000000000000000000000000000002182);
     }
 
     function setTransactionFee(
@@ -32,6 +34,14 @@ contract Configuration is OwnableUpgradeable {
         uint256 _value
     ) external onlyOwner {
         feeMap.set(_key, _value);
+    }
+
+    function getHbarxAddress() external view returns (address) {
+        return hbarxAddress;
+    }
+
+    function setHbarxAddress(address newAddress) external onlyOwner {
+        hbarxAddress = newAddress;
     }
 
     function getTransactionsFee()

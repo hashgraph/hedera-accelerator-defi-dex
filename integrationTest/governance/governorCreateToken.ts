@@ -1,11 +1,13 @@
 import Factory from "../../e2e-test/business/Factory";
 import Governor from "../../e2e-test/business/Governor";
 import GodHolder from "../../e2e-test/business/GodHolder";
+import { BigNumber } from "bignumber.js";
 
 import { Helper } from "../../utils/Helper";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { ContractService } from "../../deployment/service/ContractService";
 import { TokenId } from "@hashgraph/sdk";
+import Common from "../../e2e-test/business/Common";
 
 const csDev = new ContractService();
 const factoryContractId = csDev.getContractWithProxy(csDev.factoryContractName)
@@ -48,9 +50,6 @@ async function createTokenViaProposal(name: string, symbol: string) {
     name,
     symbol,
     clientsInfo.treasureId,
-    clientsInfo.treasureKey.publicKey,
-    clientsInfo.treasureId,
-    clientsInfo.treasureKey.publicKey,
     clientsInfo.operatorClient
   );
 
@@ -72,6 +71,27 @@ async function createTokenViaProposal(name: string, symbol: string) {
   if (!tokenId) {
     throw Error("failed to created token inside integration test");
   }
+  await governor.mintToken(
+    proposalId,
+    new BigNumber(10),
+    clientsInfo.treasureClient
+  );
+  await governor.burnToken(
+    proposalId,
+    new BigNumber(9),
+    clientsInfo.treasureClient
+  );
+  await Common.associateTokensToAccount(
+    clientsInfo.treasureId,
+    [tokenId!],
+    clientsInfo.treasureClient
+  );
+  await governor.transferToken(
+    proposalId,
+    clientsInfo.treasureId.toSolidityAddress(),
+    new BigNumber(1),
+    clientsInfo.treasureClient
+  );
   return tokenId;
 }
 

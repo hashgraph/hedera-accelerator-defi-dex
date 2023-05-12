@@ -3,14 +3,14 @@ import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { ethers, upgrades } from "hardhat";
 import { BigNumber } from "ethers";
+import { TestHelper } from "./TestHelper";
 
 describe("All Tests", function () {
   const newZeroAddress = "0x0000000000000000000000000000000000000000";
 
   describe("Splitter Upgradeable", function () {
     it("Verify if the Splitter contract is upgradeable safe ", async function () {
-      const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-      const mockBaseHTS = await MockBaseHTS.deploy(true, newZeroAddress);
+      const mockBaseHTS = await TestHelper.deployMockBaseHTS();
       const TokenCont = await ethers.getContractFactory("ERC20Mock");
       const tokenCont = await TokenCont.deploy(
         "tokenName",
@@ -48,8 +48,7 @@ describe("All Tests", function () {
     });
 
     it("Verify if the Splitter Initialisation works", async function () {
-      const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-      const mockBaseHTS = await MockBaseHTS.deploy(true, newZeroAddress);
+      const mockBaseHTS = await TestHelper.deployMockBaseHTS();
       const TokenCont = await ethers.getContractFactory("ERC20Mock");
       const tokenCont = await TokenCont.deploy(
         "tokenName",
@@ -129,8 +128,7 @@ describe("All Tests", function () {
   });
 
   async function deployFixture() {
-    const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-    const mockBaseHTS = await MockBaseHTS.deploy(true, newZeroAddress);
+    const mockBaseHTS = await TestHelper.deployMockBaseHTS();
 
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
     const tokenCont = await TokenCont.deploy(

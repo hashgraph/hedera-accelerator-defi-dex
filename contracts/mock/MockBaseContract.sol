@@ -9,13 +9,12 @@ import "./ERC20Mock.sol";
 import "hardhat/console.sol";
 
 contract MockBaseHTS is IBaseHTS {
-    address private immutable hbarx;
     uint256 private constant PASS_TXN_COUNT = 100;
     bytes32 revertCreateTokenSlot = keccak256("revertCreateTokenSlot");
     bytes32 passTransactionCountSlot = keccak256("passTransactionCountSlot");
     bytes32 tokenTestSlot = keccak256("tokenTestSlot");
 
-    constructor(bool _tokenTest, address _hbarx) {
+    constructor(bool _tokenTest) {
         StorageSlot.Uint256Slot storage passTransactionCount = StorageSlot
             .getUint256Slot(passTransactionCountSlot);
         passTransactionCount.value = PASS_TXN_COUNT;
@@ -23,8 +22,6 @@ contract MockBaseHTS is IBaseHTS {
         StorageSlot.BooleanSlot storage isTokenTest = StorageSlot
             .getBooleanSlot(tokenTestSlot);
         isTokenTest.value = _tokenTest;
-
-        hbarx = _hbarx;
     }
 
     function setPassTransactionCount(int256 _passTransactionCount) public {
@@ -66,21 +63,31 @@ contract MockBaseHTS is IBaseHTS {
     }
 
     function mintTokenPublic(
-        address,
+        address tokenAddress,
         int256 amount
-    ) external override returns (int256, int256) {
-        return (getResponseCode(), amount);
+    ) external view override returns (int256, int256) {
+        string memory tokenName = ERC20Mock(tokenAddress).name();
+        if (isFailureToken(tokenName)) {
+            return (23, amount);
+        } else {
+            return (22, amount);
+        }
     }
 
     function burnTokenPublic(
-        address,
+        address tokenAddress,
         int256 amount
-    ) external override returns (int256, int256) {
-        return (getResponseCode(), amount);
+    ) external view override returns (int256, int256) {
+        string memory tokenName = ERC20Mock(tokenAddress).name();
+        if (isFailureToken(tokenName)) {
+            return (23, amount);
+        } else {
+            return (22, amount);
+        }
     }
 
     function createFungibleTokenPublic(
-        IHederaTokenService.HederaToken memory,
+        IHederaTokenService.HederaToken memory tokenToCreate,
         uint256,
         uint256
     )
@@ -89,27 +96,26 @@ contract MockBaseHTS is IBaseHTS {
         override
         returns (int256 responseCode, address tokenAddress)
     {
-        uint revertCreateToken = StorageSlot
-            .getUint256Slot(revertCreateTokenSlot)
-            .value;
-
-        if (revertCreateToken == 1) {
-            revert();
-        }
-        responseCode = getResponseCode();
-        if (responseCode == 22) {
+        if (isFailureToken(tokenToCreate.name)) {
+            responseCode = 23;
+            tokenAddress = address(0x0);
+        } else {
             tokenAddress = address(
-                new ERC20Mock("newTokenName", "newTokenSymbol", 10, 10)
+                new ERC20Mock(tokenToCreate.name, tokenToCreate.symbol, 10, 10)
             );
+            responseCode = 22;
         }
         return (responseCode, tokenAddress);
+    }
+
+    function isFailureToken(string memory lsh) private pure returns (bool) {
+        return (keccak256(abi.encode(lsh)) == keccak256(abi.encode("FAIL")));
     }
 
     function getResponseCode() private returns (int) {
         uint256 _passTransactionCount = StorageSlot
             .getUint256Slot(passTransactionCountSlot)
             .value;
-
         if (_passTransactionCount > 1) {
             // _passTransactionCount shouldn't be < PASS_TXN_COUNT for call
             //  it might be > PASS_TXN_COUNT with delegatecall
@@ -123,10 +129,6 @@ contract MockBaseHTS is IBaseHTS {
         }
 
         return int(23);
-    }
-
-    function hbarxAddress() external view override returns (address) {
-        return hbarx;
     }
 
     function transferHBAR(

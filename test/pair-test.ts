@@ -3,8 +3,9 @@ import { expect } from "chai";
 
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { ethers, upgrades } from "hardhat";
-import { BigNumber } from "ethers";
+import { BigNumber, Contract } from "ethers";
 import { Helper } from "../utils/Helper";
+import { TestHelper } from "./TestHelper";
 
 describe("LPToken, Pair and Factory tests", function () {
   const tokenBAddress = "0x0000000000000000000000000000000000010001";
@@ -18,6 +19,31 @@ describe("LPToken, Pair and Factory tests", function () {
   const fee = BigNumber.from(1);
   const fee2 = BigNumber.from(2);
   const defaultSlippageInput = BigNumber.from(0);
+
+  async function lpTokenFixture() {
+    const signers = await TestHelper.getSigners();
+    const baseHTS = await TestHelper.deployMockBaseHTS();
+    const LP_TOKEN_ARGS = [
+      baseHTS.address,
+      signers[0].address,
+      "LpToken-Name",
+      "LpToken-Symbol",
+    ];
+    const lpTokenContract = await TestHelper.deployLogic("LPToken");
+    await lpTokenContract.initialize(...LP_TOKEN_ARGS);
+    const lpToken = await TestHelper.getContract(
+      "ERC20Mock",
+      await lpTokenContract.getLpTokenAddress()
+    );
+    return {
+      baseHTS,
+      signers,
+      lpTokenContract,
+      lpToken,
+      LP_TOKEN_ARGS,
+      user: signers[1],
+    };
+  }
 
   async function deployERC20Mock() {
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
@@ -33,7 +59,8 @@ describe("LPToken, Pair and Factory tests", function () {
   async function deployBasics(
     mockBaseHTS: any,
     tokenCont: any,
-    isLpTokenRequired: boolean
+    isLpTokenRequired: boolean,
+    configuration: Contract
   ) {
     const signers = await ethers.getSigners();
 
@@ -44,11 +71,14 @@ describe("LPToken, Pair and Factory tests", function () {
 
     const tokenCont2 = await deployERC20Mock();
     const token3Address = tokenCont2.address;
-    const LpTokenCont = await ethers.getContractFactory("MockLPToken");
-    const lpTokenCont = await upgrades.deployProxy(
-      LpTokenCont,
-      [mockBaseHTS.address, "tokenName", "tokenSymbol"],
-      { unsafeAllow: ["delegatecall"] }
+    const pair = await TestHelper.deployLogic("Pair");
+    const lpTokenCont = await TestHelper.deployLogic("MockLPToken");
+
+    await lpTokenCont.initialize(
+      mockBaseHTS.address,
+      pair.address,
+      "tokenName",
+      "tokenSymbol"
     );
 
     await lpTokenCont.deployed();
@@ -58,24 +88,15 @@ describe("LPToken, Pair and Factory tests", function () {
       await lpToken.setUserBalance(lpTokenCont.address, 100);
     }
 
-    const Configuration = await ethers.getContractFactory("Configuration");
-    const configuration = await Configuration.deploy();
-    await configuration.initialize();
-
-    const Pair = await ethers.getContractFactory("Pair");
-    const pair = await upgrades.deployProxy(
-      Pair,
-      [
-        mockBaseHTS.address,
-        lpTokenCont.address,
-        token1Address,
-        token2Address,
-        treasury,
-        fee,
-      ],
-      { unsafeAllow: ["delegatecall"] }
+    await pair.initialize(
+      mockBaseHTS.address,
+      lpTokenCont.address,
+      token1Address,
+      token2Address,
+      treasury,
+      fee,
+      configuration.address
     );
-    await pair.deployed();
 
     precision = await pair.getPrecisionValue();
     await tokenCont.setUserBalance(signers[0].address, precision.mul(1000));
@@ -100,10 +121,17 @@ describe("LPToken, Pair and Factory tests", function () {
     };
   }
 
+  async function deployConfiguration(): Promise<Contract> {
+    const Configuration = await ethers.getContractFactory("Configuration");
+    const configuration = await Configuration.deploy();
+    await configuration.initialize();
+    return configuration;
+  }
+
   describe("Pair Upgradeable", function () {
     it("Verify if the Pair contract is upgradeable safe ", async function () {
-      const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-      const mockBaseHTS = await MockBaseHTS.deploy(false, tokenCAddress);
+      const mockBaseHTS = await TestHelper.deployMockBaseHTS();
+      const configuration = await deployConfiguration();
       const Pair = await ethers.getContractFactory("Pair");
       const instance = await upgrades.deployProxy(
         Pair,
@@ -114,6 +142,7 @@ describe("LPToken, Pair and Factory tests", function () {
           tokenBAddress,
           treasury,
           fee,
+          configuration.address,
         ],
         { unsafeAllow: ["delegatecall"] }
       );
@@ -122,24 +151,25 @@ describe("LPToken, Pair and Factory tests", function () {
   });
 
   async function deployFixtureTokenTest() {
-    const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-    const mockBaseHTS = await MockBaseHTS.deploy(true, tokenCAddress);
+    const configuration = await deployConfiguration();
+    const mockBaseHTS = await TestHelper.deployMockBaseHTS();
     const tokenCont = await deployERC20Mock();
-    return deployBasics(mockBaseHTS, tokenCont, true);
+    return deployBasics(mockBaseHTS, tokenCont, true, configuration);
   }
 
   async function deployFixture() {
-    const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-    const mockBaseHTS = await MockBaseHTS.deploy(false, tokenCAddress);
+    const configuration = await deployConfiguration();
+    const mockBaseHTS = await TestHelper.deployMockBaseHTS();
     const tokenCont = await deployERC20Mock();
-    return deployBasics(mockBaseHTS, tokenCont, false);
+    return deployBasics(mockBaseHTS, tokenCont, false, configuration);
   }
 
   async function deployFixtureHBARX() {
+    const configuration = await deployConfiguration();
     const tokenCont = await deployERC20Mock();
-    const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-    const mockBaseHTS = await MockBaseHTS.deploy(true, tokenCont.address);
-    return deployBasics(mockBaseHTS, tokenCont, false);
+    const mockBaseHTS = await TestHelper.deployMockBaseHTS();
+    await configuration.setHbarxAddress(tokenCont.address);
+    return deployBasics(mockBaseHTS, tokenCont, false, configuration);
   }
 
   describe("HBAR pool test cases", async function () {
@@ -837,7 +867,8 @@ describe("LPToken, Pair and Factory tests", function () {
         tokenAAddress,
         tokenBAddress,
         treasury,
-        fee
+        fee,
+        zeroAddress
       )
     ).to.revertedWith("Initializable: contract is already initialized");
   });
@@ -1092,6 +1123,7 @@ describe("LPToken, Pair and Factory tests", function () {
           zeroAddress,
           treasury,
           negativeFee,
+          zeroAddress,
         ],
         { unsafeAllow: ["delegatecall"] }
       )
@@ -1335,11 +1367,13 @@ describe("LPToken, Pair and Factory tests", function () {
     });
 
     it("Add liquidity Fail Minting", async function () {
-      const { pair, token1Address, token2Address, mockBaseHTS } =
+      const { pair, token1Address, token2Address, lpTokenCont } =
         await loadFixture(deployFixture);
       const tokenBeforeQty = await pair.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
-      await mockBaseHTS.setPassTransactionCount(1);
+      const lpTokenAddress = await lpTokenCont.getLpTokenAddress();
+      const lpToken = await ethers.getContractAt("ERC20Mock", lpTokenAddress);
+      await lpToken.setName("FAIL"); //Forcing transfer to fail
       await expect(
         pair.addLiquidity(zeroAddress, token1Address, token2Address, 30, 30)
       ).to.revertedWith("LP token minting failed.");
@@ -1358,94 +1392,129 @@ describe("LPToken, Pair and Factory tests", function () {
         pair.addLiquidity(zeroAddress, token1Address, token2Address, 30, 30)
       ).to.revertedWith("LPToken: token transfer failed from contract.");
     });
+  });
 
-    it("allotLPToken fail for zero token count", async function () {
-      const { pair, lpTokenCont } = await loadFixture(deployFixture);
-      const tokenBeforeQty = await pair.getPairQty();
-      expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
-      await expect(
-        lpTokenCont.allotLPTokenFor(0, 10, zeroAddress)
-      ).to.revertedWith("Please provide positive token counts");
+  describe("LpToken Contract tests", async () => {
+    it("Verify contract should be reverted for multiple initialization", async function () {
+      const { lpTokenContract, LP_TOKEN_ARGS } = await loadFixture(
+        lpTokenFixture
+      );
+      await expect(lpTokenContract.initialize(...LP_TOKEN_ARGS)).revertedWith(
+        "Initializable: contract is already initialized"
+      );
     });
 
-    it("LPToken creation failed while initialize LP contract.", async function () {
-      const MockBaseHTS = await ethers.getContractFactory(
-        "MockBaseHTSWithTokenCreationFail"
+    it("Verify that lp-token address exist", async function () {
+      const { lpTokenContract } = await loadFixture(lpTokenFixture);
+      expect(await lpTokenContract.getLpTokenAddress()).not.equals(
+        TestHelper.ZERO_ADDRESS
       );
-      const mockBaseHTS = await MockBaseHTS.deploy();
+    });
 
-      const LpTokenCont = await ethers.getContractFactory("LPToken");
+    it("Verify token creation should be failed while initializing the contract", async function () {
+      const { baseHTS, signers } = await loadFixture(lpTokenFixture);
+      const tokenContract = await TestHelper.deployLogic("LPToken");
       await expect(
-        upgrades.deployProxy(
-          LpTokenCont,
-          [mockBaseHTS.address, "tokenName", "tokenSymbol"],
-          { unsafeAllow: ["delegatecall"] }
+        tokenContract.initialize(
+          baseHTS.address,
+          signers[0].address,
+          "FAIL",
+          "FAIL"
         )
-      ).to.revertedWith("LPToken: Token creation failed.");
+      ).revertedWith("LPToken: Token creation failed.");
     });
 
-    it("removeLPTokenFor fail for less lp Token", async function () {
-      const { pair, lpTokenCont } = await loadFixture(deployFixture);
-      const tokenBeforeQty = await pair.getPairQty();
-      expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
+    it("Verify allotLPTokenFor should be reverted if initialization is not done", async function () {
+      const lpTokenContract = await TestHelper.deployLogic("LPToken");
       await expect(
-        lpTokenCont.removeLPTokenFor(130, zeroAddress)
-      ).to.revertedWith("User Does not have lp amount");
+        lpTokenContract.allotLPTokenFor(10, 10, TestHelper.ONE_ADDRESS)
+      ).revertedWith("Ownable: caller is not the owner");
     });
 
-    it("verify removeLPTokenFor call should failed when given amount is <= 0", async function () {
-      const { lpTokenCont } = await loadFixture(deployFixtureTokenTest);
+    it("Verify allotLPTokenFor should be reverted for non-positive amount", async function () {
+      const { lpTokenContract, user } = await loadFixture(lpTokenFixture);
       await expect(
-        lpTokenCont.removeLPTokenFor(0, zeroAddress)
-      ).to.revertedWith("Please provide token counts");
+        lpTokenContract.allotLPTokenFor(0, 0, user.address)
+      ).revertedWith("Please provide positive token counts");
     });
 
-    it("verify removeLPTokenFor call should failed during transfer-token call", async function () {
-      const { mockBaseHTS, lpTokenCont, signers, lpToken } = await loadFixture(
-        deployFixtureTokenTest
+    it("Verify allotLPTokenFor should be reverted during mint", async function () {
+      const { lpTokenContract, user, lpToken } = await loadFixture(
+        lpTokenFixture
       );
-      await lpTokenCont.allotLPTokenFor(10, 10, signers[0].address);
+      await lpToken.setName("FAIL");
+      await expect(
+        lpTokenContract.allotLPTokenFor(30, 30, user.address)
+      ).revertedWith("LP token minting failed.");
+    });
+
+    it("Verify allotLPTokenFor should be reverted during transfer-token call", async function () {
+      const { lpTokenContract, user, lpToken } = await loadFixture(
+        lpTokenFixture
+      );
+      await lpToken.setUserBalance(lpTokenContract.address, 500);
       await lpToken.setTransaferFailed(true);
       await expect(
-        lpTokenCont.removeLPTokenFor(5, signers[0].address)
-      ).to.revertedWith("LPToken: token transfer failed to contract.");
+        lpTokenContract.allotLPTokenFor(100, 100, user.address)
+      ).revertedWith("LPToken: token transfer failed from contract.");
     });
 
-    it("verify removeLPTokenFor call should failed during burn-token call", async function () {
-      const { mockBaseHTS, lpTokenCont, signers } = await loadFixture(
-        deployFixtureTokenTest
+    it("Verify allotLPTokenFor should increase user balance", async function () {
+      const { lpTokenContract, user, lpToken } = await loadFixture(
+        lpTokenFixture
       );
-      await lpTokenCont.allotLPTokenFor(10, 10, signers[0].address);
-      await mockBaseHTS.setPassTransactionCount(1);
+      await lpToken.setUserBalance(lpTokenContract.address, 500);
+      await lpTokenContract.allotLPTokenFor(100, 100, user.address);
+      const userBalance = await lpTokenContract.lpTokenForUser(user.address);
+      expect(userBalance).equals(100);
+    });
+
+    it("Verify removeLPTokenFor should be reverted if initialization is not done", async function () {
+      const lpTokenContract = await TestHelper.deployLogic("LPToken");
       await expect(
-        lpTokenCont.removeLPTokenFor(5, signers[0].address)
+        lpTokenContract.removeLPTokenFor(101, TestHelper.ONE_ADDRESS)
+      ).revertedWith("Ownable: caller is not the owner");
+    });
+
+    it("Verify removeLPTokenFor should be reverted for non-positive amount", async function () {
+      const { lpTokenContract, user } = await loadFixture(lpTokenFixture);
+      await expect(
+        lpTokenContract.removeLPTokenFor(0, user.address)
+      ).revertedWith("Please provide token counts");
+    });
+
+    it("Verify removeLPTokenFor should be reverted if user don't have enough balance", async function () {
+      const { lpTokenContract, user, lpToken } = await loadFixture(
+        lpTokenFixture
+      );
+      await lpToken.setUserBalance(user.address, 100);
+      await expect(
+        lpTokenContract.removeLPTokenFor(101, user.address)
+      ).revertedWith("User Does not have lp amount");
+    });
+
+    it("verify removeLPTokenFor should be reverted during burn", async function () {
+      const { lpTokenContract, user, lpToken } = await loadFixture(
+        lpTokenFixture
+      );
+      await lpToken.setUserBalance(lpTokenContract.address, 10);
+      await lpTokenContract.allotLPTokenFor(10, 10, user.address);
+      await lpToken.setName("FAIL");
+      await expect(
+        lpTokenContract.removeLPTokenFor(5, user.address)
       ).to.revertedWith("LP token burn failed.");
     });
 
-    it("allotLPToken check LP Tokens", async function () {
-      const { pair, lpTokenCont, signers, lpToken } = await loadFixture(
-        deployFixtureTokenTest
+    it("Verify removeLPTokenFor should be reverted during transfer-token call", async function () {
+      const { lpTokenContract, user, lpToken } = await loadFixture(
+        lpTokenFixture
       );
-      const tokenBeforeQty = await pair.getPairQty();
-      expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
-      await lpToken.setUserBalance(lpTokenCont.address, 200);
-      await lpTokenCont.allotLPTokenFor(100, 100, signers[0].address);
-      const result = await lpTokenCont.lpTokenForUser(signers[0].address);
-      expect(result).to.equal(100);
-    });
-
-    it("verify allotLPToken call when lptoken not exist", async function () {
-      const LPToken = await ethers.getContractFactory("LPToken");
-      const instance = await LPToken.deploy();
+      await lpToken.setUserBalance(lpTokenContract.address, 10);
+      await lpTokenContract.allotLPTokenFor(10, 10, user.address);
+      await lpToken.setTransaferFailed(true);
       await expect(
-        instance.allotLPTokenFor(10, 10, userAddress)
-      ).to.revertedWith("Liquidity Token not initialized");
-    });
-
-    it("verify that lptoken address exist", async function () {
-      const { lpTokenCont } = await loadFixture(deployFixture);
-      const address = await lpTokenCont.getLpTokenAddress();
-      expect(address).to.not.equals("");
+        lpTokenContract.removeLPTokenFor(5, user.address)
+      ).revertedWith("LPToken: token transfer failed to contract.");
     });
   });
 

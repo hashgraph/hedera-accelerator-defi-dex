@@ -6,6 +6,7 @@ import "./common/IBaseHTS.sol";
 interface ILPToken {
     function initialize(
         IBaseHTS _tokenService,
+        address _owner,
         string memory tokenName,
         string memory tokenSymbol
     ) external payable;

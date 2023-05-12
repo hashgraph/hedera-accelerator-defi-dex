@@ -30,6 +30,12 @@ export enum Operation {
   DELEGATE,
 }
 
+enum TransactionState {
+  Pending,
+  Approved,
+  Executed,
+}
+
 const deployment = new Deployment();
 
 export default class MultiSigDao extends BaseDao {
@@ -93,12 +99,13 @@ export default class MultiSigDao extends BaseDao {
     client: Client = clientsInfo.operatorClient
   ) => {
     const args = new ContractFunctionParameters().addBytes32(txnHash);
-    const { result } = await this.execute(80_000, STATE, client, args);
+    const { result } = await this.execute(5_00_000, STATE, client, args);
     const hash = ethers.utils.hexlify(txnHash);
     const state = result.getInt256(0);
     console.log(
       `- MultiSigDao#${STATE}(): txnHash = ${hash}, state = ${state}\n`
     );
+    return state;
   };
 
   getTransactionInfo = async (
@@ -118,12 +125,14 @@ export default class MultiSigDao extends BaseDao {
     const bytes = Helper.getBytes(result, 3);
     const operation = result.getUint256(4);
     const nonce = result.getUint256(5);
+    const txnType = result.getUint256(6);
     const info = {
       to,
       value,
       operation,
       nonce,
       data: ethers.utils.hexlify(bytes),
+      type: txnType,
     };
     const _info = JSON.stringify(info);
     console.log(
@@ -136,14 +145,16 @@ export default class MultiSigDao extends BaseDao {
     to: string,
     data: Uint8Array,
     operation: Operation,
+    transactionType: number = 10,
     client: Client = clientsInfo.operatorClient
   ) => {
     const args = new ContractFunctionParameters()
       .addAddress(to)
       .addBytes(data)
-      .addUint8(operation);
+      .addUint8(operation)
+      .addUint256(transactionType);
     const { result } = await this.execute(
-      2_00_000,
+      3_000_000,
       PROPOSE_TRANSACTION,
       client,
       args
@@ -172,6 +183,88 @@ export default class MultiSigDao extends BaseDao {
     );
   };
 
+  proposeAddOwnerWithThreshold = async (
+    threshold: number,
+    newOwnerAccountId: AccountId,
+    gnosisSafe: HederaGnosisSafe,
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    const safeInterface = await gnosisSafe.getHederaGnosisSafeInterface();
+    const data = safeInterface.encodeFunctionData("addOwnerWithThreshold", [
+      newOwnerAccountId.toSolidityAddress(),
+      threshold,
+    ]);
+    return await this.proposeTransaction(
+      ContractId.fromString(gnosisSafe.contractId).toSolidityAddress(),
+      ethers.utils.arrayify(data),
+      Operation.CALL,
+      10,
+      client
+    );
+  };
+
+  proposeChangeThreshold = async (
+    threshold: number,
+    gnosisSafe: HederaGnosisSafe,
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    const safeInterface = await gnosisSafe.getHederaGnosisSafeInterface();
+    const data = safeInterface.encodeFunctionData("changeThreshold", [
+      threshold,
+    ]);
+    return await this.proposeTransaction(
+      ContractId.fromString(gnosisSafe.contractId).toSolidityAddress(),
+      ethers.utils.arrayify(data),
+      Operation.CALL,
+      10,
+      client
+    );
+  };
+
+  proposeRemoveOwnerWithThreshold = async (
+    threshold: number,
+    previousOwnerAccountId: AccountId,
+    ownerAccountId: AccountId,
+    gnosisSafe: HederaGnosisSafe,
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    const safeInterface = await gnosisSafe.getHederaGnosisSafeInterface();
+    const data = safeInterface.encodeFunctionData("removeOwner", [
+      previousOwnerAccountId.toSolidityAddress(),
+      ownerAccountId.toSolidityAddress(),
+      threshold,
+    ]);
+    return await this.proposeTransaction(
+      ContractId.fromString(gnosisSafe.contractId).toSolidityAddress(),
+      ethers.utils.arrayify(data),
+      Operation.CALL,
+      10,
+      client
+    );
+  };
+
+  proposeSwapOwnerWithThreshold = async (
+    previousOwnerAccountId: AccountId,
+    oldOwnerAccountId: AccountId,
+    newOwnerAccountId: AccountId,
+    gnosisSafe: HederaGnosisSafe,
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    const safeInterface = await gnosisSafe.getHederaGnosisSafeInterface();
+    const data = safeInterface.encodeFunctionData("swapOwner", [
+      previousOwnerAccountId.toSolidityAddress(),
+      oldOwnerAccountId.toSolidityAddress(),
+      newOwnerAccountId.toSolidityAddress(),
+    ]);
+    return await this.proposeTransaction(
+      ContractId.fromString(gnosisSafe.contractId).toSolidityAddress(),
+      ethers.utils.arrayify(data),
+      Operation.CALL,
+      10,
+      client
+    );
+  };
+
   proposeTransferTransaction = async (
     token: TokenId,
     receiver: AccountId | ContractId,
@@ -183,7 +276,7 @@ export default class MultiSigDao extends BaseDao {
       .addAddress(receiver.toSolidityAddress())
       .addUint256(amount);
     const { result } = await this.execute(
-      9_90_000,
+      3_000_000,
       PROPOSE_TRANSFER_TRANSACTION,
       tokenSenderClient,
       args
@@ -234,4 +327,8 @@ export default class MultiSigDao extends BaseDao {
     console.log(` - GnosisSafe#setup(): done\n`);
     return cId;
   }
+
+  getTransactionNumericState = async (transactionState: string) => {
+    return Object.values(TransactionState).indexOf(transactionState);
+  };
 }

@@ -43,6 +43,9 @@ const PROPOSAL_DETAILS = "getProposalDetails";
 const GET_CONTRACT_ADDRESSES = "getContractAddresses";
 const GET_TOKEN_ADDRESSES = "getTokenAddress";
 const GET_GOD_TOKEN_ADDRESSES = "getGODTokenAddress";
+const MINT_TOKEN = "mintToken";
+const BURN_TOKEN = "burnToken";
+const TRANSFER_TOKEN = "transferToken";
 
 enum ProposalState {
   Pending,
@@ -413,9 +416,6 @@ export default class Governor extends Base {
     tokenName: string,
     tokenSymbol: string,
     tokenTreasureId: AccountId,
-    tokenTreasurePublicKey: PublicKey,
-    tokenAdminId: AccountId,
-    tokenAdminPublicKey: PublicKey,
     client: Client = clientsInfo.operatorClient,
     description: string = DEFAULT_DESCRIPTION,
     link: string = DEFAULT_LINK
@@ -425,9 +425,6 @@ export default class Governor extends Base {
       .addString(description)
       .addString(link)
       .addAddress(tokenTreasureId.toSolidityAddress())
-      .addBytes(tokenTreasurePublicKey.toBytes())
-      .addAddress(tokenAdminId.toSolidityAddress())
-      .addBytes(tokenAdminPublicKey.toBytes())
       .addString(tokenName)
       .addString(tokenSymbol);
 
@@ -497,6 +494,68 @@ export default class Governor extends Base {
       tokenSenderAccountId,
       tokenSenderPrivateKey,
       client
+    );
+  }
+
+  async mintToken(
+    proposalId: string,
+    amount: BigNumber,
+    client: Client = clientsInfo.operatorClient
+  ) {
+    const args = new ContractFunctionParameters()
+      .addUint256(BigNumber(proposalId))
+      .addInt256(amount);
+
+    const { result } = await this.execute(3000000, MINT_TOKEN, client, args);
+
+    const newTokenSupply = result.getInt256(0).toFixed();
+    console.log(
+      `- GovernorTokenCreate#${MINT_TOKEN}(): new token supply = ${newTokenSupply}\n`
+    );
+
+    return newTokenSupply;
+  }
+
+  async burnToken(
+    proposalId: string,
+    amount: BigNumber,
+    client: Client = clientsInfo.operatorClient
+  ) {
+    const args = new ContractFunctionParameters()
+      .addUint256(BigNumber(proposalId))
+      .addInt256(amount);
+
+    const { result } = await this.execute(3000000, BURN_TOKEN, client, args);
+
+    const newTokenSupply = result.getInt256(0).toFixed();
+    console.log(
+      `- GovernorTokenCreate#${BURN_TOKEN}(): new token supply = ${newTokenSupply}\n`
+    );
+
+    return newTokenSupply;
+  }
+
+  async transferToken(
+    proposalId: string,
+    to: string,
+    amount: BigNumber,
+    client: Client = clientsInfo.operatorClient
+  ) {
+    const args = new ContractFunctionParameters()
+      .addUint256(BigNumber(proposalId))
+      .addAddress(to)
+      .addInt256(amount);
+
+    const { receipt } = await this.execute(
+      3000000,
+      TRANSFER_TOKEN,
+      client,
+      args,
+      clientsInfo.treasureKey
+    );
+
+    console.log(
+      `- GovernorTokenCreate#${TRANSFER_TOKEN}(): token transfer tx status = ${receipt.status}\n`
     );
   }
 

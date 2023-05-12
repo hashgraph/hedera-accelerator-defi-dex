@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { ethers, upgrades } from "hardhat";
+import { TestHelper } from "./TestHelper";
 
 describe("Vault Tests", function () {
   const rewardToken1 = "0x0000000000000000000000000000000000010001";
@@ -10,8 +11,7 @@ describe("Vault Tests", function () {
   const total = 100 * precision;
 
   it("Verify if the Vault Initialisation works", async function () {
-    const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-    const mockBaseHTS = await MockBaseHTS.deploy(true, newZeroAddress);
+    const mockBaseHTS = await TestHelper.deployMockBaseHTS();
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
     const tokenCont = await TokenCont.deploy(
       "tokenName",
@@ -36,8 +36,7 @@ describe("Vault Tests", function () {
   });
 
   async function deployFixture() {
-    const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-    const mockBaseHTS = await MockBaseHTS.deploy(false, newZeroAddress);
+    const mockBaseHTS = await TestHelper.deployMockBaseHTS();
 
     const TokenCont = await ethers.getContractFactory("ERC20Mock");
     const tokenCont = await TokenCont.deploy(
@@ -84,8 +83,7 @@ describe("Vault Tests", function () {
   }
 
   async function deployFailFixture() {
-    const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-    const mockBaseHTS = await MockBaseHTS.deploy(false, newZeroAddress);
+    const mockBaseHTS = await TestHelper.deployMockBaseHTS(false);
 
     const signers = await ethers.getSigners();
 

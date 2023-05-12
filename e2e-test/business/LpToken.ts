@@ -1,12 +1,8 @@
 import Base from "./Base";
-import { clientsInfo } from "../../utils/ClientManagement";
-import {
-  ContractFunctionParameters,
-  Client,
-  AccountId,
-  PrivateKey,
-} from "@hashgraph/sdk";
 import BigNumber from "bignumber.js";
+
+import { clientsInfo } from "../../utils/ClientManagement";
+import { Client, AccountId, ContractFunctionParameters } from "@hashgraph/sdk";
 
 const INITIALIZE = "initialize";
 const ALLOT_LP_TOKEN = "allotLPTokenFor";
@@ -20,11 +16,13 @@ export default class LpToken extends Base {
   initialize = async (
     tokenName: string,
     tokenSymbol: string,
+    ownerId: AccountId,
     client: Client = clientsInfo.operatorClient
   ) => {
     if (await this.isInitializationPending()) {
       const args = new ContractFunctionParameters()
         .addAddress(this.htsAddress)
+        .addAddress(ownerId.toSolidityAddress())
         .addString(tokenSymbol)
         .addString(tokenName);
       await this.execute(5_00_000, INITIALIZE, client, args, undefined, 60);
@@ -35,26 +33,14 @@ export default class LpToken extends Base {
   };
 
   getLpTokenAddress = async (client: Client = clientsInfo.operatorClient) => {
-    const { result } = await this.execute(
-      1000000,
-      GET_LP_TOKEN_ADDRESS,
-      client,
-      undefined,
-      undefined
-    );
+    const { result } = await this.execute(50_000, GET_LP_TOKEN_ADDRESS, client);
     const address = result.getAddress(0);
     console.log(`- LpToken#${GET_LP_TOKEN_ADDRESS}(): address = ${address}\n`);
     return address;
   };
 
   getAllLPTokenCount = async (client: Client = clientsInfo.operatorClient) => {
-    const { result } = await this.execute(
-      2000000,
-      GET_LP_TOKEN_COUNT,
-      client,
-      undefined,
-      undefined
-    );
+    const { result } = await this.execute(2_00_000, GET_LP_TOKEN_COUNT, client);
     const count = result.getInt256(0);
     console.log(`- LpToken#${GET_LP_TOKEN_COUNT}(): count = ${count}\n`);
     return count;
@@ -70,7 +56,7 @@ export default class LpToken extends Base {
       .addInt256(tokenBQty);
 
     const { result } = await this.execute(
-      2000000,
+      2_00_000,
       LPTOKEN_COUNT_FOR_GIVEN_TOKENS_QTY,
       client,
       args
@@ -87,43 +73,28 @@ export default class LpToken extends Base {
     tokenAQty: BigNumber,
     tokenBQty: BigNumber,
     receiverAccountId: AccountId,
-    receiverPrivateKey: PrivateKey,
     client: Client = clientsInfo.operatorClient
   ) => {
     const args = new ContractFunctionParameters()
       .addInt256(tokenAQty)
       .addInt256(tokenBQty)
       .addAddress(receiverAccountId.toSolidityAddress());
-    await this.execute(
-      900000,
-      ALLOT_LP_TOKEN,
-      client,
-      args,
-      receiverPrivateKey
-    );
-    const number = Number(tokenAQty.multipliedBy(tokenBQty));
-    const sqrt = Math.sqrt(number);
+    await this.execute(2_00_000, ALLOT_LP_TOKEN, client, args);
+    const sqrt = Math.sqrt(Number(tokenAQty.multipliedBy(tokenBQty)));
     console.log(
-      `- LpToken#${ALLOT_LP_TOKEN}(): quantities = [${tokenAQty} x ${tokenAQty}], sqrt = ${sqrt}\n`
+      `- LpToken#${ALLOT_LP_TOKEN}(): quantities = [${tokenAQty} x ${tokenAQty}], qty = ${sqrt}\n`
     );
   };
 
   removeLPToken = async (
     lpTokenQty: BigNumber,
     senderAccountId: AccountId,
-    senderPrivateKey: PrivateKey,
     client: Client = clientsInfo.operatorClient
   ) => {
     const args = new ContractFunctionParameters()
       .addInt256(lpTokenQty)
       .addAddress(senderAccountId.toSolidityAddress());
-    await this.execute(
-      3000000,
-      REMOVE_LP_TOKEN,
-      client,
-      args,
-      senderPrivateKey
-    );
+    await this.execute(2_00_000, REMOVE_LP_TOKEN, client, args);
     console.log(`- LpToken#${REMOVE_LP_TOKEN}(): qty = ${lpTokenQty}\n`);
   };
 
@@ -135,11 +106,10 @@ export default class LpToken extends Base {
       userAccountId.toSolidityAddress()
     );
     const { result } = await this.execute(
-      2000000,
+      2_00_000,
       LP_TOKEN_FOR_USER,
       client,
-      args,
-      undefined
+      args
     );
     const count = result.getInt256(0);
     console.log(`- LpToken#${LP_TOKEN_FOR_USER}(): count = ${count}\n`);

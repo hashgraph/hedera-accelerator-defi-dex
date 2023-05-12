@@ -9,6 +9,8 @@ const GET_TRANSACTIONS_FEE = "getTransactionsFee";
 const SET_TRANSACTIONS_FEE = "setTransactionFee";
 const ADD_URL_KEY = "addUrlKey";
 const GET_URL_KEYS = "getCommaSeparatedUrlKeys";
+const GET_HBARX_ADDRESS = "getHbarxAddress";
+const SET_HBARX_ADDRESS = "setHbarxAddress";
 
 export default class Configuration extends Base {
   initialize = async (client: Client = clientsInfo.operatorClient) => {
@@ -45,6 +47,32 @@ export default class Configuration extends Base {
       }, fees = ${JSON.stringify(fees)}\n`
     );
     return items;
+  };
+
+  getHbarxAddress = async (client: Client = clientsInfo.operatorClient) => {
+    const { result } = await this.execute(50000, GET_HBARX_ADDRESS, client);
+    const hbarAddress = result.getAddress(0);
+    console.log(
+      `- Configuration#${GET_HBARX_ADDRESS}(): address = ${hbarAddress}\n`
+    );
+    return hbarAddress;
+  };
+
+  setHbarxAddress = async (
+    hbarxAddress: string,
+    ownerKey: PrivateKey,
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    const args = new ContractFunctionParameters().addAddress(hbarxAddress);
+    const { receipt } = await this.execute(
+      50_000,
+      SET_HBARX_ADDRESS,
+      client,
+      args
+    );
+    console.log(
+      `- Configuration#${SET_HBARX_ADDRESS}(): tx status = ${receipt.status}\n`
+    );
   };
 
   addUrlKey = async (

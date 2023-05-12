@@ -2,6 +2,7 @@ import { expect } from "chai";
 
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { ethers, upgrades } from "hardhat";
+import { TestHelper } from "./TestHelper";
 
 describe("NFTHolder Tests", function () {
   const zeroAddress = "0x1111111000000000000000000000000000000000";
@@ -14,7 +15,7 @@ describe("NFTHolder Tests", function () {
 
   async function deployFixture() {
     const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-    const mockBaseHTS = await MockBaseHTS.deploy(true, zeroAddress);
+    const mockBaseHTS = await TestHelper.deployMockBaseHTS();
     return basicDeployments(mockBaseHTS);
   }
 

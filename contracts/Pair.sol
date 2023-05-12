@@ -9,6 +9,7 @@ import "./common/TokenOperations.sol";
 import "./common/IERC20.sol";
 import "./ILPToken.sol";
 import "./IPair.sol";
+import "./Configuration.sol";
 
 /// Emitted when the calculated slippage is over the slippage threshold.
 /// @param message a description of the error.
@@ -45,13 +46,16 @@ contract Pair is
 
     address private treasury;
 
+    Configuration configuration;
+
     function initialize(
         IBaseHTS _tokenService,
         ILPToken _lpTokenContract,
         address _tokenA,
         address _tokenB,
         address _treasury,
-        int256 _fee
+        int256 _fee,
+        Configuration _configuration
     ) public override initializer {
         __ReentrancyGuard_init();
         require(_fee > 0, "Pair: Fee should be greater than zero.");
@@ -59,6 +63,7 @@ contract Pair is
         lpTokenContract = _lpTokenContract;
         fee = _fee;
         treasury = _treasury;
+        configuration = _configuration;
         pair = Pair(Token(_tokenA, int256(0)), Token(_tokenB, int256(0)));
         _associateToken(address(this), _tokenA);
         _associateToken(address(this), _tokenB);
@@ -594,17 +599,17 @@ contract Pair is
         return reciever == address(this);
     }
 
-    function _checkIfContractHaveRequiredHBARBalance(int256 tokenQty) private {
+    function _checkIfContractHaveRequiredHBARBalance(int256 tokenQty) private view {
         require(
             _contractHBARBalance() >= uint256(tokenQty),
             "Contract does not have sufficient Hbars"
         );
     }
 
-    function _contractHBARBalance() private returns (uint256) {
+    function _contractHBARBalance() private view returns (uint256) {
         return
             uint256(
-                pair.tokenA.tokenAddress == tokenService.hbarxAddress()
+                _tokenIsHBARX(pair.tokenA.tokenAddress)
                     ? pair.tokenA.tokenQty
                     : pair.tokenB.tokenQty
             );
@@ -642,8 +647,8 @@ contract Pair is
         }
     }
 
-    function _tokenIsHBARX(address token) private returns (bool) {
-        return token == tokenService.hbarxAddress();
+    function _tokenIsHBARX(address token) private view returns (bool) {
+        return token == configuration.getHbarxAddress();
     }
 
     function isSlippageBreached(

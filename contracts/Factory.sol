@@ -60,10 +60,6 @@ contract Factory is Initializable, ReentrancyGuardUpgradeable {
         emit LogicUpdated(address(0), lpLogic, LP_TOKEN);
     }
 
-    function hbarxAddress() external returns (address) {
-        return service.hbarxAddress();
-    }
-
     function getPair(
         address _tokenA,
         address _tokenB,
@@ -202,22 +198,29 @@ contract Factory is Initializable, ReentrancyGuardUpgradeable {
         address _treasury,
         int256 _fee
     ) private returns (IPair pair) {
-        ILPToken _lpContract = _createLpContractInternally(_tokenA, _tokenB);
-
         pair = IPair(_createProxy(pairLogic));
+
+        ILPToken _lpContract = _createLpContractInternally(
+            _tokenA,
+            _tokenB,
+            address(pair)
+        );
+
         pair.initialize(
             service,
             _lpContract,
             _tokenA,
             _tokenB,
             _treasury,
-            _fee
+            _fee,
+            configuration
         );
     }
 
     function _createLpContractInternally(
         address _tokenA,
-        address _tokenB
+        address _tokenB,
+        address _owner
     ) private returns (ILPToken lp) {
         string memory lpTokenSymbol = getLPTokenSymbol(_tokenA, _tokenB);
         string memory lpTokenName = string.concat(
@@ -226,7 +229,12 @@ contract Factory is Initializable, ReentrancyGuardUpgradeable {
         );
 
         lp = ILPToken(_createProxy(lpLogic));
-        lp.initialize{value: msg.value}(service, lpTokenName, lpTokenSymbol);
+        lp.initialize{value: msg.value}(
+            service,
+            _owner,
+            lpTokenName,
+            lpTokenSymbol
+        );
     }
 
     function _createProxy(address _logic) private returns (address) {

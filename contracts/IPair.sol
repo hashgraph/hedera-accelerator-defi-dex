@@ -3,6 +3,7 @@ pragma solidity ^0.8.18;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./common/IBaseHTS.sol";
 import "./ILPToken.sol";
+import "./Configuration.sol";
 
 abstract contract IPair {
     struct Pair {
@@ -31,7 +32,8 @@ abstract contract IPair {
         address _tokenA,
         address _tokenB,
         address _treasury,
-        int256 _fee
+        int256 _fee,
+        Configuration _configuration
     ) public virtual;
 
     function addLiquidity(
