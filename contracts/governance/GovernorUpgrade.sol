@@ -27,7 +27,8 @@ contract GovernorUpgrade is GovernorCountingSimpleInternal {
             title,
             description,
             linkToDiscussion,
-            msg.sender
+            msg.sender,
+            bytes("")
         );
         _proposalData[proposalId] = TokenUpgradeData(
             proxyContract,

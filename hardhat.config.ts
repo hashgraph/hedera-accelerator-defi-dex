@@ -6,6 +6,7 @@ import "solidity-coverage";
 import "@openzeppelin/hardhat-upgrades";
 import "@nomiclabs/hardhat-ethers";
 import "@nomicfoundation/hardhat-chai-matchers";
+import "hardhat-contract-sizer";
 
 dotenv.config();
 
@@ -18,7 +19,7 @@ const config: HardhatUserConfig = {
         /// Note: A “runs” parameter of “1” will produce short but expensive code.
         ///       In contrast, a larger “runs” parameter will produce longer but more gas efficient code.
         ///       The maximum value of the parameter is 2**32-1. So it could change as required.
-        runs: 1,
+        runs: 750,
       },
     },
   },
@@ -29,6 +30,12 @@ const config: HardhatUserConfig = {
     hardhat: {
       allowUnlimitedContractSize: true,
     },
+  },
+  contractSizer: {
+    alphaSort: true,
+    disambiguatePaths: false,
+    runOnCompile: false,
+    strict: true,
   },
 };
 

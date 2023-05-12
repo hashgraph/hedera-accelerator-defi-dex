@@ -39,7 +39,8 @@ abstract contract GovernorCountingSimpleInternal is
         string description,
         string link,
         uint256 startBlock,
-        uint256 endBlock
+        uint256 endBlock,
+        bytes data
     );
 
     uint256 private constant PROPOSAL_CREATION_AMOUNT = 1e8;
@@ -93,7 +94,8 @@ abstract contract GovernorCountingSimpleInternal is
         string memory title,
         string memory description,
         string memory link,
-        address creator
+        address creator,
+        bytes memory data
     ) internal returns (uint256) {
         if (bytes(title).length == 0) {
             revert InvalidInput(
@@ -121,7 +123,8 @@ abstract contract GovernorCountingSimpleInternal is
             description,
             link,
             proposalSnapshot(proposalId),
-            proposalDeadline(proposalId)
+            proposalDeadline(proposalId),
+            data
         );
         return proposalId;
     }

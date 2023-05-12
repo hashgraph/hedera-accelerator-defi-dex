@@ -4,8 +4,13 @@ import { Helper } from "../../../utils/Helper";
 import { BigNumber } from "bignumber.js";
 import { Deployment } from "../../../utils/deployContractOnTestnet";
 import { clientsInfo } from "../../../utils/ClientManagement";
-import { Client, ContractFunctionParameters } from "@hashgraph/sdk";
+import {
+  Client,
+  ContractFunctionParameters,
+  ContractFunctionResult,
+} from "@hashgraph/sdk";
 import { ContractService } from "../../../deployment/service/ContractService";
+import { MirrorNodeService } from "../../../utils/MirrorNodeService";
 
 const deployment = new Deployment();
 
@@ -91,8 +96,14 @@ export default class MultiSigDAOFactory extends Base {
     client: Client = clientsInfo.dexOwnerClient
   ) => {
     const args = new ContractFunctionParameters().addAddress(newImpl);
-    await this.execute(35_000, UPGRADE_SAFE_LOGIC_IMPL, client, args);
+    const { result } = await this.execute(
+      90_000,
+      UPGRADE_SAFE_LOGIC_IMPL,
+      client,
+      args
+    );
     console.log(`- MultiSigDAOFactory#${UPGRADE_SAFE_LOGIC_IMPL}(): done\n`);
+    return this.readEventData(result);
   };
 
   upgradeSafeFactoryAddress = async (
@@ -100,18 +111,35 @@ export default class MultiSigDAOFactory extends Base {
     client: Client = clientsInfo.dexOwnerClient
   ) => {
     const args = new ContractFunctionParameters().addAddress(newImpl);
-    await this.execute(35_000, UPGRADE_SAFE_FACTORY_LOGIC_IMPL, client, args);
+    const { result } = await this.execute(
+      90_000,
+      UPGRADE_SAFE_FACTORY_LOGIC_IMPL,
+      client,
+      args
+    );
     console.log(
       `- MultiSigDAOFactory#${UPGRADE_SAFE_FACTORY_LOGIC_IMPL}(): done\n`
     );
+    return this.readEventData(result);
   };
 
   upgradeDaoLogicAddress = async (
     newImpl: string,
-    client: Client = clientsInfo.uiUserClient
+    client: Client = clientsInfo.dexOwnerClient
   ) => {
     const args = new ContractFunctionParameters().addAddress(newImpl);
-    await this.execute(35_000, UPGRADE_DAO_LOGIC_IMPL, client, args);
+    const { result } = await this.execute(
+      90_000,
+      UPGRADE_DAO_LOGIC_IMPL,
+      client,
+      args
+    );
     console.log(`- MultiSigDAOFactory#${UPGRADE_DAO_LOGIC_IMPL}(): done\n`);
+    return this.readEventData(result);
+  };
+
+  readEventData = async (result: ContractFunctionResult) => {
+    const map = await MirrorNodeService.getInstance().decodeLog(result.logs);
+    return map.get("LogicUpdated")![0];
   };
 }

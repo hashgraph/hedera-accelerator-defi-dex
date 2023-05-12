@@ -310,11 +310,15 @@ describe("LPToken, Pair and Factory tests", function () {
         token1Address,
         token2Address,
         configuration,
+        pair,
+        lpTokenCont,
       } = await loadFixture(deployFixture);
       // Given
       await factory.setUpFactory(
         mockBaseHTS.address,
         signers[0].address,
+        pair.address,
+        lpTokenCont.address,
         configuration.address
       );
 
@@ -343,11 +347,15 @@ describe("LPToken, Pair and Factory tests", function () {
         token1Address,
         token2Address,
         configuration,
+        pair,
+        lpTokenCont,
       } = await loadFixture(deployFixture);
       // Given
       await factory.setUpFactory(
         mockBaseHTS.address,
         signers[0].address,
+        pair.address,
+        lpTokenCont.address,
         configuration.address
       );
 
@@ -375,11 +383,15 @@ describe("LPToken, Pair and Factory tests", function () {
         token1Address,
         token2Address,
         configuration,
+        pair,
+        lpTokenCont,
       } = await loadFixture(deployFixture);
       // Given
       await factory.setUpFactory(
         mockBaseHTS.address,
         signers[0].address,
+        pair.address,
+        lpTokenCont.address,
         configuration.address
       );
 
@@ -397,11 +409,15 @@ describe("LPToken, Pair and Factory tests", function () {
         token1Address,
         token2Address,
         configuration,
+        pair,
+        lpTokenCont,
       } = await loadFixture(deployFixture);
       // Given
       await factory.setUpFactory(
         mockBaseHTS.address,
         signers[0].address,
+        pair.address,
+        lpTokenCont.address,
         configuration.address
       );
 
@@ -420,11 +436,15 @@ describe("LPToken, Pair and Factory tests", function () {
           token1Address,
           token2Address,
           configuration,
+          pair,
+          lpTokenCont,
         } = await loadFixture(deployFixture);
 
         await factory.setUpFactory(
           mockBaseHTS.address,
           signers[0].address,
+          pair.address,
+          lpTokenCont.address,
           configuration.address
         );
 
@@ -447,10 +467,13 @@ describe("LPToken, Pair and Factory tests", function () {
           token1Address,
           token2Address,
           configuration,
+          lpTokenCont,
         } = await loadFixture(deployFixture);
         await factory.setUpFactory(
           mockBaseHTS.address,
           signers[0].address,
+          pair.address,
+          lpTokenCont.address,
           configuration.address
         );
 
@@ -507,10 +530,13 @@ describe("LPToken, Pair and Factory tests", function () {
           token1Address,
           token2Address,
           configuration,
+          lpTokenCont,
         } = await loadFixture(deployFixture);
         await factory.setUpFactory(
           mockBaseHTS.address,
           signers[0].address,
+          pair.address,
+          lpTokenCont.address,
           configuration.address
         );
 
@@ -590,10 +616,13 @@ describe("LPToken, Pair and Factory tests", function () {
           token1Address,
           token2Address,
           configuration,
+          lpTokenCont,
         } = await loadFixture(deployFixture);
         await factory.setUpFactory(
           mockBaseHTS.address,
           signers[0].address,
+          pair.address,
+          lpTokenCont.address,
           configuration.address
         );
 
@@ -673,10 +702,13 @@ describe("LPToken, Pair and Factory tests", function () {
           token1Address,
           token2Address,
           configuration,
+          lpTokenCont,
         } = await loadFixture(deployFixture);
         await factory.setUpFactory(
           mockBaseHTS.address,
           signers[0].address,
+          pair.address,
+          lpTokenCont.address,
           configuration.address
         );
 
@@ -773,17 +805,27 @@ describe("LPToken, Pair and Factory tests", function () {
     });
 
     it("verify factory initization should be failed for subsequent initization call", async function () {
-      const { factory, mockBaseHTS, signers, configuration } =
-        await loadFixture(deployFixture);
+      const {
+        factory,
+        mockBaseHTS,
+        signers,
+        configuration,
+        pair,
+        lpTokenCont,
+      } = await loadFixture(deployFixture);
       await factory.setUpFactory(
         mockBaseHTS.address,
         signers[0].address,
+        pair.address,
+        lpTokenCont.address,
         configuration.address
       );
       await expect(
         factory.setUpFactory(
           mockBaseHTS.address,
           signers[0].address,
+          pair.address,
+          lpTokenCont.address,
           configuration.address
         )
       ).to.revertedWith("Initializable: contract is already initialized");
@@ -798,10 +840,14 @@ describe("LPToken, Pair and Factory tests", function () {
         token2Address,
         token3Address,
         configuration,
+        pair,
+        lpTokenCont,
       } = await loadFixture(deployFixture);
       await factory.setUpFactory(
         mockBaseHTS.address,
         signers[0].address,
+        pair.address,
+        lpTokenCont.address,
         configuration.address
       );
       await factory.createPair(token1Address, token2Address, treasury, fee);
@@ -813,11 +859,19 @@ describe("LPToken, Pair and Factory tests", function () {
     });
 
     it("Check For identical Tokens", async function () {
-      const { factory, mockBaseHTS, signers, configuration } =
-        await loadFixture(deployFixture);
+      const {
+        factory,
+        mockBaseHTS,
+        signers,
+        configuration,
+        pair,
+        lpTokenCont,
+      } = await loadFixture(deployFixture);
       await factory.setUpFactory(
         mockBaseHTS.address,
         signers[0].address,
+        pair.address,
+        lpTokenCont.address,
         configuration.address
       );
       await expect(
@@ -826,11 +880,19 @@ describe("LPToken, Pair and Factory tests", function () {
     });
 
     it("Check For zero Token address", async function () {
-      const { factory, mockBaseHTS, signers, configuration } =
-        await loadFixture(deployFixture);
+      const {
+        factory,
+        mockBaseHTS,
+        signers,
+        configuration,
+        pair,
+        lpTokenCont,
+      } = await loadFixture(deployFixture);
       await factory.setUpFactory(
         mockBaseHTS.address,
         signers[0].address,
+        pair.address,
+        lpTokenCont.address,
         configuration.address
       );
       await expect(
@@ -846,15 +908,23 @@ describe("LPToken, Pair and Factory tests", function () {
         token1Address,
         token2Address,
         configuration,
+        pair,
+        lpTokenCont,
       } = await loadFixture(deployFixture);
       await factory.setUpFactory(
         mockBaseHTS.address,
         signers[0].address,
+        pair.address,
+        lpTokenCont.address,
         configuration.address
       );
       await factory.createPair(token1Address, token2Address, treasury, fee);
-      const pair = await factory.getPair(token1Address, token2Address, fee);
-      expect(pair).to.be.not.equal(zeroAddress);
+      const pairFromFactory = await factory.getPair(
+        token1Address,
+        token2Address,
+        fee
+      );
+      expect(pairFromFactory).to.be.not.equal(zeroAddress);
     });
   });
 

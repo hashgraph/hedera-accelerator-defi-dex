@@ -1,37 +1,18 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.18;
+
 import "./Pair.sol";
-import "./LPToken.sol";
 import "./ILPToken.sol";
-import "./common/IERC20.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
-import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "./Configuration.sol";
 
-contract Factory is Initializable, ReentrancyGuardUpgradeable {
-    event PairCreated(address indexed pairAddress);
-    event LogicUpdated(
-        address indexed oldImplementation,
-        address indexed newImplementation,
-        string name
-    );
+import "./common/IERC20.sol";
+import "./common/IEvents.sol";
 
-    string private constant PAIR = "PairContract";
-    string private constant LP_TOKEN = "LpTokenContract";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
-    address private admin;
-    IBaseHTS private service;
-
-    address[] private allPairs;
-    mapping(address => mapping(address => mapping(int256 => address)))
-        private pairs;
-
-    address private pairLogic;
-    address private lpLogic;
-
-    Configuration configuration;
-
+contract Factory is IEvents, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     struct PairDetail {
         address pair;
         address token;
@@ -40,23 +21,38 @@ contract Factory is Initializable, ReentrancyGuardUpgradeable {
         int256 slippage;
     }
 
-    modifier ifAdmin() {
-        require(msg.sender == admin, "Factory: auth failed");
-        _;
-    }
+    event PairCreated(address indexed pairAddress);
+
+    string private constant PAIR = "PairContract";
+    string private constant LP_TOKEN = "LpTokenContract";
+
+    IBaseHTS private baseHTS;
+    address private proxyAdmin;
+
+    address private lpLogic;
+    address private pairLogic;
+
+    Configuration configuration;
+
+    address[] private allPairs;
+    mapping(address => mapping(address => mapping(int256 => address)))
+        private pairs;
 
     function setUpFactory(
-        IBaseHTS _service,
-        address _admin,
+        IBaseHTS _baseHTS,
+        address _proxyAdmin,
+        address _pairLogic,
+        address _lpLogic,
         Configuration _configuration
     ) public initializer {
         __ReentrancyGuard_init();
-        service = _service;
-        admin = _admin;
-        pairLogic = address(new Pair());
+        _transferOwnership(_proxyAdmin);
+        baseHTS = _baseHTS;
+        proxyAdmin = _proxyAdmin;
+        pairLogic = _pairLogic;
+        lpLogic = _lpLogic;
         configuration = _configuration;
         emit LogicUpdated(address(0), pairLogic, PAIR);
-        lpLogic = address(new LPToken());
         emit LogicUpdated(address(0), lpLogic, LP_TOKEN);
     }
 
@@ -95,12 +91,12 @@ contract Factory is Initializable, ReentrancyGuardUpgradeable {
         }
     }
 
-    function upgradePairImplementation(address _newImpl) external ifAdmin {
+    function upgradePairImplementation(address _newImpl) external onlyOwner {
         emit LogicUpdated(pairLogic, _newImpl, PAIR);
         pairLogic = _newImpl;
     }
 
-    function upgradeLpTokenImplementation(address _newImpl) external ifAdmin {
+    function upgradeLpTokenImplementation(address _newImpl) external onlyOwner {
         emit LogicUpdated(lpLogic, _newImpl, LP_TOKEN);
         lpLogic = _newImpl;
     }
@@ -207,7 +203,7 @@ contract Factory is Initializable, ReentrancyGuardUpgradeable {
         );
 
         pair.initialize(
-            service,
+            baseHTS,
             _lpContract,
             _tokenA,
             _tokenB,
@@ -230,7 +226,7 @@ contract Factory is Initializable, ReentrancyGuardUpgradeable {
 
         lp = ILPToken(_createProxy(lpLogic));
         lp.initialize{value: msg.value}(
-            service,
+            baseHTS,
             _owner,
             lpTokenName,
             lpTokenSymbol
@@ -239,6 +235,7 @@ contract Factory is Initializable, ReentrancyGuardUpgradeable {
 
     function _createProxy(address _logic) private returns (address) {
         bytes memory _data;
-        return address(new TransparentUpgradeableProxy(_logic, admin, _data));
+        return
+            address(new TransparentUpgradeableProxy(_logic, proxyAdmin, _data));
     }
 }
