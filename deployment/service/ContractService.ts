@@ -10,6 +10,8 @@ export class ContractService {
   public static NFT_DAO_FACTORY = "nftdaofactory";
   public static FT_DAO_FACTORY = "governancedaofactory";
   public static GOVERNOR_TT = "governortransfertoken";
+  public static PAIR = "pair";
+  public static LP_TOKEN = "lptoken";
 
   public governanceDaoFactory = "governancedaofactory";
   public factoryContractName = "factory";
