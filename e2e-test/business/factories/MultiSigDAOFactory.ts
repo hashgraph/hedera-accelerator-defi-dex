@@ -139,9 +139,7 @@ export default class MultiSigDAOFactory extends Base {
   };
 
   readEventData = async (result: ContractFunctionResult) => {
-    const map = await MirrorNodeService.getInstance()
-      .enableLogs()
-      .decodeLog(result.logs);
+    const map = await MirrorNodeService.getInstance().decodeLog(result.logs);
     return map.get("LogicUpdated")![0];
   };
 }
