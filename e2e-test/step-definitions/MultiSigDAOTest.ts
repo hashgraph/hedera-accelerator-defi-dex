@@ -7,15 +7,18 @@ import Common from "../business/Common";
 import { expect } from "chai";
 import { binding, given, then, when } from "cucumber-tsflow";
 import { TokenId, AccountId } from "@hashgraph/sdk";
-import { ethers } from "hardhat";
 import { Helper } from "../../utils/Helper";
+import MultiSigDAOFactory from "../../e2e-test/business/factories/MultiSigDAOFactory";
+import { ContractId } from "@hashgraph/sdk";
+import { main as deployContract } from "../../deployment/scripts/logic";
 
 const csDev = new ContractService();
 const transferTokenId = TokenId.fromString(dex.TOKEN_LAB49_1);
 
 const contract = csDev.getContractWithProxy(ContractService.MULTI_SIG);
 const multiSigDAOContractId = contract.transparentProxyId!;
-const multiSigDAO = new MultiSigDao(multiSigDAOContractId);
+let multiSigDAO: MultiSigDao;
+multiSigDAO = new MultiSigDao(multiSigDAOContractId);
 const withPrecision = 1e8;
 const DAO_OWNERS_INFO = [
   {
@@ -29,17 +32,21 @@ const DAO_OWNERS_INFO = [
 ];
 const DAO_OWNERS_ADDRESSES = DAO_OWNERS_INFO.map((item: any) => item.address);
 
+const factoryContractId = new ContractService().getContractWithProxy(
+  ContractService.MULTI_SIG_FACTORY
+).transparentProxyId!;
+const daoFactory = new MultiSigDAOFactory(factoryContractId);
+
 let gnosisSafe: HederaGnosisSafe;
 let txnHash: any;
 let targetTokenBalFromPayeeAcct: any;
 let targetTokenAmtToBeTransferred: number;
 let errorMsg: string;
 let targetTokenBalFromPayerAcct: any;
-let approvalThreshold: number;
 let listOfOwners: string[];
-enum ABIs {
-  "function changeThreshold(uint256 _threshold)",
-}
+let daoAddress: string;
+let contractNewAddress: string;
+let upgradeResult: any;
 
 @binding()
 export class MultiSigDAOSteps {
@@ -349,5 +356,108 @@ export class MultiSigDAOSteps {
       clientsInfo.uiUserClient
     );
     expect(actualNumberOfOwners.length).to.eql(Number(numberOfOwners));
+  }
+
+  @given(/User initializes MultiSigDAOFactory Contract/, undefined, 30000)
+  public async initializeMultiSigDaoFactory() {
+    console.log(
+      "*******************Starting multisigdao factory test with following credentials*******************"
+    );
+    console.log("MultiSigDAOFactoryContractId :", daoFactory.contractId);
+    await daoFactory.initialize();
+  }
+
+  @when(
+    /User create MultiSigDAO with name "([^"]*)" and logo as "([^"]*)" via factory/,
+    undefined,
+    30000
+  )
+  public async createDAOSafe(name: string, logo: string) {
+    daoAddress = await daoFactory.createDAO(
+      name,
+      logo,
+      DAO_OWNERS_ADDRESSES,
+      DAO_OWNERS_ADDRESSES.length,
+      false,
+      clientsInfo.uiUserId.toSolidityAddress(),
+      clientsInfo.uiUserClient
+    );
+
+    const multiSigDAOId = ContractId.fromSolidityAddress(daoAddress).toString();
+    multiSigDAO = new MultiSigDao(multiSigDAOId);
+    const safeContractId =
+      await multiSigDAO.getHederaGnosisSafeContractAddress();
+    gnosisSafe = new HederaGnosisSafe(safeContractId.toString());
+  }
+
+  @when(
+    /User tries to create the multisigdao with name as "([^"]*)" and logo as "([^"]*)"/,
+    undefined,
+    30000
+  )
+  public async createDAOFail(name: string, logo: string) {
+    try {
+      daoAddress = await daoFactory.createDAO(
+        name,
+        logo,
+        DAO_OWNERS_ADDRESSES,
+        DAO_OWNERS_ADDRESSES.length,
+        false,
+        clientsInfo.uiUserId.toSolidityAddress(),
+        clientsInfo.uiUserClient
+      );
+
+      const multiSigDAOId =
+        ContractId.fromSolidityAddress(daoAddress).toString();
+      multiSigDAO = new MultiSigDao(multiSigDAOId);
+      const safeContractId =
+        await multiSigDAO.getHederaGnosisSafeContractAddress();
+      gnosisSafe = new HederaGnosisSafe(safeContractId.toString());
+    } catch (e: any) {
+      errorMsg = e.message;
+    }
+  }
+
+  @when(/User deploy "([^"]*)" contract/, undefined, 30000)
+  public async contractDeploy(contractName: string) {
+    contractNewAddress = (await deployContract(contractName)).address;
+  }
+
+  @when(/User upgrade the DAO logic address/, undefined, 30000)
+  public async upgradeDAOLogicAddress() {
+    upgradeResult = await daoFactory.upgradeDaoLogicAddress(
+      contractNewAddress,
+      clientsInfo.dexOwnerClient
+    );
+  }
+
+  @then(/User verify contract logic address is updated/, undefined, 30000)
+  public async verifyDAOLogicIsUpdated() {
+    expect(upgradeResult.newImplementation).not.to.eql(
+      upgradeResult.oldImplementation
+    );
+    expect(upgradeResult.newImplementation.toString().toUpperCase()).to.eql(
+      contractNewAddress.toUpperCase()
+    );
+  }
+
+  @when(/User upgrade the hedera gnosis safe logic address/, undefined, 30000)
+  public async upgradeSafeLogicAddress() {
+    upgradeResult = await daoFactory.upgradeSafeLogicAddress(
+      contractNewAddress,
+      clientsInfo.dexOwnerClient
+    );
+  }
+
+  @when(
+    /User upgrade the hedera gnosis safe proxy factory logic address/,
+    undefined,
+    30000
+  )
+  public async upgradeGnosisSafeProxyFactory() {
+    upgradeResult = await daoFactory.upgradeSafeFactoryAddress(
+      contractNewAddress,
+      clientsInfo.dexOwnerClient
+    );
   }
 }
