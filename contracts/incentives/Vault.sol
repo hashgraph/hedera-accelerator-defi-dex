@@ -69,6 +69,7 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
         require(_amount > 0, "Vault: withdraw amount must be a postive number");
         _validateLockingPeriod(msg.sender);
         claimAllRewards(msg.sender);
+        _withdraw(msg.sender, _amount);
     }
 
     function addReward(
@@ -101,6 +102,14 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
         return usersContributionInfo[_user].total;
     }
 
+    function getTotalVolume() external view override returns (uint256) {
+        return totalSupply;
+    }
+
+    function getLockingPeriod() external view override returns (uint256) {
+        return lockingPeriod;
+    }
+
     function claimAllRewards(address _user) public override {
         this.claimSpecificRewards(_user, rewardTokens);
     }
@@ -118,14 +127,6 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
                 revert("Vault: invalid token");
             }
         }
-    }
-
-    function getTotalVolume() external view override returns (uint256) {
-        return totalSupply;
-    }
-
-    function getLockingPeriod() external view override returns (uint256) {
-        return lockingPeriod;
     }
 
     function _claimReward(
