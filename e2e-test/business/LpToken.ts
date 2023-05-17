@@ -52,8 +52,8 @@ export default class LpToken extends Base {
     client: Client = clientsInfo.operatorClient
   ) => {
     const args = new ContractFunctionParameters()
-      .addInt256(tokenAQty)
-      .addInt256(tokenBQty);
+      .addUint256(tokenAQty)
+      .addUint256(tokenBQty);
 
     const { result } = await this.execute(
       2_00_000,
@@ -76,8 +76,8 @@ export default class LpToken extends Base {
     client: Client = clientsInfo.operatorClient
   ) => {
     const args = new ContractFunctionParameters()
-      .addInt256(tokenAQty)
-      .addInt256(tokenBQty)
+      .addUint256(tokenAQty)
+      .addUint256(tokenBQty)
       .addAddress(receiverAccountId.toSolidityAddress());
     await this.execute(2_00_000, ALLOT_LP_TOKEN, client, args);
     const sqrt = Math.sqrt(Number(tokenAQty.multipliedBy(tokenBQty)));
@@ -92,7 +92,7 @@ export default class LpToken extends Base {
     client: Client = clientsInfo.operatorClient
   ) => {
     const args = new ContractFunctionParameters()
-      .addInt256(lpTokenQty)
+      .addUint256(lpTokenQty)
       .addAddress(senderAccountId.toSolidityAddress());
     await this.execute(2_00_000, REMOVE_LP_TOKEN, client, args);
     console.log(`- LpToken#${REMOVE_LP_TOKEN}(): qty = ${lpTokenQty}\n`);

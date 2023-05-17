@@ -116,7 +116,7 @@ contract Pair is
             "Add liquidity: Transfering token B to contract failed with status code"
         );
 
-        lpTokenContract.allotLPTokenFor(_tokenAQty, _tokenBQty, fromAccount);
+        lpTokenContract.allotLPTokenFor(uint256(_tokenAQty), uint256(_tokenBQty), fromAccount);
     }
 
     function removeLiquidity(
@@ -124,7 +124,7 @@ contract Pair is
         int256 _lpToken
     ) external virtual override nonReentrant {
         require(
-            lpTokenContract.lpTokenForUser(toAccount) >= _lpToken,
+            int256(lpTokenContract.lpTokenForUser(toAccount)) >= _lpToken,
             "user does not have sufficient lpTokens"
         );
         (int256 _tokenAQty, int256 _tokenBQty) = calculateTokenstoGetBack(
@@ -142,7 +142,7 @@ contract Pair is
             "Remove liquidity: Transferring token A to contract failed with status code",
             "Remove liquidity: Transferring token B to contract failed with status code"
         );
-        lpTokenContract.removeLPTokenFor(_lpToken, toAccount);
+        lpTokenContract.removeLPTokenFor(uint256(_lpToken), toAccount);
     }
 
     function getPairQty() public view returns (int256, int256) {
@@ -385,7 +385,7 @@ contract Pair is
     function calculateTokenstoGetBack(
         int256 _lpToken
     ) internal view returns (int256, int256) {
-        int256 allLPTokens = lpTokenContract.getAllLPTokenCount();
+        int256 allLPTokens = int256(lpTokenContract.getAllLPTokenCount());
 
         int256 tokenAQuantity = (_lpToken * pair.tokenA.tokenQty) / allLPTokens;
         int256 tokenBQuantity = (_lpToken * pair.tokenB.tokenQty) / allLPTokens;
