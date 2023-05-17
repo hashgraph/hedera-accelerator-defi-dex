@@ -2,7 +2,12 @@ import Base from "./Base";
 import BigNumber from "bignumber.js";
 
 import { clientsInfo } from "../../utils/ClientManagement";
-import { Client, AccountId, ContractFunctionParameters } from "@hashgraph/sdk";
+import {
+  Client,
+  AccountId,
+  ContractFunctionParameters,
+  ContractId,
+} from "@hashgraph/sdk";
 
 const INITIALIZE = "initialize";
 const ALLOT_LP_TOKEN = "allotLPTokenFor";
@@ -16,7 +21,7 @@ export default class LpToken extends Base {
   initialize = async (
     tokenName: string,
     tokenSymbol: string,
-    ownerId: AccountId,
+    ownerId: AccountId | ContractId,
     client: Client = clientsInfo.operatorClient
   ) => {
     if (await this.isInitializationPending()) {

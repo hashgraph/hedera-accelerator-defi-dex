@@ -375,32 +375,6 @@ describe("LPToken, Pair and Factory tests", function () {
       expect(pairs[0]).to.not.be.equals(pairs[1]);
     });
 
-    it("When user try to createPair with negative fee then pair creation should fail", async function () {
-      const {
-        factory,
-        mockBaseHTS,
-        signers,
-        token1Address,
-        token2Address,
-        configuration,
-        pair,
-        lpTokenCont,
-      } = await loadFixture(deployFixture);
-      // Given
-      await factory.setUpFactory(
-        mockBaseHTS.address,
-        signers[0].address,
-        pair.address,
-        lpTokenCont.address,
-        configuration.address
-      );
-
-      const negativeFee = -1;
-      await expect(
-        factory.createPair(token1Address, token2Address, treasury, negativeFee)
-      ).to.be.revertedWith("Pair: Fee should be greater than zero.");
-    });
-
     it("When user try to createPair with zero fee then pair creation should fail", async function () {
       const {
         factory,
@@ -1178,26 +1152,6 @@ describe("LPToken, Pair and Factory tests", function () {
     const tokenQty = await pair.getPairQty();
     expect(tokenQty[0]).to.be.equals(precision.mul(50));
     expect(tokenQty[1]).to.be.equals(precision.mul(50));
-  });
-
-  it("When user try to create pair with negative fee it should fail ", async () => {
-    const Pair = await ethers.getContractFactory("Pair");
-    const negativeFee = -1;
-    await expect(
-      upgrades.deployProxy(
-        Pair,
-        [
-          zeroAddress,
-          zeroAddress,
-          zeroAddress,
-          zeroAddress,
-          treasury,
-          negativeFee,
-          zeroAddress,
-        ],
-        { unsafeAllow: ["delegatecall"] }
-      )
-    ).to.be.revertedWith("Pair: Fee should be greater than zero.");
   });
 
   describe("When HTS gives failure response", async () => {
