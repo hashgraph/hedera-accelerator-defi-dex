@@ -27,7 +27,7 @@ contract NFTHolder is TokenHolder {
             address(_token),
             address(this),
             msg.sender,
-            int64(int256(tokenId))
+            tokenId
         );
         return HederaResponseCodes.SUCCESS;
     }
@@ -44,7 +44,7 @@ contract NFTHolder is TokenHolder {
             address(_token),
             address(user),
             address(this),
-            int64(int256(tokenId))
+            tokenId
         );
     }
 

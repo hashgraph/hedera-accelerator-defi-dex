@@ -93,7 +93,7 @@ export default class GovernorTokenDao extends BaseDao {
       .addAddress(fromAddress) // from
       .addAddress(toAddress) // to
       .addAddress(tokenId) // tokenToTransfer
-      .addInt256(BigNumber(tokenAmount)); // amountToTransfer
+      .addUint256(BigNumber(tokenAmount)); // amountToTransfer
     const { result } = await this.execute(
       1_000_000,
       CREATE_PROPOSAL,

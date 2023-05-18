@@ -42,7 +42,7 @@ contract GovernorTokenDAO is ITokenDAO, BaseDAO {
         address transferFromAccount,
         address transferToAccount,
         address tokenToTransfer,
-        int256 transferTokenAmount
+        uint256 transferTokenAmount
     ) external override onlyOwner returns (uint256) {
         uint256 proposalId = governorTokenTransferAddress.createProposal(
             title,

@@ -1071,16 +1071,5 @@ describe("Governor Tests", function () {
         "GovernorTransferToken: transfer token failed."
       );
     });
-
-    it("Verify transfer token proposal creation should be failed for non-positive amount", async function () {
-      const { governorTT, token, signers } = await loadFixture(deployFixture);
-      await expect(
-        getTransferTokenProposalId(governorTT, signers, token.address, -1)
-      )
-        .revertedWithCustomError(governorTT, "InvalidInput")
-        .withArgs(
-          "GovernorTransferToken: Token transfer amount must be a positive number"
-        );
-    });
   });
 });

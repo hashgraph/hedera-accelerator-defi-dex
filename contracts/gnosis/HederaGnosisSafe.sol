@@ -58,7 +58,7 @@ contract HederaGnosisSafe is
         if (code == HederaResponseCodes.SUCCESS) {
             emit TokenAssociated(_token);
         }
-        code = _transferToken(_token, _sender, address(this), int256(_amount));
+        code = _transferToken(_token, _sender, address(this), _amount);
         if (code == HederaResponseCodes.SUCCESS) {
             emit TokenTransferred(_token, _sender, _amount);
         } else {

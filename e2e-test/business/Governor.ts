@@ -136,7 +136,7 @@ export default class Governor extends Base {
       .addAddress(fromAddress) // from
       .addAddress(toAddress) // to
       .addAddress(tokenId) // tokenToTransfer
-      .addInt256(BigNumber(tokenAmount)) // amountToTransfer
+      .addUint256(BigNumber(tokenAmount)) // amountToTransfer
       .addAddress(creator); // proposal creator
     const { result } = await this.execute(
       1_000_000,
@@ -504,7 +504,7 @@ export default class Governor extends Base {
   ) {
     const args = new ContractFunctionParameters()
       .addUint256(BigNumber(proposalId))
-      .addInt256(amount);
+      .addUint256(amount);
 
     const { result } = await this.execute(3000000, MINT_TOKEN, client, args);
 
@@ -523,7 +523,7 @@ export default class Governor extends Base {
   ) {
     const args = new ContractFunctionParameters()
       .addUint256(BigNumber(proposalId))
-      .addInt256(amount);
+      .addUint256(amount);
 
     const { result } = await this.execute(3000000, BURN_TOKEN, client, args);
 
@@ -544,7 +544,7 @@ export default class Governor extends Base {
     const args = new ContractFunctionParameters()
       .addUint256(BigNumber(proposalId))
       .addAddress(to)
-      .addInt256(amount);
+      .addUint256(amount);
 
     const { receipt } = await this.execute(
       3000000,

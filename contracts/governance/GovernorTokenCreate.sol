@@ -10,7 +10,6 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
         address newTokenAddress;
     }
 
-    using Bits for uint256;
     mapping(uint256 => TokenCreateData) _proposalData;
 
     function createProposal(
@@ -82,7 +81,7 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
 
     function mintToken(
         uint256 proposalId,
-        int256 amount
+        uint256 amount
     ) external returns (int256) {
         TokenCreateData storage tokenCreateData = _proposalData[proposalId];
 
@@ -111,7 +110,7 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
 
     function burnToken(
         uint256 proposalId,
-        int256 amount
+        uint256 amount
     ) external returns (int256) {
         TokenCreateData storage tokenCreateData = _proposalData[proposalId];
         require(
@@ -141,7 +140,7 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
     function transferToken(
         uint256 proposalId,
         address to,
-        int256 amount
+        uint256 amount
     ) external {
         require(
             amount > 0,
