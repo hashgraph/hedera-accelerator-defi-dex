@@ -96,7 +96,7 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
         }
         rewardInfo.perShareAmount += perShareAmount;
         require(
-            _transferToken(_token, _from, address(this), int256(_amount)) ==
+            _transferToken(_token, _from, address(this), _amount) ==
                 HederaResponseCodes.SUCCESS,
             "Vault: Add reward failed"
         );
@@ -168,7 +168,7 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
                     _rewardToken,
                     address(this),
                     _user,
-                    int256(unclaimedRewards)
+                    unclaimedRewards
                 ) == HederaResponseCodes.SUCCESS,
                 "Vault: Claim reward failed"
             );
@@ -186,7 +186,7 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
                 address(stakingToken),
                 _user,
                 address(this),
-                int256(_amount)
+                _amount
             ) == HederaResponseCodes.SUCCESS,
             "Vault: Add stake failed"
         );
@@ -201,7 +201,7 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
                 address(stakingToken),
                 address(this),
                 _user,
-                int256(_amount)
+                _amount
             ) == HederaResponseCodes.SUCCESS,
             "Vault: withdraw failed"
         );
