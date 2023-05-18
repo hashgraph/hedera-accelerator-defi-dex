@@ -13,15 +13,15 @@ abstract contract IPair {
 
     struct Token {
         address tokenAddress;
-        int256 tokenQty;
+        uint256 tokenQty;
     }
 
     struct Amount {
-        int256 tokenASpotPrice;
-        int256 tokenBSpotPrice;
-        int256 precision;
-        int256 feePrecision;
-        int256 fee;
+        uint256 tokenASpotPrice;
+        uint256 tokenBSpotPrice;
+        uint256 precision;
+        uint256 feePrecision;
+        uint256 fee;
     }
 
     function getPair() external virtual returns (Pair memory);
@@ -32,7 +32,7 @@ abstract contract IPair {
         address _tokenA,
         address _tokenB,
         address _treasury,
-        int256 _fee,
+        uint256 _fee,
         Configuration _configuration
     ) public virtual;
 
@@ -40,20 +40,20 @@ abstract contract IPair {
         address fromAccount,
         address _tokenA,
         address _tokenB,
-        int256 _tokenAQty,
-        int256 _tokenBQty
+        uint256 _tokenAQty,
+        uint256 _tokenBQty
     ) external payable virtual;
 
     function removeLiquidity(
         address payable fromAccount,
-        int256 _lpToken
+        uint256 _lpToken
     ) external virtual;
 
     function swapToken(
         address to,
         address _token,
-        int256 _deltaQty,
-        int256 _slippage
+        uint256 _deltaQty,
+        uint256 _slippage
     ) external payable virtual;
 
     function getLpTokenContractAddress()

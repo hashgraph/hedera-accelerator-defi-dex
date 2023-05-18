@@ -50,7 +50,7 @@ export default class Pair extends Base {
         .addAddress(tokenA.toSolidityAddress())
         .addAddress(tokenB.toSolidityAddress())
         .addAddress(feeCollectionAccountId.toSolidityAddress())
-        .addInt256(fee)
+        .addUint256(fee)
         .addAddress(this.configuration);
       await this.execute(9000000, INITIALIZE, client, args, tokensOwnerKey);
       console.log(`- Pair#${INITIALIZE}(): done\n`);
@@ -70,8 +70,8 @@ export default class Pair extends Base {
 
   public getPairQty = async (client: Client = clientsInfo.operatorClient) => {
     const { result } = await this.execute(1000000, GET_PAIR_QTY, client);
-    const tokenQty = result.getInt256(0);
-    const tokenBQty = result.getInt256(1);
+    const tokenQty = result.getUint256(0);
+    const tokenBQty = result.getUint256(1);
     console.log(
       `- Pair#${GET_PAIR_QTY}(): quantities = ${tokenQty} x ${tokenBQty}\n`
     );
@@ -82,7 +82,7 @@ export default class Pair extends Base {
     client: Client = clientsInfo.operatorClient
   ) => {
     const { result } = await this.execute(1000000, PRECISION_VALUE, client);
-    const precision = result.getInt256(0);
+    const precision = result.getUint256(0);
     console.log(`- Pair#${PRECISION_VALUE}(): precision = ${precision}\n`);
     return precision;
   };
@@ -91,7 +91,7 @@ export default class Pair extends Base {
     slippage: BigNumber,
     client: Client = clientsInfo.operatorClient
   ) => {
-    const args = new ContractFunctionParameters().addInt256(slippage);
+    const args = new ContractFunctionParameters().addUint256(slippage);
     await this.execute(1000000, SET_SLIPPAGE, client, args);
     console.log(`- Pair#${SET_SLIPPAGE}(): done\n`);
   };
@@ -109,7 +109,7 @@ export default class Pair extends Base {
       client,
       args
     );
-    const price = result.getInt256(0);
+    const price = result.getUint256(0);
     console.log(
       `- Pair#${GET_SPOT_PRICE}(): TokenId = ${token}, spot price = ${price}\n`
     );
@@ -120,7 +120,7 @@ export default class Pair extends Base {
     client: Client = clientsInfo.operatorClient
   ) => {
     const { result } = await this.execute(1000000, VARIANT_VALUE, client);
-    const price = result.getInt256(0);
+    const price = result.getUint256(0);
     console.log(`- Pair#${VARIANT_VALUE}(): k = ${price}\n`);
     return price;
   };
@@ -129,14 +129,14 @@ export default class Pair extends Base {
     tokenQty: BigNumber,
     client: Client = clientsInfo.operatorClient
   ) => {
-    const args = new ContractFunctionParameters().addInt256(tokenQty);
+    const args = new ContractFunctionParameters().addUint256(tokenQty);
     const { result } = await this.execute(
       1000000,
       GET_OUT_GIVEN_IN,
       client,
       args
     );
-    const tokenBQty = result.getInt256(0);
+    const tokenBQty = result.getUint256(0);
     console.log(
       `- Pair#${GET_OUT_GIVEN_IN}(): For tokenQty ${tokenQty} the getOutGivenIn tokenBQty is ${tokenBQty}\n`
     );
@@ -147,14 +147,14 @@ export default class Pair extends Base {
     tokenBQty: BigNumber,
     client: Client = clientsInfo.operatorClient
   ) => {
-    const args = new ContractFunctionParameters().addInt256(tokenBQty);
+    const args = new ContractFunctionParameters().addUint256(tokenBQty);
     const { result } = await this.execute(
       1000000,
       GET_IN_GIVEN_OUT,
       client,
       args
     );
-    const tokenQty = result.getInt256(0);
+    const tokenQty = result.getUint256(0);
     console.log(
       `- Pair#${GET_IN_GIVEN_OUT}(): For tokenBQty ${tokenBQty} the getInGivenOut tokenQty is ${tokenQty}\n`
     );
@@ -165,14 +165,14 @@ export default class Pair extends Base {
     tokenQty: BigNumber,
     client: Client = clientsInfo.operatorClient
   ) => {
-    const args = new ContractFunctionParameters().addInt256(tokenQty);
+    const args = new ContractFunctionParameters().addUint256(tokenQty);
     const { result } = await this.execute(
       1000000,
       SLIPPAGE_OUT_GIVEN_IN,
       client,
       args
     );
-    const tokenBQty = result.getInt256(0);
+    const tokenBQty = result.getUint256(0);
     console.log(
       `- Pair#${SLIPPAGE_OUT_GIVEN_IN}(): for tokenQty = ${tokenQty} the slippageOutGivenIn tokenBQty = ${tokenBQty}\n`
     );
@@ -183,14 +183,14 @@ export default class Pair extends Base {
     tokenBQty: BigNumber,
     client: Client = clientsInfo.operatorClient
   ) => {
-    const args = new ContractFunctionParameters().addInt256(tokenBQty);
+    const args = new ContractFunctionParameters().addUint256(tokenBQty);
     const { result } = await this.execute(
       1000000,
       SLIPPAGE_IN_GIVEN_OUT,
       client,
       args
     );
-    const tokenQty = result.getInt256(0);
+    const tokenQty = result.getUint256(0);
     console.log(
       `- Pair#${SLIPPAGE_IN_GIVEN_OUT}(): for tokenBQty = ${tokenBQty} the slippageInGivenOut tokenQty = ${tokenQty}\n`
     );
@@ -234,8 +234,8 @@ export default class Pair extends Base {
       .addAddress(tokenOwnerId.toSolidityAddress())
       .addAddress(tokenA.toSolidityAddress())
       .addAddress(tokenB.toSolidityAddress())
-      .addInt256(tokenAQty1)
-      .addInt256(tokenBQty1);
+      .addUint256(tokenAQty1)
+      .addUint256(tokenBQty1);
     await this.execute(
       9000000,
       ADD_LIQUIDITY,
@@ -257,7 +257,7 @@ export default class Pair extends Base {
   ) => {
     const args = new ContractFunctionParameters()
       .addAddress(tokenReceiverId.toSolidityAddress())
-      .addInt256(lpTokenQty);
+      .addUint256(lpTokenQty);
     await this.execute(
       9000000,
       REMOVE_LIQUIDITY,
@@ -271,14 +271,14 @@ export default class Pair extends Base {
   public getPairInfo = async (client: Client = clientsInfo.operatorClient) => {
     const { result } = await this.execute(8000000, GET_PAIR_INFO, client);
     const tokenAAddress = result.getAddress(0);
-    const tokenAQty = result.getInt256(1);
+    const tokenAQty = result.getUint256(1);
     const tokenBAddress = result.getAddress(2);
-    const tokenBQty = result.getInt256(3);
-    const tokenASpotPrice = result.getInt256(4);
-    const tokenBSpotPrice = result.getInt256(5);
-    const precision = result.getInt256(6);
-    const feePrecision = result.getInt256(7);
-    const fee = result.getInt256(8);
+    const tokenBQty = result.getUint256(3);
+    const tokenASpotPrice = result.getUint256(4);
+    const tokenBSpotPrice = result.getUint256(5);
+    const precision = result.getUint256(6);
+    const feePrecision = result.getUint256(7);
+    const fee = result.getUint256(8);
     const info = {
       tokenAAddress,
       tokenAQty,
@@ -308,8 +308,8 @@ export default class Pair extends Base {
     const args = new ContractFunctionParameters()
       .addAddress(tokenOwnerId.toSolidityAddress())
       .addAddress(token.toSolidityAddress())
-      .addInt256(tokenQtyA)
-      .addInt256(slippage);
+      .addUint256(tokenQtyA)
+      .addUint256(slippage);
     await this.execute(5000000, SWAP_TOKEN, client, args, tokenOwnerKey, hBars);
     console.log(
       `- Pair#${SWAP_TOKEN}(): hBars = ${hBars}, TokenId = ${token}, Qty = ${tokenQtyA}\n`
@@ -320,9 +320,9 @@ export default class Pair extends Base {
     tokenQty: BigNumber,
     client: Client = clientsInfo.operatorClient
   ) => {
-    const args = new ContractFunctionParameters().addInt256(tokenQty);
+    const args = new ContractFunctionParameters().addUint256(tokenQty);
     const { result } = await this.execute(3000000, FEE_FOR_TOKEN, client, args);
-    const fee = result.getInt256(0);
+    const fee = result.getUint256(0);
     console.log(`- Pair#${FEE_FOR_TOKEN}(): fee for swap = ${fee}\n`);
     return fee;
   };

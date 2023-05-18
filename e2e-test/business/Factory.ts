@@ -58,7 +58,7 @@ export default class Factory extends Base {
       .addAddress(token1.toSolidityAddress())
       .addAddress(token2.toSolidityAddress())
       .addAddress(feeCollectionAccountId.toSolidityAddress())
-      .addInt256(fee);
+      .addUint256(fee);
     const { result } = await this.execute(
       9000000,
       CREATE_PAIR,
@@ -83,7 +83,7 @@ export default class Factory extends Base {
     const args = new ContractFunctionParameters()
       .addAddress(token1.toSolidityAddress())
       .addAddress(token2.toSolidityAddress())
-      .addInt256(fee);
+      .addUint256(fee);
     const { result } = await this.execute(
       5_00_000,
       GET_PAIR,
@@ -139,7 +139,7 @@ export default class Factory extends Base {
     const args = new ContractFunctionParameters()
       .addAddress(tokenAddress)
       .addAddress(otherTokenAddress)
-      .addInt256(qtyToSwap);
+      .addUint256(qtyToSwap);
 
     const { result } = await this.execute(
       2_000_000,
@@ -152,11 +152,11 @@ export default class Factory extends Base {
       `- Factory#${RECOMMENDED_PAIR_TO_SWAP}(): 
       Selected pair = ${result.getAddress(0)}, 
       token = ${result.getAddress(1)}, 
-      swapped qty = ${result.getInt256(2)}, 
+      swapped qty = ${result.getUint256(2)}, 
       fee = ${result.getUint256(3)}, 
-      slippage = ${result.getInt256(4)}
+      slippage = ${result.getUint256(4)}
       \n`
     );
-    return Number(result.getInt256(2));
+    return Number(result.getUint256(2));
   };
 }

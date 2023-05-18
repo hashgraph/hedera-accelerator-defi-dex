@@ -39,7 +39,11 @@ const initializeLPTokenContract = async () => {
       tokenA,
       tokenB
     );
-    await lpToken.initialize(lpTokenName, lpTokenSymbol);
+    await lpToken.initialize(
+      lpTokenName,
+      lpTokenSymbol,
+      ContractId.fromSolidityAddress(pairContract.transparentProxyAddress!)
+    );
   } catch (error) {
     console.error(error);
   }
