@@ -38,7 +38,7 @@ contract GODHolder is TokenHolder {
             address(_token),
             address(this),
             msg.sender,
-            int256(_amount)
+            _amount
         );
         require(
             code == HederaResponseCodes.SUCCESS,
@@ -69,7 +69,7 @@ contract GODHolder is TokenHolder {
             address(_token),
             address(user),
             address(this),
-            int256(_amount)
+            _amount
         );
         require(
             code == HederaResponseCodes.SUCCESS,

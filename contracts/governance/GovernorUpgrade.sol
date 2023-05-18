@@ -13,7 +13,6 @@ contract GovernorUpgrade is GovernorCountingSimpleInternal {
         address contractToUpgrade;
     }
 
-    using Bits for uint256;
     mapping(uint256 => TokenUpgradeData) _proposalData;
 
     function createProposal(

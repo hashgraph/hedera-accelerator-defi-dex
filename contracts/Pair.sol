@@ -597,7 +597,7 @@ contract Pair is
                 token,
                 sender,
                 receiver,
-                int256(tokenQty)
+                tokenQty
             );
             require(responseCode == HederaResponseCodes.SUCCESS, errorMessage);
         }

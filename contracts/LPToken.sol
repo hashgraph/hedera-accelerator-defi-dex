@@ -13,8 +13,6 @@ contract LPToken is ILPToken, OwnableUpgradeable, TokenOperations {
     IBaseHTS tokenService;
     IERC20 lpToken;
 
-    using Bits for uint256;
-
     function lpTokenForUser(
         address _user
     ) external view override returns (uint256) {
@@ -75,7 +73,7 @@ contract LPToken is ILPToken, OwnableUpgradeable, TokenOperations {
         (responseCode, ) = super.mintToken(
             tokenService,
             address(lpToken),
-            int256(mintingAmount)
+            mintingAmount
         );
         require(
             responseCode == HederaResponseCodes.SUCCESS,
@@ -85,7 +83,7 @@ contract LPToken is ILPToken, OwnableUpgradeable, TokenOperations {
             address(lpToken),
             address(this),
             _toUser,
-            int256(mintingAmount)
+            mintingAmount
         );
         require(
             responseCode == HederaResponseCodes.SUCCESS,
@@ -108,7 +106,7 @@ contract LPToken is ILPToken, OwnableUpgradeable, TokenOperations {
             address(lpToken),
             fromUser,
             address(this),
-            int256(lpAmount)
+            lpAmount
         );
 
         require(
@@ -120,7 +118,7 @@ contract LPToken is ILPToken, OwnableUpgradeable, TokenOperations {
         (responseCode, ) = super.burnToken(
             tokenService,
             address(lpToken),
-            int256(lpAmount)
+            lpAmount
         );
         require(
             responseCode == HederaResponseCodes.SUCCESS,
