@@ -12,6 +12,10 @@ export class TestHelper {
     }
   }
 
+  static async advanceTime(seconds: number) {
+    await ethers.provider.send("evm_increaseTime", [seconds]);
+  }
+
   static toPrecision(targetAmount: number) {
     return targetAmount * 1e8;
   }

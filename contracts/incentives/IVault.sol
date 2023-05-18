@@ -11,11 +11,7 @@ interface IVault {
         uint256 _lockingPeriod
     ) external;
 
-    function addReward(
-        address _token,
-        uint256 _amount,
-        address _fromAccount
-    ) external;
+    function addReward(address _token, uint256 _amount, address _from) external;
 
     function deposit(uint256 _amount) external;
 
@@ -23,11 +19,18 @@ interface IVault {
 
     function getTotalVolume() external view returns (uint256);
 
+    function getStakingTokenAddress() external view returns (address);
+
     function getLockingPeriod() external view returns (uint256);
 
     function getUserContribution(address _user) external view returns (uint256);
 
     function claimAllRewards(address _user) external;
+
+    function canUserWithdrawTokens(
+        address _user,
+        uint256 _amount
+    ) external view returns (bool);
 
     function claimSpecificRewards(
         address _user,

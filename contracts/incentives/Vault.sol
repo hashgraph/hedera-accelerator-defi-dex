@@ -15,7 +15,7 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
     struct ContributionInfo {
         bool exist;
         uint256 total;
-        uint256 lockedTime;
+        uint256 lastLockedTime;
         mapping(address => uint256) claimed;
     }
 
@@ -43,11 +43,11 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
         __Ownable_init();
         require(
             _stakingToken != address(0),
-            "Vault: Staking token should not be empty."
+            "Vault: staking token should not be zero"
         );
         require(
             _lockingPeriod > 0,
-            "Vault: locking period should be a postive number"
+            "Vault: locking period should be a positive number"
         );
         baseHTS = _baseHTS;
         lockingPeriod = _lockingPeriod;
@@ -56,7 +56,7 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
     }
 
     function deposit(uint256 _amount) external override {
-        require(_amount > 0, "Vault: deposit amount must be a postive number");
+        require(_amount > 0, "Vault: deposit amount must be a positive number");
         if (usersContributionInfo[msg.sender].exist) {
             claimAllRewards(msg.sender);
         } else {
@@ -66,8 +66,14 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
     }
 
     function withdraw(uint256 _amount) external override {
-        require(_amount > 0, "Vault: withdraw amount must be a postive number");
-        _validateLockingPeriod(msg.sender);
+        require(
+            _amount > 0,
+            "Vault: withdraw amount must be a positive number"
+        );
+        require(
+            canUserWithdrawTokens(msg.sender, _amount),
+            "Vault: withdraw not allowed"
+        );
         claimAllRewards(msg.sender);
         _withdraw(msg.sender, _amount);
     }
@@ -76,9 +82,9 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
         address _token,
         uint256 _amount,
         address _from
-    ) external override onlyOwner {
-        require(_token != address(0), "Vault: reward token address is zero");
-        require(_from != address(0), "Vault: from address is zero");
+    ) external override {
+        require(_token != address(0), "Vault: reward token should not be zero");
+        require(_from != address(0), "Vault: from address should not be zero");
         require(_amount > 0, "Vault: reward amount must be a positive number");
         require(totalSupply > 0, "Vault: no token staked yet");
         uint256 perShareAmount = _amount.div(totalSupply);
@@ -92,8 +98,19 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
         require(
             _transferToken(_token, _from, address(this), int256(_amount)) ==
                 HederaResponseCodes.SUCCESS,
-            "Vault: Add reward failed."
+            "Vault: Add reward failed"
         );
+    }
+
+    function canUserWithdrawTokens(
+        address _user,
+        uint256 _amount
+    ) public view override returns (bool) {
+        ContributionInfo storage cInfo = usersContributionInfo[_user];
+        require(cInfo.exist, "Vault: no contribution yet");
+        return
+            _amount <= cInfo.total &&
+            block.timestamp > (cInfo.lastLockedTime + lockingPeriod);
     }
 
     function getUserContribution(
@@ -108,6 +125,10 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
 
     function getLockingPeriod() external view override returns (uint256) {
         return lockingPeriod;
+    }
+
+    function getStakingTokenAddress() external view override returns (address) {
+        return address(stakingToken);
     }
 
     function claimAllRewards(address _user) public override {
@@ -141,21 +162,23 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
         uint256 perShareUnclaimedAmt = perShareRewardAmt - perShareClaimedAmt;
         uint256 unclaimedRewards = totalShares.mul(perShareUnclaimedAmt);
         cInfo.claimed[_rewardToken] = perShareRewardAmt;
-        require(
-            _transferToken(
-                _rewardToken,
-                address(this),
-                _user,
-                int256(unclaimedRewards)
-            ) == HederaResponseCodes.SUCCESS,
-            "Vault: Claim reward failed."
-        );
+        if (unclaimedRewards > 0) {
+            require(
+                _transferToken(
+                    _rewardToken,
+                    address(this),
+                    _user,
+                    int256(unclaimedRewards)
+                ) == HederaResponseCodes.SUCCESS,
+                "Vault: Claim reward failed"
+            );
+        }
     }
 
     function _deposit(address _user, uint256 _amount) private {
         ContributionInfo storage cInfo = usersContributionInfo[_user];
         cInfo.exist = true;
-        cInfo.lockedTime = block.timestamp;
+        cInfo.lastLockedTime = block.timestamp;
         cInfo.total += _amount;
         totalSupply += _amount;
         require(
@@ -165,7 +188,7 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
                 address(this),
                 int256(_amount)
             ) == HederaResponseCodes.SUCCESS,
-            "Vault: Add stake failed."
+            "Vault: Add stake failed"
         );
     }
 
@@ -180,18 +203,11 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
                 _user,
                 int256(_amount)
             ) == HederaResponseCodes.SUCCESS,
-            "Vault: withdraw failed."
+            "Vault: withdraw failed"
         );
     }
 
-    function _validateLockingPeriod(address _user) private view {
-        ContributionInfo storage cInfo = usersContributionInfo[_user];
-        require(
-            cInfo.lockedTime + lockingPeriod < block.timestamp,
-            "Vault: you can't unlock your tokens because the locking period is not over"
-        );
-    }
-
+    // todo: need to check this
     function _setUpStaker(address _user) private {
         ContributionInfo storage cInfo = usersContributionInfo[_user];
         uint256 rewardTokensCount = rewardTokens.length;

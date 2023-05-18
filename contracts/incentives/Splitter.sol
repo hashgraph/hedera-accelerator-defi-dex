@@ -1,141 +1,99 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.18;
 
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "../common/hedera/HederaResponseCodes.sol";
-import "../common/IBaseHTS.sol";
 import "./ISplitter.sol";
-import "hardhat/console.sol";
+import "prb-math/contracts/PRBMathUD60x18.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-contract Splitter is ISplitter, Initializable {
+contract Splitter is ISplitter, OwnableUpgradeable {
+    using PRBMathUD60x18 for uint256;
+
     event VaultAdded(IVault vault, uint256 multiplier);
     event TokenTransferred(IVault vault, uint256 amount);
 
-    IBaseHTS internal _tokenService;
-    IVault[] private _vaults;
-    mapping(IVault => uint256) private _vaultMultipliers;
-    address private _owner;
-
-    modifier onlyOwner() {
-        require(_owner == msg.sender, "Only Owner can call this function");
-        _;
-    }
+    IVault[] private vaults;
+    IBaseHTS private baseHTS;
+    mapping(IVault => uint256) private vaultMultipliers;
 
     function initialize(
-        IBaseHTS tokenService,
-        IVault[] memory vaults,
-        uint256[] memory multipliers
-    ) public initializer {
+        IBaseHTS _baseHTS,
+        IVault[] memory _vaults,
+        uint256[] memory _multipliers
+    ) external override initializer {
+        __Ownable_init();
         require(
-            vaults.length == multipliers.length,
-            "Splitter: vault and multipliers length mismatch"
+            _vaults.length == _multipliers.length && _vaults.length > 0,
+            "Splitter: vaults and multipliers length must be greater zero"
         );
-        require(vaults.length > 0, "Splitter: no vault");
-        _owner = msg.sender;
-        _tokenService = tokenService;
-        for (uint256 i = 0; i < vaults.length; i++) {
-            _addVault(vaults[i], multipliers[i]);
-        }
-    }
-
-    function _addVault(
-        IVault vault,
-        uint256 multiplier
-    ) private returns (int32) {
-        require(
-            address(vault) != address(0),
-            "Splitter: account is the zero address"
-        );
-        require(multiplier > 0, "Splitter: multiplier are 0");
-        require(
-            _vaultMultipliers[vault] == 0,
-            "Splitter: account already has shares"
-        );
-
-        _vaults.push(vault);
-        _vaultMultipliers[vault] = multiplier;
-        emit VaultAdded(vault, multiplier);
-        return HederaResponseCodes.SUCCESS;
-    }
-
-    function splitTokensToVaults(
-        address token,
-        address fromAccount,
-        uint256 amount
-    ) external override returns (int32) {
-        uint256 totalWeightForAllVaults = _totalVaultWeight();
+        baseHTS = _baseHTS;
         for (uint256 i = 0; i < _vaults.length; i++) {
-            IVault tempVault = _vaults[i];
-            uint256 amountToTransfer = _amountToTransfer(
-                tempVault,
-                amount,
-                totalWeightForAllVaults
-            );
-            require(
-                amountToTransfer != 0,
-                "Splitter: Split amount should not be zero."
-            );
-            tempVault.addReward(token, amountToTransfer, fromAccount);
-            emit TokenTransferred(tempVault, amountToTransfer);
+            _addVault(_vaults[i], _multipliers[i]);
         }
-        return HederaResponseCodes.SUCCESS;
     }
 
     function registerVault(
-        IVault vault,
-        uint16 multiplier
-    ) external override onlyOwner returns (int32) {
-        return _addVault(vault, multiplier);
+        IVault _vault,
+        uint256 _multiplier
+    ) external override onlyOwner {
+        _addVault(_vault, _multiplier);
     }
 
-    function deRegisterVault(
-        IVault vault
-    ) external override onlyOwner returns (int32) {
-        // TODO: Need Discussion if we need this
-    }
+    function deregisterVault(IVault _vault) external override onlyOwner {}
 
-    function _amountToTransfer(
-        IVault vault,
-        uint256 totalAmount,
-        uint256 totalWeightForAllVaults
-    ) private view returns (uint256 amountToTransfer) {
-        uint256 percentage = _calculateTokenRewardPercentage(
-            vault,
-            totalWeightForAllVaults
-        );
-        amountToTransfer = multiply(totalAmount, percentage);
-    }
-
-    function _calculateTokenRewardPercentage(
-        IVault vault,
-        uint256 totalWeight
-    ) private view returns (uint256) {
-        uint256 vaultShareFraction = divide(_vaultWeight(vault), totalWeight);
-        return vaultShareFraction;
-    }
-
-    function _totalVaultWeight() private view returns (uint256 totalWeight) {
-        for (uint256 i = 0; i < _vaults.length; i++) {
-            IVault tempVault = _vaults[i];
-            uint256 weight = _vaultWeight(tempVault);
-            totalWeight += weight;
+    function splitTokens(
+        address _token,
+        address _from,
+        uint256 _amount
+    ) external override {
+        uint256 totalVaultWeight = getTotalVaultWeight();
+        for (uint256 i = 0; i < vaults.length; i++) {
+            IVault vault = vaults[i];
+            uint256 amount = getAmountToTransfer(
+                vault,
+                _amount,
+                totalVaultWeight
+            );
+            vault.addReward(_token, amount, _from);
+            emit TokenTransferred(vault, amount);
         }
     }
 
-    function _vaultWeight(IVault vault) private view returns (uint256 weight) {
-        uint256 tokenCount = vault.getTotalVolume();
-        weight = tokenCount * _vaultMultipliers[vault];
+    function _addVault(IVault _vault, uint256 _multiplier) private {
+        require(
+            address(_vault) != address(0),
+            "Splitter: vault address should not be zero"
+        );
+        require(
+            _multiplier > 0,
+            "Splitter: multiplier should be a positive number"
+        );
+        require(
+            vaultMultipliers[_vault] == 0,
+            "Splitter: vault already registered"
+        );
+
+        vaults.push(_vault);
+        vaultMultipliers[_vault] = _multiplier;
+        emit VaultAdded(_vault, _multiplier);
     }
 
-    function divide(uint256 p0, uint256 p1) internal pure returns (uint256) {
-        return ((p0 * getPrecisionValue()) / p1);
+    function getAmountToTransfer(
+        IVault _vault,
+        uint256 _totalAmount,
+        uint256 _valutsWeight
+    ) private view returns (uint256) {
+        uint256 valutWeight = getVaultWeight(_vault);
+        uint256 percentage = valutWeight.div(_valutsWeight);
+        return _totalAmount.mul(percentage);
     }
 
-    function multiply(uint256 p0, uint256 p1) internal pure returns (uint256) {
-        return ((p0 * p1) / getPrecisionValue());
+    function getTotalVaultWeight() private view returns (uint256 totalWeight) {
+        for (uint256 i = 0; i < vaults.length; i++) {
+            totalWeight += getVaultWeight(vaults[i]);
+        }
     }
 
-    function getPrecisionValue() internal pure returns (uint256) {
-        return 100000000;
+    function getVaultWeight(IVault _vault) private view returns (uint256) {
+        return _vault.getTotalVolume() * vaultMultipliers[_vault];
     }
 }
