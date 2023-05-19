@@ -137,13 +137,6 @@ describe("Vault Tests", function () {
       );
     });
 
-    it("Verify withdraw operation should be reverted when no contribution by user", async function () {
-      const { vaultContract } = await loadFixture(deployFixture);
-      await expect(vaultContract.withdraw(WITHDRAW_AMOUNT)).revertedWith(
-        "Vault: no contribution yet"
-      );
-    });
-
     it("Verify withdraw operation should be reverted when locking period is not over", async function () {
       const { vaultContract } = await loadFixture(deployFixture);
       await vaultContract.deposit(DEPOSIT_AMOUNT);

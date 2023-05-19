@@ -23,12 +23,22 @@ contract Splitter is ISplitter, OwnableUpgradeable {
         __Ownable_init();
         require(
             _vaults.length == _multipliers.length && _vaults.length > 0,
-            "Splitter: vaults and multipliers length must be greater zero"
+            "Splitter: vaults and multipliers length must be greater than zero"
         );
         baseHTS = _baseHTS;
         for (uint256 i = 0; i < _vaults.length; i++) {
             _addVault(_vaults[i], _multipliers[i]);
         }
+    }
+
+    function getVaults() external view override returns (IVault[] memory) {
+        return vaults;
+    }
+
+    function getVaultMultiplier(
+        IVault _vault
+    ) external view override returns (uint256) {
+        return vaultMultipliers[_vault];
     }
 
     function registerVault(
@@ -40,21 +50,31 @@ contract Splitter is ISplitter, OwnableUpgradeable {
 
     function deregisterVault(IVault _vault) external override onlyOwner {}
 
+    function getSplittedAmountListForGivenAmount(
+        uint256 _amount
+    ) public view override returns (uint256[] memory splittedAmountList) {
+        uint256 totalVaultWeight = getTotalVaultWeight();
+        splittedAmountList = new uint256[](vaults.length);
+        for (uint256 i = 0; i < vaults.length; i++) {
+            splittedAmountList[i] = getAmountToTransfer(
+                vaults[i],
+                _amount,
+                totalVaultWeight
+            );
+        }
+    }
+
     function splitTokens(
         address _token,
         address _from,
         uint256 _amount
     ) external override {
-        uint256 totalVaultWeight = getTotalVaultWeight();
-        for (uint256 i = 0; i < vaults.length; i++) {
-            IVault vault = vaults[i];
-            uint256 amount = getAmountToTransfer(
-                vault,
-                _amount,
-                totalVaultWeight
-            );
-            vault.addReward(_token, amount, _from);
-            emit TokenTransferred(vault, amount);
+        uint256[] memory amountList = getSplittedAmountListForGivenAmount(
+            _amount
+        );
+        for (uint256 i = 0; i < amountList.length; i++) {
+            vaults[i].addReward(_token, amountList[i], _from);
+            emit TokenTransferred(vaults[i], amountList[i]);
         }
     }
 
@@ -80,10 +100,10 @@ contract Splitter is ISplitter, OwnableUpgradeable {
     function getAmountToTransfer(
         IVault _vault,
         uint256 _totalAmount,
-        uint256 _valutsWeight
+        uint256 _totalVaultWeight
     ) private view returns (uint256) {
-        uint256 valutWeight = getVaultWeight(_vault);
-        uint256 percentage = valutWeight.div(_valutsWeight);
+        uint256 vaultWeight = getVaultWeight(_vault);
+        uint256 percentage = vaultWeight.div(_totalVaultWeight);
         return _totalAmount.mul(percentage);
     }
 

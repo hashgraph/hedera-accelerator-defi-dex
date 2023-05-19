@@ -91,7 +91,7 @@ describe("Splitter contract tests", function () {
   }
 
   describe("Common tests", function () {
-    it.only("Verify contract should be reverted for multiple initialization call", async function () {
+    it("Verify contract should be reverted for multiple initialization call", async function () {
       const { splitterContract, SPLITTER_ARGS } = await loadFixture(
         deployFixture
       );
@@ -110,7 +110,7 @@ describe("Splitter contract tests", function () {
           [1, 14]
         )
       ).revertedWith(
-        "Splitter: vaults and multipliers length must be greater zero"
+        "Splitter: vaults and multipliers length must be greater than zero"
       );
     });
 
@@ -124,7 +124,7 @@ describe("Splitter contract tests", function () {
           []
         )
       ).revertedWith(
-        "Splitter: vaults and multipliers length must be greater zero"
+        "Splitter: vaults and multipliers length must be greater than zero"
       );
     });
 
@@ -187,9 +187,9 @@ describe("Splitter contract tests", function () {
     });
 
     it("Check register operation should be succeeded for non-register vault", async function () {
-      const { splitterContract, nonUsedVaultContract } = await loadFixture(
-        deployFixture
-      );
+      const { splitterContract, nonUsedVaultContract, vaults } =
+        await loadFixture(deployFixture);
+      expect((await splitterContract.getVaults()).length).equals(vaults.length);
       const txn = await splitterContract.registerVault(
         nonUsedVaultContract.address,
         16
@@ -199,6 +199,13 @@ describe("Splitter contract tests", function () {
       expect(args.length).equals(2);
       expect(args[0]).equals(nonUsedVaultContract.address);
       expect(args[1]).equals(16);
+      expect((await splitterContract.getVaults()).length).equals(
+        vaults.length + 1
+      );
+
+      expect(
+        await splitterContract.getVaultMultiplier(nonUsedVaultContract.address)
+      ).equals(16);
 
       await expect(
         splitterContract.registerVault(nonUsedVaultContract.address, 16)

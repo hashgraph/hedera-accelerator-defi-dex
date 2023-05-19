@@ -11,6 +11,14 @@ interface ISplitter {
         uint256[] memory _multipliers
     ) external;
 
+    function getVaults() external view returns (IVault[] memory);
+
+    function getVaultMultiplier(IVault _vault) external view returns (uint256);
+
+    function getSplittedAmountListForGivenAmount(
+        uint256 _amount
+    ) external view returns (uint256[] memory);
+
     function registerVault(IVault _vault, uint256 _multiplier) external;
 
     function deregisterVault(IVault _vault) external;

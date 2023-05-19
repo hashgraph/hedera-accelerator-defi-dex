@@ -107,9 +107,10 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
         uint256 _amount
     ) public view override returns (bool) {
         ContributionInfo storage cInfo = usersContributionInfo[_user];
-        require(cInfo.exist, "Vault: no contribution yet");
         return
-            _amount <= cInfo.total &&
+            cInfo.exist &&
+            cInfo.total > 0 &&
+            cInfo.total >= _amount &&
             block.timestamp > (cInfo.lastLockedTime + lockingPeriod);
     }
 
