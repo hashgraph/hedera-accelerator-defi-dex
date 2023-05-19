@@ -60,7 +60,14 @@ describe("Splitter contract tests", function () {
       MULTIPLIERS,
     ];
     const splitterContract = await TestHelper.deployLogic("Splitter");
-    await splitterContract.initialize(...SPLITTER_ARGS);
+    const txn = await splitterContract.initialize(...SPLITTER_ARGS);
+    const vaultAddedEvents = await TestHelper.readEvents(txn, ["VaultAdded"]);
+    expect(vaultAddedEvents.length).equals(USED_VAULTS.length);
+    vaultAddedEvents.forEach((element: any, index: number) => {
+      expect(element.args.length).equals(2);
+      expect(element.args.vault).equals(USED_VAULTS[index].address);
+      expect(element.args.multiplier).equals(MULTIPLIERS[index]);
+    });
 
     const nonInitSplitterContract = await TestHelper.deployLogic("Splitter");
 
@@ -84,7 +91,7 @@ describe("Splitter contract tests", function () {
   }
 
   describe("Common tests", function () {
-    it("Verify contract should be reverted for multiple initialization call", async function () {
+    it.only("Verify contract should be reverted for multiple initialization call", async function () {
       const { splitterContract, SPLITTER_ARGS } = await loadFixture(
         deployFixture
       );

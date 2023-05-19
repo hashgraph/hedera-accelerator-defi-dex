@@ -25,6 +25,13 @@ export class TestHelper {
     return { name: lastEvent.event, args: lastEvent.args };
   }
 
+  static async readEvents(transaction: any, eventsName: string[] = []) {
+    const events = (await transaction.wait()).events;
+    return eventsName.length > 0
+      ? events.filter((_event: any) => eventsName.includes(_event.event))
+      : events;
+  }
+
   static getAccountBalance = async (tokenCont: Contract, account: string) => {
     return await tokenCont.balanceOf(account);
   };
