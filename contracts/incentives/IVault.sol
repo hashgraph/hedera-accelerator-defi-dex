@@ -21,19 +21,16 @@ interface IVault {
 
     function getStakingTokenAddress() external view returns (address);
 
-    function getLockingPeriod() external view returns (uint256);
+    function getStakingTokenLockingPeriod() external view returns (uint256);
 
     function stakedTokenByUser(address _user) external view returns (uint256);
 
-    function claimAllRewards(address _user) external;
-
-    function canUserUnstakeTokens(
+    function canUserUnStakeTokens(
         address _user,
         uint256 _amount
     ) external view returns (bool);
 
-    function claimSpecificRewards(
-        address _user,
-        address[] memory _rewardTokens
-    ) external;
+    function canUserClaimRewards(address _user) external returns (bool);
+
+    function claimRewards(address _user) external returns (uint256);
 }
