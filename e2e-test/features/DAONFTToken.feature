@@ -31,7 +31,7 @@ Scenario: Verify user receives error message on creating proposal with negative 
 Scenario: Verify user can create a dao and transfer the token via proposal  
     When User fetches balance of target token from account to which user wants to transfer 
     When User setup allowance for NFT Token
-    When User locks NFT token with serial number 19
+    When User locks NFT token with serial number 18
     When User setup allowance for proposal creation
     Then User verifies target token balance in the payer account is more than transfer amount 1
     When User setup allowance as 1 for token transfer
