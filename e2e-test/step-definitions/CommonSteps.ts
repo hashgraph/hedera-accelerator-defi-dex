@@ -8,11 +8,13 @@ import {
 } from "@hashgraph/sdk";
 import GodHolder from "../business/GodHolder";
 import Common from "../business/Common";
+import NFTHolder from "../business/NFTHolder";
+import { main as deployContracts } from "../../deployment/scripts/createContractsE2E";
 
 export class CommonSteps {
   static DEFAULT_QUORUM_THRESHOLD_IN_BSP = 1;
   static DEFAULT_VOTING_DELAY = 2;
-  static DEFAULT_VOTING_PERIOD = 12;
+  static DEFAULT_VOTING_PERIOD = 9;
   static withPrecision = 1e8;
 
   public async initializeGovernorContract(
@@ -167,6 +169,41 @@ export class CommonSteps {
     );
   }
 
+  public async setupAllowanceForNFTToken(
+    nftHolder: NFTHolder,
+    voterAccountId: AccountId,
+    voterAccountPrivateKey: PrivateKey,
+    voterClient: Client
+  ) {
+    await nftHolder.setupAllowanceForTokenLocking(
+      voterAccountId,
+      voterAccountPrivateKey,
+      voterClient
+    );
+  }
+
+  public async grabNFTTokensForAllowance(
+    nftHolder: NFTHolder,
+    tokenSerial: number,
+    voterAccountId: AccountId,
+    voterAccountPrivateKey: PrivateKey,
+    voterClient: Client
+  ) {
+    await nftHolder.grabTokensForVoter(
+      tokenSerial,
+      voterAccountId,
+      voterAccountPrivateKey,
+      voterClient
+    );
+  }
+
+  public async claimNFTToken(nftHolder: NFTHolder, client: Client) {
+    await nftHolder.checkAndClaimNFTTokens(client);
+  }
+
+  public async deployGivenContract(contracts: string[]) {
+    await deployContracts(contracts);
+  }
   private async transferTokens(
     receiverAccountId: AccountId,
     senderAccountId: AccountId,
