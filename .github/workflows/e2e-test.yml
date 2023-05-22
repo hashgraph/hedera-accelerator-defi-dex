@@ -54,7 +54,7 @@ jobs:
       TOKEN_USER_ID: 0.0.2375093
       TOKEN_USER_KEY: 805a0b26c8ecee83e903076eebb86928c612590f32afc6d272ced4c73db6d466
       TREASURE_ID: 0.0.6880
-      TREASURE_KEY: c8cb72a0addffcbd898689e5b5641c0abff4399ddeb90a04071433e3724e14dd
+      TREASURE_KEY: c372f05c182ae62e04603081f6abc8cbd3a712401e1d1f88401cf310c91f644b
 
     steps:
       - uses: actions/checkout@v3
