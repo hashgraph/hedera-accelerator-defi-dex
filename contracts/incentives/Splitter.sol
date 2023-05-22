@@ -114,6 +114,6 @@ contract Splitter is ISplitter, OwnableUpgradeable {
     }
 
     function getVaultWeight(IVault _vault) private view returns (uint256) {
-        return _vault.getTotalVolume() * vaultMultipliers[_vault];
+        return _vault.getStakingTokenTotalSupply() * vaultMultipliers[_vault];
     }
 }

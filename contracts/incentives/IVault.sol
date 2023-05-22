@@ -13,21 +13,21 @@ interface IVault {
 
     function addReward(address _token, uint256 _amount, address _from) external;
 
-    function deposit(uint256 _amount) external;
+    function stake(uint256 _amount) external;
 
-    function withdraw(uint256 _amount) external;
+    function unstake(uint256 _amount) external;
 
-    function getTotalVolume() external view returns (uint256);
+    function getStakingTokenTotalSupply() external view returns (uint256);
 
     function getStakingTokenAddress() external view returns (address);
 
     function getLockingPeriod() external view returns (uint256);
 
-    function getUserContribution(address _user) external view returns (uint256);
+    function stakedTokenByUser(address _user) external view returns (uint256);
 
     function claimAllRewards(address _user) external;
 
-    function canUserWithdrawTokens(
+    function canUserUnstakeTokens(
         address _user,
         uint256 _amount
     ) external view returns (bool);

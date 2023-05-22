@@ -4,8 +4,8 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 describe("Vault Tests", function () {
   const TOTAL_AMOUNT = TestHelper.toPrecision(100);
-  const DEPOSIT_AMOUNT = TestHelper.toPrecision(50);
-  const WITHDRAW_AMOUNT = TestHelper.toPrecision(10);
+  const STAKED_AMOUNT = TestHelper.toPrecision(50);
+  const UN_STAKED_AMOUNT = TestHelper.toPrecision(10);
   const REWARD_AMOUNT = TestHelper.toPrecision(10);
   const LOCKING_PERIOD = 50; // 50 sec locking period
   const ADVANCE_LOCKING_PERIOD = LOCKING_PERIOD + 1; // 51 sec advance locking period
@@ -91,97 +91,99 @@ describe("Vault Tests", function () {
     });
   });
 
-  describe("Deposit tests", function () {
-    it("Verify deposit operation should be reverted for non-positive amount", async function () {
+  describe("Stake tests", function () {
+    it("Verify stake operation should be reverted for non-positive amount", async function () {
       const { vaultContract } = await loadFixture(deployFixture);
-      await expect(vaultContract.deposit(0)).revertedWith(
-        "Vault: deposit amount must be a positive number"
+      await expect(vaultContract.stake(0)).revertedWith(
+        "Vault: stake amount must be a positive number"
       );
     });
 
-    it("Verify deposit operation should be reverted for token transfer failed", async function () {
+    it("Verify stake operation should be reverted for token transfer failed", async function () {
       const { vaultContract, stakingTokenContract } = await loadFixture(
         deployFixture
       );
       await stakingTokenContract.setTransaferFailed(true);
-      await expect(vaultContract.deposit(DEPOSIT_AMOUNT)).revertedWith(
+      await expect(vaultContract.stake(STAKED_AMOUNT)).revertedWith(
         "Vault: Add stake failed"
       );
     });
 
-    it("Verify deposit operation should be succeeded for valid inputs", async function () {
+    it("Verify stake operation should be succeeded for valid inputs", async function () {
       const { vaultContract, owner, stakingTokenContract } = await loadFixture(
         deployFixture
       );
-      expect(await vaultContract.getTotalVolume()).equals(0);
-      expect(await vaultContract.getUserContribution(owner.address)).equals(0);
+      expect(await vaultContract.getStakingTokenTotalSupply()).equals(0);
+      expect(await vaultContract.stakedTokenByUser(owner.address)).equals(0);
       expect(await stakingTokenContract.balanceOf(owner.address)).equals(
         TOTAL_AMOUNT
       );
-      await vaultContract.deposit(DEPOSIT_AMOUNT);
-      expect(await vaultContract.getTotalVolume()).equals(DEPOSIT_AMOUNT);
-      expect(await vaultContract.getUserContribution(owner.address)).equals(
-        DEPOSIT_AMOUNT
+      await vaultContract.stake(STAKED_AMOUNT);
+      expect(await vaultContract.getStakingTokenTotalSupply()).equals(
+        STAKED_AMOUNT
+      );
+      expect(await vaultContract.stakedTokenByUser(owner.address)).equals(
+        STAKED_AMOUNT
       );
       expect(await stakingTokenContract.balanceOf(owner.address)).equals(
-        TOTAL_AMOUNT - DEPOSIT_AMOUNT
+        TOTAL_AMOUNT - STAKED_AMOUNT
       );
     });
   });
 
-  describe("Withdraw tests", function () {
-    it("Verify withdraw operation should be reverted for non positive amount", async function () {
+  describe("Unstake tests", function () {
+    it("Verify unstake operation should be reverted for non positive amount", async function () {
       const { vaultContract } = await loadFixture(deployFixture);
-      await expect(vaultContract.withdraw(0)).revertedWith(
-        "Vault: withdraw amount must be a positive number"
+      await expect(vaultContract.unstake(0)).revertedWith(
+        "Vault: unstake amount must be a positive number"
       );
     });
 
-    it("Verify withdraw operation should be reverted when locking period is not over", async function () {
+    it("Verify unstacked operation should be reverted when locking period is not over", async function () {
       const { vaultContract } = await loadFixture(deployFixture);
-      await vaultContract.deposit(DEPOSIT_AMOUNT);
-      await expect(vaultContract.withdraw(WITHDRAW_AMOUNT)).revertedWith(
-        "Vault: withdraw not allowed"
+      await vaultContract.stake(STAKED_AMOUNT);
+      await expect(vaultContract.unstake(UN_STAKED_AMOUNT)).revertedWith(
+        "Vault: unstake not allowed"
       );
     });
 
-    it("Verify withdraw operation should be reverted when withdraw amount is greater then deposit amount", async function () {
+    it("Verify unstake operation should be reverted when unstake amount is greater then stake amount", async function () {
       const { vaultContract } = await loadFixture(deployFixture);
-      await vaultContract.deposit(DEPOSIT_AMOUNT);
+      await vaultContract.stake(STAKED_AMOUNT);
       await TestHelper.increaseEVMTime(ADVANCE_LOCKING_PERIOD);
-      await expect(vaultContract.withdraw(DEPOSIT_AMOUNT + 1)).revertedWith(
-        "Vault: withdraw not allowed"
+      await expect(vaultContract.unstake(STAKED_AMOUNT + 1)).revertedWith(
+        "Vault: unstake not allowed"
       );
     });
 
-    it("Verify withdraw operation should be reverted during token transfer", async function () {
+    it("Verify unstake operation should be reverted during token transfer", async function () {
       const { vaultContract, stakingTokenContract } = await loadFixture(
         deployFixture
       );
-      await vaultContract.deposit(DEPOSIT_AMOUNT);
+      await vaultContract.stake(STAKED_AMOUNT);
       await TestHelper.increaseEVMTime(ADVANCE_LOCKING_PERIOD);
       await stakingTokenContract.setTransaferFailed(true);
-      await expect(vaultContract.withdraw(DEPOSIT_AMOUNT)).revertedWith(
-        "Vault: withdraw failed"
+      await expect(vaultContract.unstake(STAKED_AMOUNT)).revertedWith(
+        "Vault: unstake failed"
       );
     });
 
-    it("Verify partial withdraw operation should be succeeded", async function () {
+    it("Verify partial unstake operation should be succeeded", async function () {
       const { vaultContract } = await loadFixture(deployFixture);
-      await vaultContract.deposit(DEPOSIT_AMOUNT);
+      await vaultContract.stake(STAKED_AMOUNT);
       await TestHelper.increaseEVMTime(ADVANCE_LOCKING_PERIOD);
-      await vaultContract.withdraw(WITHDRAW_AMOUNT);
-      expect(await vaultContract.getTotalVolume()).equals(
-        DEPOSIT_AMOUNT - WITHDRAW_AMOUNT
+      await vaultContract.unstake(UN_STAKED_AMOUNT);
+      expect(await vaultContract.getStakingTokenTotalSupply()).equals(
+        STAKED_AMOUNT - UN_STAKED_AMOUNT
       );
     });
 
-    it("Verify fully withdraw operation should be succeeded", async function () {
+    it("Verify fully unstake operation should be succeeded", async function () {
       const { vaultContract } = await loadFixture(deployFixture);
-      await vaultContract.deposit(DEPOSIT_AMOUNT);
+      await vaultContract.stake(STAKED_AMOUNT);
       await TestHelper.increaseEVMTime(ADVANCE_LOCKING_PERIOD);
-      await vaultContract.withdraw(DEPOSIT_AMOUNT);
-      expect(await vaultContract.getTotalVolume()).equals(0);
+      await vaultContract.unstake(STAKED_AMOUNT);
+      expect(await vaultContract.getStakingTokenTotalSupply()).equals(0);
     });
   });
 
@@ -236,7 +238,7 @@ describe("Vault Tests", function () {
       const { vaultContract, owner, reward1TokenContract } = await loadFixture(
         deployFixture
       );
-      await vaultContract.deposit(DEPOSIT_AMOUNT);
+      await vaultContract.stake(STAKED_AMOUNT);
       await reward1TokenContract.setTransaferFailed(true);
       await expect(
         vaultContract.addReward(
@@ -254,7 +256,7 @@ describe("Vault Tests", function () {
       expect(
         await reward1TokenContract.balanceOf(vaultContract.address)
       ).equals(0);
-      await vaultContract.deposit(DEPOSIT_AMOUNT);
+      await vaultContract.stake(STAKED_AMOUNT);
       await vaultContract.addReward(
         reward1TokenContract.address,
         REWARD_AMOUNT,
@@ -279,7 +281,7 @@ describe("Vault Tests", function () {
         reward1TokenContract,
         reward2TokenContract,
       } = await loadFixture(deployFixture);
-      await vaultContract.deposit(DEPOSIT_AMOUNT);
+      await vaultContract.stake(STAKED_AMOUNT);
       await vaultContract.addReward(
         reward1TokenContract.address,
         REWARD_AMOUNT,
@@ -301,7 +303,7 @@ describe("Vault Tests", function () {
       const { owner, vaultContract, reward1TokenContract } = await loadFixture(
         deployFixture
       );
-      await vaultContract.deposit(DEPOSIT_AMOUNT);
+      await vaultContract.stake(STAKED_AMOUNT);
       await vaultContract.addReward(
         reward1TokenContract.address,
         REWARD_AMOUNT,
@@ -315,20 +317,20 @@ describe("Vault Tests", function () {
       ).revertedWith("Vault: Claim reward failed");
     });
 
-    it("Verify one people, one type of reward, one withdraw, add reward", async function () {
+    it("Verify one people, one type of reward, one unstake, add reward", async function () {
       const { vaultContract, owner, reward1TokenContract } = await loadFixture(
         deployFixture
       );
-      await vaultContract.deposit(DEPOSIT_AMOUNT);
+      await vaultContract.stake(STAKED_AMOUNT);
       await vaultContract.addReward(
         reward1TokenContract.address,
         REWARD_AMOUNT,
         owner.address
       );
       await TestHelper.increaseEVMTime(ADVANCE_LOCKING_PERIOD);
-      await vaultContract.withdraw(WITHDRAW_AMOUNT);
-      expect(await vaultContract.getTotalVolume()).equals(
-        DEPOSIT_AMOUNT - WITHDRAW_AMOUNT
+      await vaultContract.unstake(UN_STAKED_AMOUNT);
+      expect(await vaultContract.getStakingTokenTotalSupply()).equals(
+        STAKED_AMOUNT - UN_STAKED_AMOUNT
       );
       expect(
         await reward1TokenContract.balanceOf(vaultContract.address)
@@ -338,7 +340,7 @@ describe("Vault Tests", function () {
       );
     });
 
-    it("Verify two people, two type of rewards, one withdraw, add reward", async function () {
+    it("Verify two people, two type of rewards, one unstake, add reward", async function () {
       const {
         vaultContract,
         owner,
@@ -346,8 +348,8 @@ describe("Vault Tests", function () {
         reward1TokenContract,
         reward2TokenContract,
       } = await loadFixture(deployFixture);
-      await vaultContract.connect(owner).deposit(DEPOSIT_AMOUNT);
-      await vaultContract.connect(signers[1]).deposit(DEPOSIT_AMOUNT);
+      await vaultContract.connect(owner).stake(STAKED_AMOUNT);
+      await vaultContract.connect(signers[1]).stake(STAKED_AMOUNT);
 
       await vaultContract.addReward(
         reward1TokenContract.address,
@@ -361,9 +363,9 @@ describe("Vault Tests", function () {
       );
 
       await TestHelper.increaseEVMTime(ADVANCE_LOCKING_PERIOD);
-      await vaultContract.connect(owner).withdraw(WITHDRAW_AMOUNT);
-      expect(await vaultContract.getTotalVolume()).equals(
-        DEPOSIT_AMOUNT * 2 - WITHDRAW_AMOUNT
+      await vaultContract.connect(owner).unstake(UN_STAKED_AMOUNT);
+      expect(await vaultContract.getStakingTokenTotalSupply()).equals(
+        STAKED_AMOUNT * 2 - UN_STAKED_AMOUNT
       );
       expect(await reward1TokenContract.balanceOf(owner.address)).equals(
         REWARD_AMOUNT / 2
@@ -379,20 +381,20 @@ describe("Vault Tests", function () {
       );
     });
 
-    it("one people, one type of reward, add reward, two withdraw", async function () {
+    it("one people, one type of reward, add reward, two unstake", async function () {
       const { vaultContract, owner, reward1TokenContract } = await loadFixture(
         deployFixture
       );
-      const LOCAL_DEPOSIT_AMOUNT = DEPOSIT_AMOUNT / 2;
-      await vaultContract.deposit(LOCAL_DEPOSIT_AMOUNT);
+      const LOCAL_STAKED_AMOUNT = STAKED_AMOUNT / 2;
+      await vaultContract.stake(LOCAL_STAKED_AMOUNT);
       await vaultContract.addReward(
         reward1TokenContract.address,
         REWARD_AMOUNT,
         owner.address
       );
-      await vaultContract.deposit(LOCAL_DEPOSIT_AMOUNT);
-      expect(await vaultContract.getUserContribution(owner.address)).equals(
-        DEPOSIT_AMOUNT
+      await vaultContract.stake(LOCAL_STAKED_AMOUNT);
+      expect(await vaultContract.stakedTokenByUser(owner.address)).equals(
+        STAKED_AMOUNT
       );
       expect(await reward1TokenContract.balanceOf(owner.address)).equals(
         REWARD_AMOUNT
@@ -402,17 +404,19 @@ describe("Vault Tests", function () {
       ).equals(0);
 
       await TestHelper.increaseEVMTime(ADVANCE_LOCKING_PERIOD);
-      // 1st - withdraw
-      await vaultContract.withdraw(LOCAL_DEPOSIT_AMOUNT);
-      expect(await vaultContract.getUserContribution(owner.address)).equals(
-        LOCAL_DEPOSIT_AMOUNT
+      // 1st - unstake
+      await vaultContract.unstake(LOCAL_STAKED_AMOUNT);
+      expect(await vaultContract.stakedTokenByUser(owner.address)).equals(
+        LOCAL_STAKED_AMOUNT
       );
-      expect(await vaultContract.getTotalVolume()).equals(LOCAL_DEPOSIT_AMOUNT);
+      expect(await vaultContract.getStakingTokenTotalSupply()).equals(
+        LOCAL_STAKED_AMOUNT
+      );
 
-      // 2nd - withdraw
-      await vaultContract.withdraw(LOCAL_DEPOSIT_AMOUNT);
-      expect(await vaultContract.getUserContribution(owner.address)).equals(0);
-      expect(await vaultContract.getTotalVolume()).equals(0);
+      // 2nd - unstake
+      await vaultContract.unstake(LOCAL_STAKED_AMOUNT);
+      expect(await vaultContract.stakedTokenByUser(owner.address)).equals(0);
+      expect(await vaultContract.getStakingTokenTotalSupply()).equals(0);
     });
 
     it("one people, one type of reward, add reward, claim all rewards", async function () {
@@ -422,7 +426,7 @@ describe("Vault Tests", function () {
         reward1TokenContract,
         reward2TokenContract,
       } = await loadFixture(deployFixture);
-      await vaultContract.deposit(DEPOSIT_AMOUNT);
+      await vaultContract.stake(STAKED_AMOUNT);
       await vaultContract.addReward(
         reward1TokenContract.address,
         REWARD_AMOUNT,
@@ -449,7 +453,7 @@ describe("Vault Tests", function () {
         reward1TokenContract,
         reward2TokenContract,
       } = await loadFixture(deployFixture);
-      await vaultContract.deposit(DEPOSIT_AMOUNT);
+      await vaultContract.stake(STAKED_AMOUNT);
       await vaultContract.addReward(
         reward1TokenContract.address,
         REWARD_AMOUNT,

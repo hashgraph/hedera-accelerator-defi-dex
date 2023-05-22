@@ -5,16 +5,16 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 describe("Splitter tests", function () {
   const LOCKING_PERIOD = 50;
 
-  const DEPOSIT_AMOUNT_1 = TestHelper.toPrecision(1000);
-  const DEPOSIT_AMOUNT_2 = TestHelper.toPrecision(50);
-  const DEPOSIT_AMOUNT_3 = TestHelper.toPrecision(100);
-  const DEPOSITS_ARRAY = [DEPOSIT_AMOUNT_1, DEPOSIT_AMOUNT_2, DEPOSIT_AMOUNT_3];
-  const TOTAL_DEPOSIT_AMOUNT = DEPOSITS_ARRAY.reduce((a, b) => a + b);
+  const STAKED_AMOUNT_1 = TestHelper.toPrecision(1000);
+  const STAKED_AMOUNT_2 = TestHelper.toPrecision(50);
+  const STAKED_AMOUNT_3 = TestHelper.toPrecision(100);
+  const STAKED_ARRAY = [STAKED_AMOUNT_1, STAKED_AMOUNT_2, STAKED_AMOUNT_3];
+  const TOTAL_STAKED_AMOUNT = STAKED_ARRAY.reduce((a, b) => a + b);
 
   const MULTIPLIERS = [1, 14, 30];
   const REWARD_AMOUNT = TestHelper.toPrecision(100);
   const EACH_VAULT_WEIGHT = MULTIPLIERS.map(
-    (value, index) => value * DEPOSITS_ARRAY[index]
+    (value, index) => value * STAKED_ARRAY[index]
   );
   const ALL_VAULTS_WEIGHT = EACH_VAULT_WEIGHT.reduce((a, b) => a + b);
 
@@ -30,7 +30,7 @@ describe("Splitter tests", function () {
     const stakingTokenContract = await TestHelper.deployERC20Mock();
     await stakingTokenContract.setUserBalance(
       owner.address,
-      TOTAL_DEPOSIT_AMOUNT
+      TOTAL_STAKED_AMOUNT
     );
 
     const rewardTokenContract = await TestHelper.deployERC20Mock();
@@ -42,13 +42,13 @@ describe("Splitter tests", function () {
       LOCKING_PERIOD,
     ];
     const vaultContract1 = await TestHelper.deployProxy("Vault", ...ARGS);
-    await vaultContract1.deposit(DEPOSIT_AMOUNT_1);
+    await vaultContract1.stake(STAKED_AMOUNT_1);
 
     const vaultContract2 = await TestHelper.deployProxy("Vault", ...ARGS);
-    await vaultContract2.deposit(DEPOSIT_AMOUNT_2);
+    await vaultContract2.stake(STAKED_AMOUNT_2);
 
     const vaultContract3 = await TestHelper.deployProxy("Vault", ...ARGS);
-    await vaultContract3.deposit(DEPOSIT_AMOUNT_3);
+    await vaultContract3.stake(STAKED_AMOUNT_3);
 
     const nonUsedVaultContract = await TestHelper.deployProxy("Vault", ...ARGS);
 

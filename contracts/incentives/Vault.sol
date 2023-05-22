@@ -12,11 +12,11 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 contract Vault is IVault, OwnableUpgradeable, TokenOperations {
     using PRBMathUD60x18 for uint256;
 
-    struct ContributionInfo {
-        bool exist;
-        uint256 total;
+    struct UserStakingTokenContribution {
+        bool alreadyStaked;
+        uint256 stakingTokenTotal;
         uint256 lastLockedTime;
-        mapping(address => uint256) claimed;
+        mapping(address => uint256) rewardClaimed;
     }
 
     struct RewardInfo {
@@ -25,12 +25,13 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
     }
 
     IBaseHTS private baseHTS;
+
     IERC20 private stakingToken;
+    uint256 private stakingTokenTotalSupply;
+    uint256 private stakingTokenLockingPeriod;
 
-    uint256 private totalSupply;
-    uint256 private lockingPeriod;
-
-    mapping(address => ContributionInfo) public usersContributionInfo;
+    mapping(address => UserStakingTokenContribution)
+        public usersStakingTokenContribution;
 
     address[] private rewardTokens;
     mapping(address => RewardInfo) public tokensRewardInfo;
@@ -50,32 +51,29 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
             "Vault: locking period should be a positive number"
         );
         baseHTS = _baseHTS;
-        lockingPeriod = _lockingPeriod;
+        stakingTokenLockingPeriod = _lockingPeriod;
         stakingToken = IERC20(_stakingToken);
         _associateToken(_baseHTS, address(this), _stakingToken);
     }
 
-    function deposit(uint256 _amount) external override {
-        require(_amount > 0, "Vault: deposit amount must be a positive number");
-        if (usersContributionInfo[msg.sender].exist) {
+    function stake(uint256 _amount) external override {
+        require(_amount > 0, "Vault: stake amount must be a positive number");
+        if (usersStakingTokenContribution[msg.sender].alreadyStaked) {
             claimAllRewards(msg.sender);
         } else {
             _setUpStaker(msg.sender);
         }
-        _deposit(msg.sender, _amount);
+        _stake(msg.sender, _amount);
     }
 
-    function withdraw(uint256 _amount) external override {
+    function unstake(uint256 _amount) external override {
+        require(_amount > 0, "Vault: unstake amount must be a positive number");
         require(
-            _amount > 0,
-            "Vault: withdraw amount must be a positive number"
-        );
-        require(
-            canUserWithdrawTokens(msg.sender, _amount),
-            "Vault: withdraw not allowed"
+            canUserUnstakeTokens(msg.sender, _amount),
+            "Vault: unstake not allowed"
         );
         claimAllRewards(msg.sender);
-        _withdraw(msg.sender, _amount);
+        _unstake(msg.sender, _amount);
     }
 
     function addReward(
@@ -86,8 +84,8 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
         require(_token != address(0), "Vault: reward token should not be zero");
         require(_from != address(0), "Vault: from address should not be zero");
         require(_amount > 0, "Vault: reward amount must be a positive number");
-        require(totalSupply > 0, "Vault: no token staked yet");
-        uint256 perShareAmount = _amount.div(totalSupply);
+        require(stakingTokenTotalSupply > 0, "Vault: no token staked yet");
+        uint256 perShareAmount = _amount.div(stakingTokenTotalSupply);
         RewardInfo storage rewardInfo = tokensRewardInfo[_token];
         if (!rewardInfo.exist) {
             rewardInfo.exist = true;
@@ -102,30 +100,37 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
         );
     }
 
-    function canUserWithdrawTokens(
+    function canUserUnstakeTokens(
         address _user,
         uint256 _amount
     ) public view override returns (bool) {
-        ContributionInfo storage cInfo = usersContributionInfo[_user];
+        UserStakingTokenContribution
+            storage cInfo = usersStakingTokenContribution[_user];
         return
-            cInfo.exist &&
-            cInfo.total > 0 &&
-            cInfo.total >= _amount &&
-            block.timestamp > (cInfo.lastLockedTime + lockingPeriod);
+            cInfo.alreadyStaked &&
+            cInfo.stakingTokenTotal > 0 &&
+            cInfo.stakingTokenTotal >= _amount &&
+            block.timestamp >
+            (cInfo.lastLockedTime + stakingTokenLockingPeriod);
     }
 
-    function getUserContribution(
+    function stakedTokenByUser(
         address _user
     ) external view override returns (uint256) {
-        return usersContributionInfo[_user].total;
+        return usersStakingTokenContribution[_user].stakingTokenTotal;
     }
 
-    function getTotalVolume() external view override returns (uint256) {
-        return totalSupply;
+    function getStakingTokenTotalSupply()
+        external
+        view
+        override
+        returns (uint256)
+    {
+        return stakingTokenTotalSupply;
     }
 
     function getLockingPeriod() external view override returns (uint256) {
-        return lockingPeriod;
+        return stakingTokenLockingPeriod;
     }
 
     function getStakingTokenAddress() external view override returns (address) {
@@ -157,12 +162,13 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
         RewardInfo memory _rewardInfo
     ) private {
         uint256 perShareRewardAmt = _rewardInfo.perShareAmount;
-        ContributionInfo storage cInfo = usersContributionInfo[_user];
-        uint256 totalShares = cInfo.total;
-        uint256 perShareClaimedAmt = cInfo.claimed[_rewardToken];
+        UserStakingTokenContribution
+            storage cInfo = usersStakingTokenContribution[_user];
+        uint256 totalShares = cInfo.stakingTokenTotal;
+        uint256 perShareClaimedAmt = cInfo.rewardClaimed[_rewardToken];
         uint256 perShareUnclaimedAmt = perShareRewardAmt - perShareClaimedAmt;
         uint256 unclaimedRewards = totalShares.mul(perShareUnclaimedAmt);
-        cInfo.claimed[_rewardToken] = perShareRewardAmt;
+        cInfo.rewardClaimed[_rewardToken] = perShareRewardAmt;
         if (unclaimedRewards > 0) {
             require(
                 _transferToken(
@@ -176,12 +182,13 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
         }
     }
 
-    function _deposit(address _user, uint256 _amount) private {
-        ContributionInfo storage cInfo = usersContributionInfo[_user];
-        cInfo.exist = true;
+    function _stake(address _user, uint256 _amount) private {
+        UserStakingTokenContribution
+            storage cInfo = usersStakingTokenContribution[_user];
+        cInfo.alreadyStaked = true;
         cInfo.lastLockedTime = block.timestamp;
-        cInfo.total += _amount;
-        totalSupply += _amount;
+        cInfo.stakingTokenTotal += _amount;
+        stakingTokenTotalSupply += _amount;
         require(
             _transferToken(
                 address(stakingToken),
@@ -193,10 +200,11 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
         );
     }
 
-    function _withdraw(address _user, uint256 _amount) private {
-        ContributionInfo storage cInfo = usersContributionInfo[_user];
-        cInfo.total -= _amount;
-        totalSupply -= _amount;
+    function _unstake(address _user, uint256 _amount) private {
+        UserStakingTokenContribution
+            storage cInfo = usersStakingTokenContribution[_user];
+        cInfo.stakingTokenTotal -= _amount;
+        stakingTokenTotalSupply -= _amount;
         require(
             _transferToken(
                 address(stakingToken),
@@ -204,17 +212,17 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
                 _user,
                 _amount
             ) == HederaResponseCodes.SUCCESS,
-            "Vault: withdraw failed"
+            "Vault: unstake failed"
         );
     }
 
-    // todo: need to check this
     function _setUpStaker(address _user) private {
-        ContributionInfo storage cInfo = usersContributionInfo[_user];
+        UserStakingTokenContribution
+            storage cInfo = usersStakingTokenContribution[_user];
         uint256 rewardTokensCount = rewardTokens.length;
         for (uint256 counter = 0; counter < rewardTokensCount; counter++) {
             address rewardToken = rewardTokens[counter];
-            cInfo.claimed[rewardToken] = tokensRewardInfo[rewardToken]
+            cInfo.rewardClaimed[rewardToken] = tokensRewardInfo[rewardToken]
                 .perShareAmount;
         }
     }
