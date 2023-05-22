@@ -333,6 +333,9 @@ describe("Vault Tests", function () {
       expect(
         await reward1TokenContract.balanceOf(vaultContract.address)
       ).equals(0);
+      expect(await reward1TokenContract.balanceOf(owner.address)).equals(
+        REWARD_AMOUNT
+      );
     });
 
     it("Verify two people, two type of rewards, one withdraw, add reward", async function () {
