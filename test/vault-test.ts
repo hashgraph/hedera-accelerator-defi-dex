@@ -7,8 +7,8 @@ describe("Vault Tests", function () {
   const DEPOSIT_AMOUNT = TestHelper.toPrecision(50);
   const WITHDRAW_AMOUNT = TestHelper.toPrecision(10);
   const REWARD_AMOUNT = TestHelper.toPrecision(10);
-  const LOCKING_PERIOD = 50000; // 50 sec locking period
-  const ADVANCE_LOCKING_PERIOD = LOCKING_PERIOD + 1000; // 51 sec advance locking period
+  const LOCKING_PERIOD = 50; // 50 sec locking period
+  const ADVANCE_LOCKING_PERIOD = LOCKING_PERIOD + 1; // 51 sec advance locking period
 
   async function deployFixture() {
     const signers = await TestHelper.getSigners();
@@ -148,7 +148,7 @@ describe("Vault Tests", function () {
     it("Verify withdraw operation should be reverted when withdraw amount is greater then deposit amount", async function () {
       const { vaultContract } = await loadFixture(deployFixture);
       await vaultContract.deposit(DEPOSIT_AMOUNT);
-      await TestHelper.advanceTime(ADVANCE_LOCKING_PERIOD);
+      await TestHelper.increaseEVMTime(ADVANCE_LOCKING_PERIOD);
       await expect(vaultContract.withdraw(DEPOSIT_AMOUNT + 1)).revertedWith(
         "Vault: withdraw not allowed"
       );
@@ -159,7 +159,7 @@ describe("Vault Tests", function () {
         deployFixture
       );
       await vaultContract.deposit(DEPOSIT_AMOUNT);
-      await TestHelper.advanceTime(ADVANCE_LOCKING_PERIOD);
+      await TestHelper.increaseEVMTime(ADVANCE_LOCKING_PERIOD);
       await stakingTokenContract.setTransaferFailed(true);
       await expect(vaultContract.withdraw(DEPOSIT_AMOUNT)).revertedWith(
         "Vault: withdraw failed"
@@ -169,7 +169,7 @@ describe("Vault Tests", function () {
     it("Verify partial withdraw operation should be succeeded", async function () {
       const { vaultContract } = await loadFixture(deployFixture);
       await vaultContract.deposit(DEPOSIT_AMOUNT);
-      await TestHelper.advanceTime(ADVANCE_LOCKING_PERIOD);
+      await TestHelper.increaseEVMTime(ADVANCE_LOCKING_PERIOD);
       await vaultContract.withdraw(WITHDRAW_AMOUNT);
       expect(await vaultContract.getTotalVolume()).equals(
         DEPOSIT_AMOUNT - WITHDRAW_AMOUNT
@@ -179,7 +179,7 @@ describe("Vault Tests", function () {
     it("Verify fully withdraw operation should be succeeded", async function () {
       const { vaultContract } = await loadFixture(deployFixture);
       await vaultContract.deposit(DEPOSIT_AMOUNT);
-      await TestHelper.advanceTime(ADVANCE_LOCKING_PERIOD);
+      await TestHelper.increaseEVMTime(ADVANCE_LOCKING_PERIOD);
       await vaultContract.withdraw(DEPOSIT_AMOUNT);
       expect(await vaultContract.getTotalVolume()).equals(0);
     });
@@ -325,7 +325,7 @@ describe("Vault Tests", function () {
         REWARD_AMOUNT,
         owner.address
       );
-      await TestHelper.advanceTime(ADVANCE_LOCKING_PERIOD);
+      await TestHelper.increaseEVMTime(ADVANCE_LOCKING_PERIOD);
       await vaultContract.withdraw(WITHDRAW_AMOUNT);
       expect(await vaultContract.getTotalVolume()).equals(
         DEPOSIT_AMOUNT - WITHDRAW_AMOUNT
@@ -357,7 +357,7 @@ describe("Vault Tests", function () {
         owner.address
       );
 
-      await TestHelper.advanceTime(ADVANCE_LOCKING_PERIOD);
+      await TestHelper.increaseEVMTime(ADVANCE_LOCKING_PERIOD);
       await vaultContract.connect(owner).withdraw(WITHDRAW_AMOUNT);
       expect(await vaultContract.getTotalVolume()).equals(
         DEPOSIT_AMOUNT * 2 - WITHDRAW_AMOUNT
@@ -398,7 +398,7 @@ describe("Vault Tests", function () {
         await reward1TokenContract.balanceOf(vaultContract.address)
       ).equals(0);
 
-      await TestHelper.advanceTime(ADVANCE_LOCKING_PERIOD);
+      await TestHelper.increaseEVMTime(ADVANCE_LOCKING_PERIOD);
       // 1st - withdraw
       await vaultContract.withdraw(LOCAL_DEPOSIT_AMOUNT);
       expect(await vaultContract.getUserContribution(owner.address)).equals(

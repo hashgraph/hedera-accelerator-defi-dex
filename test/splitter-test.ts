@@ -2,8 +2,8 @@ import { expect } from "chai";
 import { TestHelper } from "./TestHelper";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-describe("Splitter contract tests", function () {
-  const LOCKING_PERIOD = 50000;
+describe("Splitter tests", function () {
+  const LOCKING_PERIOD = 50;
 
   const DEPOSIT_AMOUNT_1 = TestHelper.toPrecision(1000);
   const DEPOSIT_AMOUNT_2 = TestHelper.toPrecision(50);

@@ -12,7 +12,7 @@ export class TestHelper {
     }
   }
 
-  static async advanceTime(seconds: number) {
+  static async increaseEVMTime(seconds: number) {
     await ethers.provider.send("evm_increaseTime", [seconds]);
   }
 
