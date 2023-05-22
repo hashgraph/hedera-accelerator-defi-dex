@@ -51,7 +51,9 @@ export class GovernorUpgradeSteps extends CommonSteps {
     await this.initializeGovernorContract(
       governor,
       godHolder,
-      clientsInfo.operatorClient
+      clientsInfo.operatorClient,
+      TokenId.fromString(dex.GOD_TOKEN_ID),
+      TokenId.fromString(dex.GOD_TOKEN_ID)
     );
   }
 

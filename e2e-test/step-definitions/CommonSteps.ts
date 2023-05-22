@@ -19,15 +19,19 @@ export class CommonSteps {
 
   public async initializeGovernorContract(
     governor: Governor,
-    godHolder: GodHolder,
-    client: Client
+    tokenHolder: GodHolder | NFTHolder,
+    client: Client,
+    governorTokenId: TokenId,
+    holderTokenId: TokenId
   ) {
     await governor.initialize(
-      godHolder,
+      tokenHolder,
       client,
       CommonSteps.DEFAULT_QUORUM_THRESHOLD_IN_BSP,
       CommonSteps.DEFAULT_VOTING_DELAY,
-      CommonSteps.DEFAULT_VOTING_PERIOD
+      CommonSteps.DEFAULT_VOTING_PERIOD,
+      governorTokenId,
+      holderTokenId
     );
   }
 

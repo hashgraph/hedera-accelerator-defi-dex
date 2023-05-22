@@ -35,18 +35,12 @@ export class DAONFTTokenTest extends CommonSteps {
     30000
   )
   public async initializeNFTDAOSafe(name: string, url: string) {
-    await govTokenDao.initialize(
+    await govTokenDao.initializeDAO(
       adminAddress,
       name,
       url,
       governorTT,
-      nftHolder,
-      clientsInfo.operatorClient,
-      CommonSteps.DEFAULT_QUORUM_THRESHOLD_IN_BSP,
-      CommonSteps.DEFAULT_VOTING_DELAY,
-      CommonSteps.DEFAULT_VOTING_PERIOD,
-      GovernorTokenMetaData.GOD_TOKEN_ID,
-      dex.E2E_NFT_TOKEN_ID
+      clientsInfo.operatorClient
     );
   }
 
@@ -57,18 +51,19 @@ export class DAONFTTokenTest extends CommonSteps {
   )
   public async initializeNFTDAOFail(name: string, url: string) {
     try {
-      await govTokenDao.initialize(
+      await this.initializeGovernorContract(
+        governorTT,
+        nftHolder,
+        clientsInfo.operatorClient,
+        GovernorTokenMetaData.GOD_TOKEN_ID,
+        dex.E2E_NFT_TOKEN_ID
+      );
+      await govTokenDao.initializeDAO(
         adminAddress,
         name,
         url,
         governorTT,
-        nftHolder,
-        clientsInfo.operatorClient,
-        CommonSteps.DEFAULT_QUORUM_THRESHOLD_IN_BSP,
-        CommonSteps.DEFAULT_VOTING_DELAY,
-        CommonSteps.DEFAULT_VOTING_PERIOD,
-        GovernorTokenMetaData.GOD_TOKEN_ID,
-        dex.E2E_NFT_TOKEN_ID
+        clientsInfo.operatorClient
       );
     } catch (e: any) {
       console.log("expected error while initializing NFTDAO");
