@@ -18,7 +18,7 @@ import { BigNumber } from "bignumber.js";
 const TOKEN_ID = TokenId.fromString(dex.TOKEN_LAB49_1);
 const adminAddress: string = clientsInfo.operatorId.toSolidityAddress();
 
-let governorTokenDao: GovernorTokenDao;
+let govTokenDao: GovernorTokenDao;
 let governorTT: Governor;
 let nftHolder: NFTHolder;
 let errorMsg: string;
@@ -35,7 +35,7 @@ export class DAONFTTokenTest extends CommonSteps {
     30000
   )
   public async initializeNFTDAOSafe(name: string, url: string) {
-    await governorTokenDao.initialize(
+    await govTokenDao.initialize(
       adminAddress,
       name,
       url,
@@ -57,7 +57,7 @@ export class DAONFTTokenTest extends CommonSteps {
   )
   public async initializeNFTDAOFail(name: string, url: string) {
     try {
-      await governorTokenDao.initialize(
+      await govTokenDao.initialize(
         adminAddress,
         name,
         url,
@@ -71,7 +71,7 @@ export class DAONFTTokenTest extends CommonSteps {
         dex.E2E_NFT_TOKEN_ID
       );
     } catch (e: any) {
-      console.log("error while initializing NFTDAO");
+      console.log("expected error while initializing NFTDAO");
       errorMsg = e.message;
     }
   }
@@ -120,7 +120,7 @@ export class DAONFTTokenTest extends CommonSteps {
   )
   public async createProposal(title: string, tokenAmt: number) {
     tokens = tokenAmt * CommonSteps.withPrecision;
-    proposalId = await governorTokenDao.createTokenTransferProposal(
+    proposalId = await govTokenDao.createTokenTransferProposal(
       title,
       clientsInfo.treasureId.toSolidityAddress(),
       clientsInfo.operatorId.toSolidityAddress(),
@@ -141,7 +141,7 @@ export class DAONFTTokenTest extends CommonSteps {
     const amt = Number(
       fromAcctBal.plus(new BigNumber(1 * CommonSteps.withPrecision))
     );
-    proposalId = await governorTokenDao.createTokenTransferProposal(
+    proposalId = await govTokenDao.createTokenTransferProposal(
       title,
       clientsInfo.treasureId.toSolidityAddress(),
       clientsInfo.operatorId.toSolidityAddress(),
@@ -158,7 +158,7 @@ export class DAONFTTokenTest extends CommonSteps {
   )
   public async createProposalFail(title: string, tokenAmt: number) {
     try {
-      proposalId = await governorTokenDao.createTokenTransferProposal(
+      proposalId = await govTokenDao.createTokenTransferProposal(
         title,
         clientsInfo.treasureId.toSolidityAddress(),
         clientsInfo.operatorId.toSolidityAddress(),
@@ -241,7 +241,7 @@ export class DAONFTTokenTest extends CommonSteps {
       csDev.governorTokenDao
     ).transparentProxyId!;
 
-    governorTokenDao = new GovernorTokenDao(governorTokenDaoProxyContractId);
+    govTokenDao = new GovernorTokenDao(governorTokenDaoProxyContractId);
 
     const governorTokenTransferProxyContractId = csDev.getContractWithProxy(
       csDev.governorTTContractName
@@ -252,6 +252,19 @@ export class DAONFTTokenTest extends CommonSteps {
       csDev.nftHolderContract
     ).transparentProxyId!;
     nftHolder = new NFTHolder(nftHolderProxyContractId);
+
+    console.log(
+      "*******************Starting DAO NFT test with following*******************"
+    );
+    console.log(
+      "governorTokenDaoProxyContractId : ",
+      governorTokenDaoProxyContractId
+    );
+    console.log(
+      "governorTokenTransferProxyContractId : ",
+      governorTokenTransferProxyContractId
+    );
+    console.log("nftHolderProxyContractId : ", nftHolderProxyContractId);
   }
 
   @when(/User setup allowance as (\d*) for token transfer/, undefined, 30000)
