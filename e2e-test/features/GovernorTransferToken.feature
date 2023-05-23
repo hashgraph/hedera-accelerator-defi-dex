@@ -1,5 +1,5 @@
 @GovernorTransferToken
-@TestSuite-2
+@TestSuite-3
 Feature: GovernorTransferToken e2e test
 
     This feature file contains e2e test for governor transfer token
