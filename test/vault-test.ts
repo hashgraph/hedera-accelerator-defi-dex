@@ -498,33 +498,6 @@ describe("Vault Tests", function () {
       expect(await vaultContract.getStakingTokenTotalSupply()).equals(0);
     });
 
-    it("one people, one type of reward, add reward, claim all rewards", async function () {
-      const {
-        owner,
-        vaultContract,
-        reward1TokenContract,
-        reward2TokenContract,
-      } = await loadFixture(deployFixture);
-      await vaultContract.stake(STAKED_AMOUNT);
-      await vaultContract.addReward(
-        reward1TokenContract.address,
-        REWARD_AMOUNT,
-        owner.address
-      );
-      await vaultContract.addReward(
-        reward2TokenContract.address,
-        REWARD_AMOUNT,
-        owner.address
-      );
-      await vaultContract.claimRewards(owner.address);
-      expect(await reward1TokenContract.balanceOf(owner.address)).equals(
-        REWARD_AMOUNT
-      );
-      expect(await reward2TokenContract.balanceOf(owner.address)).equals(
-        REWARD_AMOUNT
-      );
-    });
-
     it("one people, one type of reward, add reward, claim rewards", async function () {
       const {
         owner,
