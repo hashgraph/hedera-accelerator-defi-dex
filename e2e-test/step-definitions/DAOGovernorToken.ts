@@ -19,6 +19,7 @@ import Common from "../business/Common";
 import { BigNumber } from "bignumber.js";
 import { CommonSteps } from "./CommonSteps";
 import GODTokenHolderFactory from "../business/GODTokenHolderFactory";
+import * as GovernorTokenMetaData from "../../e2e-test/business/GovernorTokenDao";
 
 const csDev = new ContractService();
 
@@ -79,7 +80,9 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
     await this.initializeGovernorContract(
       governorTokenTransfer,
       godHolder,
-      clientsInfo.operatorClient
+      clientsInfo.operatorClient,
+      GovernorTokenMetaData.GOD_TOKEN_ID,
+      GovernorTokenMetaData.GOD_TOKEN_ID
     );
     let blankTitleOrURL: boolean = false;
     try {

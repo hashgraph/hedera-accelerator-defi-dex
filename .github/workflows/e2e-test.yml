@@ -53,8 +53,8 @@ jobs:
       OPERATOR_KEY: 2cc790b009e400a3ed97363980ae27ddfb58102fa8fb7c1a7b69e212f756c084
       TOKEN_USER_ID: 0.0.2375093
       TOKEN_USER_KEY: 805a0b26c8ecee83e903076eebb86928c612590f32afc6d272ced4c73db6d466
-      TREASURE_ID: 0.0.6948
-      TREASURE_KEY: c8cb72a0addffcbd898689e5b5641c0abff4399ddeb90a04071433e3724e14dd
+      TREASURE_ID: 0.0.6880
+      TREASURE_KEY: c372f05c182ae62e04603081f6abc8cbd3a712401e1d1f88401cf310c91f644b
 
     steps:
       - uses: actions/checkout@v3
@@ -68,7 +68,7 @@ jobs:
         id: create-json
         with:
           name: "deployment/scripts/workflow-inputs.json"
-          json: '{"contracts":"GODHolder,GovernorTransferToken,GovernorTokenCreate,GovernorTextProposal,GovernanceDAOFactory,GovernorTokenDAO,GODTokenHolderFactory"}'
+          json: '{"contracts":"GODHolder,GovernorTransferToken,GovernorTokenCreate,GovernorTextProposal,GovernanceDAOFactory,GovernorTokenDAO,GODTokenHolderFactory,NFTHolder"}'
       - name: Deployment
         run: npx hardhat run deployment/scripts/createContractsE2E.ts;
       - name: e2e
