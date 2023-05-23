@@ -143,27 +143,20 @@ export class Deployment {
   deploy = async (
     contractName: string,
     adminKey: Key = clientsInfo.operatorKey.publicKey,
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
+    params: ContractFunctionParameters = new ContractFunctionParameters()
   ) => {
-    console.log(`- Deployment#deploy(): ${contractName} deploying...\n`);
-    const info = await this.contractMetadata.getContractInfo(contractName);
-    const txn = new ContractCreateFlow()
-      .setBytecode(info.artifact.bytecode)
-      .setGas(2000000)
-      .setAdminKey(adminKey);
-
-    const txnResponse = await txn.execute(client);
-    const txnReceipt = await txnResponse.getReceipt(client);
-    const contractId = txnReceipt.contractId!.toString();
-    const contractAddress = "0x" + txnReceipt.contractId!.toSolidityAddress();
-
-    console.log(
-      `- Deployment#deploy(): done where contract-name = ${contractName}, id = ${contractId}, address = ${contractAddress}\n`
+    console.log(`- Deployment#deploy(): ${contractName} logic deploying...\n`);
+    const result = await this.deployInternally(
+      contractName,
+      adminKey,
+      client,
+      params
     );
-    return {
-      id: contractId,
-      address: contractAddress,
-    };
+    console.log(
+      `- Deployment#deploy(): done where contract-name = ${contractName}, id = ${result.id}, address = ${result.address}\n`
+    );
+    return result;
   };
 
   public deployContractAsAdmin = async (
@@ -188,6 +181,34 @@ export class Deployment {
       filePath,
       contractConstructorArgs
     );
+  };
+
+  deployProxy = async (
+    contractName: string,
+    adminKey: Key = clientsInfo.operatorKey.publicKey,
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    console.log(`- Deployment#deploy(): ${contractName} proxy deploying...\n`);
+    const logic = await this.deployInternally(contractName, adminKey, client);
+    const proxy = await this.deployInternally(
+      "TransparentUpgradeableProxy",
+      adminKey,
+      client,
+      new ContractFunctionParameters()
+        .addAddress(logic.address)
+        .addAddress(clientsInfo.adminId.toSolidityAddress())
+        .addBytes(new Uint8Array())
+    );
+    const info = {
+      ...logic,
+      proxyId: proxy.id,
+      proxyAddress: proxy.address,
+      timestamp: new Date().toISOString(),
+    };
+    console.log(`- Deployment#deploy(): done`);
+    console.table(info);
+    console.log("\n");
+    return info;
   };
 
   private deployContract = async (
@@ -245,6 +266,32 @@ export class Deployment {
     return {
       id: contractId?.toString()!,
       address: contractEvmAddress,
+    };
+  };
+
+  private deployInternally = async (
+    contractName: string,
+    adminKey: Key = clientsInfo.operatorKey.publicKey,
+    client: Client = clientsInfo.operatorClient,
+    params: ContractFunctionParameters = new ContractFunctionParameters()
+  ) => {
+    const info = await this.contractMetadata.getContractInfo(contractName);
+    const txn = new ContractCreateFlow()
+      .setConstructorParameters(params)
+      .setBytecode(info.artifact.bytecode)
+      .setGas(2_000_000)
+      .setAdminKey(adminKey);
+
+    const txnResponse = await txn.execute(client);
+    const txnReceipt = await txnResponse.getReceipt(client);
+    const id = txnReceipt.contractId!.toString();
+    const address = "0x" + txnReceipt.contractId!.toSolidityAddress();
+
+    return {
+      id,
+      hash: info.hash,
+      address,
+      timestamp: new Date().toISOString(),
     };
   };
 }

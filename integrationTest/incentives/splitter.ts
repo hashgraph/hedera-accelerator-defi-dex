@@ -1,157 +1,104 @@
-import { BigNumber } from "bignumber.js";
-import {
-  ContractExecuteTransaction,
-  ContractFunctionParameters,
-  Hbar,
-  ContractId,
-  TokenId,
-} from "@hashgraph/sdk";
+import dex from "../../deployment/model/dex";
+import Vault from "../../e2e-test/business/Vault";
+import Common from "../../e2e-test/business/Common";
+import Splitter from "../../e2e-test/business/Splitter";
 
+import { Helper } from "../../utils/Helper";
+import { clientsInfo } from "../../utils/ClientManagement";
+import { InstanceProvider } from "../../utils/InstanceProvider";
+import { TokenId, ContractId } from "@hashgraph/sdk";
+import { Deployment } from "../../utils/deployContractOnTestnet";
 import { ContractService } from "../../deployment/service/ContractService";
-import ClientManagement from "../../utils/ClientManagement";
+import BigNumber from "bignumber.js";
 
-const clientManagement = new ClientManagement();
-const contractService = new ContractService();
+const STAKING_TOKEN = TokenId.fromString(dex.GOD_TOKEN_ID);
+const STAKING_TOKEN_QTY = Common.withPrecision(1, 1).toNumber();
+const LOCKING_PERIOD_IN_SECONDS = 15; // 15 second locking period
 
-let client = clientManagement.createOperatorClient();
-let treasureClient = clientManagement.createClient();
+const REWARD_TOKEN = TokenId.fromString(dex.TOKEN_LAB49_1);
+const REWARD_TOKEN_QTY = Common.withPrecision(1, 1e4).toNumber();
 
-const { treasureId, treasureKey } = clientManagement.getTreasure();
-const tokenA = TokenId.fromString("0.0.48289687");
-const tokenB = TokenId.fromString("0.0.48289686");
-const tokenC = TokenId.fromString("0.0.48301281");
-const tokenD = TokenId.fromString("0.0.48301282");
-const tokenE = TokenId.fromString("0.0.48301300");
-const tokenF = TokenId.fromString("0.0.48301322");
-
-const contractId = contractService.getContractWithProxy(
-  contractService.splitterContractName
-).transparentProxyId!;
-
-const baseService = contractService.getContractWithProxy(
-  contractService.baseContractName
-).address!;
-
-const vaultContractAddresses = contractService
-  .getContractsWithProxy(contractService.vaultContractName, 3)
-  .map((obj) => {
-    return obj.transparentProxyAddress!;
-  });
-
-const withPrecision = (value: number): BigNumber => {
-  return new BigNumber(value).multipliedBy(100000000);
+const createVaults = async () => {
+  const deployment = new Deployment();
+  return (
+    await Promise.all([
+      deployment.deployProxy(ContractService.VAULT),
+      deployment.deployProxy(ContractService.VAULT),
+      deployment.deployProxy(ContractService.VAULT),
+    ])
+  ).map((item) => new Vault(item.proxyId));
 };
 
-const vaultContractIds = contractService
-  .getContractsWithProxy(contractService.vaultContractName, 3)
-  .map((obj) => {
-    return obj.transparentProxyId!;
-  });
-
-const vaultInitialize = async (
-  contractId: string | ContractId,
-  stakeAmount: number
-) => {
-  console.log(`vaultInitialize ${contractId}`);
-  const vaultInitializeTx = await new ContractExecuteTransaction()
-    .setContractId(contractId)
-    .setGas(9000000)
-    .setFunction(
-      "initialize",
-      new ContractFunctionParameters()
-        .addAddress(tokenF.toSolidityAddress())
-        .addUint256(10) // block time
-        .addAddress(baseService)
+const vaultsMultiplier = async (splitter: Splitter, vaultsId: ContractId[]) => {
+  return await Promise.all(
+    vaultsId.map(async (vaultId: ContractId) =>
+      splitter.vaultMultiplier(vaultId)
     )
-    .setMaxTransactionFee(new Hbar(100))
-    .freezeWith(client);
-
-  const vaultInitializeTxRes = await vaultInitializeTx.execute(client);
-  const receipt = await vaultInitializeTxRes.getReceipt(client);
-  console.log(`vaultInitialize: ${receipt.status}`);
-};
-
-const vaultAddStakingToken = async (
-  contractId: string | ContractId,
-  stakeAmount: number
-) => {
-  console.log(`vaultAddStakingToken ${contractId}`);
-  const vaultAddStakingTokenTx = await new ContractExecuteTransaction()
-    .setContractId(contractId)
-    .setGas(9000000)
-    .setFunction(
-      "addStake",
-      new ContractFunctionParameters().addUint256(withPrecision(stakeAmount))
-    )
-    .setMaxTransactionFee(new Hbar(100))
-    .freezeWith(treasureClient)
-    .sign(treasureKey);
-
-  const vaultAddStakingTokenTxRes = await vaultAddStakingTokenTx.execute(
-    treasureClient
   );
-  const receipt = await vaultAddStakingTokenTxRes.getReceipt(treasureClient);
-  console.log(`vaultAddStakingToken: ${receipt.status}`);
 };
 
-const initialize = async (contractId: string | ContractId) => {
-  console.log(`Splitter Initialize`);
-  console.log(`vault addresses ${vaultContractAddresses}`);
-  const splitterInitializeTx = await new ContractExecuteTransaction()
-    .setContractId(contractId)
-    .setGas(9000000)
-    .setFunction(
-      "initialize",
-      new ContractFunctionParameters()
-        .addAddress(baseService)
-        .addAddressArray(vaultContractAddresses)
-        .addUint256Array([1, 14, 30])
-    )
-    .setMaxTransactionFee(new Hbar(100))
-    .freezeWith(client);
-
-  const splitterInitializeTxRes = await splitterInitializeTx.execute(client);
-  const receipt = await splitterInitializeTxRes.getReceipt(client);
-  console.log(`Splitter Initialize: ${receipt.status}`);
+const setupVaultAllowances = async (
+  amounts: BigNumber[],
+  vaultsId: ContractId[]
+) => {
+  const allowance = async (amount: BigNumber, index: number) =>
+    Common.setTokenAllowance(
+      REWARD_TOKEN,
+      vaultsId[index].toString(),
+      amount.toNumber(),
+      clientsInfo.operatorId,
+      clientsInfo.operatorKey,
+      clientsInfo.operatorClient
+    );
+  return await Promise.all(amounts.map(allowance));
 };
 
-const splitTokens = async (contractId: string | ContractId) => {
-  console.log(`splitTokens`);
-  const splitTokensTx = await new ContractExecuteTransaction()
-    .setContractId(contractId)
-    .setGas(9000000)
-    .setFunction(
-      "splitTokensToVaults",
-      new ContractFunctionParameters()
-        .addAddress(tokenA.toSolidityAddress())
-        .addAddress(treasureId.toSolidityAddress())
-        .addUint256(new BigNumber(10000000000))
-    )
-    .setMaxTransactionFee(new Hbar(100))
-    .freezeWith(client)
-    .sign(treasureKey);
+const stake = async (vault: Vault) => {
+  await Common.setTokenAllowance(
+    STAKING_TOKEN,
+    vault.contractId,
+    STAKING_TOKEN_QTY,
+    clientsInfo.uiUserId,
+    clientsInfo.uiUserKey,
+    clientsInfo.uiUserClient
+  );
+  await vault.stake(STAKING_TOKEN_QTY, clientsInfo.uiUserClient);
+};
 
-  const splitTokensTxRes = await splitTokensTx.execute(client);
-  const receipt = await splitTokensTxRes.getReceipt(client);
-  console.log(`splitTokens: ${receipt.status}`);
+const initialize = async (splitter: Splitter) => {
+  if (await splitter.isInitializationPending()) {
+    const vaults = await createVaults();
+    const vaultIds = await Promise.all(
+      vaults.map(async (vault: Vault) => {
+        await vault.initialize(STAKING_TOKEN, LOCKING_PERIOD_IN_SECONDS);
+        await stake(vault);
+        return ContractId.fromString(vault.contractId);
+      })
+    );
+    await splitter.initialize(vaultIds, [1, 14, 30]);
+  } else {
+    console.log(
+      `- Splitter#initialize(): already done, contract-id = ${splitter.contractId}\n`
+    );
+  }
 };
 
 async function main() {
-  /// Code to be uncommented if new fresh vault deployed
-
-  const stakeAmounts = [1000, 50, 100];
-  for (let index = 0; index < vaultContractIds.length; index++) {
-    const element = vaultContractIds[index];
-    await vaultInitialize(element, stakeAmounts[index]);
-    await vaultAddStakingToken(element, stakeAmounts[index]);
-  }
-  await initialize(contractId);
-  await splitTokens(contractId);
+  const splitter = InstanceProvider.getInstance().getSplitter();
+  await initialize(splitter);
+  const vaultsId = await splitter.vaults();
+  await vaultsMultiplier(splitter, vaultsId);
+  const amounts = await splitter.getSplittedAmountListForGivenAmount(
+    REWARD_TOKEN_QTY
+  );
+  await setupVaultAllowances(amounts, vaultsId);
+  await splitter.splitTokens(
+    REWARD_TOKEN,
+    clientsInfo.operatorId,
+    REWARD_TOKEN_QTY
+  );
 }
 
 main()
   .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
+  .catch(Helper.processError);

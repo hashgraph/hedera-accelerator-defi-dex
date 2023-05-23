@@ -12,6 +12,8 @@ export class ContractService {
   public static GOVERNOR_TT = "governortransfertoken";
   public static PAIR = "pair";
   public static LP_TOKEN = "lptoken";
+  public static VAULT = "vault";
+  public static SPLITTER = "splitter";
 
   public governanceDaoFactory = "governancedaofactory";
   public factoryContractName = "factory";

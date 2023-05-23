@@ -10,12 +10,12 @@
   },
   {
     "name": "splitter",
-    "id": "0.0.4643215",
-    "address": "0x000000000000000000000000000000000046d98f",
-    "timestamp": "2023-05-12T10:36:21.695Z",
-    "hash": "bb1c4a39ce2c4ee18f805496840368a6",
-    "transparentProxyAddress": "0x000000000000000000000000000000000046d9a7",
-    "transparentProxyId": "0.0.4643239"
+    "id": "0.0.13363772",
+    "address": "0x0000000000000000000000000000000000cbea3c",
+    "timestamp": "2023-05-23T08:54:51.786Z",
+    "hash": "6c38fe0ebc47f7828d933b6a25ab9479",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000cbea6c",
+    "transparentProxyId": "0.0.13363820"
   },
   {
     "name": "nftholder",
@@ -73,12 +73,12 @@
   },
   {
     "name": "vault",
-    "id": "0.0.4643220",
-    "address": "0x000000000000000000000000000000000046d994",
-    "timestamp": "2023-05-12T10:36:24.239Z",
-    "hash": "8b9f4d730047fd94b879a2a72967f4be",
-    "transparentProxyAddress": "0x000000000000000000000000000000000046d9b4",
-    "transparentProxyId": "0.0.4643252"
+    "id": "0.0.13363025",
+    "address": "0x0000000000000000000000000000000000cbe751",
+    "timestamp": "2023-05-23T08:32:55.087Z",
+    "hash": "c32b21d3d4b9928b5ab4e109a4e48be6",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000cbe757",
+    "transparentProxyId": "0.0.13363031"
   },
   {
     "name": "configuration",
