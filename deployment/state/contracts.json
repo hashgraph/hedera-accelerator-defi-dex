@@ -224,11 +224,56 @@
   },
   {
     "name": "factory",
-    "id": "0.0.13391089",
-    "address": "0x0000000000000000000000000000000000cc54f1",
-    "timestamp": "2023-05-24T08:18:43.555Z",
-    "hash": "7e21d9ed91eeb25533311ba55272f1ac",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000cc54f3",
-    "transparentProxyId": "0.0.13391091"
+    "id": "0.0.13392466",
+    "address": "0x0000000000000000000000000000000000cc5a52",
+    "timestamp": "2023-05-24T10:15:46.000Z",
+    "hash": "e868c2c78a45cf75645ba7924ce5bc64",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000cc5a54",
+    "transparentProxyId": "0.0.13392468"
+  },
+  {
+    "name": "lptoken",
+    "id": "0.0.13392473",
+    "address": "0x0000000000000000000000000000000000cc5a59",
+    "timestamp": "2023-05-24T10:16:26.933Z",
+    "hash": "5ad7fbfba2c050d95f097febf0881d93",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000cc5a5c",
+    "transparentProxyId": "0.0.13392476"
+  },
+  {
+    "name": "pair",
+    "id": "0.0.13392478",
+    "address": "0x0000000000000000000000000000000000cc5a5e",
+    "timestamp": "2023-05-24T10:17:13.793Z",
+    "hash": "eaa85511c6373eac2ee93d7378548a43",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000cc5a63",
+    "transparentProxyId": "0.0.13392483"
+  },
+  {
+    "name": "basehts",
+    "id": "0.0.13392490",
+    "address": "0x0000000000000000000000000000000000cc5a6a",
+    "timestamp": "2023-05-24T10:18:18.615Z",
+    "hash": "9ba73a353344195752ffee2b956ef9f1",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000cc5a6d",
+    "transparentProxyId": "0.0.13392493"
+  },
+  {
+    "name": "governortokencreate",
+    "id": "0.0.13392523",
+    "address": "0x0000000000000000000000000000000000cc5a8b",
+    "timestamp": "2023-05-24T10:19:31.517Z",
+    "hash": "dc7771b59bb19fb272a364c1008190fc",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000cc5a90",
+    "transparentProxyId": "0.0.13392528"
+  },
+  {
+    "name": "nftholder",
+    "id": "0.0.13392533",
+    "address": "0x0000000000000000000000000000000000cc5a95",
+    "timestamp": "2023-05-24T10:20:20.265Z",
+    "hash": "4d7e43c0d7702071bbf7bea25229e2cb",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000cc5a97",
+    "transparentProxyId": "0.0.13392535"
   }
 ]

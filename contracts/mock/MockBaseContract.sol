@@ -46,24 +46,24 @@ contract MockBaseHTS is IBaseHTS {
     function mintTokenPublic(
         address tokenAddress,
         int256 amount
-    ) external view override returns (int256, int256) {
+    ) external view override returns (int256, int64) {
         string memory tokenName = ERC20Mock(tokenAddress).name();
         if (isFailureToken(tokenName)) {
-            return (23, amount);
+            return (23, int64(amount));
         } else {
-            return (22, amount);
+            return (22, int64(amount));
         }
     }
 
     function burnTokenPublic(
         address tokenAddress,
         int256 amount
-    ) external view override returns (int256, int256) {
+    ) external view override returns (int256, int64) {
         string memory tokenName = ERC20Mock(tokenAddress).name();
         if (isFailureToken(tokenName)) {
-            return (23, amount);
+            return (23, int64(amount));
         } else {
-            return (22, amount);
+            return (22, int64(amount));
         }
     }
 

@@ -37,7 +37,7 @@ contract BaseHTS is HederaTokenService, IBaseHTS {
             revert("Mint Failed");
         }
 
-        return (responseCodeNew, newTotalSupplyNew); //Fine to type cast to int256 as int256 > int64
+        return (responseCodeNew, newTotalSupplyNew);
     }
 
     function burnTokenPublic(
@@ -47,7 +47,7 @@ contract BaseHTS is HederaTokenService, IBaseHTS {
         int64[] memory serialNumbers;
 
         require(
-            amount >= 0 && amount < type(int64).max,
+            amount >= 0 && amount <= type(int64).max,
             "Invalid burn value, allowed range 0 to int64 max value both end inclusive."
         );
 
@@ -60,7 +60,7 @@ contract BaseHTS is HederaTokenService, IBaseHTS {
         if (responseCodeNew != HederaResponseCodes.SUCCESS) {
             revert("Burn Failed");
         }
-        return (responseCodeNew, newTotalSupplyNew); //Fine to type cast to int256 as int256 > int64
+        return (responseCodeNew, newTotalSupplyNew);
     }
 
     function createFungibleTokenPublic(
