@@ -36,28 +36,9 @@ contract MockBaseHTS is IBaseHTS {
         revertCreateToken.value = (_revertCreateToken == true) ? 1 : 0;
     }
 
-    function transferTokenPublic(
-        address token,
-        address from,
-        address to,
-        int256 amount
-    ) external override returns (int256) {
-        if (StorageSlot.getBooleanSlot(tokenTestSlot).value) {
-            ERC20Mock(token).transfer(from, to, uint(amount));
-        }
-        return getResponseCode();
-    }
-
     function associateTokenPublic(
         address,
         address
-    ) external override returns (int256) {
-        return getResponseCode();
-    }
-
-    function associateTokensPublic(
-        address,
-        address[] memory
     ) external override returns (int256) {
         return getResponseCode();
     }
@@ -135,22 +116,6 @@ contract MockBaseHTS is IBaseHTS {
         address payable
     ) external payable override returns (bool) {
         return getResponseCode() == int(22) ? true : false;
-    }
-
-    function transferNFTPublic(
-        address token,
-        address sender,
-        address receiver,
-        int64 serial
-    ) external override returns (int256) {
-        if (StorageSlot.getBooleanSlot(tokenTestSlot).value) {
-            IERC721(token).transferFrom(
-                sender,
-                receiver,
-                uint256(int256(serial))
-            );
-        }
-        return getResponseCode();
     }
 }
 

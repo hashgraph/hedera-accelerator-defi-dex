@@ -508,7 +508,7 @@ export default class Governor extends Base {
 
     const { result } = await this.execute(3000000, MINT_TOKEN, client, args);
 
-    const newTokenSupply = result.getInt256(0).toFixed();
+    const newTokenSupply = result.getInt64(0).toFixed();
     console.log(
       `- GovernorTokenCreate#${MINT_TOKEN}(): new token supply = ${newTokenSupply}\n`
     );
@@ -527,7 +527,7 @@ export default class Governor extends Base {
 
     const { result } = await this.execute(3000000, BURN_TOKEN, client, args);
 
-    const newTokenSupply = result.getInt256(0).toFixed();
+    const newTokenSupply = result.getInt64(0).toFixed();
     console.log(
       `- GovernorTokenCreate#${BURN_TOKEN}(): new token supply = ${newTokenSupply}\n`
     );

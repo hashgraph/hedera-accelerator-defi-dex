@@ -233,7 +233,7 @@ contract Pair is
             uint256 tokenBQ = pair.tokenB.tokenQty;
             uint256 adjustedValue = (invariantValue * precision) / (tokenAQ);
             uint256 newValue = adjustedValue / precision;
-            amountTokenB = getAbsoluteDifference(tokenBQ,  newValue);
+            amountTokenB = getAbsoluteDifference(tokenBQ, newValue);
         }
 
         //Token B Calculation
@@ -530,7 +530,10 @@ contract Pair is
         uint256 _tokenTreasureFee = tokenFee / 2; //50% goes to treasurer
         uint256 tokenContractShare = tokenFee / 2; //50% goes to contract
 
-        uint256 _deltaQtyAfterAdjustingFee = getAbsoluteDifference(senderSwapQty, tokenFee);
+        uint256 _deltaQtyAfterAdjustingFee = getAbsoluteDifference(
+            senderSwapQty,
+            tokenFee
+        );
         uint256 _tokenASwapQtyPlusContractTokenShare = _deltaQtyAfterAdjustingFee +
                 tokenContractShare;
 
@@ -545,7 +548,10 @@ contract Pair is
         uint256 swappedValue
     ) private view returns (uint256, uint256) {
         uint256 tokenFee = feeForToken(swappedValue);
-        uint256 _actualSwappedValue = getAbsoluteDifference(swappedValue, tokenFee); 
+        uint256 _actualSwappedValue = getAbsoluteDifference(
+            swappedValue,
+            tokenFee
+        );
         uint256 _tokenTreasureFee = tokenFee / 2;
         return (_actualSwappedValue, _tokenTreasureFee);
     }
@@ -619,22 +625,20 @@ contract Pair is
         uint256 tokenQty
     ) private view {
         require(
-            _contractHBARBalance() >= uint256(tokenQty),
+            _contractHBARBalance() >= tokenQty,
             "Contract does not have sufficient Hbars"
         );
     }
 
     function _contractHBARBalance() private view returns (uint256) {
         return
-            uint256(
-                _tokenIsHBARX(pair.tokenA.tokenAddress)
-                    ? pair.tokenA.tokenQty
-                    : pair.tokenB.tokenQty
-            );
+            _tokenIsHBARX(pair.tokenA.tokenAddress)
+                ? pair.tokenA.tokenQty
+                : pair.tokenB.tokenQty;
     }
 
     function _checkIfCallerSentCorrectHBARs(uint256 tokenQty) private view {
-        require(msg.value >= uint256(tokenQty), "Please pass correct Hbars");
+        require(msg.value >= tokenQty, "Please pass correct Hbars");
     }
 
     function _transferHbars(
@@ -642,7 +646,7 @@ contract Pair is
         address reciever,
         string memory errorMessage
     ) private {
-        bool sent = tokenService.transferHBAR{value: uint256(tokenQty)}(
+        bool sent = tokenService.transferHBAR{value: tokenQty}(
             payable(reciever)
         );
         require(sent, errorMessage);

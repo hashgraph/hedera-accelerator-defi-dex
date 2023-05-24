@@ -133,7 +133,7 @@ contract TokenOperations {
         IBaseHTS _baseHTS,
         address token,
         uint256 amount
-    ) internal returns (int256 responseCode, int256 newTotalSupply) {
+    ) internal returns (int256 responseCode, int64 newTotalSupply) {
         require(
             amount > 0,
             "TokenOperations: Token quantity to mint should be greater than zero."
@@ -148,15 +148,15 @@ contract TokenOperations {
         );
 
         (responseCode, newTotalSupply) = success
-            ? abi.decode(result, (int256, int256))
-            : (int256(HederaResponseCodes.UNKNOWN), int256(0));
+            ? abi.decode(result, (int256, int64))
+            : (int256(HederaResponseCodes.UNKNOWN), int64(0));
     }
 
     function burnToken(
         IBaseHTS _baseHTS,
         address token,
         uint256 amount
-    ) internal returns (int256 responseCode, int256 newTotalSupply) {
+    ) internal returns (int256 responseCode, int64 newTotalSupply) {
         require(
             amount > 0,
             "TokenOperations: Token quantity to burn should be greater than zero."
@@ -172,8 +172,8 @@ contract TokenOperations {
         );
 
         (responseCode, newTotalSupply) = success
-            ? abi.decode(result, (int256, int256))
-            : (int256(HederaResponseCodes.UNKNOWN), int256(0));
+            ? abi.decode(result, (int256, int64))
+            : (int256(HederaResponseCodes.UNKNOWN), int64(0));
     }
 }
 
