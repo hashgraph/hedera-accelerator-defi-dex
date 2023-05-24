@@ -293,7 +293,6 @@ export class DAONFTTokenTest extends CommonSteps {
       );
     } catch (e: any) {
       errorMsg = e.message;
-      console.log(errorMsg);
     }
   }
 
