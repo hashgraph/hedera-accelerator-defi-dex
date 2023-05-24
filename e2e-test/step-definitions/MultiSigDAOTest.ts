@@ -132,7 +132,7 @@ export class MultiSigDAOSteps {
     targetTokenAmtToBeTransferred = tokenAmount * withPrecision;
     txnHash = await multiSigDAO.proposeTransferTransaction(
       transferTokenId,
-      clientsInfo.treasureId,
+      clientsInfo.adminId,
       targetTokenAmtToBeTransferred,
       clientsInfo.uiUserClient
     );
@@ -148,7 +148,7 @@ export class MultiSigDAOSteps {
       targetTokenAmtToBeTransferred = tokenAmount * withPrecision;
       txnHash = await multiSigDAO.proposeTransferTransaction(
         transferTokenId,
-        clientsInfo.treasureId,
+        clientsInfo.adminId,
         targetTokenAmtToBeTransferred,
         clientsInfo.uiUserClient
       );
@@ -195,9 +195,9 @@ export class MultiSigDAOSteps {
   )
   public async getTokenBalance() {
     targetTokenBalFromPayeeAcct = await Common.getTokenBalance(
-      clientsInfo.treasureId,
+      clientsInfo.adminId,
       transferTokenId,
-      clientsInfo.treasureClient
+      clientsInfo.adminClient
     );
   }
 
@@ -209,9 +209,9 @@ export class MultiSigDAOSteps {
   public async verifyTokenBalance() {
     await Helper.delay(15000);
     const updatedBalance = await Common.getTokenBalance(
-      clientsInfo.treasureId,
+      clientsInfo.adminId,
       transferTokenId,
-      clientsInfo.treasureClient
+      clientsInfo.adminClient
     );
     expect(Number(updatedBalance)).to.eql(
       Number(targetTokenBalFromPayeeAcct) +
@@ -260,7 +260,7 @@ export class MultiSigDAOSteps {
         targetTokenBalFromPayerAcct / withPrecision + 1;
       txnHash = await multiSigDAO.proposeTransferTransaction(
         transferTokenId,
-        clientsInfo.treasureId,
+        clientsInfo.adminId,
         targetTokenAmtToBeTransferred * withPrecision,
         clientsInfo.uiUserClient
       );
