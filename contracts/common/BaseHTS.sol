@@ -18,18 +18,18 @@ contract BaseHTS is HederaTokenService, IBaseHTS {
 
     function mintTokenPublic(
         address token,
-        int256 amount
+        uint256 amount
     ) external override returns (int256 responseCode, int64 newTotalSupply) {
         bytes[] memory metadata;
 
         require(
-            amount >= 0 && amount <= type(int64).max,
+            amount >= 0 && amount <= INT_64_MAX_VALUE,
             "Invalid mint value, allowed range 0 to int64 max value both end inclusive."
         );
 
         (int256 responseCodeNew, int64 newTotalSupplyNew, ) = mintToken(
             token,
-            int64(amount), //Safe to cast as guard check passed
+            int64(uint64(amount)), //Safe to cast as guard check passed
             metadata
         );
 
@@ -42,18 +42,18 @@ contract BaseHTS is HederaTokenService, IBaseHTS {
 
     function burnTokenPublic(
         address token,
-        int256 amount
+        uint256 amount
     ) external override returns (int256 responseCode, int64 newTotalSupply) {
         int64[] memory serialNumbers;
 
         require(
-            amount >= 0 && amount <= type(int64).max,
+            amount >= 0 && amount <= INT_64_MAX_VALUE,
             "Invalid burn value, allowed range 0 to int64 max value both end inclusive."
         );
 
         (int256 responseCodeNew, int64 newTotalSupplyNew) = burnToken(
             token,
-            int64(amount), //Safe to cast as guard check passed
+            int64(uint64(amount)), //Safe to cast as guard check passed
             serialNumbers
         );
 

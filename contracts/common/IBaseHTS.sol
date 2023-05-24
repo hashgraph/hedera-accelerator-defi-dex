@@ -12,12 +12,12 @@ interface IBaseHTS {
 
     function mintTokenPublic(
         address token,
-        int256 amount
+        uint256 amount
     ) external returns (int256 responseCode, int64 newTotalSupply);
 
     function burnTokenPublic(
         address token,
-        int256 amount
+        uint256 amount
     ) external returns (int256 responseCode, int64 newTotalSupply);
 
     function createFungibleTokenPublic(
