@@ -23,8 +23,8 @@ contract BaseHTS is HederaTokenService, IBaseHTS {
         bytes[] memory metadata;
 
         require(
-            amount >= 0 && amount <= INT_64_MAX_VALUE,
-            "Invalid mint value, allowed range 0 to int64 max value both end inclusive."
+            amount > 0 && amount <= INT_64_MAX_VALUE,
+            "Invalid mint value, allowed range greater than zero to int64 max value both end inclusive."
         );
 
         (int256 responseCodeNew, int64 newTotalSupplyNew, ) = mintToken(
@@ -47,8 +47,8 @@ contract BaseHTS is HederaTokenService, IBaseHTS {
         int64[] memory serialNumbers;
 
         require(
-            amount >= 0 && amount <= INT_64_MAX_VALUE,
-            "Invalid burn value, allowed range 0 to int64 max value both end inclusive."
+            amount > 0 && amount <= INT_64_MAX_VALUE,
+            "Invalid burn value, allowed range greater than zero to int64 max value both end inclusive."
         );
 
         (int256 responseCodeNew, int64 newTotalSupplyNew) = burnToken(
