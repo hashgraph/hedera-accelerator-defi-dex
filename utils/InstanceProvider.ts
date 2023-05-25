@@ -1,6 +1,8 @@
+import Vault from "../e2e-test/business/Vault";
 import LpToken from "../e2e-test/business/LpToken";
 import Factory from "../e2e-test/business/Factory";
 import Governor from "../e2e-test/business/Governor";
+import Splitter from "../e2e-test/business/Splitter";
 import GodHolder from "../e2e-test/business/GodHolder";
 import NFTHolder from "../e2e-test/business/NFTHolder";
 import DAOFactory from "../e2e-test/business/factories/DAOFactory";
@@ -90,5 +92,15 @@ export class InstanceProvider {
   public getLpToken(id: string | null = null) {
     const _id = this.getProxyId(id, this.csDev.lpTokenContractName);
     return new LpToken(_id);
+  }
+
+  public getVault(id: string | null = null) {
+    const _id = this.getProxyId(id, ContractService.VAULT);
+    return new Vault(_id);
+  }
+
+  public getSplitter(id: string | null = null) {
+    const _id = this.getProxyId(id, ContractService.SPLITTER);
+    return new Splitter(_id);
   }
 }

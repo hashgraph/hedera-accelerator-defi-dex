@@ -223,5 +223,23 @@
     "hash": "42f11bdec4fa28310e0398893b3a5603",
     "transparentProxyAddress": "0x0000000000000000000000000000000000cc6b35",
     "transparentProxyId": "0.0.13396789"
+  },
+  {
+    "name": "vault",
+    "id": "0.0.13363025",
+    "address": "0x0000000000000000000000000000000000cbe751",
+    "timestamp": "2023-05-23T08:32:55.087Z",
+    "hash": "c32b21d3d4b9928b5ab4e109a4e48be6",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000cbe757",
+    "transparentProxyId": "0.0.13363031"
+  },
+  {
+    "name": "splitter",
+    "id": "0.0.13363772",
+    "address": "0x0000000000000000000000000000000000cbea3c",
+    "timestamp": "2023-05-23T08:54:51.786Z",
+    "hash": "6c38fe0ebc47f7828d933b6a25ab9479",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000cbea6c",
+    "transparentProxyId": "0.0.13363820"
   }
 ]
