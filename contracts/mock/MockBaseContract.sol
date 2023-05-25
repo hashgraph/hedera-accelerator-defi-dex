@@ -36,18 +36,6 @@ contract MockBaseHTS is IBaseHTS {
         revertCreateToken.value = (_revertCreateToken == true) ? 1 : 0;
     }
 
-    function transferTokenPublic(
-        address token,
-        address from,
-        address to,
-        int256 amount
-    ) external override returns (int256) {
-        if (StorageSlot.getBooleanSlot(tokenTestSlot).value) {
-            ERC20Mock(token).transfer(from, to, uint(amount));
-        }
-        return getResponseCode();
-    }
-
     function associateTokenPublic(
         address,
         address
@@ -55,34 +43,27 @@ contract MockBaseHTS is IBaseHTS {
         return getResponseCode();
     }
 
-    function associateTokensPublic(
-        address,
-        address[] memory
-    ) external override returns (int256) {
-        return getResponseCode();
-    }
-
     function mintTokenPublic(
         address tokenAddress,
-        int256 amount
-    ) external view override returns (int256, int256) {
+        uint256 amount
+    ) external view override returns (int256, int64) {
         string memory tokenName = ERC20Mock(tokenAddress).name();
         if (isFailureToken(tokenName)) {
-            return (23, amount);
+            return (23, int64(int256(amount)));
         } else {
-            return (22, amount);
+            return (22, int64(int256(amount)));
         }
     }
 
     function burnTokenPublic(
         address tokenAddress,
-        int256 amount
-    ) external view override returns (int256, int256) {
+        uint256 amount
+    ) external view override returns (int256, int64) {
         string memory tokenName = ERC20Mock(tokenAddress).name();
         if (isFailureToken(tokenName)) {
-            return (23, amount);
+            return (23, int64(int256(amount)));
         } else {
-            return (22, amount);
+            return (22, int64(int256(amount)));
         }
     }
 
@@ -135,22 +116,6 @@ contract MockBaseHTS is IBaseHTS {
         address payable
     ) external payable override returns (bool) {
         return getResponseCode() == int(22) ? true : false;
-    }
-
-    function transferNFTPublic(
-        address token,
-        address sender,
-        address receiver,
-        int64 serial
-    ) external override returns (int256) {
-        if (StorageSlot.getBooleanSlot(tokenTestSlot).value) {
-            IERC721(token).transferFrom(
-                sender,
-                receiver,
-                uint256(int256(serial))
-            );
-        }
-        return getResponseCode();
     }
 }
 

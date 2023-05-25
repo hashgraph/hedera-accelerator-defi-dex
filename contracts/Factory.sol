@@ -139,7 +139,7 @@ contract Factory is IEvents, OwnableUpgradeable, ReentrancyGuardUpgradeable {
         PairDetail memory maxQtyPair;
         for (uint i = 0; i < fees.length; i = i + 2) {
             uint256 value = fees[i + 1];
-            Pair pair = Pair(pairs[_token0][_token1][uint256(value)]);
+            Pair pair = Pair(pairs[_token0][_token1][value]);
             if (address(pair) != address(0x0)) {
                 uint256 _qty;
                 address _token;
