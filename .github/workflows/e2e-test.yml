@@ -40,12 +40,33 @@ jobs:
         id: create-json
         with:
           name: "deployment/scripts/workflow-inputs.json"
-          json: '{"contracts":"LPToken,Pair,Factory,GODHolder,GovernorUpgrade,MultiSigDAO,MultisigDAOFactory"}'
+          json: '{"contracts":"LPToken,Pair,Factory"}'
       - name: Deployment
         run: npx hardhat run deployment/scripts/createContractsE2E.ts;
       - name: e2e
         run: npm run e2e-test suite-one
   suite-2:
+    if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18.15.0"
+      - run: npm ci
+      - name: Save user inputs
+        uses: jsdaniell/create-json@v1.2.2
+        id: create-json
+        with:
+          name: "deployment/scripts/workflow-inputs.json"
+          json: '{"contracts":"GODHolder,GovernorUpgrade,GovernorTextProposal"}'
+      - name: Deployment
+        run: npx hardhat run deployment/scripts/createContractsE2E.ts;
+      - name: e2e
+        run: npm run e2e-test suite-two
+  suite-3:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     env:
@@ -68,8 +89,66 @@ jobs:
         id: create-json
         with:
           name: "deployment/scripts/workflow-inputs.json"
-          json: '{"contracts":"GODHolder,GovernorTransferToken,GovernorTokenCreate,GovernorTextProposal,GovernanceDAOFactory,GovernorTokenDAO,GODTokenHolderFactory,NFTHolder"}'
+          json: '{"contracts":"GODHolder,GovernorTransferToken,GovernorTokenCreate"}'
       - name: Deployment
         run: npx hardhat run deployment/scripts/createContractsE2E.ts;
       - name: e2e
-        run: npm run e2e-test suite-two
+        run: npm run e2e-test suite-three
+  
+  suite-4:
+    if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    env:
+      OPERATOR_ID: 0.0.2375093
+      OPERATOR_KEY: 805a0b26c8ecee83e903076eebb86928c612590f32afc6d272ced4c73db6d466
+      TOKEN_USER_ID: 0.0.6883 
+      TOKEN_USER_KEY: 2cc790b009e400a3ed97363980ae27ddfb58102fa8fb7c1a7b69e212f756c084
+      TREASURE_ID: 0.0.6880
+      TREASURE_KEY: c372f05c182ae62e04603081f6abc8cbd3a712401e1d1f88401cf310c91f644b
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18.15.0"
+      - run: npm ci
+      - name: Save user inputs
+        uses: jsdaniell/create-json@v1.2.2
+        id: create-json
+        with:
+          name: "deployment/scripts/workflow-inputs.json"
+          json: '{"contracts":"GODHolder,GovernanceDAOFactory,GovernorTokenDAO,GODTokenHolderFactory,GovernorTransferToken,NFTHolder"}'
+      - name: Deployment
+        run: npx hardhat run deployment/scripts/createContractsE2E.ts;
+      - name: e2e
+        run: npm run e2e-test suite-four
+
+  suite-5:
+    if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    env:
+      OPERATOR_ID: 0.0.6883
+      OPERATOR_KEY: 2cc790b009e400a3ed97363980ae27ddfb58102fa8fb7c1a7b69e212f756c084
+      TOKEN_USER_ID: 0.0.2375093
+      TOKEN_USER_KEY: 805a0b26c8ecee83e903076eebb86928c612590f32afc6d272ced4c73db6d466
+      TREASURE_ID: 0.0.6880
+      TREASURE_KEY: c372f05c182ae62e04603081f6abc8cbd3a712401e1d1f88401cf310c91f644b
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18.15.0"
+      - run: npm ci
+      - name: Save user inputs
+        uses: jsdaniell/create-json@v1.2.2
+        id: create-json
+        with:
+          name: "deployment/scripts/workflow-inputs.json"
+          json: '{"contracts":"GODHolder,MultiSigDAO,MultisigDAOFactory"}'
+      - name: Deployment
+        run: npx hardhat run deployment/scripts/createContractsE2E.ts;
+      - name: e2e
+        run: npm run e2e-test suite-five

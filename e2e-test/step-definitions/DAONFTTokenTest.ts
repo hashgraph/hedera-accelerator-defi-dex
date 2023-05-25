@@ -293,7 +293,6 @@ export class DAONFTTokenTest extends CommonSteps {
       );
     } catch (e: any) {
       errorMsg = e.message;
-      console.log(errorMsg);
     }
   }
 
@@ -336,7 +335,7 @@ export class DAONFTTokenTest extends CommonSteps {
     30000
   )
   public async verifyTokenBalance() {
-    await Helper.delay(10000);
+    await Helper.delay(15000);
     const updatedBalance = await Common.fetchTokenBalanceFromMirrorNode(
       clientsInfo.operatorId.toString(),
       TOKEN_ID.toString()

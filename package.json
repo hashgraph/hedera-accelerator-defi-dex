@@ -8,6 +8,9 @@
     "code-format": "prettier --write \"**/*.ts\" \"**/*.json\"",
     "suite-one": "./node_modules/.bin/cucumber-js -p suiteOne",
     "suite-two": "./node_modules/.bin/cucumber-js -p suiteTwo",
+    "suite-three": "./node_modules/.bin/cucumber-js -p suiteThree",
+    "suite-four": "./node_modules/.bin/cucumber-js -p suiteFour",
+    "suite-five": "./node_modules/.bin/cucumber-js -p suiteFive",
     "test": "./node_modules/.bin/cucumber-js -p default",
     "e2e-test": "node trigger-test.js"
   },

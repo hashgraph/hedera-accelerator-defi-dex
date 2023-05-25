@@ -1,4 +1,4 @@
-@TestSuite-1
+@TestSuite-5
 Feature: MultiSigDAO e2e test
 
     This feature file contains e2e test for MultiSigDAO functionality
