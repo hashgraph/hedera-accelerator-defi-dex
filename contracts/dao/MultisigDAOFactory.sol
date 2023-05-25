@@ -4,6 +4,7 @@ pragma solidity ^0.8.18;
 import "../common/IEvents.sol";
 import "../common/IErrors.sol";
 import "../common/IBaseHTS.sol";
+import "../common/CommonOperations.sol";
 
 import "../dao/MultisigDAO.sol";
 
@@ -13,7 +14,12 @@ import "../gnosis/HederaGnosisSafeProxyFactory.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-contract MultisigDAOFactory is OwnableUpgradeable, IEvents, IErrors {
+contract MultisigDAOFactory is
+    IErrors,
+    IEvents,
+    CommonOperations,
+    OwnableUpgradeable
+{
     event DAOCreated(
         address daoAddress,
         address safeAddress,
@@ -22,8 +28,21 @@ contract MultisigDAOFactory is OwnableUpgradeable, IEvents, IErrors {
         string logoUrl,
         address[] owners,
         uint256 threshold,
-        bool isPrivate
+        bool isPrivate,
+        string description,
+        string webLinks
     );
+
+    struct CreateDAOInputs {
+        address admin;
+        string name;
+        string logoUrl;
+        address[] owners;
+        uint256 threshold;
+        bool isPrivate;
+        string description;
+        string[] webLinks;
+    }
 
     error NotAdmin(string message);
 
@@ -86,43 +105,37 @@ contract MultisigDAOFactory is OwnableUpgradeable, IEvents, IErrors {
     }
 
     function createDAO(
-        address _admin,
-        string calldata _name,
-        string calldata _logoUrl,
-        address[] calldata _owners,
-        uint256 _threshold,
-        bool _isPrivate
+        CreateDAOInputs memory _createDAOInputs
     ) external returns (address) {
         HederaGnosisSafe hederaGnosisSafe = _createGnosisSafeProxyInstance(
-            _owners,
-            _threshold
+            _createDAOInputs.owners,
+            _createDAOInputs.threshold
         );
         address createdDAOAddress = _createMultiSigDAOInstance(
-            _admin,
-            _name,
-            _logoUrl,
+            _createDAOInputs.admin,
+            _createDAOInputs.name,
+            _createDAOInputs.logoUrl,
+            _createDAOInputs.description,
+            _createDAOInputs.webLinks,
             hederaGnosisSafe
         );
-        if (!_isPrivate) {
+        if (!_createDAOInputs.isPrivate) {
             daos.push(createdDAOAddress);
         }
-        emit DAOCreated(
+        emitDOACreatedEvent(
             createdDAOAddress,
-            address(hederaGnosisSafe),
-            _admin,
-            _name,
-            _logoUrl,
-            _owners,
-            _threshold,
-            _isPrivate
+            hederaGnosisSafe,
+            _createDAOInputs
         );
         return createdDAOAddress;
     }
 
     function _createMultiSigDAOInstance(
         address _admin,
-        string calldata _name,
-        string calldata _logoUrl,
+        string memory _name,
+        string memory _logoUrl,
+        string memory _desc,
+        string[] memory _webLinks,
         HederaGnosisSafe hederaGnosisSafe
     ) private returns (address) {
         TransparentUpgradeableProxy upgradeableProxy = new TransparentUpgradeableProxy(
@@ -131,12 +144,20 @@ contract MultisigDAOFactory is OwnableUpgradeable, IEvents, IErrors {
                 NO_DATA
             );
         MultiSigDAO _mSigDAO = MultiSigDAO(address(upgradeableProxy));
-        _mSigDAO.initialize(_admin, _name, _logoUrl, hederaGnosisSafe, baseHTS);
+        _mSigDAO.initialize(
+            _admin,
+            _name,
+            _logoUrl,
+            _desc,
+            _webLinks,
+            hederaGnosisSafe,
+            baseHTS
+        );
         return address(_mSigDAO);
     }
 
     function _createGnosisSafeProxyInstance(
-        address[] calldata _owners,
+        address[] memory _owners,
         uint256 _threshold
     ) private returns (HederaGnosisSafe) {
         address _zero;
@@ -159,5 +180,24 @@ contract MultisigDAOFactory is OwnableUpgradeable, IEvents, IErrors {
             payable(_zero)
         );
         return gnosisSafe;
+    }
+
+    function emitDOACreatedEvent(
+        address createdDAOAddress,
+        HederaGnosisSafe hederaGnosisSafe,
+        CreateDAOInputs memory _createDAOInputs
+    ) private {
+        emit DAOCreated(
+            createdDAOAddress,
+            address(hederaGnosisSafe),
+            _createDAOInputs.admin,
+            _createDAOInputs.name,
+            _createDAOInputs.logoUrl,
+            _createDAOInputs.owners,
+            _createDAOInputs.threshold,
+            _createDAOInputs.isPrivate,
+            _createDAOInputs.description,
+            join(_createDAOInputs.webLinks, ",")
+        );
     }
 }

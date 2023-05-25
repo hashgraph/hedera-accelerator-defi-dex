@@ -1021,6 +1021,17 @@ describe("Governor Tests", function () {
   });
 
   describe("GovernorTransferToken contract tests", async () => {
+    it("Verify transfer token proposal should be failed during creation for zero amount", async function () {
+      const { governorTT, token, signers } = await loadFixture(deployFixture);
+      await expect(
+        getTransferTokenProposalId(governorTT, signers, token.address, 0)
+      )
+        .revertedWithCustomError(governorTT, "InvalidInput")
+        .withArgs(
+          "GovernorTransferToken: Token transfer amount must be a positive number"
+        );
+    });
+
     it("Verify transfer token proposal should be executed", async function () {
       const TOKEN_COUNT = TestHelper.toPrecision(3);
       const { governorTT, token, signers, creator, godHolder } =

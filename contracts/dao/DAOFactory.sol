@@ -5,6 +5,7 @@ import "../common/IERC20.sol";
 import "../common/IEvents.sol";
 import "../common/IErrors.sol";
 import "../common/IBaseHTS.sol";
+import "../common/CommonOperations.sol";
 
 import "../dao/ITokenDAO.sol";
 import "../governance/ITokenHolderFactory.sol";
@@ -13,7 +14,7 @@ import "../governance/IGovernorTransferToken.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-contract DAOFactory is OwnableUpgradeable, IEvents, IErrors {
+contract DAOFactory is IErrors, IEvents, CommonOperations, OwnableUpgradeable {
     event DAOCreated(
         address daoAddress,
         address admin,
@@ -23,8 +24,23 @@ contract DAOFactory is OwnableUpgradeable, IEvents, IErrors {
         uint256 quorumThreshold,
         uint256 votingDelay,
         uint256 votingPeriod,
-        bool isPrivate
+        bool isPrivate,
+        string description,
+        string webLinks
     );
+
+    struct CreateDAOInputs {
+        address admin;
+        string name;
+        string logoUrl;
+        IERC20 tokenAddress;
+        uint256 quorumThreshold;
+        uint256 votingDelay;
+        uint256 votingPeriod;
+        bool isPrivate;
+        string description;
+        string[] webLinks;
+    }
 
     error NotAdmin(string message);
 
@@ -114,57 +130,36 @@ contract DAOFactory is OwnableUpgradeable, IEvents, IErrors {
     }
 
     function createDAO(
-        address _admin,
-        string calldata _name,
-        string calldata _logoUrl,
-        IERC20 _tokenAddress,
-        uint256 _quorumThreshold,
-        uint256 _votingDelay,
-        uint256 _votingPeriod,
-        bool _isPrivate
+        CreateDAOInputs memory _createDAOInputs
     ) external returns (address) {
-        if (bytes(_name).length == 0) {
-            revert InvalidInput("DAOFactory: name is empty");
-        }
-        if (address(_tokenAddress) == address(0)) {
+        if (address(_createDAOInputs.tokenAddress) == address(0)) {
             revert InvalidInput("DAOFactory: token address is zero");
         }
-        if (address(_admin) == address(0)) {
-            revert InvalidInput("DAOFactory: admin address is zero");
-        }
-        if (_votingPeriod == 0) {
+        if (_createDAOInputs.votingPeriod == 0) {
             revert InvalidInput("DAOFactory: voting period is zero");
         }
         ITokenHolder iTokenHolder = tokenHolderFactory.getTokenHolder(
-            address(_tokenAddress)
+            address(_createDAOInputs.tokenAddress)
         );
         IGovernorTransferToken tokenTransfer = _createGovernorTransferTokenContractInstance(
-                address(_tokenAddress),
-                _quorumThreshold,
-                _votingDelay,
-                _votingPeriod,
+                address(_createDAOInputs.tokenAddress),
+                _createDAOInputs.quorumThreshold,
+                _createDAOInputs.votingDelay,
+                _createDAOInputs.votingPeriod,
                 iTokenHolder
             );
         address createdDAOAddress = _createTokenDAOContractInstance(
-            _admin,
-            _name,
-            _logoUrl,
+            _createDAOInputs.admin,
+            _createDAOInputs.name,
+            _createDAOInputs.logoUrl,
+            _createDAOInputs.description,
+            _createDAOInputs.webLinks,
             tokenTransfer
         );
-        if (!_isPrivate) {
+        if (!_createDAOInputs.isPrivate) {
             daos.push(createdDAOAddress);
         }
-        emit DAOCreated(
-            createdDAOAddress,
-            _admin,
-            _name,
-            _logoUrl,
-            address(_tokenAddress),
-            _quorumThreshold,
-            _votingDelay,
-            _votingPeriod,
-            _isPrivate
-        );
+        emitDOACreatedEvent(createdDAOAddress, _createDAOInputs);
         return createdDAOAddress;
     }
 
@@ -194,8 +189,10 @@ contract DAOFactory is OwnableUpgradeable, IEvents, IErrors {
 
     function _createTokenDAOContractInstance(
         address _admin,
-        string calldata _name,
-        string calldata _logoUrl,
+        string memory _name,
+        string memory _logoUrl,
+        string memory _desc,
+        string[] memory _webLinks,
         IGovernorTransferToken _governorTokenTransferContractAddress
     ) private returns (address daoAddress) {
         ITokenDAO tokenDAO = ITokenDAO(_createProxy(address(daoLogic)));
@@ -203,6 +200,8 @@ contract DAOFactory is OwnableUpgradeable, IEvents, IErrors {
             _admin,
             _name,
             _logoUrl,
+            _desc,
+            _webLinks,
             _governorTokenTransferContractAddress
         );
         return address(tokenDAO);
@@ -212,5 +211,24 @@ contract DAOFactory is OwnableUpgradeable, IEvents, IErrors {
         bytes memory _data;
         return
             address(new TransparentUpgradeableProxy(_logic, proxyAdmin, _data));
+    }
+
+    function emitDOACreatedEvent(
+        address createdDAOAddress,
+        CreateDAOInputs memory _createDAOInputs
+    ) private {
+        emit DAOCreated(
+            createdDAOAddress,
+            _createDAOInputs.admin,
+            _createDAOInputs.name,
+            _createDAOInputs.logoUrl,
+            address(_createDAOInputs.tokenAddress),
+            _createDAOInputs.quorumThreshold,
+            _createDAOInputs.votingDelay,
+            _createDAOInputs.votingPeriod,
+            _createDAOInputs.isPrivate,
+            _createDAOInputs.description,
+            join(_createDAOInputs.webLinks, ",")
+        );
     }
 }

@@ -4,9 +4,11 @@ import "../governance/IGovernorTransferToken.sol";
 
 interface ITokenDAO {
     function initialize(
-        address admin,
-        string calldata name,
-        string calldata logoUrl,
+        address _admin,
+        string memory _name,
+        string memory _logoUrl,
+        string memory _description,
+        string[] memory _webLinks,
         IGovernorTransferToken governor
     ) external;
 
@@ -18,12 +20,12 @@ interface ITokenDAO {
     function getAllProposals() external view returns (uint256[] memory);
 
     function createProposal(
-        string memory title,
-        string memory description,
-        string memory linkToDiscussion,
-        address transferFromAccount,
-        address transferToAccount,
-        address tokenToTransfer,
-        uint256 transferTokenAmount
+        string memory _title,
+        string memory _description,
+        string memory _linkToDiscussion,
+        address _transferFromAccount,
+        address _transferToAccount,
+        address _tokenToTransfer,
+        uint256 _transferTokenAmount
     ) external returns (uint256);
 }
