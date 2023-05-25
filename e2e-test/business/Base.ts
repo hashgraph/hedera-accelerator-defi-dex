@@ -64,7 +64,7 @@ export default class Base {
     };
   };
 
-  protected isInitializationPending = async () => {
+  public isInitializationPending = async () => {
     return await MirrorNodeService.getInstance().isInitializationPending(
       this.contractId
     );
