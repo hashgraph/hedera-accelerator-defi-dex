@@ -34,14 +34,16 @@ contract MultiSigDAO is BaseDAO {
 
     function initialize(
         address _admin,
-        string calldata _name,
-        string calldata _logoUrl,
+        string memory _name,
+        string memory _logoUrl,
+        string memory _description,
+        string[] memory _webLinks,
         HederaGnosisSafe _hederaGnosisSafe,
         IBaseHTS _iBaseHTS
     ) external initializer {
         baseHTS = _iBaseHTS;
         hederaGnosisSafe = _hederaGnosisSafe;
-        __BaseDAO_init(_admin, _name, _logoUrl);
+        __BaseDAO_init(_admin, _name, _logoUrl, _description, _webLinks);
     }
 
     function getHederaGnosisSafeContractAddress()

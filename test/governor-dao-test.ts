@@ -13,6 +13,13 @@ describe("GovernanceTokenDAO tests", function () {
 
   const DAO_NAME = "DAO_NAME";
   const LOGO_URL = "LOGO_URL";
+  const DESCRIPTION = "DESCRIPTION";
+  const WEB_LINKS = [
+    "TWITTER",
+    "https://twitter.com",
+    "LINKEDIN",
+    "https://linkedin.com",
+  ];
 
   const WEB_KEY = "git";
   const WEB_URL = "web-url";
@@ -45,6 +52,8 @@ describe("GovernanceTokenDAO tests", function () {
       daoAdminOne.address,
       DAO_NAME,
       LOGO_URL,
+      DESCRIPTION,
+      WEB_LINKS,
       governorTT.address,
     ];
     const governorTokenDAO = await TestHelper.deployLogic("GovernorTokenDAO");
@@ -105,58 +114,61 @@ describe("GovernanceTokenDAO tests", function () {
 
     it("Verify createDAO should be reverted when dao admin is zero", async function () {
       const { governorDAOFactory, token } = await loadFixture(deployFixture);
-      await expect(
-        governorDAOFactory.createDAO(
-          TestHelper.ZERO_ADDRESS,
-          DAO_NAME,
-          LOGO_URL,
-          token.address,
-          BigNumber.from(500),
-          BigNumber.from(0),
-          BigNumber.from(100),
-          true
-        )
-      )
+      const CREATE_DAO_ARGS = [
+        TestHelper.ZERO_ADDRESS,
+        DAO_NAME,
+        LOGO_URL,
+        token.address,
+        BigNumber.from(500),
+        BigNumber.from(0),
+        BigNumber.from(100),
+        true,
+        DESCRIPTION,
+        WEB_LINKS,
+      ];
+      await expect(governorDAOFactory.createDAO(CREATE_DAO_ARGS))
         .revertedWithCustomError(governorDAOFactory, "InvalidInput")
-        .withArgs("DAOFactory: admin address is zero");
+        .withArgs("BaseDAO: admin address is zero");
     });
 
     it("Verify createDAO should be reverted when dao name is empty", async function () {
       const { governorDAOFactory, daoAdminOne, token } = await loadFixture(
         deployFixture
       );
-      await expect(
-        governorDAOFactory.createDAO(
-          daoAdminOne.address,
-          "",
-          LOGO_URL,
-          token.address,
-          BigNumber.from(500),
-          BigNumber.from(0),
-          BigNumber.from(100),
-          true
-        )
-      )
+      const CREATE_DAO_ARGS = [
+        daoAdminOne.address,
+        "",
+        LOGO_URL,
+        token.address,
+        BigNumber.from(500),
+        BigNumber.from(0),
+        BigNumber.from(100),
+        true,
+        DESCRIPTION,
+        WEB_LINKS,
+      ];
+      await expect(governorDAOFactory.createDAO(CREATE_DAO_ARGS))
         .revertedWithCustomError(governorDAOFactory, "InvalidInput")
-        .withArgs("DAOFactory: name is empty");
+        .withArgs("BaseDAO: name is empty");
     });
 
     it("Verify createDAO should be reverted when token address is zero", async function () {
       const { governorDAOFactory, daoAdminOne } = await loadFixture(
         deployFixture
       );
-      await expect(
-        governorDAOFactory.createDAO(
-          daoAdminOne.address,
-          DAO_NAME,
-          LOGO_URL,
-          TestHelper.ZERO_ADDRESS,
-          BigNumber.from(500),
-          BigNumber.from(0),
-          BigNumber.from(100),
-          true
-        )
-      )
+      const CREATE_DAO_ARGS = [
+        daoAdminOne.address,
+        DAO_NAME,
+        LOGO_URL,
+        TestHelper.ZERO_ADDRESS,
+        BigNumber.from(500),
+        BigNumber.from(0),
+        BigNumber.from(100),
+        true,
+        DESCRIPTION,
+        WEB_LINKS,
+      ];
+      await expect(governorDAOFactory.createDAO(CREATE_DAO_ARGS))
         .revertedWithCustomError(governorDAOFactory, "InvalidInput")
         .withArgs("DAOFactory: token address is zero");
     });
@@ -165,18 +177,19 @@ describe("GovernanceTokenDAO tests", function () {
       const { governorDAOFactory, daoAdminOne, token } = await loadFixture(
         deployFixture
       );
-      await expect(
-        governorDAOFactory.createDAO(
-          daoAdminOne.address,
-          DAO_NAME,
-          LOGO_URL,
-          token.address,
-          BigNumber.from(500),
-          BigNumber.from(0),
-          BigNumber.from(0),
-          false
-        )
-      )
+      const CREATE_DAO_ARGS = [
+        daoAdminOne.address,
+        DAO_NAME,
+        LOGO_URL,
+        token.address,
+        BigNumber.from(500),
+        BigNumber.from(0),
+        BigNumber.from(0),
+        false,
+        DESCRIPTION,
+        WEB_LINKS,
+      ];
+      await expect(governorDAOFactory.createDAO(CREATE_DAO_ARGS))
         .revertedWithCustomError(governorDAOFactory, "InvalidInput")
         .withArgs("DAOFactory: voting period is zero");
     });
@@ -189,7 +202,7 @@ describe("GovernanceTokenDAO tests", function () {
       const currentList = await governorDAOFactory.getDAOs();
       expect(currentList.length).equal(0);
 
-      const txn = await governorDAOFactory.createDAO(
+      const CREATE_DAO_ARGS = [
         daoAdminOne.address,
         DAO_NAME,
         LOGO_URL,
@@ -197,8 +210,12 @@ describe("GovernanceTokenDAO tests", function () {
         BigNumber.from(500),
         BigNumber.from(0),
         BigNumber.from(100),
-        false
-      );
+        false,
+        DESCRIPTION,
+        WEB_LINKS,
+      ];
+
+      const txn = await governorDAOFactory.createDAO(CREATE_DAO_ARGS);
 
       const lastEvent = (await txn.wait()).events.pop();
       expect(lastEvent.event).equal("DAOCreated");
@@ -216,7 +233,7 @@ describe("GovernanceTokenDAO tests", function () {
       const currentList = await governorDAOFactory.getDAOs();
       expect(currentList.length).equal(0);
 
-      const txn = await governorDAOFactory.createDAO(
+      const CREATE_DAO_ARGS = [
         daoAdminOne.address,
         DAO_NAME,
         LOGO_URL,
@@ -224,8 +241,12 @@ describe("GovernanceTokenDAO tests", function () {
         BigNumber.from(500),
         BigNumber.from(0),
         BigNumber.from(100),
-        true
-      );
+        true,
+        DESCRIPTION,
+        WEB_LINKS,
+      ];
+
+      const txn = await governorDAOFactory.createDAO(CREATE_DAO_ARGS);
 
       const lastEvent = (await txn.wait()).events.pop();
       expect(lastEvent.event).equal("DAOCreated");
@@ -328,7 +349,14 @@ describe("GovernanceTokenDAO tests", function () {
       const dao = await TestHelper.deployLogic("GovernorTokenDAO");
 
       await expect(
-        dao.initialize(daoAdminOne.address, "", LOGO_URL, governorTT.address)
+        dao.initialize(
+          daoAdminOne.address,
+          "",
+          LOGO_URL,
+          DESCRIPTION,
+          WEB_LINKS,
+          governorTT.address
+        )
       )
         .revertedWithCustomError(dao, "InvalidInput")
         .withArgs("BaseDAO: name is empty");
@@ -338,6 +366,8 @@ describe("GovernanceTokenDAO tests", function () {
           TestHelper.ZERO_ADDRESS,
           DAO_NAME,
           LOGO_URL,
+          DESCRIPTION,
+          WEB_LINKS,
           governorTT.address
         )
       )
@@ -417,6 +447,8 @@ describe("GovernanceTokenDAO tests", function () {
           daoAdminOne.address,
           "",
           LOGO_URL,
+          DESCRIPTION,
+          WEB_LINKS,
           governorTT.address
         )
       )
@@ -428,11 +460,39 @@ describe("GovernanceTokenDAO tests", function () {
           TestHelper.ZERO_ADDRESS,
           DAO_NAME,
           LOGO_URL,
+          DESCRIPTION,
+          WEB_LINKS,
           governorTT.address
         )
       )
         .revertedWithCustomError(governorTokenDAO, "InvalidInput")
         .withArgs("BaseDAO: admin address is zero");
+
+      await expect(
+        governorTokenDAO.initialize(
+          daoAdminOne.address,
+          DAO_NAME,
+          LOGO_URL,
+          "",
+          WEB_LINKS,
+          governorTT.address
+        )
+      )
+        .revertedWithCustomError(governorTokenDAO, "InvalidInput")
+        .withArgs("BaseDAO: description is empty");
+
+      await expect(
+        governorTokenDAO.initialize(
+          daoAdminOne.address,
+          DAO_NAME,
+          LOGO_URL,
+          DESCRIPTION,
+          ["WEB_LINKS"],
+          governorTT.address
+        )
+      )
+        .revertedWithCustomError(governorTokenDAO, "InvalidInput")
+        .withArgs("BaseDAO: links must be even length array");
     });
 
     it("Verify contract should be reverted if __BaseDAO_init called from outside", async function () {
@@ -440,7 +500,13 @@ describe("GovernanceTokenDAO tests", function () {
         deployFixture
       );
       await expect(
-        governorTokenDAO.__BaseDAO_init(daoAdminOne.address, DAO_NAME, LOGO_URL)
+        governorTokenDAO.__BaseDAO_init(
+          daoAdminOne.address,
+          DAO_NAME,
+          LOGO_URL,
+          DESCRIPTION,
+          WEB_LINKS
+        )
       ).revertedWith("Initializable: contract is not initializing");
     });
 
@@ -451,21 +517,14 @@ describe("GovernanceTokenDAO tests", function () {
       const daoDetails1 = await governorTokenDAO.getDaoDetail();
       expect(daoDetails1[0]).equals(DAO_NAME);
       expect(daoDetails1[1]).equals(LOGO_URL);
-      expect(daoDetails1[2]).equals("");
+      expect(daoDetails1[2]).equals(WEB_LINKS.join(","));
+      expect(daoDetails1[3]).equals(DESCRIPTION);
+      expect(daoDetails1[4]).equals(daoAdminOne.address);
 
       await governorTokenDAO.connect(daoAdminOne).addWebLink(WEB_KEY, WEB_URL);
 
       const daoDetails2 = await governorTokenDAO.getDaoDetail();
-      expect(daoDetails2[2]).equals([WEB_KEY, WEB_URL].join(","));
-
-      await governorTokenDAO
-        .connect(daoAdminOne)
-        .addWebLink("WEB_KEY", "WEB_URL");
-
-      const daoDetails3 = await governorTokenDAO.getDaoDetail();
-      expect(daoDetails3[2]).equals(
-        [WEB_KEY, WEB_URL, "WEB_KEY", "WEB_URL"].join(",")
-      );
+      expect(daoDetails2[2]).equals([...WEB_LINKS, WEB_KEY, WEB_URL].join(","));
     });
 
     it("Verify updating dao details should be reverted for non-admin user", async function () {
@@ -484,9 +543,13 @@ describe("GovernanceTokenDAO tests", function () {
       await expect(
         governorTokenDAO.connect(daoAdminTwo).updateLogoURL(LOGO_URL)
       ).revertedWith("Ownable: caller is not the owner");
+
+      await expect(
+        governorTokenDAO.connect(daoAdminTwo).updateDescription(DESCRIPTION)
+      ).revertedWith("Ownable: caller is not the owner");
     });
 
-    it("Verify addWebLink, updateName should be reverted for invalid inputs", async function () {
+    it("Verify addWebLink, updateName, updateDescription should be reverted for invalid inputs", async function () {
       const { governorTokenDAO, daoAdminOne } = await loadFixture(
         deployFixture
       );
@@ -502,6 +565,10 @@ describe("GovernanceTokenDAO tests", function () {
       await expect(governorTokenDAO.connect(daoAdminOne).updateName(""))
         .revertedWithCustomError(governorTokenDAO, "InvalidInput")
         .withArgs("BaseDAO: name is empty");
+
+      await expect(governorTokenDAO.connect(daoAdminOne).updateDescription(""))
+        .revertedWithCustomError(governorTokenDAO, "InvalidInput")
+        .withArgs("BaseDAO: description is empty");
     });
 
     it("Verify addWebLink should be succeeded for valid inputs", async function () {
@@ -514,11 +581,13 @@ describe("GovernanceTokenDAO tests", function () {
 
       const { name, args } = await TestHelper.readLastEvent(txn);
       expect(name).equals("WebLinkUpdated");
-      expect(args.previousLink).equals("");
-      expect(args.currentLink).equals(WEB_KEY + "," + WEB_URL);
+      expect(args.previousLink).equals(WEB_LINKS.join(","));
+      expect(args.currentLink).equals(
+        [...WEB_LINKS, WEB_KEY, WEB_URL].join(",")
+      );
 
       const result = await governorTokenDAO.getDaoDetail();
-      const links = result[2].split(",");
+      const links: any[] = result[2].split(",").slice(-2);
       expect(links[0]).equals(WEB_KEY);
       expect(links[1]).equals(WEB_URL);
     });
@@ -553,6 +622,22 @@ describe("GovernanceTokenDAO tests", function () {
       expect(name).equals("LogoUrlUpdated");
       expect(args[0]).equals(LOGO_URL);
       expect(args[1]).equals(UPDATED_LOGO_URL);
+    });
+
+    it("Verify updateDescription should be succeeded for valid inputs", async function () {
+      const { governorTokenDAO, daoAdminOne } = await loadFixture(
+        deployFixture
+      );
+
+      const UPDATED_DESCRIPTION = DESCRIPTION + "_1";
+      const txn = await governorTokenDAO
+        .connect(daoAdminOne)
+        .updateDescription(UPDATED_DESCRIPTION);
+
+      const { name, args } = await TestHelper.readLastEvent(txn);
+      expect(name).equals("DescriptionUpdated");
+      expect(args[0]).equals(DESCRIPTION);
+      expect(args[1]).equals(UPDATED_DESCRIPTION);
     });
   });
 });

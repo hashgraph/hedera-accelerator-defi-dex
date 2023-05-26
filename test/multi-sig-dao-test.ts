@@ -11,6 +11,13 @@ describe("MultiSig tests", function () {
   const TRANSFER_AMOUNT = 10 * 1e8;
   const DAO_NAME = "DAO_NAME";
   const LOGO_URL = "LOGO_URL";
+  const DESCRIPTION = "DESCRIPTION";
+  const WEB_LINKS = [
+    "TWITTER",
+    "https://twitter.com",
+    "LINKEDIN",
+    "https://linkedin.com",
+  ];
 
   async function gnosisProxyCreationVerification(name: string, args: any) {
     expect(name).equal("ProxyCreation");
@@ -80,17 +87,14 @@ describe("MultiSig tests", function () {
 
   async function deployFixture() {
     const signers = await TestHelper.getSigners();
-    const daoAdminOne = await TestHelper.getDAOAdminOne();
-
     const bastHTS = await TestHelper.deployMockBaseHTS();
+    const dexOwner = await TestHelper.getDexOwner();
 
-    const tokenInstance = await TestHelper.deployLogic(
-      "ERC20Mock",
-      "Test",
-      "Test",
-      TOTAL,
-      0
-    );
+    const daoSigners = await TestHelper.getDAOSigners();
+    expect(daoSigners.length).not.equals(0);
+
+    const daoAdminOne = await TestHelper.getDAOAdminOne();
+    const tokenInstance = await TestHelper.deployERC20Mock();
 
     const multiSigDAOLogicInstance = await TestHelper.deployLogic(
       "MultiSigDAO"
@@ -117,9 +121,6 @@ describe("MultiSig tests", function () {
       hederaGnosisSafeProxyInstance
     );
 
-    const daoSigners = await TestHelper.getDAOSigners();
-    expect(daoSigners.length).not.equals(0);
-
     const doaSignersAddresses = daoSigners.map(
       (signer: SignerWithAddress) => signer.address
     );
@@ -135,15 +136,25 @@ describe("MultiSig tests", function () {
       TestHelper.ZERO_ADDRESS
     );
 
-    const dexOwner = await TestHelper.getDexOwner();
-    const multiSigDAOInstance = await TestHelper.deployLogic("MultiSigDAO");
-    await multiSigDAOInstance.initialize(
+    const MULTISIG_ARGS = [
       dexOwner.address,
       DAO_NAME,
       LOGO_URL,
+      DESCRIPTION,
+      WEB_LINKS,
       hederaGnosisSafeProxyInstance,
-      bastHTS.address
-    );
+      bastHTS.address,
+    ];
+
+    const multiSigDAOInstance = await TestHelper.deployLogic("MultiSigDAO");
+    const txn = await multiSigDAOInstance.initialize(...MULTISIG_ARGS);
+    const events = await TestHelper.readEvents(txn, [
+      "WebLinkUpdated",
+      "NameUpdated",
+      "LogoUrlUpdated",
+      "DescriptionUpdated",
+    ]);
+    expect(events.length).equals(4);
 
     // factory setup
     const multiSigDAOFactoryInstance = await TestHelper.deployLogic(
@@ -179,6 +190,7 @@ describe("MultiSig tests", function () {
       doaSignersAddresses,
       daoAdminOne,
       bastHTS,
+      MULTISIG_ARGS,
     };
   }
 
@@ -283,7 +295,7 @@ describe("MultiSig tests", function () {
           signers[1].address,
           1e8
         )
-      ).to.revertedWith("GS031");
+      ).revertedWith("GS031");
     });
 
     it("Verify propose transaction should be reverted when user executed GnosisSafe exe method which is disabled by us", async function () {
@@ -311,7 +323,7 @@ describe("MultiSig tests", function () {
           info.to,
           info.data
         )
-      ).to.revertedWith("HederaGnosisSafe: API not available");
+      ).revertedWith("HederaGnosisSafe: API not available");
     });
 
     it("Verify propose transaction should be reverted for twice execution", async function () {
@@ -347,7 +359,7 @@ describe("MultiSig tests", function () {
           info.operation,
           info.nonce
         )
-      ).to.revertedWith("HederaGnosisSafe: txn already executed");
+      ).revertedWith("HederaGnosisSafe: txn already executed");
     });
   });
 
@@ -369,40 +381,42 @@ describe("MultiSig tests", function () {
           hederaGnosisSafeProxyFactoryInstance.address,
           bastHTS.address
         )
-      ).to.revertedWith("Initializable: contract is already initialized");
+      ).revertedWith("Initializable: contract is already initialized");
     });
 
     it("Verify createDAO should be reverted when dao admin is zero", async function () {
       const { multiSigDAOFactoryInstance, doaSignersAddresses } =
         await loadFixture(deployFixture);
-      await expect(
-        multiSigDAOFactoryInstance.createDAO(
-          TestHelper.ZERO_ADDRESS,
-          DAO_NAME,
-          LOGO_URL,
-          doaSignersAddresses,
-          doaSignersAddresses.length,
-          true
-        )
-      )
-        .to.revertedWithCustomError(multiSigDAOFactoryInstance, "InvalidInput")
+      const ARGS = [
+        TestHelper.ZERO_ADDRESS,
+        DAO_NAME,
+        LOGO_URL,
+        doaSignersAddresses,
+        doaSignersAddresses.length,
+        true,
+        DESCRIPTION,
+        WEB_LINKS,
+      ];
+      await expect(multiSigDAOFactoryInstance.createDAO(ARGS))
+        .revertedWithCustomError(multiSigDAOFactoryInstance, "InvalidInput")
         .withArgs("BaseDAO: admin address is zero");
     });
 
     it("Verify createDAO should be reverted when dao name is empty", async function () {
       const { multiSigDAOFactoryInstance, doaSignersAddresses, daoAdminOne } =
         await loadFixture(deployFixture);
-      await expect(
-        multiSigDAOFactoryInstance.createDAO(
-          daoAdminOne.address,
-          "",
-          LOGO_URL,
-          doaSignersAddresses,
-          doaSignersAddresses.length,
-          true
-        )
-      )
-        .to.revertedWithCustomError(multiSigDAOFactoryInstance, "InvalidInput")
+      const ARGS = [
+        daoAdminOne.address,
+        "",
+        LOGO_URL,
+        doaSignersAddresses,
+        doaSignersAddresses.length,
+        true,
+        DESCRIPTION,
+        WEB_LINKS,
+      ];
+      await expect(multiSigDAOFactoryInstance.createDAO(ARGS))
+        .revertedWithCustomError(multiSigDAOFactoryInstance, "InvalidInput")
         .withArgs("BaseDAO: name is empty");
     });
 
@@ -411,23 +425,27 @@ describe("MultiSig tests", function () {
         await loadFixture(deployFixture);
 
       const currentList = await multiSigDAOFactoryInstance.getDAOs();
-      expect(currentList.length).to.be.equal(0);
+      expect(currentList.length).equal(0);
 
-      const txn = await multiSigDAOFactoryInstance.createDAO(
+      const ARGS = [
         daoAdminOne.address,
         DAO_NAME,
         LOGO_URL,
         doaSignersAddresses,
         doaSignersAddresses.length,
-        false
-      );
+        false,
+        DESCRIPTION,
+        WEB_LINKS,
+      ];
+
+      const txn = await multiSigDAOFactoryInstance.createDAO(ARGS);
 
       const { name, args } = await TestHelper.readLastEvent(txn);
-      expect(name).to.be.equal("DAOCreated");
-      expect(args.daoAddress).not.to.be.equal(TestHelper.ZERO_ADDRESS);
+      expect(name).equal("DAOCreated");
+      expect(args.daoAddress).not.equal(TestHelper.ZERO_ADDRESS);
 
       const updatedList = await multiSigDAOFactoryInstance.getDAOs();
-      expect(updatedList.length).to.be.equal(1);
+      expect(updatedList.length).equal(1);
     });
 
     it("Verify createDAO should not add new dao into list when the dao is private", async function () {
@@ -435,23 +453,27 @@ describe("MultiSig tests", function () {
         await loadFixture(deployFixture);
 
       const currentList = await multiSigDAOFactoryInstance.getDAOs();
-      expect(currentList.length).to.be.equal(0);
+      expect(currentList.length).equal(0);
 
-      const txn = await multiSigDAOFactoryInstance.createDAO(
+      const ARGS = [
         daoAdminOne.address,
         DAO_NAME,
         LOGO_URL,
         doaSignersAddresses,
         doaSignersAddresses.length,
-        true
-      );
+        true,
+        DESCRIPTION,
+        WEB_LINKS,
+      ];
+
+      const txn = await multiSigDAOFactoryInstance.createDAO(ARGS);
 
       const { name, args } = await TestHelper.readLastEvent(txn);
-      expect(name).to.be.equal("DAOCreated");
-      expect(args.daoAddress).not.to.be.equal(TestHelper.ZERO_ADDRESS);
+      expect(name).equal("DAOCreated");
+      expect(args.daoAddress).not.equal(TestHelper.ZERO_ADDRESS);
 
       const updatedList = await multiSigDAOFactoryInstance.getDAOs();
-      expect(updatedList.length).to.be.equal(0);
+      expect(updatedList.length).equal(0);
     });
 
     it("Verify upgrade logic call should be reverted for non dex owner", async function () {
@@ -464,7 +486,7 @@ describe("MultiSig tests", function () {
           .connect(daoAdminOne)
           .upgradeSafeFactoryAddress(TestHelper.ZERO_ADDRESS)
       )
-        .to.revertedWithCustomError(multiSigDAOFactoryInstance, "NotAdmin")
+        .revertedWithCustomError(multiSigDAOFactoryInstance, "NotAdmin")
         .withArgs("MultisigDAOFactory: auth failed");
 
       await expect(
@@ -472,7 +494,7 @@ describe("MultiSig tests", function () {
           .connect(daoAdminOne)
           .upgradeSafeLogicAddress(TestHelper.ZERO_ADDRESS)
       )
-        .to.revertedWithCustomError(multiSigDAOFactoryInstance, "NotAdmin")
+        .revertedWithCustomError(multiSigDAOFactoryInstance, "NotAdmin")
         .withArgs("MultisigDAOFactory: auth failed");
 
       await expect(
@@ -480,7 +502,7 @@ describe("MultiSig tests", function () {
           .connect(daoAdminOne)
           .upgradeDaoLogicAddress(TestHelper.ZERO_ADDRESS)
       )
-        .to.revertedWithCustomError(multiSigDAOFactoryInstance, "NotAdmin")
+        .revertedWithCustomError(multiSigDAOFactoryInstance, "NotAdmin")
         .withArgs("MultisigDAOFactory: auth failed");
     });
 
@@ -495,9 +517,9 @@ describe("MultiSig tests", function () {
       const safeFactoryTxnEvent = await TestHelper.readLastEvent(
         safeFactoryTxn
       );
-      expect(safeFactoryTxnEvent.name).to.be.equal("LogicUpdated");
-      expect(safeFactoryTxnEvent.args.name).to.be.equal("SafeFactory");
-      expect(safeFactoryTxnEvent.args.newImplementation).to.be.equal(
+      expect(safeFactoryTxnEvent.name).equal("LogicUpdated");
+      expect(safeFactoryTxnEvent.args.name).equal("SafeFactory");
+      expect(safeFactoryTxnEvent.args.newImplementation).equal(
         TestHelper.ONE_ADDRESS
       );
 
@@ -505,9 +527,9 @@ describe("MultiSig tests", function () {
         .connect(dexOwner)
         .upgradeSafeLogicAddress(TestHelper.ONE_ADDRESS);
       const safeLogicTxnEvent = await TestHelper.readLastEvent(safeLogicTxn);
-      expect(safeLogicTxnEvent.name).to.be.equal("LogicUpdated");
-      expect(safeLogicTxnEvent.args.name).to.be.equal("SafeLogic");
-      expect(safeLogicTxnEvent.args.newImplementation).to.be.equal(
+      expect(safeLogicTxnEvent.name).equal("LogicUpdated");
+      expect(safeLogicTxnEvent.args.name).equal("SafeLogic");
+      expect(safeLogicTxnEvent.args.newImplementation).equal(
         TestHelper.ONE_ADDRESS
       );
 
@@ -515,31 +537,22 @@ describe("MultiSig tests", function () {
         .connect(dexOwner)
         .upgradeDaoLogicAddress(TestHelper.ONE_ADDRESS);
       const daoLogicTxnEvent = await TestHelper.readLastEvent(daoLogicTxn);
-      expect(daoLogicTxnEvent.name).to.be.equal("LogicUpdated");
-      expect(daoLogicTxnEvent.args.name).to.be.equal("DaoLogic");
-      expect(daoLogicTxnEvent.args.newImplementation).to.be.equal(
+      expect(daoLogicTxnEvent.name).equal("LogicUpdated");
+      expect(daoLogicTxnEvent.args.name).equal("DaoLogic");
+      expect(daoLogicTxnEvent.args.newImplementation).equal(
         TestHelper.ONE_ADDRESS
       );
     });
   });
 
   describe("MultiSigDAO contract tests", function () {
-    it("Verify MultiSigDAO contract revert for multiple initialization", async function () {
-      const {
-        multiSigDAOInstance,
-        dexOwner,
-        hederaGnosisSafeProxyContract,
-        bastHTS,
-      } = await loadFixture(deployFixture);
+    it("Verify MultiSigDAO contract should be reverted for multiple initialization", async function () {
+      const { multiSigDAOInstance, MULTISIG_ARGS } = await loadFixture(
+        deployFixture
+      );
       await expect(
-        multiSigDAOInstance.initialize(
-          dexOwner.address,
-          DAO_NAME,
-          LOGO_URL,
-          hederaGnosisSafeProxyContract.address,
-          bastHTS.address
-        )
-      ).to.revertedWith("Initializable: contract is already initialized");
+        multiSigDAOInstance.initialize(...MULTISIG_ARGS)
+      ).revertedWith("Initializable: contract is already initialized");
     });
 
     it("Verify HederaGnosisSafe address set properly", async function () {
@@ -554,12 +567,12 @@ describe("MultiSig tests", function () {
       const { multiSigDAOInstance } = await loadFixture(deployFixture);
       await expect(
         multiSigDAOInstance.getTransactionInfo(INVALID_TXN_HASH)
-      ).to.revertedWith("MultiSigDAO: no txn exist");
+      ).revertedWith("MultiSigDAO: no txn exist");
     });
 
     it("Verify transaction state should be reverted for non-existing hash", async function () {
       const { multiSigDAOInstance } = await loadFixture(deployFixture);
-      await expect(multiSigDAOInstance.state(INVALID_TXN_HASH)).to.revertedWith(
+      await expect(multiSigDAOInstance.state(INVALID_TXN_HASH)).revertedWith(
         "MultiSigDAO: no txn exist"
       );
     });
@@ -719,7 +732,7 @@ describe("MultiSig tests", function () {
           info.operation,
           info.nonce
         )
-      ).to.revertedWith("Owner has not approved yet");
+      ).revertedWith("Owner has not approved yet");
     });
   });
 });

@@ -1,10 +1,11 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.18;
 
+import "./common/CommonOperations.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableMapUpgradeable.sol";
 
-contract Configuration is OwnableUpgradeable {
+contract Configuration is OwnableUpgradeable, CommonOperations {
     string private constant TWITTER = "TWITTER";
     string private constant DISCORD = "DISCORD";
     string private constant WEBSITE = "WEBSITE";
@@ -71,11 +72,7 @@ contract Configuration is OwnableUpgradeable {
     }
 
     function getCommaSeparatedUrlKeys() public view returns (string memory) {
-        string memory allKeys = "";
-        for (uint i = 0; i < urlsKeys.length; i++) {
-            allKeys = string.concat(urlsKeys[i], ",", allKeys);
-        }
-        return allKeys;
+        return join(urlsKeys, ",");
     }
 
     function _populateFeeMap() private {
