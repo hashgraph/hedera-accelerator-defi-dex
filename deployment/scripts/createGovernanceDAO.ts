@@ -10,11 +10,16 @@ async function main() {
   const contractId = ContractId.fromString(input.contractId);
   TokenId.fromSolidityAddress(input.tokenAddress);
   AccountId.fromSolidityAddress(input.daoAdmin);
-
+  const webLinks = input.daoWebLinks.split(",");
+  if (webLinks.length % 2 !== 0) {
+    throw Error("Invalid WebLinks");
+  }
   const governanceDAOFactory = new GovernanceDAOFactory(contractId.toString());
   await governanceDAOFactory.createDAO(
     input.daoName,
     input.daoLogoUrl,
+    input.daoDescription,
+    webLinks,
     input.tokenAddress,
     Number(input.quorumThreshold),
     Number(input.votingDelay),

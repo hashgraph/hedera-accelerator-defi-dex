@@ -1,4 +1,6 @@
+import { ethers } from "hardhat";
 import { Helper } from "../../utils/Helper";
+import { Interface } from "ethers/lib/utils";
 import { BigNumber } from "bignumber.js";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { ContractService } from "../../deployment/service/ContractService";
@@ -8,7 +10,9 @@ import {
   PrivateKey,
   ContractExecuteTransaction,
   ContractFunctionParameters,
+  AccountId,
 } from "@hashgraph/sdk";
+import ContractMetadata from "../../utils/ContractMetadata";
 
 export default class Base {
   private csDev: ContractService = new ContractService();
@@ -44,15 +48,22 @@ export default class Base {
     gas: number,
     functionName: string,
     client: Client,
-    functionParams: ContractFunctionParameters | undefined = undefined,
+    functionParams:
+      | Uint8Array
+      | ContractFunctionParameters
+      | undefined = undefined,
     keys: PrivateKey | PrivateKey[] | undefined = undefined,
     amount: BigNumber | number = 0
   ) => {
     const txn = new ContractExecuteTransaction()
       .setContractId(this.contractId)
       .setGas(gas)
-      .setFunction(functionName, functionParams)
       .setPayableAmount(amount);
+    if (functionParams instanceof Uint8Array) {
+      txn.setFunctionParameters(functionParams);
+    } else {
+      txn.setFunction(functionName, functionParams);
+    }
     const txnToExecute = await Helper.signTxnIfNeeded(txn, keys, client);
     const txnResponse = await txnToExecute.execute(client);
     const txnReceipt = await txnResponse.getReceipt(client);
@@ -77,5 +88,17 @@ export default class Base {
   private getConfigurationContractAddress(): string {
     return this.csDev.getContractWithProxy(this.csDev.configuration)
       .transparentProxyAddress!!;
+  }
+
+  protected async encodeFunctionData(
+    contractName: string,
+    functionName: string,
+    data: any[]
+  ) {
+    const contractInterface = await new ContractMetadata().getContractInterface(
+      contractName
+    );
+    const hex = contractInterface.encodeFunctionData(functionName, data);
+    return { bytes: ethers.utils.arrayify(hex), hex };
   }
 }

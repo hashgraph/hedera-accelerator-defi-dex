@@ -26,6 +26,16 @@ on:
         default: "https://defi-ui.hedera.com/"
         required: true
         type: string
+      daoDescription:
+        description: "Enter DAO description"
+        default: "Lorem Ipsum is simply dummy text"
+        required: true
+        type: string
+      daoWebLinks:
+        description: "Enter dao web links (csv format with even length)"
+        default: "LINKEDIN,https://linkedin.com"
+        required: true
+        type: string
       quorumThreshold:
         description: "Enter quorum threshold"
         default: "500"

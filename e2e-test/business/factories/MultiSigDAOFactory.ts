@@ -1,7 +1,8 @@
 import Base from "../Base";
+import ContractMetadata from "../../../utils/ContractMetadata";
 
+import { ethers } from "hardhat";
 import { Helper } from "../../../utils/Helper";
-import { BigNumber } from "bignumber.js";
 import { Deployment } from "../../../utils/deployContractOnTestnet";
 import { clientsInfo } from "../../../utils/ClientManagement";
 import {
@@ -49,32 +50,38 @@ export default class MultiSigDAOFactory extends Base {
   createDAO = async (
     name: string,
     logoUrl: string,
+    desc: string,
+    webLinks: string[],
     owners: string[],
     threshold: number,
     isPrivate: boolean,
     admin: string = clientsInfo.uiUserId.toSolidityAddress(),
     client: Client = clientsInfo.uiUserClient
   ) => {
-    const params = {
+    const createDAOInputs = {
       admin,
       name,
       logoUrl,
-      owners: owners.toString(),
+      owners,
       threshold,
       isPrivate,
+      desc,
+      webLinks,
     };
-    const args = new ContractFunctionParameters()
-      .addAddress(admin)
-      .addString(name)
-      .addString(logoUrl)
-      .addAddressArray(owners)
-      .addUint256(BigNumber(threshold))
-      .addBool(isPrivate);
-    const { result } = await this.execute(7_00_000, CREATE_DAO, client, args);
+    const { hex, bytes } = await this.encodeFunctionData(
+      ContractService.MULTI_SIG_FACTORY,
+      CREATE_DAO,
+      [Object.values(createDAOInputs)]
+    );
+    const { result } = await this.execute(7_00_000, CREATE_DAO, client, bytes);
     const address = result.getAddress(0);
-    console.log(`- MultiSigDAOFactory#${CREATE_DAO}(): done`);
+    console.log(
+      `- MultiSigDAOFactory#${CREATE_DAO}(): where input data = ${hex}`
+    );
     console.table({
-      ...params,
+      ...createDAOInputs,
+      owners: owners.toString(),
+      webLinks: webLinks.toString(),
       daoAddress: address,
       daoFactoryId: this.contractId,
     });
@@ -83,7 +90,7 @@ export default class MultiSigDAOFactory extends Base {
   };
 
   getDAOs = async (client: Client = clientsInfo.operatorClient) => {
-    const { result } = await this.execute(1_00_000, GET_DAOS, client);
+    const { result } = await this.execute(2_00_000, GET_DAOS, client);
     const addresses = Helper.getAddressArray(result);
     console.log(
       `- MultiSigDAOFactory#${GET_DAOS}(): count = ${addresses.length}, dao's = [${addresses}]\n`
@@ -142,4 +149,10 @@ export default class MultiSigDAOFactory extends Base {
     const map = await MirrorNodeService.getInstance().decodeLog(result.logs);
     return map.get("LogicUpdated")![0];
   };
+
+  public async getMultiSigDAOFactoryInterface() {
+    return await new ContractMetadata().getContractInterface(
+      "MultiSigDAOFactory"
+    );
+  }
 }

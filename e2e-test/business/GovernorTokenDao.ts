@@ -32,6 +32,8 @@ export default class GovernorTokenDao extends BaseDao {
     admin: string,
     name: string,
     url: string,
+    desc: string,
+    webLinks: string[],
     governor: Governor,
     tokenHolder: GodHolder | NFTHolder,
     client: Client = clientsInfo.operatorClient,
@@ -50,13 +52,23 @@ export default class GovernorTokenDao extends BaseDao {
       tokenId,
       holderTokenId
     );
-    await this.initializeDAO(admin, name, url, governor, client);
+    await this.initializeDAO(
+      admin,
+      name,
+      url,
+      desc,
+      webLinks,
+      governor,
+      client
+    );
   }
 
   async initializeDAO(
     admin: string,
     name: string,
     url: string,
+    desc: string,
+    webLinks: string[],
     governor: Governor,
     client: Client = clientsInfo.operatorClient
   ) {
@@ -68,6 +80,8 @@ export default class GovernorTokenDao extends BaseDao {
         .addAddress(admin)
         .addString(name)
         .addString(url)
+        .addString(desc)
+        .addStringArray(webLinks)
         .addAddress(governorAddress);
       await this.execute(9_00_000, INITIALIZE, client, args);
       console.log(`- GovernorTokenDao#${INITIALIZE}(): done\n`);

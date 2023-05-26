@@ -17,6 +17,8 @@ import { BigNumber } from "bignumber.js";
 
 const TOKEN_ID = TokenId.fromString(dex.TOKEN_LAB49_1);
 const adminAddress: string = clientsInfo.operatorId.toSolidityAddress();
+const DAO_DESC = "Lorem Ipsum is simply dummy text";
+const DAO_WEB_LINKS = ["LINKEDIN", "https://linkedin.com"];
 
 let govTokenDao: GovernorTokenDao;
 let governorTT: Governor;
@@ -39,6 +41,8 @@ export class DAONFTTokenTest extends CommonSteps {
       adminAddress,
       name,
       url,
+      DAO_DESC,
+      DAO_WEB_LINKS,
       governorTT,
       clientsInfo.operatorClient
     );
@@ -62,6 +66,8 @@ export class DAONFTTokenTest extends CommonSteps {
         adminAddress,
         name,
         url,
+        DAO_DESC,
+        DAO_WEB_LINKS,
         governorTT,
         clientsInfo.operatorClient
       );

@@ -1,7 +1,6 @@
 import Base from "../Base";
 
 import { Helper } from "../../../utils/Helper";
-import { BigNumber } from "bignumber.js";
 import { Deployment } from "../../../utils/deployContractOnTestnet";
 import { clientsInfo } from "../../../utils/ClientManagement";
 import { Client, ContractId, ContractFunctionParameters } from "@hashgraph/sdk";
@@ -71,6 +70,8 @@ export default class DAOFactory extends Base {
   createDAO = async (
     name: string,
     logoUrl: string,
+    desc: string,
+    webLinks: string[],
     tokenAddress: string,
     quorumThreshold: number,
     votingDelay: number,
@@ -82,28 +83,36 @@ export default class DAOFactory extends Base {
     const params = {
       admin,
       name,
+      logoUrl,
       tokenAddress,
       quorumThreshold,
       votingDelay,
       votingPeriod,
       isPrivate,
+      desc,
+      webLinks,
     };
-    const args = new ContractFunctionParameters()
-      .addAddress(admin)
-      .addString(name)
-      .addString(logoUrl)
-      .addAddress(tokenAddress)
-      .addUint256(BigNumber(quorumThreshold))
-      .addUint256(BigNumber(votingDelay))
-      .addUint256(BigNumber(votingPeriod))
-      .addBool(isPrivate);
-    const { result } = await this.execute(9000000, CREATE_DAO, client, args);
+    const { bytes, hex } = await this.encodeFunctionData(
+      ContractService.FT_DAO_FACTORY,
+      CREATE_DAO,
+      [Object.values(params)]
+    );
+    const { result, record } = await this.execute(
+      3_500_000,
+      CREATE_DAO,
+      client,
+      bytes
+    );
     const address = result.getAddress(0);
-    console.log(`- ${this.getPrefix()}DAOFactory#${CREATE_DAO}(): done`);
+    console.log(
+      `- ${this.getPrefix()}DAOFactory#${CREATE_DAO}(): with input data = ${hex}`
+    );
     console.table({
       ...params,
+      webLinks: webLinks.toString(),
       daoAddress: address,
       daoFactoryId: this.contractId,
+      txnId: record.transactionId.toString(),
     });
     return address;
   };
