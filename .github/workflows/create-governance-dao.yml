@@ -21,11 +21,6 @@ on:
         default: "GitHub-JOB-DAO"
         required: true
         type: string
-      daoLogoUrl:
-        description: "Enter DAO logo url"
-        default: "https://defi-ui.hedera.com/"
-        required: true
-        type: string
       daoDescription:
         description: "Enter DAO description"
         default: "Lorem Ipsum is simply dummy text"

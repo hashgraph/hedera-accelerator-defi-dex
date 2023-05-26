@@ -17,7 +17,7 @@ async function main() {
   const governanceDAOFactory = new GovernanceDAOFactory(contractId.toString());
   await governanceDAOFactory.createDAO(
     input.daoName,
-    input.daoLogoUrl,
+    "https://defi-ui.hedera.com/",
     input.daoDescription,
     webLinks,
     input.tokenAddress,
