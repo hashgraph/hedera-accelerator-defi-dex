@@ -18,6 +18,20 @@ Feature: Pair contract e2e test
         When User adds 210.00 units of PairToken1 and 230.00 units of PairToken2
         Then PairToken1 and PairToken2 balances in the pool are 210.00 units and 230.00 units respectively   
         Then Balance of "PairToken1" and "PairToken2" in user account is 199790.00 and 199770.00 respectively
+
+    Scenario: Verify user get error in case of overflow while adding liquidity 
+        Given User verify that pair exists for given tokens "PairToken1" and "PairToken2"
+        When User set allowance amount as more than allowed maximum for the token "PairToken1"
+        When User set allowance amount as more than allowed maximum for the token "PairToken2"
+        When User adds more than allowed maximum units of "PairToken1" and "PairToken2" to pool
+        Then User get error message "offset is out of bounds"
+
+    Scenario: Verify user get error in case of underflow while removing liquidity 
+        Given User verify that pair exists for given tokens "PairToken1" and "PairToken2"
+        When User set allowance amount as more than allowed maximum for the token "lptoken"
+        When User gives more than allowed maximum units of lptoken
+        Then User get error message "offset is out of bounds"       
+
     
     Scenario: Verify token balance after removing liquidity
         Given User gets the count of lptokens from  pool
