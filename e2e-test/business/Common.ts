@@ -265,6 +265,57 @@ export default class Common {
     );
   };
 
+  static checkNFTBalance = async (
+    accountId: string | AccountId,
+    tokenId: TokenId,
+    client: Client
+  ) => {
+    var balanceCheckTx = await new AccountBalanceQuery()
+      .setAccountId(accountId)
+      .execute(client);
+    let balance = balanceCheckTx.tokens!._map.get(tokenId.toString());
+    balance = balance ?? new Long(0);
+    console.log(
+      `-Account: ${accountId} has balance: ${balance} NFTs of ID ${tokenId}`
+    );
+    return balance;
+  };
+
+  static transferNFTToken = async (
+    tokenId: TokenId,
+    serialNo: number,
+    fromAccountId: AccountId | ContractId,
+    fromAccountPrivateKey: PrivateKey,
+    toAccountId: string | AccountId,
+    client: Client
+  ) => {
+    const balance = await Common.getTokenBalance(
+      fromAccountId,
+      tokenId,
+      client
+    );
+
+    if (balance.toNumber() > 0) {
+      const txn = await new TransferTransaction()
+        .addNftTransfer(
+          tokenId,
+          serialNo,
+          AccountId.fromString(fromAccountId.toString()),
+          toAccountId
+        )
+        .freezeWith(client)
+        .sign(fromAccountPrivateKey);
+      const txnResult = await txn.execute(client);
+      const txnReceipt = await txnResult.getReceipt(client);
+      console.log(
+        ` - Common#transferNFTToken(): status = ${
+          txnReceipt.status
+        }, tokenId = ${tokenId.toString()},serialNo = ${serialNo},fromAccountId = ${fromAccountId.toString()}, 
+     toAccountId = ${toAccountId.toString()} \n`
+      );
+    }
+  };
+
   private static getBalanceInternally = async (
     id: AccountId | ContractId,
     client: Client

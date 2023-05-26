@@ -208,6 +208,24 @@ export class CommonSteps {
   public async deployGivenContract(contracts: string[]) {
     await deployContracts(contracts);
   }
+
+  public async revertNFTs(
+    fromAccountId: ContractId | AccountId,
+    fromAccountKey: PrivateKey,
+    toAccountId: string | AccountId,
+    tokenId: TokenId,
+    tokenSerialNumber: number,
+    client: Client
+  ) {
+    await Common.transferNFTToken(
+      tokenId,
+      tokenSerialNumber,
+      fromAccountId,
+      fromAccountKey,
+      toAccountId,
+      client
+    );
+  }
   private async transferTokens(
     receiverAccountId: AccountId,
     senderAccountId: AccountId,

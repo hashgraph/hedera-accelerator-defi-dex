@@ -259,7 +259,7 @@ export default class Pair extends Base {
       .addAddress(tokenReceiverId.toSolidityAddress())
       .addUint256(lpTokenQty);
     await this.execute(
-      9000000,
+      9999900,
       REMOVE_LIQUIDITY,
       client,
       args,
