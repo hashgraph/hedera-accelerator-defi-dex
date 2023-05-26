@@ -265,22 +265,6 @@ export default class Common {
     );
   };
 
-  static checkNFTBalance = async (
-    accountId: string | AccountId,
-    tokenId: TokenId,
-    client: Client
-  ) => {
-    var balanceCheckTx = await new AccountBalanceQuery()
-      .setAccountId(accountId)
-      .execute(client);
-    let balance = balanceCheckTx.tokens!._map.get(tokenId.toString());
-    balance = balance ?? new Long(0);
-    console.log(
-      `-Account: ${accountId} has balance: ${balance} NFTs of ID ${tokenId}`
-    );
-    return balance;
-  };
-
   static transferNFTToken = async (
     tokenId: TokenId,
     serialNo: number,
