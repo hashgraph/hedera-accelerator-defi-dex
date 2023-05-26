@@ -1,6 +1,7 @@
+import ContractMetadata from "../../utils/ContractMetadata";
+
 import { ethers } from "hardhat";
 import { Helper } from "../../utils/Helper";
-import { Interface } from "ethers/lib/utils";
 import { BigNumber } from "bignumber.js";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { ContractService } from "../../deployment/service/ContractService";
@@ -10,9 +11,7 @@ import {
   PrivateKey,
   ContractExecuteTransaction,
   ContractFunctionParameters,
-  AccountId,
 } from "@hashgraph/sdk";
-import ContractMetadata from "../../utils/ContractMetadata";
 
 export default class Base {
   private csDev: ContractService = new ContractService();

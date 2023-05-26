@@ -73,7 +73,12 @@ export default class MultiSigDAOFactory extends Base {
       CREATE_DAO,
       [Object.values(createDAOInputs)]
     );
-    const { result } = await this.execute(7_00_000, CREATE_DAO, client, bytes);
+    const { result, record } = await this.execute(
+      7_00_000,
+      CREATE_DAO,
+      client,
+      bytes
+    );
     const address = result.getAddress(0);
     console.log(
       `- MultiSigDAOFactory#${CREATE_DAO}(): where input data = ${hex}`
@@ -84,6 +89,7 @@ export default class MultiSigDAOFactory extends Base {
       webLinks: webLinks.toString(),
       daoAddress: address,
       daoFactoryId: this.contractId,
+      txnId: record.transactionId.toString(),
     });
     console.log("");
     return address;
