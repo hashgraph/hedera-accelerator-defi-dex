@@ -46,6 +46,7 @@ let precision: BigNumber;
 let tokenBalanceBeforeSwapWithTreasury: Number;
 let feeForSwap: BigNumber;
 let errorMsg: string;
+const maximumLimit = 2e256;
 
 @binding()
 export class PairTestSteps {
@@ -397,9 +398,10 @@ export class PairTestSteps {
     }
   }
 
-  @then(/User receive error message "([^"]*)"/)
+  @then(/User get error message "([^"]*)"/)
   public async verifyErrorMessage(msg: string) {
     expect(errorMsg).contains(msg);
+    errorMsg = "";
   }
 
   @then(
@@ -448,5 +450,85 @@ export class PairTestSteps {
       key,
       client
     );
+  }
+
+  @given(
+    /User verify that pair exists for given tokens "([^"]*)" and "([^"]*)"/,
+    undefined,
+    30000
+  )
+  public async getPair(firstTokenName: string, secondTokenName: string) {
+    const firstTokenIdFromMap = tokenNameIdMap.get(firstTokenName);
+    const secondTokenIdFromMap = tokenNameIdMap.get(secondTokenName);
+    const firstTokenId = TokenId.fromSolidityAddress(
+      (await pair.getTokenPairAddress(clientsInfo.operatorClient)).tokenAAddress
+    );
+    const secondTokenId = TokenId.fromSolidityAddress(
+      (await pair.getTokenPairAddress(clientsInfo.operatorClient)).tokenBAddress
+    );
+    expect(firstTokenIdFromMap).to.eql(firstTokenId);
+    expect(secondTokenIdFromMap).to.eql(secondTokenId);
+  }
+
+  @when(
+    /User set allowance amount as more than allowed maximum for the token "([^"]*)"/,
+    undefined,
+    30000
+  )
+  public async setAllowanceMoreThanAllowed(tokenName: String) {
+    const tokenId = tokenNameIdMap.get(tokenName);
+    const contractId =
+      tokenName === "lptoken"
+        ? lpTokenContract.transparentProxyId!
+        : pairContract.transparentProxyId!;
+    await Common.setTokenAllowance(
+      tokenId,
+      contractId,
+      maximumLimit,
+      id,
+      key,
+      client
+    );
+  }
+
+  @when(
+    /User adds more than allowed maximum units of "([^"]*)" and "([^"]*)" to pool/,
+    undefined,
+    30000
+  )
+  public async addLiquidityMoreThanMax(
+    firstTokenName: string,
+    secondTokenName: string
+  ) {
+    const firstTokenIdFromMap = tokenNameIdMap.get(firstTokenName);
+    const secondTokenIdFromMap = tokenNameIdMap.get(secondTokenName);
+    try {
+      await pair.addLiquidity(
+        id,
+        key,
+        firstTokenIdFromMap,
+        new BigNumber(maximumLimit),
+        secondTokenIdFromMap,
+        new BigNumber(maximumLimit),
+        precision,
+        client
+      );
+    } catch (e: any) {
+      console.log(e.message);
+      errorMsg = e.message;
+    }
+  }
+
+  @when(
+    /User gives more than allowed maximum units of lptoken/,
+    undefined,
+    30000
+  )
+  public async returnMoreThanMaxLPTokens() {
+    try {
+      await pair.removeLiquidity(new BigNumber(maximumLimit), id, key, client);
+    } catch (e: any) {
+      errorMsg = e.message;
+    }
   }
 }
