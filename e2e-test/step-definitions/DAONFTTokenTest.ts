@@ -1,5 +1,11 @@
 import { Helper } from "../../utils/Helper";
-import { AccountId, Client, PrivateKey, TokenId } from "@hashgraph/sdk";
+import {
+  AccountId,
+  Client,
+  PrivateKey,
+  TokenId,
+  ContractId,
+} from "@hashgraph/sdk";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { ContractService } from "../../deployment/service/ContractService";
 import { InstanceProvider } from "../../utils/InstanceProvider";
@@ -296,9 +302,16 @@ export class DAONFTTokenTest extends CommonSteps {
     }
   }
 
-  @when(/User claim NFT tokens/, undefined, 30000)
-  public async claimNFTs() {
-    await this.claimNFTToken(nftHolder, clientsInfo.operatorClient);
+  @when(/User claim NFT token with serial number (\d+\.?\d*)/, undefined, 30000)
+  public async claimNFTs(tokenSerialNumber: number) {
+    await this.revertNFTs(
+      ContractId.fromString(nftHolder.contractId),
+      clientsInfo.operatorKey,
+      clientsInfo.operatorId,
+      dex.E2E_NFT_TOKEN_ID,
+      tokenSerialNumber,
+      clientsInfo.operatorClient
+    );
   }
 
   @when(
