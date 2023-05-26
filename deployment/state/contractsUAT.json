@@ -214,5 +214,12 @@
     "hash": "f0c99de38147f33d48305b865ab55192",
     "transparentProxyAddress": "0x0000000000000000000000000000000000d04868",
     "transparentProxyId": "0.0.13650024"
+  },
+  {
+    "name": "hederaservice",
+    "id": "0.0.13668844",
+    "address": "0x0000000000000000000000000000000000d091ec",
+    "timestamp": "2023-05-26T12:17:50.811Z",
+    "hash": "233b4f2fe37497d2f426bb512118f3ce"
   }
 ]
