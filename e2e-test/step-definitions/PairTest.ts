@@ -46,7 +46,6 @@ let precision: BigNumber;
 let tokenBalanceBeforeSwapWithTreasury: Number;
 let feeForSwap: BigNumber;
 let errorMsg: string;
-const maximumLimit = 2e256;
 
 @binding()
 export class PairTestSteps {
@@ -471,11 +470,14 @@ export class PairTestSteps {
   }
 
   @when(
-    /User set allowance amount as more than allowed maximum for the token "([^"]*)"/,
+    /User set allowance amount "([^"]*)" for the token "([^"]*)"/,
     undefined,
     30000
   )
-  public async setAllowanceMoreThanAllowed(tokenName: String) {
+  public async setAllowanceMoreThanAllowed(
+    maximumLimit: string,
+    tokenName: string
+  ) {
     const tokenId = tokenNameIdMap.get(tokenName);
     const contractId =
       tokenName === "lptoken"
@@ -484,7 +486,7 @@ export class PairTestSteps {
     await Common.setTokenAllowance(
       tokenId,
       contractId,
-      maximumLimit,
+      Number(maximumLimit),
       id,
       key,
       client
@@ -492,11 +494,12 @@ export class PairTestSteps {
   }
 
   @when(
-    /User adds more than allowed maximum units of "([^"]*)" and "([^"]*)" to pool/,
+    /User tries to add "([^"]*)" units of "([^"]*)" and "([^"]*)" to pool/,
     undefined,
     30000
   )
   public async addLiquidityMoreThanMax(
+    maximumLimit: number,
     firstTokenName: string,
     secondTokenName: string
   ) {
@@ -507,9 +510,9 @@ export class PairTestSteps {
         id,
         key,
         firstTokenIdFromMap,
-        new BigNumber(maximumLimit),
+        new BigNumber(Number(maximumLimit)),
         secondTokenIdFromMap,
-        new BigNumber(maximumLimit),
+        new BigNumber(Number(maximumLimit)),
         precision,
         client
       );
@@ -519,14 +522,15 @@ export class PairTestSteps {
     }
   }
 
-  @when(
-    /User gives more than allowed maximum units of lptoken/,
-    undefined,
-    30000
-  )
-  public async returnMoreThanMaxLPTokens() {
+  @when(/User gives "([^"]*)" units of lptoken/, undefined, 30000)
+  public async returnMoreThanMaxLPTokens(maximumLimit: number) {
     try {
-      await pair.removeLiquidity(new BigNumber(maximumLimit), id, key, client);
+      await pair.removeLiquidity(
+        new BigNumber(Number(maximumLimit)),
+        id,
+        key,
+        client
+      );
     } catch (e: any) {
       errorMsg = e.message;
     }
