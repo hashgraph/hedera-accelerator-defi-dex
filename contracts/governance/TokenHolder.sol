@@ -1,25 +1,30 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.18;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-
-import "../common/IBaseHTS.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "../common/IHederaService.sol";
 import "../common/TokenOperations.sol";
 import "../common/hedera/HederaResponseCodes.sol";
 
 import "./ITokenHolder.sol";
 
-abstract contract TokenHolder is ITokenHolder, Initializable, TokenOperations {
+abstract contract TokenHolder is
+    ITokenHolder,
+    Initializable,
+    TokenOperations,
+    OwnableUpgradeable
+{
     mapping(address => uint256[]) activeProposalsForUsers;
-    IBaseHTS internal _tokenService;
+    IHederaService internal hederaService;
     address internal _token;
 
     function initialize(
-        IBaseHTS tokenService,
+        IHederaService _hederaService,
         address token
     ) public initializer {
-        _tokenService = tokenService;
+        hederaService = _hederaService;
         _token = token;
-        _associateToken(tokenService, address(this), address(_token));
+        _associateToken(hederaService, address(this), address(_token));
     }
 
     function getToken() public view override returns (address) {
@@ -56,6 +61,12 @@ abstract contract TokenHolder is ITokenHolder, Initializable, TokenOperations {
 
     function canUserClaimTokens() public view virtual returns (bool) {
         return activeProposalsForUsers[msg.sender].length == 0;
+    }
+
+    function upgradeHederaService(
+        IHederaService newHederaService
+    ) external onlyOwner {
+        hederaService = newHederaService;
     }
 
     function _removeAnArrayElement(

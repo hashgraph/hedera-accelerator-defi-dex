@@ -18,7 +18,7 @@ const client = clientManagement.createOperatorClient();
 const { treasureId, treasureKey } = clientManagement.getTreasure();
 const contractService = new ContractService();
 const baseContract = contractService.getContract(
-  contractService.baseContractName
+  contractService.hederaServiceContractName
 );
 const factoryContractId = contractService.getContractWithProxy(
   contractService.factoryContractName
@@ -65,7 +65,7 @@ export class FactorySteps {
       .getAdmin()
       .adminId.toSolidityAddress();
     console.log("Factory contractId : ", factoryContractId);
-    console.log("BaseHts address : ", baseContractAddress);
+    console.log("H address : ", baseContractAddress);
     console.log("adminAddress : ", adminAddress);
     console.log("TOKEN_USER_ID : ", id.toString());
     console.log("TREASURE_ID :", treasureId.toString());

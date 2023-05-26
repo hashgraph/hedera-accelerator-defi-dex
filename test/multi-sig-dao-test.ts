@@ -87,7 +87,7 @@ describe("MultiSig tests", function () {
 
   async function deployFixture() {
     const signers = await TestHelper.getSigners();
-    const bastHTS = await TestHelper.deployMockBaseHTS();
+    const bastHTS = await TestHelper.deployMockHederaService();
     const dexOwner = await TestHelper.getDexOwner();
 
     const daoSigners = await TestHelper.getDAOSigners();

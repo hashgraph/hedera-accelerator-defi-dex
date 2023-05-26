@@ -9,22 +9,22 @@ describe("GODHolder tests", function () {
     const admin = (await TestHelper.getDexOwner()).address;
     const signers = await TestHelper.getSigners();
 
-    const baseHTS = await TestHelper.deployMockBaseHTS();
+    const hederaService = await TestHelper.deployMockHederaService();
 
     const token = await TestHelper.deployERC20Mock(TOTAL_AMOUNT);
     await token.setUserBalance(signers[0].address, TOTAL_AMOUNT);
 
-    const godHolder = await TestHelper.deployGodHolder(baseHTS, token);
+    const godHolder = await TestHelper.deployGodHolder(hederaService, token);
 
     const godTokenHolderFactory = await TestHelper.deployGodTokenHolderFactory(
-      baseHTS,
+      hederaService,
       godHolder,
       admin
     );
 
     return {
       token,
-      baseHTS,
+      hederaService,
       signers,
       godHolder,
       godTokenHolderFactory,
@@ -34,14 +34,16 @@ describe("GODHolder tests", function () {
   }
   describe("GODHolder contract tests", function () {
     it("Verify contract should be reverted for multiple initialization", async function () {
-      const { godHolder, baseHTS, token } = await loadFixture(deployFixture);
+      const { godHolder, hederaService, token } = await loadFixture(
+        deployFixture
+      );
       await expect(
-        godHolder.initialize(baseHTS.address, token.address)
+        godHolder.initialize(hederaService.address, token.address)
       ).revertedWith("Initializable: contract is already initialized");
     });
 
     it("Verify contract should be reverted for invalid inputs during token locking", async function () {
-      const { godHolder, voter, baseHTS, token } = await loadFixture(
+      const { godHolder, voter, hederaService, token } = await loadFixture(
         deployFixture
       );
       await expect(godHolder.grabTokensFromUser(voter, 0)).revertedWith(
@@ -244,11 +246,11 @@ describe("GODHolder tests", function () {
 
   describe("GODTokenHolderFactory contract tests", function () {
     it("Verify contract should be reverted for multiple initialization", async function () {
-      const { godTokenHolderFactory, godHolder, baseHTS, admin } =
+      const { godTokenHolderFactory, godHolder, hederaService, admin } =
         await loadFixture(deployFixture);
       await expect(
         godTokenHolderFactory.initialize(
-          baseHTS.address,
+          hederaService.address,
           godHolder.address,
           admin
         )

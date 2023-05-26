@@ -3,14 +3,14 @@ pragma solidity ^0.8.18;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./common/hedera/HederaResponseCodes.sol";
-import "./common/IBaseHTS.sol";
+import "./common/IHederaService.sol";
 import "./common/IERC20.sol";
 import "./common/TokenOperations.sol";
 import "./common/hedera/HederaTokenService.sol";
 import "./ILPToken.sol";
 
 contract LPToken is ILPToken, OwnableUpgradeable, TokenOperations {
-    IBaseHTS tokenService;
+    IHederaService hederaService;
     IERC20 lpToken;
 
     function lpTokenForUser(
@@ -35,16 +35,16 @@ contract LPToken is ILPToken, OwnableUpgradeable, TokenOperations {
     }
 
     function initialize(
-        IBaseHTS _tokenService,
+        IHederaService _hederaService,
         address _owner,
         string memory tokenName,
         string memory tokenSymbol
     ) external payable override initializer {
         _transferOwnership(_owner);
-        tokenService = _tokenService;
+        hederaService = _hederaService;
         (int256 responseCode, address newToken) = super
             .createTokenWithContractAsOwner(
-                _tokenService,
+                _hederaService,
                 tokenName,
                 tokenSymbol,
                 0,
@@ -71,7 +71,7 @@ contract LPToken is ILPToken, OwnableUpgradeable, TokenOperations {
             amountB
         );
         (responseCode, ) = super.mintToken(
-            tokenService,
+            hederaService,
             address(lpToken),
             mintingAmount
         );
@@ -116,7 +116,7 @@ contract LPToken is ILPToken, OwnableUpgradeable, TokenOperations {
 
         // burn old amount of LP
         (responseCode, ) = super.burnToken(
-            tokenService,
+            hederaService,
             address(lpToken),
             lpAmount
         );
@@ -125,6 +125,12 @@ contract LPToken is ILPToken, OwnableUpgradeable, TokenOperations {
             "LP token burn failed."
         );
         return HederaResponseCodes.SUCCESS;
+    }
+
+    function upgradeHederaService(
+        IHederaService newHederaService
+    ) external onlyOwner {
+        hederaService = newHederaService;
     }
 
     function sqrt(uint256 value) private pure returns (uint256 output) {

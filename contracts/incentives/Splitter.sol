@@ -12,11 +12,9 @@ contract Splitter is ISplitter, OwnableUpgradeable {
     event TokenTransferred(IVault vault, uint256 amount);
 
     IVault[] private vaults;
-    IBaseHTS private baseHTS;
     mapping(IVault => uint256) private vaultMultipliers;
 
     function initialize(
-        IBaseHTS _baseHTS,
         IVault[] memory _vaults,
         uint256[] memory _multipliers
     ) external override initializer {
@@ -25,7 +23,6 @@ contract Splitter is ISplitter, OwnableUpgradeable {
             _vaults.length == _multipliers.length && _vaults.length > 0,
             "Splitter: vaults and multipliers length must be greater than zero"
         );
-        baseHTS = _baseHTS;
         for (uint256 i = 0; i < _vaults.length; i++) {
             _addVault(_vaults[i], _multipliers[i]);
         }

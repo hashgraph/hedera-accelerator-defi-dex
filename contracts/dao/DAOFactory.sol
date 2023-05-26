@@ -4,7 +4,7 @@ pragma solidity ^0.8.18;
 import "../common/IERC20.sol";
 import "../common/IEvents.sol";
 import "../common/IErrors.sol";
-import "../common/IBaseHTS.sol";
+import "../common/IHederaService.sol";
 import "../common/CommonOperations.sol";
 
 import "../dao/ITokenDAO.sol";
@@ -48,7 +48,7 @@ contract DAOFactory is IErrors, IEvents, CommonOperations, OwnableUpgradeable {
     string private constant TransferToken = "TransferToken";
     string private constant TokenHolderFactory = "TokenHolderFactory";
 
-    IBaseHTS private baseHTS;
+    IHederaService private hederaService;
     address private proxyAdmin;
 
     address[] private daos;
@@ -66,14 +66,14 @@ contract DAOFactory is IErrors, IEvents, CommonOperations, OwnableUpgradeable {
 
     function initialize(
         address _proxyAdmin,
-        IBaseHTS _baseHTS,
+        IHederaService _hederaService,
         ITokenDAO _daoLogic,
         ITokenHolderFactory _tokenHolderFactory,
         IGovernorTransferToken _tokenTransferLogic
     ) external initializer {
         __Ownable_init();
         proxyAdmin = _proxyAdmin;
-        baseHTS = _baseHTS;
+        hederaService = _hederaService;
         daoLogic = _daoLogic;
         tokenHolderFactory = _tokenHolderFactory;
         tokenTransferLogic = _tokenTransferLogic;
@@ -181,7 +181,7 @@ contract DAOFactory is IErrors, IEvents, CommonOperations, OwnableUpgradeable {
             IERC20(_tokenAddress),
             _votingDelay,
             _votingPeriod,
-            baseHTS,
+            hederaService,
             _iTokenHolder,
             _quorumThreshold
         );

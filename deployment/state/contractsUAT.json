@@ -1,14 +1,5 @@
 [
   {
-    "name": "basehts",
-    "id": "0.0.13394343",
-    "address": "0x0000000000000000000000000000000000cc61a7",
-    "timestamp": "2023-05-24T11:58:04.188Z",
-    "hash": "61b6177a05d4ccff316b67bf5687642e",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000cc61c4",
-    "transparentProxyId": "0.0.13394372"
-  },
-  {
     "name": "splitter",
     "id": "0.0.13363772",
     "address": "0x0000000000000000000000000000000000cbea3c",

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.18;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
-import "../common/IBaseHTS.sol";
+import "../common/IHederaService.sol";
 import "../common/hedera/HederaResponseCodes.sol";
 import "./ITokenHolder.sol";
 import "./ITokenHolderFactory.sol";
@@ -10,7 +10,7 @@ import "./ITokenHolderFactory.sol";
 contract TokenHolderFactory is ITokenHolderFactory, Initializable {
     string private constant TokenHolder = "ITokenHolder";
     ITokenHolder private tokenHolderLogic;
-    IBaseHTS tokenService;
+    IHederaService hederaService;
     address private admin;
     mapping(address => ITokenHolder) private tokenToHolderContractMap;
 
@@ -23,12 +23,12 @@ contract TokenHolderFactory is ITokenHolderFactory, Initializable {
     }
 
     function initialize(
-        IBaseHTS _tokenService,
+        IHederaService _hederaService,
         ITokenHolder _tokenHolderLogic,
         address _admin
     ) public initializer {
         tokenHolderLogic = _tokenHolderLogic;
-        tokenService = _tokenService;
+        hederaService = _hederaService;
         admin = _admin;
         emit LogicUpdated(address(0), address(_tokenHolderLogic), TokenHolder);
     }
@@ -70,7 +70,7 @@ contract TokenHolderFactory is ITokenHolderFactory, Initializable {
     function _createTokenHolder(address _token) private returns (ITokenHolder) {
         address proxy = _createProxy();
         ITokenHolder holder = ITokenHolder(proxy);
-        holder.initialize(tokenService, _token);
+        holder.initialize(hederaService, _token);
         return holder;
     }
 }

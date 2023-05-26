@@ -20,7 +20,7 @@ export default class Base {
   contractId: string;
 
   constructor(_contractId: string) {
-    this.htsAddress = this.getBaseHTSContractAddress();
+    this.htsAddress = this.getHederaServiceContractAddress();
     this.configuration = this.getConfigurationContractAddress();
     this.contractId = _contractId;
   }
@@ -80,8 +80,8 @@ export default class Base {
     );
   };
 
-  private getBaseHTSContractAddress(): string {
-    return this.csDev.getContract(this.csDev.baseContractName).address;
+  private getHederaServiceContractAddress(): string {
+    return this.csDev.getContract(this.csDev.hederaServiceContractName).address;
   }
 
   private getConfigurationContractAddress(): string {

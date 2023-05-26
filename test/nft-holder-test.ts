@@ -14,12 +14,14 @@ describe("NFTHolder Tests", function () {
   const tokenCount = 1;
 
   async function deployFixture() {
-    const MockBaseHTS = await ethers.getContractFactory("MockBaseHTS");
-    const mockBaseHTS = await TestHelper.deployMockBaseHTS();
-    return basicDeployments(mockBaseHTS);
+    const MockHederaService = await ethers.getContractFactory(
+      "MockHederaService"
+    );
+    const mockHederaService = await TestHelper.deployMockHederaService();
+    return basicDeployments(mockHederaService);
   }
 
-  async function basicDeployments(mockBaseHTS: any) {
+  async function basicDeployments(mockHederaService: any) {
     const signers = await ethers.getSigners();
     admin = signers[1].address;
     const TokenCont = await ethers.getContractFactory("ERC721Mock");
@@ -29,7 +31,7 @@ describe("NFTHolder Tests", function () {
     const NFTHolder = await ethers.getContractFactory("NFTHolder");
     const nftHolder = await upgrades.deployProxy(
       NFTHolder,
-      [mockBaseHTS.address, tokenCont.address],
+      [mockHederaService.address, tokenCont.address],
       { unsafeAllow: ["delegatecall"] }
     );
 
@@ -42,14 +44,14 @@ describe("NFTHolder Tests", function () {
     const nftTokenHolderFactory = await NFTTokenHolderFactory.deploy();
 
     await nftTokenHolderFactory.initialize(
-      mockBaseHTS.address,
+      mockHederaService.address,
       mockNFTHolder.address,
       admin
     );
 
     return {
       tokenCont,
-      mockBaseHTS,
+      mockHederaService,
       signers,
       nftHolder,
       admin,

@@ -32,7 +32,7 @@ export default class ContractMetadata {
     "Factory",
     "LPToken",
     "Pair",
-    "BaseHTS",
+    "HederaService",
     "GovernorUpgrade",
     "GovernorTransferToken",
     "GovernorTextProposal",

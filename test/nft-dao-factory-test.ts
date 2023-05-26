@@ -26,7 +26,7 @@ describe("NFTDAOFactory contract tests", function () {
     const token = await TestHelper.deployLogic("ERC721Mock");
     token.setUserBalance(signers[0].address, total);
 
-    const bastHTS = await TestHelper.deployMockBaseHTS();
+    const bastHTS = await TestHelper.deployMockHederaService();
 
     const nftTokenDAO = await TestHelper.deployLogic("GovernorTokenDAO");
 

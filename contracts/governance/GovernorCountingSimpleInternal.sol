@@ -7,8 +7,9 @@ import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorSettin
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorCountingSimpleUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesQuorumFractionUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "../common/IERC20.sol";
-import "../common/IBaseHTS.sol";
+import "../common/IHederaService.sol";
 import "../common/hedera/HederaResponseCodes.sol";
 import "./TokenHolder.sol";
 import "./IGovernorBase.sol";
@@ -22,6 +23,7 @@ abstract contract GovernorCountingSimpleInternal is
     GovernorSettingsUpgradeable,
     GovernorCountingSimpleUpgradeable,
     TokenOperations,
+    OwnableUpgradeable,
     IErrors
 {
     struct ProposalInfo {
@@ -47,7 +49,7 @@ abstract contract GovernorCountingSimpleInternal is
     address[] private EMPTY_VOTERS_LIST;
 
     IERC20 private token;
-    IBaseHTS internal tokenService;
+    IHederaService internal hederaService;
     ITokenHolder tokenHolder;
 
     uint256 quorumThresholdInBsp;
@@ -58,11 +60,12 @@ abstract contract GovernorCountingSimpleInternal is
         IERC20 _token,
         uint256 _votingDelayValue,
         uint256 _votingPeriodValue,
-        IBaseHTS _tokenService,
+        IHederaService _hederaService,
         ITokenHolder _tokenHolder,
         uint256 _quorumThresholdInBsp
     ) public initializer {
-        tokenService = _tokenService;
+        __Ownable_init();
+        hederaService = _hederaService;
         tokenHolder = _tokenHolder;
         token = _token;
         quorumThresholdInBsp = _quorumThresholdInBsp == 0
@@ -75,7 +78,7 @@ abstract contract GovernorCountingSimpleInternal is
             0
         );
         __GovernorCountingSimple_init();
-        _associateToken(tokenService, address(this), address(token));
+        _associateToken(hederaService, address(this), address(token));
     }
 
     function getGODTokenAddress() external view returns (address) {
@@ -285,6 +288,12 @@ abstract contract GovernorCountingSimpleInternal is
         } else {
             return 1;
         }
+    }
+
+    function upgradeHederaService(
+        IHederaService newHederaService
+    ) external onlyOwner {
+        hederaService = newHederaService;
     }
 
     function _mockFunctionCall()

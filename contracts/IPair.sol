@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.18;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "./common/IBaseHTS.sol";
+import "./common/IHederaService.sol";
 import "./ILPToken.sol";
 import "./Configuration.sol";
 
@@ -27,7 +27,7 @@ abstract contract IPair {
     function getPair() external virtual returns (Pair memory);
 
     function initialize(
-        IBaseHTS _tokenService,
+        IHederaService _hederaService,
         ILPToken _lpTokenContract,
         address _tokenA,
         address _tokenB,

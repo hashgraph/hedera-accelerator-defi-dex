@@ -3,9 +3,9 @@ pragma solidity ^0.8.18;
 
 import "./hedera/HederaTokenService.sol";
 import "./hedera/HederaResponseCodes.sol";
-import "./IBaseHTS.sol";
+import "./IHederaService.sol";
 
-contract BaseHTS is HederaTokenService, IBaseHTS {
+contract HederaService is HederaTokenService, IHederaService {
     uint64 private constant INT_64_MAX_VALUE = 9223372036854775807;
     uint64 private constant INT_32_MAX_VALUE = 2147483647;
 

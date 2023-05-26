@@ -3,7 +3,8 @@ pragma solidity ^0.8.18;
 
 import "../common/IEvents.sol";
 import "../common/IErrors.sol";
-import "../common/IBaseHTS.sol";
+import "../common/CommonOperations.sol";
+import "../common/IHederaService.sol";
 import "../common/CommonOperations.sol";
 
 import "../dao/MultisigDAO.sol";
@@ -56,7 +57,7 @@ contract MultisigDAOFactory is
     address private daoLogic;
     address private safeLogic;
     address private safeFactory;
-    IBaseHTS private baseHTS;
+    IHederaService private hederaService;
 
     address[] private daos;
 
@@ -72,14 +73,14 @@ contract MultisigDAOFactory is
         address _daoLogic,
         address _safeLogic,
         address _safeFactory,
-        IBaseHTS _baseHTS
+        IHederaService _hederaService
     ) external initializer {
         __Ownable_init();
         proxyAdmin = _proxyAdmin;
         daoLogic = _daoLogic;
         safeLogic = _safeLogic;
         safeFactory = _safeFactory;
-        baseHTS = _baseHTS;
+        hederaService = _hederaService;
         emit LogicUpdated(address(0), daoLogic, DaoLogic);
         emit LogicUpdated(address(0), safeLogic, SafeLogic);
         emit LogicUpdated(address(0), safeFactory, SafeFactory);
@@ -151,7 +152,7 @@ contract MultisigDAOFactory is
             _desc,
             _webLinks,
             hederaGnosisSafe,
-            baseHTS
+            hederaService
         );
         return address(_mSigDAO);
     }

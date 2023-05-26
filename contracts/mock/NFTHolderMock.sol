@@ -6,7 +6,7 @@ import "../governance/ITokenHolderFactory.sol";
 
 contract NFTHolderMock is ITokenHolder {
     function initialize(
-        IBaseHTS tokenService,
+        IHederaService hederaService,
         address token
     ) external override {}
 

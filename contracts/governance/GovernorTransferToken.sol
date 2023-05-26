@@ -66,7 +66,7 @@ contract GovernorTransferToken is
     function transferToken(uint256 proposalId) internal {
         TokenTransferData storage tokenTransferData = _proposalData[proposalId];
         _associateToken(
-            tokenService,
+            hederaService,
             tokenTransferData.transferToAccount,
             tokenTransferData.tokenToTransfer
         );

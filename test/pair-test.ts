@@ -22,9 +22,9 @@ describe("LPToken, Pair and Factory tests", function () {
 
   async function lpTokenFixture() {
     const signers = await TestHelper.getSigners();
-    const baseHTS = await TestHelper.deployMockBaseHTS();
+    const hederaService = await TestHelper.deployMockHederaService();
     const LP_TOKEN_ARGS = [
-      baseHTS.address,
+      hederaService.address,
       signers[0].address,
       "LpToken-Name",
       "LpToken-Symbol",
@@ -36,7 +36,7 @@ describe("LPToken, Pair and Factory tests", function () {
       await lpTokenContract.getLpTokenAddress()
     );
     return {
-      baseHTS,
+      hederaService,
       signers,
       lpTokenContract,
       lpToken,
@@ -57,7 +57,7 @@ describe("LPToken, Pair and Factory tests", function () {
   }
 
   async function deployBasics(
-    mockBaseHTS: any,
+    mockHederaService: any,
     tokenCont: any,
     isLpTokenRequired: boolean,
     configuration: Contract
@@ -75,7 +75,7 @@ describe("LPToken, Pair and Factory tests", function () {
     const lpTokenCont = await TestHelper.deployLogic("MockLPToken");
 
     await lpTokenCont.initialize(
-      mockBaseHTS.address,
+      mockHederaService.address,
       pair.address,
       "tokenName",
       "tokenSymbol"
@@ -89,7 +89,7 @@ describe("LPToken, Pair and Factory tests", function () {
     }
 
     await pair.initialize(
-      mockBaseHTS.address,
+      mockHederaService.address,
       lpTokenCont.address,
       token1Address,
       token2Address,
@@ -107,7 +107,7 @@ describe("LPToken, Pair and Factory tests", function () {
 
     return {
       pair,
-      mockBaseHTS,
+      mockHederaService,
       lpTokenCont,
       factory,
       token1Address,
@@ -130,13 +130,13 @@ describe("LPToken, Pair and Factory tests", function () {
 
   describe("Pair Upgradeable", function () {
     it("Verify if the Pair contract is upgradeable safe ", async function () {
-      const mockBaseHTS = await TestHelper.deployMockBaseHTS();
+      const mockHederaService = await TestHelper.deployMockHederaService();
       const configuration = await deployConfiguration();
       const Pair = await ethers.getContractFactory("Pair");
       const instance = await upgrades.deployProxy(
         Pair,
         [
-          mockBaseHTS.address,
+          mockHederaService.address,
           zeroAddress,
           tokenAAddress,
           tokenBAddress,
@@ -152,24 +152,24 @@ describe("LPToken, Pair and Factory tests", function () {
 
   async function deployFixtureTokenTest() {
     const configuration = await deployConfiguration();
-    const mockBaseHTS = await TestHelper.deployMockBaseHTS();
+    const mockHederaService = await TestHelper.deployMockHederaService();
     const tokenCont = await deployERC20Mock();
-    return deployBasics(mockBaseHTS, tokenCont, true, configuration);
+    return deployBasics(mockHederaService, tokenCont, true, configuration);
   }
 
   async function deployFixture() {
     const configuration = await deployConfiguration();
-    const mockBaseHTS = await TestHelper.deployMockBaseHTS();
+    const mockHederaService = await TestHelper.deployMockHederaService();
     const tokenCont = await deployERC20Mock();
-    return deployBasics(mockBaseHTS, tokenCont, false, configuration);
+    return deployBasics(mockHederaService, tokenCont, false, configuration);
   }
 
   async function deployFixtureHBARX() {
     const configuration = await deployConfiguration();
     const tokenCont = await deployERC20Mock();
-    const mockBaseHTS = await TestHelper.deployMockBaseHTS();
+    const mockHederaService = await TestHelper.deployMockHederaService();
     await configuration.setHbarxAddress(tokenCont.address);
-    return deployBasics(mockBaseHTS, tokenCont, false, configuration);
+    return deployBasics(mockHederaService, tokenCont, false, configuration);
   }
 
   describe("HBAR pool test cases", async function () {
@@ -305,7 +305,7 @@ describe("LPToken, Pair and Factory tests", function () {
     it("Check createPair method, Same Tokens and same fees", async function () {
       const {
         factory,
-        mockBaseHTS,
+        mockHederaService,
         signers,
         token1Address,
         token2Address,
@@ -315,7 +315,7 @@ describe("LPToken, Pair and Factory tests", function () {
       } = await loadFixture(deployFixture);
       // Given
       await factory.setUpFactory(
-        mockBaseHTS.address,
+        mockHederaService.address,
         signers[0].address,
         pair.address,
         lpTokenCont.address,
@@ -342,7 +342,7 @@ describe("LPToken, Pair and Factory tests", function () {
     it("Check createPair method, Same Tokens and different fees", async function () {
       const {
         factory,
-        mockBaseHTS,
+        mockHederaService,
         signers,
         token1Address,
         token2Address,
@@ -352,7 +352,7 @@ describe("LPToken, Pair and Factory tests", function () {
       } = await loadFixture(deployFixture);
       // Given
       await factory.setUpFactory(
-        mockBaseHTS.address,
+        mockHederaService.address,
         signers[0].address,
         pair.address,
         lpTokenCont.address,
@@ -378,7 +378,7 @@ describe("LPToken, Pair and Factory tests", function () {
     it("When user try to createPair with zero fee then pair creation should fail", async function () {
       const {
         factory,
-        mockBaseHTS,
+        mockHederaService,
         signers,
         token1Address,
         token2Address,
@@ -388,7 +388,7 @@ describe("LPToken, Pair and Factory tests", function () {
       } = await loadFixture(deployFixture);
       // Given
       await factory.setUpFactory(
-        mockBaseHTS.address,
+        mockHederaService.address,
         signers[0].address,
         pair.address,
         lpTokenCont.address,
@@ -405,7 +405,7 @@ describe("LPToken, Pair and Factory tests", function () {
       it("Given no pool of pair exists when user asks for swap recommendation then no pair should be returned ", async function () {
         const {
           factory,
-          mockBaseHTS,
+          mockHederaService,
           signers,
           token1Address,
           token2Address,
@@ -415,7 +415,7 @@ describe("LPToken, Pair and Factory tests", function () {
         } = await loadFixture(deployFixture);
 
         await factory.setUpFactory(
-          mockBaseHTS.address,
+          mockHederaService.address,
           signers[0].address,
           pair.address,
           lpTokenCont.address,
@@ -436,7 +436,7 @@ describe("LPToken, Pair and Factory tests", function () {
         const {
           pair,
           factory,
-          mockBaseHTS,
+          mockHederaService,
           signers,
           token1Address,
           token2Address,
@@ -444,7 +444,7 @@ describe("LPToken, Pair and Factory tests", function () {
           lpTokenCont,
         } = await loadFixture(deployFixture);
         await factory.setUpFactory(
-          mockBaseHTS.address,
+          mockHederaService.address,
           signers[0].address,
           pair.address,
           lpTokenCont.address,
@@ -499,7 +499,7 @@ describe("LPToken, Pair and Factory tests", function () {
         const {
           pair,
           factory,
-          mockBaseHTS,
+          mockHederaService,
           signers,
           token1Address,
           token2Address,
@@ -507,7 +507,7 @@ describe("LPToken, Pair and Factory tests", function () {
           lpTokenCont,
         } = await loadFixture(deployFixture);
         await factory.setUpFactory(
-          mockBaseHTS.address,
+          mockHederaService.address,
           signers[0].address,
           pair.address,
           lpTokenCont.address,
@@ -585,7 +585,7 @@ describe("LPToken, Pair and Factory tests", function () {
         const {
           pair,
           factory,
-          mockBaseHTS,
+          mockHederaService,
           signers,
           token1Address,
           token2Address,
@@ -593,7 +593,7 @@ describe("LPToken, Pair and Factory tests", function () {
           lpTokenCont,
         } = await loadFixture(deployFixture);
         await factory.setUpFactory(
-          mockBaseHTS.address,
+          mockHederaService.address,
           signers[0].address,
           pair.address,
           lpTokenCont.address,
@@ -671,7 +671,7 @@ describe("LPToken, Pair and Factory tests", function () {
         const {
           pair,
           factory,
-          mockBaseHTS,
+          mockHederaService,
           signers,
           token1Address,
           token2Address,
@@ -679,7 +679,7 @@ describe("LPToken, Pair and Factory tests", function () {
           lpTokenCont,
         } = await loadFixture(deployFixture);
         await factory.setUpFactory(
-          mockBaseHTS.address,
+          mockHederaService.address,
           signers[0].address,
           pair.address,
           lpTokenCont.address,
@@ -781,14 +781,14 @@ describe("LPToken, Pair and Factory tests", function () {
     it("verify factory initization should be failed for subsequent initization call", async function () {
       const {
         factory,
-        mockBaseHTS,
+        mockHederaService,
         signers,
         configuration,
         pair,
         lpTokenCont,
       } = await loadFixture(deployFixture);
       await factory.setUpFactory(
-        mockBaseHTS.address,
+        mockHederaService.address,
         signers[0].address,
         pair.address,
         lpTokenCont.address,
@@ -796,7 +796,7 @@ describe("LPToken, Pair and Factory tests", function () {
       );
       await expect(
         factory.setUpFactory(
-          mockBaseHTS.address,
+          mockHederaService.address,
           signers[0].address,
           pair.address,
           lpTokenCont.address,
@@ -808,7 +808,7 @@ describe("LPToken, Pair and Factory tests", function () {
     it("Check getPairs method", async function () {
       const {
         factory,
-        mockBaseHTS,
+        mockHederaService,
         signers,
         token1Address,
         token2Address,
@@ -818,7 +818,7 @@ describe("LPToken, Pair and Factory tests", function () {
         lpTokenCont,
       } = await loadFixture(deployFixture);
       await factory.setUpFactory(
-        mockBaseHTS.address,
+        mockHederaService.address,
         signers[0].address,
         pair.address,
         lpTokenCont.address,
@@ -835,14 +835,14 @@ describe("LPToken, Pair and Factory tests", function () {
     it("Check For identical Tokens", async function () {
       const {
         factory,
-        mockBaseHTS,
+        mockHederaService,
         signers,
         configuration,
         pair,
         lpTokenCont,
       } = await loadFixture(deployFixture);
       await factory.setUpFactory(
-        mockBaseHTS.address,
+        mockHederaService.address,
         signers[0].address,
         pair.address,
         lpTokenCont.address,
@@ -856,14 +856,14 @@ describe("LPToken, Pair and Factory tests", function () {
     it("Check For zero Token address", async function () {
       const {
         factory,
-        mockBaseHTS,
+        mockHederaService,
         signers,
         configuration,
         pair,
         lpTokenCont,
       } = await loadFixture(deployFixture);
       await factory.setUpFactory(
-        mockBaseHTS.address,
+        mockHederaService.address,
         signers[0].address,
         pair.address,
         lpTokenCont.address,
@@ -877,7 +877,7 @@ describe("LPToken, Pair and Factory tests", function () {
     it("Check getPair method", async function () {
       const {
         factory,
-        mockBaseHTS,
+        mockHederaService,
         signers,
         token1Address,
         token2Address,
@@ -886,7 +886,7 @@ describe("LPToken, Pair and Factory tests", function () {
         lpTokenCont,
       } = await loadFixture(deployFixture);
       await factory.setUpFactory(
-        mockBaseHTS.address,
+        mockHederaService.address,
         signers[0].address,
         pair.address,
         lpTokenCont.address,
@@ -903,10 +903,12 @@ describe("LPToken, Pair and Factory tests", function () {
   });
 
   it("verify pair initization should be failed for subsequent initization call", async function () {
-    const { pair, mockBaseHTS, lpTokenCont } = await loadFixture(deployFixture);
+    const { pair, mockHederaService, lpTokenCont } = await loadFixture(
+      deployFixture
+    );
     await expect(
       pair.initialize(
-        mockBaseHTS.address,
+        mockHederaService.address,
         lpTokenCont.address,
         tokenAAddress,
         tokenBAddress,
@@ -1404,11 +1406,16 @@ describe("LPToken, Pair and Factory tests", function () {
     });
 
     it("Add liquidity Transfer LPToken Fail", async function () {
-      const { pair, token1Address, token2Address, mockBaseHTS, lpTokenCont } =
-        await loadFixture(deployFixture);
+      const {
+        pair,
+        token1Address,
+        token2Address,
+        mockHederaService,
+        lpTokenCont,
+      } = await loadFixture(deployFixture);
       const tokenBeforeQty = await pair.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
-      await mockBaseHTS.setPassTransactionCount(7);
+      await mockHederaService.setPassTransactionCount(7);
       const lpTokenAddress = await lpTokenCont.getLpTokenAddress();
       const lpToken = await ethers.getContractAt("ERC20Mock", lpTokenAddress);
       await lpToken.setTransaferFailed(true); //Forcing transfer to fail
@@ -1436,11 +1443,11 @@ describe("LPToken, Pair and Factory tests", function () {
     });
 
     it("Verify token creation should be failed while initializing the contract", async function () {
-      const { baseHTS, signers } = await loadFixture(lpTokenFixture);
+      const { hederaService, signers } = await loadFixture(lpTokenFixture);
       const tokenContract = await TestHelper.deployLogic("LPToken");
       await expect(
         tokenContract.initialize(
-          baseHTS.address,
+          hederaService.address,
           signers[0].address,
           "FAIL",
           "FAIL"

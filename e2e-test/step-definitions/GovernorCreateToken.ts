@@ -12,7 +12,7 @@ import { httpRequest } from "../../deployment/api/HttpsService";
 import { Helper } from "../../utils/Helper";
 import Pair from "../business/Pair";
 import BigNumber from "bignumber.js";
-import BaseHTS from "../business/BaseHTS";
+import HederaService from "../business/HederaService";
 import { CommonSteps } from "./CommonSteps";
 
 const csDev = new ContractService();
@@ -29,7 +29,9 @@ const godHolderContractId = csDev.getContractWithProxy(csDev.godHolderContract)
 const factory = new Factory(factoryContractId);
 const governor = new Governor(tokenCreateContractId);
 const godHolder = new GodHolder(godHolderContractId);
-const baseHTS = new BaseHTS(csDev.getContract(csDev.baseContractName).id);
+const hederaService = new HederaService(
+  csDev.getContract(csDev.hederaServiceContractName).id
+);
 const tokenHBARX = TokenId.fromString(dex.HBARX_TOKEN_ID);
 
 let proposalId: string;
@@ -185,7 +187,7 @@ export class GovernorCreateToken extends CommonSteps {
   public async createPair(firstTokenName: string, secondTokenName: string) {
     const firstTokenId = this.getTokenId(firstTokenName);
     const secondTokenId = this.getTokenId(secondTokenName);
-    await baseHTS.associateTokenPublic(
+    await hederaService.associateTokenPublic(
       firstTokenId,
       clientsInfo.operatorId,
       clientsInfo.operatorKey
