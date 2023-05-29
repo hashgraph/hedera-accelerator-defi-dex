@@ -43,6 +43,8 @@ export default class MultiSigDao extends BaseDao {
     admin: string,
     name: string,
     logoURL: string,
+    desc: string,
+    webLinks: string[],
     owners: string[],
     client: Client = clientsInfo.operatorClient,
     threshold: number = owners.length
@@ -70,6 +72,8 @@ export default class MultiSigDao extends BaseDao {
         .addAddress(admin)
         .addString(name)
         .addString(logoURL)
+        .addString(desc)
+        .addStringArray(webLinks)
         .addAddress(gnosisProxy.toSolidityAddress())
         .addAddress(this.htsAddress);
       await this.execute(9_00_000, INITIALIZE, client, args);

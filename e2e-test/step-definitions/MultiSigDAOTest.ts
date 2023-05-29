@@ -31,6 +31,8 @@ const DAO_OWNERS_INFO = [
   },
 ];
 const DAO_OWNERS_ADDRESSES = DAO_OWNERS_INFO.map((item: any) => item.address);
+const DAO_WEB_LINKS = ["LINKEDIN", "https://linkedin.com"];
+const DAO_DESC = "Lorem Ipsum is simply dummy text";
 
 const factoryContractId = new ContractService().getContractWithProxy(
   ContractService.MULTI_SIG_FACTORY
@@ -67,6 +69,8 @@ export class MultiSigDAOSteps {
         daoOwnerAddress,
         name,
         logo,
+        DAO_DESC,
+        DAO_WEB_LINKS,
         DAO_OWNERS_ADDRESSES,
         clientsInfo.uiUserClient,
         DAO_OWNERS_ADDRESSES.length
@@ -97,6 +101,8 @@ export class MultiSigDAOSteps {
       daoOwnerAddress,
       name,
       logo,
+      DAO_DESC,
+      DAO_WEB_LINKS,
       DAO_OWNERS_ADDRESSES,
       clientsInfo.uiUserClient,
       DAO_OWNERS_ADDRESSES.length
@@ -376,6 +382,8 @@ export class MultiSigDAOSteps {
     daoAddress = await daoFactory.createDAO(
       name,
       logo,
+      DAO_DESC,
+      DAO_WEB_LINKS,
       DAO_OWNERS_ADDRESSES,
       DAO_OWNERS_ADDRESSES.length,
       false,
@@ -400,6 +408,8 @@ export class MultiSigDAOSteps {
       daoAddress = await daoFactory.createDAO(
         name,
         logo,
+        DAO_DESC,
+        DAO_WEB_LINKS,
         DAO_OWNERS_ADDRESSES,
         DAO_OWNERS_ADDRESSES.length,
         false,

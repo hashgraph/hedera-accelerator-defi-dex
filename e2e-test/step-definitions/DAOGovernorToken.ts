@@ -21,6 +21,9 @@ import { CommonSteps } from "./CommonSteps";
 import GODTokenHolderFactory from "../business/GODTokenHolderFactory";
 import * as GovernorTokenMetaData from "../../e2e-test/business/GovernorTokenDao";
 
+const DAO_DESC = "Lorem Ipsum is simply dummy text";
+const DAO_WEB_LINKS = ["LINKEDIN", "https://linkedin.com"];
+
 const csDev = new ContractService();
 
 const governorTokenDaoProxyContractId = csDev.getContractWithProxy(
@@ -91,6 +94,8 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
         adminAddress,
         name,
         url,
+        DAO_DESC,
+        DAO_WEB_LINKS,
         governorTokenTransfer,
         clientsInfo.operatorClient
       );
@@ -114,6 +119,8 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
       adminAddress,
       name,
       url,
+      DAO_DESC,
+      DAO_WEB_LINKS,
       governorTokenTransfer,
       clientsInfo.operatorClient
     );
@@ -137,6 +144,8 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
       daoAddress = await daoFactory.createDAO(
         daoName,
         daoURL,
+        DAO_DESC,
+        DAO_WEB_LINKS,
         daoTokenId.toSolidityAddress(),
         CommonSteps.DEFAULT_QUORUM_THRESHOLD_IN_BSP,
         CommonSteps.DEFAULT_VOTING_DELAY,

@@ -5,6 +5,8 @@ import { executeGovernorTokenTransferFlow } from "./dao/daoGovernorToken";
 
 import dex from "../deployment/model/dex";
 import GovernanceDAOFactory from "../e2e-test/business/GovernanceDAOFactory";
+const DAO_WEB_LINKS = ["LINKEDIN", "https://linkedin.com"];
+const DAO_DESC = "Lorem Ipsum is simply dummy text";
 
 export async function executeGovernorTokenDAOFlow(
   daoFactory: GovernanceDAOFactory,
@@ -41,6 +43,8 @@ async function createDAO(
   await daoFactory.createDAO(
     name,
     "https://defi-ui.hedera.com/",
+    DAO_DESC,
+    DAO_WEB_LINKS,
     tokenId.toSolidityAddress(),
     500,
     0,

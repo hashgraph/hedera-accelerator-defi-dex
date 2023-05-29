@@ -1,22 +1,25 @@
 import MultiSigDao from "../e2e-test/business/MultiSigDao";
-import MultiSigDAOFactory from "../e2e-test/business/factories/MultiSigDAOFactory";
 
 import { Helper } from "../utils/Helper";
 import { ContractId } from "@hashgraph/sdk";
-import { ContractService } from "../deployment/service/ContractService";
+import { InstanceProvider } from "../utils/InstanceProvider";
 import {
   DAO_LOGO,
   DAO_NAME,
+  DAO_DESC,
   executeDAO,
+  DAO_WEB_LINKS,
   DAO_OWNERS_ADDRESSES,
 } from "./multiSigDAO";
 
 async function main() {
-  const daoFactory = getMultiSigFactoryInstance();
+  const daoFactory = InstanceProvider.getInstance().getMultiSigDAOFactory();
   await daoFactory.initialize();
   await daoFactory.createDAO(
     DAO_NAME,
     DAO_LOGO,
+    DAO_DESC,
+    DAO_WEB_LINKS,
     DAO_OWNERS_ADDRESSES,
     DAO_OWNERS_ADDRESSES.length,
     false
@@ -28,13 +31,6 @@ async function main() {
     const multiSigDAOInstance = new MultiSigDao(multiSigDAOId);
     await executeDAO(multiSigDAOInstance);
   }
-}
-
-function getMultiSigFactoryInstance() {
-  const factoryContractId = new ContractService().getContractWithProxy(
-    ContractService.MULTI_SIG_FACTORY
-  ).transparentProxyId!;
-  return new MultiSigDAOFactory(factoryContractId);
 }
 
 main()
