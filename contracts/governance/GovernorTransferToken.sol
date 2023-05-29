@@ -13,7 +13,7 @@ contract GovernorTransferToken is
         address transferFromAccount;
         address transferToAccount;
         address tokenToTransfer;
-        int256 transferTokenAmount;
+        uint256 transferTokenAmount;
     }
     mapping(uint256 => TokenTransferData) _proposalData;
 
@@ -24,7 +24,7 @@ contract GovernorTransferToken is
         address _transferFromAccount,
         address _transferToAccount,
         address _tokenToTransfer,
-        int256 _transferTokenAmount,
+        uint256 _transferTokenAmount,
         address creator
     ) external returns (uint256) {
         if (_transferTokenAmount <= 0) {

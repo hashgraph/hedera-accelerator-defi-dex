@@ -12,6 +12,7 @@ import { BigNumber } from "bignumber.js";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { ContractService } from "../../deployment/service/ContractService";
 import { CommonSteps } from "./CommonSteps";
+import { Helper } from "../../utils/Helper";
 
 const clientManagement = new ClientManagement();
 const csDev = new ContractService();
@@ -54,7 +55,9 @@ export class GovernorSteps extends CommonSteps {
     await this.initializeGovernorContract(
       governor,
       godHolder,
-      clientsInfo.operatorClient
+      clientsInfo.operatorClient,
+      TokenId.fromString(dex.GOD_TOKEN_ID),
+      TokenId.fromString(dex.GOD_TOKEN_ID)
     );
   }
 
@@ -202,6 +205,7 @@ export class GovernorSteps extends CommonSteps {
     30000
   )
   public async verifyTokenBalance() {
+    await Helper.delay(15000);
     const updatedBalance = await Common.getTokenBalance(
       clientsInfo.treasureId,
       TRANSFER_TOKEN_ID,

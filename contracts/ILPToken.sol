@@ -12,24 +12,24 @@ interface ILPToken {
     ) external payable;
 
     function allotLPTokenFor(
-        int256 amountA,
-        int256 amountB,
+        uint256 amountA,
+        uint256 amountB,
         address _toUser
     ) external returns (int256 responseCode);
 
     function removeLPTokenFor(
-        int256 lpAmount,
+        uint256 lpAmount,
         address fromUser
     ) external returns (int256 responseCode);
 
-    function lpTokenForUser(address _user) external view returns (int256);
+    function lpTokenForUser(address _user) external view returns (uint256);
 
     function getLpTokenAddress() external view returns (address);
 
-    function getAllLPTokenCount() external view returns (int256);
+    function getAllLPTokenCount() external view returns (uint256);
 
     function lpTokenCountForGivenTokensQty(
-        int256 tokenAQuantity,
-        int256 tokenBQuantity
-    ) external view returns (int256);
+        uint256 tokenAQuantity,
+        uint256 tokenBQuantity
+    ) external view returns (uint256);
 }

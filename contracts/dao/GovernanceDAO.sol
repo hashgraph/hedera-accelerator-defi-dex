@@ -8,13 +8,15 @@ contract GovernorTokenDAO is ITokenDAO, BaseDAO {
     uint256[] private _proposals;
 
     function initialize(
-        address admin,
-        string calldata name,
-        string calldata logoUrl,
+        address _admin,
+        string memory _name,
+        string memory _logoUrl,
+        string memory _description,
+        string[] memory _webLinks,
         IGovernorTransferToken governor
     ) external override initializer {
         governorTokenTransferAddress = governor;
-        __BaseDAO_init(admin, name, logoUrl);
+        __BaseDAO_init(_admin, _name, _logoUrl, _description, _webLinks);
     }
 
     function getGovernorTokenTransferContractAddress()
@@ -36,22 +38,22 @@ contract GovernorTokenDAO is ITokenDAO, BaseDAO {
     }
 
     function createProposal(
-        string memory title,
-        string memory description,
-        string memory linkToDiscussion,
-        address transferFromAccount,
-        address transferToAccount,
-        address tokenToTransfer,
-        int256 transferTokenAmount
+        string memory _title,
+        string memory _description,
+        string memory _linkToDiscussion,
+        address _transferFromAccount,
+        address _transferToAccount,
+        address _tokenToTransfer,
+        uint256 _transferTokenAmount
     ) external override onlyOwner returns (uint256) {
         uint256 proposalId = governorTokenTransferAddress.createProposal(
-            title,
-            description,
-            linkToDiscussion,
-            transferFromAccount,
-            transferToAccount,
-            tokenToTransfer,
-            transferTokenAmount,
+            _title,
+            _description,
+            _linkToDiscussion,
+            _transferFromAccount,
+            _transferToAccount,
+            _tokenToTransfer,
+            _transferTokenAmount,
             msg.sender
         );
         _proposals.push(proposalId);

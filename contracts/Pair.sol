@@ -17,8 +17,8 @@ import "./Configuration.sol";
 /// @param slippageThreshold the maximum slippage allowed for a transaction to proceed.
 error SlippageBreached(
     string message,
-    int256 calculatedSlippage,
-    int256 slippageThreshold
+    uint256 calculatedSlippage,
+    uint256 slippageThreshold
 );
 
 error WrongPairPassed(
@@ -40,9 +40,9 @@ contract Pair is
 
     Pair pair;
 
-    int256 slippage;
+    uint256 slippage;
 
-    int256 private fee;
+    uint256 private fee;
 
     address private treasury;
 
@@ -54,7 +54,7 @@ contract Pair is
         address _tokenA,
         address _tokenB,
         address _treasury,
-        int256 _fee,
+        uint256 _fee,
         Configuration _configuration
     ) public override initializer {
         __ReentrancyGuard_init();
@@ -64,7 +64,7 @@ contract Pair is
         fee = _fee;
         treasury = _treasury;
         configuration = _configuration;
-        pair = Pair(Token(_tokenA, int256(0)), Token(_tokenB, int256(0)));
+        pair = Pair(Token(_tokenA, uint256(0)), Token(_tokenB, uint256(0)));
         _associateToken(address(this), _tokenA);
         _associateToken(address(this), _tokenB);
     }
@@ -77,8 +77,8 @@ contract Pair is
         address fromAccount,
         address _tokenA,
         address _tokenB,
-        int256 _tokenAQty,
-        int256 _tokenBQty
+        uint256 _tokenAQty,
+        uint256 _tokenBQty
     ) external payable virtual override nonReentrant {
         _tokenAQty = _tokenQuantity(_tokenA, _tokenAQty);
         _tokenBQty = _tokenQuantity(_tokenB, _tokenBQty);
@@ -121,13 +121,13 @@ contract Pair is
 
     function removeLiquidity(
         address payable toAccount,
-        int256 _lpToken
+        uint256 _lpToken
     ) external virtual override nonReentrant {
         require(
             lpTokenContract.lpTokenForUser(toAccount) >= _lpToken,
             "user does not have sufficient lpTokens"
         );
-        (int256 _tokenAQty, int256 _tokenBQty) = calculateTokenstoGetBack(
+        (uint256 _tokenAQty, uint256 _tokenBQty) = calculateTokenstoGetBack(
             _lpToken
         );
         pair.tokenA.tokenQty -= _tokenAQty;
@@ -145,7 +145,7 @@ contract Pair is
         lpTokenContract.removeLPTokenFor(_lpToken, toAccount);
     }
 
-    function getPairQty() public view returns (int256, int256) {
+    function getPairQty() public view returns (uint256, uint256) {
         return (pair.tokenA.tokenQty, pair.tokenB.tokenQty);
     }
 
@@ -164,15 +164,15 @@ contract Pair is
         );
     }
 
-    function getSpotPrice(address token) public view returns (int256) {
-        int256 precision = getPrecisionValue();
-        int256 spotTokenQty = token == pair.tokenA.tokenAddress
+    function getSpotPrice(address token) public view returns (uint256) {
+        uint256 precision = getPrecisionValue();
+        uint256 spotTokenQty = token == pair.tokenA.tokenAddress
             ? pair.tokenA.tokenQty
             : pair.tokenB.tokenQty;
-        int256 otherTokenQty = token == pair.tokenA.tokenAddress
+        uint256 otherTokenQty = token == pair.tokenA.tokenAddress
             ? pair.tokenB.tokenQty
             : pair.tokenA.tokenQty;
-        int256 value;
+        uint256 value;
         if (otherTokenQty > 0) {
             value = (spotTokenQty * precision) / otherTokenQty;
         }
@@ -180,28 +180,29 @@ contract Pair is
     }
 
     function getInGivenOut(
-        int256 amountTokenB
-    ) public view returns (int256, int256, int256, int256) {
+        uint256 amountTokenB
+    ) public view returns (uint256, uint256, uint256, uint256) {
         (
-            int256 _tokenBTreasureFee,
-            int256 _deltaBQtyAfterAdjustingFee,
-            int256 _tokenBSwapQtyPlusContractTokenShare
+            uint256 _tokenBTreasureFee,
+            uint256 _deltaBQtyAfterAdjustingFee,
+            uint256 _tokenBSwapQtyPlusContractTokenShare
         ) = _calculateIncomingTokenQuantities(amountTokenB);
 
-        int256 amountTokenA;
+        uint256 amountTokenA;
         {
-            int256 invariantValue = getVariantValue();
-            int256 precision = getPrecisionValue();
-            int256 tokenAQ = pair.tokenA.tokenQty;
-            int256 tokenBQ = pair.tokenB.tokenQty + _deltaBQtyAfterAdjustingFee;
-            int256 adjustedValue = (invariantValue * precision) / (tokenBQ);
-            int256 newValue = adjustedValue / precision;
-            amountTokenA = newValue - tokenAQ;
+            uint256 invariantValue = getVariantValue();
+            uint256 precision = getPrecisionValue();
+            uint256 tokenAQ = pair.tokenA.tokenQty;
+            uint256 tokenBQ = pair.tokenB.tokenQty +
+                _deltaBQtyAfterAdjustingFee;
+            uint256 adjustedValue = (invariantValue * precision) / (tokenBQ);
+            uint256 newValue = adjustedValue / precision;
+            amountTokenA = getAbsoluteDifference(newValue, tokenAQ);
         }
 
         (
-            int256 _actualSwapAValue,
-            int256 _tokenATreasureFee
+            uint256 _actualSwapAValue,
+            uint256 _tokenATreasureFee
         ) = _calculateOutgoingTokenQuantities(amountTokenA);
 
         return (
@@ -213,31 +214,32 @@ contract Pair is
     }
 
     function getOutGivenIn(
-        int256 amountTokenA
-    ) public view returns (int256, int256, int256, int256) {
+        uint256 amountTokenA
+    ) public view returns (uint256, uint256, uint256, uint256) {
         // Token A Calculation
         (
-            int256 _tokenATreasureFee,
-            int256 _deltaAQtyAfterAdjustingFee,
-            int256 _tokenASwapQtyPlusContractTokenShare
+            uint256 _tokenATreasureFee,
+            uint256 _deltaAQtyAfterAdjustingFee,
+            uint256 _tokenASwapQtyPlusContractTokenShare
         ) = _calculateIncomingTokenQuantities(amountTokenA);
 
-        int256 amountTokenB;
+        uint256 amountTokenB;
         //Scoped variable to avoid stack too deep
         {
-            int256 precision = getPrecisionValue();
-            int256 invariantValue = getVariantValue();
-            int256 tokenAQ = pair.tokenA.tokenQty + _deltaAQtyAfterAdjustingFee;
-            int256 tokenBQ = pair.tokenB.tokenQty;
-            int256 adjustedValue = (invariantValue * precision) / (tokenAQ);
-            int256 newValue = adjustedValue / precision;
-            amountTokenB = tokenBQ - newValue;
+            uint256 precision = getPrecisionValue();
+            uint256 invariantValue = getVariantValue();
+            uint256 tokenAQ = pair.tokenA.tokenQty +
+                _deltaAQtyAfterAdjustingFee;
+            uint256 tokenBQ = pair.tokenB.tokenQty;
+            uint256 adjustedValue = (invariantValue * precision) / (tokenAQ);
+            uint256 newValue = adjustedValue / precision;
+            amountTokenB = getAbsoluteDifference(tokenBQ, newValue);
         }
 
         //Token B Calculation
         (
-            int256 _actualSwapBValue,
-            int256 _tokenBTreasureFee
+            uint256 _actualSwapBValue,
+            uint256 _tokenBTreasureFee
         ) = _calculateOutgoingTokenQuantities(amountTokenB);
 
         return (
@@ -248,80 +250,93 @@ contract Pair is
         );
     }
 
-    function getVariantValue() public view returns (int256) {
-        int256 tokenAQ = pair.tokenA.tokenQty;
-        int256 tokenBQ = pair.tokenB.tokenQty;
+    function getVariantValue() public view returns (uint256) {
+        uint256 tokenAQ = pair.tokenA.tokenQty;
+        uint256 tokenBQ = pair.tokenB.tokenQty;
         return tokenAQ * tokenBQ;
     }
 
-    function getPrecisionValue() public pure returns (int256) {
+    function getPrecisionValue() public pure returns (uint256) {
         return 100_000_000;
     }
 
-    function getSlippage() public view returns (int256) {
+    function getSlippage() public view returns (uint256) {
         // 0.005 should be default as per requirement.
-        return (slippage <= 0) ? int256(500000) : slippage;
+        return (slippage <= 0) ? uint256(500000) : slippage;
     }
 
-    function setSlippage(int256 _slippage) external returns (int256) {
+    function setSlippage(uint256 _slippage) external returns (uint256) {
         slippage = _slippage;
         return slippage;
     }
 
     function slippageOutGivenIn(
-        int256 _tokenAQty
-    ) public view returns (int256) {
-        int256 precision = getPrecisionValue();
-        int256 tokenAQ = pair.tokenA.tokenQty;
-        int256 tokenBQ = pair.tokenB.tokenQty;
-        int256 unitPriceForA = (tokenBQ * precision) / tokenAQ;
-        int256 spotValueExpected = (_tokenAQty * unitPriceForA) / precision;
+        uint256 _tokenAQty
+    ) public view returns (uint256) {
+        uint256 precision = getPrecisionValue();
+        uint256 tokenAQ = pair.tokenA.tokenQty;
+        uint256 tokenBQ = pair.tokenB.tokenQty;
+        uint256 unitPriceForA = (tokenBQ * precision) / tokenAQ;
+        uint256 spotValueExpected = (_tokenAQty * unitPriceForA) / precision;
 
         (
             ,
             ,
-            int256 _actualSwapBValue,
-            int256 _tokenBTreasureFee
+            uint256 _actualSwapBValue,
+            uint256 _tokenBTreasureFee
         ) = getOutGivenIn(_tokenAQty);
 
-        int256 finalDeltaBQty = (_actualSwapBValue + _tokenBTreasureFee);
+        uint256 finalDeltaBQty = (_actualSwapBValue + _tokenBTreasureFee);
 
-        int256 calculatedSlippage = ((spotValueExpected - finalDeltaBQty) *
-            precision) / spotValueExpected;
+        uint256 priceMovement = getAbsoluteDifference(
+            finalDeltaBQty,
+            spotValueExpected
+        );
 
-        calculatedSlippage = calculatedSlippage < 0
-            ? -calculatedSlippage
-            : calculatedSlippage;
+        uint256 calculatedSlippage = (priceMovement * precision) /
+            spotValueExpected;
 
         return calculatedSlippage;
     }
 
     function slippageInGivenOut(
-        int256 _tokenBQty
-    ) public view returns (int256) {
-        int256 precision = getPrecisionValue();
-        int256 tokenAQ = pair.tokenA.tokenQty;
-        int256 tokenBQ = pair.tokenB.tokenQty;
-        int256 unitPriceForB = (tokenAQ * precision) / tokenBQ;
-        int256 spotValueExpected = (_tokenBQty * unitPriceForB) / precision;
+        uint256 _tokenBQty
+    ) public view returns (uint256) {
+        uint256 precision = getPrecisionValue();
+        uint256 tokenAQ = pair.tokenA.tokenQty;
+        uint256 tokenBQ = pair.tokenB.tokenQty;
+        uint256 unitPriceForB = (tokenAQ * precision) / tokenBQ;
+        uint256 spotValueExpected = (_tokenBQty * unitPriceForB) / precision;
 
         (
             ,
             ,
-            int256 _actualSwapAValue,
-            int256 _tokenATreasureFee
+            uint256 _actualSwapAValue,
+            uint256 _tokenATreasureFee
         ) = getInGivenOut(_tokenBQty);
 
-        int256 finalDeltaAQty = (_actualSwapAValue + _tokenATreasureFee);
+        uint256 finalDeltaAQty = (_actualSwapAValue + _tokenATreasureFee);
 
-        int256 calculatedSlippage = ((finalDeltaAQty - spotValueExpected) *
-            precision) / spotValueExpected;
+        uint256 priceMovement = getAbsoluteDifference(
+            finalDeltaAQty,
+            spotValueExpected
+        );
 
-        calculatedSlippage = calculatedSlippage < 0
-            ? -calculatedSlippage
-            : calculatedSlippage;
+        uint256 calculatedSlippage = (priceMovement * precision) /
+            spotValueExpected;
 
         return calculatedSlippage;
+    }
+
+    function getAbsoluteDifference(
+        uint256 lhs,
+        uint256 rhs
+    ) internal pure returns (uint256 difference) {
+        if (lhs > rhs) {
+            difference = lhs - rhs;
+        } else {
+            difference = rhs - lhs;
+        }
     }
 
     function getContractAddress() public view returns (address) {
@@ -340,7 +355,7 @@ contract Pair is
     function getTokenPairAddress()
         public
         view
-        returns (address, address, address, int256)
+        returns (address, address, address, uint256)
     {
         return (
             pair.tokenA.tokenAddress,
@@ -350,24 +365,24 @@ contract Pair is
         );
     }
 
-    function getFee() public view returns (int256) {
+    function getFee() public view returns (uint256) {
         return fee;
     }
 
-    function getFeePrecision() public pure returns (int256) {
+    function getFeePrecision() public pure returns (uint256) {
         return 100;
     }
 
-    function feeForToken(int256 _tokenQ) public view returns (int256) {
-        int256 tokenQ = ((_tokenQ * fee) / 2) / getFeePrecision();
+    function feeForToken(uint256 _tokenQ) public view returns (uint256) {
+        uint256 tokenQ = ((_tokenQ * fee) / 2) / getFeePrecision();
         return tokenQ;
     }
 
     function swapToken(
         address to,
         address _token,
-        int256 _deltaQty,
-        int256 _slippage
+        uint256 _deltaQty,
+        uint256 _slippage
     ) external payable virtual override nonReentrant {
         require(
             _token == pair.tokenA.tokenAddress ||
@@ -383,29 +398,31 @@ contract Pair is
     }
 
     function calculateTokenstoGetBack(
-        int256 _lpToken
-    ) internal view returns (int256, int256) {
-        int256 allLPTokens = lpTokenContract.getAllLPTokenCount();
+        uint256 _lpToken
+    ) internal view returns (uint256, uint256) {
+        uint256 allLPTokens = lpTokenContract.getAllLPTokenCount();
 
-        int256 tokenAQuantity = (_lpToken * pair.tokenA.tokenQty) / allLPTokens;
-        int256 tokenBQuantity = (_lpToken * pair.tokenB.tokenQty) / allLPTokens;
+        uint256 tokenAQuantity = (_lpToken * pair.tokenA.tokenQty) /
+            allLPTokens;
+        uint256 tokenBQuantity = (_lpToken * pair.tokenB.tokenQty) /
+            allLPTokens;
 
         return (tokenAQuantity, tokenBQuantity);
     }
 
     function doTokenASwap(
         address to,
-        int256 _deltaAQty,
-        int256 _slippage
+        uint256 _deltaAQty,
+        uint256 _slippage
     ) private {
-        int256 calculatedSlippage = slippageOutGivenIn(_deltaAQty);
+        uint256 calculatedSlippage = slippageOutGivenIn(_deltaAQty);
         isSlippageBreached(calculatedSlippage, _slippage);
 
         (
-            int256 _tokenATreasureFee,
-            int256 _tokenASwapQtyPlusContractTokenShare,
-            int256 _actualSwapBValue,
-            int256 _tokenBTreasureFee
+            uint256 _tokenATreasureFee,
+            uint256 _tokenASwapQtyPlusContractTokenShare,
+            uint256 _actualSwapBValue,
+            uint256 _tokenBTreasureFee
         ) = getOutGivenIn(_deltaAQty);
 
         pair.tokenA.tokenQty += _tokenASwapQtyPlusContractTokenShare;
@@ -450,17 +467,17 @@ contract Pair is
 
     function doTokenBSwap(
         address to,
-        int256 _deltaBQty,
-        int256 _slippage
+        uint256 _deltaBQty,
+        uint256 _slippage
     ) private {
-        int256 calculatedSlippage = slippageInGivenOut(_deltaBQty);
+        uint256 calculatedSlippage = slippageInGivenOut(_deltaBQty);
         isSlippageBreached(calculatedSlippage, _slippage);
 
         (
-            int256 _tokenBTreasureFee,
-            int256 _tokenBSwapQtyPlusContractTokenShare,
-            int256 _actualSwapAValue,
-            int256 _tokenATreasureFee
+            uint256 _tokenBTreasureFee,
+            uint256 _tokenBSwapQtyPlusContractTokenShare,
+            uint256 _actualSwapAValue,
+            uint256 _tokenATreasureFee
         ) = getInGivenOut(_deltaBQty);
 
         //Token B Calculation
@@ -506,15 +523,18 @@ contract Pair is
     }
 
     function _calculateIncomingTokenQuantities(
-        int256 senderSwapQty
-    ) private view returns (int256, int256, int256) {
+        uint256 senderSwapQty
+    ) private view returns (uint256, uint256, uint256) {
         // Token A Calculation
-        int256 tokenFee = feeForToken(senderSwapQty);
-        int256 _tokenTreasureFee = tokenFee / 2; //50% goes to treasurer
-        int256 tokenContractShare = tokenFee / 2; //50% goes to contract
+        uint256 tokenFee = feeForToken(senderSwapQty);
+        uint256 _tokenTreasureFee = tokenFee / 2; //50% goes to treasurer
+        uint256 tokenContractShare = tokenFee / 2; //50% goes to contract
 
-        int256 _deltaQtyAfterAdjustingFee = senderSwapQty - tokenFee;
-        int256 _tokenASwapQtyPlusContractTokenShare = _deltaQtyAfterAdjustingFee +
+        uint256 _deltaQtyAfterAdjustingFee = getAbsoluteDifference(
+            senderSwapQty,
+            tokenFee
+        );
+        uint256 _tokenASwapQtyPlusContractTokenShare = _deltaQtyAfterAdjustingFee +
                 tokenContractShare;
 
         return (
@@ -525,12 +545,14 @@ contract Pair is
     }
 
     function _calculateOutgoingTokenQuantities(
-        int256 swappedValue
-    ) private view returns (int256, int256) {
-        swappedValue = swappedValue < 0 ? -swappedValue : swappedValue;
-        int256 tokenFee = feeForToken(swappedValue);
-        int256 _actualSwappedValue = swappedValue - tokenFee;
-        int256 _tokenTreasureFee = tokenFee / 2;
+        uint256 swappedValue
+    ) private view returns (uint256, uint256) {
+        uint256 tokenFee = feeForToken(swappedValue);
+        uint256 _actualSwappedValue = getAbsoluteDifference(
+            swappedValue,
+            tokenFee
+        );
+        uint256 _tokenTreasureFee = tokenFee / 2;
         return (_actualSwappedValue, _tokenTreasureFee);
     }
 
@@ -539,8 +561,8 @@ contract Pair is
         address reciever,
         address tokenA,
         address tokenB,
-        int256 tokenAQty,
-        int256 tokenBQty,
+        uint256 tokenAQty,
+        uint256 tokenBQty,
         string memory errorMessageA,
         string memory errorMessageB
     ) private {
@@ -564,7 +586,7 @@ contract Pair is
         address sender,
         address receiver,
         address token,
-        int256 tokenQty,
+        uint256 tokenQty,
         string memory errorMessage
     ) private {
         if (_tokenIsHBARX(token)) {
@@ -599,32 +621,32 @@ contract Pair is
         return reciever == address(this);
     }
 
-    function _checkIfContractHaveRequiredHBARBalance(int256 tokenQty) private view {
+    function _checkIfContractHaveRequiredHBARBalance(
+        uint256 tokenQty
+    ) private view {
         require(
-            _contractHBARBalance() >= uint256(tokenQty),
+            _contractHBARBalance() >= tokenQty,
             "Contract does not have sufficient Hbars"
         );
     }
 
     function _contractHBARBalance() private view returns (uint256) {
         return
-            uint256(
-                _tokenIsHBARX(pair.tokenA.tokenAddress)
-                    ? pair.tokenA.tokenQty
-                    : pair.tokenB.tokenQty
-            );
+            _tokenIsHBARX(pair.tokenA.tokenAddress)
+                ? pair.tokenA.tokenQty
+                : pair.tokenB.tokenQty;
     }
 
-    function _checkIfCallerSentCorrectHBARs(int256 tokenQty) private view {
-        require(msg.value >= uint256(tokenQty), "Please pass correct Hbars");
+    function _checkIfCallerSentCorrectHBARs(uint256 tokenQty) private view {
+        require(msg.value >= tokenQty, "Please pass correct Hbars");
     }
 
     function _transferHbars(
-        int256 tokenQty,
+        uint256 tokenQty,
         address reciever,
         string memory errorMessage
     ) private {
-        bool sent = tokenService.transferHBAR{value: uint256(tokenQty)}(
+        bool sent = tokenService.transferHBAR{value: tokenQty}(
             payable(reciever)
         );
         require(sent, errorMessage);
@@ -632,11 +654,11 @@ contract Pair is
 
     function _tokenQuantity(
         address token,
-        int256 quantity
-    ) private returns (int256) {
+        uint256 quantity
+    ) private returns (uint256) {
         if (_tokenIsHBARX(token)) {
             require(quantity == 0, "HBARs should be passed as payble");
-            return int256(msg.value);
+            return uint256(msg.value);
         }
         return quantity;
     }
@@ -652,10 +674,10 @@ contract Pair is
     }
 
     function isSlippageBreached(
-        int256 calculatedSlippage,
-        int256 _slippage
+        uint256 calculatedSlippage,
+        uint256 _slippage
     ) private view {
-        int256 slippageThreshold = _slippage > 0 ? _slippage : getSlippage();
+        uint256 slippageThreshold = _slippage > 0 ? _slippage : getSlippage();
 
         if (calculatedSlippage > slippageThreshold) {
             revert SlippageBreached({

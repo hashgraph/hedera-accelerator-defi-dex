@@ -10,7 +10,6 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
         address newTokenAddress;
     }
 
-    using Bits for uint256;
     mapping(uint256 => TokenCreateData) _proposalData;
 
     function createProposal(
@@ -82,8 +81,8 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
 
     function mintToken(
         uint256 proposalId,
-        int256 amount
-    ) external returns (int256) {
+        uint256 amount
+    ) external returns (int64) {
         TokenCreateData storage tokenCreateData = _proposalData[proposalId];
 
         require(
@@ -96,7 +95,7 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
             "GovernorTokenCreate: Only treasurer can mint tokens."
         );
 
-        (int256 responseCode, int256 newTotalSupply) = super.mintToken(
+        (int256 responseCode, int64 newTotalSupply) = super.mintToken(
             tokenService,
             tokenCreateData.newTokenAddress,
             amount
@@ -111,8 +110,8 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
 
     function burnToken(
         uint256 proposalId,
-        int256 amount
-    ) external returns (int256) {
+        uint256 amount
+    ) external returns (int64) {
         TokenCreateData storage tokenCreateData = _proposalData[proposalId];
         require(
             tokenCreateData.newTokenAddress != address(0x0),
@@ -124,7 +123,7 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
             "GovernorTokenCreate: Only treasurer can burn tokens."
         );
 
-        (int256 responseCode, int256 newTotalSupply) = super.burnToken(
+        (int256 responseCode, int64 newTotalSupply) = super.burnToken(
             tokenService,
             tokenCreateData.newTokenAddress,
             amount
@@ -141,7 +140,7 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
     function transferToken(
         uint256 proposalId,
         address to,
-        int256 amount
+        uint256 amount
     ) external {
         require(
             amount > 0,
@@ -161,7 +160,7 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
             address(this)
         );
         require(
-            contractBalance >= uint256(amount),
+            contractBalance >= amount,
             "GovernorTokenCreate: Contract doesn't have sufficient balance please take treasurer help to mint it."
         );
 

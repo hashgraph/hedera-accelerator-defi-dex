@@ -19,6 +19,10 @@ import Common from "../business/Common";
 import { BigNumber } from "bignumber.js";
 import { CommonSteps } from "./CommonSteps";
 import GODTokenHolderFactory from "../business/GODTokenHolderFactory";
+import * as GovernorTokenMetaData from "../../e2e-test/business/GovernorTokenDao";
+
+const DAO_DESC = "Lorem Ipsum is simply dummy text";
+const DAO_WEB_LINKS = ["LINKEDIN", "https://linkedin.com"];
 
 const csDev = new ContractService();
 
@@ -79,7 +83,9 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
     await this.initializeGovernorContract(
       governorTokenTransfer,
       godHolder,
-      clientsInfo.operatorClient
+      clientsInfo.operatorClient,
+      GovernorTokenMetaData.GOD_TOKEN_ID,
+      GovernorTokenMetaData.GOD_TOKEN_ID
     );
     let blankTitleOrURL: boolean = false;
     try {
@@ -88,6 +94,8 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
         adminAddress,
         name,
         url,
+        DAO_DESC,
+        DAO_WEB_LINKS,
         governorTokenTransfer,
         clientsInfo.operatorClient
       );
@@ -111,6 +119,8 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
       adminAddress,
       name,
       url,
+      DAO_DESC,
+      DAO_WEB_LINKS,
       governorTokenTransfer,
       clientsInfo.operatorClient
     );
@@ -134,6 +144,8 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
       daoAddress = await daoFactory.createDAO(
         daoName,
         daoURL,
+        DAO_DESC,
+        DAO_WEB_LINKS,
         daoTokenId.toSolidityAddress(),
         CommonSteps.DEFAULT_QUORUM_THRESHOLD_IN_BSP,
         CommonSteps.DEFAULT_VOTING_DELAY,
@@ -308,7 +320,7 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
     30000
   )
   public async verifyTokenBalance() {
-    await Helper.delay(10000);
+    await Helper.delay(15000);
     const updatedBalance = await Common.fetchTokenBalanceFromMirrorNode(
       toAccount.toString(),
       tokenId.toString()

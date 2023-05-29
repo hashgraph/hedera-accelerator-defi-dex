@@ -1,5 +1,5 @@
 @GovernorContractUpgrade
-@TestSuite-1
+@TestSuite-2
 Feature: Governor Contract Upgrade E2E Test
 
     This feature file contains e2e test for governor upgrade contract

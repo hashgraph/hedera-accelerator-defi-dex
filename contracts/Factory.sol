@@ -16,9 +16,9 @@ contract Factory is IEvents, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     struct PairDetail {
         address pair;
         address token;
-        int256 swappedQty;
+        uint256 swappedQty;
         uint256 fee;
-        int256 slippage;
+        uint256 slippage;
     }
 
     event PairCreated(address indexed pairAddress);
@@ -35,7 +35,7 @@ contract Factory is IEvents, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     Configuration configuration;
 
     address[] private allPairs;
-    mapping(address => mapping(address => mapping(int256 => address)))
+    mapping(address => mapping(address => mapping(uint256 => address)))
         private pairs;
 
     function setUpFactory(
@@ -59,7 +59,7 @@ contract Factory is IEvents, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     function getPair(
         address _tokenA,
         address _tokenB,
-        int256 _fee
+        uint256 _fee
     ) external view returns (address) {
         (address token0, address token1) = sortTokens(_tokenA, _tokenB);
         return pairs[token0][token1][_fee];
@@ -73,7 +73,7 @@ contract Factory is IEvents, OwnableUpgradeable, ReentrancyGuardUpgradeable {
         address _tokenA,
         address _tokenB,
         address _treasury,
-        int256 _fee
+        uint256 _fee
     ) external payable nonReentrant returns (address pair) {
         (address _token0, address _token1) = sortTokens(_tokenA, _tokenB);
         pair = pairs[_token0][_token1][_fee];
@@ -104,8 +104,8 @@ contract Factory is IEvents, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     function recommendedPairToSwap(
         address _tokenToSwap,
         address _otherTokenOfPair,
-        int256 _qtyToSwap
-    ) external view returns (address, address, int256, uint256, int256) {
+        uint256 _qtyToSwap
+    ) external view returns (address, address, uint256, uint256, uint256) {
         uint256[] memory fees = configuration.getTransactionsFee();
         (address _token0, address _token1) = sortTokens(
             _tokenToSwap,
@@ -134,16 +134,16 @@ contract Factory is IEvents, OwnableUpgradeable, ReentrancyGuardUpgradeable {
         address _token0,
         address _token1,
         address _tokenToSwap,
-        int256 _qtyToSwap
+        uint256 _qtyToSwap
     ) private view returns (PairDetail memory) {
         PairDetail memory maxQtyPair;
         for (uint i = 0; i < fees.length; i = i + 2) {
             uint256 value = fees[i + 1];
-            Pair pair = Pair(pairs[_token0][_token1][int256(value)]);
+            Pair pair = Pair(pairs[_token0][_token1][value]);
             if (address(pair) != address(0x0)) {
-                int256 _qty;
+                uint256 _qty;
                 address _token;
-                int256 _slippage;
+                uint256 _slippage;
                 if (_tokenToSwap == _token0) {
                     (, , _qty, ) = pair.getOutGivenIn(_qtyToSwap);
                     _token = _token1;
@@ -192,7 +192,7 @@ contract Factory is IEvents, OwnableUpgradeable, ReentrancyGuardUpgradeable {
         address _tokenA,
         address _tokenB,
         address _treasury,
-        int256 _fee
+        uint256 _fee
     ) private returns (IPair pair) {
         pair = IPair(_createProxy(pairLogic));
 

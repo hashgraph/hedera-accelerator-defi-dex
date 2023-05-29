@@ -14,6 +14,9 @@ import * as GovernorTokenMetaData from "../../e2e-test/business/GovernorTokenDao
 const TOKEN_QTY = 1 * 1e8;
 const TOKEN_ID = TokenId.fromString(dex.TOKEN_LAB49_1);
 const adminAddress: string = clientsInfo.operatorId.toSolidityAddress();
+const DAO_ADMIN_CLIENT = clientsInfo.operatorClient;
+const DAO_DESC = "Lorem Ipsum is simply dummy text";
+const DAO_WEB_LINKS = ["LINKEDIN", "https://linkedin.com"];
 
 async function main() {
   const csDev = new ContractService();
@@ -33,6 +36,8 @@ async function main() {
     adminAddress,
     "Governor Token Dao",
     "dao url",
+    DAO_DESC,
+    DAO_WEB_LINKS,
     governorTT,
     nftHolder,
     clientsInfo.operatorClient,
@@ -49,10 +54,13 @@ async function main() {
     governorTT
   );
 
-  await governorTokenDao.addWebLink();
-  await governorTokenDao.getDaoDetail();
-  await governorTokenDao.updateName("Governor Token Dao - New");
-  await governorTokenDao.updateLogoURL("dao url - New");
+  await governorTokenDao.addWebLink("GIT", "https://git.com", DAO_ADMIN_CLIENT);
+  await governorTokenDao.updateName(
+    "Governor Token Dao - New",
+    DAO_ADMIN_CLIENT
+  );
+  await governorTokenDao.updateLogoURL("dao url - New", DAO_ADMIN_CLIENT);
+  await governorTokenDao.updateDescription("desc - New", DAO_ADMIN_CLIENT);
   await governorTokenDao.getDaoDetail();
   console.log(`\nDone`);
 }
@@ -104,8 +112,8 @@ export async function executeGovernorTokenTransferFlow(
     tokenId.toSolidityAddress(),
     tokenAmount,
     proposalCreatorClient,
-    GovernorTokenMetaData.DEFAULT_LINK,
-    GovernorTokenMetaData.DEFAULT_DESCRIPTION
+    GovernorTokenMetaData.DEFAULT_DESCRIPTION,
+    GovernorTokenMetaData.DEFAULT_LINK
   );
 
   await governorTokenTransfer.getProposalDetails(proposalId);

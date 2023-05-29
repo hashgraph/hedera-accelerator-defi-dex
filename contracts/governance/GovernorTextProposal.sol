@@ -3,7 +3,6 @@ pragma solidity ^0.8.18;
 import "./GovernorCountingSimpleInternal.sol";
 
 contract GovernorTextProposal is GovernorCountingSimpleInternal {
-    using Bits for uint256;
 
     function createProposal(
         string memory title,

@@ -310,7 +310,7 @@ abstract contract GovernorCountingSimpleInternal is
             address(token),
             creator,
             address(this),
-            int256(PROPOSAL_CREATION_AMOUNT)
+            PROPOSAL_CREATION_AMOUNT
         );
         require(
             code == HederaResponseCodes.SUCCESS,
@@ -323,7 +323,7 @@ abstract contract GovernorCountingSimpleInternal is
             address(token),
             address(this),
             creator,
-            int256(PROPOSAL_CREATION_AMOUNT)
+            PROPOSAL_CREATION_AMOUNT
         );
         require(
             code == HederaResponseCodes.SUCCESS,

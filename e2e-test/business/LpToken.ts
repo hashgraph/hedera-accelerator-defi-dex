@@ -2,7 +2,12 @@ import Base from "./Base";
 import BigNumber from "bignumber.js";
 
 import { clientsInfo } from "../../utils/ClientManagement";
-import { Client, AccountId, ContractFunctionParameters } from "@hashgraph/sdk";
+import {
+  Client,
+  AccountId,
+  ContractFunctionParameters,
+  ContractId,
+} from "@hashgraph/sdk";
 
 const INITIALIZE = "initialize";
 const ALLOT_LP_TOKEN = "allotLPTokenFor";
@@ -16,7 +21,7 @@ export default class LpToken extends Base {
   initialize = async (
     tokenName: string,
     tokenSymbol: string,
-    ownerId: AccountId,
+    ownerId: AccountId | ContractId,
     client: Client = clientsInfo.operatorClient
   ) => {
     if (await this.isInitializationPending()) {
@@ -52,8 +57,8 @@ export default class LpToken extends Base {
     client: Client = clientsInfo.operatorClient
   ) => {
     const args = new ContractFunctionParameters()
-      .addInt256(tokenAQty)
-      .addInt256(tokenBQty);
+      .addUint256(tokenAQty)
+      .addUint256(tokenBQty);
 
     const { result } = await this.execute(
       2_00_000,
@@ -76,8 +81,8 @@ export default class LpToken extends Base {
     client: Client = clientsInfo.operatorClient
   ) => {
     const args = new ContractFunctionParameters()
-      .addInt256(tokenAQty)
-      .addInt256(tokenBQty)
+      .addUint256(tokenAQty)
+      .addUint256(tokenBQty)
       .addAddress(receiverAccountId.toSolidityAddress());
     await this.execute(2_00_000, ALLOT_LP_TOKEN, client, args);
     const sqrt = Math.sqrt(Number(tokenAQty.multipliedBy(tokenBQty)));
@@ -92,7 +97,7 @@ export default class LpToken extends Base {
     client: Client = clientsInfo.operatorClient
   ) => {
     const args = new ContractFunctionParameters()
-      .addInt256(lpTokenQty)
+      .addUint256(lpTokenQty)
       .addAddress(senderAccountId.toSolidityAddress());
     await this.execute(2_00_000, REMOVE_LP_TOKEN, client, args);
     console.log(`- LpToken#${REMOVE_LP_TOKEN}(): qty = ${lpTokenQty}\n`);

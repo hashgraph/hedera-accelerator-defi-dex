@@ -23,12 +23,7 @@ contract NFTHolder is TokenHolder {
         uint256 tokenId = nftTokenForUsers[msg.sender];
         require(tokenId > 0, "NFTHolder: No amount for the Voter.");
         delete (nftTokenForUsers[msg.sender]);
-        _transferNFTToken(
-            address(_token),
-            address(this),
-            msg.sender,
-            int64(int256(tokenId))
-        );
+        _transferNFTToken(address(_token), address(this), msg.sender, tokenId);
         return HederaResponseCodes.SUCCESS;
     }
 
@@ -39,12 +34,12 @@ contract NFTHolder is TokenHolder {
         if (nftTokenForUsers[user] > 0) {
             return;
         }
-        nftTokenForUsers[user] = uint256(tokenId);
+        nftTokenForUsers[user] = tokenId;
         _transferNFTToken(
             address(_token),
             address(user),
             address(this),
-            int64(int256(tokenId))
+            tokenId
         );
     }
 

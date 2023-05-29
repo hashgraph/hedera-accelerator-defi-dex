@@ -13,26 +13,24 @@ contract LPToken is ILPToken, OwnableUpgradeable, TokenOperations {
     IBaseHTS tokenService;
     IERC20 lpToken;
 
-    using Bits for uint256;
-
     function lpTokenForUser(
         address _user
-    ) external view override returns (int256) {
-        return int256(lpToken.balanceOf(_user));
+    ) external view override returns (uint256) {
+        return lpToken.balanceOf(_user);
     }
 
     function getLpTokenAddress() external view override returns (address) {
         return address(lpToken);
     }
 
-    function getAllLPTokenCount() external view override returns (int256) {
-        return int256(lpToken.totalSupply());
+    function getAllLPTokenCount() external view override returns (uint256) {
+        return lpToken.totalSupply();
     }
 
     function lpTokenCountForGivenTokensQty(
-        int256 tokenAQuantity,
-        int256 tokenBQuantity
-    ) external pure override returns (int256) {
+        uint256 tokenAQuantity,
+        uint256 tokenBQuantity
+    ) external pure override returns (uint256) {
         return sqrt(tokenAQuantity * tokenBQuantity);
     }
 
@@ -60,15 +58,15 @@ contract LPToken is ILPToken, OwnableUpgradeable, TokenOperations {
     }
 
     function allotLPTokenFor(
-        int256 amountA,
-        int256 amountB,
+        uint256 amountA,
+        uint256 amountB,
         address _toUser
     ) external override onlyOwner returns (int256 responseCode) {
         require(
             (amountA > 0 && amountB > 0),
             "Please provide positive token counts"
         );
-        int256 mintingAmount = this.lpTokenCountForGivenTokensQty(
+        uint256 mintingAmount = this.lpTokenCountForGivenTokensQty(
             amountA,
             amountB
         );
@@ -95,7 +93,7 @@ contract LPToken is ILPToken, OwnableUpgradeable, TokenOperations {
     }
 
     function removeLPTokenFor(
-        int256 lpAmount,
+        uint256 lpAmount,
         address fromUser
     ) external override onlyOwner returns (int256 responseCode) {
         require((lpAmount > 0), "Please provide token counts");
@@ -129,8 +127,8 @@ contract LPToken is ILPToken, OwnableUpgradeable, TokenOperations {
         return HederaResponseCodes.SUCCESS;
     }
 
-    function sqrt(int256 value) private pure returns (int256 output) {
-        int256 modifiedValue = (value + 1) / 2;
+    function sqrt(uint256 value) private pure returns (uint256 output) {
+        uint256 modifiedValue = (value + 1) / 2;
         output = value;
         while (modifiedValue < output) {
             output = modifiedValue;

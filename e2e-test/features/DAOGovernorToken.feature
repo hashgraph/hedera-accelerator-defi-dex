@@ -1,5 +1,5 @@
 @DAOGovernorToken
-@TestSuite-2
+@TestSuite-4
 Feature: DAOGovernorToken e2e test
 
     This feature file contains e2e test for DAO Governor Token

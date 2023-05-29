@@ -30,11 +30,11 @@ contract TokenOperations {
         address _token,
         address _sender,
         address _receiver,
-        int256 _amount
+        uint256 _amount
     ) internal returns (int256 responseCode) {
         bool isTransferSuccessful = isContractSendingTokens(_sender)
-            ? IERC20(_token).transfer(_receiver, uint256(_amount))
-            : IERC20(_token).transferFrom(_sender, _receiver, uint256(_amount));
+            ? IERC20(_token).transfer(_receiver, _amount)
+            : IERC20(_token).transferFrom(_sender, _receiver, _amount);
 
         return
             isTransferSuccessful
@@ -46,9 +46,9 @@ contract TokenOperations {
         address _token,
         address _sender,
         address _receiver,
-        int256 _amount
+        uint256 _amount
     ) internal {
-        IERC721(_token).transferFrom(_sender, _receiver, uint256(_amount));
+        IERC721(_token).transferFrom(_sender, _receiver, _amount);
     }
 
     function isContract(address _account) private view returns (bool) {
@@ -132,8 +132,8 @@ contract TokenOperations {
     function mintToken(
         IBaseHTS _baseHTS,
         address token,
-        int256 amount
-    ) internal returns (int256 responseCode, int256 newTotalSupply) {
+        uint256 amount
+    ) internal returns (int256 responseCode, int64 newTotalSupply) {
         require(
             amount > 0,
             "TokenOperations: Token quantity to mint should be greater than zero."
@@ -148,15 +148,15 @@ contract TokenOperations {
         );
 
         (responseCode, newTotalSupply) = success
-            ? abi.decode(result, (int256, int256))
-            : (int256(HederaResponseCodes.UNKNOWN), int256(0));
+            ? abi.decode(result, (int256, int64))
+            : (int256(HederaResponseCodes.UNKNOWN), int64(0));
     }
 
     function burnToken(
         IBaseHTS _baseHTS,
         address token,
-        int256 amount
-    ) internal returns (int256 responseCode, int256 newTotalSupply) {
+        uint256 amount
+    ) internal returns (int256 responseCode, int64 newTotalSupply) {
         require(
             amount > 0,
             "TokenOperations: Token quantity to burn should be greater than zero."
@@ -172,8 +172,8 @@ contract TokenOperations {
         );
 
         (responseCode, newTotalSupply) = success
-            ? abi.decode(result, (int256, int256))
-            : (int256(HederaResponseCodes.UNKNOWN), int256(0));
+            ? abi.decode(result, (int256, int64))
+            : (int256(HederaResponseCodes.UNKNOWN), int64(0));
     }
 }
 

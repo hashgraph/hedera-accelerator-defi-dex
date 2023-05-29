@@ -12,6 +12,10 @@ export class TestHelper {
     }
   }
 
+  static async increaseEVMTime(seconds: number) {
+    await ethers.provider.send("evm_increaseTime", [seconds]);
+  }
+
   static toPrecision(targetAmount: number) {
     return targetAmount * 1e8;
   }
@@ -19,6 +23,13 @@ export class TestHelper {
   static async readLastEvent(transaction: any) {
     const lastEvent = (await transaction.wait()).events.pop();
     return { name: lastEvent.event, args: lastEvent.args };
+  }
+
+  static async readEvents(transaction: any, eventsName: string[] = []) {
+    const events = (await transaction.wait()).events;
+    return eventsName.length > 0
+      ? events.filter((_event: any) => eventsName.includes(_event.event))
+      : events;
   }
 
   static getAccountBalance = async (tokenCont: Contract, account: string) => {

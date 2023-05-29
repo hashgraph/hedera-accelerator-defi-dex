@@ -10,7 +10,7 @@ interface IGovernorTransferToken is IGovernorBase {
         address transferFromAccount,
         address transferToAccount,
         address tokenToTransfer,
-        int256 transferTokenAmount,
+        uint256 transferTokenAmount,
         address creator
     ) external returns (uint256);
 }

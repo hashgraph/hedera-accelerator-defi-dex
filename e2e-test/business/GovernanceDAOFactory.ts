@@ -1,7 +1,6 @@
 import Base from "./Base";
 
 import { Helper } from "../../utils/Helper";
-import { BigNumber } from "bignumber.js";
 import { Deployment } from "../../utils/deployContractOnTestnet";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { Client, ContractId, ContractFunctionParameters } from "@hashgraph/sdk";
@@ -47,7 +46,7 @@ export default class GovernanceDAOFactory extends Base {
         .addAddress(governorTokenDao.address)
         .addAddress(godHolderFactoryAddress)
         .addAddress(governorTT.address);
-      await this.execute(800000, INITIALIZE, client, args);
+      await this.execute(8_00_000, INITIALIZE, client, args);
       console.log(`- GovernanceDAOFactory#${INITIALIZE}(): done\n`);
       return;
     }
@@ -57,6 +56,8 @@ export default class GovernanceDAOFactory extends Base {
   createDAO = async (
     name: string,
     logoUrl: string,
+    desc: string,
+    webLinks: string[],
     tokenAddress: string,
     quorumThreshold: number,
     votingDelay: number,
@@ -65,37 +66,45 @@ export default class GovernanceDAOFactory extends Base {
     admin: string = clientsInfo.operatorId.toSolidityAddress(),
     client: Client = clientsInfo.operatorClient
   ) => {
-    const params = {
+    const createDAOInputs = {
       admin,
       name,
+      logoUrl,
       tokenAddress,
       quorumThreshold,
       votingDelay,
       votingPeriod,
       isPrivate,
+      desc,
+      webLinks,
     };
-    const args = new ContractFunctionParameters()
-      .addAddress(admin)
-      .addString(name)
-      .addString(logoUrl)
-      .addAddress(tokenAddress)
-      .addUint256(BigNumber(quorumThreshold))
-      .addUint256(BigNumber(votingDelay))
-      .addUint256(BigNumber(votingPeriod))
-      .addBool(isPrivate);
-    const { result } = await this.execute(9000000, CREATE_DAO, client, args);
+    const { bytes, hex } = await this.encodeFunctionData(
+      ContractService.FT_DAO_FACTORY,
+      CREATE_DAO,
+      [Object.values(createDAOInputs)]
+    );
+    const { result, record } = await this.execute(
+      3_500_000,
+      CREATE_DAO,
+      client,
+      bytes
+    );
     const address = result.getAddress(0);
-    console.log(`- GovernanceDAOFactory#${CREATE_DAO}(): done`);
+    console.log(
+      `- GovernanceDAOFactory#${CREATE_DAO}(): with input data = ${hex}`
+    );
     console.table({
-      ...params,
+      ...createDAOInputs,
+      webLinks: webLinks.toString(),
       daoAddress: address,
       daoFactoryId: this.contractId,
+      txnId: record.transactionId.toString(),
     });
     return address;
   };
 
   getDAOs = async (client: Client = clientsInfo.operatorClient) => {
-    const { result } = await this.execute(9999999, GET_DAOS, client);
+    const { result } = await this.execute(4_00_000, GET_DAOS, client);
     const addresses = Helper.getAddressArray(result);
     console.log(
       `- GovernanceDAOFactory#${GET_DAOS}(): count = ${addresses.length}, dao's = [${addresses}]\n`
@@ -108,7 +117,7 @@ export default class GovernanceDAOFactory extends Base {
   ) => {
     const args = new ContractFunctionParameters().addAddress(_newImpl);
     await this.execute(
-      200000,
+      2_00_000,
       UPGRADE_GOVERNOR_TOKEN_TRANSFER_LOGIC_IMPL,
       clientsInfo.dexOwnerClient,
       args
@@ -121,7 +130,7 @@ export default class GovernanceDAOFactory extends Base {
   upgradeGovernorTokenDaoLogicImplementation = async (_newImpl: string) => {
     const args = new ContractFunctionParameters().addAddress(_newImpl);
     await this.execute(
-      200000,
+      2_00_000,
       UPGRADE_GOVERNOR_TOKEN_DAO_LOGIC_IMPL,
       clientsInfo.dexOwnerClient,
       args
@@ -134,7 +143,7 @@ export default class GovernanceDAOFactory extends Base {
   upgradeGODTokenHolderFactory = async (_newImpl: string) => {
     const args = new ContractFunctionParameters().addAddress(_newImpl);
     await this.execute(
-      200000,
+      2_00_000,
       UPGRADE_GOD_TOKEN_HOLDER_FACTORY,
       clientsInfo.dexOwnerClient,
       args
@@ -146,7 +155,7 @@ export default class GovernanceDAOFactory extends Base {
 
   getGODTokenHolderFactoryAddress = async () => {
     const { result } = await this.execute(
-      200000,
+      2_00_000,
       GET_GOD_TOKEN_HOLDER_FACTORY_ADDRESS,
       clientsInfo.dexOwnerClient
     );
