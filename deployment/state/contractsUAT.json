@@ -16,12 +16,6 @@
     "hash": "6c38fe0ebc47f7828d933b6a25ab9479",
     "transparentProxyAddress": "0x0000000000000000000000000000000000cbea6c",
     "transparentProxyId": "0.0.13363820"
-    "id": "0.0.13363772",
-    "address": "0x0000000000000000000000000000000000cbea3c",
-    "timestamp": "2023-05-23T08:54:51.786Z",
-    "hash": "6c38fe0ebc47f7828d933b6a25ab9479",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000cbea6c",
-    "transparentProxyId": "0.0.13363820"
   },
   {
     "name": "nftholder",
@@ -76,24 +70,6 @@
     "hash": "c32b21d3d4b9928b5ab4e109a4e48be6",
     "transparentProxyAddress": "0x0000000000000000000000000000000000cbe757",
     "transparentProxyId": "0.0.13363031"
-  },
-  {
-    "name": "configuration",
-    "id": "0.0.4643224",
-    "address": "0x000000000000000000000000000000000046d998",
-    "timestamp": "2023-05-12T10:36:24.361Z",
-    "hash": "ad4d04ec82b5dd0455495187015c04a9",
-    "transparentProxyAddress": "0x000000000000000000000000000000000046d9b5",
-    "transparentProxyId": "0.0.4643253"
-  },
-  {
-    "name": "multisigdao",
-    "id": "0.0.4643233",
-    "address": "0x000000000000000000000000000000000046d9a1",
-    "timestamp": "2023-05-12T10:36:26.046Z",
-    "hash": "de85222df9d7fac6792511d14d34b3ea",
-    "transparentProxyAddress": "0x000000000000000000000000000000000046d9b6",
-    "transparentProxyId": "0.0.4643254"
   },
   {
     "name": "pair",
