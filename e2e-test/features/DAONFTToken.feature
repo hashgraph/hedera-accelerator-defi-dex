@@ -65,7 +65,7 @@ Scenario: Verify user cannot execute proposal if token transfer amount is greate
   
 
 Scenario: Verify User gets back NFT tokens 
-    When User claim NFT tokens
+    When User claim NFT token with serial number 18
 
 
   

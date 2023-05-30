@@ -60,7 +60,7 @@ export default class Factory extends Base {
       .addAddress(feeCollectionAccountId.toSolidityAddress())
       .addUint256(fee);
     const { result } = await this.execute(
-      9000000,
+      9999900,
       CREATE_PAIR,
       client,
       args,

@@ -52,7 +52,7 @@ export default class Pair extends Base {
         .addAddress(feeCollectionAccountId.toSolidityAddress())
         .addUint256(fee)
         .addAddress(this.configuration);
-      await this.execute(9000000, INITIALIZE, client, args, tokensOwnerKey);
+      await this.execute(9999900, INITIALIZE, client, args, tokensOwnerKey);
       console.log(`- Pair#${INITIALIZE}(): done\n`);
       return;
     }
@@ -237,7 +237,7 @@ export default class Pair extends Base {
       .addUint256(tokenAQty1)
       .addUint256(tokenBQty1);
     await this.execute(
-      9000000,
+      9990000,
       ADD_LIQUIDITY,
       client,
       args,
@@ -259,7 +259,7 @@ export default class Pair extends Base {
       .addAddress(tokenReceiverId.toSolidityAddress())
       .addUint256(lpTokenQty);
     await this.execute(
-      9000000,
+      9999900,
       REMOVE_LIQUIDITY,
       client,
       args,
