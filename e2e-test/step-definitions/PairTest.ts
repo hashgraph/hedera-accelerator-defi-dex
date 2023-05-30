@@ -208,6 +208,35 @@ export class PairTestSteps {
     feeForSwap = await pair.feeForSwap(tokenQty, clientsInfo.operatorClient);
   }
 
+  @when(
+    /User tries to swap "([^"]*)" unit of token "([^"]*)" with slippage as (-?\d+\.\d+)/,
+    undefined,
+    30000
+  )
+  public async swapTokenWithMaxValue(
+    tokenCount: string,
+    tokenName: string,
+    slippage: number
+  ): Promise<void> {
+    try {
+      const slippageVal = new BigNumber(slippage).multipliedBy(
+        precision.div(100)
+      );
+      const tokenId = tokenNameIdMap.get(tokenName);
+      await pair.swapToken(
+        tokenId,
+        Number(tokenCount),
+        id,
+        key,
+        precision,
+        slippageVal,
+        client
+      );
+    } catch (e: any) {
+      errorMsg = e.message;
+    }
+  }
+
   @then(
     /PairToken1 quantity is (-?\d+\.\d+) and PairToken2 quantity is (-?\d+\.\d+) in pool/,
     undefined,
@@ -244,6 +273,20 @@ export class PairTestSteps {
     tokenAQty = await pair.getInGivenOut(tokenBQty, client);
   }
 
+  @when(
+    /User tries to give maximum "([^"]*)" units of PairToken2 to the pool/,
+    undefined,
+    30000
+  )
+  public async calculateTokenAQtyForMaxTokenBQty(tokenBCount: string) {
+    try {
+      const tokenBQty = Common.withPrecision(Number(tokenBCount), precision);
+      tokenAQty = await pair.getInGivenOut(tokenBQty, client);
+    } catch (e: any) {
+      errorMsg = e.message;
+    }
+  }
+
   @then(/Expected PairToken1 quantity should be (\d+\.?\d*)/, undefined, 30000)
   public async verifyTokenAQty(expectedTokenAQty: number) {
     const withPrecision = Common.withPrecision(1, precision);
@@ -262,6 +305,20 @@ export class PairTestSteps {
     slippageOutGivenIn = await pair.slippageOutGivenIn(tokenAQty, client);
   }
 
+  @when(
+    /User tries to give "([^"]*)" units of PairToken1 for calculating slippage out/,
+    undefined,
+    30000
+  )
+  public async calculateSlippageOutForMaxGivenIn(tokenACount: string) {
+    try {
+      const tokenAQty = Common.withPrecision(Number(tokenACount), precision);
+      slippageOutGivenIn = await pair.slippageOutGivenIn(tokenAQty, client);
+    } catch (e: any) {
+      errorMsg = e.message;
+    }
+  }
+
   @then(/Expected slippage out value should be (\d*)/, undefined, 30000)
   public async verifySlippageOut(expectedSlippageOut: string) {
     expect(Number(slippageOutGivenIn)).to.eql(Number(expectedSlippageOut));
@@ -275,6 +332,24 @@ export class PairTestSteps {
   public async calculateSlippageIn(tokenBCount: number) {
     const tokenBQty = await Common.withPrecision(tokenBCount, precision);
     slippageInGivenOut = await pair.slippageInGivenOut(tokenBQty, client);
+  }
+
+  @when(
+    /User tries to give "([^"]*)" units of PairToken2 for calculating slippage in/,
+    undefined,
+    30000
+  )
+  public async calculateSlippageInForMaxValGivenOutVal(tokenBCount: string) {
+    try {
+      const tokenBQty = await Common.withPrecision(
+        Number(tokenBCount),
+        precision
+      );
+      slippageInGivenOut = await pair.slippageInGivenOut(tokenBQty, client);
+    } catch (e: any) {
+      errorMsg = e.message;
+      console.log(errorMsg);
+    }
   }
 
   @then(/Expected slippage in value should be (\d+\.?\d*)/, undefined, 30000)
@@ -397,9 +472,10 @@ export class PairTestSteps {
     }
   }
 
-  @then(/User receive error message "([^"]*)"/)
+  @then(/User get error message "([^"]*)"/)
   public async verifyErrorMessage(msg: string) {
     expect(errorMsg).contains(msg);
+    errorMsg = "";
   }
 
   @then(
@@ -448,5 +524,90 @@ export class PairTestSteps {
       key,
       client
     );
+  }
+
+  @given(
+    /User verify that pair exists for given tokens "([^"]*)" and "([^"]*)"/,
+    undefined,
+    30000
+  )
+  public async getPair(firstTokenName: string, secondTokenName: string) {
+    const firstTokenIdFromMap = tokenNameIdMap.get(firstTokenName);
+    const secondTokenIdFromMap = tokenNameIdMap.get(secondTokenName);
+    const firstTokenId = TokenId.fromSolidityAddress(
+      (await pair.getTokenPairAddress(clientsInfo.operatorClient)).tokenAAddress
+    );
+    const secondTokenId = TokenId.fromSolidityAddress(
+      (await pair.getTokenPairAddress(clientsInfo.operatorClient)).tokenBAddress
+    );
+    expect(firstTokenIdFromMap).to.eql(firstTokenId);
+    expect(secondTokenIdFromMap).to.eql(secondTokenId);
+  }
+
+  @when(
+    /User set allowance amount "([^"]*)" for the token "([^"]*)"/,
+    undefined,
+    30000
+  )
+  public async setAllowanceMoreThanAllowed(
+    maximumLimit: string,
+    tokenName: string
+  ) {
+    const tokenId = tokenNameIdMap.get(tokenName);
+    const contractId =
+      tokenName === "lptoken"
+        ? lpTokenContract.transparentProxyId!
+        : pairContract.transparentProxyId!;
+    await Common.setTokenAllowance(
+      tokenId,
+      contractId,
+      Number(maximumLimit),
+      id,
+      key,
+      client
+    );
+  }
+
+  @when(
+    /User tries to add "([^"]*)" units of "([^"]*)" and "([^"]*)" to pool/,
+    undefined,
+    30000
+  )
+  public async addLiquidityMoreThanMax(
+    maximumLimit: number,
+    firstTokenName: string,
+    secondTokenName: string
+  ) {
+    const firstTokenIdFromMap = tokenNameIdMap.get(firstTokenName);
+    const secondTokenIdFromMap = tokenNameIdMap.get(secondTokenName);
+    try {
+      await pair.addLiquidity(
+        id,
+        key,
+        firstTokenIdFromMap,
+        new BigNumber(Number(maximumLimit)),
+        secondTokenIdFromMap,
+        new BigNumber(Number(maximumLimit)),
+        precision,
+        client
+      );
+    } catch (e: any) {
+      console.log(e.message);
+      errorMsg = e.message;
+    }
+  }
+
+  @when(/User gives "([^"]*)" units of lptoken/, undefined, 30000)
+  public async returnMoreThanMaxLPTokens(maximumLimit: number) {
+    try {
+      await pair.removeLiquidity(
+        new BigNumber(Number(maximumLimit)),
+        id,
+        key,
+        client
+      );
+    } catch (e: any) {
+      errorMsg = e.message;
+    }
   }
 }
