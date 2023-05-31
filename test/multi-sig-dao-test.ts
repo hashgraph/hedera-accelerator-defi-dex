@@ -803,8 +803,7 @@ describe("MultiSig tests", function () {
       ).not.rejectedWith("MultiSigDAO: caller is not the system user");
     });
 
-    //Need to fix this in next PR
-    it.skip("Verify upgrade Hedera service fails with non-system user", async function () {
+    it("Verify upgrade Hedera service fails with non-system user", async function () {
       const { multiSigDAOInstance, signers } = await loadFixture(deployFixture);
 
       const nonSystemUser = signers[3];

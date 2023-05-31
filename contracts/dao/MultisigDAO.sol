@@ -7,6 +7,7 @@ import "../gnosis/HederaGnosisSafe.sol";
 import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
 contract MultiSigDAO is BaseDAO {
+    address private systemUser;
     event TransactionCreated(bytes32 txnHash, TransactionInfo info);
 
     enum TransactionState {
@@ -22,6 +23,14 @@ contract MultiSigDAO is BaseDAO {
         Enum.Operation operation;
         uint256 nonce;
         uint256 transactionType;
+    }
+
+    modifier onlySystemUser() {
+        require(
+            systemUser == _msgSender(),
+            "MultiSigDAO: caller is not the system user"
+        );
+        _;
     }
 
     // HederaGnosisSafe#transferTokenViaSafe(address token, address receiver, uint256 amount)
@@ -44,6 +53,7 @@ contract MultiSigDAO is BaseDAO {
         hederaService = _hederaService;
         hederaGnosisSafe = _hederaGnosisSafe;
         __BaseDAO_init(_admin, _name, _logoUrl, _description, _webLinks);
+        systemUser = msg.sender;
     }
 
     function getHederaGnosisSafeContractAddress()
@@ -119,8 +129,9 @@ contract MultiSigDAO is BaseDAO {
         return proposeTransaction(address(hederaGnosisSafe), data, call, 1);
     }
 
-    //TODO: Apply guard check only systemAdmin can invoke this
-    function upgradeHederaService(IHederaService newHederaService) external {
+    function upgradeHederaService(
+        IHederaService newHederaService
+    ) external onlySystemUser {
         hederaService = newHederaService;
     }
 
