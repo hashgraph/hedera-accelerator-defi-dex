@@ -203,6 +203,10 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
         hederaService = newHederaService;
     }
 
+    function getHederaServiceVersion() external view returns (IHederaService) {
+        return hederaService;
+    }
+
     function _stake(address _user, uint256 _amount) private {
         UserStakingTokenContribution
             storage cInfo = usersStakingTokenContribution[_user];

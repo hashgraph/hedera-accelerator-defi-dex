@@ -900,6 +900,106 @@ describe("LPToken, Pair and Factory tests", function () {
       );
       expect(pairFromFactory).to.be.not.equal(zeroAddress);
     });
+
+    it("Verify Hedera upgrade service passes when owner tries", async () => {
+      const {
+        factory,
+        mockHederaService,
+        signers,
+        token1Address,
+        token2Address,
+        configuration,
+        pair,
+        lpTokenCont,
+      } = await loadFixture(deployFixture);
+
+      await factory.setUpFactory(
+        mockHederaService.address,
+        signers[0].address,
+        pair.address,
+        lpTokenCont.address,
+        configuration.address
+      );
+
+      await factory.createPair(token1Address, token2Address, treasury, fee);
+
+      const pairFromFactory = await factory.getPair(
+        token1Address,
+        token2Address,
+        fee
+      );
+
+      const pairContract = await TestHelper.getContract(
+        "Pair",
+        pairFromFactory
+      );
+      const lpTokenContractAddress = await pairContract
+        .connect(signers[4])
+        .getLpTokenContractAddress();
+      const lpTokenContract = await TestHelper.getContract(
+        "LPToken",
+        lpTokenContractAddress
+      );
+
+      let updatedAddress = await factory.getHederaServiceVersion();
+      expect(updatedAddress).equals(mockHederaService.address);
+
+      updatedAddress = await pairContract
+        .connect(signers[4])
+        .getHederaServiceVersion();
+      expect(updatedAddress).equals(mockHederaService.address);
+
+      updatedAddress = await lpTokenContract
+        .connect(signers[4])
+        .getHederaServiceVersion();
+      expect(updatedAddress).equals(mockHederaService.address);
+
+      const newHederaServiceAddress = signers[3].address;
+
+      await factory.upgradeHederaService(newHederaServiceAddress);
+
+      updatedAddress = await factory.getHederaServiceVersion();
+      expect(updatedAddress).equals(newHederaServiceAddress);
+
+      updatedAddress = await pairContract
+        .connect(signers[4])
+        .getHederaServiceVersion();
+      expect(updatedAddress).equals(newHederaServiceAddress);
+
+      updatedAddress = await lpTokenContract
+        .connect(signers[4])
+        .getHederaServiceVersion();
+      expect(updatedAddress).equals(newHederaServiceAddress);
+    });
+
+    it("Verify Hedera upgrade service fails when non-owner tries", async () => {
+      const {
+        factory,
+        mockHederaService,
+        signers,
+        token1Address,
+        token2Address,
+        configuration,
+        pair,
+        lpTokenCont,
+      } = await loadFixture(deployFixture);
+
+      await factory.setUpFactory(
+        mockHederaService.address,
+        signers[0].address,
+        pair.address,
+        lpTokenCont.address,
+        configuration.address
+      );
+
+      await factory.createPair(token1Address, token2Address, treasury, fee);
+
+      const nonOwner = signers[3];
+
+      await expect(
+        factory.connect(nonOwner).upgradeHederaService(signers[3].address)
+      ).revertedWith("Ownable: caller is not the owner");
+    });
   });
 
   it("verify pair initization should be failed for subsequent initization call", async function () {

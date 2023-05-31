@@ -292,8 +292,17 @@ abstract contract GovernorCountingSimpleInternal is
 
     function upgradeHederaService(
         IHederaService newHederaService
-    ) external onlyOwner {
+    ) external virtual onlyOwner {
         hederaService = newHederaService;
+    }
+
+    function getHederaServiceVersion()
+        external
+        view
+        virtual
+        returns (IHederaService)
+    {
+        return hederaService;
     }
 
     function _mockFunctionCall()

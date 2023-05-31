@@ -18,6 +18,7 @@ export default class Base {
   protected htsAddress: string;
   protected configuration: string;
   contractId: string;
+  private UPGRADE_HEDERA_SERVICE = "upgradeHederaService";
 
   constructor(_contractId: string) {
     this.htsAddress = this.getHederaServiceContractAddress();
@@ -78,6 +79,17 @@ export default class Base {
     return await MirrorNodeService.getInstance().isInitializationPending(
       this.contractId
     );
+  };
+
+  public upgradeHederaService = async () => {
+    const args = new ContractFunctionParameters().addAddress(this.htsAddress);
+    this.execute(
+      20_00_000,
+      this.UPGRADE_HEDERA_SERVICE,
+      clientsInfo.dexOwnerClient,
+      args
+    );
+    console.log(`- Base#${this.UPGRADE_HEDERA_SERVICE}(): done\n`);
   };
 
   private getHederaServiceContractAddress(): string {

@@ -29,6 +29,7 @@ async function main() {
     TOKEN_ID.toSolidityAddress(),
     clientsInfo.operatorClient
   );
+  await godTokenHolderFactory.upgradeHederaService();
 }
 
 main()

@@ -32,4 +32,8 @@ interface ILPToken {
         uint256 tokenAQuantity,
         uint256 tokenBQuantity
     ) external view returns (uint256);
+
+    function upgradeHederaService(IHederaService newHederaService) external;
+
+    function getHederaServiceVersion() external view returns (IHederaService);
 }

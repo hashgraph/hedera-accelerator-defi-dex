@@ -62,6 +62,7 @@ async function main() {
   await governorTokenDao.updateLogoURL("dao url - New", DAO_ADMIN_CLIENT);
   await governorTokenDao.updateDescription("desc - New", DAO_ADMIN_CLIENT);
   await governorTokenDao.getDaoDetail();
+  await governorTokenDao.upgradeHederaService();
   console.log(`\nDone`);
 }
 

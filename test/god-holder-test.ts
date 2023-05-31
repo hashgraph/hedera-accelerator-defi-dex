@@ -312,5 +312,64 @@ describe("GODHolder tests", function () {
 
       expect(godHolderAddress).equal(existingHolderAddress);
     });
+
+    it("Verify upgrade Hedera service should pass when owner try to upgrade it ", async () => {
+      const { godTokenHolderFactory, token, signers, hederaService } =
+        await loadFixture(deployFixture);
+
+      const tx = await godTokenHolderFactory.getTokenHolder(token.address);
+      const { name, args } = await TestHelper.readLastEvent(tx);
+      const tokenAddress = args[0];
+      const godHolderAddress = args[1];
+
+      expect(name).equals("TokenHolderCreated");
+      expect(tokenAddress).equals(token.address);
+      expect(godHolderAddress).not.equals(TestHelper.ZERO_ADDRESS);
+
+      const godHolderContract = await TestHelper.getContract(
+        "GODHolder",
+        godHolderAddress
+      );
+      expect(await godTokenHolderFactory.getHederaServiceVersion()).equals(
+        hederaService.address
+      );
+
+      let updatedAddress = await godHolderContract.getHederaServiceVersion();
+      expect(updatedAddress).equals(hederaService.address);
+
+      const owner = signers[0];
+      const newHederaServiceAddress = signers[3].address;
+      await godTokenHolderFactory
+        .connect(owner)
+        .upgradeHederaService(newHederaServiceAddress);
+      expect(await godTokenHolderFactory.getHederaServiceVersion()).equals(
+        newHederaServiceAddress
+      );
+
+      updatedAddress = await godHolderContract.getHederaServiceVersion();
+      expect(updatedAddress).equals(newHederaServiceAddress);
+    });
+
+    it("Verify upgrade Hedera service should fail when owner try to upgrade it ", async () => {
+      const { godTokenHolderFactory, token, signers } = await loadFixture(
+        deployFixture
+      );
+
+      const tx = await godTokenHolderFactory.getTokenHolder(token.address);
+      const { name, args } = await TestHelper.readLastEvent(tx);
+      const tokenAddress = args[0];
+      const godHolderAddress = args[1];
+
+      expect(name).equals("TokenHolderCreated");
+      expect(tokenAddress).equals(token.address);
+      expect(godHolderAddress).not.equals(TestHelper.ZERO_ADDRESS);
+      const nonOwner = signers[1];
+
+      await expect(
+        godTokenHolderFactory
+          .connect(nonOwner)
+          .upgradeHederaService(signers[3].address)
+      ).revertedWith("Ownable: caller is not the owner");
+    });
   });
 });

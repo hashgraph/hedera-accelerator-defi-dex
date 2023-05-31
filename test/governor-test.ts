@@ -934,6 +934,28 @@ describe("Governor Tests", function () {
           "GovernorTokenCreate: Token transfer not allowed as token doesn't exist for this proposal."
         );
       });
+
+      it("Upgrade hederaService fails with non creator", async () => {
+        const { governorTT, signers } = await loadFixture(deployFixture);
+
+        const nonCreator = signers[2];
+
+        await expect(
+          governorTT
+            .connect(nonCreator)
+            .upgradeHederaService(signers[3].address)
+        ).revertedWith("Ownable: caller is not the owner");
+      });
+
+      it("Upgrade hederaService passes with creator", async () => {
+        const { governorTT, creator, signers } = await loadFixture(
+          deployFixture
+        );
+
+        await expect(
+          governorTT.connect(creator).upgradeHederaService(signers[3].address)
+        ).not.revertedWith("Ownable: caller is not the owner");
+      });
     });
 
     it("Verify proposal is executed before minting and burning", async function () {

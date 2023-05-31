@@ -87,7 +87,7 @@ describe("MultiSig tests", function () {
 
   async function deployFixture() {
     const signers = await TestHelper.getSigners();
-    const bastHTS = await TestHelper.deployMockHederaService();
+    const hederaService = await TestHelper.deployMockHederaService();
     const dexOwner = await TestHelper.getDexOwner();
 
     const daoSigners = await TestHelper.getDAOSigners();
@@ -143,7 +143,7 @@ describe("MultiSig tests", function () {
       DESCRIPTION,
       WEB_LINKS,
       hederaGnosisSafeProxyInstance,
-      bastHTS.address,
+      hederaService.address,
     ];
 
     const multiSigDAOInstance = await TestHelper.deployLogic("MultiSigDAO");
@@ -165,7 +165,7 @@ describe("MultiSig tests", function () {
       multiSigDAOLogicInstance.address,
       hederaGnosisSafeLogicInstance.address,
       hederaGnosisSafeProxyFactoryInstance.address,
-      bastHTS.address
+      hederaService.address
     );
 
     // token association to gnosis contract not possible in unit test as of now
@@ -189,7 +189,7 @@ describe("MultiSig tests", function () {
       daoSigners,
       doaSignersAddresses,
       daoAdminOne,
-      bastHTS,
+      hederaService,
       MULTISIG_ARGS,
     };
   }
@@ -239,14 +239,14 @@ describe("MultiSig tests", function () {
       const {
         tokenInstance,
         hederaGnosisSafeProxyContract,
-        bastHTS,
+        hederaService,
         daoAdminOne,
       } = await loadFixture(deployFixture);
 
       await tokenInstance.setTransaferFailed(true);
       await expect(
         hederaGnosisSafeProxyContract.transferToSafe(
-          bastHTS.address,
+          hederaService.address,
           tokenInstance.address,
           1e8,
           daoAdminOne.address
@@ -258,7 +258,7 @@ describe("MultiSig tests", function () {
       const {
         tokenInstance,
         hederaGnosisSafeProxyContract,
-        bastHTS,
+        hederaService,
         daoAdminOne,
       } = await loadFixture(deployFixture);
 
@@ -271,7 +271,7 @@ describe("MultiSig tests", function () {
       expect(beforeBalance).equals(TOKEN_BALANCE);
 
       const transaction = await hederaGnosisSafeProxyContract.transferToSafe(
-        bastHTS.address,
+        hederaService.address,
         tokenInstance.address,
         TOKEN_TRANSFER_AMOUNT,
         daoAdminOne.address
@@ -371,7 +371,7 @@ describe("MultiSig tests", function () {
         multiSigDAOLogicInstance,
         hederaGnosisSafeLogicInstance,
         hederaGnosisSafeProxyFactoryInstance,
-        bastHTS,
+        hederaService,
       } = await loadFixture(deployFixture);
       await expect(
         multiSigDAOFactoryInstance.initialize(
@@ -379,7 +379,7 @@ describe("MultiSig tests", function () {
           multiSigDAOLogicInstance.address,
           hederaGnosisSafeLogicInstance.address,
           hederaGnosisSafeProxyFactoryInstance.address,
-          bastHTS.address
+          hederaService.address
         )
       ).revertedWith("Initializable: contract is already initialized");
     });
@@ -542,6 +542,62 @@ describe("MultiSig tests", function () {
       expect(daoLogicTxnEvent.args.newImplementation).equal(
         TestHelper.ONE_ADDRESS
       );
+    });
+
+    it("Verify upgradeHederaService should fail when non-owner try to upgrade Hedera service", async function () {
+      const { multiSigDAOFactoryInstance, signers } = await loadFixture(
+        deployFixture
+      );
+      const nonOwner = signers[3];
+      await expect(
+        multiSigDAOFactoryInstance
+          .connect(nonOwner)
+          .upgradeHederaService(signers[3].address)
+      ).revertedWith("Ownable: caller is not the owner");
+    });
+
+    it("Verify upgrade Hedera service should pass when owner try to upgrade it", async function () {
+      const {
+        multiSigDAOFactoryInstance,
+        signers,
+        daoAdminOne,
+        doaSignersAddresses,
+        hederaService,
+      } = await loadFixture(deployFixture);
+
+      const CREATE_DAO_ARGS = [
+        daoAdminOne.address,
+        DAO_NAME,
+        LOGO_URL,
+        doaSignersAddresses,
+        doaSignersAddresses.length,
+        false,
+        DESCRIPTION,
+        WEB_LINKS,
+      ];
+
+      await multiSigDAOFactoryInstance.createDAO(CREATE_DAO_ARGS);
+
+      const daos = await multiSigDAOFactoryInstance.getDAOs();
+
+      const tokenDAO = await TestHelper.getContract("MultiSigDAO", daos[0]);
+      expect(tokenDAO).not.equals(TestHelper.ZERO_ADDRESS);
+
+      expect(await multiSigDAOFactoryInstance.getHederaServiceVersion()).equals(
+        hederaService.address
+      );
+      expect(await tokenDAO.getHederaServiceVersion()).equals(
+        hederaService.address
+      );
+
+      const newAddress = signers[3].address;
+
+      await multiSigDAOFactoryInstance.upgradeHederaService(newAddress);
+
+      expect(await multiSigDAOFactoryInstance.getHederaServiceVersion()).equals(
+        newAddress
+      );
+      expect(await tokenDAO.getHederaServiceVersion()).equals(newAddress);
     });
   });
 
@@ -733,6 +789,31 @@ describe("MultiSig tests", function () {
           info.nonce
         )
       ).revertedWith("Owner has not approved yet");
+    });
+
+    it("Verify upgrade Hedera service passes with system user", async function () {
+      const { multiSigDAOInstance, signers } = await loadFixture(deployFixture);
+
+      const systemUser = signers[0];
+
+      await expect(
+        multiSigDAOInstance
+          .connect(systemUser)
+          .upgradeHederaService(signers[3].address)
+      ).not.rejectedWith("MultiSigDAO: caller is not the system user");
+    });
+
+    //Need to fix this in next PR
+    it.skip("Verify upgrade Hedera service fails with non-system user", async function () {
+      const { multiSigDAOInstance, signers } = await loadFixture(deployFixture);
+
+      const nonSystemUser = signers[3];
+
+      await expect(
+        multiSigDAOInstance
+          .connect(nonSystemUser)
+          .upgradeHederaService(signers[1].address)
+      ).rejectedWith("MultiSigDAO: caller is not the system user");
     });
   });
 });

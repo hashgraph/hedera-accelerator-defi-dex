@@ -133,6 +133,14 @@ contract Factory is IEvents, OwnableUpgradeable, ReentrancyGuardUpgradeable {
         IHederaService newHederaService
     ) external onlyOwner {
         hederaService = newHederaService;
+        for (uint i = 0; i < allPairs.length; i++) {
+            IPair pair = IPair(allPairs[i]);
+            pair.upgradeHederaService(newHederaService);
+        }
+    }
+
+    function getHederaServiceVersion() external view returns (IHederaService) {
+        return hederaService;
     }
 
     function findMaxQtyPool(

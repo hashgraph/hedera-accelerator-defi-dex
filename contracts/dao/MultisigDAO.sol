@@ -39,9 +39,9 @@ contract MultiSigDAO is BaseDAO {
         string memory _description,
         string[] memory _webLinks,
         HederaGnosisSafe _hederaGnosisSafe,
-        IHederaService _iHederaService
+        IHederaService _hederaService
     ) external initializer {
-        hederaService = _iHederaService;
+        hederaService = _hederaService;
         hederaGnosisSafe = _hederaGnosisSafe;
         __BaseDAO_init(_admin, _name, _logoUrl, _description, _webLinks);
     }
@@ -117,5 +117,14 @@ contract MultiSigDAO is BaseDAO {
         );
         Enum.Operation call = Enum.Operation.Call;
         return proposeTransaction(address(hederaGnosisSafe), data, call, 1);
+    }
+
+    //TODO: Apply guard check only systemAdmin can invoke this
+    function upgradeHederaService(IHederaService newHederaService) external {
+        hederaService = newHederaService;
+    }
+
+    function getHederaServiceVersion() external view returns (IHederaService) {
+        return hederaService;
     }
 }

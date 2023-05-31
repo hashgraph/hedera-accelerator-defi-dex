@@ -167,6 +167,23 @@ contract DAOFactory is IErrors, IEvents, CommonOperations, OwnableUpgradeable {
         return daos;
     }
 
+    function upgradeHederaService(
+        IHederaService newHederaService
+    ) external onlyOwner {
+        hederaService = newHederaService;
+        for (uint i = 0; i < daos.length; i++) {
+            ITokenDAO dao = ITokenDAO(daos[i]);
+            IGovernorTransferToken iGovernorTransferToken = IGovernorTransferToken(
+                    dao.getGovernorTokenTransferContractAddress()
+                );
+            iGovernorTransferToken.upgradeHederaService(newHederaService);
+        }
+    }
+
+    function getHederaServiceVersion() external view returns (IHederaService) {
+        return hederaService;
+    }
+
     function _createGovernorTransferTokenContractInstance(
         address _tokenAddress,
         uint256 _quorumThreshold,

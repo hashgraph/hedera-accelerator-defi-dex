@@ -50,6 +50,7 @@ async function main() {
   );
   await lpToken.getAllLPTokenCount(clientsInfo.treasureClient);
   await lpToken.lpTokenForUser(clientsInfo.treasureId);
+  await lpToken.upgradeHederaService();
 }
 
 main()

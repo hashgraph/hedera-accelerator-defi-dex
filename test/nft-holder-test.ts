@@ -200,4 +200,63 @@ describe("NFTHolder Tests", function () {
     expect(tokenNFTHolder).not.to.be.equal("0x0");
     expect(newTokenNFTHolder).not.to.be.equal("0x0");
   });
+
+  it("Verify upgrade Hedera service should pass when owner try to upgrade it ", async () => {
+    const { nftTokenHolderFactory, tokenCont, signers, mockHederaService } =
+      await loadFixture(deployFixture);
+
+    const tx = await nftTokenHolderFactory.getTokenHolder(tokenCont.address);
+    const { name, args } = await TestHelper.readLastEvent(tx);
+    const tokenAddress = args[0];
+    const nftHolderAddress = args[1];
+
+    expect(name).equals("TokenHolderCreated");
+    expect(tokenAddress).equals(tokenCont.address);
+    expect(nftHolderAddress).not.equals(TestHelper.ZERO_ADDRESS);
+
+    const nftHolderContract = await TestHelper.getContract(
+      "NFTHolder",
+      nftHolderAddress
+    );
+    expect(await nftTokenHolderFactory.getHederaServiceVersion()).equals(
+      mockHederaService.address
+    );
+
+    let updatedAddress = await nftHolderContract.getHederaServiceVersion();
+    expect(updatedAddress).equals(mockHederaService.address);
+
+    const owner = signers[0];
+    const newHederaServiceAddress = signers[3].address;
+    await nftTokenHolderFactory
+      .connect(owner)
+      .upgradeHederaService(newHederaServiceAddress);
+    expect(await nftTokenHolderFactory.getHederaServiceVersion()).equals(
+      newHederaServiceAddress
+    );
+
+    updatedAddress = await nftHolderContract.getHederaServiceVersion();
+    expect(updatedAddress).equals(newHederaServiceAddress);
+  });
+
+  it("Verify upgrade Hedera service should fail when owner try to upgrade it ", async () => {
+    const { nftTokenHolderFactory, tokenCont, signers } = await loadFixture(
+      deployFixture
+    );
+
+    const tx = await nftTokenHolderFactory.getTokenHolder(tokenCont.address);
+    const { name, args } = await TestHelper.readLastEvent(tx);
+    const tokenAddress = args[0];
+    const godHolderAddress = args[1];
+
+    expect(name).equals("TokenHolderCreated");
+    expect(tokenAddress).equals(tokenCont.address);
+    expect(godHolderAddress).not.equals(TestHelper.ZERO_ADDRESS);
+    const nonOwner = signers[1];
+
+    await expect(
+      nftTokenHolderFactory
+        .connect(nonOwner)
+        .upgradeHederaService(signers[3].address)
+    ).revertedWith("Ownable: caller is not the owner");
+  });
 });

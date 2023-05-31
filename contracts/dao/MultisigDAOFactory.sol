@@ -131,6 +131,20 @@ contract MultisigDAOFactory is
         return createdDAOAddress;
     }
 
+    function upgradeHederaService(
+        IHederaService newHederaService
+    ) external onlyOwner {
+        hederaService = newHederaService;
+        for (uint i = 0; i < daos.length; i++) {
+            MultiSigDAO dao = MultiSigDAO(daos[i]);
+            dao.upgradeHederaService(newHederaService);
+        }
+    }
+
+    function getHederaServiceVersion() external view returns (IHederaService) {
+        return hederaService;
+    }
+
     function _createMultiSigDAOInstance(
         address _admin,
         string memory _name,

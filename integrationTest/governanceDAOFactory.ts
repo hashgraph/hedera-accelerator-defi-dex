@@ -78,6 +78,7 @@ async function main() {
   );
   const daoAddresses = await daoFactory.getDAOs();
   await executeGovernorTokenDAOFlow(daoFactory, daoAddresses);
+  await daoFactory.upgradeHederaService();
   console.log(`\nDone`);
 }
 

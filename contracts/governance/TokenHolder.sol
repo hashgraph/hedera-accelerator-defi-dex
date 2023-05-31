@@ -22,6 +22,7 @@ abstract contract TokenHolder is
         IHederaService _hederaService,
         address token
     ) public initializer {
+        __Ownable_init();
         hederaService = _hederaService;
         _token = token;
         _associateToken(hederaService, address(this), address(_token));
@@ -67,6 +68,10 @@ abstract contract TokenHolder is
         IHederaService newHederaService
     ) external onlyOwner {
         hederaService = newHederaService;
+    }
+
+    function getHederaServiceVersion() external view returns (IHederaService) {
+        return hederaService;
     }
 
     function _removeAnArrayElement(

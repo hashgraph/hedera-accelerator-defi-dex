@@ -28,6 +28,8 @@ async function main() {
   await governor.initialize(godHolder);
   const token1 = await createTokenViaProposal("TEST-A", "TEST-A");
   const token2 = await createTokenViaProposal("TEST-B", "TEST-B");
+  await governor.upgradeHederaService();
+
   await runFactoryTest(token1, token2);
   console.log(`Done`);
 }

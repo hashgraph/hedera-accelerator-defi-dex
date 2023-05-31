@@ -25,4 +25,8 @@ interface ITokenHolder {
     function getToken() external view returns (address);
 
     function isNFTType() external view returns (bool);
+
+    function upgradeHederaService(IHederaService newHederaService) external;
+
+    function getHederaServiceVersion() external view returns (IHederaService);
 }

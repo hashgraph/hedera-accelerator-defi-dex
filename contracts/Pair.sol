@@ -60,6 +60,7 @@ contract Pair is
         Configuration _configuration
     ) public override initializer {
         __ReentrancyGuard_init();
+        __Ownable_init();
         require(_fee > 0, "Pair: Fee should be greater than zero.");
         hederaService = _hederaService;
         lpTokenContract = _lpTokenContract;
@@ -401,8 +402,13 @@ contract Pair is
 
     function upgradeHederaService(
         IHederaService newHederaService
-    ) external onlyOwner {
+    ) external override onlyOwner {
         hederaService = newHederaService;
+        lpTokenContract.upgradeHederaService(newHederaService);
+    }
+
+    function getHederaServiceVersion() external view override returns (IHederaService) {
+        return hederaService;
     }
 
     function calculateTokenstoGetBack(

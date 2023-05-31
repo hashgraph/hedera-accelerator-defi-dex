@@ -33,4 +33,15 @@ contract GODHolderMock is ITokenHolder {
     function isNFTType() external pure returns (bool) {
         return false;
     }
+
+    function upgradeHederaService(
+        IHederaService newHederaService
+    ) external override {}
+
+    function getHederaServiceVersion()
+        external
+        view
+        override
+        returns (IHederaService)
+    {}
 }

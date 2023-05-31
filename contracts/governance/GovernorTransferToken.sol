@@ -49,6 +49,25 @@ contract GovernorTransferToken is
         return proposalId;
     }
 
+    function upgradeHederaService(
+        IHederaService newHederaService
+    )
+        external
+        override(GovernorCountingSimpleInternal, IGovernorTransferToken)
+        onlyOwner
+    {
+        hederaService = newHederaService;
+    }
+
+    function getHederaServiceVersion()
+        external
+        view
+        override(GovernorCountingSimpleInternal, IGovernorTransferToken)
+        returns (IHederaService)
+    {
+        return hederaService;
+    }
+
     /**
      * @dev Internal execution mechanism. Can be overridden to implement different execution mechanism
      */

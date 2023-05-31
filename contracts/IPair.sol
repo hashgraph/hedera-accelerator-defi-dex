@@ -61,4 +61,14 @@ abstract contract IPair {
         view
         virtual
         returns (address);
+
+    function upgradeHederaService(
+        IHederaService newHederaService
+    ) external virtual;
+
+    function getHederaServiceVersion()
+        external
+        view
+        virtual
+        returns (IHederaService);
 }

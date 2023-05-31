@@ -133,6 +133,10 @@ contract LPToken is ILPToken, OwnableUpgradeable, TokenOperations {
         hederaService = newHederaService;
     }
 
+    function getHederaServiceVersion() external view returns (IHederaService) {
+        return hederaService;
+    }
+
     function sqrt(uint256 value) private pure returns (uint256 output) {
         uint256 modifiedValue = (value + 1) / 2;
         output = value;

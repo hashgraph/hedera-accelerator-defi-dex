@@ -60,6 +60,7 @@ describe("NFTDAOFactory contract tests", function () {
       daoAdminOne,
       daoAdminTwo,
       token,
+      signers,
     };
   }
 
@@ -309,5 +310,27 @@ describe("NFTDAOFactory contract tests", function () {
       .getTokenHolderFactoryAddress();
 
     expect(address).equals(nftHolderFactory.address);
+  });
+
+  it("Verify upgradeHederaService should fail when non-owner try to upgrade Hedera service", async function () {
+    const { governorDAOFactoryInstance, signers } = await loadFixture(
+      deployFixture
+    );
+    const nonOwner = signers[3];
+    await expect(
+      governorDAOFactoryInstance
+        .connect(nonOwner)
+        .upgradeHederaService(signers[3].address)
+    ).revertedWith("Ownable: caller is not the owner");
+  });
+
+  it("Verify upgrade Hedera service should pass when owner try to upgrade it", async function () {
+    const { governorDAOFactoryInstance, signers } = await loadFixture(
+      deployFixture
+    );
+
+    await expect(
+      governorDAOFactoryInstance.upgradeHederaService(signers[3].address)
+    ).not.revertedWith("Ownable: caller is not the owner");
   });
 });

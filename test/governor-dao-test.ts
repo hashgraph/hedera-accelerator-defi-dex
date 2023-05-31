@@ -332,6 +332,44 @@ describe("GovernanceTokenDAO tests", function () {
 
       expect(address).equals(godHolderFactory.address);
     });
+
+    it("Verify upgradeHederaService should fail when non-owner try to upgrade Hedera service", async function () {
+      const { governorDAOFactory, signers } = await loadFixture(deployFixture);
+      const nonOwner = signers[3];
+      await expect(
+        governorDAOFactory
+          .connect(nonOwner)
+          .upgradeHederaService(signers[3].address)
+      ).revertedWith("Ownable: caller is not the owner");
+    });
+
+    it("Verify upgrade Hedera service should pass when owner try to upgrade it", async function () {
+      const { governorDAOFactory, signers, daoAdminOne, token } =
+        await loadFixture(deployFixture);
+
+      const CREATE_DAO_ARGS = [
+        daoAdminOne.address,
+        DAO_NAME,
+        LOGO_URL,
+        token.address,
+        BigNumber.from(500),
+        BigNumber.from(0),
+        BigNumber.from(100),
+        false,
+        DESCRIPTION,
+        WEB_LINKS,
+      ];
+
+      await governorDAOFactory.createDAO(CREATE_DAO_ARGS);
+
+      const daos = await governorDAOFactory.getDAOs();
+
+      const tokenDAO = TestHelper.getContract("ITokenDAO", daos[0]);
+      expect(tokenDAO).not.equals(TestHelper.ZERO_ADDRESS);
+      await expect(
+        governorDAOFactory.upgradeHederaService(signers[3].address)
+      ).not.revertedWith("Ownable: caller is not the owner");
+    });
   });
 
   describe("GovernorTokenDAO contract tests", function () {
