@@ -113,6 +113,47 @@ export class FactorySteps {
     pairContractId = await this.fetchContractID(pairAddress);
   }
 
+  @when(
+    /User create a pair of tokens "([^"]*)" and "([^"]*)" and with fee as "([^"]*)"/,
+    undefined,
+    60000
+  )
+  public async createPair(
+    firstToken: string,
+    secondToken: string,
+    fee: string
+  ): Promise<void> {
+    try {
+      const tokenOne = await Common.createToken(
+        firstToken,
+        firstToken,
+        id,
+        key,
+        client
+      );
+      const tokenTwo = await Common.createToken(
+        secondToken,
+        secondToken,
+        id,
+        key,
+        client
+      );
+      const fees = new BigNumber(Number(fee) * 100);
+      actualPairAddress = await factory.createPair(
+        tokenOne,
+        tokenTwo,
+        id,
+        key,
+        client,
+        fees
+      );
+      tokenNameIdMap.set(firstToken, tokenOne);
+      tokenNameIdMap.set(secondToken, tokenTwo);
+    } catch (e: any) {
+      errorMsg = e.message;
+    }
+  }
+
   @then(
     /User verify address of pair is same to address received after pair creation/,
     undefined,
@@ -251,6 +292,34 @@ export class FactorySteps {
     );
   }
 
+  @when(
+    /User tries to add "([^"]*)" units of "([^"]*)" and "([^"]*)" units of "([^"]*)" token/,
+    undefined,
+    30000
+  )
+  public async addMaxLiquidityInPool(
+    tokenACount: string,
+    firstTokenName: string,
+    tokenBCount: string,
+    secondTokenName: string
+  ): Promise<void> {
+    try {
+      tokenOne = tokenNameIdMap.get(firstTokenName);
+      await pair.addLiquidity(
+        id,
+        key,
+        tokenOne,
+        Number(tokenACount),
+        tokenHBARX,
+        Number(tokenBCount),
+        precision,
+        client
+      );
+    } catch (e: any) {
+      errorMsg = e.message;
+    }
+  }
+
   @then(
     /HBAR and Factory9 balances in the pool are (\d+\.?\d*) units and (\d+\.?\d*) units respectively/,
     undefined,
@@ -283,6 +352,23 @@ export class FactorySteps {
 
     lpTokenQty = Common.withPrecision(lpTokenCount, precision);
     await pair.removeLiquidity(lpTokenQty, id, key, client);
+  }
+
+  @when(
+    /User tries to returns "([^"]*)" units of lptoken to pool/,
+    undefined,
+    30000
+  )
+  public async returnMaxLPTokensAndRemoveLiquidity(
+    lpTokenCount: string
+  ): Promise<void> {
+    try {
+      const lpTokenQty = Common.withPrecision(Number(lpTokenCount), precision);
+      await pair.removeLiquidity(lpTokenQty, id, key, client);
+    } catch (e: any) {
+      errorMsg = e.message;
+      console.log(errorMsg);
+    }
   }
 
   @then(
@@ -346,6 +432,35 @@ export class FactorySteps {
     );
   }
 
+  @when(
+    /User tries to swap "([^"]*)" unit of "([^"]*)" token with another token in pair with slippage as (\d+\.?\d*)/,
+    undefined,
+    30000
+  )
+  public async swapTokenWithMaxAmt(
+    tokenCount: string,
+    tokenName: string,
+    slippage: number
+  ): Promise<void> {
+    try {
+      const tokenToSwap = tokenNameIdMap.get(tokenName);
+      const slippageVal = new BigNumber(slippage).multipliedBy(
+        precision.div(100)
+      );
+      await pair.swapToken(
+        tokenToSwap,
+        Number(tokenCount),
+        id,
+        key,
+        precision,
+        slippageVal,
+        client
+      );
+    } catch (e: any) {
+      errorMsg = e.message;
+    }
+  }
+
   @then(
     /HBAR token quantity is (\d+\.?\d*) and Factory9 quantity is (\d+\.?\d*) in pool/,
     undefined,
@@ -393,6 +508,23 @@ export class FactorySteps {
     tokenAQty = await pair.getInGivenOut(tokenHBARQty, client);
   }
 
+  @when(
+    /User tries to give "([^"]*)" units of HBAR to the pool/,
+    undefined,
+    30000
+  )
+  public async calculateTokenAQtyForMaxTokenBQty(tokenHBARCount: string) {
+    const tokenHBARQty = Common.withPrecision(
+      Number(tokenHBARCount),
+      precision
+    );
+    try {
+      await pair.getInGivenOut(tokenHBARQty, client);
+    } catch (e: any) {
+      errorMsg = e.message;
+    }
+  }
+
   @then(
     /Expected quantity of Factory9 token should be (\d+\.?\d*)/,
     undefined,
@@ -415,6 +547,20 @@ export class FactorySteps {
     slippageOutGivenIn = await pair.slippageOutGivenIn(tokenAQty, client);
   }
 
+  @when(
+    /User gives back "([^"]*)" units of Factory9 to calculate slippage out/,
+    undefined,
+    30000
+  )
+  public async calculateSlippageOutForMaxGivenIn(tokenACount: string) {
+    const tokenAQty = Common.withPrecision(Number(tokenACount), precision);
+    try {
+      slippageOutGivenIn = await pair.slippageOutGivenIn(tokenAQty, client);
+    } catch (e: any) {
+      errorMsg = e.message;
+    }
+  }
+
   @then(/Slippage out value should be (\d+\.?\d*)/, undefined, 30000)
   public async verifySlippageOut(expectedSlippageOut: number) {
     expect(Number(slippageOutGivenIn)).to.eql(Number(expectedSlippageOut));
@@ -428,6 +574,20 @@ export class FactorySteps {
   public async calculateSlippageIn(tokenHBARCount: number) {
     const tokenBQty = Common.withPrecision(tokenHBARCount, precision);
     slippageInGivenOut = await pair.slippageInGivenOut(tokenBQty, client);
+  }
+
+  @when(
+    /User give "([^"]*)" units of HBAR to calculate slippage in/,
+    undefined,
+    30000
+  )
+  public async calculateSlippageInForMaxQtyOfHBAR(tokenHBARCount: number) {
+    const tokenBQty = Common.withPrecision(tokenHBARCount, precision);
+    try {
+      await pair.slippageInGivenOut(tokenBQty, client);
+    } catch (e: any) {
+      errorMsg = e.message;
+    }
   }
 
   @then(/Slippage in value should be (\d+\.?\d*)/, undefined, 30000)
@@ -553,6 +713,30 @@ export class FactorySteps {
       tokenId,
       contractId,
       allowanceAmt * CommonSteps.withPrecision,
+      id,
+      key,
+      client
+    );
+  }
+
+  @when(
+    /User set max allowance amount as "([^"]*)" for token "([^"]*)"/,
+    undefined,
+    30000
+  )
+  public async setMaxAllowanceForToken(
+    allowanceAmt: string,
+    tokenName: string
+  ) {
+    const tokenId = tokenNameIdMap.get(tokenName);
+    const contractId =
+      tokenName === "lptoken"
+        ? ContractId.fromSolidityAddress(lpTokenAdd).toString()
+        : pairContractId;
+    await Common.setTokenAllowance(
+      tokenId,
+      contractId,
+      Number(allowanceAmt) * CommonSteps.withPrecision,
       id,
       key,
       client

@@ -9,6 +9,10 @@ Feature: Factory contract e2e test
         When User create a new pair of tokens with name "FactoryTest1" and "FactoryTest2" and with fee as 0.1%
         Then User verify address of pair is same to address received after pair creation
 
+    Scenario: Verify user gets error message on creating pair with more than allowed limit of fee
+        When User create a pair of tokens "OutOfBoundsFactoryTest1" and "OutOfBoundsFactoryTest2" and with fee as "2e256"
+        Then User receive error message "offset is out of bounds"   
+
     Scenario: Verify user can create pair of same tokens with different fees
         When User create a new pair with tokens "FactoryTest1" and "FactoryTest2" and with fee as 0.3%
         Then User verify address of pair is same to address received after pair creation
@@ -50,6 +54,13 @@ Feature: Factory contract e2e test
         Then HBAR and Factory9 balances in the pool are 150.00 units and 300.00 units respectively    
         Then User verifies balance of "HBAR" token from contract is 150.00    
         Then User verifies balance of "Factory9" token from contract is 300.00   
+
+    Scenario: Verify user gets error message on adding more than allowed max liquidity to pool
+        When User set max allowance amount as "2e256" for token "Factory9" 
+        When User set max allowance amount as "2e256" for token "HBAR"       
+        When User tries to add "2e256" units of "Factory9" and "2e256" units of "HBAR" token  
+        Then User receive error message "offset is out of bounds"  
+        Then HBAR and Factory9 balances in the pool are 150.00 units and 300.00 units respectively          
         
 
      Scenario: Verify token balance after removing liquidity for HBAR and some other token
@@ -59,6 +70,16 @@ Feature: Factory contract e2e test
         Then User verifies 146.4644661 units of HBAR and 292.92893219 units of Factory9 are left in pool
         Then User verifies balance of "HBAR" token from contract is 146.4644661    
         Then User verifies balance of "Factory9" token from contract is 292.92893219
+
+    Scenario: Verify user receive error message in case of underflow while removing liquidity
+        Given Factory9 and HBAR are present in pool with quantity 292.92893219 units and 146.4644661 units respectively
+        When User set max allowance amount as "2e256" for token "lptoken"
+        When User tries to returns "2e256" units of lptoken to pool
+        Then User receive error message "offset is out of bounds"  
+        Then User verifies 146.4644661 units of HBAR and 292.92893219 units of Factory9 are left in pool
+        Then User verifies balance of "HBAR" token from contract is 146.4644661    
+        Then User verifies balance of "Factory9" token from contract is 292.92893219
+
     
     Scenario: Verify user is able to perform swap of Factory9 token with HBAR
         Given Factory9 and HBAR are present in pool with quantity 292.92893219 units and 146.4644661 units respectively
@@ -69,6 +90,14 @@ Feature: Factory contract e2e test
         Then HBAR token quantity is 141.97869449 and Factory9 quantity is 302.67893219 in pool    
         Then User verifies balance of "HBAR" token from contract is 141.97869449    
         Then User verifies balance of "Factory9" token from contract is 302.67893219
+
+    Scenario: Verify user gets error message on performing swap with more than allowed maximum quantity of token
+        Given Factory9 and HBAR are present in pool with quantity 302.67893219 units and 141.97869449 units respectively
+        When User set max allowance amount as "2e256" for token "Factory9" 
+        When User tries to swap "2e256" unit of "Factory9" token with another token in pair with slippage as 200.00
+        Then User receive error message "offset is out of bounds"  
+        Then HBAR token quantity is 141.97869449 and Factory9 quantity is 302.67893219 in pool 
+
     
     Scenario: Verify user is able to perform swap of HBAR with Factory9 Token
         Given Factory9 and HBAR are present in pool with quantity 302.67893219 units and 141.97869449 units respectively
@@ -86,16 +115,31 @@ Feature: Factory contract e2e test
         Given Factory9 and HBAR are present in pool with quantity 284.17095904 units and 151.72869449 units respectively
         When User gives 10 units of HBAR to the pool
         Then Expected quantity of Factory9 token should be 0.25
+    
+    Scenario: Verify user get error message while getting Factory9 token quantity for more than allowed max qty of HABR
+        Given Factory9 and HBAR are present in pool with quantity 284.17095904 units and 151.72869449 units respectively
+        When User tries to give "2e256" units of HBAR to the pool
+        Then User receive error message "offset is out of bounds"   
 
     Scenario: Verify slippage out value for given in Factory9 token quantity
         Given Factory9 and HBAR are present in pool with quantity 284.17095904 units and 151.72869449 units respectively
         When User gives 10 units of Factory9 to calculate slippage out
         Then Slippage out value should be 12832697
 
+    Scenario: Verify user get error message while calculating slippage out for more than allowed max qty of Factory9
+        Given Factory9 and HBAR are present in pool with quantity 284.17095904 units and 151.72869449 units respectively
+        When User gives back "2e256" units of Factory9 to calculate slippage out
+        Then User receive error message "offset is out of bounds" 
+
     Scenario: Verify slippage in value for given out HBAR quantity
         Given Factory9 and HBAR are present in pool with quantity 284.17095904 units and 151.72869449 units respectively
         When User gives 10 units of HBAR to calculate slippage in
         Then Slippage in value should be 10371337   
+    
+    Scenario: Verify user get error message while calculating slippage in for more than allowed max qty of HBAR
+        Given Factory9 and HBAR are present in pool with quantity 284.17095904 units and 151.72869449 units respectively
+        When User give "2e256" units of HBAR to calculate slippage in
+        Then User receive error message "offset is out of bounds" 
 
     Scenario: Verify spot price for HBAR 
         When User get spot price for "HBAR"
