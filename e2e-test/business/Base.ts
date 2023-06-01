@@ -81,15 +81,19 @@ export default class Base {
     );
   };
 
-  public upgradeHederaService = async () => {
+  public upgradeHederaService = async (
+    client: Client = clientsInfo.operatorClient
+  ) => {
     const args = new ContractFunctionParameters().addAddress(this.htsAddress);
-    this.execute(
+    const { receipt } = await this.execute(
       20_00_000,
       this.UPGRADE_HEDERA_SERVICE,
-      clientsInfo.dexOwnerClient,
+      client,
       args
     );
-    console.log(`- Base#${this.UPGRADE_HEDERA_SERVICE}(): done\n`);
+    console.log(
+      `- Base#${this.UPGRADE_HEDERA_SERVICE}(): tx status ${receipt.status}\n`
+    );
   };
 
   private getHederaServiceContractAddress(): string {
