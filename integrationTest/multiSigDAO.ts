@@ -58,6 +58,7 @@ async function main() {
     DAO_ADMIN_CLIENT
   );
   await multiSigDAO.getDaoDetail();
+  await multiSigDAO.upgradeHederaService();
 }
 
 async function initDAO(dao: MultiSigDao) {

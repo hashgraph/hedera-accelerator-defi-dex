@@ -56,7 +56,7 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
         TokenCreateData storage tokenCreateData = _proposalData[proposalId];
 
         (responseCode, tokenAddress) = super.createTokenWithContractAsOwner(
-            tokenService,
+            hederaService,
             tokenCreateData.tokenName,
             tokenCreateData.tokenSymbol,
             0,
@@ -96,7 +96,7 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
         );
 
         (int256 responseCode, int64 newTotalSupply) = super.mintToken(
-            tokenService,
+            hederaService,
             tokenCreateData.newTokenAddress,
             amount
         );
@@ -124,7 +124,7 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
         );
 
         (int256 responseCode, int64 newTotalSupply) = super.burnToken(
-            tokenService,
+            hederaService,
             tokenCreateData.newTokenAddress,
             amount
         );

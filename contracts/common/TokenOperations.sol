@@ -3,7 +3,7 @@ pragma solidity ^0.8.18;
 
 import "./IERC20.sol";
 import "./IERC721.sol";
-import "./IBaseHTS.sol";
+import "./IHederaService.sol";
 
 contract TokenOperations {
     using Bits for uint256;
@@ -16,14 +16,15 @@ contract TokenOperations {
     }
 
     function _associateToken(
-        IBaseHTS _baseHTS,
+        IHederaService _hederaService,
         address _account,
         address _token
     ) internal returns (int256 code) {
         if (isContract(_account)) {
-            return associateTokenViaDelegation(_baseHTS, _account, _token);
+            return
+                associateTokenViaDelegation(_hederaService, _account, _token);
         }
-        return _baseHTS.associateTokenPublic(_account, _token);
+        return _hederaService.associateTokenPublic(_account, _token);
     }
 
     function _transferToken(
@@ -57,17 +58,18 @@ contract TokenOperations {
 
     /// @custom:oz-upgrades-unsafe-allow delegatecall
     function associateTokenViaDelegation(
-        IBaseHTS _baseHTS,
+        IHederaService _hederaService,
         address _account,
         address _token
     ) private returns (int256 code) {
-        (bool success, bytes memory result) = address(_baseHTS).delegatecall(
-            abi.encodeWithSelector(
-                IBaseHTS.associateTokenPublic.selector,
-                _account,
-                _token
-            )
-        );
+        (bool success, bytes memory result) = address(_hederaService)
+            .delegatecall(
+                abi.encodeWithSelector(
+                    IHederaService.associateTokenPublic.selector,
+                    _account,
+                    _token
+                )
+            );
         code = success
             ? abi.decode(result, (int256))
             : HederaResponseCodes.UNKNOWN;
@@ -80,7 +82,7 @@ contract TokenOperations {
     }
 
     function createTokenWithContractAsOwner(
-        IBaseHTS _baseHTS,
+        IHederaService _hederaService,
         string memory tokenName,
         string memory tokenSymbol,
         uint256 initialTotalSupply,
@@ -115,14 +117,15 @@ contract TokenOperations {
         newToken.tokenKeys = keys;
 
         /// @custom:oz-upgrades-unsafe-allow delegatecall
-        (bool success, bytes memory result) = address(_baseHTS).delegatecall(
-            abi.encodeWithSelector(
-                IBaseHTS.createFungibleTokenPublic.selector,
-                newToken,
-                initialTotalSupply,
-                decimals
-            )
-        );
+        (bool success, bytes memory result) = address(_hederaService)
+            .delegatecall(
+                abi.encodeWithSelector(
+                    IHederaService.createFungibleTokenPublic.selector,
+                    newToken,
+                    initialTotalSupply,
+                    decimals
+                )
+            );
 
         (responseCode, tokenAddress) = success
             ? abi.decode(result, (int256, address))
@@ -130,7 +133,7 @@ contract TokenOperations {
     }
 
     function mintToken(
-        IBaseHTS _baseHTS,
+        IHederaService _hederaService,
         address token,
         uint256 amount
     ) internal returns (int256 responseCode, int64 newTotalSupply) {
@@ -139,13 +142,14 @@ contract TokenOperations {
             "TokenOperations: Token quantity to mint should be greater than zero."
         );
         /// @custom:oz-upgrades-unsafe-allow delegatecall
-        (bool success, bytes memory result) = address(_baseHTS).delegatecall(
-            abi.encodeWithSelector(
-                IBaseHTS.mintTokenPublic.selector,
-                token,
-                amount
-            )
-        );
+        (bool success, bytes memory result) = address(_hederaService)
+            .delegatecall(
+                abi.encodeWithSelector(
+                    IHederaService.mintTokenPublic.selector,
+                    token,
+                    amount
+                )
+            );
 
         (responseCode, newTotalSupply) = success
             ? abi.decode(result, (int256, int64))
@@ -153,7 +157,7 @@ contract TokenOperations {
     }
 
     function burnToken(
-        IBaseHTS _baseHTS,
+        IHederaService _hederaService,
         address token,
         uint256 amount
     ) internal returns (int256 responseCode, int64 newTotalSupply) {
@@ -163,13 +167,14 @@ contract TokenOperations {
         );
 
         /// @custom:oz-upgrades-unsafe-allow delegatecall
-        (bool success, bytes memory result) = address(_baseHTS).delegatecall(
-            abi.encodeWithSelector(
-                IBaseHTS.burnTokenPublic.selector,
-                token,
-                amount
-            )
-        );
+        (bool success, bytes memory result) = address(_hederaService)
+            .delegatecall(
+                abi.encodeWithSelector(
+                    IHederaService.burnTokenPublic.selector,
+                    token,
+                    amount
+                )
+            );
 
         (responseCode, newTotalSupply) = success
             ? abi.decode(result, (int256, int64))

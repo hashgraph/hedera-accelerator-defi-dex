@@ -31,6 +31,7 @@ async function main() {
     const multiSigDAOInstance = new MultiSigDao(multiSigDAOId);
     await executeDAO(multiSigDAOInstance);
   }
+  await daoFactory.upgradeHederaService();
 }
 
 main()

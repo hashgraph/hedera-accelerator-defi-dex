@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.18;
 import "../common/IERC20.sol";
-import "../common/IBaseHTS.sol";
+import "../common/IHederaService.sol";
 import "./ITokenHolder.sol";
 
 interface ITokenHolderFactory {
@@ -14,7 +14,7 @@ interface ITokenHolderFactory {
     event TokenHolderCreated(address token, address tokenHolder);
 
     function initialize(
-        IBaseHTS _tokenService,
+        IHederaService _hederaService,
         ITokenHolder _tokenHolderLogic,
         address _admin
     ) external;

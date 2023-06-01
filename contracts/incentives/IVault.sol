@@ -2,11 +2,11 @@
 
 pragma solidity ^0.8.18;
 
-import "../common/IBaseHTS.sol";
+import "../common/IHederaService.sol";
 
 interface IVault {
     function initialize(
-        IBaseHTS _baseHTS,
+        IHederaService _hederaService,
         address _stakingToken,
         uint256 _lockingPeriod
     ) external;

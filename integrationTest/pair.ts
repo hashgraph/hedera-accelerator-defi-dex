@@ -242,6 +242,7 @@ async function testForSinglePair(
   await getInGivenOut();
   await slippageOutGivenIn();
   await slippageInGivenOut();
+  await pair.upgradeHederaService();
 }
 
 main()

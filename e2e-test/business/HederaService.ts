@@ -11,7 +11,7 @@ import {
 
 const ASSOCIATE_TOKEN_PUBLIC = "associateTokenPublic";
 
-export default class BaseHTS extends Base {
+export default class HederaService extends Base {
   associateTokenPublic = async (
     tokenId: TokenId,
     accountId: AccountId | ContractId,
@@ -30,7 +30,7 @@ export default class BaseHTS extends Base {
     );
     const responseCode = result.getUint256(0);
     console.log(
-      `- BaseHTS#${ASSOCIATE_TOKEN_PUBLIC}(): done with code = ${responseCode}\n`
+      `- HederaService#${ASSOCIATE_TOKEN_PUBLIC}(): done with code = ${responseCode}\n`
     );
   };
 }

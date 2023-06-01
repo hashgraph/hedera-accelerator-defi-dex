@@ -25,7 +25,7 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
     }
 
     uint256 private constant MAX_REWARDS_PER_TXN = 40;
-    IBaseHTS private baseHTS;
+    IHederaService private hederaService;
 
     IERC20 private stakingToken;
     uint256 private stakingTokenTotalSupply;
@@ -38,7 +38,7 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
     mapping(address => RewardInfo) public tokensRewardInfo;
 
     function initialize(
-        IBaseHTS _baseHTS,
+        IHederaService _hederaService,
         address _stakingToken,
         uint256 _lockingPeriod
     ) public initializer {
@@ -51,10 +51,10 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
             _lockingPeriod > 0,
             "Vault: locking period should be a positive number"
         );
-        baseHTS = _baseHTS;
+        hederaService = _hederaService;
         stakingTokenLockingPeriod = _lockingPeriod;
         stakingToken = IERC20(_stakingToken);
-        _associateToken(_baseHTS, address(this), _stakingToken);
+        _associateToken(_hederaService, address(this), _stakingToken);
     }
 
     function stake(uint256 _amount) external override {
@@ -92,7 +92,7 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
         if (!rewardInfo.exist) {
             rewardInfo.exist = true;
             rewardTokens.push(_token);
-            _associateToken(baseHTS, address(this), _token);
+            _associateToken(hederaService, address(this), _token);
         }
         rewardInfo.perShareAmount += perShareAmount;
         require(
@@ -195,6 +195,16 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
                 }
             }
         }
+    }
+
+    function upgradeHederaService(
+        IHederaService newHederaService
+    ) external onlyOwner {
+        hederaService = newHederaService;
+    }
+
+    function getHederaServiceVersion() external view returns (IHederaService) {
+        return hederaService;
     }
 
     function _stake(address _user, uint256 _amount) private {

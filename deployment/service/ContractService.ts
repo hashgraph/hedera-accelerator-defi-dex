@@ -18,7 +18,7 @@ export class ContractService {
   public governanceDaoFactory = "governancedaofactory";
   public factoryContractName = "factory";
   public pairContractName = "pair";
-  public baseContractName = "basehts";
+  public hederaServiceContractName = "hederaservice";
   public lpTokenContractName = "lptoken";
   public splitterContractName = "splitter";
   public vaultContractName = "vault";

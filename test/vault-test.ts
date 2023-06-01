@@ -14,7 +14,7 @@ describe("Vault Tests", function () {
     const signers = await TestHelper.getSigners();
     const owner = signers[0];
 
-    const baseHTS = await TestHelper.deployMockBaseHTS();
+    const hederaService = await TestHelper.deployMockHederaService();
 
     const stakingTokenContract = await TestHelper.deployERC20Mock();
     await stakingTokenContract.setUserBalance(owner.address, TOTAL_AMOUNT);
@@ -35,7 +35,7 @@ describe("Vault Tests", function () {
     );
 
     const ARGS = [
-      baseHTS.address,
+      hederaService.address,
       stakingTokenContract.address,
       LOCKING_PERIOD,
     ];
@@ -45,7 +45,7 @@ describe("Vault Tests", function () {
     return {
       ARGS,
       signers,
-      baseHTS,
+      hederaService,
       vaultContract,
       stakingTokenContract,
       reward1TokenContract,
@@ -58,12 +58,12 @@ describe("Vault Tests", function () {
 
   describe("Common tests", function () {
     it("Verify contract initialization should be reverted when staking token address is zero", async function () {
-      const { nonInitVaultContract, baseHTS } = await loadFixture(
+      const { nonInitVaultContract, hederaService } = await loadFixture(
         deployFixture
       );
       await expect(
         nonInitVaultContract.initialize(
-          baseHTS.address,
+          hederaService.address,
           TestHelper.ZERO_ADDRESS,
           LOCKING_PERIOD
         )
@@ -71,11 +71,11 @@ describe("Vault Tests", function () {
     });
 
     it("Verify contract initialization should be reverted when locking period is zero", async function () {
-      const { nonInitVaultContract, baseHTS, stakingTokenContract } =
+      const { nonInitVaultContract, hederaService, stakingTokenContract } =
         await loadFixture(deployFixture);
       await expect(
         nonInitVaultContract.initialize(
-          baseHTS.address,
+          hederaService.address,
           stakingTokenContract.address,
           0
         )

@@ -24,23 +24,25 @@ const client = cm
 const clientDetails = cm.getAdmin();
 
 const contractService = new ContractService();
-const baseHts = contractService.getContract(contractService.baseContractName);
-const contractIdObject = ContractId.fromString(baseHts.id);
+const hederaService = contractService.getContract(
+  contractService.hederaServiceContractName
+);
+const contractIdObject = ContractId.fromString(hederaService.id);
 
 async function main() {
   const { tokenId, tokenAddressSol } = await createToken(100);
   await tokenQueryFunction(tokenId);
-  await mintTokenPublic(baseHts.id, tokenAddressSol, 50);
-  await burnTokenPublic(baseHts.id, tokenAddressSol, 25);
+  await mintTokenPublic(hederaService.id, tokenAddressSol, 50);
+  await burnTokenPublic(hederaService.id, tokenAddressSol, 25);
   await tokenQueryFunction(tokenId);
   await associateTokenPublic(
-    baseHts.id,
+    hederaService.id,
     userAccountId.toSolidityAddress(),
     userPrivateKey,
     tokenAddressSol
   );
   await transferTokenPublic(
-    baseHts.id,
+    hederaService.id,
     tokenAddressSol,
     clientDetails.adminId.toSolidityAddress(),
     userAccountId.toSolidityAddress(),

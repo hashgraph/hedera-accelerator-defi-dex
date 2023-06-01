@@ -18,9 +18,11 @@ export default class Base {
   protected htsAddress: string;
   protected configuration: string;
   contractId: string;
+  private UPGRADE_HEDERA_SERVICE = "upgradeHederaService";
+  private OWNER = "owner";
 
   constructor(_contractId: string) {
-    this.htsAddress = this.getBaseHTSContractAddress();
+    this.htsAddress = this.getHederaServiceContractAddress();
     this.configuration = this.getConfigurationContractAddress();
     this.contractId = _contractId;
   }
@@ -80,8 +82,34 @@ export default class Base {
     );
   };
 
-  private getBaseHTSContractAddress(): string {
-    return this.csDev.getContract(this.csDev.baseContractName).address;
+  public upgradeHederaService = async (
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    const args = new ContractFunctionParameters().addAddress(this.htsAddress);
+    const { receipt } = await this.execute(
+      20_00_000,
+      this.UPGRADE_HEDERA_SERVICE,
+      client,
+      args
+    );
+    console.log(
+      `- Base#${this.UPGRADE_HEDERA_SERVICE}(): tx status ${receipt.status}\n`
+    );
+  };
+
+  public owner = async () => {
+    const { result } = await this.execute(
+      2_00_000,
+      this.OWNER,
+      clientsInfo.operatorClient
+    );
+    console.log(
+      `- Base#${this.OWNER}(): owner address  ${result.getAddress(0)}\n`
+    );
+  };
+
+  private getHederaServiceContractAddress(): string {
+    return this.csDev.getContract(this.csDev.hederaServiceContractName).address;
   }
 
   private getConfigurationContractAddress(): string {

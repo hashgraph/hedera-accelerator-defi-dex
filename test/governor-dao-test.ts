@@ -30,17 +30,17 @@ describe("GovernanceTokenDAO tests", function () {
     const daoAdminTwo = await TestHelper.getDAOAdminTwo();
     const signers = await TestHelper.getSigners();
 
-    const baseHTS = await TestHelper.deployMockBaseHTS();
+    const hederaService = await TestHelper.deployMockHederaService();
     const token = await TestHelper.deployERC20Mock(TOTAL);
     await token.setUserBalance(signers[0].address, TOTAL);
 
-    const godHolder = await TestHelper.deployGodHolder(baseHTS, token);
+    const godHolder = await TestHelper.deployGodHolder(hederaService, token);
 
     const ARGS = [
       token.address,
       VOTING_DELAY,
       VOTING_PERIOD,
-      baseHTS.address,
+      hederaService.address,
       godHolder.address,
       QUORUM_THRESHOLD_BSP,
     ];
@@ -60,7 +60,7 @@ describe("GovernanceTokenDAO tests", function () {
     await governorTokenDAO.initialize(...GOVERNOR_TOKEN_DAO_ARGS);
 
     const godHolderFactory = await TestHelper.deployGodTokenHolderFactory(
-      baseHTS,
+      hederaService,
       godHolder,
       dexOwner.address
     );
@@ -70,7 +70,7 @@ describe("GovernanceTokenDAO tests", function () {
     );
     await governorDAOFactory.initialize(
       dexOwner.address,
-      baseHTS.address,
+      hederaService.address,
       governorTokenDAO.address,
       godHolderFactory.address,
       governorTT.address
@@ -78,7 +78,7 @@ describe("GovernanceTokenDAO tests", function () {
     return {
       token,
       signers,
-      baseHTS,
+      hederaService,
       dexOwner,
       governorTT,
       daoAdminOne,
@@ -95,7 +95,7 @@ describe("GovernanceTokenDAO tests", function () {
       const {
         governorDAOFactory,
         dexOwner,
-        baseHTS,
+        hederaService,
         governorTokenDAO,
         godHolderFactory,
         governorTT,
@@ -104,7 +104,7 @@ describe("GovernanceTokenDAO tests", function () {
       await expect(
         governorDAOFactory.initialize(
           dexOwner.address,
-          baseHTS.address,
+          hederaService.address,
           governorTokenDAO.address,
           godHolderFactory.address,
           governorTT.address
@@ -331,6 +331,44 @@ describe("GovernanceTokenDAO tests", function () {
         .getTokenHolderFactoryAddress();
 
       expect(address).equals(godHolderFactory.address);
+    });
+
+    it("Verify upgradeHederaService should fail when non-owner try to upgrade Hedera service", async function () {
+      const { governorDAOFactory, signers } = await loadFixture(deployFixture);
+      const nonOwner = signers[3];
+      await expect(
+        governorDAOFactory
+          .connect(nonOwner)
+          .upgradeHederaService(signers[3].address)
+      ).revertedWith("Ownable: caller is not the owner");
+    });
+
+    it("Verify upgrade Hedera service should pass when owner try to upgrade it", async function () {
+      const { governorDAOFactory, signers, daoAdminOne, token } =
+        await loadFixture(deployFixture);
+
+      const CREATE_DAO_ARGS = [
+        daoAdminOne.address,
+        DAO_NAME,
+        LOGO_URL,
+        token.address,
+        BigNumber.from(500),
+        BigNumber.from(0),
+        BigNumber.from(100),
+        false,
+        DESCRIPTION,
+        WEB_LINKS,
+      ];
+
+      await governorDAOFactory.createDAO(CREATE_DAO_ARGS);
+
+      const daos = await governorDAOFactory.getDAOs();
+
+      const tokenDAO = TestHelper.getContract("ITokenDAO", daos[0]);
+      expect(tokenDAO).not.equals(TestHelper.ZERO_ADDRESS);
+      await expect(
+        governorDAOFactory.upgradeHederaService(signers[3].address)
+      ).not.revertedWith("Ownable: caller is not the owner");
     });
   });
 

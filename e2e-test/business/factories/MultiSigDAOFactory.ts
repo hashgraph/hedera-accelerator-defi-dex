@@ -74,7 +74,7 @@ export default class MultiSigDAOFactory extends Base {
       [Object.values(createDAOInputs)]
     );
     const { result, record } = await this.execute(
-      7_00_000,
+      70_00_000,
       CREATE_DAO,
       client,
       bytes

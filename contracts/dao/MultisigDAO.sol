@@ -2,11 +2,12 @@
 pragma solidity ^0.8.18;
 
 import "./BaseDAO.sol";
-import "../common/IBaseHTS.sol";
+import "../common/IHederaService.sol";
 import "../gnosis/HederaGnosisSafe.sol";
 import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
 contract MultiSigDAO is BaseDAO {
+    address private systemUser;
     event TransactionCreated(bytes32 txnHash, TransactionInfo info);
 
     enum TransactionState {
@@ -24,11 +25,19 @@ contract MultiSigDAO is BaseDAO {
         uint256 transactionType;
     }
 
+    modifier onlySystemUser() {
+        require(
+            systemUser == _msgSender(),
+            "MultiSigDAO: caller is not the system user"
+        );
+        _;
+    }
+
     // HederaGnosisSafe#transferTokenViaSafe(address token, address receiver, uint256 amount)
     bytes4 private constant TRANSFER_TOKEN_FROM_SAFE_SELECTOR =
         bytes4(keccak256("transferTokenViaSafe(address,address,uint256)"));
 
-    IBaseHTS private baseHTS;
+    IHederaService private hederaService;
     HederaGnosisSafe private hederaGnosisSafe;
     mapping(bytes32 => TransactionInfo) private transactions;
 
@@ -39,11 +48,12 @@ contract MultiSigDAO is BaseDAO {
         string memory _description,
         string[] memory _webLinks,
         HederaGnosisSafe _hederaGnosisSafe,
-        IBaseHTS _iBaseHTS
+        IHederaService _hederaService
     ) external initializer {
-        baseHTS = _iBaseHTS;
+        hederaService = _hederaService;
         hederaGnosisSafe = _hederaGnosisSafe;
         __BaseDAO_init(_admin, _name, _logoUrl, _description, _webLinks);
+        systemUser = msg.sender;
     }
 
     function getHederaGnosisSafeContractAddress()
@@ -103,7 +113,12 @@ contract MultiSigDAO is BaseDAO {
         address _receiver,
         uint256 _amount
     ) external payable returns (bytes32) {
-        hederaGnosisSafe.transferToSafe(baseHTS, _token, _amount, msg.sender);
+        hederaGnosisSafe.transferToSafe(
+            hederaService,
+            _token,
+            _amount,
+            msg.sender
+        );
         bytes memory data = abi.encodeWithSelector(
             TRANSFER_TOKEN_FROM_SAFE_SELECTOR,
             _token,
@@ -112,5 +127,15 @@ contract MultiSigDAO is BaseDAO {
         );
         Enum.Operation call = Enum.Operation.Call;
         return proposeTransaction(address(hederaGnosisSafe), data, call, 1);
+    }
+
+    function upgradeHederaService(
+        IHederaService newHederaService
+    ) external onlySystemUser {
+        hederaService = newHederaService;
+    }
+
+    function getHederaServiceVersion() external view returns (IHederaService) {
+        return hederaService;
     }
 }
