@@ -4,7 +4,7 @@ pragma solidity ^0.8.18;
 import "./hedera/HederaTokenService.sol";
 import "./hedera/HederaResponseCodes.sol";
 
-interface IBaseHTS {
+interface IHederaService {
     function associateTokenPublic(
         address account,
         address token

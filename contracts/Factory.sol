@@ -26,7 +26,7 @@ contract Factory is IEvents, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     string private constant PAIR = "PairContract";
     string private constant LP_TOKEN = "LpTokenContract";
 
-    IBaseHTS private baseHTS;
+    IHederaService private hederaService;
     address private proxyAdmin;
 
     address private lpLogic;
@@ -39,7 +39,7 @@ contract Factory is IEvents, OwnableUpgradeable, ReentrancyGuardUpgradeable {
         private pairs;
 
     function setUpFactory(
-        IBaseHTS _baseHTS,
+        IHederaService _hederaService,
         address _proxyAdmin,
         address _pairLogic,
         address _lpLogic,
@@ -47,7 +47,7 @@ contract Factory is IEvents, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     ) public initializer {
         __ReentrancyGuard_init();
         _transferOwnership(_proxyAdmin);
-        baseHTS = _baseHTS;
+        hederaService = _hederaService;
         proxyAdmin = _proxyAdmin;
         pairLogic = _pairLogic;
         lpLogic = _lpLogic;
@@ -129,6 +129,20 @@ contract Factory is IEvents, OwnableUpgradeable, ReentrancyGuardUpgradeable {
         );
     }
 
+    function upgradeHederaService(
+        IHederaService newHederaService
+    ) external onlyOwner {
+        hederaService = newHederaService;
+        for (uint i = 0; i < allPairs.length; i++) {
+            IPair pair = IPair(allPairs[i]);
+            pair.upgradeHederaService(newHederaService);
+        }
+    }
+
+    function getHederaServiceVersion() external view returns (IHederaService) {
+        return hederaService;
+    }
+
     function findMaxQtyPool(
         uint256[] memory fees,
         address _token0,
@@ -203,7 +217,7 @@ contract Factory is IEvents, OwnableUpgradeable, ReentrancyGuardUpgradeable {
         );
 
         pair.initialize(
-            baseHTS,
+            hederaService,
             _lpContract,
             _tokenA,
             _tokenB,
@@ -226,7 +240,7 @@ contract Factory is IEvents, OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
         lp = ILPToken(_createProxy(lpLogic));
         lp.initialize{value: msg.value}(
-            baseHTS,
+            hederaService,
             _owner,
             lpTokenName,
             lpTokenSymbol

@@ -1,14 +1,14 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.18;
 
-import "../common/IBaseHTS.sol";
+import "../common/IHederaService.sol";
 import "../common/hedera/HederaResponseCodes.sol";
 import "./IERC20Mock.sol";
 import "../common/IERC721.sol";
 import "./ERC20Mock.sol";
 import "hardhat/console.sol";
 
-contract MockBaseHTS is IBaseHTS {
+contract MockHederaService is IHederaService {
     uint256 private constant PASS_TXN_COUNT = 100;
     bytes32 revertCreateTokenSlot = keccak256("revertCreateTokenSlot");
     bytes32 passTransactionCountSlot = keccak256("passTransactionCountSlot");

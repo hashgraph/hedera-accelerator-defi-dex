@@ -1,11 +1,11 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.18;
 
-import "./common/IBaseHTS.sol";
+import "./common/IHederaService.sol";
 
 interface ILPToken {
     function initialize(
-        IBaseHTS _tokenService,
+        IHederaService _hederaService,
         address _owner,
         string memory tokenName,
         string memory tokenSymbol
@@ -32,4 +32,8 @@ interface ILPToken {
         uint256 tokenAQuantity,
         uint256 tokenBQuantity
     ) external view returns (uint256);
+
+    function upgradeHederaService(IHederaService newHederaService) external;
+
+    function getHederaServiceVersion() external view returns (IHederaService);
 }

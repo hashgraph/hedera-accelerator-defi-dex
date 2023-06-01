@@ -62,6 +62,7 @@ async function main() {
   await governorTokenDao.updateLogoURL("dao url - New", DAO_ADMIN_CLIENT);
   await governorTokenDao.updateDescription("desc - New", DAO_ADMIN_CLIENT);
   await governorTokenDao.getDaoDetail();
+  await governorTokenDao.upgradeHederaService();
   console.log(`\nDone`);
 }
 
@@ -93,7 +94,7 @@ export async function executeGovernorTokenTransferFlow(
     voterClient
   );
   await nftHolder.grabTokensForVoter(
-    12,
+    20,
     voterAccountId,
     voterAccountPrivateKey,
     voterClient
@@ -117,7 +118,7 @@ export async function executeGovernorTokenTransferFlow(
   );
 
   await governorTokenTransfer.getProposalDetails(proposalId);
-  await governorTokenTransfer.forVote(proposalId, 12, voterClient);
+  await governorTokenTransfer.forVote(proposalId, 20, voterClient);
   await governorTokenTransfer.isQuorumReached(proposalId);
   await governorTokenTransfer.isVoteSucceeded(proposalId);
   await governorTokenTransfer.proposalVotes(proposalId);

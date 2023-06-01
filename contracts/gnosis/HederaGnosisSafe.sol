@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.18;
 
-import "../common/IBaseHTS.sol";
+import "../common/IHederaService.sol";
 import "../common/TokenOperations.sol";
 
 import "@gnosis.pm/safe-contracts/contracts/GnosisSafe.sol";
@@ -49,12 +49,12 @@ contract HederaGnosisSafe is
     }
 
     function transferToSafe(
-        IBaseHTS _baseHTS,
+        IHederaService _hederaService,
         address _token,
         uint256 _amount,
         address _sender
     ) external {
-        int256 code = _associateToken(_baseHTS, address(this), _token);
+        int256 code = _associateToken(_hederaService, address(this), _token);
         if (code == HederaResponseCodes.SUCCESS) {
             emit TokenAssociated(_token);
         }

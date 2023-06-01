@@ -56,19 +56,19 @@ export class TestHelper {
     return (await ethers.getSigners()).slice(4, 6)!;
   }
 
-  static async deployGodHolder(baseHTS: Contract, token: Contract) {
+  static async deployGodHolder(hederaService: Contract, token: Contract) {
     const instance = await this.deployLogic("GODHolder");
-    await instance.initialize(baseHTS.address, token.address);
+    await instance.initialize(hederaService.address, token.address);
     return instance;
   }
 
   static async deployGodTokenHolderFactory(
-    baseHTS: Contract,
+    hederaService: Contract,
     godHolder: Contract,
     admin: string
   ) {
     const instance = await this.deployLogic("GODTokenHolderFactory");
-    await instance.initialize(baseHTS.address, godHolder.address, admin);
+    await instance.initialize(hederaService.address, godHolder.address, admin);
     return instance;
   }
 
@@ -80,8 +80,8 @@ export class TestHelper {
     return await this.deployLogic("ERC20Mock", name, symbol, total, 0);
   }
 
-  static async deployMockBaseHTS(tokenTesting: boolean = true) {
-    return await this.deployLogic("MockBaseHTS", tokenTesting);
+  static async deployMockHederaService(tokenTesting: boolean = true) {
+    return await this.deployLogic("MockHederaService", tokenTesting);
   }
 
   static async deployLogic(name: string, ...args: any) {

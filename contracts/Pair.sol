@@ -3,8 +3,9 @@ pragma solidity ^0.8.18;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./common/hedera/HederaResponseCodes.sol";
-import "./common/IBaseHTS.sol";
+import "./common/IHederaService.sol";
 import "./common/TokenOperations.sol";
 import "./common/IERC20.sol";
 import "./ILPToken.sol";
@@ -33,9 +34,10 @@ contract Pair is
     IPair,
     Initializable,
     TokenOperations,
-    ReentrancyGuardUpgradeable
+    ReentrancyGuardUpgradeable,
+    OwnableUpgradeable
 {
-    IBaseHTS internal tokenService;
+    IHederaService internal hederaService;
     ILPToken internal lpTokenContract;
 
     Pair pair;
@@ -49,7 +51,7 @@ contract Pair is
     Configuration configuration;
 
     function initialize(
-        IBaseHTS _tokenService,
+        IHederaService _hederaService,
         ILPToken _lpTokenContract,
         address _tokenA,
         address _tokenB,
@@ -58,8 +60,9 @@ contract Pair is
         Configuration _configuration
     ) public override initializer {
         __ReentrancyGuard_init();
+        __Ownable_init();
         require(_fee > 0, "Pair: Fee should be greater than zero.");
-        tokenService = _tokenService;
+        hederaService = _hederaService;
         lpTokenContract = _lpTokenContract;
         fee = _fee;
         treasury = _treasury;
@@ -397,6 +400,17 @@ contract Pair is
         }
     }
 
+    function upgradeHederaService(
+        IHederaService newHederaService
+    ) external override onlyOwner {
+        hederaService = newHederaService;
+        lpTokenContract.upgradeHederaService(newHederaService);
+    }
+
+    function getHederaServiceVersion() external view override returns (IHederaService) {
+        return hederaService;
+    }
+
     function calculateTokenstoGetBack(
         uint256 _lpToken
     ) internal view returns (uint256, uint256) {
@@ -646,7 +660,7 @@ contract Pair is
         address reciever,
         string memory errorMessage
     ) private {
-        bool sent = tokenService.transferHBAR{value: tokenQty}(
+        bool sent = hederaService.transferHBAR{value: tokenQty}(
             payable(reciever)
         );
         require(sent, errorMessage);
@@ -665,7 +679,7 @@ contract Pair is
 
     function _associateToken(address account, address token) private {
         if (!_tokenIsHBARX(token)) {
-            _associateToken(tokenService, account, token);
+            _associateToken(hederaService, account, token);
         }
     }
 

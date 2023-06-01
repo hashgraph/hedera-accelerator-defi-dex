@@ -32,7 +32,7 @@ describe("Governor Tests", function () {
 
   async function deployFixture() {
     const signers = await TestHelper.getSigners();
-    const baseHTS = await TestHelper.deployMockBaseHTS();
+    const hederaService = await TestHelper.deployMockHederaService();
 
     const token = await TestHelper.deployERC20Mock(TOTAL_SUPPLY);
     await token.setUserBalance(signers[0].address, TWENTY_PERCENT);
@@ -40,13 +40,13 @@ describe("Governor Tests", function () {
     await token.setUserBalance(signers[2].address, FIFTY_PERCENT);
 
     const creator = signers[0];
-    const godHolder = await TestHelper.deployGodHolder(baseHTS, token);
+    const godHolder = await TestHelper.deployGodHolder(hederaService, token);
 
     const ARGS = [
       token.address,
       VOTING_DELAY,
       VOTING_PERIOD,
-      baseHTS.address,
+      hederaService.address,
       godHolder.address,
       QUORUM_THRESHOLD_BSP,
     ];
@@ -66,7 +66,7 @@ describe("Governor Tests", function () {
     return {
       ARGS,
       token,
-      baseHTS,
+      hederaService,
       signers,
       godHolder,
       governorTT,
@@ -616,9 +616,8 @@ describe("Governor Tests", function () {
     });
 
     it("Verify token creation proposal should be failed during execution", async function () {
-      const { governorToken, baseHTS, creator, godHolder } = await loadFixture(
-        deployFixture
-      );
+      const { governorToken, hederaService, creator, godHolder } =
+        await loadFixture(deployFixture);
       await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
       const { proposalId } = await getTokenCreateProposalId(
         governorToken,
@@ -627,12 +626,12 @@ describe("Governor Tests", function () {
       );
       await governorToken.castVotePublic(proposalId, 0, 1);
       await TestHelper.mineNBlocks(BLOCKS_COUNT);
-      await baseHTS.setPassTransactionCount(0); // 0 pass transaction
-      await baseHTS.setRevertCreateToken(true);
+      await hederaService.setPassTransactionCount(0); // 0 pass transaction
+      await hederaService.setRevertCreateToken(true);
       await expect(governorToken.executeProposal(TITLE)).to.revertedWith(
         "GovernorTokenCreate: Token creation failed."
       );
-      await baseHTS.setRevertCreateToken(false);
+      await hederaService.setRevertCreateToken(false);
       await expect(governorToken.executeProposal(TITLE)).to.revertedWith(
         "GovernorTokenCreate: Token creation failed."
       );
@@ -935,6 +934,28 @@ describe("Governor Tests", function () {
           "GovernorTokenCreate: Token transfer not allowed as token doesn't exist for this proposal."
         );
       });
+
+      it("Upgrade hederaService fails with non creator", async () => {
+        const { governorTT, signers } = await loadFixture(deployFixture);
+
+        const nonCreator = signers[2];
+
+        await expect(
+          governorTT
+            .connect(nonCreator)
+            .upgradeHederaService(signers[3].address)
+        ).revertedWith("Ownable: caller is not the owner");
+      });
+
+      it("Upgrade hederaService passes with creator", async () => {
+        const { governorTT, creator, signers } = await loadFixture(
+          deployFixture
+        );
+
+        await expect(
+          governorTT.connect(creator).upgradeHederaService(signers[3].address)
+        ).not.revertedWith("Ownable: caller is not the owner");
+      });
     });
 
     it("Verify proposal is executed before minting and burning", async function () {
@@ -973,12 +994,14 @@ describe("Governor Tests", function () {
     });
 
     it("Verify contract should initialize quorum threshold value with 500 when user passed 0 as threshold", async function () {
-      const { godHolder, baseHTS, token } = await loadFixture(deployFixture);
+      const { godHolder, hederaService, token } = await loadFixture(
+        deployFixture
+      );
       const ARGS = [
         token.address,
         VOTING_DELAY,
         VOTING_PERIOD,
-        baseHTS.address,
+        hederaService.address,
         godHolder.address,
         0,
       ];

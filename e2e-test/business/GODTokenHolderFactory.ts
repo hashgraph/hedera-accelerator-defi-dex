@@ -32,7 +32,7 @@ export default class GODTokenHolderFactory extends Base {
     const args = new ContractFunctionParameters().addAddress(tokenAddress);
 
     const { result } = await this.execute(
-      9_00_000,
+      20_00_000,
       GET_TOKEN_HOLDER,
       client,
       args

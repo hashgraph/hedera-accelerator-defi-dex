@@ -13,4 +13,8 @@ interface IGovernorTransferToken is IGovernorBase {
         uint256 transferTokenAmount,
         address creator
     ) external returns (uint256);
+
+    function upgradeHederaService(IHederaService newHederaService) external;
+
+    function getHederaServiceVersion() external view returns (IHederaService);
 }

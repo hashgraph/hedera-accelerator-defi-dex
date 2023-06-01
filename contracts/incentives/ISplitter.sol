@@ -2,11 +2,9 @@
 pragma solidity ^0.8.18;
 
 import "./IVault.sol";
-import "../common/IBaseHTS.sol";
 
 interface ISplitter {
     function initialize(
-        IBaseHTS _baseHTS,
         IVault[] memory _vaults,
         uint256[] memory _multipliers
     ) external;

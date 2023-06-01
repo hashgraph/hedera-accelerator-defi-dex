@@ -61,6 +61,7 @@ async function main() {
     clientsInfo.uiUserClient,
     clientsInfo.uiUserId
   );
+  await governor.upgradeHederaService();
 }
 
 main()

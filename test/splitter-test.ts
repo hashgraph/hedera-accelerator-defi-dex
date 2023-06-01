@@ -26,7 +26,7 @@ describe("Splitter tests", function () {
     const signers = await TestHelper.getSigners();
     const owner = signers[0];
 
-    const baseHTS = await TestHelper.deployMockBaseHTS();
+    const hederaService = await TestHelper.deployMockHederaService();
     const stakingTokenContract = await TestHelper.deployERC20Mock();
     await stakingTokenContract.setUserBalance(
       owner.address,
@@ -37,7 +37,7 @@ describe("Splitter tests", function () {
     await rewardTokenContract.setUserBalance(owner.address, REWARD_AMOUNT);
 
     const ARGS = [
-      baseHTS.address,
+      hederaService.address,
       stakingTokenContract.address,
       LOCKING_PERIOD,
     ];
@@ -55,7 +55,6 @@ describe("Splitter tests", function () {
     const USED_VAULTS = [vaultContract1, vaultContract2, vaultContract3];
 
     const SPLITTER_ARGS = [
-      baseHTS.address,
       USED_VAULTS.map((contract) => contract.address),
       MULTIPLIERS,
     ];
@@ -76,7 +75,7 @@ describe("Splitter tests", function () {
       owner,
       vaults: USED_VAULTS,
       rewards: REWARDS_AMOUNT_ARRAY,
-      baseHTS,
+      hederaService,
       signers,
       SPLITTER_ARGS,
       vaultContract1,
@@ -101,28 +100,22 @@ describe("Splitter tests", function () {
     });
 
     it("Verify contract initialization call should be reverted when vaults and multipliers length mismatch", async function () {
-      const { nonInitSplitterContract, baseHTS, vaultContract1 } =
-        await loadFixture(deployFixture);
+      const { nonInitSplitterContract, vaultContract1 } = await loadFixture(
+        deployFixture
+      );
       await expect(
-        nonInitSplitterContract.initialize(
-          baseHTS.address,
-          [vaultContract1.address],
-          [1, 14]
-        )
+        nonInitSplitterContract.initialize([vaultContract1.address], [1, 14])
       ).revertedWith(
         "Splitter: vaults and multipliers length must be greater than zero"
       );
     });
 
     it("Verify contract initialization call should be reverted when vaults or multipliers length is zero", async function () {
-      const { nonInitSplitterContract, baseHTS, vaultContract1 } =
-        await loadFixture(deployFixture);
+      const { nonInitSplitterContract, vaultContract1 } = await loadFixture(
+        deployFixture
+      );
       await expect(
-        nonInitSplitterContract.initialize(
-          baseHTS.address,
-          [vaultContract1.address],
-          []
-        )
+        nonInitSplitterContract.initialize([vaultContract1.address], [])
       ).revertedWith(
         "Splitter: vaults and multipliers length must be greater than zero"
       );

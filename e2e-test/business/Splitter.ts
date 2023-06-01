@@ -27,7 +27,6 @@ export default class Splitter extends Base {
   ) => {
     if (await this.isInitializationPending()) {
       const args = new ContractFunctionParameters()
-        .addAddress(this.htsAddress)
         .addAddressArray(vaults.map((vault) => vault.toSolidityAddress()))
         .addUint256Array(multipliers);
       await this.execute(5_00_000, INITIALIZE, client, args);

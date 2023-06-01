@@ -5,10 +5,14 @@ import "../common/IERC20.sol";
 import "../governance/ITokenHolderFactory.sol";
 
 contract NFTHolderMock is ITokenHolder {
+    IHederaService hederaService;
+
     function initialize(
-        IBaseHTS tokenService,
-        address token
-    ) external override {}
+        IHederaService _hederaService,
+        address
+    ) external override {
+        hederaService = _hederaService;
+    }
 
     function revertTokensForVoter(uint256) external override returns (int32) {}
 
@@ -32,5 +36,20 @@ contract NFTHolderMock is ITokenHolder {
 
     function isNFTType() external pure returns (bool) {
         return true;
+    }
+
+    function upgradeHederaService(
+        IHederaService newHederaService
+    ) external override {
+        hederaService = newHederaService;
+    }
+
+    function getHederaServiceVersion()
+        external
+        view
+        override
+        returns (IHederaService)
+    {
+        return hederaService;
     }
 }
