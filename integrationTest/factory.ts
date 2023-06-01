@@ -217,7 +217,7 @@ async function testForSinglePair(
   await getTreasureBalance(pairContractId, [token0, token1]);
   await swapToken(token1, pairContractId.toString());
   await getTreasureBalance(pairContractId, [token0, token1]);
-  await factory.upgradeHederaService();
+  await factory.upgradeHederaService(clientsInfo.dexOwnerClient);
 }
 
 main()

@@ -19,6 +19,7 @@ export default class Base {
   protected configuration: string;
   contractId: string;
   private UPGRADE_HEDERA_SERVICE = "upgradeHederaService";
+  private OWNER = "owner";
 
   constructor(_contractId: string) {
     this.htsAddress = this.getHederaServiceContractAddress();
@@ -93,6 +94,17 @@ export default class Base {
     );
     console.log(
       `- Base#${this.UPGRADE_HEDERA_SERVICE}(): tx status ${receipt.status}\n`
+    );
+  };
+
+  public owner = async () => {
+    const { result } = await this.execute(
+      2_00_000,
+      this.OWNER,
+      clientsInfo.operatorClient
+    );
+    console.log(
+      `- Base#${this.OWNER}(): owner address  ${result.getAddress(0)}\n`
     );
   };
 
