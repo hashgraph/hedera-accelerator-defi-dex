@@ -196,19 +196,12 @@ export default class Vault extends Base {
       args
     );
     const offSet = result.getUint256(0).div(32).toNumber();
-    const arrayItemsLengthOffSet = result
-      .getUint256(offSet + 4)
-      .div(32)
-      .toNumber();
-    const arrayItemsLengthPosition = arrayItemsLengthOffSet + 1;
     const info = {
       alreadyClaimedCount: result.getUint256(offSet + 0).toNumber(),
       claimedRewardsCount: result.getUint256(offSet + 1).toNumber(),
       unclaimedRewardsCount: result.getUint256(offSet + 2).toNumber(),
       totalRewardsCount: result.getUint256(offSet + 3).toNumber(),
-      tokens: Helper.getAddressArray(result, arrayItemsLengthPosition).join(
-        ","
-      ),
+      tokens: Helper.getAddressArray(result, offSet, offSet + 4).join(","),
     };
     console.log(`- Vault#${CLAIM_REWARDS}():`);
     console.table({ ...info, TxnId: record.transactionId.toString() });

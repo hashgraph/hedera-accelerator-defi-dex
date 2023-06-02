@@ -73,17 +73,19 @@ export class Helper {
   /// it return address as string stored after default values.
   static getAddressArray = (
     contractFunctionResult: ContractFunctionResult,
-    arrayItemsLengthPosition: number = 1
+    topLevelOffset: number = 0,
+    arrayItemsLengthIndexOffset: number = 0
   ) => {
-    const arrayFirstItemPosition = arrayItemsLengthPosition + 1;
-    const tokenCount = contractFunctionResult.getUint256(
-      arrayItemsLengthPosition
-    );
+    const arrayItemsLengthIndex = contractFunctionResult
+      .getUint256(arrayItemsLengthIndexOffset)
+      .div(32)
+      .plus(topLevelOffset)
+      .toNumber();
+    const itemsCount = contractFunctionResult.getUint256(arrayItemsLengthIndex);
+    const firstItemIndex = arrayItemsLengthIndex + 1;
     const result: string[] = [];
-    for (let i = 0; i < Number(tokenCount); i++) {
-      result.push(
-        contractFunctionResult.getAddress(arrayFirstItemPosition + i)
-      );
+    for (let i = 0; i < Number(itemsCount); i++) {
+      result.push(contractFunctionResult.getAddress(firstItemIndex + i));
     }
     return result;
   };
