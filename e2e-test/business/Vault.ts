@@ -2,6 +2,7 @@ import Base from "./Base";
 import BigNumber from "bignumber.js";
 
 import { ethers } from "ethers";
+import { Helper } from "../../utils/Helper";
 import { clientsInfo } from "../../utils/ClientManagement";
 import {
   Client,
@@ -56,9 +57,10 @@ export default class Vault extends Base {
       client,
       args
     );
+    const hex = ethers.utils.hexlify(result.asBytes());
     const isStaked = result.getBool(0);
     console.log(
-      `- Vault#${STAKE}(): amount = ${amount.toString()}, txnId = ${record.transactionId.toString()}, staked = ${isStaked}\n`
+      `- Vault#${STAKE}(): amount = ${amount.toString()}, txnId = ${record.transactionId.toString()}, hex = ${hex}, staked = ${isStaked}\n`
     );
     return isStaked;
   };
@@ -71,11 +73,12 @@ export default class Vault extends Base {
       client,
       args
     );
-    const isUnStaked = result.getBool(0);
+    const hex = ethers.utils.hexlify(result.asBytes());
+    const wasUnStakeSuccessful = result.getBool(0);
     console.log(
-      `- Vault#${UNSTAKE}(): amount = ${amount.toString()}, txnId = ${record.transactionId.toString()}, unstaked = ${isUnStaked}\n`
+      `- Vault#${UNSTAKE}(): amount = ${amount.toString()}, txnId = ${record.transactionId.toString()}, hex = ${hex}, wasUnStakeSuccessful = ${wasUnStakeSuccessful}\n`
     );
-    return isUnStaked;
+    return wasUnStakeSuccessful;
   };
 
   addReward = async (
@@ -192,11 +195,20 @@ export default class Vault extends Base {
       client,
       args
     );
+    const offSet = result.getUint256(0).div(32).toNumber();
+    const arrayItemsLengthOffSet = result
+      .getUint256(offSet + 4)
+      .div(32)
+      .toNumber();
+    const arrayItemsLengthPosition = arrayItemsLengthOffSet + 1;
     const info = {
-      alreadyClaimedCount: result.getUint256(0).toNumber(),
-      claimedRewardsCount: result.getUint256(1).toNumber(),
-      unclaimedRewardsCount: result.getUint256(2).toNumber(),
-      totalRewardsCount: result.getUint256(3).toNumber(),
+      alreadyClaimedCount: result.getUint256(offSet + 0).toNumber(),
+      claimedRewardsCount: result.getUint256(offSet + 1).toNumber(),
+      unclaimedRewardsCount: result.getUint256(offSet + 2).toNumber(),
+      totalRewardsCount: result.getUint256(offSet + 3).toNumber(),
+      tokens: Helper.getAddressArray(result, arrayItemsLengthPosition).join(
+        ","
+      ),
     };
     console.log(`- Vault#${CLAIM_REWARDS}():`);
     console.table({ ...info, TxnId: record.transactionId.toString() });

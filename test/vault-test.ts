@@ -5,8 +5,8 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 describe("Vault Tests", function () {
-  const TOTAL_AMOUNT = TestHelper.toPrecision(100);
-  const STAKED_AMOUNT = TestHelper.toPrecision(50);
+  const TOTAL_AMOUNT = TestHelper.toPrecision(2000);
+  const STAKED_AMOUNT = TestHelper.toPrecision(100);
   const UN_STAKED_AMOUNT = TestHelper.toPrecision(10);
   const REWARD_AMOUNT = TestHelper.toPrecision(10);
   const LOCKING_PERIOD = 50; // 50 sec locking period
@@ -77,6 +77,9 @@ describe("Vault Tests", function () {
     expect(args.response.claimedRewardsCount).equals(claimedRewardsCount);
     expect(args.response.unclaimedRewardsCount).equals(unclaimedRewardsCount);
     expect(args.response.totalRewardsCount).equals(totalRewardsCount);
+    expect(args.response.claimedRewardsTokens.length).equals(
+      claimedRewardsCount
+    );
   }
 
   async function verifyRewardAddedEvent(
@@ -150,15 +153,37 @@ describe("Vault Tests", function () {
       );
     });
 
-    it("Verify contract init params set properly", async function () {
-      const { vaultContract, stakingTokenContract } = await loadFixture(
+    it("Verify update hedera service should be reverted for non-owner user", async function () {
+      const { vaultContract, hederaService, signers } = await loadFixture(
         deployFixture
       );
+      await expect(
+        vaultContract
+          .connect(signers[1])
+          .upgradeHederaService(hederaService.address)
+      ).revertedWith("Ownable: caller is not the owner");
+    });
+
+    it("Verify update hedera service should be succeeded for owner user", async function () {
+      const { vaultContract } = await loadFixture(deployFixture);
+      const hederaService = await TestHelper.deployMockHederaService();
+      await vaultContract.upgradeHederaService(hederaService.address);
+      expect(await vaultContract.getHederaServiceVersion()).equals(
+        hederaService.address
+      );
+    });
+
+    it("Verify contract init params set properly", async function () {
+      const { vaultContract, stakingTokenContract, hederaService } =
+        await loadFixture(deployFixture);
       expect(await vaultContract.getStakingTokenLockingPeriod()).equals(
         LOCKING_PERIOD
       );
       expect(await vaultContract.getStakingTokenAddress()).equals(
         stakingTokenContract.address
+      );
+      expect(await vaultContract.getHederaServiceVersion()).equals(
+        hederaService.address
       );
     });
   });
@@ -181,6 +206,12 @@ describe("Vault Tests", function () {
       );
     });
 
+    it("Verify stake operation should emit 'Staked' event", async function () {
+      const { vaultContract, owner } = await loadFixture(deployFixture);
+      const txn = await vaultContract.stake(STAKED_AMOUNT);
+      await verifyStakedEvent(txn, owner, STAKED_AMOUNT);
+    });
+
     it("Verify stake operation should be succeeded for valid inputs", async function () {
       const { vaultContract, owner, stakingTokenContract } = await loadFixture(
         deployFixture
@@ -190,8 +221,11 @@ describe("Vault Tests", function () {
       expect(await stakingTokenContract.balanceOf(owner.address)).equals(
         TOTAL_AMOUNT
       );
-      const txn = await vaultContract.stake(STAKED_AMOUNT);
-      await verifyStakedEvent(txn, owner, STAKED_AMOUNT);
+      expect(
+        await stakingTokenContract.balanceOf(vaultContract.address)
+      ).equals(0);
+
+      await vaultContract.stake(STAKED_AMOUNT);
 
       expect(await vaultContract.getStakingTokenTotalSupply()).equals(
         STAKED_AMOUNT
@@ -202,13 +236,19 @@ describe("Vault Tests", function () {
       expect(await stakingTokenContract.balanceOf(owner.address)).equals(
         TOTAL_AMOUNT - STAKED_AMOUNT
       );
+      expect(
+        await stakingTokenContract.balanceOf(vaultContract.address)
+      ).equals(STAKED_AMOUNT);
     });
 
     it("Verify multiple stake calls required when rewards can not be claimed automatically in one stake call for same user", async function () {
       const { vaultContract, owner, rewardsContract } = await loadFixture(
         deployFixture
       );
-      await vaultContract.stake(STAKED_AMOUNT / 2);
+      await vaultContract.stake(STAKED_AMOUNT);
+      expect(await vaultContract.getStakingTokenTotalSupply()).equals(
+        STAKED_AMOUNT
+      );
       for (const rewardContract of rewardsContract) {
         await vaultContract.addReward(
           rewardContract.address,
@@ -216,18 +256,17 @@ describe("Vault Tests", function () {
           owner.address
         );
       }
-      await vaultContract.stake(STAKED_AMOUNT / 2);
-      await vaultContract.stake(STAKED_AMOUNT / 2);
-      const txn = await vaultContract.stake(STAKED_AMOUNT / 2);
+      await vaultContract.stake(STAKED_AMOUNT);
+      await vaultContract.stake(STAKED_AMOUNT);
+      const txn = await vaultContract.stake(STAKED_AMOUNT);
       await verifyClaimRewardsCallResponseEvent(txn, owner, 80, 20, 0, 100);
-      await verifyStakedEvent(txn, owner, STAKED_AMOUNT / 2);
-
+      await verifyStakedEvent(txn, owner, STAKED_AMOUNT);
       expect(await vaultContract.getStakingTokenTotalSupply()).equals(
-        STAKED_AMOUNT
+        STAKED_AMOUNT * 2
       );
     });
 
-    it("Verify multiple stake calls required when rewards can not be claimed automatically in one stake call for multiple users", async function () {
+    it("Verify existing rewards will not be given out during staking for new user", async function () {
       const { vaultContract, owner, signers, reward1TokenContract } =
         await loadFixture(deployFixture);
       await vaultContract.connect(owner).stake(STAKED_AMOUNT);
@@ -236,10 +275,10 @@ describe("Vault Tests", function () {
         REWARD_AMOUNT,
         owner.address
       );
+      await vaultContract.connect(signers[1]).stake(STAKED_AMOUNT);
       expect(await vaultContract.canUserClaimRewards(owner.address)).equals(
         true
       );
-      await vaultContract.connect(signers[1]).stake(STAKED_AMOUNT);
       expect(
         await vaultContract.canUserClaimRewards(signers[1].address)
       ).equals(false);
@@ -249,6 +288,7 @@ describe("Vault Tests", function () {
   describe("Unstake tests", function () {
     it("Verify unstake operation should be reverted for non positive amount", async function () {
       const { vaultContract } = await loadFixture(deployFixture);
+      await vaultContract.stake(STAKED_AMOUNT);
       await expect(vaultContract.unstake(0)).revertedWith(
         "Vault: unstake amount must be a positive number"
       );
@@ -262,13 +302,22 @@ describe("Vault Tests", function () {
       );
     });
 
-    it("Verify unstake operation should be reverted when unstake amount is greater then stake amount", async function () {
+    it("Verify unstake operation should be reverted when unstake amount is greater then staked amount", async function () {
       const { vaultContract } = await loadFixture(deployFixture);
       await vaultContract.stake(STAKED_AMOUNT);
       await TestHelper.increaseEVMTime(ADVANCE_LOCKING_PERIOD);
       await expect(vaultContract.unstake(STAKED_AMOUNT + 1)).revertedWith(
         "Vault: unstake not allowed"
       );
+    });
+
+    it("Verify unstake operation should be reverted when no stake amount available for given user", async function () {
+      const { vaultContract, signers } = await loadFixture(deployFixture);
+      await vaultContract.stake(STAKED_AMOUNT);
+      await TestHelper.increaseEVMTime(ADVANCE_LOCKING_PERIOD);
+      await expect(
+        vaultContract.connect(signers[1]).unstake(STAKED_AMOUNT)
+      ).revertedWith("Vault: unstake not allowed");
     });
 
     it("Verify unstake operation should be reverted during token transfer", async function () {
@@ -283,6 +332,14 @@ describe("Vault Tests", function () {
       );
     });
 
+    it("Verify partial unstake operation should emit 'UnStaked' event", async function () {
+      const { vaultContract, owner } = await loadFixture(deployFixture);
+      await vaultContract.stake(STAKED_AMOUNT);
+      await TestHelper.increaseEVMTime(ADVANCE_LOCKING_PERIOD);
+      const txn = await vaultContract.unstake(STAKED_AMOUNT);
+      await verifyUnStakedEvent(txn, owner, STAKED_AMOUNT);
+    });
+
     it("Verify partial unstake operation should be succeeded", async function () {
       const { vaultContract } = await loadFixture(deployFixture);
       await vaultContract.stake(STAKED_AMOUNT);
@@ -294,11 +351,10 @@ describe("Vault Tests", function () {
     });
 
     it("Verify fully unstake operation should be succeeded", async function () {
-      const { vaultContract, owner } = await loadFixture(deployFixture);
+      const { vaultContract } = await loadFixture(deployFixture);
       await vaultContract.stake(STAKED_AMOUNT);
       await TestHelper.increaseEVMTime(ADVANCE_LOCKING_PERIOD);
-      const txn = await vaultContract.unstake(STAKED_AMOUNT);
-      await verifyUnStakedEvent(txn, owner, STAKED_AMOUNT);
+      await vaultContract.unstake(STAKED_AMOUNT);
       expect(await vaultContract.getStakingTokenTotalSupply()).equals(0);
     });
 
@@ -385,6 +441,21 @@ describe("Vault Tests", function () {
       ).revertedWith("Vault: Add reward failed");
     });
 
+    it("Verify reward operation should emit 'RewardAdded' event", async function () {
+      const {
+        vaultContract,
+        owner,
+        reward1TokenContract: reward1,
+      } = await loadFixture(deployFixture);
+      await vaultContract.stake(STAKED_AMOUNT);
+      const txn = await vaultContract.addReward(
+        reward1.address,
+        REWARD_AMOUNT,
+        owner.address
+      );
+      await verifyRewardAddedEvent(txn, owner, reward1, REWARD_AMOUNT);
+    });
+
     it("Verify reward operations should be succeeded for valid inputs", async function () {
       const {
         vaultContract,
@@ -397,26 +468,21 @@ describe("Vault Tests", function () {
       expect(await reward1.balanceOf(vaultContract.address)).equals(0);
       expect(await reward2.balanceOf(vaultContract.address)).equals(0);
 
-      const txn = await vaultContract.addReward(
+      await vaultContract.addReward(
         reward1.address,
         REWARD_AMOUNT,
         owner.address
       );
-      await verifyRewardAddedEvent(txn, owner, reward1, REWARD_AMOUNT);
-
-      const txn1 = await vaultContract.addReward(
+      await vaultContract.addReward(
         reward1.address,
         REWARD_AMOUNT,
         owner.address
       );
-      await verifyRewardAddedEvent(txn1, owner, reward1, REWARD_AMOUNT);
-
-      const txn2 = await vaultContract.addReward(
+      await vaultContract.addReward(
         reward2.address,
         REWARD_AMOUNT,
         owner.address
       );
-      await verifyRewardAddedEvent(txn2, owner, reward2, REWARD_AMOUNT);
 
       expect(await reward1.balanceOf(vaultContract.address)).equals(
         REWARD_AMOUNT * 2
@@ -444,10 +510,13 @@ describe("Vault Tests", function () {
       );
     });
 
-    it("Verify claim rewards call when 100 reward tokens are available where contract can transfer at-most 40 in single txn", async function () {
-      const { owner, vaultContract, rewardsContract } = await loadFixture(
-        deployFixture
-      );
+    it("Verify claim rewards call can transfer at-most 40 in single txn", async function () {
+      const {
+        owner,
+        vaultContract,
+        rewardsContract,
+        reward1TokenContract: reward1,
+      } = await loadFixture(deployFixture);
       await vaultContract.stake(STAKED_AMOUNT);
       for (const rewardContract of rewardsContract) {
         await vaultContract.addReward(
@@ -465,8 +534,17 @@ describe("Vault Tests", function () {
       const txn2 = await vaultContract.claimRewards(owner.address);
       await verifyClaimRewardsCallResponseEvent(txn2, owner, 80, 20, 0, 100);
 
+      await vaultContract.addReward(
+        reward1.address,
+        REWARD_AMOUNT,
+        owner.address
+      );
+
       const txn3 = await vaultContract.claimRewards(owner.address);
-      await verifyClaimRewardsCallResponseEvent(txn3, owner, 100, 0, 0, 100);
+      await verifyClaimRewardsCallResponseEvent(txn3, owner, 100, 1, 0, 101);
+
+      const txn4 = await vaultContract.claimRewards(owner.address);
+      await verifyClaimRewardsCallResponseEvent(txn4, owner, 101, 0, 0, 101);
     });
 
     it("Verify claim rewards call when no reward tokens are available", async function () {
@@ -477,7 +555,7 @@ describe("Vault Tests", function () {
       await verifyClaimRewardsCallResponseEvent(txn, owner, 0, 0, 0, 0);
     });
 
-    it("Verify one people, add reward, claim reward, one unstake", async function () {
+    it("Verify one people, one stake, add reward, claim reward, one unstake", async function () {
       const { vaultContract, owner, reward1TokenContract } = await loadFixture(
         deployFixture
       );
@@ -489,11 +567,10 @@ describe("Vault Tests", function () {
       );
       await TestHelper.increaseEVMTime(ADVANCE_LOCKING_PERIOD);
       await vaultContract.claimRewards(owner.address);
+      await vaultContract.unstake(UN_STAKED_AMOUNT);
       expect(
         await reward1TokenContract.balanceOf(vaultContract.address)
       ).equals(0);
-
-      await vaultContract.unstake(UN_STAKED_AMOUNT);
       expect(await reward1TokenContract.balanceOf(owner.address)).equals(
         TOTAL_AMOUNT
       );

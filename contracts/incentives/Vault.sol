@@ -47,6 +47,7 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
         public usersStakingTokenContribution;
 
     address[] private rewardTokens;
+    address[] private claimedRewardsTokens;
     mapping(address => RewardInfo) public tokensRewardInfo;
 
     function initialize(
@@ -204,8 +205,7 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
         address _user,
         uint256 _maxRewardsTransferPerTxn
     ) private returns (ClaimCallResponse memory response) {
-        response.totalRewardsCount = rewardTokens.length;
-        for (uint256 i = 0; i < response.totalRewardsCount; i++) {
+        for (uint256 i = 0; i < rewardTokens.length; i++) {
             address rewardToken = rewardTokens[i];
             RewardInfo memory rewardInfo = tokensRewardInfo[rewardToken];
             (
@@ -220,7 +220,9 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
                 response.unclaimedRewardsCount++;
                 continue;
             }
+            // rewards distributions start from here
             response.claimedRewardsCount++;
+            claimedRewardsTokens.push(rewardToken);
             _transferAndUpdateRewardTokenHistoryForGivenUser(
                 _user,
                 rewardToken,
@@ -228,6 +230,9 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
                 perShareUnclaimedAmount
             );
         }
+        response.totalRewardsCount = rewardTokens.length;
+        response.claimedRewardsTokens = claimedRewardsTokens;
+        delete claimedRewardsTokens;
     }
 
     function upgradeHederaService(

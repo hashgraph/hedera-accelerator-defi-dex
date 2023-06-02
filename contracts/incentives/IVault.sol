@@ -10,6 +10,7 @@ interface IVault {
         uint256 claimedRewardsCount;
         uint256 unclaimedRewardsCount;
         uint256 totalRewardsCount;
+        address[] claimedRewardsTokens;
     }
 
     function initialize(
