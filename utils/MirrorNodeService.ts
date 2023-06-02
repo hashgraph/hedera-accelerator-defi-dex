@@ -83,7 +83,10 @@ export class MirrorNodeService {
       return { message: r.result, timestamp };
     }
     if (message === "0x" || !this.web3.utils.isHex(message)) {
-      return { message, timestamp };
+      const parsedMessage =
+        await this.parseErrorMessageFromCallTraceIfAvailable(tId);
+      const finalMessage = parsedMessage.length > 0 ? parsedMessage : message;
+      return { message: finalMessage, timestamp };
     }
     const signature = message.substring(0, 10);
     const info = message.substring(10);
@@ -144,5 +147,25 @@ export class MirrorNodeService {
     eventsMap.forEach((items: any[]) => (mappedItems += items.length));
     this.isLogEnabled && console.log("- Mapping count:", mappedItems);
     return eventsMap;
+  }
+
+  private async getCallTrace(txnId: string) {
+    const calls: any[] = [];
+    let url = `${BASE_URL}/api/v1/contracts/results/${txnId}/actions?limit=100&order=desc`;
+    while ((url = await this.readRecords(url, calls, "actions")));
+    this.isLogEnabled && console.log("- Calls count:", calls.length);
+    return calls;
+  }
+
+  private async parseErrorMessageFromCallTraceIfAvailable(txnId: string) {
+    const errorMessages = (await this.getCallTrace(txnId))
+      .filter(
+        (call: any) =>
+          call.result_data_type === "ERROR" && call.result_data !== "0x"
+      )
+      .map((call: any) =>
+        String.fromCharCode(...ethers.utils.arrayify(call.result_data))
+      );
+    return [...new Set(errorMessages)].join(",");
   }
 }

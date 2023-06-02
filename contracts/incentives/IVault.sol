@@ -5,6 +5,13 @@ pragma solidity ^0.8.18;
 import "../common/IHederaService.sol";
 
 interface IVault {
+    struct ClaimCallResponse {
+        uint256 alreadyClaimedCount;
+        uint256 claimedRewardsCount;
+        uint256 unclaimedRewardsCount;
+        uint256 totalRewardsCount;
+    }
+
     function initialize(
         IHederaService _hederaService,
         address _stakingToken,
@@ -13,9 +20,9 @@ interface IVault {
 
     function addReward(address _token, uint256 _amount, address _from) external;
 
-    function stake(uint256 _amount) external;
+    function stake(uint256 _amount) external returns (bool);
 
-    function unstake(uint256 _amount) external;
+    function unstake(uint256 _amount) external returns (bool);
 
     function getStakingTokenTotalSupply() external view returns (uint256);
 
@@ -32,5 +39,7 @@ interface IVault {
 
     function canUserClaimRewards(address _user) external returns (bool);
 
-    function claimRewards(address _user) external returns (uint256);
+    function claimRewards(
+        address _user
+    ) external returns (ClaimCallResponse memory response);
 }
