@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { Contract } from "ethers";
+import { ethers, Contract } from "ethers";
 import { TestHelper } from "./TestHelper";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
@@ -70,6 +70,9 @@ describe("Vault Tests", function () {
       await TestHelper.readEvents(txn, ["ClaimRewardsCallResponse"])
     ).pop();
     const { name, args } = { name: lastEvent.event, args: lastEvent.args };
+    const claimedRewardsTokens = args.response.claimedRewardsTokens.filter(
+      (item: string) => ethers.constants.AddressZero !== item
+    );
     expect(name).equals("ClaimRewardsCallResponse");
     expect(args.length).equals(2);
     expect(args.user).equals(owner.address);
@@ -77,9 +80,7 @@ describe("Vault Tests", function () {
     expect(args.response.claimedRewardsCount).equals(claimedRewardsCount);
     expect(args.response.unclaimedRewardsCount).equals(unclaimedRewardsCount);
     expect(args.response.totalRewardsCount).equals(totalRewardsCount);
-    expect(args.response.claimedRewardsTokens.length).equals(
-      claimedRewardsCount
-    );
+    expect(claimedRewardsTokens.length).equals(claimedRewardsCount);
   }
 
   async function verifyRewardAddedEvent(
