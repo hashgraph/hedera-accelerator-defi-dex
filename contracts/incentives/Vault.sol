@@ -12,6 +12,18 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 contract Vault is IVault, OwnableUpgradeable, TokenOperations {
     using PRBMathUD60x18 for uint256;
 
+    event Staked(address indexed user, uint256 amount);
+    event UnStaked(address indexed user, uint256 amount);
+    event RewardAdded(
+        address indexed user,
+        address indexed reward,
+        uint256 amount
+    );
+    event ClaimRewardsCallResponse(
+        address indexed user,
+        ClaimCallResponse response
+    );
+
     struct UserStakingTokenContribution {
         bool alreadyStaked;
         uint256 stakingTokenTotal;
@@ -57,25 +69,32 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
         _associateToken(_hederaService, address(this), _stakingToken);
     }
 
-    function stake(uint256 _amount) external override {
+    function stake(uint256 _amount) external override returns (bool staked) {
         require(_amount > 0, "Vault: stake amount must be a positive number");
-        require(
-            !canUserClaimRewards(msg.sender),
-            "Vault: rewards should be claimed before stake"
-        );
         if (!usersStakingTokenContribution[msg.sender].alreadyStaked) {
             _setUpStaker(msg.sender);
+            _stake(msg.sender, _amount);
+            staked = true;
+        } else if (
+            claimRewardsInternally(msg.sender).unclaimedRewardsCount == 0
+        ) {
+            _stake(msg.sender, _amount);
+            staked = true;
         }
-        _stake(msg.sender, _amount);
     }
 
-    function unstake(uint256 _amount) external override {
+    function unstake(
+        uint256 _amount
+    ) external override returns (bool unstaked) {
         require(_amount > 0, "Vault: unstake amount must be a positive number");
         require(
             canUserUnStakeTokens(msg.sender, _amount),
             "Vault: unstake not allowed"
         );
-        _unstake(msg.sender, _amount);
+        if (claimRewardsInternally(msg.sender).unclaimedRewardsCount == 0) {
+            _unstake(msg.sender, _amount);
+            unstaked = true;
+        }
     }
 
     function addReward(
@@ -100,6 +119,7 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
                 HederaResponseCodes.SUCCESS,
             "Vault: Add reward failed"
         );
+        emit RewardAdded(_from, _token, _amount);
     }
 
     function stakedTokenByUser(
@@ -141,8 +161,7 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
             cInfo.stakingTokenTotal > 0 &&
             cInfo.stakingTokenTotal >= _amount &&
             block.timestamp >
-            (cInfo.lastLockedTime + stakingTokenLockingPeriod) &&
-            !canUserClaimRewards(_user);
+            (cInfo.lastLockedTime + stakingTokenLockingPeriod);
     }
 
     function canUserClaimRewards(
@@ -165,35 +184,56 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
 
     function claimRewards(
         address _user
-    ) public override returns (uint256 claimedRewardsCount) {
-        require(
-            canUserClaimRewards(_user),
-            "Vault: no rewards available for user"
+    ) external override returns (ClaimCallResponse memory response) {
+        response = _claimRewardsAndGetResponse(_user, MAX_REWARDS_PER_TXN);
+        emit ClaimRewardsCallResponse(_user, response);
+        return response;
+    }
+
+    function claimRewardsInternally(
+        address _user
+    ) private returns (ClaimCallResponse memory response) {
+        response = _claimRewardsAndGetResponse(_user, MAX_REWARDS_PER_TXN);
+        if (response.claimedRewardsCount > 0) {
+            emit ClaimRewardsCallResponse(_user, response);
+        }
+        return response;
+    }
+
+    function _claimRewardsAndGetResponse(
+        address _user,
+        uint256 _maxRewardsTransferPerTxn
+    ) private returns (ClaimCallResponse memory response) {
+        response.claimedRewardsTokens = new address[](
+            _maxRewardsTransferPerTxn
         );
+        response.totalRewardsCount = rewardTokens.length;
         for (uint256 i = 0; i < rewardTokens.length; i++) {
             address rewardToken = rewardTokens[i];
             RewardInfo memory rewardInfo = tokensRewardInfo[rewardToken];
             (
-                uint256 unclaimedRewardAmount,
-                uint256 perShareRewardAmount
+                uint256 unclaimedAmount,
+                uint256 perShareUnclaimedAmount
             ) = _unclaimedRewardAmountDetails(_user, rewardToken, rewardInfo);
-            if (unclaimedRewardAmount > 0) {
-                UserStakingTokenContribution
-                    storage cInfo = usersStakingTokenContribution[_user];
-                cInfo.rewardClaimed[rewardToken] = perShareRewardAmount;
-                require(
-                    _transferToken(
-                        rewardToken,
-                        address(this),
-                        _user,
-                        unclaimedRewardAmount
-                    ) == HederaResponseCodes.SUCCESS,
-                    "Vault: Claim reward failed"
-                );
-                if (++claimedRewardsCount >= MAX_REWARDS_PER_TXN) {
-                    break;
-                }
+            if (unclaimedAmount == 0) {
+                response.alreadyClaimedCount++;
+                continue;
             }
+            if (response.claimedRewardsCount >= _maxRewardsTransferPerTxn) {
+                response.unclaimedRewardsCount++;
+                continue;
+            }
+            // rewards distributions start from here
+            response.claimedRewardsTokens[
+                response.claimedRewardsCount
+            ] = rewardToken;
+            response.claimedRewardsCount++;
+            _transferAndUpdateRewardTokenHistoryForGivenUser(
+                _user,
+                rewardToken,
+                unclaimedAmount,
+                perShareUnclaimedAmount
+            );
         }
     }
 
@@ -223,6 +263,7 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
             ) == HederaResponseCodes.SUCCESS,
             "Vault: staking failed"
         );
+        emit Staked(_user, _amount);
     }
 
     function _unstake(address _user, uint256 _amount) private {
@@ -242,6 +283,7 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
             ) == HederaResponseCodes.SUCCESS,
             "Vault: unstaking failed"
         );
+        emit UnStaked(_user, _amount);
     }
 
     function _setUpStaker(address _user) private {
@@ -259,14 +301,37 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
         address _user,
         address _rewardToken,
         RewardInfo memory _rewardInfo
-    ) private view returns (uint256 unclaimedAmount, uint256 perShareAmount) {
-        perShareAmount = _rewardInfo.perShareAmount;
+    )
+        private
+        view
+        returns (uint256 unclaimedAmount, uint256 perShareUnclaimedAmount)
+    {
+        uint256 perShareAmount = _rewardInfo.perShareAmount;
         UserStakingTokenContribution
             storage cInfo = usersStakingTokenContribution[_user];
         uint256 userStakingTokenTotal = cInfo.stakingTokenTotal;
         uint256 perShareClaimedAmount = cInfo.rewardClaimed[_rewardToken];
-        uint256 perShareUnclaimedAmount = perShareAmount -
-            perShareClaimedAmount;
+        perShareUnclaimedAmount = perShareAmount - perShareClaimedAmount;
         unclaimedAmount = userStakingTokenTotal.mul(perShareUnclaimedAmount);
+    }
+
+    function _transferAndUpdateRewardTokenHistoryForGivenUser(
+        address _user,
+        address _rewardToken,
+        uint256 _unclaimedAmount,
+        uint256 _perShareUnclaimedAmount
+    ) private {
+        UserStakingTokenContribution
+            storage cInfo = usersStakingTokenContribution[_user];
+        cInfo.rewardClaimed[_rewardToken] += _perShareUnclaimedAmount;
+        require(
+            _transferToken(
+                _rewardToken,
+                address(this),
+                _user,
+                _unclaimedAmount
+            ) == HederaResponseCodes.SUCCESS,
+            "Vault: Claim reward failed"
+        );
     }
 }

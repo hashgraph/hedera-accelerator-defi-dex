@@ -2,6 +2,7 @@ import Base from "./Base";
 import BigNumber from "bignumber.js";
 
 import { ethers } from "ethers";
+import { Helper } from "../../utils/Helper";
 import { clientsInfo } from "../../utils/ClientManagement";
 import {
   Client,
@@ -50,18 +51,34 @@ export default class Vault extends Base {
 
   stake = async (amount: BigNumber | number, client: Client) => {
     const args = new ContractFunctionParameters().addUint256(amount);
-    const { record } = await this.execute(5_00_000, STAKE, client, args);
-    console.log(
-      `- Vault#${STAKE}(): done, amount = ${amount.toString()}, TxnId = ${record.transactionId.toString()}\n`
+    const { record, result } = await this.execute(
+      5_00_000,
+      STAKE,
+      client,
+      args
     );
+    const hex = ethers.utils.hexlify(result.asBytes());
+    const isStaked = result.getBool(0);
+    console.log(
+      `- Vault#${STAKE}(): amount = ${amount.toString()}, txnId = ${record.transactionId.toString()}, hex = ${hex}, staked = ${isStaked}\n`
+    );
+    return isStaked;
   };
 
   unstake = async (amount: BigNumber | number, client: Client) => {
     const args = new ContractFunctionParameters().addUint256(amount);
-    const { record } = await this.execute(9_00_000, UNSTAKE, client, args);
-    console.log(
-      `- Vault#${UNSTAKE}(): done, amount = ${amount.toString()}, TxnId = ${record.transactionId.toString()}\n`
+    const { record, result } = await this.execute(
+      9_00_000,
+      UNSTAKE,
+      client,
+      args
     );
+    const hex = ethers.utils.hexlify(result.asBytes());
+    const wasUnStakeSuccessful = result.getBool(0);
+    console.log(
+      `- Vault#${UNSTAKE}(): amount = ${amount.toString()}, txnId = ${record.transactionId.toString()}, hex = ${hex}, wasUnStakeSuccessful = ${wasUnStakeSuccessful}\n`
+    );
+    return wasUnStakeSuccessful;
   };
 
   addReward = async (
@@ -172,15 +189,26 @@ export default class Vault extends Base {
     const args = new ContractFunctionParameters().addAddress(
       userAccount.toSolidityAddress()
     );
-    const { record } = await this.execute(
+    const { record, result } = await this.execute(
       1_000_000,
       CLAIM_REWARDS,
       client,
       args
     );
-    console.log(
-      `- Vault#${CLAIM_REWARDS}(): done, TxnId = ${record.transactionId.toString()}\n`
-    );
+    const offSet = result.getUint256(0).div(32).toNumber();
+    const tokens = Helper.getAddressArray(result, offSet, offSet + 4)
+      .filter((item: string) => !ethers.constants.AddressZero.includes(item))
+      .join(",");
+    const info = {
+      alreadyClaimedCount: result.getUint256(offSet + 0).toNumber(),
+      claimedRewardsCount: result.getUint256(offSet + 1).toNumber(),
+      unclaimedRewardsCount: result.getUint256(offSet + 2).toNumber(),
+      totalRewardsCount: result.getUint256(offSet + 3).toNumber(),
+      tokens,
+    };
+    console.log(`- Vault#${CLAIM_REWARDS}():`);
+    console.table({ ...info, TxnId: record.transactionId.toString() });
+    console.log(`\n`);
   };
 
   canUserClaimRewards = async (

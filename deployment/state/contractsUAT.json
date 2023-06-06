@@ -167,5 +167,14 @@
     "hash": "e6342a9dfddff69acdeb102d8a6f2c73",
     "transparentProxyAddress": "0x0000000000000000000000000000000000d177e6",
     "transparentProxyId": "0.0.13727718"
+  },
+  {
+    "name": "vault",
+    "id": "0.0.13885900",
+    "address": "0x0000000000000000000000000000000000d3e1cc",
+    "timestamp": "2023-06-06T06:59:39.964Z",
+    "hash": "f67ef2779a56eda2608b02b065d9df73",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000d3e1e6",
+    "transparentProxyId": "0.0.13885926"
   }
 ]

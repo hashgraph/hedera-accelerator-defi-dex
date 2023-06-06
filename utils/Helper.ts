@@ -71,11 +71,21 @@ export class Helper {
 
   /// This function is used to iterate over result of ContractFunctionResult which returning array
   /// it return address as string stored after default values.
-  static getAddressArray = (contractFunctionResult: ContractFunctionResult) => {
-    const tokenCount = contractFunctionResult.getUint256(1);
+  static getAddressArray = (
+    contractFunctionResult: ContractFunctionResult,
+    topLevelOffset: number = 0,
+    arrayItemsLengthIndexOffset: number = 0
+  ) => {
+    const arrayItemsLengthIndex = contractFunctionResult
+      .getUint256(arrayItemsLengthIndexOffset)
+      .div(32)
+      .plus(topLevelOffset)
+      .toNumber();
+    const itemsCount = contractFunctionResult.getUint256(arrayItemsLengthIndex);
+    const firstItemIndex = arrayItemsLengthIndex + 1;
     const result: string[] = [];
-    for (let i = 0; i < Number(tokenCount); i++) {
-      result.push(contractFunctionResult.getAddress(i + 2));
+    for (let i = 0; i < Number(itemsCount); i++) {
+      result.push(contractFunctionResult.getAddress(firstItemIndex + i));
     }
     return result;
   };

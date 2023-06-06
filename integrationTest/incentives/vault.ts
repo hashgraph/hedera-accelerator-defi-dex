@@ -42,7 +42,7 @@ const stake = async (vault: Vault) => {
     clientsInfo.uiUserKey,
     clientsInfo.uiUserClient
   );
-  await vault.stake(STAKING_TOKEN_QTY, clientsInfo.uiUserClient);
+  return await vault.stake(STAKING_TOKEN_QTY, clientsInfo.uiUserClient);
 };
 
 async function main() {
@@ -60,20 +60,22 @@ async function main() {
   );
 
   await stake(vault);
+  const stakedAmount = await vault.stakedTokenByUser(clientsInfo.uiUserId);
+  await vault.canUserUnStakeTokens(clientsInfo.uiUserId, stakedAmount);
+
   await addRewards(vault, REWARD_TOKEN);
   await addRewards(vault, REWARD_TOKEN_1);
   await vault.getStakingTokenTotalSupply();
-
+  await vault.claimRewards(clientsInfo.uiUserId);
+  await vault.claimRewards(clientsInfo.uiUserId);
   const amount = await vault.stakedTokenByUser(clientsInfo.uiUserId);
-  await vault.canUserUnStakeTokens(clientsInfo.uiUserId, amount);
-  await Helper.delay(LOCKING_PERIOD_IN_SECONDS * 1e3);
-  await vault.canUserUnStakeTokens(clientsInfo.uiUserId, amount);
-  const rewardsAvailable = await vault.canUserClaimRewards(
-    clientsInfo.uiUserId
-  );
-  rewardsAvailable && (await vault.claimRewards(clientsInfo.uiUserId));
-  await vault.canUserUnStakeTokens(clientsInfo.uiUserId, amount);
-  await vault.unstake(amount, clientsInfo.uiUserClient);
+
+  !(await vault.canUserUnStakeTokens(clientsInfo.uiUserId, amount)) &&
+    (await Helper.delay(LOCKING_PERIOD_IN_SECONDS * 1e3));
+
+  (await vault.canUserUnStakeTokens(clientsInfo.uiUserId, amount)) &&
+    (await vault.unstake(amount, clientsInfo.uiUserClient));
+
   await vault.getStakingTokenTotalSupply();
 }
 
