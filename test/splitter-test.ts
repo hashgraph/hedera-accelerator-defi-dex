@@ -129,7 +129,7 @@ describe("Splitter tests", function () {
         owner.address,
         REWARD_AMOUNT
       );
-      const events = (await txn.wait()).events;
+      const events = await TestHelper.readEvents(txn, ["TokenTransferred"]);
       for (let i = 0; i < events.length; i++) {
         const eventData = events[i];
         expect(eventData.event).equals("TokenTransferred");
