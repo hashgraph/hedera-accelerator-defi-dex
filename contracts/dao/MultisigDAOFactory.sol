@@ -9,6 +9,7 @@ import "../common/CommonOperations.sol";
 
 import "../dao/MultisigDAO.sol";
 
+import "../gnosis/HederaMultiSend.sol";
 import "../gnosis/HederaGnosisSafe.sol";
 import "../gnosis/HederaGnosisSafeProxyFactory.sol";
 
@@ -58,6 +59,7 @@ contract MultisigDAOFactory is
     address private safeLogic;
     address private safeFactory;
     IHederaService private hederaService;
+    HederaMultiSend private multiSend;
 
     address[] private daos;
 
@@ -73,7 +75,8 @@ contract MultisigDAOFactory is
         address _daoLogic,
         address _safeLogic,
         address _safeFactory,
-        IHederaService _hederaService
+        IHederaService _hederaService,
+        HederaMultiSend _multiSend
     ) external initializer {
         __Ownable_init();
         proxyAdmin = _proxyAdmin;
@@ -81,6 +84,7 @@ contract MultisigDAOFactory is
         safeLogic = _safeLogic;
         safeFactory = _safeFactory;
         hederaService = _hederaService;
+        multiSend = _multiSend;
         emit LogicUpdated(address(0), daoLogic, DaoLogic);
         emit LogicUpdated(address(0), safeLogic, SafeLogic);
         emit LogicUpdated(address(0), safeFactory, SafeFactory);
@@ -141,6 +145,14 @@ contract MultisigDAOFactory is
         }
     }
 
+    function upgradeMultiSend(HederaMultiSend _multiSend) external onlyOwner {
+        multiSend = _multiSend;
+        for (uint i = 0; i < daos.length; i++) {
+            MultiSigDAO dao = MultiSigDAO(daos[i]);
+            dao.upgradeMultiSend(multiSend);
+        }
+    }
+
     function getHederaServiceVersion() external view returns (IHederaService) {
         return hederaService;
     }
@@ -166,7 +178,8 @@ contract MultisigDAOFactory is
             _desc,
             _webLinks,
             hederaGnosisSafe,
-            hederaService
+            hederaService,
+            multiSend
         );
         return address(_mSigDAO);
     }

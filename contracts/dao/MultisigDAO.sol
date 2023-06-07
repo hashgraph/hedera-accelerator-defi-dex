@@ -3,6 +3,7 @@ pragma solidity ^0.8.18;
 
 import "./BaseDAO.sol";
 import "../common/IHederaService.sol";
+import "../gnosis/HederaMultiSend.sol";
 import "../gnosis/HederaGnosisSafe.sol";
 import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
@@ -41,6 +42,10 @@ contract MultiSigDAO is BaseDAO {
     HederaGnosisSafe private hederaGnosisSafe;
     mapping(bytes32 => TransactionInfo) private transactions;
 
+    bytes4 private constant MULTI_SEND_TXN_SELECTOR =
+        bytes4(keccak256("multiSend(bytes)"));
+    HederaMultiSend private multiSend;
+
     function initialize(
         address _admin,
         string memory _name,
@@ -48,10 +53,12 @@ contract MultiSigDAO is BaseDAO {
         string memory _description,
         string[] memory _webLinks,
         HederaGnosisSafe _hederaGnosisSafe,
-        IHederaService _hederaService
+        IHederaService _hederaService,
+        HederaMultiSend _multiSend
     ) external initializer {
         hederaService = _hederaService;
         hederaGnosisSafe = _hederaGnosisSafe;
+        multiSend = _multiSend;
         __BaseDAO_init(_admin, _name, _logoUrl, _description, _webLinks);
         systemUser = msg.sender;
     }
@@ -74,6 +81,10 @@ contract MultiSigDAO is BaseDAO {
         } else {
             return TransactionState.Pending;
         }
+    }
+
+    function getApprovalCounts(bytes32 _txnHash) public view returns (uint256) {
+        return hederaGnosisSafe.getApprovalCounts(_txnHash);
     }
 
     function getTransactionInfo(
@@ -129,10 +140,46 @@ contract MultiSigDAO is BaseDAO {
         return proposeTransaction(address(hederaGnosisSafe), data, call, 1);
     }
 
+    function proposeBatchTransaction(
+        address[] memory _targets,
+        uint256[] memory _values,
+        bytes[] memory _calldatas
+    ) public payable returns (bytes32) {
+        require(
+            _targets.length > 0 &&
+                _targets.length == _values.length &&
+                _targets.length == _calldatas.length,
+            "MultiSigDAO: invalid transaction length"
+        );
+        bytes memory transactionsBytes;
+        for (uint256 i = 0; i < _targets.length; i++) {
+            transactionsBytes = abi.encodePacked(
+                transactionsBytes,
+                uint8(0),
+                _targets[i],
+                _values[i],
+                _calldatas[i].length,
+                _calldatas[i]
+            );
+        }
+        bytes memory data = abi.encodeWithSelector(
+            MULTI_SEND_TXN_SELECTOR,
+            transactionsBytes
+        );
+        Enum.Operation call = Enum.Operation.Call;
+        return proposeTransaction(address(multiSend), data, call, 2);
+    }
+
     function upgradeHederaService(
         IHederaService newHederaService
     ) external onlySystemUser {
         hederaService = newHederaService;
+    }
+
+    function upgradeMultiSend(
+        HederaMultiSend _multiSend
+    ) external onlySystemUser {
+        multiSend = _multiSend;
     }
 
     function getHederaServiceVersion() external view returns (IHederaService) {

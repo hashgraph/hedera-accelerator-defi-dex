@@ -37,15 +37,7 @@ contract HederaGnosisSafe is
     }
 
     function checkApprovals(bytes32 dataHash) public view returns (bool) {
-        uint256 approvedCount = 0;
-        address currentOwner = owners[SENTINEL_OWNERS];
-        while (currentOwner != SENTINEL_OWNERS) {
-            if (approvedHashes[currentOwner][dataHash] == 1) {
-                approvedCount++;
-            }
-            currentOwner = owners[currentOwner];
-        }
-        return approvedCount > 0 && approvedCount >= threshold;
+        return getApprovalCounts(dataHash) >= threshold;
     }
 
     function transferToSafe(
@@ -63,6 +55,18 @@ contract HederaGnosisSafe is
             emit TokenTransferred(_token, _sender, _amount);
         } else {
             revert("HederaGnosisSafe: transfer token to safe failed");
+        }
+    }
+
+    function getApprovalCounts(
+        bytes32 dataHash
+    ) public view returns (uint256 approvedCount) {
+        address currentOwner = owners[SENTINEL_OWNERS];
+        while (currentOwner != SENTINEL_OWNERS) {
+            if (approvedHashes[currentOwner][dataHash] == 1) {
+                approvedCount++;
+            }
+            currentOwner = owners[currentOwner];
         }
     }
 

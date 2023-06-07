@@ -49,6 +49,7 @@ export default class ContractMetadata {
     "MultisigDAOFactory",
     "MultiSigDAO",
     "NFTDAOFactory",
+    "HederaMultiSend",
   ];
 
   static SUPPORTED_PROXY_OPTIONS = ["create", "update"];

@@ -39,7 +39,8 @@ export default class MultiSigDAOFactory extends Base {
         .addAddress(multiSigDao.address)
         .addAddress(gnosisLogic.address)
         .addAddress(gnosisFactory.address)
-        .addAddress(this.htsAddress);
+        .addAddress(this.htsAddress)
+        .addAddress(this.getMultiSendContractAddress());
       await this.execute(9_00_000, INITIALIZE, client, args);
       console.log(`- MultiSigDAOFactory#${INITIALIZE}(): done\n`);
       return;

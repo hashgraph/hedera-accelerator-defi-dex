@@ -1,6 +1,7 @@
 import Base from "./Base";
 import BaseDao from "./BaseDao";
 import Common from "./Common";
+import ContractMetadata from "../../utils/ContractMetadata";
 
 import { ethers } from "ethers";
 import { Helper } from "../../utils/Helper";
@@ -21,6 +22,8 @@ const STATE = "state";
 const INITIALIZE = "initialize";
 const GET_TRANSACTION_INFO = "getTransactionInfo";
 const PROPOSE_TRANSACTION = "proposeTransaction";
+const GET_APPROVAL_COUNTS = "getApprovalCounts";
+const PROPOSE_BATCH_TRANSACTION = "proposeBatchTransaction";
 const PROPOSE_TRANSFER_TRANSACTION = "proposeTransferTransaction";
 const GET_HEDERA_GNOSIS_SAFE_CONTRACT_ADDRESS =
   "getHederaGnosisSafeContractAddress";
@@ -75,7 +78,8 @@ export default class MultiSigDao extends BaseDao {
         .addString(desc)
         .addStringArray(webLinks)
         .addAddress(gnosisProxy.toSolidityAddress())
-        .addAddress(this.htsAddress);
+        .addAddress(this.htsAddress)
+        .addAddress(this.getMultiSendContractAddress());
       await this.execute(9_00_000, INITIALIZE, client, args);
       console.log(`- MultiSigDao#${INITIALIZE}(): done\n`);
       return;
@@ -110,6 +114,25 @@ export default class MultiSigDao extends BaseDao {
       `- MultiSigDao#${STATE}(): txnHash = ${hash}, state = ${state}\n`
     );
     return state;
+  };
+
+  getApprovalCounts = async (
+    txnHash: Uint8Array,
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    const args = new ContractFunctionParameters().addBytes32(txnHash);
+    const { result } = await this.execute(
+      5_00_000,
+      GET_APPROVAL_COUNTS,
+      client,
+      args
+    );
+    const hash = ethers.utils.hexlify(txnHash);
+    const count = result.getInt256(0);
+    console.log(
+      `- MultiSigDao#${GET_APPROVAL_COUNTS}(): txnHash = ${hash}, count = ${count}\n`
+    );
+    return count;
   };
 
   getTransactionInfo = async (
@@ -267,6 +290,32 @@ export default class MultiSigDao extends BaseDao {
       10,
       client
     );
+  };
+
+  proposeBatchTransaction = async (
+    values: number[],
+    targets: ContractId[],
+    callDataArray: Uint8Array[],
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    const args = new ContractFunctionParameters()
+      .addAddressArray(
+        targets.map((address: ContractId) => address.toSolidityAddress())
+      )
+      .addUint256Array(values)
+      .addBytesArray(callDataArray);
+    const { result } = await this.execute(
+      1_000_000,
+      PROPOSE_BATCH_TRANSACTION,
+      client,
+      args
+    );
+    const txnHash = result.getBytes32(0);
+    const hash = ethers.utils.hexlify(txnHash);
+    console.log(
+      `- MultiSigDao#${PROPOSE_BATCH_TRANSACTION}(): txnHash = ${hash}\n`
+    );
+    return txnHash;
   };
 
   proposeTransferTransaction = async (
