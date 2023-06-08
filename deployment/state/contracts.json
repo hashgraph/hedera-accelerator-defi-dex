@@ -176,5 +176,32 @@
     "hash": "f67ef2779a56eda2608b02b065d9df73",
     "transparentProxyAddress": "0x0000000000000000000000000000000000d3e1e6",
     "transparentProxyId": "0.0.13885926"
+  },
+  {
+    "name": "contractupgradedaofactory",
+    "id": "0.0.14027323",
+    "address": "0x0000000000000000000000000000000000d60a3b",
+    "timestamp": "2023-06-08T14:02:15.114Z",
+    "hash": "2c4245d4cc5d7dd63afc7411958b46b2",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000d60a3d",
+    "transparentProxyId": "0.0.14027325"
+  },
+  {
+    "name": "tokentransferdaofactory",
+    "id": "0.0.14027495",
+    "address": "0x0000000000000000000000000000000000d60ae7",
+    "timestamp": "2023-06-08T14:27:06.614Z",
+    "hash": "d4d27ab60bef23969408e665a760708f",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000d60aea",
+    "transparentProxyId": "0.0.14027498"
+  },
+  {
+    "name": "tokentransferdaofactory",
+    "id": "0.0.14027518",
+    "address": "0x0000000000000000000000000000000000d60afe",
+    "timestamp": "2023-06-08T14:36:12.818Z",
+    "hash": "d4d27ab60bef23969408e665a760708f",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000d60b04",
+    "transparentProxyId": "0.0.14027524"
   }
 ]

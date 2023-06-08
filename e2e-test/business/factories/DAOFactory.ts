@@ -20,7 +20,7 @@ const UPGRADE_TOKEN_HOLDER_FACTORY = "upgradeTokenHolderFactory";
 const GET_TOKEN_HOLDER_FACTORY_ADDRESS = "getTokenHolderFactoryAddress";
 const UPGRADE_TOKEN_DAO_LOGIC_IMPL = "upgradeTokenDaoLogicImplementation";
 const UPGRADE_GOVERNOR_TOKEN_TRANSFER_LOGIC_IMPL =
-  "upgradeTokenTransferLogicImplementation";
+  "upgradeGovernorLogicImplementation";
 
 export default class DAOFactory extends Base {
   private _isNFTType: Boolean;
@@ -47,15 +47,15 @@ export default class DAOFactory extends Base {
     if (await this.isInitializationPending()) {
       const proxyAdmin = clientsInfo.dexOwnerId.toSolidityAddress();
       const deployedItems = await deployment.deployContracts([
-        csDev.governorTokenDao,
+        csDev.tokenTransferDAO,
         csDev.governorTTContractName,
       ]);
-      const governorTokenDao = deployedItems.get(csDev.governorTokenDao);
+      const tokenTransferDAO = deployedItems.get(csDev.tokenTransferDAO);
       const governorTT = deployedItems.get(csDev.governorTTContractName);
       const args = new ContractFunctionParameters()
         .addAddress(proxyAdmin)
         .addAddress(this.htsAddress)
-        .addAddress(governorTokenDao.address)
+        .addAddress(tokenTransferDAO.address)
         .addAddress(this.getTokenHolderFactoryAddressFromJson())
         .addAddress(governorTT.address);
       await this.execute(800000, INITIALIZE, client, args);
@@ -183,16 +183,16 @@ export default class DAOFactory extends Base {
   };
 
   getGovernorTokenDaoInstance = (daoProxyAddress: string) => {
-    const governorTokenDaoProxyId =
+    const tokenTransferDAOProxyId =
       ContractId.fromSolidityAddress(daoProxyAddress).toString();
-    return this._provider.getGovernorTokenDao(governorTokenDaoProxyId);
+    return this._provider.getGovernorTokenDao(tokenTransferDAOProxyId);
   };
 
   getGovernorTokenTransferInstance = async (
-    governorTokenDao: GovernorTokenDao
+    tokenTransferDAO: GovernorTokenDao
   ) => {
     const governorTTId =
-      await governorTokenDao.getGovernorTokenTransferContractAddress();
+      await tokenTransferDAO.getGovernorTokenTransferContractAddress();
     return this._provider.getGovernor("", governorTTId.toString());
   };
 

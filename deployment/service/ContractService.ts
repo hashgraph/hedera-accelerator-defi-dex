@@ -8,14 +8,15 @@ export class ContractService {
   public static SAFE = "hederagnosissafe";
   public static SAFE_FACTORY = "hederagnosissafeproxyfactory";
   public static NFT_DAO_FACTORY = "nftdaofactory";
-  public static FT_DAO_FACTORY = "governancedaofactory";
+  public static FT_DAO_FACTORY = "tokentransferdaofactory";
   public static GOVERNOR_TT = "governortransfertoken";
   public static PAIR = "pair";
   public static LP_TOKEN = "lptoken";
   public static VAULT = "vault";
   public static SPLITTER = "splitter";
+  public static CONTRACT_UPGRADE_DAO_FACTORY = "contractupgradedaofactory";
 
-  public governanceDaoFactory = "governancedaofactory";
+  public tokenTransferDAOFactory = "tokentransferdaofactory";
   public factoryContractName = "factory";
   public pairContractName = "pair";
   public hederaServiceContractName = "hederaservice";
@@ -39,7 +40,8 @@ export class ContractService {
   public godTokenHolderFactory = "godtokenholderfactory";
   public nftTokenHolderFactory = "nfttokenholderfactory";
 
-  public governorTokenDao = "governortokendao";
+  public tokenTransferDAO = "tokentransferdao";
+  public contractUpgradeDao = "contractupgradedao";
 
   private contractRecordFile = "./deployment/state/contracts.json";
   static DEV_CONTRACTS_PATH = "./deployment/state/contracts.json";

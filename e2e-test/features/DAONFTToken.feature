@@ -5,7 +5,7 @@ Feature: DAONFT Token e2e test
     This feature file contains e2e test for DAO NFT Token
 
 Scenario: Deploy contracts 
-    When User deploy the following contracts "GovernorTokenDAO,GovernorTransferToken,NFTHolder"
+    When User deploy the following contracts "TokenTransferDAO,GovernorTransferToken,NFTHolder"
     When User gets the instances of deployed contracts
 
 Scenario: Verify user cann't create a DAO with empty name 

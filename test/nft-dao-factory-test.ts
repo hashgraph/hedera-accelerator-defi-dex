@@ -28,7 +28,7 @@ describe("NFTDAOFactory contract tests", function () {
 
     const bastHTS = await TestHelper.deployMockHederaService();
 
-    const nftTokenDAO = await TestHelper.deployLogic("GovernorTokenDAO");
+    const nftTokenDAO = await TestHelper.deployLogic("TokenTransferDAO");
 
     const nftHolder = await TestHelper.deployLogic("NFTHolder");
     const nftHolderFactory = await TestHelper.deployProxy(
@@ -242,7 +242,7 @@ describe("NFTDAOFactory contract tests", function () {
     await expect(
       governorDAOFactoryInstance
         .connect(daoAdminTwo)
-        .upgradeTokenTransferLogicImplementation(zeroAddress)
+        .upgradeGovernorLogicImplementation(zeroAddress)
     )
       .revertedWithCustomError(governorDAOFactoryInstance, "NotAdmin")
       .withArgs("DAOFactory: auth failed");
@@ -272,7 +272,7 @@ describe("NFTDAOFactory contract tests", function () {
 
     const txn2 = await governorDAOFactoryInstance
       .connect(dexOwner)
-      .upgradeTokenTransferLogicImplementation(oneAddress);
+      .upgradeGovernorLogicImplementation(oneAddress);
 
     const event2 = (await txn2.wait()).events.pop();
     expect(event2.event).equal("LogicUpdated");

@@ -155,7 +155,8 @@ describe("Governor Tests", function () {
         DESC,
         LINK,
         TestHelper.ONE_ADDRESS,
-        TestHelper.TWO_ADDRESS
+        TestHelper.TWO_ADDRESS,
+        account.address
       );
     return await verifyProposalCreationEvent(tx, true);
   }

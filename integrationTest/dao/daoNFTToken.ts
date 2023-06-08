@@ -22,7 +22,7 @@ async function main() {
   const csDev = new ContractService();
   await deployContracts([
     csDev.governorTTContractName,
-    csDev.governorTokenDao,
+    csDev.tokenTransferDAO,
     csDev.nftHolderContract,
   ]);
 
@@ -31,8 +31,8 @@ async function main() {
   const nftHolder = provider.getNonFungibleTokenHolder();
   const governorTT = provider.getGovernor(ContractService.GOVERNOR_TT);
 
-  const governorTokenDao = provider.getGovernorTokenDao();
-  await governorTokenDao.initialize(
+  const tokenTransferDAO = provider.getGovernorTokenDao();
+  await tokenTransferDAO.initialize(
     adminAddress,
     "Governor Token Dao",
     "dao url",
@@ -50,19 +50,19 @@ async function main() {
 
   await executeGovernorTokenTransferFlow(
     nftHolder,
-    governorTokenDao,
+    tokenTransferDAO,
     governorTT
   );
 
-  await governorTokenDao.addWebLink("GIT", "https://git.com", DAO_ADMIN_CLIENT);
-  await governorTokenDao.updateName(
+  await tokenTransferDAO.addWebLink("GIT", "https://git.com", DAO_ADMIN_CLIENT);
+  await tokenTransferDAO.updateName(
     "Governor Token Dao - New",
     DAO_ADMIN_CLIENT
   );
-  await governorTokenDao.updateLogoURL("dao url - New", DAO_ADMIN_CLIENT);
-  await governorTokenDao.updateDescription("desc - New", DAO_ADMIN_CLIENT);
-  await governorTokenDao.getDaoDetail();
-  await governorTokenDao.upgradeHederaService();
+  await tokenTransferDAO.updateLogoURL("dao url - New", DAO_ADMIN_CLIENT);
+  await tokenTransferDAO.updateDescription("desc - New", DAO_ADMIN_CLIENT);
+  await tokenTransferDAO.getDaoDetail();
+  await tokenTransferDAO.upgradeHederaService();
   console.log(`\nDone`);
 }
 
@@ -74,7 +74,7 @@ if (require.main === module) {
 
 export async function executeGovernorTokenTransferFlow(
   nftHolder: NFTHolder,
-  governorTokenDao: GovernorTokenDao,
+  tokenTransferDAO: GovernorTokenDao,
   governorTokenTransfer: Governor,
   fromAccount: AccountId = clientsInfo.treasureId,
   fromAccountPrivateKey: PrivateKey = clientsInfo.treasureKey,
@@ -106,7 +106,7 @@ export async function executeGovernorTokenTransferFlow(
   );
 
   const title = Helper.createProposalTitle("Token Transfer Proposal");
-  const proposalId = await governorTokenDao.createTokenTransferProposal(
+  const proposalId = await tokenTransferDAO.createTokenTransferProposal(
     title,
     fromAccount.toSolidityAddress(),
     toAccount.toSolidityAddress(),

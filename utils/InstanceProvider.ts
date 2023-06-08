@@ -14,6 +14,7 @@ import MultiSigDAOFactory from "../e2e-test/business/factories/MultiSigDAOFactor
 import TokenHolderFactory from "../e2e-test/business/factories/TokenHolderFactory";
 
 import { ContractService } from "../deployment/service/ContractService";
+import ContractUpgradeDao from "../e2e-test/business/ContractUpgradeDao";
 
 export class InstanceProvider {
   private static instance = new InstanceProvider();
@@ -60,8 +61,13 @@ export class InstanceProvider {
   }
 
   public getGovernorTokenDao(id: string | null = null) {
-    const _id = this.getProxyId(id, this.csDev.governorTokenDao);
+    const _id = this.getProxyId(id, this.csDev.tokenTransferDAO);
     return new GovernorTokenDao(_id);
+  }
+
+  public getContractUpgradeDao(id: string | null = null) {
+    const _id = this.getProxyId(id, this.csDev.contractUpgradeDao);
+    return new ContractUpgradeDao(_id);
   }
 
   public getGovernor(name: string, id: string | null = null) {
