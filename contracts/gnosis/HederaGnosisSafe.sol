@@ -37,7 +37,8 @@ contract HederaGnosisSafe is
     }
 
     function checkApprovals(bytes32 dataHash) public view returns (bool) {
-        return getApprovalCounts(dataHash) >= threshold;
+        uint256 approvedCount = getApprovalCounts(dataHash);
+        return approvedCount > 0 && approvedCount >= threshold;
     }
 
     function transferToSafe(
