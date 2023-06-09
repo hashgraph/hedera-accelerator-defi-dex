@@ -6,6 +6,7 @@ import Splitter from "../e2e-test/business/Splitter";
 import GodHolder from "../e2e-test/business/GodHolder";
 import NFTHolder from "../e2e-test/business/NFTHolder";
 import DAOFactory from "../e2e-test/business/factories/DAOFactory";
+import ContractUpgradeDAOFactory from "../e2e-test/business/DAOFactory";
 import MultiSigDao from "../e2e-test/business/MultiSigDao";
 import Configuration from "../e2e-test/business/Configuration";
 import GovernorTokenDao from "../e2e-test/business/GovernorTokenDao";
@@ -68,6 +69,17 @@ export class InstanceProvider {
   public getContractUpgradeDao(id: string | null = null) {
     const _id = this.getProxyId(id, this.csDev.contractUpgradeDao);
     return new ContractUpgradeDao(_id);
+  }
+
+  public getContractUpgradeDaoFactory(
+    id: string | null = null,
+    isNFTType: Boolean
+  ) {
+    const _id = this.getProxyId(
+      id,
+      ContractService.CONTRACT_UPGRADE_DAO_FACTORY
+    );
+    return new ContractUpgradeDAOFactory(_id);
   }
 
   public getGovernor(name: string, id: string | null = null) {

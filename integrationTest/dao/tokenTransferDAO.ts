@@ -62,7 +62,6 @@ async function main() {
   await tokenTransferDAO.updateLogoURL("dao url - New", DAO_ADMIN_CLIENT);
   await tokenTransferDAO.updateDescription("desc - New", DAO_ADMIN_CLIENT);
   await tokenTransferDAO.getDaoDetail();
-  await tokenTransferDAO.upgradeHederaService();
   console.log(`\nDone`);
 }
 

@@ -1,12 +1,13 @@
-import { Helper } from "../utils/Helper";
+import { Helper } from "../../utils/Helper";
 import { ContractId, TokenId } from "@hashgraph/sdk";
-import { ContractService } from "../deployment/service/ContractService";
-import { executeContractUpgradeFlow } from "./dao/contractUpgradeDAO";
+import { ContractService } from "../../deployment/service/ContractService";
+import { executeContractUpgradeFlow } from "./contractUpgradeDAO";
 
-import dex from "../deployment/model/dex";
-import DAOFactory from "../e2e-test/business/DAOFactory";
-import ContractUpgradeDao from "../e2e-test/business/ContractUpgradeDao";
-import Governor from "../e2e-test/business/Governor";
+import dex from "../../deployment/model/dex";
+import DAOFactory from "../../e2e-test/business/DAOFactory";
+import ContractUpgradeDao from "../../e2e-test/business/ContractUpgradeDao";
+import Governor from "../../e2e-test/business/Governor";
+import { InstanceProvider } from "../../utils/InstanceProvider";
 const DAO_WEB_LINKS = ["LINKEDIN", "https://linkedin.com"];
 const DAO_DESC = "Lorem Ipsum is simply dummy text";
 
@@ -18,16 +19,14 @@ const getContractUpgradeDaoInstance = (daoProxyAddress: string) => {
   return new ContractUpgradeDao(tokenTransferDAOProxyId);
 };
 
-const getGovernorTokenTransferInstance = async (
-  contractUpgradeDao: ContractUpgradeDao
-) => {
+const getGovernorInstance = async (contractUpgradeDao: ContractUpgradeDao) => {
   const contractUpgradeGovernorContractId =
     await contractUpgradeDao.getGovernorAddress();
   return new Governor(contractUpgradeGovernorContractId.toString());
 };
 
 export async function executeContractUpgradeDAOFlow(
-  daoFactory: TokenTransferDAOFactory,
+  daoFactory: DAOFactory,
   daoAddresses: string[]
 ) {
   if (daoAddresses.length > 0) {
@@ -36,7 +35,7 @@ export async function executeContractUpgradeDAOFlow(
 
     const contractUpgradeDao = getContractUpgradeDaoInstance(daoProxyAddress);
 
-    const contractUpgradeGovernor = await getGovernorTokenTransferInstance(
+    const contractUpgradeGovernor = await getGovernorInstance(
       contractUpgradeDao
     );
 
@@ -74,17 +73,9 @@ async function createDAO(
   );
 }
 
-function getTokenTransferDAOFactoryInfo() {
-  const csDev = new ContractService();
-  const contract = csDev.getContractWithProxy(
-    ContractService.CONTRACT_UPGRADE_DAO_FACTORY
-  );
-  const proxyId = contract.transparentProxyId!;
-  return new DAOFactory(proxyId);
-}
-
 async function main() {
-  const daoFactory = getTokenTransferDAOFactoryInfo();
+  const daoFactory =
+    InstanceProvider.getInstance().getContractUpgradeDaoFactory(null, false);
   await daoFactory.initializeWithContractUpgrade();
   await daoFactory.getGODTokenHolderFactoryAddress();
   await createDAO(

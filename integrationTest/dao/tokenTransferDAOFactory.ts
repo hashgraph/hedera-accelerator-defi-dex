@@ -1,10 +1,10 @@
-import { Helper } from "../utils/Helper";
+import { Helper } from "../../utils/Helper";
 import { TokenId } from "@hashgraph/sdk";
-import { ContractService } from "../deployment/service/ContractService";
-import { executeGovernorTokenTransferFlow } from "./dao/daoGovernorToken";
+import { ContractService } from "../../deployment/service/ContractService";
+import { executeGovernorTokenTransferFlow } from "./tokenTransferDAO";
 
-import dex from "../deployment/model/dex";
-import DAOFactory from "../e2e-test/business/DAOFactory";
+import dex from "../../deployment/model/dex";
+import DAOFactory from "../../e2e-test/business/DAOFactory";
 const DAO_WEB_LINKS = ["LINKEDIN", "https://linkedin.com"];
 const DAO_DESC = "Lorem Ipsum is simply dummy text";
 

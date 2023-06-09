@@ -13,7 +13,7 @@ import dex from "../../deployment/model/dex";
 import Governor from "../../e2e-test/business/Governor";
 import GodHolder from "../../e2e-test/business/GodHolder";
 import GovernorTokenDao from "../../e2e-test/business/GovernorTokenDao";
-import TokenTransferDAOFactory from "../../e2e-test/business/TokenTransferDAOFactory";
+import TokenTransferDAOFactory from "../../e2e-test/business/DAOFactory";
 import { expect } from "chai";
 import Common from "../business/Common";
 import { BigNumber } from "bignumber.js";
