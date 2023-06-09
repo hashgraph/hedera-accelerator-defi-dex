@@ -7,7 +7,6 @@ import "../governance/GovernorUpgrade.sol";
 contract ContractUpgradeDAO is IGovernanceDAO, BaseDAO {
     GovernorUpgrade private governorUpgrade;
     uint256[] private _proposals;
-    address systemUser;
 
     function initialize(
         address _admin,
@@ -17,7 +16,6 @@ contract ContractUpgradeDAO is IGovernanceDAO, BaseDAO {
         string[] memory _webLinks,
         address payable governor
     ) external override initializer {
-        systemUser = msg.sender;
         governorUpgrade = GovernorUpgrade(governor);
         __BaseDAO_init(_admin, _name, _logoUrl, _description, _webLinks);
     }
