@@ -141,7 +141,7 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
     let blankNameOrURL: boolean = false;
     if (daoName === "" || daoURL === "") blankNameOrURL = true;
     try {
-      daoAddress = await daoFactory.createDAO(
+      daoAddress = await daoFactory.createTokenTransferDao(
         daoName,
         daoURL,
         DAO_DESC,
