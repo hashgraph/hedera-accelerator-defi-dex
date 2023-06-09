@@ -71,10 +71,7 @@ export class InstanceProvider {
     return new ContractUpgradeDao(_id);
   }
 
-  public getContractUpgradeDaoFactory(
-    id: string | null = null,
-    isNFTType: Boolean
-  ) {
+  public getContractUpgradeDaoFactory(id: string | null = null) {
     const _id = this.getProxyId(
       id,
       ContractService.CONTRACT_UPGRADE_DAO_FACTORY
