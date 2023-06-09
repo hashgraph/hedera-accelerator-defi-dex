@@ -1,7 +1,7 @@
 import Base from "./Base";
-import BaseDao from "./BaseDao";
 import Common from "./Common";
-import ContractMetadata from "../../utils/ContractMetadata";
+import BaseDao from "./BaseDao";
+import HederaGnosisSafe from "./HederaGnosisSafe";
 
 import { ethers } from "ethers";
 import { Helper } from "../../utils/Helper";
@@ -16,7 +16,10 @@ import {
   ContractFunctionParameters,
   PrivateKey,
 } from "@hashgraph/sdk";
-import HederaGnosisSafe from "./HederaGnosisSafe";
+
+const TITLE = "TITLE";
+const DESCRIPTION = "DESCRIPTION";
+const LINK_TO_DISCUSSION = "LINK_TO_DISCUSSION";
 
 const STATE = "state";
 const INITIALIZE = "initialize";
@@ -173,13 +176,19 @@ export default class MultiSigDao extends BaseDao {
     data: Uint8Array,
     operation: Operation,
     transactionType: number = 10,
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
+    title: string = TITLE,
+    description: string = DESCRIPTION,
+    linkToDiscussion: string = LINK_TO_DISCUSSION
   ) => {
     const args = new ContractFunctionParameters()
       .addAddress(to)
       .addBytes(data)
       .addUint8(operation)
-      .addUint256(transactionType);
+      .addUint256(transactionType)
+      .addString(title)
+      .addString(description)
+      .addString(linkToDiscussion);
     const { result } = await this.execute(
       3_000_000,
       PROPOSE_TRANSACTION,
@@ -296,14 +305,20 @@ export default class MultiSigDao extends BaseDao {
     values: number[],
     targets: ContractId[],
     callDataArray: Uint8Array[],
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
+    title: string = TITLE,
+    description: string = DESCRIPTION,
+    linkToDiscussion: string = LINK_TO_DISCUSSION
   ) => {
     const args = new ContractFunctionParameters()
       .addAddressArray(
         targets.map((address: ContractId) => address.toSolidityAddress())
       )
       .addUint256Array(values)
-      .addBytesArray(callDataArray);
+      .addBytesArray(callDataArray)
+      .addString(title)
+      .addString(description)
+      .addString(linkToDiscussion);
     const { result } = await this.execute(
       1_000_000,
       PROPOSE_BATCH_TRANSACTION,
@@ -322,12 +337,18 @@ export default class MultiSigDao extends BaseDao {
     token: TokenId,
     receiver: AccountId | ContractId,
     amount: number,
-    tokenSenderClient: Client = clientsInfo.uiUserClient
+    tokenSenderClient: Client = clientsInfo.uiUserClient,
+    title: string = TITLE,
+    description: string = DESCRIPTION,
+    linkToDiscussion: string = LINK_TO_DISCUSSION
   ) => {
     const args = new ContractFunctionParameters()
       .addAddress(token.toSolidityAddress())
       .addAddress(receiver.toSolidityAddress())
-      .addUint256(amount);
+      .addUint256(amount)
+      .addString(title)
+      .addString(description)
+      .addString(linkToDiscussion);
     const { result } = await this.execute(
       3_000_000,
       PROPOSE_TRANSFER_TRANSACTION,

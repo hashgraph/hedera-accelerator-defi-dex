@@ -18,6 +18,8 @@ describe("MultiSig tests", function () {
     "LINKEDIN",
     "https://linkedin.com",
   ];
+  const TITLE = "TITLE";
+  const LINK_TO_DISCUSSION = "LINK_TO_DISCUSSION";
 
   async function gnosisProxyCreationVerification(txn: any) {
     const { name, args } = await TestHelper.readLastEvent(txn);
@@ -48,6 +50,9 @@ describe("MultiSig tests", function () {
     expect(info.operation).equals(opType);
     expect(info.nonce).equals(1);
     expect(info.transactionType).equals(txnType);
+    expect(info.title).equals(TITLE);
+    expect(info.description).equals(DESCRIPTION);
+    expect(info.linkToDiscussion).equals(LINK_TO_DISCUSSION);
     return { txnHash, info };
   }
 
@@ -56,13 +61,18 @@ describe("MultiSig tests", function () {
     receiver: string,
     token: string,
     amount: number = TRANSFER_AMOUNT,
-    operation: number = 0 // 1 delegate and 0 call (balance verification not working with 1,so default is 0 for unit test)
+    operation: number = 0, // 1 delegate and 0 call (balance verification not working with 1,so default is 0 for unit test)
+    title: string = TITLE,
+    description: string = DESCRIPTION
   ) {
     const txn = await multiSigDAOInstance.proposeTransaction(
       token,
       createTransferTransactionABIData(receiver, amount),
       operation,
-      10
+      10,
+      title,
+      description,
+      LINK_TO_DISCUSSION
     );
     return await verifyTransactionCreatedEvent(txn, 10, operation);
   }
@@ -76,7 +86,10 @@ describe("MultiSig tests", function () {
     const txn = await multiSigDAOInstance.proposeTransferTransaction(
       token,
       receiver,
-      amount
+      amount,
+      TITLE,
+      DESCRIPTION,
+      LINK_TO_DISCUSSION
     );
     return await verifyTransactionCreatedEvent(txn, 1, 0);
   }
@@ -335,6 +348,33 @@ describe("MultiSig tests", function () {
           info.data
         )
       ).revertedWith("HederaGnosisSafe: API not available");
+    });
+
+    it("Verify propose transaction should be reverted when title / description empty", async function () {
+      const { signers, tokenInstance, multiSigDAOInstance } = await loadFixture(
+        deployFixture
+      );
+      await expect(
+        proposeTransaction(
+          multiSigDAOInstance,
+          signers[1].address,
+          tokenInstance.address,
+          TRANSFER_AMOUNT,
+          0,
+          ""
+        )
+      ).revertedWith("MultiSigDAO: title can't be blank");
+      await expect(
+        proposeTransaction(
+          multiSigDAOInstance,
+          signers[1].address,
+          tokenInstance.address,
+          TRANSFER_AMOUNT,
+          0,
+          TITLE,
+          ""
+        )
+      ).revertedWith("MultiSigDAO: desc can't be blank");
     });
 
     it("Verify propose transaction should be reverted for twice execution", async function () {
@@ -863,7 +903,10 @@ describe("MultiSig tests", function () {
         multiSigDAOInstance.proposeBatchTransaction(
           [],
           VALUES,
-          CALL_DATA_ARRAY.slice(0, 1)
+          CALL_DATA_ARRAY.slice(0, 1),
+          TITLE,
+          DESCRIPTION,
+          LINK_TO_DISCUSSION
         )
       ).rejectedWith("MultiSigDAO: invalid transaction length");
       // 2- when targets is less
@@ -871,7 +914,10 @@ describe("MultiSig tests", function () {
         multiSigDAOInstance.proposeBatchTransaction(
           TARGETS.slice(0, 1),
           VALUES,
-          CALL_DATA_ARRAY
+          CALL_DATA_ARRAY,
+          TITLE,
+          DESCRIPTION,
+          LINK_TO_DISCUSSION
         )
       ).rejectedWith("MultiSigDAO: invalid transaction length");
       // 3- when values is less
@@ -879,7 +925,10 @@ describe("MultiSig tests", function () {
         multiSigDAOInstance.proposeBatchTransaction(
           TARGETS,
           VALUES.slice(0, 1),
-          CALL_DATA_ARRAY
+          CALL_DATA_ARRAY,
+          TITLE,
+          DESCRIPTION,
+          LINK_TO_DISCUSSION
         )
       ).rejectedWith("MultiSigDAO: invalid transaction length");
       // 4- when call-data-array is less
@@ -887,7 +936,10 @@ describe("MultiSig tests", function () {
         multiSigDAOInstance.proposeBatchTransaction(
           TARGETS,
           VALUES,
-          CALL_DATA_ARRAY.slice(0, 1)
+          CALL_DATA_ARRAY.slice(0, 1),
+          TITLE,
+          DESCRIPTION,
+          LINK_TO_DISCUSSION
         )
       ).rejectedWith("MultiSigDAO: invalid transaction length");
     });
@@ -912,7 +964,10 @@ describe("MultiSig tests", function () {
       const pTxn = await multiSigDAOInstance.proposeBatchTransaction(
         TARGETS,
         VALUES,
-        CALL_DATA_ARRAY
+        CALL_DATA_ARRAY,
+        TITLE,
+        DESCRIPTION,
+        LINK_TO_DISCUSSION
       );
       const { txnHash, info } = await verifyTransactionCreatedEvent(pTxn, 2, 0);
       for (const signer of daoSigners) {
