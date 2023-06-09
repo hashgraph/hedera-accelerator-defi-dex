@@ -157,6 +157,10 @@ contract MultisigDAOFactory is
         return hederaService;
     }
 
+    function getMultiSendContractAddress() external view returns (address) {
+        return address(multiSend);
+    }
+
     function _createMultiSigDAOInstance(
         address _admin,
         string memory _name,

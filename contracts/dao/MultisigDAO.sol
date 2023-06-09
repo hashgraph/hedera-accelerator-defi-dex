@@ -185,4 +185,8 @@ contract MultiSigDAO is BaseDAO {
     function getHederaServiceVersion() external view returns (IHederaService) {
         return hederaService;
     }
+
+    function getMultiSendContractAddress() external view returns (address) {
+        return address(multiSend);
+    }
 }
