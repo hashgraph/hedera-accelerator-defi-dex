@@ -53,6 +53,7 @@ describe("MultiSig tests", function () {
     expect(info.title).equals(TITLE);
     expect(info.description).equals(DESCRIPTION);
     expect(info.linkToDiscussion).equals(LINK_TO_DISCUSSION);
+    expect(info.creator).not.equals(TestHelper.ZERO_ADDRESS);
     return { txnHash, info };
   }
 

@@ -27,6 +27,7 @@ contract MultiSigDAO is BaseDAO {
         string title;
         string description;
         string linkToDiscussion;
+        address creator;
     }
 
     modifier onlySystemUser() {
@@ -126,6 +127,7 @@ contract MultiSigDAO is BaseDAO {
         transactionInfo.title = title;
         transactionInfo.description = desc;
         transactionInfo.linkToDiscussion = linkToDiscussion;
+        transactionInfo.creator = msg.sender;
 
         emit TransactionCreated(txnHash, transactionInfo);
         return txnHash;
