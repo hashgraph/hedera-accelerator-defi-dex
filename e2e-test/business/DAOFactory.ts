@@ -6,10 +6,10 @@ import { clientsInfo } from "../../utils/ClientManagement";
 import { Client, ContractId, ContractFunctionParameters } from "@hashgraph/sdk";
 import { ContractService } from "../../deployment/service/ContractService";
 
-import Governor from "../../e2e-test/business/Governor";
-import GodHolder from "../../e2e-test/business/GodHolder";
-import GovernorTokenDao from "../../e2e-test/business/GovernorTokenDao";
-import GODTokenHolderFactory from "../../e2e-test/business/GODTokenHolderFactory";
+import Governor from "./Governor";
+import GodHolder from "./GodHolder";
+import GovernorTokenDao from "./GovernorTokenDao";
+import GODTokenHolderFactory from "./GODTokenHolderFactory";
 
 const deployment = new Deployment();
 const csDev = new ContractService();
@@ -21,13 +21,13 @@ const UPGRADE_GOVERNOR_TOKEN_DAO_LOGIC_IMPL =
   "upgradeTokenDaoLogicImplementation";
 
 const UPGRADE_GOVERNOR_TOKEN_TRANSFER_LOGIC_IMPL =
-  "upgradeTokenTransferLogicImplementation";
+  "upgradeGovernorLogicImplementation";
 
 const UPGRADE_GOD_TOKEN_HOLDER_FACTORY = "upgradeTokenHolderFactory";
 
 const GET_GOD_TOKEN_HOLDER_FACTORY_ADDRESS = "getTokenHolderFactoryAddress";
 
-export default class GovernanceDAOFactory extends Base {
+export default class DAOFactory extends Base {
   initialize = async (client: Client = clientsInfo.operatorClient) => {
     if (await this.isInitializationPending()) {
       const proxyAdmin = clientsInfo.dexOwnerId.toSolidityAddress();
@@ -35,25 +35,54 @@ export default class GovernanceDAOFactory extends Base {
         csDev.godTokenHolderFactory
       ).transparentProxyAddress!;
       const deployedItems = await deployment.deployContracts([
-        csDev.governorTokenDao,
+        csDev.tokenTransferDAO,
         csDev.governorTTContractName,
       ]);
-      const governorTokenDao = deployedItems.get(csDev.governorTokenDao);
+      const tokenTransferDAO = deployedItems.get(csDev.tokenTransferDAO);
       const governorTT = deployedItems.get(csDev.governorTTContractName);
       const args = new ContractFunctionParameters()
         .addAddress(proxyAdmin)
         .addAddress(this.htsAddress)
-        .addAddress(governorTokenDao.address)
+        .addAddress(tokenTransferDAO.address)
         .addAddress(godHolderFactoryAddress)
         .addAddress(governorTT.address);
       await this.execute(8_00_000, INITIALIZE, client, args);
-      console.log(`- GovernanceDAOFactory#${INITIALIZE}(): done\n`);
+      console.log(`- DAOFactory#${INITIALIZE}(): done\n`);
       return;
     }
-    console.log(`- GovernanceDAOFactory#${INITIALIZE}(): already done\n`);
+    console.log(`- DAOFactory#${INITIALIZE}(): already done\n`);
   };
 
-  createDAO = async (
+  initializeWithContractUpgrade = async (
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    if (await this.isInitializationPending()) {
+      const proxyAdmin = clientsInfo.dexOwnerId.toSolidityAddress();
+      const godHolderFactoryAddress = csDev.getContractWithProxy(
+        csDev.godTokenHolderFactory
+      ).transparentProxyAddress!;
+      const deployedItems = await deployment.deployContracts([
+        csDev.contractUpgradeDao,
+        csDev.governorUpgradeContract,
+      ]);
+      const contractUpgradeDao = deployedItems.get(csDev.contractUpgradeDao);
+      const governorUpgradeContract = deployedItems.get(
+        csDev.governorUpgradeContract
+      );
+      const args = new ContractFunctionParameters()
+        .addAddress(proxyAdmin)
+        .addAddress(this.htsAddress)
+        .addAddress(contractUpgradeDao.address)
+        .addAddress(godHolderFactoryAddress)
+        .addAddress(governorUpgradeContract.address);
+      await this.execute(8_00_000, INITIALIZE, client, args);
+      console.log(`- DAOFactory#${INITIALIZE}(): done\n`);
+      return;
+    }
+    console.log(`- DAOFactory#${INITIALIZE}(): already done\n`);
+  };
+
+  createTokenTransferDao = async (
     name: string,
     logoUrl: string,
     desc: string,
@@ -90,9 +119,55 @@ export default class GovernanceDAOFactory extends Base {
       bytes
     );
     const address = result.getAddress(0);
-    console.log(
-      `- GovernanceDAOFactory#${CREATE_DAO}(): with input data = ${hex}`
+    console.log(`- DAOFactory#${CREATE_DAO}(): with input data = ${hex}`);
+    console.table({
+      ...createDAOInputs,
+      webLinks: webLinks.toString(),
+      daoAddress: address,
+      daoFactoryId: this.contractId,
+      txnId: record.transactionId.toString(),
+    });
+    return address;
+  };
+
+  createContractUpgradeDao = async (
+    name: string,
+    logoUrl: string,
+    desc: string,
+    webLinks: string[],
+    tokenAddress: string,
+    quorumThreshold: number,
+    votingDelay: number,
+    votingPeriod: number,
+    isPrivate: boolean,
+    admin: string = clientsInfo.operatorId.toSolidityAddress(),
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    const createDAOInputs = {
+      admin,
+      name,
+      logoUrl,
+      tokenAddress,
+      quorumThreshold,
+      votingDelay,
+      votingPeriod,
+      isPrivate,
+      desc,
+      webLinks,
+    };
+    const { bytes, hex } = await this.encodeFunctionData(
+      ContractService.CONTRACT_UPGRADE_DAO_FACTORY,
+      CREATE_DAO,
+      [Object.values(createDAOInputs)]
     );
+    const { result, record } = await this.execute(
+      3_500_000,
+      CREATE_DAO,
+      client,
+      bytes
+    );
+    const address = result.getAddress(0);
+    console.log(`- DAOFactory#${CREATE_DAO}(): with input data = ${hex}`);
     console.table({
       ...createDAOInputs,
       webLinks: webLinks.toString(),
@@ -107,7 +182,7 @@ export default class GovernanceDAOFactory extends Base {
     const { result } = await this.execute(4_00_000, GET_DAOS, client);
     const addresses = Helper.getAddressArray(result);
     console.log(
-      `- GovernanceDAOFactory#${GET_DAOS}(): count = ${addresses.length}, dao's = [${addresses}]\n`
+      `- DAOFactory#${GET_DAOS}(): count = ${addresses.length}, dao's = [${addresses}]\n`
     );
     return addresses;
   };
@@ -123,7 +198,7 @@ export default class GovernanceDAOFactory extends Base {
       args
     );
     console.log(
-      `- GovernanceDAOFactory#${UPGRADE_GOVERNOR_TOKEN_TRANSFER_LOGIC_IMPL}(): done\n`
+      `- DAOFactory#${UPGRADE_GOVERNOR_TOKEN_TRANSFER_LOGIC_IMPL}(): done\n`
     );
   };
 
@@ -136,7 +211,7 @@ export default class GovernanceDAOFactory extends Base {
       args
     );
     console.log(
-      `- GovernanceDAOFactory#${UPGRADE_GOVERNOR_TOKEN_DAO_LOGIC_IMPL}(): done\n`
+      `- DAOFactory#${UPGRADE_GOVERNOR_TOKEN_DAO_LOGIC_IMPL}(): done\n`
     );
   };
 
@@ -148,9 +223,7 @@ export default class GovernanceDAOFactory extends Base {
       clientsInfo.dexOwnerClient,
       args
     );
-    console.log(
-      `- GovernanceDAOFactory#${UPGRADE_GOD_TOKEN_HOLDER_FACTORY}(): done\n`
-    );
+    console.log(`- DAOFactory#${UPGRADE_GOD_TOKEN_HOLDER_FACTORY}(): done\n`);
   };
 
   getGODTokenHolderFactoryAddress = async () => {
@@ -161,22 +234,22 @@ export default class GovernanceDAOFactory extends Base {
     );
     const address = result.getAddress(0);
     console.log(
-      `- GovernanceDAOFactory#${GET_GOD_TOKEN_HOLDER_FACTORY_ADDRESS}(): address = ${address}\n`
+      `- DAOFactory#${GET_GOD_TOKEN_HOLDER_FACTORY_ADDRESS}(): address = ${address}\n`
     );
     return ContractId.fromSolidityAddress(address);
   };
 
   getGovernorTokenDaoInstance = (daoProxyAddress: string) => {
-    const governorTokenDaoProxyId =
+    const tokenTransferDAOProxyId =
       ContractId.fromSolidityAddress(daoProxyAddress).toString();
-    return new GovernorTokenDao(governorTokenDaoProxyId);
+    return new GovernorTokenDao(tokenTransferDAOProxyId);
   };
 
   getGovernorTokenTransferInstance = async (
-    governorTokenDao: GovernorTokenDao
+    tokenTransferDAO: GovernorTokenDao
   ) => {
     const governorTokenTransferProxyContractId =
-      await governorTokenDao.getGovernorTokenTransferContractAddress();
+      await tokenTransferDAO.getGovernorTokenTransferContractAddress();
     return new Governor(governorTokenTransferProxyContractId.toString());
   };
 

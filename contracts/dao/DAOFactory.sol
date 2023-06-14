@@ -7,7 +7,7 @@ import "../common/IErrors.sol";
 import "../common/IHederaService.sol";
 import "../common/CommonOperations.sol";
 
-import "../dao/ITokenDAO.sol";
+import "../dao/IGovernanceDAO.sol";
 import "../governance/ITokenHolderFactory.sol";
 import "../governance/IGovernorTransferToken.sol";
 
@@ -53,8 +53,8 @@ contract DAOFactory is IErrors, IEvents, CommonOperations, OwnableUpgradeable {
 
     address[] private daos;
 
-    ITokenDAO private daoLogic;
-    IGovernorTransferToken private tokenTransferLogic;
+    IGovernanceDAO private daoLogic;
+    IGovernorBase private governorBase;
     ITokenHolderFactory private tokenHolderFactory;
 
     modifier ifAdmin() {
@@ -67,23 +67,19 @@ contract DAOFactory is IErrors, IEvents, CommonOperations, OwnableUpgradeable {
     function initialize(
         address _proxyAdmin,
         IHederaService _hederaService,
-        ITokenDAO _daoLogic,
+        IGovernanceDAO _daoLogic,
         ITokenHolderFactory _tokenHolderFactory,
-        IGovernorTransferToken _tokenTransferLogic
+        IGovernorBase _governor
     ) external initializer {
         __Ownable_init();
         proxyAdmin = _proxyAdmin;
         hederaService = _hederaService;
         daoLogic = _daoLogic;
         tokenHolderFactory = _tokenHolderFactory;
-        tokenTransferLogic = _tokenTransferLogic;
+        governorBase = _governor;
 
         emit LogicUpdated(address(0), address(daoLogic), TokenDAO);
-        emit LogicUpdated(
-            address(0),
-            address(tokenTransferLogic),
-            TransferToken
-        );
+        emit LogicUpdated(address(0), address(governorBase), TransferToken);
         emit LogicUpdated(
             address(0),
             address(tokenHolderFactory),
@@ -112,21 +108,21 @@ contract DAOFactory is IErrors, IEvents, CommonOperations, OwnableUpgradeable {
     }
 
     function upgradeTokenDaoLogicImplementation(
-        ITokenDAO _newImpl
+        IGovernanceDAO _newImpl
     ) external ifAdmin {
         emit LogicUpdated(address(daoLogic), address(_newImpl), TokenDAO);
         daoLogic = _newImpl;
     }
 
-    function upgradeTokenTransferLogicImplementation(
+    function upgradeGovernorLogicImplementation(
         IGovernorTransferToken _newImpl
     ) external ifAdmin {
         emit LogicUpdated(
-            address(tokenTransferLogic),
+            address(governorBase),
             address(_newImpl),
             TransferToken
         );
-        tokenTransferLogic = _newImpl;
+        governorBase = _newImpl;
     }
 
     function createDAO(
@@ -141,20 +137,20 @@ contract DAOFactory is IErrors, IEvents, CommonOperations, OwnableUpgradeable {
         ITokenHolder iTokenHolder = tokenHolderFactory.getTokenHolder(
             address(_createDAOInputs.tokenAddress)
         );
-        IGovernorTransferToken tokenTransfer = _createGovernorTransferTokenContractInstance(
-                address(_createDAOInputs.tokenAddress),
-                _createDAOInputs.quorumThreshold,
-                _createDAOInputs.votingDelay,
-                _createDAOInputs.votingPeriod,
-                iTokenHolder
-            );
+        IGovernorBase _governorBase = _createGovernorContractInstance(
+            address(_createDAOInputs.tokenAddress),
+            _createDAOInputs.quorumThreshold,
+            _createDAOInputs.votingDelay,
+            _createDAOInputs.votingPeriod,
+            iTokenHolder
+        );
         address createdDAOAddress = _createTokenDAOContractInstance(
             _createDAOInputs.admin,
             _createDAOInputs.name,
             _createDAOInputs.logoUrl,
             _createDAOInputs.description,
             _createDAOInputs.webLinks,
-            tokenTransfer
+            payable(address(_governorBase))
         );
         if (!_createDAOInputs.isPrivate) {
             daos.push(createdDAOAddress);
@@ -172,11 +168,11 @@ contract DAOFactory is IErrors, IEvents, CommonOperations, OwnableUpgradeable {
     ) external onlyOwner {
         hederaService = newHederaService;
         for (uint i = 0; i < daos.length; i++) {
-            ITokenDAO dao = ITokenDAO(daos[i]);
-            IGovernorTransferToken iGovernorTransferToken = IGovernorTransferToken(
-                    dao.getGovernorTokenTransferContractAddress()
-                );
-            iGovernorTransferToken.upgradeHederaService(newHederaService);
+            IGovernanceDAO dao = IGovernanceDAO(daos[i]);
+            address _governorAddress = dao.getGovernorContractAddress();
+            IGovernorBase(_governorAddress).upgradeHederaService(
+                newHederaService
+            );
         }
     }
 
@@ -184,17 +180,15 @@ contract DAOFactory is IErrors, IEvents, CommonOperations, OwnableUpgradeable {
         return hederaService;
     }
 
-    function _createGovernorTransferTokenContractInstance(
+    function _createGovernorContractInstance(
         address _tokenAddress,
         uint256 _quorumThreshold,
         uint256 _votingDelay,
         uint256 _votingPeriod,
         ITokenHolder _iTokenHolder
-    ) private returns (IGovernorTransferToken iGovernorTransferToken) {
-        iGovernorTransferToken = IGovernorTransferToken(
-            _createProxy(address(tokenTransferLogic))
-        );
-        iGovernorTransferToken.initialize(
+    ) private returns (IGovernorBase iGovernorBase) {
+        iGovernorBase = IGovernorBase(_createProxy(address(governorBase)));
+        iGovernorBase.initialize(
             IERC20(_tokenAddress),
             _votingDelay,
             _votingPeriod,
@@ -210,16 +204,18 @@ contract DAOFactory is IErrors, IEvents, CommonOperations, OwnableUpgradeable {
         string memory _logoUrl,
         string memory _desc,
         string[] memory _webLinks,
-        IGovernorTransferToken _governorTokenTransferContractAddress
+        address payable _governorContractAddress
     ) private returns (address daoAddress) {
-        ITokenDAO tokenDAO = ITokenDAO(_createProxy(address(daoLogic)));
+        IGovernanceDAO tokenDAO = IGovernanceDAO(
+            _createProxy(address(daoLogic))
+        );
         tokenDAO.initialize(
             _admin,
             _name,
             _logoUrl,
             _desc,
             _webLinks,
-            _governorTokenTransferContractAddress
+            _governorContractAddress
         );
         return address(tokenDAO);
     }

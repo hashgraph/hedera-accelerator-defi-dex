@@ -1,19 +1,19 @@
 import { Helper } from "../../utils/Helper";
-import { AccountId, Client, PrivateKey, TokenId } from "@hashgraph/sdk";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { ContractService } from "../../deployment/service/ContractService";
 import { InstanceProvider } from "../../utils/InstanceProvider";
 import { main as deployContracts } from "../../deployment/scripts/createContractsE2E";
+import { AccountId, Client, PrivateKey, TokenId } from "@hashgraph/sdk";
 
 import dex from "../../deployment/model/dex";
 import Governor from "../../e2e-test/business/Governor";
-import NFTHolder from "../../e2e-test/business/NFTHolder";
+import GodHolder from "../../e2e-test/business/GodHolder";
 import GovernorTokenDao from "../../e2e-test/business/GovernorTokenDao";
 import * as GovernorTokenMetaData from "../../e2e-test/business/GovernorTokenDao";
 
 const TOKEN_QTY = 1 * 1e8;
 const TOKEN_ID = TokenId.fromString(dex.TOKEN_LAB49_1);
-const adminAddress: string = clientsInfo.operatorId.toSolidityAddress();
+const DOA_ADMIN_ADDRESS = clientsInfo.operatorId.toSolidityAddress();
 const DAO_ADMIN_CLIENT = clientsInfo.operatorClient;
 const DAO_DESC = "Lorem Ipsum is simply dummy text";
 const DAO_WEB_LINKS = ["LINKEDIN", "https://linkedin.com"];
@@ -23,33 +23,33 @@ async function main() {
   await deployContracts([
     csDev.governorTTContractName,
     csDev.tokenTransferDAO,
-    csDev.nftHolderContract,
+    csDev.godHolderContract,
   ]);
 
   const provider = InstanceProvider.getInstance();
 
-  const nftHolder = provider.getNonFungibleTokenHolder();
+  const godHolder = provider.getFungibleTokenHolder();
   const governorTT = provider.getGovernor(ContractService.GOVERNOR_TT);
 
   const tokenTransferDAO = provider.getGovernorTokenDao();
   await tokenTransferDAO.initialize(
-    adminAddress,
+    DOA_ADMIN_ADDRESS,
     "Governor Token Dao",
     "dao url",
     DAO_DESC,
     DAO_WEB_LINKS,
     governorTT,
-    nftHolder,
+    godHolder,
     clientsInfo.operatorClient,
     GovernorTokenMetaData.DEFAULT_QUORUM_THRESHOLD_IN_BSP,
     GovernorTokenMetaData.DEFAULT_VOTING_DELAY,
     GovernorTokenMetaData.DEFAULT_VOTING_PERIOD,
-    GovernorTokenMetaData.GOD_TOKEN_ID,
-    GovernorTokenMetaData.NFT_TOKEN_ID
+    dex.GOVERNANCE_DAO_ONE_TOKEN_ID,
+    dex.GOVERNANCE_DAO_ONE_TOKEN_ID
   );
 
   await executeGovernorTokenTransferFlow(
-    nftHolder,
+    godHolder,
     tokenTransferDAO,
     governorTT
   );
@@ -62,7 +62,6 @@ async function main() {
   await tokenTransferDAO.updateLogoURL("dao url - New", DAO_ADMIN_CLIENT);
   await tokenTransferDAO.updateDescription("desc - New", DAO_ADMIN_CLIENT);
   await tokenTransferDAO.getDaoDetail();
-  await tokenTransferDAO.upgradeHederaService();
   console.log(`\nDone`);
 }
 
@@ -73,7 +72,7 @@ if (require.main === module) {
 }
 
 export async function executeGovernorTokenTransferFlow(
-  nftHolder: NFTHolder,
+  godHolder: GodHolder,
   tokenTransferDAO: GovernorTokenDao,
   governorTokenTransfer: Governor,
   fromAccount: AccountId = clientsInfo.treasureId,
@@ -88,17 +87,20 @@ export async function executeGovernorTokenTransferFlow(
   voterAccountId: AccountId = clientsInfo.operatorId,
   voterAccountPrivateKey: PrivateKey = clientsInfo.operatorKey
 ) {
-  await nftHolder.setupAllowanceForTokenLocking(
+  await godHolder.setupAllowanceForTokenLocking(
+    10005e8,
     voterAccountId,
     voterAccountPrivateKey,
     voterClient
   );
-  await nftHolder.grabTokensForVoter(
-    20,
+
+  await godHolder.lock(
+    10005e8,
     voterAccountId,
     voterAccountPrivateKey,
     voterClient
   );
+
   await governorTokenTransfer.setupAllowanceForProposalCreation(
     proposalCreatorClient,
     proposalCreatorAccountId,
@@ -116,9 +118,8 @@ export async function executeGovernorTokenTransferFlow(
     GovernorTokenMetaData.DEFAULT_DESCRIPTION,
     GovernorTokenMetaData.DEFAULT_LINK
   );
-
   await governorTokenTransfer.getProposalDetails(proposalId);
-  await governorTokenTransfer.forVote(proposalId, 20, voterClient);
+  await governorTokenTransfer.forVote(proposalId, 0, voterClient);
   await governorTokenTransfer.isQuorumReached(proposalId);
   await governorTokenTransfer.isVoteSucceeded(proposalId);
   await governorTokenTransfer.proposalVotes(proposalId);
@@ -134,5 +135,5 @@ export async function executeGovernorTokenTransferFlow(
   } else {
     await governorTokenTransfer.cancelProposal(title, proposalCreatorClient);
   }
-  await nftHolder.checkAndClaimNFTTokens(voterClient);
+  await godHolder.checkAndClaimGodTokens(voterClient, voterAccountId);
 }

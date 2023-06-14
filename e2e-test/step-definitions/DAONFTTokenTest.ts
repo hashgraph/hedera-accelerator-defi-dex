@@ -244,11 +244,11 @@ export class DAONFTTokenTest extends CommonSteps {
   public async getInstances() {
     const csDev = new ContractService();
 
-    const governorTokenDaoProxyContractId = csDev.getContractWithProxy(
-      csDev.governorTokenDao
+    const tokenTransferDAOProxyContractId = csDev.getContractWithProxy(
+      csDev.tokenTransferDAO
     ).transparentProxyId!;
 
-    govTokenDao = new GovernorTokenDao(governorTokenDaoProxyContractId);
+    govTokenDao = new GovernorTokenDao(tokenTransferDAOProxyContractId);
 
     const governorTokenTransferProxyContractId = csDev.getContractWithProxy(
       csDev.governorTTContractName
@@ -264,8 +264,8 @@ export class DAONFTTokenTest extends CommonSteps {
       "*******************Starting DAO NFT test with following*******************"
     );
     console.log(
-      "governorTokenDaoProxyContractId : ",
-      governorTokenDaoProxyContractId
+      "tokenTransferDAOProxyContractId : ",
+      tokenTransferDAOProxyContractId
     );
     console.log(
       "governorTokenTransferProxyContractId : ",

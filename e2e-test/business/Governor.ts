@@ -164,7 +164,8 @@ export default class Governor extends Base {
       .addString(description)
       .addString(link)
       .addAddress(targetProxyId.toSolidityAddress())
-      .addAddress(targetLogicId.toSolidityAddress());
+      .addAddress(targetLogicId.toSolidityAddress())
+      .addAddress(clientsInfo.operatorId.toSolidityAddress());
 
     const { result, receipt } = await this.execute(
       1_000_000,

@@ -13,7 +13,7 @@ import dex from "../../deployment/model/dex";
 import Governor from "../../e2e-test/business/Governor";
 import GodHolder from "../../e2e-test/business/GodHolder";
 import GovernorTokenDao from "../../e2e-test/business/GovernorTokenDao";
-import GovernanceDAOFactory from "../../e2e-test/business/GovernanceDAOFactory";
+import TokenTransferDAOFactory from "../../e2e-test/business/DAOFactory";
 import { expect } from "chai";
 import Common from "../business/Common";
 import { BigNumber } from "bignumber.js";
@@ -26,11 +26,11 @@ const DAO_WEB_LINKS = ["LINKEDIN", "https://linkedin.com"];
 
 const csDev = new ContractService();
 
-const governorTokenDaoProxyContractId = csDev.getContractWithProxy(
-  csDev.governorTokenDao
+const tokenTransferDAOProxyContractId = csDev.getContractWithProxy(
+  csDev.tokenTransferDAO
 ).transparentProxyId!;
 
-let governorTokenDao = new GovernorTokenDao(governorTokenDaoProxyContractId);
+let tokenTransferDAO = new GovernorTokenDao(tokenTransferDAOProxyContractId);
 
 const governorTokenTransferProxyContractId = csDev.getContractWithProxy(
   csDev.governorTTContractName
@@ -43,10 +43,10 @@ const godHolderProxyContractId = csDev.getContractWithProxy(
 let godHolder = new GodHolder(godHolderProxyContractId);
 
 const daoFactoryContract = csDev.getContractWithProxy(
-  csDev.governanceDaoFactory
+  csDev.tokenTransferDAOFactory
 );
 const proxyId = daoFactoryContract.transparentProxyId!;
-const daoFactory = new GovernanceDAOFactory(proxyId);
+const daoFactory = new TokenTransferDAOFactory(proxyId);
 
 const godHolderFactoryId = csDev.getContractWithProxy(
   csDev.godTokenHolderFactory
@@ -90,7 +90,7 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
     let blankTitleOrURL: boolean = false;
     try {
       if (name === "" || url === "") blankTitleOrURL = true;
-      await governorTokenDao.initializeDAO(
+      await tokenTransferDAO.initializeDAO(
         adminAddress,
         name,
         url,
@@ -115,7 +115,7 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
     30000
   )
   public async initializeSafe(name: string, url: string) {
-    await governorTokenDao.initializeDAO(
+    await tokenTransferDAO.initializeDAO(
       adminAddress,
       name,
       url,
@@ -141,7 +141,7 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
     let blankNameOrURL: boolean = false;
     if (daoName === "" || daoURL === "") blankNameOrURL = true;
     try {
-      daoAddress = await daoFactory.createDAO(
+      daoAddress = await daoFactory.createTokenTransferDao(
         daoName,
         daoURL,
         DAO_DESC,
@@ -170,9 +170,9 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
     30000
   )
   public async initializeContractsViaFactory() {
-    governorTokenDao = daoFactory.getGovernorTokenDaoInstance(daoAddress);
+    tokenTransferDAO = daoFactory.getGovernorTokenDaoInstance(daoAddress);
     governorTokenTransfer = await daoFactory.getGovernorTokenTransferInstance(
-      governorTokenDao
+      tokenTransferDAO
     );
     godHolder = await daoFactory.getGodHolderInstance(governorTokenTransfer);
     factoryGODHolderContractId = godHolder.contractId;
@@ -191,7 +191,7 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
     );
     tokens = new BigNumber(tokenAmount * CommonSteps.withPrecision);
     try {
-      proposalId = await governorTokenDao.createTokenTransferProposal(
+      proposalId = await tokenTransferDAO.createTokenTransferProposal(
         title,
         fromAccount.toSolidityAddress(),
         toAccount.toSolidityAddress(),
@@ -338,7 +338,7 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
     console.log(
       `DAOGovernorTokenTransfer#createTokenTransferProposalWithHigherAmt() transfer amount  = ${amt}`
     );
-    proposalId = await governorTokenDao.createTokenTransferProposal(
+    proposalId = await tokenTransferDAO.createTokenTransferProposal(
       title,
       fromAccount.toSolidityAddress(),
       toAccount.toSolidityAddress(),

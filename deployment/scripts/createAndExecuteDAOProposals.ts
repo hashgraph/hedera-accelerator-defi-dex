@@ -1,8 +1,8 @@
 import { Helper } from "../../utils/Helper";
 import { ContractId } from "@hashgraph/sdk";
-import { executeGovernorTokenDAOFlow } from "../../integrationTest/governanceDAOFactory";
+import { executeTokenTransferDAOFlow } from "../../integrationTest/governanceDAOFactory";
 
-import GovernanceDAOFactory from "../../e2e-test/business/GovernanceDAOFactory";
+import TokenTransferDAOFactory from "../../e2e-test/business/TokenTransferDAOFactory";
 
 async function main() {
   const input = Helper.readWorkflowInputs();
@@ -11,8 +11,8 @@ async function main() {
   const contractId = ContractId.fromString(input.contractId);
   ContractId.fromSolidityAddress(input.daoAddress);
 
-  const daoFactory = new GovernanceDAOFactory(contractId.toString());
-  await executeGovernorTokenDAOFlow(daoFactory, [input.daoAddress]);
+  const daoFactory = new TokenTransferDAOFactory(contractId.toString());
+  await executeTokenTransferDAOFlow(daoFactory, [input.daoAddress]);
 }
 
 main()

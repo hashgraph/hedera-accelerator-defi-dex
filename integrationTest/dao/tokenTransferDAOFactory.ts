@@ -1,26 +1,26 @@
-import { Helper } from "../utils/Helper";
+import { Helper } from "../../utils/Helper";
 import { TokenId } from "@hashgraph/sdk";
-import { ContractService } from "../deployment/service/ContractService";
-import { executeGovernorTokenTransferFlow } from "./dao/daoGovernorToken";
+import { ContractService } from "../../deployment/service/ContractService";
+import { executeGovernorTokenTransferFlow } from "./tokenTransferDAO";
 
-import dex from "../deployment/model/dex";
-import GovernanceDAOFactory from "../e2e-test/business/GovernanceDAOFactory";
+import dex from "../../deployment/model/dex";
+import DAOFactory from "../../e2e-test/business/DAOFactory";
 const DAO_WEB_LINKS = ["LINKEDIN", "https://linkedin.com"];
 const DAO_DESC = "Lorem Ipsum is simply dummy text";
 
-export async function executeGovernorTokenDAOFlow(
-  daoFactory: GovernanceDAOFactory,
+export async function executeTokenTransferDAOFlow(
+  daoFactory: DAOFactory,
   daoAddresses: string[]
 ) {
   if (daoAddresses.length > 0) {
     const daoProxyAddress = daoAddresses.pop()!;
-    console.log(`- executing GovernorTokenDAO i.e ${daoProxyAddress}\n`);
+    console.log(`- executing TokenTransferDAO i.e ${daoProxyAddress}\n`);
 
-    const governorTokenDao =
+    const tokenTransferDAO =
       daoFactory.getGovernorTokenDaoInstance(daoProxyAddress);
 
     const governorTokenTransfer =
-      await daoFactory.getGovernorTokenTransferInstance(governorTokenDao);
+      await daoFactory.getGovernorTokenTransferInstance(tokenTransferDAO);
 
     const godHolder = await daoFactory.getGodHolderInstance(
       governorTokenTransfer
@@ -28,19 +28,19 @@ export async function executeGovernorTokenDAOFlow(
 
     await executeGovernorTokenTransferFlow(
       godHolder,
-      governorTokenDao,
+      tokenTransferDAO,
       governorTokenTransfer
     );
   }
 }
 
 async function createDAO(
-  daoFactory: GovernanceDAOFactory,
+  daoFactory: DAOFactory,
   name: string,
   tokenId: TokenId,
   isPrivate: boolean
 ) {
-  await daoFactory.createDAO(
+  await daoFactory.createTokenTransferDao(
     name,
     "https://defi-ui.hedera.com/",
     DAO_DESC,
@@ -53,15 +53,15 @@ async function createDAO(
   );
 }
 
-function getGovernanceDAOFactoryInfo() {
+function getTokenTransferDAOFactoryInfo() {
   const csDev = new ContractService();
-  const contract = csDev.getContractWithProxy(csDev.governanceDaoFactory);
+  const contract = csDev.getContractWithProxy(csDev.tokenTransferDAOFactory);
   const proxyId = contract.transparentProxyId!;
-  return new GovernanceDAOFactory(proxyId);
+  return new DAOFactory(proxyId);
 }
 
 async function main() {
-  const daoFactory = getGovernanceDAOFactoryInfo();
+  const daoFactory = getTokenTransferDAOFactoryInfo();
   await daoFactory.initialize();
   await daoFactory.getGODTokenHolderFactoryAddress();
   await createDAO(
@@ -77,7 +77,7 @@ async function main() {
     true
   );
   const daoAddresses = await daoFactory.getDAOs();
-  await executeGovernorTokenDAOFlow(daoFactory, daoAddresses);
+  await executeTokenTransferDAOFlow(daoFactory, daoAddresses);
   await daoFactory.upgradeHederaService();
   console.log(`\nDone`);
 }

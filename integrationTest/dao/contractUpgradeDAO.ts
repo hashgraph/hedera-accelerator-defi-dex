@@ -3,16 +3,21 @@ import { clientsInfo } from "../../utils/ClientManagement";
 import { ContractService } from "../../deployment/service/ContractService";
 import { InstanceProvider } from "../../utils/InstanceProvider";
 import { main as deployContracts } from "../../deployment/scripts/createContractsE2E";
-import { AccountId, Client, PrivateKey, TokenId } from "@hashgraph/sdk";
+import {
+  AccountId,
+  Client,
+  ContractId,
+  PrivateKey,
+  TokenId,
+} from "@hashgraph/sdk";
 
 import dex from "../../deployment/model/dex";
 import Governor from "../../e2e-test/business/Governor";
 import GodHolder from "../../e2e-test/business/GodHolder";
-import GovernorTokenDao from "../../e2e-test/business/GovernorTokenDao";
+import ContractUpgradeDao from "../../e2e-test/business/contractUpgradeDao";
 import * as GovernorTokenMetaData from "../../e2e-test/business/GovernorTokenDao";
+import Common from "../../e2e-test/business/Common";
 
-const TOKEN_QTY = 1 * 1e8;
-const TOKEN_ID = TokenId.fromString(dex.TOKEN_LAB49_1);
 const DOA_ADMIN_ADDRESS = clientsInfo.operatorId.toSolidityAddress();
 const DAO_ADMIN_CLIENT = clientsInfo.operatorClient;
 const DAO_DESC = "Lorem Ipsum is simply dummy text";
@@ -21,24 +26,28 @@ const DAO_WEB_LINKS = ["LINKEDIN", "https://linkedin.com"];
 async function main() {
   const csDev = new ContractService();
   await deployContracts([
-    csDev.governorTTContractName,
-    csDev.governorTokenDao,
+    csDev.governorUpgradeContract,
+    csDev.contractUpgradeDao,
     csDev.godHolderContract,
   ]);
 
   const provider = InstanceProvider.getInstance();
 
   const godHolder = provider.getFungibleTokenHolder();
-  const governorTT = provider.getGovernor(ContractService.GOVERNOR_TT);
 
-  const governorTokenDao = provider.getGovernorTokenDao();
-  await governorTokenDao.initialize(
+  const contractUpgradeGovernor = provider.getGovernor(
+    csDev.governorUpgradeContract
+  );
+
+  const contractUpgradeDao = provider.getContractUpgradeDao();
+
+  await contractUpgradeDao.initialize(
     DOA_ADMIN_ADDRESS,
-    "Governor Token Dao",
+    "Contract Upgrade Dao",
     "dao url",
     DAO_DESC,
     DAO_WEB_LINKS,
-    governorTT,
+    contractUpgradeGovernor,
     godHolder,
     clientsInfo.operatorClient,
     GovernorTokenMetaData.DEFAULT_QUORUM_THRESHOLD_IN_BSP,
@@ -48,21 +57,27 @@ async function main() {
     dex.GOVERNANCE_DAO_ONE_TOKEN_ID
   );
 
-  await executeGovernorTokenTransferFlow(
+  await executeContractUpgradeFlow(
     godHolder,
-    governorTokenDao,
-    governorTT
+    contractUpgradeDao,
+    contractUpgradeGovernor,
+    csDev.getContractWithProxy(csDev.factoryContractName)
+      .transparentProxyAddress!,
+    csDev.getContract(csDev.factoryContractName).address
   );
 
-  await governorTokenDao.addWebLink("GIT", "https://git.com", DAO_ADMIN_CLIENT);
-  await governorTokenDao.updateName(
-    "Governor Token Dao - New",
+  await contractUpgradeDao.addWebLink(
+    "GIT",
+    "https://git.com",
     DAO_ADMIN_CLIENT
   );
-  await governorTokenDao.updateLogoURL("dao url - New", DAO_ADMIN_CLIENT);
-  await governorTokenDao.updateDescription("desc - New", DAO_ADMIN_CLIENT);
-  await governorTokenDao.getDaoDetail();
-  await governorTokenDao.upgradeHederaService();
+  await contractUpgradeDao.updateName(
+    "Contract Upgrade Dao - New",
+    DAO_ADMIN_CLIENT
+  );
+  await contractUpgradeDao.updateLogoURL("dao url - New", DAO_ADMIN_CLIENT);
+  await contractUpgradeDao.updateDescription("desc - New", DAO_ADMIN_CLIENT);
+  await contractUpgradeDao.getDaoDetail();
   console.log(`\nDone`);
 }
 
@@ -72,15 +87,12 @@ if (require.main === module) {
     .catch(Helper.processError);
 }
 
-export async function executeGovernorTokenTransferFlow(
+export async function executeContractUpgradeFlow(
   godHolder: GodHolder,
-  governorTokenDao: GovernorTokenDao,
-  governorTokenTransfer: Governor,
-  fromAccount: AccountId = clientsInfo.treasureId,
-  fromAccountPrivateKey: PrivateKey = clientsInfo.treasureKey,
-  toAccount: AccountId = clientsInfo.operatorId,
-  tokenId: TokenId = TOKEN_ID,
-  tokenAmount: number = TOKEN_QTY,
+  contractUpgradeDao: ContractUpgradeDao,
+  contractUpgradeGovernor: Governor,
+  proxyContract: string,
+  contractToUpgrade: string,
   proposalCreatorClient: Client = clientsInfo.operatorClient,
   proposalCreatorAccountId: AccountId = clientsInfo.operatorId,
   proposalCreatorAccountPrivateKey: PrivateKey = clientsInfo.operatorKey,
@@ -102,39 +114,42 @@ export async function executeGovernorTokenTransferFlow(
     voterClient
   );
 
-  await governorTokenTransfer.setupAllowanceForProposalCreation(
+  await contractUpgradeGovernor.setupAllowanceForProposalCreation(
     proposalCreatorClient,
     proposalCreatorAccountId,
     proposalCreatorAccountPrivateKey
   );
 
-  const title = Helper.createProposalTitle("Token Transfer Proposal");
-  const proposalId = await governorTokenDao.createTokenTransferProposal(
+  const title = Helper.createProposalTitle("Contract upgrade proposal");
+
+  const proposalId = await contractUpgradeDao.createContractUpgradeProposal(
     title,
-    fromAccount.toSolidityAddress(),
-    toAccount.toSolidityAddress(),
-    tokenId.toSolidityAddress(),
-    tokenAmount,
+    proxyContract,
+    contractToUpgrade,
     proposalCreatorClient,
     GovernorTokenMetaData.DEFAULT_DESCRIPTION,
-    GovernorTokenMetaData.DEFAULT_LINK
+    GovernorTokenMetaData.DEFAULT_LINK,
+    ContractId.fromString(contractUpgradeGovernor.contractId)
   );
-  await governorTokenTransfer.getProposalDetails(proposalId);
-  await governorTokenTransfer.forVote(proposalId, 0, voterClient);
-  await governorTokenTransfer.isQuorumReached(proposalId);
-  await governorTokenTransfer.isVoteSucceeded(proposalId);
-  await governorTokenTransfer.proposalVotes(proposalId);
-  if (await governorTokenTransfer.isSucceeded(proposalId)) {
-    await governorTokenTransfer.setAllowanceForTransferTokenProposal(
-      tokenId,
-      tokenAmount,
-      governorTokenTransfer.contractId,
-      fromAccount,
-      fromAccountPrivateKey
+
+  await contractUpgradeGovernor.getProposalDetails(proposalId);
+  await contractUpgradeGovernor.forVote(proposalId, 0, voterClient);
+  await contractUpgradeGovernor.isQuorumReached(proposalId);
+  await contractUpgradeGovernor.isVoteSucceeded(proposalId);
+  await contractUpgradeGovernor.proposalVotes(proposalId);
+  if (await contractUpgradeGovernor.isSucceeded(proposalId)) {
+    await contractUpgradeGovernor.executeProposal(
+      title,
+      clientsInfo.operatorKey,
+      clientsInfo.operatorClient
     );
-    await governorTokenTransfer.executeProposal(title, fromAccountPrivateKey);
+    const { proxyAddress, logicAddress } =
+      await contractUpgradeGovernor.getContractAddressesFromGovernorUpgradeContract(
+        proposalId
+      );
+    await Common.upgradeTo(proxyAddress, logicAddress);
   } else {
-    await governorTokenTransfer.cancelProposal(title, proposalCreatorClient);
+    await contractUpgradeGovernor.cancelProposal(title, proposalCreatorClient);
   }
   await godHolder.checkAndClaimGodTokens(voterClient, voterAccountId);
 }

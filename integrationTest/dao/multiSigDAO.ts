@@ -1,10 +1,10 @@
-import dex from "../deployment/model/dex";
-import MultiSigDao from "../e2e-test/business/MultiSigDao";
-import HederaGnosisSafe from "../e2e-test/business/HederaGnosisSafe";
+import dex from "../../deployment/model/dex";
+import MultiSigDao from "../../e2e-test/business/MultiSigDao";
+import HederaGnosisSafe from "../../e2e-test/business/HederaGnosisSafe";
 
-import { Helper } from "../utils/Helper";
-import { clientsInfo } from "../utils/ClientManagement";
-import { ContractService } from "../deployment/service/ContractService";
+import { Helper } from "../../utils/Helper";
+import { clientsInfo } from "../../utils/ClientManagement";
+import { ContractService } from "../../deployment/service/ContractService";
 import {
   Client,
   TokenId,

@@ -14,4 +14,6 @@ interface IGovernorBase {
         ITokenHolder _tokenHolder,
         uint256 _quorumThresholdInBsp
     ) external;
+
+    function upgradeHederaService(IHederaService newHederaService) external;
 }

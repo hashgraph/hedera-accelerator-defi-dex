@@ -81,6 +81,7 @@ export async function main() {
   await provider.getNonFungibleTokenDAOFactory().initialize();
 
   await provider.getMultiSigDAOFactory().initialize();
+  await provider.getContractUpgradeDaoFactory().initialize();
 
   for (const contractName of csDev.allGovernorContracts) {
     const contract = csDev.getContractWithProxy(contractName);

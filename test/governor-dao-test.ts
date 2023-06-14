@@ -56,7 +56,7 @@ describe("GovernanceTokenDAO tests", function () {
       WEB_LINKS,
       governorTT.address,
     ];
-    const governorTokenDAO = await TestHelper.deployLogic("GovernorTokenDAO");
+    const governorTokenDAO = await TestHelper.deployLogic("TokenTransferDAO");
     await governorTokenDAO.initialize(...GOVERNOR_TOKEN_DAO_ARGS);
 
     const godHolderFactory = await TestHelper.deployGodTokenHolderFactory(
@@ -66,7 +66,7 @@ describe("GovernanceTokenDAO tests", function () {
     );
 
     const governorDAOFactory = await TestHelper.deployLogic(
-      "GovernanceDAOFactory"
+      "TokenTransferDAOFactory"
     );
     await governorDAOFactory.initialize(
       dexOwner.address,
@@ -90,7 +90,7 @@ describe("GovernanceTokenDAO tests", function () {
     };
   }
 
-  describe("GovernanceDAOFactory contract tests", async function () {
+  describe("TokenTransferDAOFactory contract tests", async function () {
     it("Verify contract should be revert for multiple initialization", async function () {
       const {
         governorDAOFactory,
@@ -271,7 +271,7 @@ describe("GovernanceTokenDAO tests", function () {
       await expect(
         governorDAOFactory
           .connect(daoAdminTwo)
-          .upgradeTokenTransferLogicImplementation(TestHelper.ZERO_ADDRESS)
+          .upgradeGovernorLogicImplementation(TestHelper.ZERO_ADDRESS)
       )
         .revertedWithCustomError(governorDAOFactory, "NotAdmin")
         .withArgs("DAOFactory: auth failed");
@@ -299,7 +299,7 @@ describe("GovernanceTokenDAO tests", function () {
 
       const txn2 = await governorDAOFactory
         .connect(dexOwner)
-        .upgradeTokenTransferLogicImplementation(TestHelper.ONE_ADDRESS);
+        .upgradeGovernorLogicImplementation(TestHelper.ONE_ADDRESS);
 
       const event2 = (await txn2.wait()).events.pop();
       expect(event2.event).equal("LogicUpdated");
@@ -364,7 +364,7 @@ describe("GovernanceTokenDAO tests", function () {
 
       const daos = await governorDAOFactory.getDAOs();
 
-      const tokenDAO = TestHelper.getContract("ITokenDAO", daos[0]);
+      const tokenDAO = TestHelper.getContract("IGovernanceDAO", daos[0]);
       expect(tokenDAO).not.equals(TestHelper.ZERO_ADDRESS);
       await expect(
         governorDAOFactory.upgradeHederaService(signers[3].address)
@@ -372,7 +372,7 @@ describe("GovernanceTokenDAO tests", function () {
     });
   });
 
-  describe("GovernorTokenDAO contract tests", function () {
+  describe("TokenTransferDAO contract tests", function () {
     it("Verify contract should be revert for multiple initialization", async function () {
       const { governorTokenDAO, GOVERNOR_TOKEN_DAO_ARGS } = await loadFixture(
         deployFixture
@@ -382,9 +382,9 @@ describe("GovernanceTokenDAO tests", function () {
       ).revertedWith("Initializable: contract is already initialized");
     });
 
-    it("Verify GovernorTokenDAO initialize call", async function () {
+    it("Verify TokenTransferDAO initialize call", async function () {
       const { governorTT, daoAdminOne } = await loadFixture(deployFixture);
-      const dao = await TestHelper.deployLogic("GovernorTokenDAO");
+      const dao = await TestHelper.deployLogic("TokenTransferDAO");
 
       await expect(
         dao.initialize(
@@ -413,10 +413,9 @@ describe("GovernanceTokenDAO tests", function () {
         .withArgs("BaseDAO: admin address is zero");
     });
 
-    it("Verify getGovernorTokenTransferContractAddress", async function () {
+    it("Verify getGovernorContractAddress", async function () {
       const { governorTokenDAO, governorTT } = await loadFixture(deployFixture);
-      const governor =
-        await governorTokenDAO.getGovernorTokenTransferContractAddress();
+      const governor = await governorTokenDAO.getGovernorContractAddress();
       expect(governor).equals(governorTT.address);
     });
 
@@ -478,7 +477,7 @@ describe("GovernanceTokenDAO tests", function () {
   describe("BaseDAO contract tests", function () {
     it("Verify contract should be revert for initialization with invalid inputs", async function () {
       const { governorTT, daoAdminOne } = await loadFixture(deployFixture);
-      const governorTokenDAO = await TestHelper.deployLogic("GovernorTokenDAO");
+      const governorTokenDAO = await TestHelper.deployLogic("TokenTransferDAO");
 
       await expect(
         governorTokenDAO.initialize(
