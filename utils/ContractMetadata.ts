@@ -27,6 +27,8 @@ export default class ContractMetadata {
     "NFTDAOFactory",
     "MultisigDAOFactory",
     "ContractUpgradeDAOFactory",
+    "TextDAO",
+    "TextDAOFactory",
   ];
 
   static SUPPORTED_CONTRACTS_FOR_DEPLOYMENT = [
@@ -52,6 +54,8 @@ export default class ContractMetadata {
     "NFTDAOFactory",
     "ContractUpgradeDAO",
     "ContractUpgradeDAOFactory",
+    "TextDAO",
+    "TextDAOFactory",
   ];
 
   static SUPPORTED_PROXY_OPTIONS = ["create", "update"];

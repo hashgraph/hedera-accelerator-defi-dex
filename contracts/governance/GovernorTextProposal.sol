@@ -3,17 +3,17 @@ pragma solidity ^0.8.18;
 import "./GovernorCountingSimpleInternal.sol";
 
 contract GovernorTextProposal is GovernorCountingSimpleInternal {
-
     function createProposal(
         string memory title,
         string memory description,
-        string memory linkToDiscussion
+        string memory linkToDiscussion,
+        address creator
     ) public returns (uint256) {
         uint256 proposalId = _createProposal(
             title,
             description,
             linkToDiscussion,
-            msg.sender,
+            creator,
             bytes("")
         );
         return proposalId;

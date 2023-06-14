@@ -194,5 +194,77 @@
     "hash": "9e0fc140d4c07fd88fc9c9db04813893",
     "transparentProxyAddress": "0x0000000000000000000000000000000000d61ff0",
     "transparentProxyId": "0.0.14032880"
+  },
+  {
+    "name": "textdao",
+    "id": "0.0.14035025",
+    "address": "0x0000000000000000000000000000000000d62851",
+    "timestamp": "2023-06-09T11:43:42.680Z",
+    "hash": "6a959ae9bb9779c629a865abf18d6e61",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000d62857",
+    "transparentProxyId": "0.0.14035031"
+  },
+  {
+    "name": "godholder",
+    "id": "0.0.14035050",
+    "address": "0x0000000000000000000000000000000000d6286a",
+    "timestamp": "2023-06-09T11:44:25.772Z",
+    "hash": "aa39fb6d49fbade381dea35e04551d1d",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000d62871",
+    "transparentProxyId": "0.0.14035057"
+  },
+  {
+    "name": "textdao",
+    "id": "0.0.14035051",
+    "address": "0x0000000000000000000000000000000000d6286b",
+    "timestamp": "2023-06-09T11:44:27.027Z",
+    "hash": "6a959ae9bb9779c629a865abf18d6e61",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000d62872",
+    "transparentProxyId": "0.0.14035058"
+  },
+  {
+    "name": "governortextproposal",
+    "id": "0.0.14035060",
+    "address": "0x0000000000000000000000000000000000d62874",
+    "timestamp": "2023-06-09T11:44:37.552Z",
+    "hash": "35868aebf82d15c30142a5364f955d49",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000d62879",
+    "transparentProxyId": "0.0.14035065"
+  },
+  {
+    "name": "godholder",
+    "id": "0.0.14035336",
+    "address": "0x0000000000000000000000000000000000d62988",
+    "timestamp": "2023-06-09T11:54:44.968Z",
+    "hash": "aa39fb6d49fbade381dea35e04551d1d",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000d6298f",
+    "transparentProxyId": "0.0.14035343"
+  },
+  {
+    "name": "textdao",
+    "id": "0.0.14035337",
+    "address": "0x0000000000000000000000000000000000d62989",
+    "timestamp": "2023-06-09T11:54:45.816Z",
+    "hash": "6a959ae9bb9779c629a865abf18d6e61",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000d62990",
+    "transparentProxyId": "0.0.14035344"
+  },
+  {
+    "name": "governortextproposal",
+    "id": "0.0.14035347",
+    "address": "0x0000000000000000000000000000000000d62993",
+    "timestamp": "2023-06-09T11:54:56.667Z",
+    "hash": "35868aebf82d15c30142a5364f955d49",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000d62996",
+    "transparentProxyId": "0.0.14035350"
+  },
+  {
+    "name": "textdaofactory",
+    "id": "0.0.14035936",
+    "address": "0x0000000000000000000000000000000000d62be0",
+    "timestamp": "2023-06-09T12:17:52.103Z",
+    "hash": "96993bfc89bda7bb059185fceef87344",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000d62bec",
+    "transparentProxyId": "0.0.14035948"
   }
 ]

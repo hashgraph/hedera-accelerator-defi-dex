@@ -7,6 +7,7 @@ import GodHolder from "../e2e-test/business/GodHolder";
 import NFTHolder from "../e2e-test/business/NFTHolder";
 import DAOFactory from "../e2e-test/business/factories/DAOFactory";
 import ContractUpgradeDAOFactory from "../e2e-test/business/DAOFactory";
+import TextDAOFactory from "../e2e-test/business/DAOFactory";
 import MultiSigDao from "../e2e-test/business/MultiSigDao";
 import Configuration from "../e2e-test/business/Configuration";
 import GovernorTokenDao from "../e2e-test/business/GovernorTokenDao";
@@ -16,6 +17,7 @@ import TokenHolderFactory from "../e2e-test/business/factories/TokenHolderFactor
 
 import { ContractService } from "../deployment/service/ContractService";
 import ContractUpgradeDao from "../e2e-test/business/ContractUpgradeDao";
+import TextDao from "../e2e-test/business/TextDao";
 
 export class InstanceProvider {
   private static instance = new InstanceProvider();
@@ -71,12 +73,22 @@ export class InstanceProvider {
     return new ContractUpgradeDao(_id);
   }
 
+  public getTextDao(id: string | null = null) {
+    const _id = this.getProxyId(id, this.csDev.textDao);
+    return new TextDao(_id);
+  }
+
   public getContractUpgradeDaoFactory(id: string | null = null) {
     const _id = this.getProxyId(
       id,
       ContractService.CONTRACT_UPGRADE_DAO_FACTORY
     );
     return new ContractUpgradeDAOFactory(_id);
+  }
+
+  public getTextDaoFactory(id: string | null = null) {
+    const _id = this.getProxyId(id, ContractService.TEXT_DAO_FACTORY);
+    return new TextDAOFactory(_id);
   }
 
   public getGovernor(name: string, id: string | null = null) {

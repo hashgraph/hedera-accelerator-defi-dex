@@ -15,6 +15,7 @@ export class ContractService {
   public static VAULT = "vault";
   public static SPLITTER = "splitter";
   public static CONTRACT_UPGRADE_DAO_FACTORY = "contractupgradedaofactory";
+  public static TEXT_DAO_FACTORY = "textdaofactory";
 
   public tokenTransferDAOFactory = "tokentransferdaofactory";
   public factoryContractName = "factory";
@@ -42,6 +43,7 @@ export class ContractService {
 
   public tokenTransferDAO = "tokentransferdao";
   public contractUpgradeDao = "contractupgradedao";
+  public textDao = "textdao";
 
   private contractRecordFile = "./deployment/state/contracts.json";
   static DEV_CONTRACTS_PATH = "./deployment/state/contracts.json";

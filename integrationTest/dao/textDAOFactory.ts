@@ -1,56 +1,45 @@
 import { Helper } from "../../utils/Helper";
 import { ContractId, TokenId } from "@hashgraph/sdk";
 import { ContractService } from "../../deployment/service/ContractService";
-import { executeContractUpgradeFlow } from "./contractUpgradeDAO";
+import { executeTextProposalFlow } from "./textDAO";
 
 import dex from "../../deployment/model/dex";
 import DAOFactory from "../../e2e-test/business/DAOFactory";
 import ContractUpgradeDao from "../../e2e-test/business/ContractUpgradeDao";
 import Governor from "../../e2e-test/business/Governor";
 import { InstanceProvider } from "../../utils/InstanceProvider";
+import TextDao from "../../e2e-test/business/TextDao";
 const DAO_WEB_LINKS = ["LINKEDIN", "https://linkedin.com"];
 const DAO_DESC = "Lorem Ipsum is simply dummy text";
 
 const csDev = new ContractService();
 
-const getContractUpgradeDaoInstance = (daoProxyAddress: string) => {
+const getTextDaoInstance = (daoProxyAddress: string) => {
   const tokenTransferDAOProxyId =
     ContractId.fromSolidityAddress(daoProxyAddress).toString();
-  return new ContractUpgradeDao(tokenTransferDAOProxyId);
+  return new TextDao(tokenTransferDAOProxyId);
 };
 
-const getGovernorInstance = async (contractUpgradeDao: ContractUpgradeDao) => {
-  const contractUpgradeGovernorContractId =
-    await contractUpgradeDao.getGovernorAddress();
-  return new Governor(contractUpgradeGovernorContractId.toString());
+const getGovernorInstance = async (textDao: TextDao) => {
+  const textDaoContractId = await textDao.getGovernorAddress();
+  return new Governor(textDaoContractId.toString());
 };
 
-export async function executeContractUpgradeDAOFlow(
+export async function executeTextDAOFlow(
   daoFactory: DAOFactory,
   daoAddresses: string[]
 ) {
   if (daoAddresses.length > 0) {
     const daoProxyAddress = daoAddresses.pop()!;
-    console.log(`- executing ContractUpgradeDAO i.e ${daoProxyAddress}\n`);
+    console.log(`- executing TextDAO i.e ${daoProxyAddress}\n`);
 
-    const contractUpgradeDao = getContractUpgradeDaoInstance(daoProxyAddress);
+    const textDao = getTextDaoInstance(daoProxyAddress);
 
-    const contractUpgradeGovernor = await getGovernorInstance(
-      contractUpgradeDao
-    );
+    const textGovernor = await getGovernorInstance(textDao);
 
-    const godHolder = await daoFactory.getGodHolderInstance(
-      contractUpgradeGovernor
-    );
+    const godHolder = await daoFactory.getGodHolderInstance(textGovernor);
 
-    await executeContractUpgradeFlow(
-      godHolder,
-      contractUpgradeDao,
-      contractUpgradeGovernor,
-      csDev.getContractWithProxy(csDev.factoryContractName)
-        .transparentProxyAddress!,
-      csDev.getContract(csDev.factoryContractName).address
-    );
+    await executeTextProposalFlow(godHolder, textDao, textGovernor);
   }
 }
 
@@ -74,9 +63,8 @@ async function createDAO(
 }
 
 async function main() {
-  const daoFactory =
-    InstanceProvider.getInstance().getContractUpgradeDaoFactory();
-  await daoFactory.initializeWithContractUpgrade();
+  const daoFactory = InstanceProvider.getInstance().getTextDaoFactory();
+  await daoFactory.initializeWithTextGovernance();
   await daoFactory.getGODTokenHolderFactoryAddress();
   await createDAO(
     daoFactory,
@@ -91,7 +79,7 @@ async function main() {
     true
   );
   const daoAddresses = await daoFactory.getDAOs();
-  await executeContractUpgradeDAOFlow(daoFactory, daoAddresses);
+  await executeTextDAOFlow(daoFactory, daoAddresses);
   await daoFactory.upgradeHederaService();
   console.log(`\nDone`);
 }
