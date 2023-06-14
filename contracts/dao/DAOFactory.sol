@@ -27,7 +27,8 @@ contract DAOFactory is IErrors, IEvents, CommonOperations, OwnableUpgradeable {
         bool isPrivate,
         string description,
         string webLinks,
-        address governanceAddress
+        address governanceAddress,
+        address tokenHolderAddress
     );
 
     struct CreateDAOInputs {
@@ -163,6 +164,7 @@ contract DAOFactory is IErrors, IEvents, CommonOperations, OwnableUpgradeable {
         emitDOACreatedEvent(
             createdDAOAddress,
             address(tokenTransfer),
+            address(iTokenHolder),
             _createDAOInputs
         );
         return createdDAOAddress;
@@ -238,6 +240,7 @@ contract DAOFactory is IErrors, IEvents, CommonOperations, OwnableUpgradeable {
     function emitDOACreatedEvent(
         address createdDAOAddress,
         address governanceAddress,
+        address tokenHolderAddress,
         CreateDAOInputs memory _createDAOInputs
     ) private {
         emit DAOCreated(
@@ -252,7 +255,8 @@ contract DAOFactory is IErrors, IEvents, CommonOperations, OwnableUpgradeable {
             _createDAOInputs.isPrivate,
             _createDAOInputs.description,
             join(_createDAOInputs.webLinks, ","),
-            governanceAddress
+            governanceAddress,
+            tokenHolderAddress
         );
     }
 }
