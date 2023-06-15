@@ -1,28 +1,22 @@
+import dex from "../../deployment/model/dex";
+import TextDao from "../../e2e-test/business/TextDao";
+import DAOFactory from "../../e2e-test/business/DAOFactory";
+
 import { Helper } from "../../utils/Helper";
-import { ContractId, TokenId } from "@hashgraph/sdk";
+import { TokenId } from "@hashgraph/sdk";
 import { ContractService } from "../../deployment/service/ContractService";
+import { InstanceProvider } from "../../utils/InstanceProvider";
 import { executeTextProposalFlow } from "./textDAO";
 
-import dex from "../../deployment/model/dex";
-import DAOFactory from "../../e2e-test/business/DAOFactory";
-import ContractUpgradeDao from "../../e2e-test/business/ContractUpgradeDao";
-import Governor from "../../e2e-test/business/Governor";
-import { InstanceProvider } from "../../utils/InstanceProvider";
-import TextDao from "../../e2e-test/business/TextDao";
-const DAO_WEB_LINKS = ["LINKEDIN", "https://linkedin.com"];
+const provider = InstanceProvider.getInstance();
 const DAO_DESC = "Lorem Ipsum is simply dummy text";
-
-const csDev = new ContractService();
-
-const getTextDaoInstance = (daoProxyAddress: string) => {
-  const tokenTransferDAOProxyId =
-    ContractId.fromSolidityAddress(daoProxyAddress).toString();
-  return new TextDao(tokenTransferDAOProxyId);
-};
+const DAO_WEB_LINKS = ["LINKEDIN", "https://linkedin.com"];
 
 const getGovernorInstance = async (textDao: TextDao) => {
-  const textDaoContractId = await textDao.getGovernorAddress();
-  return new Governor(textDaoContractId.toString());
+  return provider.getGovernor(
+    ContractService.GOVERNOR_TEXT,
+    (await textDao.getGovernorAddress()).toString()
+  );
 };
 
 export async function executeTextDAOFlow(
@@ -32,13 +26,9 @@ export async function executeTextDAOFlow(
   if (daoAddresses.length > 0) {
     const daoProxyAddress = daoAddresses.pop()!;
     console.log(`- executing TextDAO i.e ${daoProxyAddress}\n`);
-
-    const textDao = getTextDaoInstance(daoProxyAddress);
-
+    const textDao = provider.getTextDao(daoProxyAddress);
     const textGovernor = await getGovernorInstance(textDao);
-
     const godHolder = await daoFactory.getGodHolderInstance(textGovernor);
-
     await executeTextProposalFlow(godHolder, textDao, textGovernor);
   }
 }
@@ -63,7 +53,7 @@ async function createDAO(
 }
 
 async function main() {
-  const daoFactory = InstanceProvider.getInstance().getTextDaoFactory();
+  const daoFactory = provider.getTextDaoFactory();
   await daoFactory.initializeWithTextGovernance();
   await daoFactory.getGODTokenHolderFactoryAddress();
   await createDAO(

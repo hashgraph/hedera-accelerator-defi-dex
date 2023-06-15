@@ -82,6 +82,39 @@ export default class DAOFactory extends Base {
     console.log(`- DAOFactory#${INITIALIZE}(): already done\n`);
   };
 
+  initializeWithTextGovernance = async (
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    if (await this.isInitializationPending()) {
+      const proxyAdmin = clientsInfo.dexOwnerId.toSolidityAddress();
+      const godHolderFactoryAddress = csDev.getContractWithProxy(
+        csDev.godTokenHolderFactory
+      ).transparentProxyAddress!;
+      const deployedItems = await deployment.deployContracts([
+        csDev.textDao,
+        csDev.governorTextContractName,
+      ]);
+      const textDao = deployedItems.get(csDev.textDao);
+      const governorTextContract = deployedItems.get(
+        csDev.governorTextContractName
+      );
+      const args = new ContractFunctionParameters()
+        .addAddress(proxyAdmin)
+        .addAddress(this.htsAddress)
+        .addAddress(textDao.address)
+        .addAddress(godHolderFactoryAddress)
+        .addAddress(governorTextContract.address);
+      await this.execute(8_00_000, INITIALIZE, client, args);
+      console.log(
+        `- DAOFactory#${INITIALIZE}(): done contract-id = ${this.contractId}\n`
+      );
+      return;
+    }
+    console.log(
+      `- DAOFactory#${INITIALIZE}(): done contract-id = ${this.contractId} already done\n`
+    );
+  };
+
   createTokenTransferDao = async (
     name: string,
     logoUrl: string,
