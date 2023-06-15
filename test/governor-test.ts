@@ -140,7 +140,7 @@ describe("Governor Tests", function () {
   ) {
     const tx = await governance
       .connect(account)
-      .createProposal(title, DESC, LINK);
+      .createProposal(title, DESC, LINK, account.address);
     return await verifyProposalCreationEvent(tx, true);
   }
 
