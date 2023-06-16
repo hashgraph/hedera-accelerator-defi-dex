@@ -11,6 +11,9 @@ export class ContractService {
   public static FT_DAO_FACTORY = "tokentransferdaofactory";
   public static GOVERNOR_TT = "governortransfertoken";
   public static GOVERNOR_TEXT = "governortextproposal";
+  public static GOVERNOR_UPGRADE = "governorupgrade";
+  public static GOVERNOR_TOKEN_CREATE = "governortokencreate";
+  public static FACTORY = "factory";
   public static PAIR = "pair";
   public static LP_TOKEN = "lptoken";
   public static VAULT = "vault";

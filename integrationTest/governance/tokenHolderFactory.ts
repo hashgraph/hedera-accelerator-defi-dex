@@ -16,14 +16,14 @@ async function executeTokensHolderFlow(
   tokens: TokenId[]
 ) {
   await factory.initialize();
-  // for (const token of tokens) {
-  //   await factory.getTokenHolder(
-  //     token.toSolidityAddress(),
-  //     clientsInfo.operatorClient
-  //   );
-  // }
+  for (const token of tokens) {
+    await factory.getTokenHolder(
+      token.toSolidityAddress(),
+      clientsInfo.operatorClient
+    );
+  }
   await factory.getTokenHolders();
-  // await factory.upgradeHederaService();
+  await factory.upgradeHederaService();
 }
 
 async function main() {

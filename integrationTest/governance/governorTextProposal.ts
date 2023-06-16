@@ -7,9 +7,9 @@ import { ContractService } from "../../deployment/service/ContractService";
 import { InstanceProvider } from "../../utils/InstanceProvider";
 
 const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
-const provider = InstanceProvider.getInstance();
 
 async function main() {
+  const provider = InstanceProvider.getInstance();
   const godHolder = await provider.getGODTokenHolderFromFactory(GOD_TOKEN_ID);
   const governor = provider.getGovernor(ContractService.GOVERNOR_TEXT);
   await governor.initialize(godHolder);
