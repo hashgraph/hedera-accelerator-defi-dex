@@ -12,6 +12,8 @@ export class ContractService {
   public static GOVERNOR_TT = "governortransfertoken";
   public static GOVERNOR_TEXT = "governortextproposal";
   public static GOVERNOR_UPGRADE = "governorupgrade";
+  public static CONTRACT_UPGRADE_DAO = "contractupgradedao";
+  public static TOKEN_TRANSFER_DAO = "tokentransferdao";
   public static GOVERNOR_TOKEN_CREATE = "governortokencreate";
   public static FACTORY = "factory";
   public static PAIR = "pair";
