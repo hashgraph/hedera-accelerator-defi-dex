@@ -120,14 +120,20 @@ export class InstanceProvider {
     return new GodHolder(_id);
   }
 
-  public async getNFTTokenHolderFromFactory(tokenId: TokenId) {
-    const factory = this.getNonFungibleTokenHolderFactory();
+  public async getNFTTokenHolderFromFactory(
+    tokenId: TokenId,
+    id: string | null = null
+  ) {
+    const factory = this.getNonFungibleTokenHolderFactory(id);
     const cId = await factory.getTokenHolder(tokenId.toSolidityAddress());
     return new NFTHolder(cId.toString());
   }
 
-  public async getGODTokenHolderFromFactory(tokenId: TokenId) {
-    const factory = this.getFungibleTokenHolderFactory();
+  public async getGODTokenHolderFromFactory(
+    tokenId: TokenId,
+    id: string | null = null
+  ) {
+    const factory = this.getFungibleTokenHolderFactory(id);
     const cId = await factory.getTokenHolder(tokenId.toSolidityAddress());
     return new GodHolder(cId.toString());
   }

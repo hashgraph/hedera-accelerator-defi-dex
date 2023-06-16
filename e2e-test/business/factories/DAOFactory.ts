@@ -40,7 +40,7 @@ export default class DAOFactory extends Base {
   }
 
   private getPrefix() {
-    return this._isNFTType ? "NF" : "F";
+    return this._isNFTType ? "NFT" : "GOD";
   }
 
   initialize = async (client: Client = clientsInfo.operatorClient) => {
@@ -198,18 +198,12 @@ export default class DAOFactory extends Base {
 
   getTokenHolderInstance = async (governor: Governor) => {
     const tokenId = await governor.getGODTokenAddress();
-    const tokenAddress = tokenId.toSolidityAddress();
     const factoryProxyId = (
       await this.getTokenHolderFactoryAddress()
     ).toString();
 
-    const holderFactory = this._isNFTType
-      ? this._provider.getNonFungibleTokenHolderFactory(factoryProxyId)
-      : this._provider.getFungibleTokenHolderFactory(factoryProxyId);
-    const tokenHolderProxyId = await holderFactory.getTokenHolder(tokenAddress);
-
-    return this._isNFTType
-      ? this._provider.getNonFungibleTokenHolder(tokenHolderProxyId.toString())
-      : this._provider.getFungibleTokenHolder(tokenHolderProxyId.toString());
+    return await (this._isNFTType
+      ? this._provider.getNFTTokenHolderFromFactory(tokenId, factoryProxyId)
+      : this._provider.getGODTokenHolderFromFactory(tokenId, factoryProxyId));
   };
 }
