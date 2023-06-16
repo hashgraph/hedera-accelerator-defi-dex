@@ -43,6 +43,7 @@ contract GODHolder is TokenHolder {
             code == HederaResponseCodes.SUCCESS,
             "GODHolder: token transfer failed from contract."
         );
+        emit UpdatedAmount(msg.sender, godTokenForUsers[msg.sender], 1);
         return HederaResponseCodes.SUCCESS;
     }
 
@@ -74,6 +75,7 @@ contract GODHolder is TokenHolder {
             code == HederaResponseCodes.SUCCESS,
             "GODHolder: token transfer failed to contract."
         );
+        emit UpdatedAmount(user, godTokenForUsers[user], 2);
     }
 
     function canUserClaimTokens() public view override returns (bool) {

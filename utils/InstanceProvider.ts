@@ -19,8 +19,13 @@ import ContractUpgradeDao from "../e2e-test/business/ContractUpgradeDao";
 import ContractUpgradeDAOFactory from "../e2e-test/business/DAOFactory";
 
 import MultiSigDao from "../e2e-test/business/MultiSigDao";
+import Configuration from "../e2e-test/business/Configuration";
+import GovernorTokenDao from "../e2e-test/business/GovernorTokenDao";
+import ContractUpgradeDao from "../e2e-test/business/ContractUpgradeDao";
+
 import MultiSigDAOFactory from "../e2e-test/business/factories/MultiSigDAOFactory";
 
+import { TokenId } from "@hashgraph/sdk";
 import { ContractId } from "@hashgraph/sdk";
 import { ContractService } from "../deployment/service/ContractService";
 
@@ -113,6 +118,18 @@ export class InstanceProvider {
   public getFungibleTokenHolder(id: string | null = null) {
     const _id = this.getProxyId(id, this.csDev.godHolderContract);
     return new GodHolder(_id);
+  }
+
+  public async getNFTTokenHolderFromFactory(tokenId: TokenId) {
+    const factory = this.getNonFungibleTokenHolderFactory();
+    const cId = await factory.getTokenHolder(tokenId.toSolidityAddress());
+    return new NFTHolder(cId.toString());
+  }
+
+  public async getGODTokenHolderFromFactory(tokenId: TokenId) {
+    const factory = this.getFungibleTokenHolderFactory();
+    const cId = await factory.getTokenHolder(tokenId.toSolidityAddress());
+    return new GodHolder(cId.toString());
   }
 
   public getConfiguration(id: string | null = null) {

@@ -6,10 +6,9 @@ import { clientsInfo } from "../../utils/ClientManagement";
 import { Client, ContractId, ContractFunctionParameters } from "@hashgraph/sdk";
 import { ContractService } from "../../deployment/service/ContractService";
 
-import Governor from "./Governor";
-import GodHolder from "./GodHolder";
-import GovernorTokenDao from "./GovernorTokenDao";
-import GODTokenHolderFactory from "./GODTokenHolderFactory";
+import Governor from "../../e2e-test/business/Governor";
+import GodHolder from "../../e2e-test/business/GodHolder";
+import GovernorTokenDao from "../../e2e-test/business/GovernorTokenDao";
 
 const deployment = new Deployment();
 const csDev = new ContractService();

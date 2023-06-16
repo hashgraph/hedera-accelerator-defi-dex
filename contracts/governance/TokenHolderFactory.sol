@@ -72,6 +72,10 @@ contract TokenHolderFactory is
         }
     }
 
+    function getTokenHolders() external view returns (ITokenHolder[] memory) {
+        return tokenHolders;
+    }
+
     function getHederaServiceVersion() external view returns (IHederaService) {
         return hederaService;
     }
