@@ -5,7 +5,6 @@ import "../common/IEvents.sol";
 import "../common/IErrors.sol";
 import "../common/CommonOperations.sol";
 import "../common/IHederaService.sol";
-import "../common/CommonOperations.sol";
 
 import "../dao/MultisigDAO.sol";
 
@@ -15,23 +14,11 @@ import "../gnosis/HederaGnosisSafeProxyFactory.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-contract MultisigDAOFactory is
-    IErrors,
-    IEvents,
-    CommonOperations,
-    OwnableUpgradeable
-{
+contract MultisigDAOFactory is IErrors, IEvents, OwnableUpgradeable {
     event DAOCreated(
         address daoAddress,
         address safeAddress,
-        address admin,
-        string name,
-        string logoUrl,
-        address[] owners,
-        uint256 threshold,
-        bool isPrivate,
-        string description,
-        string webLinks
+        CreateDAOInputs inputs
     );
 
     struct CreateDAOInputs {
@@ -123,9 +110,9 @@ contract MultisigDAOFactory is
         if (!_createDAOInputs.isPrivate) {
             daos.push(createdDAOAddress);
         }
-        emitDOACreatedEvent(
+        emit DAOCreated(
             createdDAOAddress,
-            hederaGnosisSafe,
+            address(hederaGnosisSafe),
             _createDAOInputs
         );
         return createdDAOAddress;
@@ -195,24 +182,5 @@ contract MultisigDAOFactory is
             payable(_zero)
         );
         return gnosisSafe;
-    }
-
-    function emitDOACreatedEvent(
-        address createdDAOAddress,
-        HederaGnosisSafe hederaGnosisSafe,
-        CreateDAOInputs memory _createDAOInputs
-    ) private {
-        emit DAOCreated(
-            createdDAOAddress,
-            address(hederaGnosisSafe),
-            _createDAOInputs.admin,
-            _createDAOInputs.name,
-            _createDAOInputs.logoUrl,
-            _createDAOInputs.owners,
-            _createDAOInputs.threshold,
-            _createDAOInputs.isPrivate,
-            _createDAOInputs.description,
-            join(_createDAOInputs.webLinks, ",")
-        );
     }
 }

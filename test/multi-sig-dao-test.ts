@@ -18,11 +18,37 @@ describe("MultiSig tests", function () {
     "LINKEDIN",
     "https://linkedin.com",
   ];
+  const TITLE = "TITLE";
+  const LINK_TO_DISCUSSION = "LINK_TO_DISCUSSION";
 
-  async function gnosisProxyCreationVerification(name: string, args: any) {
+  async function gnosisProxyCreationVerification(txn: any) {
+    const { name, args } = await TestHelper.readLastEvent(txn);
     expect(name).equal("ProxyCreation");
     expect(args.proxy).not.equal(TestHelper.ZERO_ADDRESS);
     expect(args.singleton).not.equal(TestHelper.ZERO_ADDRESS);
+    return { proxy: args.proxy };
+  }
+
+  async function verifyTransactionCreatedEvent(
+    txn: any,
+    txnType: number,
+    opType: number
+  ) {
+    const { name, args } = await TestHelper.readLastEvent(txn);
+    const txnHash = args.txnHash;
+    const info = args.info;
+
+    expect(name).equal("TransactionCreated");
+    expect(txnHash).not.equals(TestHelper.ZERO_ADDRESS);
+    expect(info.to).not.equals(TestHelper.ZERO_ADDRESS);
+    expect(info.operation).equals(opType);
+    expect(info.nonce).equals(1);
+    expect(info.transactionType).equals(txnType);
+    expect(info.title).equals(TITLE);
+    expect(info.description).equals(DESCRIPTION);
+    expect(info.linkToDiscussion).equals(LINK_TO_DISCUSSION);
+    expect(info.creator).not.equals(TestHelper.ZERO_ADDRESS);
+    return { txnHash, info };
   }
 
   async function proposeTransaction(
@@ -30,25 +56,20 @@ describe("MultiSig tests", function () {
     receiver: string,
     token: string,
     amount: number = TRANSFER_AMOUNT,
-    operation: number = 0 // 1 delegate and 0 call (balance verification not working with 1,so default is 0 for unit test)
+    operation: number = 0, // 1 delegate and 0 call (balance verification not working with 1,so default is 0 for unit test)
+    title: string = TITLE,
+    description: string = DESCRIPTION
   ) {
-    const transaction = await multiSigDAOInstance.proposeTransaction(
+    const txn = await multiSigDAOInstance.proposeTransaction(
       token,
       createTransferTransactionABIData(receiver, amount),
       operation,
-      10
+      10,
+      title,
+      description,
+      LINK_TO_DISCUSSION
     );
-    const { name, args } = await TestHelper.readLastEvent(transaction);
-    const txnHash = args.txnHash;
-    const info = args.info;
-
-    expect(name).equal("TransactionCreated");
-    expect(txnHash).not.equals(TestHelper.ZERO_ADDRESS);
-    expect(info.to).not.equals(TestHelper.ZERO_ADDRESS);
-    expect(info.operation).equals(operation);
-    expect(info.nonce).equals(1);
-    expect(info.transactionType).equals(10);
-    return { txnHash, info };
+    return await verifyTransactionCreatedEvent(txn, 10, operation);
   }
 
   async function proposeTransferTransaction(
@@ -57,22 +78,15 @@ describe("MultiSig tests", function () {
     token: string,
     amount: number = TRANSFER_AMOUNT
   ) {
-    const transaction = await multiSigDAOInstance.proposeTransferTransaction(
+    const txn = await multiSigDAOInstance.proposeTransferTransaction(
       token,
       receiver,
-      amount
+      amount,
+      TITLE,
+      DESCRIPTION,
+      LINK_TO_DISCUSSION
     );
-    const { name, args } = await TestHelper.readLastEvent(transaction);
-    const txnHash = args.txnHash;
-    const info = args.info;
-
-    expect(name).equal("TransactionCreated");
-    expect(txnHash).not.equals(TestHelper.ZERO_ADDRESS);
-    expect(info.to).not.equals(TestHelper.ZERO_ADDRESS);
-    expect(info.operation).equals(0);
-    expect(info.nonce).equals(1);
-    expect(info.transactionType).equals(1);
-    return { txnHash, info };
+    return await verifyTransactionCreatedEvent(txn, 1, 0);
   }
 
   function createTransferTransactionABIData(
@@ -112,8 +126,7 @@ describe("MultiSig tests", function () {
       hederaGnosisSafeLogicInstance.address,
       new Uint8Array()
     );
-    const { name, args } = await TestHelper.readLastEvent(transaction);
-    gnosisProxyCreationVerification(name, args);
+    const args = await gnosisProxyCreationVerification(transaction);
 
     const hederaGnosisSafeProxyInstance = args.proxy;
     const hederaGnosisSafeProxyContract = await TestHelper.getContract(
@@ -324,6 +337,33 @@ describe("MultiSig tests", function () {
           info.data
         )
       ).revertedWith("HederaGnosisSafe: API not available");
+    });
+
+    it("Verify propose transaction should be reverted when title / description empty", async function () {
+      const { signers, tokenInstance, multiSigDAOInstance } = await loadFixture(
+        deployFixture
+      );
+      await expect(
+        proposeTransaction(
+          multiSigDAOInstance,
+          signers[1].address,
+          tokenInstance.address,
+          TRANSFER_AMOUNT,
+          0,
+          ""
+        )
+      ).revertedWith("MultiSigDAO: title can't be blank");
+      await expect(
+        proposeTransaction(
+          multiSigDAOInstance,
+          signers[1].address,
+          tokenInstance.address,
+          TRANSFER_AMOUNT,
+          0,
+          TITLE,
+          ""
+        )
+      ).revertedWith("MultiSigDAO: desc can't be blank");
     });
 
     it("Verify propose transaction should be reverted for twice execution", async function () {
@@ -655,6 +695,7 @@ describe("MultiSig tests", function () {
         signers[1].address,
         tokenInstance.address
       );
+      expect(await multiSigDAOInstance.getApprovalCounts(txnHash)).equals(0);
       expect(await multiSigDAOInstance.state(txnHash)).equals(0); // Pending
     });
 
@@ -671,11 +712,15 @@ describe("MultiSig tests", function () {
         signers[1].address,
         tokenInstance.address
       );
+      expect(await multiSigDAOInstance.getApprovalCounts(txnHash)).equals(0);
       for (const signer of daoSigners) {
         await hederaGnosisSafeProxyContract
           .connect(signer)
           .approveHash(txnHash);
       }
+      expect(await multiSigDAOInstance.getApprovalCounts(txnHash)).equals(
+        daoSigners.length
+      );
       expect(await multiSigDAOInstance.state(txnHash)).equals(1); // Approved
     });
 

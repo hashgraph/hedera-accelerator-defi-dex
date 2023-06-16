@@ -23,6 +23,10 @@ contract MultiSigDAO is BaseDAO {
         Enum.Operation operation;
         uint256 nonce;
         uint256 transactionType;
+        string title;
+        string description;
+        string linkToDiscussion;
+        address creator;
     }
 
     modifier onlySystemUser() {
@@ -76,6 +80,10 @@ contract MultiSigDAO is BaseDAO {
         }
     }
 
+    function getApprovalCounts(bytes32 _txnHash) public view returns (uint256) {
+        return hederaGnosisSafe.getApprovalCounts(_txnHash);
+    }
+
     function getTransactionInfo(
         bytes32 _txnHash
     ) external view returns (TransactionInfo memory) {
@@ -88,8 +96,14 @@ contract MultiSigDAO is BaseDAO {
         address _to,
         bytes memory _data,
         Enum.Operation _operation,
-        uint256 _type
+        uint256 _type,
+        string memory title,
+        string memory desc,
+        string memory linkToDiscussion
     ) public payable returns (bytes32) {
+        require(bytes(title).length != 0, "MultiSigDAO: title can't be blank");
+        require(bytes(desc).length != 0, "MultiSigDAO: desc can't be blank");
+
         (bytes32 txnHash, uint256 txnNonce) = hederaGnosisSafe.getTxnHash(
             _to,
             msg.value,
@@ -103,6 +117,10 @@ contract MultiSigDAO is BaseDAO {
         transactionInfo.operation = _operation;
         transactionInfo.nonce = txnNonce;
         transactionInfo.transactionType = _type;
+        transactionInfo.title = title;
+        transactionInfo.description = desc;
+        transactionInfo.linkToDiscussion = linkToDiscussion;
+        transactionInfo.creator = msg.sender;
 
         emit TransactionCreated(txnHash, transactionInfo);
         return txnHash;
@@ -111,7 +129,10 @@ contract MultiSigDAO is BaseDAO {
     function proposeTransferTransaction(
         address _token,
         address _receiver,
-        uint256 _amount
+        uint256 _amount,
+        string memory title,
+        string memory desc,
+        string memory linkToDiscussion
     ) external payable returns (bytes32) {
         hederaGnosisSafe.transferToSafe(
             hederaService,
@@ -126,7 +147,16 @@ contract MultiSigDAO is BaseDAO {
             _amount
         );
         Enum.Operation call = Enum.Operation.Call;
-        return proposeTransaction(address(hederaGnosisSafe), data, call, 1);
+        return
+            proposeTransaction(
+                address(hederaGnosisSafe),
+                data,
+                call,
+                1,
+                title,
+                desc,
+                linkToDiscussion
+            );
     }
 
     function upgradeHederaService(
