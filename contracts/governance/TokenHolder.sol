@@ -14,7 +14,13 @@ abstract contract TokenHolder is
     TokenOperations,
     OwnableUpgradeable
 {
-    event UpdatedAmount(address indexed user, uint256 idOrAmount, uint8 caller);
+    uint8 internal constant LOCKED = 1;
+    uint8 internal constant UNLOCKED = 2;
+    event UpdatedAmount(
+        address indexed user,
+        uint256 idOrAmount,
+        uint8 operation
+    );
     mapping(address => uint256[]) activeProposalsForUsers;
     IHederaService internal hederaService;
     address internal _token;

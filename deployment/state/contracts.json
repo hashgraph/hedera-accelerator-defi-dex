@@ -8,7 +8,6 @@
   },
   {
     "name": "splitter",
-<<<<<<< HEAD
     "id": "0.0.13725263",
     "address": "0x0000000000000000000000000000000000d16e4f",
     "timestamp": "2023-05-31T07:30:04.621Z",
@@ -24,14 +23,6 @@
     "hash": "011a69486f8974e7811380eecddbc3bd",
     "transparentProxyAddress": "0x0000000000000000000000000000000000d16e56",
     "transparentProxyId": "0.0.13725270"
-=======
-    "id": "0.0.14828409",
-    "address": "0x0000000000000000000000000000000000e24379",
-    "timestamp": "2023-06-19T07:26:19.636Z",
-    "hash": "546be49319c63f8441596887bc714d8d",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000e2438e",
-    "transparentProxyId": "0.0.14828430"
->>>>>>> d7721a2 (added new copies)
   },
   {
     "name": "lptoken",
@@ -62,7 +53,6 @@
   },
   {
     "name": "factory",
-<<<<<<< HEAD
     "id": "0.0.13725303",
     "address": "0x0000000000000000000000000000000000d16e77",
     "timestamp": "2023-05-31T07:34:53.341Z",
@@ -96,14 +86,6 @@
     "hash": "e917890182c75dd76bf48b08c25f43df",
     "transparentProxyAddress": "0x0000000000000000000000000000000000d16e90",
     "transparentProxyId": "0.0.13725328"
-=======
-    "id": "0.0.14828415",
-    "address": "0x0000000000000000000000000000000000e2437f",
-    "timestamp": "2023-06-19T07:26:22.646Z",
-    "hash": "d4cd360603dff0bd6bb14d04e9301d53",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000e24397",
-    "transparentProxyId": "0.0.14828439"
->>>>>>> d7721a2 (added new copies)
   },
   {
     "name": "nftdaofactory",
@@ -134,7 +116,6 @@
   },
   {
     "name": "tokentransferdaofactory",
-<<<<<<< HEAD
     "id": "0.0.14032828",
     "address": "0x0000000000000000000000000000000000d61fbc",
     "timestamp": "2023-06-09T08:42:09.662Z",
@@ -195,13 +176,6 @@
     "hash": "0bb7815a658f77d12f817206bff0a86b",
     "transparentProxyAddress": "0x0000000000000000000000000000000000dcfa9d",
     "transparentProxyId": "0.0.14482077"
-=======
-    "id": "0.0.14828420",
-    "address": "0x0000000000000000000000000000000000e24384",
-    "timestamp": "2023-06-19T07:26:23.627Z",
-    "hash": "3c83762ba7c99eec6fe9512bbe591008",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000e2439d",
-    "transparentProxyId": "0.0.14828445"
   },
   {
     "name": "multisigdaofactory",
@@ -274,9 +248,6 @@
     "hash": "1401c4eec072cbb9b54d311c47ce6cdc",
     "transparentProxyAddress": "0x0000000000000000000000000000000000e243ab",
     "transparentProxyId": "0.0.14828459"
-<<<<<<< HEAD
->>>>>>> d7721a2 (added new copies)
-=======
   },
   {
     "name": "tokentransferdao",
@@ -286,9 +257,6 @@
     "hash": "8c6899dab9d86624607c080af5d350d6",
     "transparentProxyAddress": "0x0000000000000000000000000000000000e245c0",
     "transparentProxyId": "0.0.14828992"
-<<<<<<< HEAD
->>>>>>> 06ff961 (fixed e2e after adding TokenTransferDAO)
-=======
   },
   {
     "name": "godholder",
@@ -307,6 +275,23 @@
     "hash": "b4dadaf5bd5d5f6edc99ea46a8937e70",
     "transparentProxyAddress": "0x0000000000000000000000000000000000e2467f",
     "transparentProxyId": "0.0.14829183"
->>>>>>> 746ec7c (added god and nft holder)
+  },
+  {
+    "name": "godtokenholderfactory",
+    "id": "0.0.14830670",
+    "address": "0x0000000000000000000000000000000000e24c4e",
+    "timestamp": "2023-06-19T10:19:37.206Z",
+    "hash": "20619b7d2c97da1c86d3489cac154297",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000e24c51",
+    "transparentProxyId": "0.0.14830673"
+  },
+  {
+    "name": "textdaofactory",
+    "id": "0.0.14830679",
+    "address": "0x0000000000000000000000000000000000e24c57",
+    "timestamp": "2023-06-19T10:20:10.790Z",
+    "hash": "f6a8e84c5f84d9b77733e1c0846b23eb",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000e24c59",
+    "transparentProxyId": "0.0.14830681"
   }
 ]

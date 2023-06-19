@@ -1,15 +1,9 @@
 import { Helper } from "../../utils/Helper";
+import { Deployment } from "../../utils/deployContractOnTestnet";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { ContractService } from "../../deployment/service/ContractService";
 import { InstanceProvider } from "../../utils/InstanceProvider";
-import { main as deployContracts } from "../../deployment/scripts/createContractsE2E";
-import {
-  AccountId,
-  Client,
-  ContractId,
-  PrivateKey,
-  TokenId,
-} from "@hashgraph/sdk";
+import { AccountId, Client, PrivateKey } from "@hashgraph/sdk";
 
 import dex from "../../deployment/model/dex";
 import Governor from "../../e2e-test/business/Governor";
@@ -22,21 +16,24 @@ const DAO_ADMIN_CLIENT = clientsInfo.operatorClient;
 const DAO_DESC = "Lorem Ipsum is simply dummy text";
 const DAO_WEB_LINKS = ["LINKEDIN", "https://linkedin.com"];
 
+const deployment = new Deployment();
+const provider = InstanceProvider.getInstance();
+
 async function main() {
-  const csDev = new ContractService();
-  await deployContracts([
-    csDev.governorTextContractName,
-    csDev.textDao,
-    csDev.godHolderContract,
+  const newCopies = await deployment.deployProxies([
+    ContractService.TEXT_DAO,
+    ContractService.GOVERNOR_TEXT,
   ]);
 
-  const provider = InstanceProvider.getInstance();
+  const daoContract = newCopies.get(ContractService.TEXT_DAO);
+  const governorContract = newCopies.get(ContractService.GOVERNOR_TEXT);
 
-  const godHolder = provider.getFungibleTokenHolder();
+  const textGovernor = provider.getGovernor("", governorContract.id);
+  const textDao = provider.getTextDao(daoContract.id);
 
-  const textGovernor = provider.getGovernor(csDev.governorTextContractName);
-
-  const textDao = provider.getTextDao();
+  const godHolder = await provider.getGODTokenHolderFromFactory(
+    dex.GOVERNANCE_DAO_ONE_TOKEN_ID
+  );
 
   await textDao.initialize(
     DOA_ADMIN_ADDRESS,

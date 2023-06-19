@@ -78,6 +78,8 @@ export async function main() {
   await provider.getNFTTokenHolderFactory().initialize();
 
   const godHolder = await provider.getGODTokenHolderFromFactory(tokenGOD);
+  await provider.getGODTokenHolderFromFactory(dex.TOKEN_LAB49_1_ID);
+  await provider.getGODTokenHolderFromFactory(dex.GOVERNANCE_DAO_ONE_TOKEN_ID);
   await provider.getNFTTokenHolderFromFactory(tokenNFT);
 
   await provider.getMultiSigDAOFactory().initialize();
