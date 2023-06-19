@@ -48,6 +48,7 @@ export default class ContractMetadata {
     "MultisigDAOFactory",
     "MultiSigDAO",
     "TokenTransferDAOFactory",
+    "TokenTransferDAO",
     "NFTDAOFactory",
     "ContractUpgradeDAOFactory",
     "TextDAO",
@@ -117,7 +118,6 @@ export default class ContractMetadata {
       "HederaGnosisSafeProxyFactory",
       "GODHolder",
       "NFTHolder",
-      "TokenTransferDAO",
       "ContractUpgradeDAO",
     ]
   ) => {
