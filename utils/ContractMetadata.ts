@@ -53,6 +53,8 @@ export default class ContractMetadata {
     "ContractUpgradeDAOFactory",
     "TextDAO",
     "TextDAOFactory",
+    "GODHolder",
+    "NFTHolder",
   ];
 
   static SUPPORTED_PROXY_OPTIONS = ["create", "update"];
@@ -116,8 +118,6 @@ export default class ContractMetadata {
       "TransparentUpgradeableProxy",
       "HederaGnosisSafe",
       "HederaGnosisSafeProxyFactory",
-      "GODHolder",
-      "NFTHolder",
       "ContractUpgradeDAO",
     ]
   ) => {

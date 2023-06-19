@@ -286,6 +286,27 @@
     "hash": "8c6899dab9d86624607c080af5d350d6",
     "transparentProxyAddress": "0x0000000000000000000000000000000000e245c0",
     "transparentProxyId": "0.0.14828992"
+<<<<<<< HEAD
 >>>>>>> 06ff961 (fixed e2e after adding TokenTransferDAO)
+=======
+  },
+  {
+    "name": "godholder",
+    "id": "0.0.14829155",
+    "address": "0x0000000000000000000000000000000000e24663",
+    "timestamp": "2023-06-19T08:09:43.216Z",
+    "hash": "c31aae4e1425ae3b1d09d7e12f01fe93",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000e24671",
+    "transparentProxyId": "0.0.14829169"
+  },
+  {
+    "name": "nftholder",
+    "id": "0.0.14829179",
+    "address": "0x0000000000000000000000000000000000e2467b",
+    "timestamp": "2023-06-19T08:10:08.422Z",
+    "hash": "b4dadaf5bd5d5f6edc99ea46a8937e70",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000e2467f",
+    "transparentProxyId": "0.0.14829183"
+>>>>>>> 746ec7c (added god and nft holder)
   }
 ]
