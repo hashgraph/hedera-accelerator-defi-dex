@@ -35,7 +35,7 @@ export default class TokenHolderFactory extends Base {
 
   initialize = async (client: Client = clientsInfo.operatorClient) => {
     if (await this.isInitializationPending()) {
-      const logic = this._isNFTType ? "NFTHolder" : "GodHolder";
+      const logic = this._isNFTType ? "NFTHolder" : "GODHolder";
       const holderLogic = await new Deployment().deploy(logic);
       const proxyAdmin = clientsInfo.dexOwnerId.toSolidityAddress();
       const args = new ContractFunctionParameters()
@@ -60,7 +60,7 @@ export default class TokenHolderFactory extends Base {
     const args = new ContractFunctionParameters().addAddress(tokenAddress);
 
     const { result } = await this.execute(
-      9_00_000,
+      20_00_000,
       GET_TOKEN_HOLDER,
       client,
       args

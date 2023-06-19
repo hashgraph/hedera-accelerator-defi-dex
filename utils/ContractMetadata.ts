@@ -115,6 +115,10 @@ export default class ContractMetadata {
       "TransparentUpgradeableProxy",
       "HederaGnosisSafe",
       "HederaGnosisSafeProxyFactory",
+      "GODHolder",
+      "NFTHolder",
+      "TokenTransferDAO",
+      "ContractUpgradeDAO",
     ]
   ) => {
     return await this._readAllContractInfo(contractNameList);
