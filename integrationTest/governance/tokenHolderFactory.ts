@@ -28,8 +28,8 @@ async function executeTokensHolderFlow(
 
 async function main() {
   const provider = InstanceProvider.getInstance();
-  const godTokenHolderFactory = provider.getFungibleTokenHolderFactory();
-  const nftTokenHolderFactory = provider.getNonFungibleTokenHolderFactory();
+  const godTokenHolderFactory = provider.getGODTokenHolderFactory();
+  const nftTokenHolderFactory = provider.getNFTTokenHolderFactory();
   await executeTokensHolderFlow(godTokenHolderFactory, [
     GOD_TOKEN_ID,
     TOKEN_LAB49_1,

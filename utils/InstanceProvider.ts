@@ -47,12 +47,12 @@ export class InstanceProvider {
       : idOrAddress;
   }
 
-  public getFungibleTokenHolderFactory(id: string | null = null) {
+  public getGODTokenHolderFactory(id: string | null = null) {
     const _id = this.getProxyId(id, this.csDev.godTokenHolderFactory);
     return new TokenHolderFactory(_id, false);
   }
 
-  public getNonFungibleTokenHolderFactory(id: string | null = null) {
+  public getNFTTokenHolderFactory(id: string | null = null) {
     const _id = this.getProxyId(id, this.csDev.nftTokenHolderFactory);
     return new TokenHolderFactory(_id, true);
   }
@@ -115,16 +115,11 @@ export class InstanceProvider {
     return new NFTHolder(_id);
   }
 
-  public getFungibleTokenHolder(id: string | null = null) {
-    const _id = this.getProxyId(id, this.csDev.godHolderContract);
-    return new GodHolder(_id);
-  }
-
   public async getNFTTokenHolderFromFactory(
     tokenId: TokenId,
     id: string | null = null
   ) {
-    const factory = this.getNonFungibleTokenHolderFactory(id);
+    const factory = this.getNFTTokenHolderFactory(id);
     const cId = await factory.getTokenHolder(tokenId.toSolidityAddress());
     return new NFTHolder(cId.toString());
   }
@@ -133,7 +128,7 @@ export class InstanceProvider {
     tokenId: TokenId,
     id: string | null = null
   ) {
-    const factory = this.getFungibleTokenHolderFactory(id);
+    const factory = this.getGODTokenHolderFactory(id);
     const cId = await factory.getTokenHolder(tokenId.toSolidityAddress());
     return new GodHolder(cId.toString());
   }

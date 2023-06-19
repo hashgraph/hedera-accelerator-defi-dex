@@ -18,8 +18,8 @@ import { expect } from "chai";
 import Common from "../business/Common";
 import { BigNumber } from "bignumber.js";
 import { CommonSteps } from "./CommonSteps";
-import GODTokenHolderFactory from "../business/GODTokenHolderFactory";
 import * as GovernorTokenMetaData from "../../e2e-test/business/GovernorTokenDao";
+import { InstanceProvider } from "../../utils/InstanceProvider";
 
 const DAO_DESC = "Lorem Ipsum is simply dummy text";
 const DAO_WEB_LINKS = ["LINKEDIN", "https://linkedin.com"];
@@ -48,12 +48,8 @@ const daoFactoryContract = csDev.getContractWithProxy(
 const proxyId = daoFactoryContract.transparentProxyId!;
 const daoFactory = new TokenTransferDAOFactory(proxyId);
 
-const godHolderFactoryId = csDev.getContractWithProxy(
-  csDev.godTokenHolderFactory
-).transparentProxyId!;
-
-const godTokenHolderFactory = new GODTokenHolderFactory(godHolderFactoryId);
-
+const godTokenHolderFactory =
+  InstanceProvider.getInstance().getGODTokenHolderFactory();
 const adminAddress: string = clientsInfo.operatorId.toSolidityAddress();
 
 const toAccount: AccountId = clientsInfo.treasureId;

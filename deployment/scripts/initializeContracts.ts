@@ -73,8 +73,8 @@ export async function main() {
 
   await factory.getPairs();
 
-  await provider.getFungibleTokenHolderFactory().initialize();
-  await provider.getNonFungibleTokenHolderFactory().initialize();
+  await provider.getGODTokenHolderFactory().initialize();
+  await provider.getNFTTokenHolderFactory().initialize();
 
   const godHolder = await provider.getGODTokenHolderFromFactory(tokenGOD);
   await provider.getNFTTokenHolderFromFactory(tokenNFT);
