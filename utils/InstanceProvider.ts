@@ -10,20 +10,14 @@ import NFTHolder from "../e2e-test/business/NFTHolder";
 import TokenHolderFactory from "../e2e-test/business/factories/TokenHolderFactory";
 
 import TextDao from "../e2e-test/business/TextDao";
-import TextDAOFactory from "../e2e-test/business/DAOFactory";
-
-import GovernorTokenDao from "../e2e-test/business/GovernorTokenDao";
-import DAOFactory from "../e2e-test/business/factories/DAOFactory";
-
-import ContractUpgradeDao from "../e2e-test/business/ContractUpgradeDao";
-import ContractUpgradeDAOFactory from "../e2e-test/business/DAOFactory";
-
 import MultiSigDao from "../e2e-test/business/MultiSigDao";
-import Configuration from "../e2e-test/business/Configuration";
 import GovernorTokenDao from "../e2e-test/business/GovernorTokenDao";
 import ContractUpgradeDao from "../e2e-test/business/ContractUpgradeDao";
 
+import DAOFactory from "../e2e-test/business/factories/DAOFactory";
+import TextDAOFactory from "../e2e-test/business/DAOFactory";
 import MultiSigDAOFactory from "../e2e-test/business/factories/MultiSigDAOFactory";
+import ContractUpgradeDAOFactory from "../e2e-test/business/DAOFactory";
 
 import { TokenId } from "@hashgraph/sdk";
 import { ContractId } from "@hashgraph/sdk";
