@@ -194,5 +194,14 @@
     "hash": "9e0fc140d4c07fd88fc9c9db04813893",
     "transparentProxyAddress": "0x0000000000000000000000000000000000d61ff0",
     "transparentProxyId": "0.0.14032880"
+  },
+  {
+    "name": "textdaofactory",
+    "id": "0.0.14482039",
+    "address": "0x0000000000000000000000000000000000dcfa77",
+    "timestamp": "2023-06-15T10:25:41.798Z",
+    "hash": "0bb7815a658f77d12f817206bff0a86b",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000dcfa9d",
+    "transparentProxyId": "0.0.14482077"
   }
 ]

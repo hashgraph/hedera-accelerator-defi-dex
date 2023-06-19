@@ -75,7 +75,7 @@ async function createDAO(
 
 async function main() {
   const daoFactory =
-    InstanceProvider.getInstance().getContractUpgradeDaoFactory(null, false);
+    InstanceProvider.getInstance().getContractUpgradeDaoFactory();
   await daoFactory.initializeWithContractUpgrade();
   await daoFactory.getGODTokenHolderFactoryAddress();
   await createDAO(
