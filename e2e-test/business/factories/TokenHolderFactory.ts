@@ -5,6 +5,7 @@ import NFTHolder from "../NFTHolder";
 import { Helper } from "../../../utils/Helper";
 import { Deployment } from "../../../utils/deployContractOnTestnet";
 import { clientsInfo } from "../../../utils/ClientManagement";
+import { ContractService } from "../../../deployment/service/ContractService";
 import {
   Client,
   TokenId,
@@ -35,7 +36,9 @@ export default class TokenHolderFactory extends Base {
 
   initialize = async (client: Client = clientsInfo.operatorClient) => {
     if (await this.isInitializationPending()) {
-      const logic = this._isNFTType ? "NFTHolder" : "GODHolder";
+      const logic = this._isNFTType
+        ? ContractService.NFT_HOLDER
+        : ContractService.GOD_HOLDER;
       const holderLogic = await new Deployment().deploy(logic);
       const proxyAdmin = clientsInfo.dexOwnerId.toSolidityAddress();
       const args = new ContractFunctionParameters()

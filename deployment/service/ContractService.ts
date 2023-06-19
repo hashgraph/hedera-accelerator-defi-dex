@@ -23,6 +23,8 @@ export class ContractService {
   public static SPLITTER = "splitter";
   public static CONTRACT_UPGRADE_DAO_FACTORY = "contractupgradedaofactory";
   public static TEXT_DAO_FACTORY = "textdaofactory";
+  public static GOD_HOLDER = "godholder";
+  public static NFT_HOLDER = "nftholder";
 
   public tokenTransferDAOFactory = "tokentransferdaofactory";
   public factoryContractName = "factory";
