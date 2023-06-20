@@ -42,20 +42,19 @@ export default class ContractMetadata {
     "GovernorTokenCreate",
     "Splitter",
     "Vault",
-    "GODHolder",
-    "NFTHolder",
     "Configuration",
     "GODTokenHolderFactory",
     "NFTTokenHolderFactory",
-    "TokenTransferDAOFactory",
-    "TokenTransferDAO",
     "MultisigDAOFactory",
     "MultiSigDAO",
+    "TokenTransferDAOFactory",
+    "TokenTransferDAO",
     "NFTDAOFactory",
-    "ContractUpgradeDAO",
     "ContractUpgradeDAOFactory",
     "TextDAO",
     "TextDAOFactory",
+    "GODHolder",
+    "NFTHolder",
   ];
 
   static SUPPORTED_PROXY_OPTIONS = ["create", "update"];
@@ -119,6 +118,7 @@ export default class ContractMetadata {
       "TransparentUpgradeableProxy",
       "HederaGnosisSafe",
       "HederaGnosisSafeProxyFactory",
+      "ContractUpgradeDAO",
     ]
   ) => {
     return await this._readAllContractInfo(contractNameList);

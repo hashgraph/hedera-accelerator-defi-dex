@@ -1,45 +1,45 @@
-import { Helper } from "../../utils/Helper";
-import { clientsInfo } from "../../utils/ClientManagement";
-import { ContractService } from "../../deployment/service/ContractService";
-import { InstanceProvider } from "../../utils/InstanceProvider";
-import { main as deployContracts } from "../../deployment/scripts/createContractsE2E";
-import {
-  AccountId,
-  Client,
-  ContractId,
-  PrivateKey,
-  TokenId,
-} from "@hashgraph/sdk";
-
 import dex from "../../deployment/model/dex";
+import Common from "../../e2e-test/business/Common";
 import Governor from "../../e2e-test/business/Governor";
 import GodHolder from "../../e2e-test/business/GodHolder";
 import ContractUpgradeDao from "../../e2e-test/business/contractUpgradeDao";
 import * as GovernorTokenMetaData from "../../e2e-test/business/GovernorTokenDao";
-import Common from "../../e2e-test/business/Common";
+
+import { Helper } from "../../utils/Helper";
+import { clientsInfo } from "../../utils/ClientManagement";
+import { ContractService } from "../../deployment/service/ContractService";
+import { InstanceProvider } from "../../utils/InstanceProvider";
+import { Client, AccountId, ContractId, PrivateKey } from "@hashgraph/sdk";
+import { Deployment } from "../../utils/deployContractOnTestnet";
 
 const DOA_ADMIN_ADDRESS = clientsInfo.operatorId.toSolidityAddress();
 const DAO_ADMIN_CLIENT = clientsInfo.operatorClient;
 const DAO_DESC = "Lorem Ipsum is simply dummy text";
 const DAO_WEB_LINKS = ["LINKEDIN", "https://linkedin.com"];
 
+const csDev = new ContractService();
+const deployment = new Deployment();
+const provider = InstanceProvider.getInstance();
+
 async function main() {
-  const csDev = new ContractService();
-  await deployContracts([
-    csDev.governorUpgradeContract,
-    csDev.contractUpgradeDao,
-    csDev.godHolderContract,
+  const newCopies = await deployment.deployProxies([
+    ContractService.GOVERNOR_UPGRADE,
+    ContractService.CONTRACT_UPGRADE_DAO,
   ]);
 
-  const provider = InstanceProvider.getInstance();
-
-  const godHolder = provider.getFungibleTokenHolder();
+  const governor = newCopies.get(ContractService.GOVERNOR_UPGRADE);
+  const upgradeDao = newCopies.get(ContractService.CONTRACT_UPGRADE_DAO);
 
   const contractUpgradeGovernor = provider.getGovernor(
-    csDev.governorUpgradeContract
+    ContractService.GOVERNOR_UPGRADE,
+    governor.id
   );
 
-  const contractUpgradeDao = provider.getContractUpgradeDao();
+  const contractUpgradeDao = provider.getContractUpgradeDao(upgradeDao.id);
+
+  const godHolder = await provider.getGODTokenHolderFromFactory(
+    dex.GOVERNANCE_DAO_ONE_TOKEN_ID
+  );
 
   await contractUpgradeDao.initialize(
     DOA_ADMIN_ADDRESS,

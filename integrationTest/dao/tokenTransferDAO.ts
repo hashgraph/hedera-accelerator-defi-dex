@@ -1,15 +1,15 @@
-import { Helper } from "../../utils/Helper";
-import { clientsInfo } from "../../utils/ClientManagement";
-import { ContractService } from "../../deployment/service/ContractService";
-import { InstanceProvider } from "../../utils/InstanceProvider";
-import { main as deployContracts } from "../../deployment/scripts/createContractsE2E";
-import { AccountId, Client, PrivateKey, TokenId } from "@hashgraph/sdk";
-
 import dex from "../../deployment/model/dex";
 import Governor from "../../e2e-test/business/Governor";
 import GodHolder from "../../e2e-test/business/GodHolder";
 import GovernorTokenDao from "../../e2e-test/business/GovernorTokenDao";
 import * as GovernorTokenMetaData from "../../e2e-test/business/GovernorTokenDao";
+
+import { Helper } from "../../utils/Helper";
+import { Deployment } from "../../utils/deployContractOnTestnet";
+import { clientsInfo } from "../../utils/ClientManagement";
+import { ContractService } from "../../deployment/service/ContractService";
+import { InstanceProvider } from "../../utils/InstanceProvider";
+import { Client, TokenId, AccountId, PrivateKey } from "@hashgraph/sdk";
 
 const TOKEN_QTY = 1 * 1e8;
 const TOKEN_ID = TokenId.fromString(dex.TOKEN_LAB49_1);
@@ -18,20 +18,28 @@ const DAO_ADMIN_CLIENT = clientsInfo.operatorClient;
 const DAO_DESC = "Lorem Ipsum is simply dummy text";
 const DAO_WEB_LINKS = ["LINKEDIN", "https://linkedin.com"];
 
+const deployment = new Deployment();
+const provider = InstanceProvider.getInstance();
+
 async function main() {
-  const csDev = new ContractService();
-  await deployContracts([
-    csDev.governorTTContractName,
-    csDev.tokenTransferDAO,
-    csDev.godHolderContract,
+  const newCopies = await deployment.deployProxies([
+    ContractService.GOVERNOR_TT,
+    ContractService.TOKEN_TRANSFER_DAO,
   ]);
 
-  const provider = InstanceProvider.getInstance();
+  const governor = newCopies.get(ContractService.GOVERNOR_TT);
+  const transferDao = newCopies.get(ContractService.TOKEN_TRANSFER_DAO);
 
-  const godHolder = provider.getFungibleTokenHolder();
-  const governorTT = provider.getGovernor(ContractService.GOVERNOR_TT);
+  const governorTT = provider.getGovernor(
+    ContractService.GOVERNOR_TT,
+    governor.id
+  );
+  const tokenTransferDAO = provider.getGovernorTokenDao(transferDao.id);
 
-  const tokenTransferDAO = provider.getGovernorTokenDao();
+  const godHolder = await provider.getGODTokenHolderFromFactory(
+    dex.GOVERNANCE_DAO_ONE_TOKEN_ID
+  );
+
   await tokenTransferDAO.initialize(
     DOA_ADMIN_ADDRESS,
     "Governor Token Dao",

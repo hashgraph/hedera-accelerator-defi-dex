@@ -5,7 +5,6 @@ import "../common/IERC20.sol";
 import "../common/IEvents.sol";
 import "../common/IErrors.sol";
 import "../common/IHederaService.sol";
-import "../common/CommonOperations.sol";
 
 import "../dao/IGovernanceDAO.sol";
 import "../governance/ITokenHolderFactory.sol";
@@ -14,19 +13,12 @@ import "../governance/IGovernorTransferToken.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-contract DAOFactory is IErrors, IEvents, CommonOperations, OwnableUpgradeable {
+contract DAOFactory is IErrors, IEvents, OwnableUpgradeable {
     event DAOCreated(
         address daoAddress,
-        address admin,
-        string name,
-        string logoUrl,
-        address tokenAddress,
-        uint256 quorumThreshold,
-        uint256 votingDelay,
-        uint256 votingPeriod,
-        bool isPrivate,
-        string description,
-        string webLinks
+        address governanceAddress,
+        address tokenHolderAddress,
+        CreateDAOInputs inputs
     );
 
     struct CreateDAOInputs {
@@ -155,7 +147,12 @@ contract DAOFactory is IErrors, IEvents, CommonOperations, OwnableUpgradeable {
         if (!_createDAOInputs.isPrivate) {
             daos.push(createdDAOAddress);
         }
-        emitDOACreatedEvent(createdDAOAddress, _createDAOInputs);
+        emit DAOCreated(
+            createdDAOAddress,
+            address(_governorBase),
+            address(iTokenHolder),
+            _createDAOInputs
+        );
         return createdDAOAddress;
     }
 
@@ -224,24 +221,5 @@ contract DAOFactory is IErrors, IEvents, CommonOperations, OwnableUpgradeable {
         bytes memory _data;
         return
             address(new TransparentUpgradeableProxy(_logic, proxyAdmin, _data));
-    }
-
-    function emitDOACreatedEvent(
-        address createdDAOAddress,
-        CreateDAOInputs memory _createDAOInputs
-    ) private {
-        emit DAOCreated(
-            createdDAOAddress,
-            _createDAOInputs.admin,
-            _createDAOInputs.name,
-            _createDAOInputs.logoUrl,
-            address(_createDAOInputs.tokenAddress),
-            _createDAOInputs.quorumThreshold,
-            _createDAOInputs.votingDelay,
-            _createDAOInputs.votingPeriod,
-            _createDAOInputs.isPrivate,
-            _createDAOInputs.description,
-            join(_createDAOInputs.webLinks, ",")
-        );
     }
 }

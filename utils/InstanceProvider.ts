@@ -10,17 +10,16 @@ import NFTHolder from "../e2e-test/business/NFTHolder";
 import TokenHolderFactory from "../e2e-test/business/factories/TokenHolderFactory";
 
 import TextDao from "../e2e-test/business/TextDao";
-import TextDAOFactory from "../e2e-test/business/DAOFactory";
-
+import MultiSigDao from "../e2e-test/business/MultiSigDao";
 import GovernorTokenDao from "../e2e-test/business/GovernorTokenDao";
-import DAOFactory from "../e2e-test/business/factories/DAOFactory";
-
 import ContractUpgradeDao from "../e2e-test/business/ContractUpgradeDao";
+
+import DAOFactory from "../e2e-test/business/factories/DAOFactory";
+import TextDAOFactory from "../e2e-test/business/DAOFactory";
+import MultiSigDAOFactory from "../e2e-test/business/factories/MultiSigDAOFactory";
 import ContractUpgradeDAOFactory from "../e2e-test/business/DAOFactory";
 
-import MultiSigDao from "../e2e-test/business/MultiSigDao";
-import MultiSigDAOFactory from "../e2e-test/business/factories/MultiSigDAOFactory";
-
+import { TokenId } from "@hashgraph/sdk";
 import { ContractId } from "@hashgraph/sdk";
 import { ContractService } from "../deployment/service/ContractService";
 
@@ -42,12 +41,12 @@ export class InstanceProvider {
       : idOrAddress;
   }
 
-  public getFungibleTokenHolderFactory(id: string | null = null) {
+  public getGODTokenHolderFactory(id: string | null = null) {
     const _id = this.getProxyId(id, this.csDev.godTokenHolderFactory);
     return new TokenHolderFactory(_id, false);
   }
 
-  public getNonFungibleTokenHolderFactory(id: string | null = null) {
+  public getNFTTokenHolderFactory(id: string | null = null) {
     const _id = this.getProxyId(id, this.csDev.nftTokenHolderFactory);
     return new TokenHolderFactory(_id, true);
   }
@@ -110,9 +109,22 @@ export class InstanceProvider {
     return new NFTHolder(_id);
   }
 
-  public getFungibleTokenHolder(id: string | null = null) {
-    const _id = this.getProxyId(id, this.csDev.godHolderContract);
-    return new GodHolder(_id);
+  public async getNFTTokenHolderFromFactory(
+    tokenId: TokenId,
+    id: string | null = null
+  ) {
+    const factory = this.getNFTTokenHolderFactory(id);
+    const cId = await factory.getTokenHolder(tokenId.toSolidityAddress());
+    return new NFTHolder(cId.toString());
+  }
+
+  public async getGODTokenHolderFromFactory(
+    tokenId: TokenId,
+    id: string | null = null
+  ) {
+    const factory = this.getGODTokenHolderFactory(id);
+    const cId = await factory.getTokenHolder(tokenId.toSolidityAddress());
+    return new GodHolder(cId.toString());
   }
 
   public getConfiguration(id: string | null = null) {

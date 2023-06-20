@@ -1,16 +1,17 @@
-import { Helper } from "../../utils/Helper";
-import { AccountId, Client, PrivateKey, TokenId } from "@hashgraph/sdk";
-import { clientsInfo } from "../../utils/ClientManagement";
-import { ContractService } from "../../deployment/service/ContractService";
-import { InstanceProvider } from "../../utils/InstanceProvider";
-import { main as deployContracts } from "../../deployment/scripts/createContractsE2E";
-
 import dex from "../../deployment/model/dex";
 import Governor from "../../e2e-test/business/Governor";
 import NFTHolder from "../../e2e-test/business/NFTHolder";
 import GovernorTokenDao from "../../e2e-test/business/GovernorTokenDao";
 import * as GovernorTokenMetaData from "../../e2e-test/business/GovernorTokenDao";
 
+import { Helper } from "../../utils/Helper";
+import { Deployment } from "../../utils/deployContractOnTestnet";
+import { clientsInfo } from "../../utils/ClientManagement";
+import { ContractService } from "../../deployment/service/ContractService";
+import { InstanceProvider } from "../../utils/InstanceProvider";
+import { AccountId, Client, PrivateKey, TokenId } from "@hashgraph/sdk";
+
+const NFT_ID = 19;
 const TOKEN_QTY = 1 * 1e8;
 const TOKEN_ID = TokenId.fromString(dex.TOKEN_LAB49_1);
 const adminAddress: string = clientsInfo.operatorId.toSolidityAddress();
@@ -18,20 +19,28 @@ const DAO_ADMIN_CLIENT = clientsInfo.operatorClient;
 const DAO_DESC = "Lorem Ipsum is simply dummy text";
 const DAO_WEB_LINKS = ["LINKEDIN", "https://linkedin.com"];
 
+const deployment = new Deployment();
+const provider = InstanceProvider.getInstance();
+
 async function main() {
-  const csDev = new ContractService();
-  await deployContracts([
-    csDev.governorTTContractName,
-    csDev.tokenTransferDAO,
-    csDev.nftHolderContract,
+  const newCopies = await deployment.deployProxies([
+    ContractService.GOVERNOR_TT,
+    ContractService.TOKEN_TRANSFER_DAO,
   ]);
 
-  const provider = InstanceProvider.getInstance();
+  const governor = newCopies.get(ContractService.GOVERNOR_TT);
+  const transferDao = newCopies.get(ContractService.TOKEN_TRANSFER_DAO);
 
-  const nftHolder = provider.getNonFungibleTokenHolder();
-  const governorTT = provider.getGovernor(ContractService.GOVERNOR_TT);
+  const governorTT = provider.getGovernor(
+    ContractService.GOVERNOR_TT,
+    governor.id
+  );
+  const tokenTransferDAO = provider.getGovernorTokenDao(transferDao.id);
 
-  const tokenTransferDAO = provider.getGovernorTokenDao();
+  const nftHolder = await provider.getNFTTokenHolderFromFactory(
+    GovernorTokenMetaData.NFT_TOKEN_ID
+  );
+
   await tokenTransferDAO.initialize(
     adminAddress,
     "Governor Token Dao",
@@ -94,7 +103,7 @@ export async function executeGovernorTokenTransferFlow(
     voterClient
   );
   await nftHolder.grabTokensForVoter(
-    20,
+    NFT_ID,
     voterAccountId,
     voterAccountPrivateKey,
     voterClient
@@ -118,7 +127,7 @@ export async function executeGovernorTokenTransferFlow(
   );
 
   await governorTokenTransfer.getProposalDetails(proposalId);
-  await governorTokenTransfer.forVote(proposalId, 20, voterClient);
+  await governorTokenTransfer.forVote(proposalId, NFT_ID, voterClient);
   await governorTokenTransfer.isQuorumReached(proposalId);
   await governorTokenTransfer.isVoteSucceeded(proposalId);
   await governorTokenTransfer.proposalVotes(proposalId);

@@ -11,12 +11,20 @@ export class ContractService {
   public static FT_DAO_FACTORY = "tokentransferdaofactory";
   public static GOVERNOR_TT = "governortransfertoken";
   public static GOVERNOR_TEXT = "governortextproposal";
+  public static GOVERNOR_UPGRADE = "governorupgrade";
+  public static CONTRACT_UPGRADE_DAO = "contractupgradedao";
+  public static TOKEN_TRANSFER_DAO = "tokentransferdao";
+  public static TEXT_DAO = "textdao";
+  public static GOVERNOR_TOKEN_CREATE = "governortokencreate";
+  public static FACTORY = "factory";
   public static PAIR = "pair";
   public static LP_TOKEN = "lptoken";
   public static VAULT = "vault";
   public static SPLITTER = "splitter";
   public static CONTRACT_UPGRADE_DAO_FACTORY = "contractupgradedaofactory";
   public static TEXT_DAO_FACTORY = "textdaofactory";
+  public static GOD_HOLDER = "godholder";
+  public static NFT_HOLDER = "nftholder";
 
   public tokenTransferDAOFactory = "tokentransferdaofactory";
   public factoryContractName = "factory";

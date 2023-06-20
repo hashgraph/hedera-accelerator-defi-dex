@@ -5,11 +5,10 @@ import { Deployment } from "../../utils/deployContractOnTestnet";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { Client, ContractId, ContractFunctionParameters } from "@hashgraph/sdk";
 import { ContractService } from "../../deployment/service/ContractService";
+import { InstanceProvider } from "../../utils/InstanceProvider";
 
-import Governor from "./Governor";
-import GodHolder from "./GodHolder";
-import GovernorTokenDao from "./GovernorTokenDao";
-import GODTokenHolderFactory from "./GODTokenHolderFactory";
+import Governor from "../../e2e-test/business/Governor";
+import GovernorTokenDao from "../../e2e-test/business/GovernorTokenDao";
 
 const deployment = new Deployment();
 const csDev = new ContractService();
@@ -287,16 +286,11 @@ export default class DAOFactory extends Base {
   };
 
   getGodHolderInstance = async (governor: Governor) => {
-    const godTokenHolderFactoryProxyContractId =
-      await this.getGODTokenHolderFactoryAddress();
-    const godHolderFactory = new GODTokenHolderFactory(
-      godTokenHolderFactoryProxyContractId.toString()
-    );
+    const factoryId = await this.getGODTokenHolderFactoryAddress();
     const godTokenId = await governor.getGODTokenAddress();
-    const godTokenAddress = godTokenId.toSolidityAddress();
-    const godHolderProxyContractId = await godHolderFactory.getTokenHolder(
-      godTokenAddress
+    return InstanceProvider.getInstance().getGODTokenHolderFromFactory(
+      godTokenId,
+      factoryId.toString()
     );
-    return new GodHolder(godHolderProxyContractId.toString());
   };
 }

@@ -43,9 +43,6 @@ export default class ContractUpgradeDao extends BaseDao {
     tokenId: TokenId = GOD_TOKEN_ID,
     holderTokenId: TokenId = GOD_TOKEN_ID
   ) {
-    console.log(
-      `contractUpgradeGovernor ${contractUpgradeGovernor.contractId}`
-    );
     await contractUpgradeGovernor.initialize(
       tokenHolder,
       client,
@@ -79,7 +76,6 @@ export default class ContractUpgradeDao extends BaseDao {
       const governorId = governor.contractId;
       const governorAddress =
         ContractId.fromString(governorId).toSolidityAddress();
-      console.log(`governorAddress ${governorAddress}`);
       const args = new ContractFunctionParameters()
         .addAddress(admin)
         .addString(name)

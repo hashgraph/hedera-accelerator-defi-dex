@@ -183,6 +183,20 @@ export class Deployment {
     );
   };
 
+  deployProxies = async (
+    names: string[],
+    adminKey: Key = clientsInfo.operatorKey.publicKey,
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    const deployedItems = new Map<String, any>();
+    const pendingItems = names.map(async (name: string) => {
+      const item = await this.deployProxy(name, adminKey, client);
+      deployedItems.set(name, item);
+    });
+    await Promise.all(pendingItems);
+    return deployedItems;
+  };
+
   deployProxy = async (
     contractName: string,
     adminKey: Key = clientsInfo.operatorKey.publicKey,
@@ -204,6 +218,7 @@ export class Deployment {
       proxyId: proxy.id,
       proxyAddress: proxy.address,
       timestamp: new Date().toISOString(),
+      name: contractName,
     };
     console.log(`- Deployment#deploy(): done`);
     console.table(info);
