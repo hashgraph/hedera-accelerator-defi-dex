@@ -26,6 +26,7 @@ async function main() {
   const title = Helper.createProposalTitle("Text Proposal");
   const proposalId = await governor.createTextProposal(
     title,
+    clientsInfo.operatorId,
     clientsInfo.operatorClient
   );
   await governor.getProposalDetails(proposalId);

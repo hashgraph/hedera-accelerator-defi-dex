@@ -97,6 +97,7 @@ export default class Governor extends Base {
 
   createTextProposal = async (
     title: string,
+    creator: AccountId,
     client: Client = clientsInfo.operatorClient,
     description: string = DEFAULT_DESCRIPTION,
     link: string = DEFAULT_LINK
@@ -104,7 +105,8 @@ export default class Governor extends Base {
     const args = new ContractFunctionParameters()
       .addString(title)
       .addString(description)
-      .addString(link);
+      .addString(link)
+      .addAddress(creator.toSolidityAddress());
     const { result } = await this.execute(
       1_000_000,
       CREATE_PROPOSAL,
