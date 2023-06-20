@@ -21,6 +21,7 @@ export class ContractService {
   public static SPLITTER = "splitter";
   public static GOD_HOLDER = "godholder";
   public static NFT_HOLDER = "nftholder";
+  public static MULTI_SEND = "hederamultisend";
 
   public factoryContractName = "factory";
   public pairContractName = "pair";

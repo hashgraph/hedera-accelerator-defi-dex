@@ -2,6 +2,7 @@ import dex from "../../deployment/model/dex";
 import MultiSigDao from "../../e2e-test/business/MultiSigDao";
 import HederaGnosisSafe from "../../e2e-test/business/HederaGnosisSafe";
 
+import { ethers } from "ethers";
 import { Helper } from "../../utils/Helper";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { ContractService } from "../../deployment/service/ContractService";
@@ -16,6 +17,7 @@ import {
 const csDev = new ContractService();
 
 const TOKEN = TokenId.fromString(dex.TOKEN_LAB49_1);
+const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
 const TOKEN_QTY = 1;
 
 export const DAO_OWNERS_INFO = [
@@ -119,11 +121,46 @@ export async function executeDAO(
     safeTxnExecutionClient
   );
   await multiSigDAO.state(transferTxnHash);
+
+  // TXN-2 batch
+  const batchTxnHash = await proposeBatchTransaction(multiSigDAO);
+  await multiSigDAO.getApprovalCounts(batchTxnHash);
+  const batchTxnInfo = await multiSigDAO.getTransactionInfo(batchTxnHash);
+  for (const daoOwner of ownersInfo) {
+    await gnosisSafe.approveHash(batchTxnHash, daoOwner.client);
+    await multiSigDAO.getApprovalCounts(batchTxnHash);
+  }
+  await gnosisSafe.executeTransaction(
+    batchTxnInfo.to,
+    batchTxnInfo.value,
+    batchTxnInfo.data,
+    batchTxnInfo.operation,
+    batchTxnInfo.nonce,
+    safeTxnExecutionClient
+  );
 }
 
 async function getGnosisSafeInstance(multiSigDAO: MultiSigDao) {
   const safeContractId = await multiSigDAO.getHederaGnosisSafeContractAddress();
   return new HederaGnosisSafe(safeContractId.toString());
+}
+
+async function proposeBatchTransaction(multiSigDAO: MultiSigDao) {
+  const targets = [
+    ContractId.fromString(TOKEN.toString()),
+    ContractId.fromString(GOD_TOKEN_ID.toString()),
+  ];
+
+  // 0x18160ddd == totalSupply()
+  const callDataArray = ["0x18160ddd", "0x18160ddd"].map((data: string) =>
+    ethers.utils.arrayify(data)
+  );
+
+  return await multiSigDAO.proposeBatchTransaction(
+    [0, 0], // 0 HBars
+    targets, // contract address
+    callDataArray // contract call data
+  );
 }
 
 if (require.main === module) {

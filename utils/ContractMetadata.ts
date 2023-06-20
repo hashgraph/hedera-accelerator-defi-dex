@@ -50,6 +50,7 @@ export default class ContractMetadata {
     "NFTDAOFactory",
     "GODHolder",
     "NFTHolder",
+    "HederaMultiSend",
   ];
 
   static SUPPORTED_PROXY_OPTIONS = ["create", "update"];
