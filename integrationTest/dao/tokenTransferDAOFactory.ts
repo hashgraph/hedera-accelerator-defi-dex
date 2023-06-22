@@ -1,37 +1,52 @@
 import { Helper } from "../../utils/Helper";
-import { TokenId } from "@hashgraph/sdk";
+import { ContractId, TokenId } from "@hashgraph/sdk";
 import { ContractService } from "../../deployment/service/ContractService";
-import { executeGovernorTokenTransferFlow } from "./tokenTransferDAO";
+import {
+  executeGovernorTokenTransferFlow,
+  executeContractUpgradeFlow,
+  executeTextProposalFlow,
+} from "./tokenTransferDAO";
+import { clientsInfo } from "../../utils/ClientManagement";
 
 import dex from "../../deployment/model/dex";
 import DAOFactory from "../../e2e-test/business/DAOFactory";
+import { InstanceProvider } from "../../utils/InstanceProvider";
 const DAO_WEB_LINKS = ["LINKEDIN", "https://linkedin.com"];
 const DAO_DESC = "Lorem Ipsum is simply dummy text";
 
-export async function executeTokenTransferDAOFlow(
+const csDev = new ContractService();
+
+export async function executeDAOFlow(
   daoFactory: DAOFactory,
-  daoAddresses: string[]
+  daoProxyAddress: string,
+  tokenId: TokenId
 ) {
-  if (daoAddresses.length > 0) {
-    const daoProxyAddress = daoAddresses.pop()!;
-    console.log(`- executing TokenTransferDAO i.e ${daoProxyAddress}\n`);
+  console.log(`- executing TokenTransferDAO i.e ${daoProxyAddress}\n`);
 
-    const tokenTransferDAO =
-      daoFactory.getGovernorTokenDaoInstance(daoProxyAddress);
+  const tokenTransferDAO =
+    daoFactory.getGovernorTokenDaoInstance(daoProxyAddress);
 
-    const governorTokenTransfer =
-      await daoFactory.getGovernorTokenTransferInstance(tokenTransferDAO);
+  const godHolder = await daoFactory.getGodHolderInstance(tokenId);
 
-    const godHolder = await daoFactory.getGodHolderInstance(
-      governorTokenTransfer
-    );
+  await executeGovernorTokenTransferFlow(
+    godHolder,
+    tokenTransferDAO,
+    clientsInfo.treasureId,
+    clientsInfo.treasureKey,
+    clientsInfo.operatorId,
+    tokenId
+  );
 
-    await executeGovernorTokenTransferFlow(
-      godHolder,
-      tokenTransferDAO,
-      governorTokenTransfer
-    );
-  }
+  await executeTextProposalFlow(godHolder, tokenTransferDAO, tokenId);
+
+  await executeContractUpgradeFlow(
+    godHolder,
+    tokenTransferDAO,
+    csDev.getContractWithProxy(csDev.factoryContractName)
+      .transparentProxyAddress!,
+    csDev.getContract(csDev.factoryContractName).address,
+    tokenId
+  );
 }
 
 async function createDAO(
@@ -54,7 +69,6 @@ async function createDAO(
 }
 
 function getTokenTransferDAOFactoryInfo() {
-  const csDev = new ContractService();
   const contract = csDev.getContractWithProxy(csDev.tokenTransferDAOFactory);
   const proxyId = contract.transparentProxyId!;
   return new DAOFactory(proxyId);
@@ -66,19 +80,24 @@ async function main() {
   await daoFactory.getGODTokenHolderFactoryAddress();
   await createDAO(
     daoFactory,
-    dex.GOVERNANCE_DAO_ONE,
-    dex.GOVERNANCE_DAO_ONE_TOKEN_ID,
-    false
-  );
-  await createDAO(
-    daoFactory,
     dex.GOVERNANCE_DAO_TWO,
     dex.GOVERNANCE_DAO_TWO_TOKEN_ID,
-    true
+    false
   );
   const daoAddresses = await daoFactory.getDAOs();
-  await executeTokenTransferDAOFlow(daoFactory, daoAddresses);
-  await daoFactory.upgradeHederaService();
+  const daoAddress = daoAddresses[0];
+  await executeDAOFlow(daoFactory, daoAddress, dex.GOVERNANCE_DAO_TWO_TOKEN_ID);
+  const contractId = ContractId.fromSolidityAddress(daoAddress);
+  const daoInstance = InstanceProvider.getInstance().getGovernorTokenDao(
+    contractId.toString()
+  );
+  await daoInstance.upgradeHederaService();
+  await daoFactory.upgradeGovernorsImplementation(
+    csDev.getContract(ContractService.GOVERNOR_TT).address,
+    csDev.getContract(ContractService.GOVERNOR_TOKEN_CREATE).address,
+    csDev.getContract(ContractService.GOVERNOR_TEXT).address,
+    csDev.getContract(ContractService.GOVERNOR_UPGRADE).address
+  );
   console.log(`\nDone`);
 }
 

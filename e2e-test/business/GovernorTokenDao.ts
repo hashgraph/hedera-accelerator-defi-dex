@@ -1,6 +1,5 @@
 import dex from "../../deployment/model/dex";
 import BaseDao from "./BaseDao";
-import Governor from "./Governor";
 import GodHolder from "../../e2e-test/business/GodHolder";
 import NFTHolder from "../../e2e-test/business/NFTHolder";
 
@@ -12,12 +11,16 @@ import {
   ContractId,
   ContractFunctionParameters,
 } from "@hashgraph/sdk";
+import { ContractService } from "../../deployment/service/ContractService";
+import { Helper } from "../../utils/Helper";
 
 const INITIALIZE = "initialize";
-const CREATE_PROPOSAL = "createProposal";
-const GET_ALL_PROPOSALS = "getAllProposals";
-const GET_GOVERNOR_TOKEN_TRANSFER_CONTRACT_ADDRESS =
-  "getGovernorContractAddress";
+const CREATE_PROPOSAL = "createTokenTransferProposal";
+const CREATE_TEXT_PROPOSAL = "createTextProposal";
+const CREATE_CONTRACT_UPGRADE_PROPOSAL = "createContractUpgradeProposal";
+const GET_TOKEN_TRANSFER_PROPOSALS = "getTokenTransferProposals";
+const GET_GOVERNOR_TOKEN_TRANSFER_CONTRACT_ADDRESSES =
+  "getGovernorContractAddresses";
 
 export const DEFAULT_DESCRIPTION = "description";
 export const DEFAULT_LINK = "https://defi-ui.hedera.com/governance";
@@ -34,7 +37,6 @@ export default class GovernorTokenDao extends BaseDao {
     url: string,
     desc: string,
     webLinks: string[],
-    governor: Governor,
     tokenHolder: GodHolder | NFTHolder,
     client: Client = clientsInfo.operatorClient,
     defaultQuorumThresholdValue: number = DEFAULT_QUORUM_THRESHOLD_IN_BSP,
@@ -43,51 +45,61 @@ export default class GovernorTokenDao extends BaseDao {
     tokenId: TokenId = GOD_TOKEN_ID,
     holderTokenId: TokenId = GOD_TOKEN_ID
   ) {
-    await governor.initialize(
-      tokenHolder,
-      client,
-      defaultQuorumThresholdValue,
-      votingDelay,
-      votingPeriod,
-      tokenId,
-      holderTokenId
-    );
-    await this.initializeDAO(
+    await tokenHolder.initialize(client, holderTokenId.toSolidityAddress());
+    const godHolderContractId = tokenHolder.contractId;
+    const godHolderProxyAddress =
+      ContractId.fromString(godHolderContractId).toSolidityAddress();
+
+    const contractService = new ContractService();
+
+    const inputs = {
       admin,
       name,
       url,
-      desc,
+      tokenAddress: holderTokenId.toSolidityAddress(),
+      quorumThreshold: defaultQuorumThresholdValue,
+      votingDelay,
+      votingPeriod,
+      isPrivate: false,
+      description: desc,
       webLinks,
-      governor,
-      client
-    );
-  }
+    };
 
-  async initializeDAO(
-    admin: string,
-    name: string,
-    url: string,
-    desc: string,
-    webLinks: string[],
-    governor: Governor,
-    client: Client = clientsInfo.operatorClient
-  ) {
-    if (await this.isInitializationPending()) {
-      const governorId = governor.contractId;
-      const governorAddress =
-        ContractId.fromString(governorId).toSolidityAddress();
-      const args = new ContractFunctionParameters()
-        .addAddress(admin)
-        .addString(name)
-        .addString(url)
-        .addString(desc)
-        .addStringArray(webLinks)
-        .addAddress(governorAddress);
-      await this.execute(9_00_000, INITIALIZE, client, args);
-      console.log(`- GovernorTokenDao#${INITIALIZE}(): done\n`);
-      return;
-    }
-    console.log(`- GovernorTokenDao#${INITIALIZE}(): already done\n`);
+    const governance = {
+      tokenTransferLogic: contractService.getContract(
+        ContractService.GOVERNOR_TT
+      ).address,
+      textLogic: contractService.getContract(ContractService.GOVERNOR_TEXT)
+        .address,
+      contractUpgradeLogic: contractService.getContract(
+        ContractService.GOVERNOR_UPGRADE
+      ).address,
+      createTokenLogic: contractService.getContract(
+        ContractService.GOVERNOR_TOKEN_CREATE
+      ).address,
+    };
+
+    const common = {
+      hederaService: this.htsAddress,
+      iTokenHolder: godHolderProxyAddress,
+      proxyAdmin: clientsInfo.dexOwnerId.toSolidityAddress(),
+      systemUser: clientsInfo.operatorId.toSolidityAddress(),
+    };
+
+    const { hex, bytes } = await this.encodeFunctionData(
+      ContractService.TOKEN_TRANSFER_DAO,
+      INITIALIZE,
+      [Object.values(inputs), Object.values(governance), Object.values(common)]
+    );
+
+    const { receipt } = await this.execute(
+      70_00_000,
+      INITIALIZE,
+      client,
+      bytes
+    );
+
+    console.log(`- GovernorTokenDao#${INITIALIZE}(): ${receipt.status} \n`);
   }
 
   createTokenTransferProposal = async (
@@ -122,32 +134,109 @@ export default class GovernorTokenDao extends BaseDao {
     return proposalId;
   };
 
-  getAllProposals = async (client: Client = clientsInfo.operatorClient) => {
+  createTextProposal = async (
+    title: string,
+    client: Client = clientsInfo.operatorClient,
+    description: string = DEFAULT_DESCRIPTION,
+    link: string = DEFAULT_LINK
+  ) => {
+    const args = new ContractFunctionParameters()
+      .addString(title)
+      .addString(description)
+      .addString(link);
+
+    const { result } = await this.execute(
+      1_000_000,
+      CREATE_TEXT_PROPOSAL,
+      client,
+      args,
+      clientsInfo.operatorKey
+    );
+
+    const proposalId = result.getUint256(0).toFixed();
+
+    console.log(
+      `- TextDao#${CREATE_PROPOSAL}(): proposal-id = ${proposalId}\n`
+    );
+
+    return proposalId;
+  };
+
+  createContractUpgradeProposal = async (
+    title: string,
+    proxyContract: string,
+    contractToUpgrade: string,
+    client: Client = clientsInfo.operatorClient,
+    description: string = DEFAULT_DESCRIPTION,
+    link: string = DEFAULT_LINK
+  ) => {
+    const args = new ContractFunctionParameters()
+      .addString(title)
+      .addString(description)
+      .addString(link)
+      .addAddress(proxyContract)
+      .addAddress(contractToUpgrade);
+
+    const { result } = await this.execute(
+      1_000_000,
+      CREATE_CONTRACT_UPGRADE_PROPOSAL,
+      client,
+      args,
+      clientsInfo.operatorKey
+    );
+
+    const proposalId = result.getUint256(0).toFixed();
+
+    console.log(
+      `- ContractUpgradeDao#${CREATE_PROPOSAL}(): proposal-id = ${proposalId}\n`
+    );
+
+    return proposalId;
+  };
+
+  getTokenTransferProposals = async (
+    client: Client = clientsInfo.operatorClient
+  ) => {
     const args = new ContractFunctionParameters();
     const { result } = await this.execute(
       9000000,
-      GET_ALL_PROPOSALS,
+      GET_TOKEN_TRANSFER_PROPOSALS,
       client,
       args
     );
-    const proposalId = result.getUint256(0).toFixed();
+    const proposalIds = Helper.getUint256Array(result);
     console.log(
-      `- GovernorTokenDao#${GET_ALL_PROPOSALS}(): proposal-id = ${proposalId}\n`
+      `- GovernorTokenDao#${GET_TOKEN_TRANSFER_PROPOSALS}(): proposal-id = ${proposalIds} length = ${proposalIds.length}}\n`
     );
   };
 
-  getGovernorTokenTransferContractAddress = async (
+  getGovernorTokenTransferContractAddresses = async (
     client: Client = clientsInfo.operatorClient
   ) => {
     const { result } = await this.execute(
       2000000,
-      GET_GOVERNOR_TOKEN_TRANSFER_CONTRACT_ADDRESS,
+      GET_GOVERNOR_TOKEN_TRANSFER_CONTRACT_ADDRESSES,
       client
     );
-    const address = result.getAddress(0);
-    console.log(
-      `- GovernorTokenDao#${GET_GOVERNOR_TOKEN_TRANSFER_CONTRACT_ADDRESS}(): address = ${address}\n`
-    );
-    return ContractId.fromSolidityAddress(address);
+    const addresses = {
+      governorTokenTransferProxy: result.getAddress(0),
+      governorTextProposalProxy: result.getAddress(1),
+      governorUpgradeProxy: result.getAddress(2),
+      governorTokenCreateProxy: result.getAddress(3),
+      governorTokenTransferProxyId: ContractId.fromSolidityAddress(
+        result.getAddress(0)
+      ).toString(),
+      governorTextProposalProxyId: ContractId.fromSolidityAddress(
+        result.getAddress(1)
+      ).toString(),
+      governorUpgradeProxyId: ContractId.fromSolidityAddress(
+        result.getAddress(2)
+      ).toString(),
+      governorTokenCreateProxyId: ContractId.fromSolidityAddress(
+        result.getAddress(3)
+      ).toString(),
+    };
+    console.table(addresses);
+    return addresses;
   };
 }

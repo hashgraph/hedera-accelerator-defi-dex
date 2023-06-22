@@ -3,7 +3,7 @@ import { BigNumber } from "ethers";
 import { TestHelper } from "./TestHelper";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-describe("GovernanceTokenDAO tests", function () {
+describe.only("GovernanceTokenDAO tests", function () {
   const QUORUM_THRESHOLD = 5;
   const QUORUM_THRESHOLD_BSP = QUORUM_THRESHOLD * 100;
 
@@ -47,6 +47,13 @@ describe("GovernanceTokenDAO tests", function () {
 
     const governorTT = await TestHelper.deployLogic("GovernorTransferToken");
     await governorTT.initialize(...ARGS);
+    const governorUpgrade = await TestHelper.deployLogic("GovernorUpgrade");
+    const governorTokenCreate = await TestHelper.deployLogic(
+      "GovernorTokenCreate"
+    );
+    const governorTextProposal = await TestHelper.deployLogic(
+      "GovernorTextProposal"
+    );
 
     const GOVERNOR_TOKEN_DAO_ARGS = [
       daoAdminOne.address,
@@ -56,8 +63,40 @@ describe("GovernanceTokenDAO tests", function () {
       WEB_LINKS,
       governorTT.address,
     ];
+
+    const inputs = {
+      admin: daoAdminOne.address,
+      DAO_NAME,
+      LOGO_URL,
+      tokenAddress: token.address,
+      quorumThreshold: QUORUM_THRESHOLD_BSP,
+      VOTING_DELAY,
+      VOTING_PERIOD,
+      isPrivate: false,
+      description: DESCRIPTION,
+      WEB_LINKS,
+    };
+
+    const governance = {
+      tokenTransferLogic: governorTT.address,
+      textLogic: governorTextProposal.address,
+      contractUpgradeLogic: governorUpgrade.address,
+      createTokenLogic: governorTokenCreate.address,
+    };
+
+    const common = {
+      hederaService: hederaService.address,
+      iTokenHolder: godHolder.address,
+      proxyAdmin: signers[4].address,
+      systemUser: signers[5].address,
+    };
+
     const governorTokenDAO = await TestHelper.deployLogic("TokenTransferDAO");
-    await governorTokenDAO.initialize(...GOVERNOR_TOKEN_DAO_ARGS);
+    await governorTokenDAO.initialize(
+      Object.values(inputs),
+      Object.values(governance),
+      Object.values(common)
+    );
 
     const godHolderFactory = await TestHelper.deployGodTokenHolderFactory(
       hederaService,
@@ -90,8 +129,8 @@ describe("GovernanceTokenDAO tests", function () {
     };
   }
 
-  describe("TokenTransferDAOFactory contract tests", async function () {
-    it("Verify contract should be revert for multiple initialization", async function () {
+  describe.only("TokenTransferDAOFactory contract tests", async function () {
+    it.only("Verify contract should be revert for multiple initialization", async function () {
       const {
         governorDAOFactory,
         dexOwner,

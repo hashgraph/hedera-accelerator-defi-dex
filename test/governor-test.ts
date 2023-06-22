@@ -195,7 +195,15 @@ describe("Governor Tests", function () {
   ) {
     const tx = await governance
       .connect(account)
-      .createProposal(TITLE, DESC, LINK, account.address, tokenName, "Symbol");
+      .createProposal(
+        TITLE,
+        DESC,
+        LINK,
+        account.address,
+        tokenName,
+        "Symbol",
+        account.address
+      );
     return await verifyProposalCreationEvent(tx, true);
   }
 

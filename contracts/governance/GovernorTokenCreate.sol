@@ -18,13 +18,14 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
         string memory linkToDiscussion,
         address _treasurer,
         string memory _tokenName,
-        string memory _tokenSymbol
+        string memory _tokenSymbol,
+        address creator
     ) public returns (uint256) {
         uint256 proposalId = _createProposal(
             title,
             description,
             linkToDiscussion,
-            msg.sender,
+            creator,
             bytes("")
         );
         _proposalData[proposalId] = TokenCreateData(
