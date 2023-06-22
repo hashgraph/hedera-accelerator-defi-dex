@@ -4,6 +4,11 @@ import { TestHelper } from "./TestHelper";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 describe("NFTDAOFactory contract tests", function () {
+  const QUORUM_THRESHOLD = 5;
+  const QUORUM_THRESHOLD_BSP = QUORUM_THRESHOLD * 100;
+  const VOTING_DELAY = 0;
+  const VOTING_PERIOD = 12;
+
   const zeroAddress = "0x0000000000000000000000000000000000000000";
   const oneAddress = "0x0000000000000000000000000000000000000001";
   const total = 100 * 1e8;
@@ -27,6 +32,43 @@ describe("NFTDAOFactory contract tests", function () {
     token.setUserBalance(signers[0].address, total);
 
     const bastHTS = await TestHelper.deployMockHederaService();
+    const godHolder = await TestHelper.deployGodHolder(bastHTS, token);
+
+    const governorTT = await TestHelper.deployLogic("GovernorTransferToken");
+    const governorUpgrade = await TestHelper.deployLogic("GovernorUpgrade");
+    const governorTokenCreate = await TestHelper.deployLogic(
+      "GovernorTokenCreate"
+    );
+    const governorTextProposal = await TestHelper.deployLogic(
+      "GovernorTextProposal"
+    );
+
+    const inputs = {
+      admin: daoAdminOne.address,
+      name: DAO_NAME,
+      LOGO_URL,
+      token: token.address,
+      QUORUM_THRESHOLD_BSP,
+      VOTING_DELAY,
+      VOTING_PERIOD,
+      isPrivate: false,
+      description: DESCRIPTION,
+      webLinks: WEB_LINKS,
+    };
+
+    const governance = [
+      governorTT.address,
+      governorTextProposal.address,
+      governorUpgrade.address,
+      governorTokenCreate.address,
+    ];
+
+    const common = [
+      bastHTS.address,
+      godHolder.address,
+      signers[4].address,
+      signers[5].address,
+    ];
 
     const nftTokenDAO = await TestHelper.deployLogic("TokenTransferDAO");
 
@@ -48,8 +90,9 @@ describe("NFTDAOFactory contract tests", function () {
       bastHTS.address,
       nftTokenDAO.address,
       nftHolderFactory.address,
-      governorTransferToken.address
+      governance
     );
+
     return {
       governorDAOFactoryInstance,
       dexOwner,
@@ -61,6 +104,9 @@ describe("NFTDAOFactory contract tests", function () {
       daoAdminTwo,
       token,
       signers,
+      inputs,
+      governance,
+      common,
     };
   }
 
@@ -72,6 +118,7 @@ describe("NFTDAOFactory contract tests", function () {
       nftTokenDAO,
       nftHolderFactory,
       governorTransferToken,
+      governance,
     } = await loadFixture(deployFixture);
 
     await expect(
@@ -80,7 +127,7 @@ describe("NFTDAOFactory contract tests", function () {
         bastHTS.address,
         nftTokenDAO.address,
         nftHolderFactory.address,
-        governorTransferToken.address
+        governance
       )
     ).revertedWith("Initializable: contract is already initialized");
   });
@@ -228,7 +275,7 @@ describe("NFTDAOFactory contract tests", function () {
   });
 
   it("Verify upgrade logic call should be reverted for non dex owner", async function () {
-    const { governorDAOFactoryInstance, daoAdminOne, daoAdminTwo } =
+    const { governorDAOFactoryInstance, daoAdminOne, daoAdminTwo, governance } =
       await loadFixture(deployFixture);
 
     await expect(
@@ -242,7 +289,7 @@ describe("NFTDAOFactory contract tests", function () {
     await expect(
       governorDAOFactoryInstance
         .connect(daoAdminTwo)
-        .upgradeGovernorLogicImplementation(zeroAddress)
+        .upgradeGovernorsImplementation(governance)
     )
       .revertedWithCustomError(governorDAOFactoryInstance, "NotAdmin")
       .withArgs("DAOFactory: auth failed");
@@ -257,9 +304,8 @@ describe("NFTDAOFactory contract tests", function () {
   });
 
   it("Verify upgrade logic call should be proceeded for dex owner", async function () {
-    const { governorDAOFactoryInstance, dexOwner } = await loadFixture(
-      deployFixture
-    );
+    const { governorDAOFactoryInstance, dexOwner, governance } =
+      await loadFixture(deployFixture);
 
     const txn1 = await governorDAOFactoryInstance
       .connect(dexOwner)
@@ -272,12 +318,19 @@ describe("NFTDAOFactory contract tests", function () {
 
     const txn2 = await governorDAOFactoryInstance
       .connect(dexOwner)
-      .upgradeGovernorLogicImplementation(oneAddress);
+      .upgradeGovernorsImplementation(governance);
 
     const event2 = (await txn2.wait()).events.pop();
-    expect(event2.event).equal("LogicUpdated");
-    expect(event2.args.name).equal("TransferToken");
-    expect(event2.args.newImplementation).equal(oneAddress);
+    expect(event2.event).equal("GovernorLogicUpdated");
+    expect(event2.args.name).equal("Governors");
+    expect(event2.args.newImplementation.tokenTransferLogic).equal(
+      governance[0]
+    );
+    expect(event2.args.newImplementation.textLogic).equal(governance[1]);
+    expect(event2.args.newImplementation.contractUpgradeLogic).equal(
+      governance[2]
+    );
+    expect(event2.args.newImplementation.createTokenLogic).equal(governance[3]);
 
     const txn3 = await governorDAOFactoryInstance
       .connect(dexOwner)

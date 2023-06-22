@@ -33,8 +33,8 @@ interface ISharedDAOModel {
     }
 
     event GovernorLogicUpdated(
-        Governor indexed oldImplementation,
-        Governor indexed newImplementation,
+        Governor oldImplementation,
+        Governor newImplementation,
         string name
     );
 }
