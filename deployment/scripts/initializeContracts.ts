@@ -85,7 +85,6 @@ export async function main() {
   await provider.getMultiSigDAOFactory().initialize();
   await provider.getFungibleTokenDAOFactory().initialize();
   await provider.getNonFungibleTokenDAOFactory().initialize();
-  await provider.getContractUpgradeDaoFactory().initialize();
 
   for (const contractName of csDev.allGovernorContracts) {
     console.log(`- Governor contract name = ${contractName}`);
