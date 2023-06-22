@@ -293,5 +293,14 @@
     "hash": "d510d8508b029ec57614bdd2dff02fe6",
     "transparentProxyAddress": "0x0000000000000000000000000000000000e438f3",
     "transparentProxyId": "0.0.14956787"
+  },
+  {
+    "name": "tokentransferdaofactory",
+    "id": "0.0.14958273",
+    "address": "0x0000000000000000000000000000000000e43ec1",
+    "timestamp": "2023-06-22T11:45:33.991Z",
+    "hash": "8ed98f855d9dcb6a4ec13d3ec4c61d4f",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000e43ec8",
+    "transparentProxyId": "0.0.14958280"
   }
 ]

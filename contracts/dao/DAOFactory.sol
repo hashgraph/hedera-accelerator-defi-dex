@@ -128,12 +128,25 @@ contract DAOFactory is
             _createDAOInputs,
             iTokenHolder
         );
+        TokenTransferDAO dao = TokenTransferDAO(createdDAOAddress);
+        (
+            address governorTokenTransferProxy,
+            address governorTextProposalProxy,
+            address governorUpgradeProxy,
+            address governorTokenCreateProxy
+        ) = dao.getGovernorContractAddresses();
+
         if (!_createDAOInputs.isPrivate) {
             daos.push(createdDAOAddress);
         }
+        Governor memory proxies;
+        proxies.tokenTransferLogic = governorTokenTransferProxy;
+        proxies.contractUpgradeLogic = governorUpgradeProxy;
+        proxies.textLogic = governorTextProposalProxy;
+        proxies.createTokenLogic = governorTokenCreateProxy;
         emit DAOCreated(
             createdDAOAddress,
-            governors,
+            proxies,
             address(iTokenHolder),
             _createDAOInputs
         );
