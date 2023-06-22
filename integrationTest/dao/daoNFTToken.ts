@@ -1,8 +1,8 @@
 import dex from "../../deployment/model/dex";
 import Governor from "../../e2e-test/business/Governor";
 import NFTHolder from "../../e2e-test/business/NFTHolder";
-import GovernorTokenDao from "../../e2e-test/business/GovernorTokenDao";
-import * as GovernorTokenMetaData from "../../e2e-test/business/GovernorTokenDao";
+import FTDAO from "../../e2e-test/business/FTDAO";
+import * as GovernorTokenMetaData from "../../e2e-test/business/FTDAO";
 
 import { Helper } from "../../utils/Helper";
 import { Deployment } from "../../utils/deployContractOnTestnet";
@@ -23,18 +23,10 @@ const deployment = new Deployment();
 const provider = InstanceProvider.getInstance();
 
 async function main() {
-  const newCopies = await deployment.deployProxies([
-    ContractService.GOVERNOR_TT,
-    ContractService.TOKEN_TRANSFER_DAO,
-  ]);
+  const newCopies = await deployment.deployProxies([ContractService.FT_DAO]);
 
-  const governor = newCopies.get(ContractService.GOVERNOR_TT);
-  const transferDao = newCopies.get(ContractService.TOKEN_TRANSFER_DAO);
+  const transferDao = newCopies.get(ContractService.FT_DAO);
 
-  const governorTT = provider.getGovernor(
-    ContractService.GOVERNOR_TT,
-    governor.id
-  );
   const tokenTransferDAO = provider.getGovernorTokenDao(transferDao.id);
 
   const nftHolder = await provider.getNFTTokenHolderFromFactory(
@@ -47,7 +39,6 @@ async function main() {
     "dao url",
     DAO_DESC,
     DAO_WEB_LINKS,
-    governorTT,
     nftHolder,
     clientsInfo.operatorClient,
     GovernorTokenMetaData.DEFAULT_QUORUM_THRESHOLD_IN_BSP,
@@ -57,11 +48,7 @@ async function main() {
     GovernorTokenMetaData.NFT_TOKEN_ID
   );
 
-  await executeGovernorTokenTransferFlow(
-    nftHolder,
-    tokenTransferDAO,
-    governorTT
-  );
+  await executeGovernorTokenTransferFlow(nftHolder, tokenTransferDAO);
 
   await tokenTransferDAO.addWebLink("GIT", "https://git.com", DAO_ADMIN_CLIENT);
   await tokenTransferDAO.updateName(
@@ -83,8 +70,7 @@ if (require.main === module) {
 
 export async function executeGovernorTokenTransferFlow(
   nftHolder: NFTHolder,
-  tokenTransferDAO: GovernorTokenDao,
-  governorTokenTransfer: Governor,
+  tokenTransferDAO: FTDAO,
   fromAccount: AccountId = clientsInfo.treasureId,
   fromAccountPrivateKey: PrivateKey = clientsInfo.treasureKey,
   toAccount: AccountId = clientsInfo.operatorId,
@@ -108,6 +94,13 @@ export async function executeGovernorTokenTransferFlow(
     voterAccountPrivateKey,
     voterClient
   );
+
+  const governorAddresses =
+    await tokenTransferDAO.getGovernorTokenTransferContractAddresses();
+  const governorTokenTransfer = new Governor(
+    governorAddresses.governorTokenTransferProxyId.toString()
+  );
+
   await governorTokenTransfer.setupAllowanceForProposalCreation(
     proposalCreatorClient,
     proposalCreatorAccountId,

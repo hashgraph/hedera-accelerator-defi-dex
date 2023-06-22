@@ -31,7 +31,24 @@ abstract contract GovernorCountingSimpleInternal is
         string title;
         string description;
         string link;
+        bytes data;
         address[] voters;
+    }
+
+    struct VotingInformation {
+        uint256 quorumValue;
+        bool isQuorumReached;
+        ProposalState proposalState;
+        bool voted;
+        address votedUser;
+        uint256 againstVotes;
+        uint256 forVotes;
+        uint256 abstainVotes;
+    }
+
+    struct Duration {
+        uint256 startBlock;
+        uint256 endBlock;
     }
 
     event ProposalDetails(
@@ -40,9 +57,9 @@ abstract contract GovernorCountingSimpleInternal is
         string title,
         string description,
         string link,
-        uint256 startBlock,
-        uint256 endBlock,
-        bytes data
+        bytes data,
+        Duration duration,
+        VotingInformation votingInformation
     );
 
     uint256 private constant PROPOSAL_CREATION_AMOUNT = 1e8;
@@ -117,26 +134,54 @@ abstract contract GovernorCountingSimpleInternal is
             title,
             description,
             link,
+            data,
             EMPTY_VOTERS_LIST
         );
+
+        Duration memory duration;
+        duration.startBlock = proposalSnapshot(proposalId);
+        duration.endBlock = proposalDeadline(proposalId);
+
         emit ProposalDetails(
             proposalId,
             creator,
             title,
             description,
             link,
-            proposalSnapshot(proposalId),
-            proposalDeadline(proposalId),
-            data
+            data,
+            duration,
+            getVotingInformation(proposalId)
         );
+
         return proposalId;
+    }
+
+    function getVotingInformation(
+        uint256 proposalId
+    ) private view returns (VotingInformation memory) {
+        (
+            uint256 againstVotes,
+            uint256 forVotes,
+            uint256 abstainVotes
+        ) = proposalVotes(proposalId);
+
+        VotingInformation memory votingInfo;
+        votingInfo.quorumValue = quorum(0);
+        votingInfo.isQuorumReached = _quorumReached(proposalId);
+        votingInfo.proposalState = state(proposalId);
+        votingInfo.voted = hasVoted(proposalId, msg.sender);
+        votingInfo.votedUser = msg.sender;
+        votingInfo.abstainVotes = abstainVotes;
+        votingInfo.forVotes = forVotes;
+        votingInfo.againstVotes = againstVotes;
+
+        return votingInfo;
     }
 
     function getProposalDetails(
         uint256 proposalId
     )
         public
-        view
         returns (
             uint256 quorumValue,
             bool isQuorumReached,
@@ -152,33 +197,34 @@ abstract contract GovernorCountingSimpleInternal is
         )
     {
         ProposalInfo memory proposalInfo = _getProposalInfoIfExist(proposalId);
-        quorumValue = quorum(0);
-        isQuorumReached = _quorumReached(proposalId);
-        proposalState = state(proposalId);
-        voted = hasVoted(proposalId, msg.sender);
-        (againstVotes, forVotes, abstainVotes) = proposalVotes(proposalId);
+        VotingInformation memory votingInfo = getVotingInformation(proposalId);
+
+        quorumValue = votingInfo.quorumValue;
+        isQuorumReached = votingInfo.isQuorumReached;
+        proposalState = votingInfo.proposalState;
+        voted = votingInfo.voted;
+        againstVotes = votingInfo.againstVotes;
+        forVotes = votingInfo.forVotes;
+        abstainVotes = votingInfo.abstainVotes;
         creator = proposalInfo.creator;
         title = proposalInfo.title;
         descripition = proposalInfo.description;
         link = proposalInfo.link;
-    }
 
-    function votingDelay()
-        public
-        view
-        override(IGovernorUpgradeable, GovernorSettingsUpgradeable)
-        returns (uint256)
-    {
-        return super.votingDelay();
-    }
+        Duration memory duration;
+        duration.startBlock = proposalSnapshot(proposalId);
+        duration.endBlock = proposalDeadline(proposalId);
 
-    function votingPeriod()
-        public
-        view
-        override(IGovernorUpgradeable, GovernorSettingsUpgradeable)
-        returns (uint256)
-    {
-        return super.votingPeriod();
+        emit ProposalDetails(
+            proposalId,
+            creator,
+            title,
+            descripition,
+            link,
+            proposalInfo.data,
+            duration,
+            votingInfo
+        );
     }
 
     function proposalThreshold()
@@ -208,6 +254,7 @@ abstract contract GovernorCountingSimpleInternal is
         proposalId = super._cancel(targets, values, calldatas, descriptionHash);
         _returnGODToken(proposalInfo.creator);
         _cleanup(proposalId);
+        getProposalDetails(proposalId);
     }
 
     /**
@@ -256,6 +303,7 @@ abstract contract GovernorCountingSimpleInternal is
         tokenHolder.addProposalForVoter(voter, proposalId);
         uint256 weight = _castVote(proposalId, voter, support, "");
         proposalInfo.voters.push(voter);
+        getProposalDetails(proposalId);
         return weight;
     }
 
@@ -272,6 +320,7 @@ abstract contract GovernorCountingSimpleInternal is
         ProposalInfo memory proposalInfo = _getProposalInfoIfExist(proposalId);
         _returnGODToken(proposalInfo.creator);
         _cleanup(proposalId);
+        getProposalDetails(proposalId);
     }
 
     function quorum(

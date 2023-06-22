@@ -23,12 +23,10 @@ export default class ContractMetadata {
     "GovernorTokenCreate",
     "Splitter",
     "Configuration",
-    "TokenTransferDAOFactory",
+    "FTDAO",
+    "FTDAOFactory",
     "NFTDAOFactory",
     "MultisigDAOFactory",
-    "ContractUpgradeDAOFactory",
-    "TextDAO",
-    "TextDAOFactory",
   ];
 
   static SUPPORTED_CONTRACTS_FOR_DEPLOYMENT = [
@@ -47,12 +45,9 @@ export default class ContractMetadata {
     "NFTTokenHolderFactory",
     "MultisigDAOFactory",
     "MultiSigDAO",
-    "TokenTransferDAOFactory",
-    "TokenTransferDAO",
+    "FTDAO",
+    "FTDAOFactory",
     "NFTDAOFactory",
-    "ContractUpgradeDAOFactory",
-    "TextDAO",
-    "TextDAOFactory",
     "GODHolder",
     "NFTHolder",
   ];

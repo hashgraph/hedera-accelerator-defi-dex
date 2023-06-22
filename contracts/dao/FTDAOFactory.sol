@@ -5,49 +5,44 @@ import "../common/IERC20.sol";
 import "../common/IEvents.sol";
 import "../common/IErrors.sol";
 import "../common/IHederaService.sol";
+import "../common/RoleBasedAccess.sol";
 
-import "../dao/IGovernanceDAO.sol";
+import "../dao/FTDAO.sol";
 import "../governance/ITokenHolderFactory.sol";
 import "../governance/IGovernorTransferToken.sol";
+import "./ISharedDAOModel.sol";
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-contract DAOFactory is IErrors, IEvents, OwnableUpgradeable {
+contract FTDAOFactory is
+    IErrors,
+    IEvents,
+    OwnableUpgradeable,
+    ISharedDAOModel,
+    RoleBasedAccess
+{
     event DAOCreated(
         address daoAddress,
-        address governanceAddress,
+        Governor governors,
         address tokenHolderAddress,
         CreateDAOInputs inputs
     );
 
-    struct CreateDAOInputs {
-        address admin;
-        string name;
-        string logoUrl;
-        IERC20 tokenAddress;
-        uint256 quorumThreshold;
-        uint256 votingDelay;
-        uint256 votingPeriod;
-        bool isPrivate;
-        string description;
-        string[] webLinks;
-    }
-
     error NotAdmin(string message);
 
-    string private constant TokenDAO = "TokenDAO";
-    string private constant TransferToken = "TransferToken";
+    string private constant FungibleTokenDAO = "FTDAO";
     string private constant TokenHolderFactory = "TokenHolderFactory";
+    string private constant Governors = "Governors";
 
     IHederaService private hederaService;
     address private proxyAdmin;
 
     address[] private daos;
 
-    IGovernanceDAO private daoLogic;
-    IGovernorBase private governorBase;
+    FTDAO private daoLogic;
     ITokenHolderFactory private tokenHolderFactory;
+    Governor governors;
 
     modifier ifAdmin() {
         if (msg.sender != proxyAdmin) {
@@ -59,24 +54,27 @@ contract DAOFactory is IErrors, IEvents, OwnableUpgradeable {
     function initialize(
         address _proxyAdmin,
         IHederaService _hederaService,
-        IGovernanceDAO _daoLogic,
+        FTDAO _daoLogic,
         ITokenHolderFactory _tokenHolderFactory,
-        IGovernorBase _governor
+        Governor memory _governors
     ) external initializer {
+        systemUser = msg.sender;
         __Ownable_init();
         proxyAdmin = _proxyAdmin;
         hederaService = _hederaService;
         daoLogic = _daoLogic;
         tokenHolderFactory = _tokenHolderFactory;
-        governorBase = _governor;
+        governors = _governors;
 
-        emit LogicUpdated(address(0), address(daoLogic), TokenDAO);
-        emit LogicUpdated(address(0), address(governorBase), TransferToken);
+        emit LogicUpdated(address(0), address(daoLogic), FungibleTokenDAO);
         emit LogicUpdated(
             address(0),
             address(tokenHolderFactory),
             TokenHolderFactory
         );
+
+        Governor memory oldGovernors;
+        emit GovernorLogicUpdated(oldGovernors, _governors, Governors);
     }
 
     function getTokenHolderFactoryAddress()
@@ -99,22 +97,20 @@ contract DAOFactory is IErrors, IEvents, OwnableUpgradeable {
         tokenHolderFactory = _newTokenHolderFactory;
     }
 
-    function upgradeTokenDaoLogicImplementation(
-        IGovernanceDAO _newImpl
-    ) external ifAdmin {
-        emit LogicUpdated(address(daoLogic), address(_newImpl), TokenDAO);
+    function upgradeFTDAOLogicImplementation(FTDAO _newImpl) external ifAdmin {
+        emit LogicUpdated(
+            address(daoLogic),
+            address(_newImpl),
+            FungibleTokenDAO
+        );
         daoLogic = _newImpl;
     }
 
-    function upgradeGovernorLogicImplementation(
-        IGovernorTransferToken _newImpl
+    function upgradeGovernorsImplementation(
+        Governor memory _newImpl
     ) external ifAdmin {
-        emit LogicUpdated(
-            address(governorBase),
-            address(_newImpl),
-            TransferToken
-        );
-        governorBase = _newImpl;
+        emit GovernorLogicUpdated(governors, _newImpl, Governors);
+        governors = _newImpl;
     }
 
     function createDAO(
@@ -129,27 +125,29 @@ contract DAOFactory is IErrors, IEvents, OwnableUpgradeable {
         ITokenHolder iTokenHolder = tokenHolderFactory.getTokenHolder(
             address(_createDAOInputs.tokenAddress)
         );
-        IGovernorBase _governorBase = _createGovernorContractInstance(
-            address(_createDAOInputs.tokenAddress),
-            _createDAOInputs.quorumThreshold,
-            _createDAOInputs.votingDelay,
-            _createDAOInputs.votingPeriod,
+        address createdDAOAddress = _createFTDAOContractInstance(
+            _createDAOInputs,
             iTokenHolder
         );
-        address createdDAOAddress = _createTokenDAOContractInstance(
-            _createDAOInputs.admin,
-            _createDAOInputs.name,
-            _createDAOInputs.logoUrl,
-            _createDAOInputs.description,
-            _createDAOInputs.webLinks,
-            payable(address(_governorBase))
-        );
+        FTDAO dao = FTDAO(createdDAOAddress);
+        (
+            address governorTokenTransferProxy,
+            address governorTextProposalProxy,
+            address governorUpgradeProxy,
+            address governorTokenCreateProxy
+        ) = dao.getGovernorContractAddresses();
+
         if (!_createDAOInputs.isPrivate) {
             daos.push(createdDAOAddress);
         }
+        Governor memory proxies;
+        proxies.tokenTransferLogic = governorTokenTransferProxy;
+        proxies.contractUpgradeLogic = governorUpgradeProxy;
+        proxies.textLogic = governorTextProposalProxy;
+        proxies.createTokenLogic = governorTokenCreateProxy;
         emit DAOCreated(
             createdDAOAddress,
-            address(_governorBase),
+            proxies,
             address(iTokenHolder),
             _createDAOInputs
         );
@@ -164,57 +162,24 @@ contract DAOFactory is IErrors, IEvents, OwnableUpgradeable {
         IHederaService newHederaService
     ) external onlyOwner {
         hederaService = newHederaService;
-        for (uint i = 0; i < daos.length; i++) {
-            IGovernanceDAO dao = IGovernanceDAO(daos[i]);
-            address _governorAddress = dao.getGovernorContractAddress();
-            IGovernorBase(_governorAddress).upgradeHederaService(
-                newHederaService
-            );
-        }
     }
 
     function getHederaServiceVersion() external view returns (IHederaService) {
         return hederaService;
     }
 
-    function _createGovernorContractInstance(
-        address _tokenAddress,
-        uint256 _quorumThreshold,
-        uint256 _votingDelay,
-        uint256 _votingPeriod,
-        ITokenHolder _iTokenHolder
-    ) private returns (IGovernorBase iGovernorBase) {
-        iGovernorBase = IGovernorBase(_createProxy(address(governorBase)));
-        iGovernorBase.initialize(
-            IERC20(_tokenAddress),
-            _votingDelay,
-            _votingPeriod,
-            hederaService,
-            _iTokenHolder,
-            _quorumThreshold
-        );
-    }
-
-    function _createTokenDAOContractInstance(
-        address _admin,
-        string memory _name,
-        string memory _logoUrl,
-        string memory _desc,
-        string[] memory _webLinks,
-        address payable _governorContractAddress
+    function _createFTDAOContractInstance(
+        CreateDAOInputs memory _createDAOInputs,
+        ITokenHolder iTokenHolder
     ) private returns (address daoAddress) {
-        IGovernanceDAO tokenDAO = IGovernanceDAO(
-            _createProxy(address(daoLogic))
-        );
-        tokenDAO.initialize(
-            _admin,
-            _name,
-            _logoUrl,
-            _desc,
-            _webLinks,
-            _governorContractAddress
-        );
-        return address(tokenDAO);
+        FTDAO dao = FTDAO(_createProxy(address(daoLogic)));
+        Common memory common;
+        common.hederaService = hederaService;
+        common.iTokenHolder = iTokenHolder;
+        common.proxyAdmin = proxyAdmin;
+        common.systemUser = systemUser;
+        dao.initialize(_createDAOInputs, governors, common);
+        return address(dao);
     }
 
     function _createProxy(address _logic) private returns (address) {

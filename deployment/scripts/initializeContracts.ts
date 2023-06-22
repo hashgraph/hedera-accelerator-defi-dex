@@ -74,8 +74,10 @@ export async function main() {
 
   await factory.getPairs();
 
-  await provider.getGODTokenHolderFactory().initialize();
-  await provider.getNFTTokenHolderFactory().initialize();
+  const godTokenHolderFactory = provider.getGODTokenHolderFactory();
+  await godTokenHolderFactory.initialize();
+  const nftTokenHolderFactory = provider.getNFTTokenHolderFactory();
+  await nftTokenHolderFactory.initialize();
 
   const godHolder = await provider.getGODTokenHolderFromFactory(tokenGOD);
   await provider.getGODTokenHolderFromFactory(dex.TOKEN_LAB49_1_ID);
@@ -83,9 +85,12 @@ export async function main() {
   await provider.getNFTTokenHolderFromFactory(tokenNFT);
 
   await provider.getMultiSigDAOFactory().initialize();
-  await provider.getFungibleTokenDAOFactory().initialize();
-  await provider.getNonFungibleTokenDAOFactory().initialize();
-  await provider.getContractUpgradeDaoFactory().initialize();
+  await provider
+    .getFungibleTokenDAOFactory()
+    .initialize(clientsInfo.operatorClient, godTokenHolderFactory);
+  await provider
+    .getNonFungibleTokenDAOFactory()
+    .initialize(clientsInfo.operatorClient, nftTokenHolderFactory);
 
   for (const contractName of csDev.allGovernorContracts) {
     console.log(`- Governor contract name = ${contractName}`);

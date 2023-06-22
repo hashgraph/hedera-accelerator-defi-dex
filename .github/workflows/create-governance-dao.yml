@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       contractId:
-        description: "TokenTransferDAOFactory contract id"
+        description: "FTDAOFactory contract id"
         default: "0.0.3630071"
         required: true
         type: string

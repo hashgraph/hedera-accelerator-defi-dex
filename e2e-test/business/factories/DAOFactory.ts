@@ -3,12 +3,15 @@ import Base from "../Base";
 import { Helper } from "../../../utils/Helper";
 import { Deployment } from "../../../utils/deployContractOnTestnet";
 import { clientsInfo } from "../../../utils/ClientManagement";
-import { Client, ContractId, ContractFunctionParameters } from "@hashgraph/sdk";
+import {
+  Client,
+  ContractId,
+  ContractFunctionParameters,
+  TokenId,
+} from "@hashgraph/sdk";
 import { ContractService } from "../../../deployment/service/ContractService";
 import { InstanceProvider } from "../../../utils/InstanceProvider";
-
-import Governor from "../../../e2e-test/business/Governor";
-import GovernorTokenDao from "../../../e2e-test/business/GovernorTokenDao";
+import TokenHolderFactory from "./TokenHolderFactory";
 
 const deployment = new Deployment();
 const csDev = new ContractService();
@@ -18,9 +21,8 @@ const CREATE_DAO = "createDAO";
 const INITIALIZE = "initialize";
 const UPGRADE_TOKEN_HOLDER_FACTORY = "upgradeTokenHolderFactory";
 const GET_TOKEN_HOLDER_FACTORY_ADDRESS = "getTokenHolderFactoryAddress";
-const UPGRADE_TOKEN_DAO_LOGIC_IMPL = "upgradeTokenDaoLogicImplementation";
-const UPGRADE_GOVERNOR_TOKEN_TRANSFER_LOGIC_IMPL =
-  "upgradeGovernorLogicImplementation";
+const UPGRADE_TOKEN_DAO_LOGIC_IMPL = "upgradeFTDAOLogicImplementation";
+const UPGRADE_GOVERNORS_IMPLEMENTATION = "upgradeGovernorsImplementation";
 
 export default class DAOFactory extends Base {
   private _isNFTType: Boolean;
@@ -43,22 +45,45 @@ export default class DAOFactory extends Base {
     return this._isNFTType ? "NFT" : "GOD";
   }
 
-  initialize = async (client: Client = clientsInfo.operatorClient) => {
+  initialize = async (
+    client: Client = clientsInfo.operatorClient,
+    tokenHolderFactory: TokenHolderFactory
+  ) => {
     if (await this.isInitializationPending()) {
+      const tokenHolderFactoryContractId = ContractId.fromString(
+        tokenHolderFactory.contractId
+      ).toSolidityAddress();
+      const tokenHolderFactoryAddress = tokenHolderFactoryContractId;
       const proxyAdmin = clientsInfo.dexOwnerId.toSolidityAddress();
       const deployedItems = await deployment.deployContracts([
-        csDev.tokenTransferDAO,
-        csDev.governorTTContractName,
+        ContractService.FT_DAO,
       ]);
-      const tokenTransferDAO = deployedItems.get(csDev.tokenTransferDAO);
-      const governorTT = deployedItems.get(csDev.governorTTContractName);
-      const args = new ContractFunctionParameters()
-        .addAddress(proxyAdmin)
-        .addAddress(this.htsAddress)
-        .addAddress(tokenTransferDAO.address)
-        .addAddress(this.getTokenHolderFactoryAddressFromJson())
-        .addAddress(governorTT.address);
-      await this.execute(800000, INITIALIZE, client, args);
+      const ftDao = deployedItems.get(ContractService.FT_DAO);
+
+      const governance = {
+        tokenTransferLogic: csDev.getContract(ContractService.GOVERNOR_TT)
+          .address,
+        textLogic: csDev.getContract(ContractService.GOVERNOR_TEXT).address,
+        upgradeLogic: csDev.getContract(ContractService.GOVERNOR_UPGRADE)
+          .address,
+        createTokenLogic: csDev.getContract(
+          ContractService.GOVERNOR_TOKEN_CREATE
+        ).address,
+      };
+
+      const { bytes } = await this.encodeFunctionData(
+        ContractService.FT_DAO_FACTORY,
+        INITIALIZE,
+        [
+          proxyAdmin,
+          this.htsAddress,
+          ftDao.address,
+          tokenHolderFactoryAddress,
+          Object.values(governance),
+        ]
+      );
+
+      await this.execute(800000, INITIALIZE, client, bytes);
       console.log(`- ${this.getPrefix()}DAOFactory#${INITIALIZE}(): done\n`);
       return;
     }
@@ -77,8 +102,8 @@ export default class DAOFactory extends Base {
     votingDelay: number,
     votingPeriod: number,
     isPrivate: boolean,
-    admin: string = clientsInfo.uiUserId.toSolidityAddress(),
-    client: Client = clientsInfo.uiUserClient
+    admin: string = clientsInfo.operatorId.toSolidityAddress(),
+    client: Client = clientsInfo.operatorClient
   ) => {
     const params = {
       admin,
@@ -98,7 +123,7 @@ export default class DAOFactory extends Base {
       [Object.values(params)]
     );
     const { result, record } = await this.execute(
-      3_500_000,
+      8_500_000,
       CREATE_DAO,
       client,
       bytes
@@ -128,22 +153,40 @@ export default class DAOFactory extends Base {
     return addresses;
   };
 
-  upgradeGovernorTokenTransferLogicImplementation = async (
-    _newImpl: string
+  upgradeGovernorsImplementation = async (
+    tokenTransferLogic: string,
+    tokenCreateLogic: string,
+    textProposalLogic: string,
+    contractUpgrade: string
   ) => {
-    const args = new ContractFunctionParameters().addAddress(_newImpl);
-    await this.execute(
-      200000,
-      UPGRADE_GOVERNOR_TOKEN_TRANSFER_LOGIC_IMPL,
-      clientsInfo.dexOwnerClient,
-      args
+    const args = {
+      tokenTransferLogic: tokenTransferLogic,
+      tokenCreateLogic: tokenCreateLogic,
+      textProposalLogic: textProposalLogic,
+      contractUpgrade: contractUpgrade,
+    };
+
+    const { bytes } = await this.encodeFunctionData(
+      ContractService.FT_DAO_FACTORY,
+      UPGRADE_GOVERNORS_IMPLEMENTATION,
+      [Object.values(args)]
     );
+
+    const { receipt } = await this.execute(
+      2_00_000,
+      UPGRADE_GOVERNORS_IMPLEMENTATION,
+      clientsInfo.dexOwnerClient,
+      bytes
+    );
+
     console.log(
-      `- ${this.getPrefix()}DAOFactory#${UPGRADE_GOVERNOR_TOKEN_TRANSFER_LOGIC_IMPL}(): done\n`
+      `- ${this.getPrefix()}DAOFactory#${UPGRADE_GOVERNORS_IMPLEMENTATION}(): tx status ${
+        receipt.status
+      }\n`
     );
   };
 
-  upgradeTokenDaoLogicImplementation = async (_newImpl: string) => {
+  upgradeFTDAOLogicImplementation = async (_newImpl: string) => {
     const args = new ContractFunctionParameters().addAddress(_newImpl);
     await this.execute(
       200000,
@@ -188,16 +231,7 @@ export default class DAOFactory extends Base {
     return this._provider.getGovernorTokenDao(tokenTransferDAOProxyId);
   };
 
-  getGovernorTokenTransferInstance = async (
-    tokenTransferDAO: GovernorTokenDao
-  ) => {
-    const governorTTId =
-      await tokenTransferDAO.getGovernorTokenTransferContractAddress();
-    return this._provider.getGovernor("", governorTTId.toString());
-  };
-
-  getTokenHolderInstance = async (governor: Governor) => {
-    const tokenId = await governor.getGODTokenAddress();
+  getTokenHolderInstance = async (tokenId: TokenId) => {
     const factoryProxyId = (
       await this.getTokenHolderFactoryAddress()
     ).toString();
