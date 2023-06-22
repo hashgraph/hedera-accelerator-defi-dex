@@ -3,7 +3,7 @@ import { BigNumber } from "ethers";
 import { TestHelper } from "./TestHelper";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-describe.only("GovernanceTokenDAO tests", function () {
+describe("GovernanceTokenDAO tests", function () {
   const QUORUM_THRESHOLD = 5;
   const QUORUM_THRESHOLD_BSP = QUORUM_THRESHOLD * 100;
 
@@ -64,18 +64,18 @@ describe.only("GovernanceTokenDAO tests", function () {
       governorTT.address,
     ];
 
-    const inputs = [
-      daoAdminOne.address,
-      DAO_NAME,
+    const inputs = {
+      admin: daoAdminOne.address,
+      name: DAO_NAME,
       LOGO_URL,
-      token.address,
+      token: token.address,
       QUORUM_THRESHOLD_BSP,
       VOTING_DELAY,
       VOTING_PERIOD,
-      false,
-      DESCRIPTION,
-      WEB_LINKS,
-    ];
+      isPrivate: false,
+      description: DESCRIPTION,
+      webLinks: WEB_LINKS,
+    };
 
     const governance = [
       governorTT.address,
@@ -93,7 +93,11 @@ describe.only("GovernanceTokenDAO tests", function () {
 
     const governorTokenDAO = await TestHelper.deployLogic("TokenTransferDAO");
 
-    await governorTokenDAO.initialize(inputs, governance, common);
+    await governorTokenDAO.initialize(
+      Object.values(inputs),
+      governance,
+      common
+    );
 
     const godHolderFactory = await TestHelper.deployGodTokenHolderFactory(
       hederaService,
@@ -347,7 +351,16 @@ describe.only("GovernanceTokenDAO tests", function () {
       const event2 = (await txn2.wait()).events.pop();
       expect(event2.event).equal("GovernorLogicUpdated");
       expect(event2.args.name).equal("Governors");
-      expect(event2.args.newImplementation).equal(TestHelper.ONE_ADDRESS);
+      expect(event2.args.newImplementation.tokenTransferLogic).equal(
+        governance[0]
+      );
+      expect(event2.args.newImplementation.textLogic).equal(governance[1]);
+      expect(event2.args.newImplementation.contractUpgradeLogic).equal(
+        governance[2]
+      );
+      expect(event2.args.newImplementation.createTokenLogic).equal(
+        governance[3]
+      );
 
       const txn3 = await governorDAOFactory
         .connect(dexOwner)
@@ -420,22 +433,31 @@ describe.only("GovernanceTokenDAO tests", function () {
       const { governorTokenDAO, inputs, governance, common } =
         await loadFixture(deployFixture);
       await expect(
-        governorTokenDAO.initialize(inputs, governance, common)
+        governorTokenDAO.initialize(Object.values(inputs), governance, common)
       ).revertedWith("Initializable: contract is already initialized");
     });
 
     it("Verify TokenTransferDAO initialize call", async function () {
       const { inputs, governance, common } = await loadFixture(deployFixture);
       const dao = await TestHelper.deployLogic("TokenTransferDAO");
-      inputs[1] = "";
-      await expect(dao.initialize(inputs, governance, common))
+      const newInputsWithNoName = {
+        ...inputs,
+      };
+      newInputsWithNoName.name = "";
+      await expect(
+        dao.initialize(Object.values(newInputsWithNoName), governance, common)
+      )
         .revertedWithCustomError(dao, "InvalidInput")
         .withArgs("BaseDAO: name is empty");
 
-      inputs[1] = "NAME";
-      inputs[0] = TestHelper.ZERO_ADDRESS;
+      const newInputsWithNoAdmin = {
+        ...inputs,
+      };
+      newInputsWithNoAdmin.admin = TestHelper.ZERO_ADDRESS;
 
-      await expect(dao.initialize(inputs, governance, common))
+      await expect(
+        dao.initialize(Object.values(newInputsWithNoAdmin), governance, common)
+      )
         .revertedWithCustomError(dao, "InvalidInput")
         .withArgs("BaseDAO: admin address is zero");
     });
@@ -506,33 +528,63 @@ describe.only("GovernanceTokenDAO tests", function () {
 
   describe("BaseDAO contract tests", function () {
     it("Verify contract should be revert for initialization with invalid inputs", async function () {
-      const { governorTT, inputs, governance, common, daoAdminOne } =
-        await loadFixture(deployFixture);
+      const { inputs, governance, common, daoAdminOne } = await loadFixture(
+        deployFixture
+      );
       const governorTokenDAO = await TestHelper.deployLogic("TokenTransferDAO");
-      inputs[1] = "";
-      await expect(governorTokenDAO.initialize(inputs, governance, common))
+      const newInputsWithNoName = {
+        ...inputs,
+      };
+      newInputsWithNoName.name = "";
+      await expect(
+        governorTokenDAO.initialize(
+          Object.values(newInputsWithNoName),
+          governance,
+          common
+        )
+      )
         .revertedWithCustomError(governorTokenDAO, "InvalidInput")
         .withArgs("BaseDAO: name is empty");
 
-      inputs[1] = "Name";
-      inputs[0] = "";
-
-      await expect(governorTokenDAO.initialize(inputs, governance, common))
+      const newInputsWithNoAdmin = {
+        ...inputs,
+      };
+      newInputsWithNoAdmin.admin = TestHelper.ZERO_ADDRESS;
+      await expect(
+        governorTokenDAO.initialize(
+          Object.values(newInputsWithNoAdmin),
+          governance,
+          common
+        )
+      )
         .revertedWithCustomError(governorTokenDAO, "InvalidInput")
         .withArgs("BaseDAO: admin address is zero");
 
-      inputs[1] = "Name";
-      inputs[0] = daoAdminOne.address;
-      inputs[8] = "";
-
-      await expect(governorTokenDAO.initialize(inputs, governance, common))
+      const newInputsWithNoDesc = {
+        ...inputs,
+      };
+      newInputsWithNoDesc.description = "";
+      await expect(
+        governorTokenDAO.initialize(
+          Object.values(newInputsWithNoDesc),
+          governance,
+          common
+        )
+      )
         .revertedWithCustomError(governorTokenDAO, "InvalidInput")
         .withArgs("BaseDAO: description is empty");
 
-      inputs[8] = "DESCRIPTION";
-      inputs[9] = ["WEB_LINKS"];
-
-      await expect(governorTokenDAO.initialize(inputs, governance, common))
+      const newInputsWithWebLink = {
+        ...inputs,
+      };
+      newInputsWithWebLink.webLinks = ["WEB_LINKS"];
+      await expect(
+        governorTokenDAO.initialize(
+          Object.values(newInputsWithWebLink),
+          governance,
+          common
+        )
+      )
         .revertedWithCustomError(governorTokenDAO, "InvalidInput")
         .withArgs("BaseDAO: links must be even length array");
     });
