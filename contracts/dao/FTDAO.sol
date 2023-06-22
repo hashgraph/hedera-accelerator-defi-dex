@@ -103,7 +103,8 @@ contract FTDAO is BaseDAO, ISharedDAOModel, RoleBasedAccess {
         address _transferFromAccount,
         address _transferToAccount,
         address _tokenToTransfer,
-        uint256 _transferTokenAmount
+        uint256 _transferTokenAmount,
+        uint256 nftTokenSerialId
     ) external onlyOwner returns (uint256) {
         GovernorTransferToken governorTransferToken = GovernorTransferToken(
             governorTokenTransferProxy
@@ -116,7 +117,8 @@ contract FTDAO is BaseDAO, ISharedDAOModel, RoleBasedAccess {
             _transferToAccount,
             _tokenToTransfer,
             _transferTokenAmount,
-            msg.sender
+            msg.sender,
+            nftTokenSerialId
         );
         tokenTransferProposals.push(proposalId);
         return proposalId;
@@ -127,7 +129,8 @@ contract FTDAO is BaseDAO, ISharedDAOModel, RoleBasedAccess {
         string memory _description,
         string memory _linkToDiscussion,
         address payable _proxyContract,
-        address _contractToUpgrade
+        address _contractToUpgrade,
+        uint256 nftTokenSerialId
     ) external onlyOwner returns (uint256) {
         GovernorUpgrade governorUpgrade = GovernorUpgrade(governorUpgradeProxy);
         uint256 proposalId = governorUpgrade.createProposal(
@@ -136,7 +139,8 @@ contract FTDAO is BaseDAO, ISharedDAOModel, RoleBasedAccess {
             _linkToDiscussion,
             _proxyContract,
             _contractToUpgrade,
-            msg.sender
+            msg.sender,
+            nftTokenSerialId
         );
         contractUpgraeProposals.push(proposalId);
         return proposalId;
@@ -145,7 +149,8 @@ contract FTDAO is BaseDAO, ISharedDAOModel, RoleBasedAccess {
     function createTextProposal(
         string memory _title,
         string memory _description,
-        string memory _linkToDiscussion
+        string memory _linkToDiscussion,
+        uint256 nftTokenSerialId
     ) external onlyOwner returns (uint256) {
         GovernorTextProposal governorTextProposal = GovernorTextProposal(
             governorTextProposalProxy
@@ -154,7 +159,8 @@ contract FTDAO is BaseDAO, ISharedDAOModel, RoleBasedAccess {
             _title,
             _description,
             _linkToDiscussion,
-            msg.sender
+            msg.sender,
+            nftTokenSerialId
         );
         textProposals.push(proposalId);
         return proposalId;
@@ -166,7 +172,8 @@ contract FTDAO is BaseDAO, ISharedDAOModel, RoleBasedAccess {
         string memory linkToDiscussion,
         address treasurer,
         string memory tokenName,
-        string memory tokenSymbol
+        string memory tokenSymbol,
+        uint256 nftTokenSerialId
     ) external onlyOwner returns (uint256) {
         GovernorTokenCreate governorTokenCreate = GovernorTokenCreate(
             governorTokenCreateProxy
@@ -178,7 +185,8 @@ contract FTDAO is BaseDAO, ISharedDAOModel, RoleBasedAccess {
             treasurer,
             tokenName,
             tokenSymbol,
-            msg.sender
+            msg.sender,
+            nftTokenSerialId
         );
         tokenCreateProposals.push(proposalId);
         return proposalId;

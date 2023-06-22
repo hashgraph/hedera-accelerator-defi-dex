@@ -5,6 +5,7 @@
     "address": "0x0000000000000000000000000000000000e24f37",
     "timestamp": "2023-06-19T11:16:47.351Z",
     "hash": "23156ce8bab06e08d7c4d7d3e4b55188"
+<<<<<<< HEAD
   },
   {
     "name": "configuration",
@@ -14,6 +15,8 @@
     "hash": "3ed604f0c6f6c59c7348334d80b9efe8",
     "transparentProxyAddress": "0x0000000000000000000000000000000000e4ef54",
     "transparentProxyId": "0.0.15003476"
+=======
+>>>>>>> 7d33c22 (NFT as governance token)
   },
   {
     "name": "lptoken",
@@ -43,6 +46,7 @@
     "transparentProxyId": "0.0.14831484"
   },
   {
+<<<<<<< HEAD
     "name": "multisigdaofactory",
     "id": "0.0.15039913",
     "address": "0x0000000000000000000000000000000000e57da9",
@@ -52,6 +56,8 @@
     "transparentProxyId": "0.0.15039915"
   },
   {
+=======
+>>>>>>> 7d33c22 (NFT as governance token)
     "name": "pair",
     "id": "0.0.14831460",
     "address": "0x0000000000000000000000000000000000e24f64",
@@ -89,30 +95,48 @@
   },
   {
     "name": "governortransfertoken",
-    "id": "0.0.14831487",
-    "address": "0x0000000000000000000000000000000000e24f7f",
-    "timestamp": "2023-06-19T11:17:14.537Z",
-    "hash": "df1726f88d777da96f7661d761af8d16",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000e24f94",
-    "transparentProxyId": "0.0.14831508"
+    "id": "0.0.15046292",
+    "address": "0x0000000000000000000000000000000000e59694",
+    "timestamp": "2023-07-04T13:49:31.123Z",
+    "hash": "682189156bf37386d617c9ffd5a3d264",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000e5969a",
+    "transparentProxyId": "0.0.15046298"
   },
   {
     "name": "governorupgrade",
-    "id": "0.0.14831491",
-    "address": "0x0000000000000000000000000000000000e24f83",
-    "timestamp": "2023-06-19T11:17:15.252Z",
-    "hash": "c5a85ddc95c6a9d46bb4c7a1899e7e3f",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000e24f97",
-    "transparentProxyId": "0.0.14831511"
+    "id": "0.0.15046268",
+    "address": "0x0000000000000000000000000000000000e5967c",
+    "timestamp": "2023-07-04T13:46:39.919Z",
+    "hash": "3c93cb10a8cb709c7c5d9b7d4799396e",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000e59682",
+    "transparentProxyId": "0.0.15046274"
   },
   {
     "name": "governortextproposal",
-    "id": "0.0.14831490",
-    "address": "0x0000000000000000000000000000000000e24f82",
-    "timestamp": "2023-06-19T11:17:15.619Z",
-    "hash": "aea9fa1561708a90fe2304f14b3b7d65",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000e24f98",
-    "transparentProxyId": "0.0.14831512"
+    "id": "0.0.15046322",
+    "address": "0x0000000000000000000000000000000000e596b2",
+    "timestamp": "2023-07-04T13:51:00.894Z",
+    "hash": "bfc82569e13996dd700285e88badcf82",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000e596b4",
+    "transparentProxyId": "0.0.15046324"
+  },
+  {
+    "name": "ftdao",
+    "id": "0.0.15046336",
+    "address": "0x0000000000000000000000000000000000e596c0",
+    "timestamp": "2023-07-04T13:55:09.166Z",
+    "hash": "32895b50b8494fbafb43c761f44a484c",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000e596c3",
+    "transparentProxyId": "0.0.15046339"
+  },
+  {
+    "name": "nftholder",
+    "id": "0.0.14988964",
+    "address": "0x0000000000000000000000000000000000e4b6a4",
+    "timestamp": "2023-06-26T13:27:43.119Z",
+    "hash": "287836b8b46e6f3b10dfbf6666525461",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000e4b6a9",
+    "transparentProxyId": "0.0.14988969"
   },
   {
     "name": "multisigdao",
@@ -161,6 +185,7 @@
   },
   {
     "name": "governortokencreate",
+<<<<<<< HEAD
     "id": "0.0.14994429",
     "address": "0x0000000000000000000000000000000000e4cbfd",
     "timestamp": "2023-06-27T08:00:38.626Z",
@@ -203,6 +228,50 @@
     "hash": "0b822af7e01b4fd0992bd9776202eb0d",
     "transparentProxyAddress": "0x0000000000000000000000000000000000e5353e",
     "transparentProxyId": "0.0.15021374"
+=======
+    "id": "0.0.15046330",
+    "address": "0x0000000000000000000000000000000000e596ba",
+    "timestamp": "2023-07-04T13:51:58.180Z",
+    "hash": "fa431d15877a307436041b0017c39053",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000e596bc",
+    "transparentProxyId": "0.0.15046332"
+  },
+  {
+    "name": "godholder",
+    "id": "0.0.14994460",
+    "address": "0x0000000000000000000000000000000000e4cc1c",
+    "timestamp": "2023-06-27T08:14:08.281Z",
+    "hash": "926a1b687631fd9e9da80429f2e9081f",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000e4cc1e",
+    "transparentProxyId": "0.0.14994462"
+  },
+  {
+    "name": "ftdaofactory",
+    "id": "0.0.15046341",
+    "address": "0x0000000000000000000000000000000000e596c5",
+    "timestamp": "2023-07-04T13:55:50.490Z",
+    "hash": "528bb7213311a8625d8549ad37c4673f",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000e596c7",
+    "transparentProxyId": "0.0.15046343"
+  },
+  {
+    "name": "nftdaofactory",
+    "id": "0.0.15046345",
+    "address": "0x0000000000000000000000000000000000e596c9",
+    "timestamp": "2023-07-04T14:00:11.996Z",
+    "hash": "4fb594c2703e021001954a9f98f36707",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000e596d4",
+    "transparentProxyId": "0.0.15046356"
+  },
+  {
+    "name": "multisigdao",
+    "id": "0.0.15039898",
+    "address": "0x0000000000000000000000000000000000e57d9a",
+    "timestamp": "2023-07-03T11:52:41.732Z",
+    "hash": "6627fc8bbe28b58df6961a8623aca891",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000e57d9c",
+    "transparentProxyId": "0.0.15039900"
+>>>>>>> 7d33c22 (NFT as governance token)
   },
   {
     "name": "ftdaofactory",
@@ -214,6 +283,7 @@
     "transparentProxyId": "0.0.15045799"
   },
   {
+<<<<<<< HEAD
     "name": "nftdaofactory",
     "id": "0.0.15021409",
     "address": "0x0000000000000000000000000000000000e53561",
@@ -221,5 +291,21 @@
     "hash": "91b53d6e773b56141cef7ebd77d8853d",
     "transparentProxyAddress": "0x0000000000000000000000000000000000e53565",
     "transparentProxyId": "0.0.15021413"
+=======
+    "name": "multisigdaofactory",
+    "id": "0.0.15039913",
+    "address": "0x0000000000000000000000000000000000e57da9",
+    "timestamp": "2023-07-03T11:55:48.871Z",
+    "hash": "1a2d33b16efada4ef16ea36480b5ae9c",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000e57dab",
+    "transparentProxyId": "0.0.15039915"
+  },
+  {
+    "name": "hederamultisend",
+    "id": "0.0.15039894",
+    "address": "0x0000000000000000000000000000000000e57d96",
+    "timestamp": "2023-07-03T11:51:57.199Z",
+    "hash": "74ad23cc6dbcd19c51c47791ad4c8f3d"
+>>>>>>> 7d33c22 (NFT as governance token)
   }
 ]

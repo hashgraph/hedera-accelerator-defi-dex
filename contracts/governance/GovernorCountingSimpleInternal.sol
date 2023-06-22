@@ -33,6 +33,23 @@ abstract contract GovernorCountingSimpleInternal is
         string link;
         bytes data;
         address[] voters;
+        uint256 nftTokenSerialId;
+    }
+
+    struct VotingInformation {
+        uint256 quorumValue;
+        bool isQuorumReached;
+        ProposalState proposalState;
+        bool voted;
+        address votedUser;
+        uint256 againstVotes;
+        uint256 forVotes;
+        uint256 abstainVotes;
+    }
+
+    struct Duration {
+        uint256 startBlock;
+        uint256 endBlock;
     }
 
     struct VotingInformation {
@@ -59,13 +76,14 @@ abstract contract GovernorCountingSimpleInternal is
         string link,
         bytes data,
         Duration duration,
-        VotingInformation votingInformation
+        VotingInformation votingInformation,
+        uint256 nftTokenSerialId
     );
 
     uint256 private constant PROPOSAL_CREATION_AMOUNT = 1e8;
     address[] private EMPTY_VOTERS_LIST;
 
-    IERC20 private token;
+    address private token;
     IHederaService internal hederaService;
     ITokenHolder tokenHolder;
 
@@ -74,7 +92,7 @@ abstract contract GovernorCountingSimpleInternal is
     mapping(uint256 => ProposalInfo) proposals;
 
     function initialize(
-        IERC20 _token,
+        address _token,
         uint256 _votingDelayValue,
         uint256 _votingPeriodValue,
         IHederaService _hederaService,
@@ -115,14 +133,14 @@ abstract contract GovernorCountingSimpleInternal is
         string memory description,
         string memory link,
         address creator,
-        bytes memory data
+        bytes memory data,
+        uint256 nftTokenSerialId
     ) internal returns (uint256) {
         if (bytes(title).length == 0) {
             revert InvalidInput(
                 "GovernorCountingSimpleInternal: proposal title can not be blank"
             );
         }
-        _getGODToken(creator);
         (
             address[] memory targets,
             uint256[] memory values,
@@ -135,8 +153,11 @@ abstract contract GovernorCountingSimpleInternal is
             description,
             link,
             data,
-            EMPTY_VOTERS_LIST
+            EMPTY_VOTERS_LIST,
+            nftTokenSerialId
         );
+
+        _getGODToken(creator, nftTokenSerialId);
 
         Duration memory duration;
         duration.startBlock = proposalSnapshot(proposalId);
@@ -150,7 +171,8 @@ abstract contract GovernorCountingSimpleInternal is
             link,
             data,
             duration,
-            getVotingInformation(proposalId)
+            getVotingInformation(proposalId),
+            nftTokenSerialId
         );
 
         return proposalId;
@@ -223,7 +245,8 @@ abstract contract GovernorCountingSimpleInternal is
             link,
             proposalInfo.data,
             duration,
-            votingInfo
+            votingInfo,
+            proposalInfo.nftTokenSerialId
         );
     }
 
@@ -252,7 +275,6 @@ abstract contract GovernorCountingSimpleInternal is
             "GovernorCountingSimpleInternal: Only proposer can cancel the proposal"
         );
         proposalId = super._cancel(targets, values, calldatas, descriptionHash);
-        _returnGODToken(proposalInfo.creator);
         _cleanup(proposalId);
         getProposalDetails(proposalId);
     }
@@ -317,8 +339,6 @@ abstract contract GovernorCountingSimpleInternal is
         bytes[] memory,
         bytes32 /*descriptionHash*/
     ) internal virtual override {
-        ProposalInfo memory proposalInfo = _getProposalInfoIfExist(proposalId);
-        _returnGODToken(proposalInfo.creator);
         _cleanup(proposalId);
         getProposalDetails(proposalId);
     }
@@ -372,34 +392,53 @@ abstract contract GovernorCountingSimpleInternal is
         calldatas[0] = (b);
     }
 
-    function _getGODToken(address creator) private {
-        int256 code = _transferToken(
-            address(token),
-            creator,
-            address(this),
-            PROPOSAL_CREATION_AMOUNT
-        );
-        require(
-            code == HederaResponseCodes.SUCCESS,
-            "GovernorCountingSimpleInternal: token transfer failed to contract."
-        );
+    function _getGODToken(address creator, uint256 nftTokenSerialId) private {
+        if (!tokenHolder.isNFTType()) {
+            int256 code = _transferToken(
+                address(token),
+                creator,
+                address(this),
+                PROPOSAL_CREATION_AMOUNT
+            );
+            require(
+                code == HederaResponseCodes.SUCCESS,
+                "GovernorCountingSimpleInternal: token transfer failed to contract."
+            );
+        } else {
+            _transferNFTToken(
+                address(token),
+                creator,
+                address(this),
+                nftTokenSerialId
+            );
+        }
     }
 
-    function _returnGODToken(address creator) private {
-        int256 code = _transferToken(
-            address(token),
-            address(this),
-            creator,
-            PROPOSAL_CREATION_AMOUNT
-        );
-        require(
-            code == HederaResponseCodes.SUCCESS,
-            "GovernorCountingSimpleInternal: token transfer failed from contract."
-        );
+    function _returnGODToken(address creator, uint256 nftTokenSerialId) private {
+        if (!tokenHolder.isNFTType()) {
+            int256 code = _transferToken(
+                address(token),
+                address(this),
+                creator,
+                PROPOSAL_CREATION_AMOUNT
+            );
+            require(
+                code == HederaResponseCodes.SUCCESS,
+                "GovernorCountingSimpleInternal: token transfer failed from contract."
+            );
+        } else {
+            _transferNFTToken(
+                address(token),
+                address(this),
+                creator,
+                nftTokenSerialId
+            );
+        }
     }
 
     function _cleanup(uint256 proposalId) private {
         ProposalInfo storage proposalInfo = _getProposalInfoIfExist(proposalId);
+        _returnGODToken(proposalInfo.creator, proposalInfo.nftTokenSerialId);
         tokenHolder.removeActiveProposals(proposalInfo.voters, proposalId);
         delete (proposalInfo.voters);
     }

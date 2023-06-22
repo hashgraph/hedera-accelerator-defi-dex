@@ -46,6 +46,7 @@ const GET_GOD_TOKEN_ADDRESSES = "getGODTokenAddress";
 const MINT_TOKEN = "mintToken";
 const BURN_TOKEN = "burnToken";
 const TRANSFER_TOKEN = "transferToken";
+const DEFAULT_NFT_TOKEN_SERIAL_NO = 19;
 
 enum ProposalState {
   Pending,
@@ -100,13 +101,16 @@ export default class Governor extends Base {
     creator: AccountId,
     client: Client = clientsInfo.operatorClient,
     description: string = DEFAULT_DESCRIPTION,
-    link: string = DEFAULT_LINK
+    link: string = DEFAULT_LINK,
+    nftTokenSerialId: number = DEFAULT_NFT_TOKEN_SERIAL_NO
   ) => {
     const args = new ContractFunctionParameters()
       .addString(title)
       .addString(description)
       .addString(link)
-      .addAddress(creator.toSolidityAddress());
+      .addAddress(creator.toSolidityAddress())
+      .addUint256(nftTokenSerialId);
+
     const { result } = await this.execute(
       1_000_000,
       CREATE_PROPOSAL,
@@ -127,6 +131,7 @@ export default class Governor extends Base {
     tokenId: string,
     tokenAmount: number,
     client: Client = clientsInfo.operatorClient,
+    nftTokenSerialId: number = DEFAULT_NFT_TOKEN_SERIAL_NO,
     description: string = DEFAULT_DESCRIPTION,
     link: string = DEFAULT_LINK,
     creator: string = clientsInfo.operatorId.toSolidityAddress()
@@ -139,7 +144,9 @@ export default class Governor extends Base {
       .addAddress(toAddress) // to
       .addAddress(tokenId) // tokenToTransfer
       .addUint256(BigNumber(tokenAmount)) // amountToTransfer
-      .addAddress(creator); // proposal creator
+      .addAddress(creator) // proposal creator
+      .addUint256(nftTokenSerialId);
+
     const { result } = await this.execute(
       1_000_000,
       CREATE_PROPOSAL,
@@ -159,7 +166,8 @@ export default class Governor extends Base {
     title: string,
     client: Client = clientsInfo.operatorClient,
     description: string = DEFAULT_DESCRIPTION,
-    link: string = DEFAULT_LINK
+    link: string = DEFAULT_LINK,
+    nftTokenSerialId: number = DEFAULT_NFT_TOKEN_SERIAL_NO
   ) => {
     const args = new ContractFunctionParameters()
       .addString(title)
@@ -167,7 +175,8 @@ export default class Governor extends Base {
       .addString(link)
       .addAddress(targetProxyId.toSolidityAddress())
       .addAddress(targetLogicId.toSolidityAddress())
-      .addAddress(clientsInfo.operatorId.toSolidityAddress());
+      .addAddress(clientsInfo.operatorId.toSolidityAddress())
+      .addUint256(nftTokenSerialId);
 
     const { result, receipt } = await this.execute(
       1_000_000,
@@ -421,7 +430,8 @@ export default class Governor extends Base {
     tokenTreasureId: AccountId,
     client: Client = clientsInfo.operatorClient,
     description: string = DEFAULT_DESCRIPTION,
-    link: string = DEFAULT_LINK
+    link: string = DEFAULT_LINK,
+    nftTokenSerialId: number = DEFAULT_NFT_TOKEN_SERIAL_NO
   ) => {
     const args = new ContractFunctionParameters()
       .addString(title)
@@ -430,7 +440,8 @@ export default class Governor extends Base {
       .addAddress(tokenTreasureId.toSolidityAddress())
       .addString(tokenName)
       .addString(tokenSymbol)
-      .addAddress(clientsInfo.operatorId.toSolidityAddress());
+      .addAddress(clientsInfo.operatorId.toSolidityAddress())
+      .addUint256(nftTokenSerialId);
 
     const { result } = await this.execute(
       1_000_000,
@@ -490,6 +501,21 @@ export default class Governor extends Base {
       godTokenId,
       this.contractId,
       1e8,
+      creatorAccountId,
+      creatorPrivateKey,
+      creatorClient
+    );
+  }
+
+  async setupNFTAllowanceForProposalCreation(
+    creatorClient: Client,
+    creatorAccountId: AccountId,
+    creatorPrivateKey: PrivateKey
+  ) {
+    const godTokenId = await this.getGODTokenAddress();
+    await Common.setNFTTokenAllowance(
+      godTokenId,
+      this.contractId,
       creatorAccountId,
       creatorPrivateKey,
       creatorClient

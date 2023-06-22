@@ -54,7 +54,7 @@ export class DAONFTTokenTest extends CommonSteps {
       CommonSteps.DEFAULT_QUORUM_THRESHOLD_IN_BSP,
       CommonSteps.DEFAULT_VOTING_DELAY,
       CommonSteps.DEFAULT_VOTING_PERIOD,
-      TokenId.fromString(dex.GOD_TOKEN_ID),
+      dex.E2E_NFT_TOKEN_ID,
       dex.E2E_NFT_TOKEN_ID
     );
     await this.updateGovernor(ftDao);
@@ -78,7 +78,7 @@ export class DAONFTTokenTest extends CommonSteps {
         CommonSteps.DEFAULT_QUORUM_THRESHOLD_IN_BSP,
         CommonSteps.DEFAULT_VOTING_DELAY,
         CommonSteps.DEFAULT_VOTING_PERIOD,
-        TokenId.fromString(dex.GOD_TOKEN_ID),
+        dex.E2E_NFT_TOKEN_ID,
         dex.E2E_NFT_TOKEN_ID
       );
     } catch (e: any) {
@@ -116,7 +116,7 @@ export class DAONFTTokenTest extends CommonSteps {
 
   @when(/User setup allowance for proposal creation/, undefined, 30000)
   public async setupAllowance() {
-    await this.setupAllowanceForProposalCreation(
+    await this.setupNFTAllowanceForProposalCreation(
       governorTT,
       clientsInfo.operatorClient,
       clientsInfo.operatorId,

@@ -7,7 +7,7 @@ import "../governance/ITokenHolder.sol";
 
 interface IGovernorBase {
     function initialize(
-        IERC20 _token,
+        address _token,
         uint256 _votingDelayValue,
         uint256 _votingPeriodValue,
         IHederaService _hederaService,

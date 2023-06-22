@@ -95,6 +95,7 @@ export class GovernorSteps extends CommonSteps {
       TRANSFER_TOKEN_ID.toSolidityAddress(),
       tokenQty,
       clientsInfo.operatorClient,
+      1,
       description,
       link,
       clientsInfo.operatorId.toSolidityAddress()
@@ -123,6 +124,7 @@ export class GovernorSteps extends CommonSteps {
         TRANSFER_TOKEN_ID.toSolidityAddress(),
         tokenQty,
         clientsInfo.operatorClient,
+        1,
         description,
         link,
         clientsInfo.operatorId.toSolidityAddress()
@@ -166,6 +168,7 @@ export class GovernorSteps extends CommonSteps {
         TRANSFER_TOKEN_ID.toSolidityAddress(),
         tokenQty,
         clientWithNoGODToken,
+        1,
         description,
         link,
         clientsInfo.operatorId.toSolidityAddress()

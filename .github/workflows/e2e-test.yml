@@ -112,7 +112,7 @@ jobs:
         id: create-json
         with:
           name: "deployment/scripts/workflow-inputs.json"
-          json: '{"contracts":"GODHolder,FTDAOFactory,FTDAO,GODTokenHolderFactory"}'
+          json: '{"contracts":"GODHolder,FTDAOFactory,FTDAO,GovernorTransferToken,GODTokenHolderFactory"}'
       - name: Deployment
         run: npx hardhat run deployment/scripts/createContractsE2E.ts;
       - name: e2e

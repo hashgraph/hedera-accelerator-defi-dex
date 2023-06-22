@@ -16,7 +16,7 @@ interface ISharedDAOModel {
         address admin;
         string name;
         string logoUrl;
-        IERC20 tokenAddress;
+        address tokenAddress;
         uint256 quorumThreshold;
         uint256 votingDelay;
         uint256 votingPeriod;

@@ -225,4 +225,16 @@ export class ContractService {
     const data = JSON.stringify(items, null, 2);
     fs.writeFileSync(this.contractRecordFile, data);
   };
+
+  public makeLatestDeploymentAsDefault = () => {
+    const contracts: [DeployedContract] = this.readFileContent();
+    const oldContents = JSON.stringify(contracts, null, 2);
+    console.log(`Contract details oldContents ${oldContents}`);
+    const mergedContracts = [
+      ...new Map(contracts.map((x) => [x.name, x])).values(),
+    ];
+    const newContents = JSON.stringify(mergedContracts, null, 2);
+    console.log(`Contract details newContents ${newContents}`);
+    fs.writeFileSync(this.contractRecordFile, newContents);
+  };
 }
