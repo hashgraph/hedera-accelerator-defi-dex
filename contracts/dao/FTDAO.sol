@@ -1,6 +1,5 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.18;
-import "./IGovernanceDAO.sol";
 import "./BaseDAO.sol";
 import "../governance/GovernorTransferToken.sol";
 import "../governance/GovernorUpgrade.sol";
@@ -9,7 +8,7 @@ import "../governance/GovernorTokenCreate.sol";
 import "./ISharedDAOModel.sol";
 import "../common/RoleBasedAccess.sol";
 
-contract TokenTransferDAO is BaseDAO, ISharedDAOModel, RoleBasedAccess {
+contract FTDAO is BaseDAO, ISharedDAOModel, RoleBasedAccess {
     address payable private governorTokenTransferProxy;
     address payable private governorUpgradeProxy;
     address payable private governorTextProposalProxy;

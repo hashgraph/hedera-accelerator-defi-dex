@@ -43,15 +43,6 @@
     "transparentProxyId": "0.0.14831477"
   },
   {
-    "name": "textdao",
-    "id": "0.0.14831457",
-    "address": "0x0000000000000000000000000000000000e24f61",
-    "timestamp": "2023-06-19T11:17:06.595Z",
-    "hash": "09144045c7b14789603ad8449441ecd3",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000e24f7a",
-    "transparentProxyId": "0.0.14831482"
-  },
-  {
     "name": "splitter",
     "id": "0.0.14831447",
     "address": "0x0000000000000000000000000000000000e24f57",
@@ -79,33 +70,6 @@
     "transparentProxyId": "0.0.14831486"
   },
   {
-    "name": "contractupgradedaofactory",
-    "id": "0.0.14831458",
-    "address": "0x0000000000000000000000000000000000e24f62",
-    "timestamp": "2023-06-19T11:17:08.622Z",
-    "hash": "b39858e03b992b8117c5d279dbf1c0b7",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000e24f80",
-    "transparentProxyId": "0.0.14831488"
-  },
-  {
-    "name": "textdaofactory",
-    "id": "0.0.14831459",
-    "address": "0x0000000000000000000000000000000000e24f63",
-    "timestamp": "2023-06-19T11:17:09.309Z",
-    "hash": "f6a8e84c5f84d9b77733e1c0846b23eb",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000e24f84",
-    "transparentProxyId": "0.0.14831492"
-  },
-  {
-    "name": "tokentransferdaofactory",
-    "id": "0.0.14831462",
-    "address": "0x0000000000000000000000000000000000e24f66",
-    "timestamp": "2023-06-19T11:17:09.870Z",
-    "hash": "3c83762ba7c99eec6fe9512bbe591008",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000e24f85",
-    "transparentProxyId": "0.0.14831493"
-  },
-  {
     "name": "pair",
     "id": "0.0.14831460",
     "address": "0x0000000000000000000000000000000000e24f64",
@@ -131,15 +95,6 @@
     "hash": "20619b7d2c97da1c86d3489cac154297",
     "transparentProxyAddress": "0x0000000000000000000000000000000000e24f8b",
     "transparentProxyId": "0.0.14831499"
-  },
-  {
-    "name": "tokentransferdao",
-    "id": "0.0.14831471",
-    "address": "0x0000000000000000000000000000000000e24f6f",
-    "timestamp": "2023-06-19T11:17:10.565Z",
-    "hash": "79b35d1eb5091a9d6c78f4c5245da2aa",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000e24f8a",
-    "transparentProxyId": "0.0.14831498"
   },
   {
     "name": "nftdaofactory",
@@ -205,102 +160,21 @@
     "transparentProxyId": "0.0.14831520"
   },
   {
-    "name": "contractupgradedaofactory",
-    "id": "0.0.14912118",
-    "address": "0x0000000000000000000000000000000000e38a76",
-    "timestamp": "2023-06-21T08:36:36.348Z",
-    "hash": "aaf95860ca4f46cc2d2074fa25cd268f",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000e38af7",
-    "transparentProxyId": "0.0.14912247"
+    "name": "ftdao",
+    "id": "0.0.14967148",
+    "address": "0x0000000000000000000000000000000000e4616c",
+    "timestamp": "2023-06-23T10:11:54.614Z",
+    "hash": "0c15ad786c9291ff36ae0fe7501449da",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000e4616f",
+    "transparentProxyId": "0.0.14967151"
   },
   {
-    "name": "contractupgradedao",
-    "id": "0.0.14912843",
-    "address": "0x0000000000000000000000000000000000e38d4b",
-    "timestamp": "2023-06-21T08:41:49.971Z",
-    "hash": "ed73eed06ff005e4aa8267c26b52cd08",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000e38d71",
-    "transparentProxyId": "0.0.14912881"
-  },
-  {
-    "name": "tokentransferdao",
-    "id": "0.0.14922305",
-    "address": "0x0000000000000000000000000000000000e3b241",
-    "timestamp": "2023-06-21T10:02:54.005Z",
-    "hash": "c1e137df593f5d0af81d728f2be97181",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000e3b25d",
-    "transparentProxyId": "0.0.14922333"
-  },
-  {
-    "name": "tokentransferdaofactory",
-    "id": "0.0.14948041",
-    "address": "0x0000000000000000000000000000000000e416c9",
-    "timestamp": "2023-06-21T13:42:56.170Z",
-    "hash": "9f4ee5a5df044dcdd087ad04b183bf12",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000e416e0",
-    "transparentProxyId": "0.0.14948064"
-  },
-  {
-    "name": "tokentransferdaofactory",
-    "id": "0.0.14952036",
-    "address": "0x0000000000000000000000000000000000e42664",
-    "timestamp": "2023-06-21T15:17:46.014Z",
-    "hash": "9f4ee5a5df044dcdd087ad04b183bf12",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000e4266c",
-    "transparentProxyId": "0.0.14952044"
-  },
-  {
-    "name": "tokentransferdaofactory",
-    "id": "0.0.14952641",
-    "address": "0x0000000000000000000000000000000000e428c1",
-    "timestamp": "2023-06-21T15:39:07.881Z",
-    "hash": "9f4ee5a5df044dcdd087ad04b183bf12",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000e428cc",
-    "transparentProxyId": "0.0.14952652"
-  },
-  {
-    "name": "tokentransferdaofactory",
-    "id": "0.0.14955753",
-    "address": "0x0000000000000000000000000000000000e434e9",
-    "timestamp": "2023-06-22T05:50:28.202Z",
-    "hash": "1eff6a17e7cf9237bda625b6dd35cc76",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000e434ee",
-    "transparentProxyId": "0.0.14955758"
-  },
-  {
-    "name": "tokentransferdaofactory",
-    "id": "0.0.14956014",
-    "address": "0x0000000000000000000000000000000000e435ee",
-    "timestamp": "2023-06-22T07:27:28.518Z",
-    "hash": "1a24394725f10ba8dff7662be5365eab",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000e435f2",
-    "transparentProxyId": "0.0.14956018"
-  },
-  {
-    "name": "tokentransferdaofactory",
-    "id": "0.0.14956355",
-    "address": "0x0000000000000000000000000000000000e43743",
-    "timestamp": "2023-06-22T08:36:13.287Z",
-    "hash": "1a24394725f10ba8dff7662be5365eab",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000e43749",
-    "transparentProxyId": "0.0.14956361"
-  },
-  {
-    "name": "tokentransferdaofactory",
-    "id": "0.0.14956785",
-    "address": "0x0000000000000000000000000000000000e438f1",
-    "timestamp": "2023-06-22T09:51:59.066Z",
-    "hash": "d510d8508b029ec57614bdd2dff02fe6",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000e438f3",
-    "transparentProxyId": "0.0.14956787"
-  },
-  {
-    "name": "tokentransferdaofactory",
-    "id": "0.0.14958273",
-    "address": "0x0000000000000000000000000000000000e43ec1",
-    "timestamp": "2023-06-22T11:45:33.991Z",
-    "hash": "8ed98f855d9dcb6a4ec13d3ec4c61d4f",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000e43ec8",
-    "transparentProxyId": "0.0.14958280"
+    "name": "ftdaofactory",
+    "id": "0.0.14967166",
+    "address": "0x0000000000000000000000000000000000e4617e",
+    "timestamp": "2023-06-23T10:12:35.410Z",
+    "hash": "384d0105e6ba387956e1d7df78b2da11",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000e46185",
+    "transparentProxyId": "0.0.14967173"
   }
 ]

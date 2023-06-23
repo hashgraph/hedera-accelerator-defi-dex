@@ -1,7 +1,7 @@
 import { Helper } from "../../utils/Helper";
 import { TokenId, AccountId, ContractId } from "@hashgraph/sdk";
 
-import TokenTransferDAOFactory from "../../e2e-test/business/TokenTransferDAOFactory";
+import DAOFactory from "../../e2e-test/business/factories/DAOFactory";
 
 async function main() {
   const input = Helper.readWorkflowInputs();
@@ -14,9 +14,7 @@ async function main() {
   if (webLinks.length % 2 !== 0) {
     throw Error("Invalid WebLinks");
   }
-  const governanceDAOFactory = new TokenTransferDAOFactory(
-    contractId.toString()
-  );
+  const governanceDAOFactory = new DAOFactory(contractId.toString(), false);
   await governanceDAOFactory.createDAO(
     input.daoName,
     "https://defi-ui.hedera.com/",

@@ -38,6 +38,12 @@ export async function executeGovernorTokenTransferFlow(
   voterAccountId: AccountId = clientsInfo.operatorId,
   voterAccountPrivateKey: PrivateKey = clientsInfo.operatorKey
 ) {
+  await Common.associateTokensToAccount(
+    voterAccountId,
+    [dex.GOVERNANCE_DAO_ONE_TOKEN_ID],
+    clientsInfo.treasureClient
+  );
+
   await godHolder.setupAllowanceForTokenLocking(
     10005e8,
     voterAccountId,
@@ -231,11 +237,9 @@ export async function executeContractUpgradeFlow(
 }
 
 async function main() {
-  const newCopies = await deployment.deployProxies([
-    ContractService.TOKEN_TRANSFER_DAO,
-  ]);
+  const newCopies = await deployment.deployProxies([ContractService.FT_DAO]);
 
-  const transferDao = newCopies.get(ContractService.TOKEN_TRANSFER_DAO);
+  const transferDao = newCopies.get(ContractService.FT_DAO);
   const tokenTransferDAO = provider.getGovernorTokenDao(transferDao.id);
   const godHolder = await provider.getGODTokenHolderFromFactory(
     dex.GOVERNANCE_DAO_ONE_TOKEN_ID
@@ -259,29 +263,29 @@ async function main() {
   const governorAddresses =
     await tokenTransferDAO.getGovernorTokenTransferContractAddresses();
 
-  // await executeGovernorTokenTransferFlow(godHolder, tokenTransferDAO);
+  await executeGovernorTokenTransferFlow(godHolder, tokenTransferDAO);
 
-  // await executeTextProposalFlow(godHolder, tokenTransferDAO);
+  await executeTextProposalFlow(godHolder, tokenTransferDAO);
 
-  // await executeContractUpgradeFlow(
-  //   godHolder,
-  //   tokenTransferDAO,
-  //   csDev.getContractWithProxy(csDev.factoryContractName)
-  //     .transparentProxyAddress!,
-  //   csDev.getContract(csDev.factoryContractName).address
-  // );
+  await executeContractUpgradeFlow(
+    godHolder,
+    tokenTransferDAO,
+    csDev.getContractWithProxy(csDev.factoryContractName)
+      .transparentProxyAddress!,
+    csDev.getContract(csDev.factoryContractName).address
+  );
 
-  // await tokenTransferDAO.addWebLink("GIT", "https://git.com", DAO_ADMIN_CLIENT);
-  // await tokenTransferDAO.updateName(
-  //   "Governor Token Dao - New",
-  //   DAO_ADMIN_CLIENT
-  // );
-  // await tokenTransferDAO.updateLogoURL("dao url - New", DAO_ADMIN_CLIENT);
-  // await tokenTransferDAO.updateDescription("desc - New", DAO_ADMIN_CLIENT);
-  // await tokenTransferDAO.getDaoDetail();
-  // await tokenTransferDAO.getTokenTransferProposals();
-  // await tokenTransferDAO.upgradeHederaService();
-  // console.log(`\nDone`);
+  await tokenTransferDAO.addWebLink("GIT", "https://git.com", DAO_ADMIN_CLIENT);
+  await tokenTransferDAO.updateName(
+    "Governor Token Dao - New",
+    DAO_ADMIN_CLIENT
+  );
+  await tokenTransferDAO.updateLogoURL("dao url - New", DAO_ADMIN_CLIENT);
+  await tokenTransferDAO.updateDescription("desc - New", DAO_ADMIN_CLIENT);
+  await tokenTransferDAO.getDaoDetail();
+  await tokenTransferDAO.getTokenTransferProposals();
+  await tokenTransferDAO.upgradeHederaService();
+  console.log(`\nDone`);
 }
 
 if (require.main === module) {

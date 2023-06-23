@@ -23,18 +23,10 @@ const deployment = new Deployment();
 const provider = InstanceProvider.getInstance();
 
 async function main() {
-  const newCopies = await deployment.deployProxies([
-    ContractService.GOVERNOR_TT,
-    ContractService.TOKEN_TRANSFER_DAO,
-  ]);
+  const newCopies = await deployment.deployProxies([ContractService.FTDAO]);
 
-  const governor = newCopies.get(ContractService.GOVERNOR_TT);
-  const transferDao = newCopies.get(ContractService.TOKEN_TRANSFER_DAO);
+  const transferDao = newCopies.get(ContractService.FTDAO);
 
-  const governorTT = provider.getGovernor(
-    ContractService.GOVERNOR_TT,
-    governor.id
-  );
   const tokenTransferDAO = provider.getGovernorTokenDao(transferDao.id);
 
   const nftHolder = await provider.getNFTTokenHolderFromFactory(
@@ -47,7 +39,6 @@ async function main() {
     "dao url",
     DAO_DESC,
     DAO_WEB_LINKS,
-    governorTT,
     nftHolder,
     clientsInfo.operatorClient,
     GovernorTokenMetaData.DEFAULT_QUORUM_THRESHOLD_IN_BSP,
@@ -57,11 +48,7 @@ async function main() {
     GovernorTokenMetaData.NFT_TOKEN_ID
   );
 
-  await executeGovernorTokenTransferFlow(
-    nftHolder,
-    tokenTransferDAO,
-    governorTT
-  );
+  await executeGovernorTokenTransferFlow(nftHolder, tokenTransferDAO);
 
   await tokenTransferDAO.addWebLink("GIT", "https://git.com", DAO_ADMIN_CLIENT);
   await tokenTransferDAO.updateName(
@@ -84,7 +71,6 @@ if (require.main === module) {
 export async function executeGovernorTokenTransferFlow(
   nftHolder: NFTHolder,
   tokenTransferDAO: GovernorTokenDao,
-  governorTokenTransfer: Governor,
   fromAccount: AccountId = clientsInfo.treasureId,
   fromAccountPrivateKey: PrivateKey = clientsInfo.treasureKey,
   toAccount: AccountId = clientsInfo.operatorId,
@@ -108,6 +94,13 @@ export async function executeGovernorTokenTransferFlow(
     voterAccountPrivateKey,
     voterClient
   );
+
+  const governorAddresses =
+    await tokenTransferDAO.getGovernorTokenTransferContractAddresses();
+  const governorTokenTransfer = new Governor(
+    governorAddresses.governorTokenTransferProxyId.toString()
+  );
+
   await governorTokenTransfer.setupAllowanceForProposalCreation(
     proposalCreatorClient,
     proposalCreatorAccountId,

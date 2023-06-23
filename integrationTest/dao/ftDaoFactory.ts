@@ -5,12 +5,13 @@ import {
   executeGovernorTokenTransferFlow,
   executeContractUpgradeFlow,
   executeTextProposalFlow,
-} from "./tokenTransferDAO";
+} from "./ftDao";
 import { clientsInfo } from "../../utils/ClientManagement";
 
 import dex from "../../deployment/model/dex";
-import DAOFactory from "../../e2e-test/business/DAOFactory";
+import DAOFactory from "../../e2e-test/business/factories/DAOFactory";
 import { InstanceProvider } from "../../utils/InstanceProvider";
+import GodHolder from "../../e2e-test/business/GodHolder";
 const DAO_WEB_LINKS = ["LINKEDIN", "https://linkedin.com"];
 const DAO_DESC = "Lorem Ipsum is simply dummy text";
 
@@ -26,10 +27,11 @@ export async function executeDAOFlow(
   const tokenTransferDAO =
     daoFactory.getGovernorTokenDaoInstance(daoProxyAddress);
 
-  const godHolder = await daoFactory.getGodHolderInstance(tokenId);
+  const genericHolder = await daoFactory.getTokenHolderInstance(tokenId);
+  const godHolder = genericHolder as GodHolder;
 
   await executeGovernorTokenTransferFlow(
-    godHolder,
+    godHolder as GodHolder,
     tokenTransferDAO,
     clientsInfo.treasureId,
     clientsInfo.treasureKey,
@@ -55,7 +57,7 @@ async function createDAO(
   tokenId: TokenId,
   isPrivate: boolean
 ) {
-  await daoFactory.createTokenTransferDao(
+  await daoFactory.createDAO(
     name,
     "https://defi-ui.hedera.com/",
     DAO_DESC,
@@ -69,15 +71,15 @@ async function createDAO(
 }
 
 function getTokenTransferDAOFactoryInfo() {
-  const contract = csDev.getContractWithProxy(csDev.tokenTransferDAOFactory);
+  const contract = csDev.getContractWithProxy(ContractService.FT_DAO_FACTORY);
   const proxyId = contract.transparentProxyId!;
-  return new DAOFactory(proxyId);
+  return new DAOFactory(proxyId, false);
 }
 
 async function main() {
   const daoFactory = getTokenTransferDAOFactoryInfo();
   await daoFactory.initialize();
-  await daoFactory.getGODTokenHolderFactoryAddress();
+  await daoFactory.getTokenHolderFactoryAddress();
   await createDAO(
     daoFactory,
     dex.GOVERNANCE_DAO_TWO,
@@ -85,7 +87,7 @@ async function main() {
     false
   );
   const daoAddresses = await daoFactory.getDAOs();
-  const daoAddress = daoAddresses[0];
+  const daoAddress = daoAddresses.pop()!;
   await executeDAOFlow(daoFactory, daoAddress, dex.GOVERNANCE_DAO_TWO_TOKEN_ID);
   const contractId = ContractId.fromSolidityAddress(daoAddress);
   const daoInstance = InstanceProvider.getInstance().getGovernorTokenDao(

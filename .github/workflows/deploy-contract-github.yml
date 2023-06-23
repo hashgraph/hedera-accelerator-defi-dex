@@ -15,7 +15,7 @@ on:
           - GovernorTokenCreate
           - GovernorTextProposal
           - GovernorTransferToken
-          - TokenTransferDAOFactory
+          - FTDAOFactory
           - GODTokenHolderFactory
       contractType:
         type: choice
