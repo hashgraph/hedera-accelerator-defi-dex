@@ -1,6 +1,6 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.18;
 
-import "./DAOFactory.sol";
+import "./FTDAOFactory.sol";
 
-contract NFTDAOFactory is DAOFactory {}
+contract NFTDAOFactory is FTDAOFactory {}

@@ -13,7 +13,7 @@ import dex from "../../deployment/model/dex";
 import Governor from "../../e2e-test/business/Governor";
 import GodHolder from "../../e2e-test/business/GodHolder";
 import GovernorTokenDao from "../../e2e-test/business/GovernorTokenDao";
-import TokenTransferDAOFactory from "../../e2e-test/business/DAOFactory";
+import DAOFactory from "../../e2e-test/business/factories/DAOFactory";
 import { expect } from "chai";
 import Common from "../business/Common";
 import { BigNumber } from "bignumber.js";
@@ -27,7 +27,7 @@ const DAO_WEB_LINKS = ["LINKEDIN", "https://linkedin.com"];
 const csDev = new ContractService();
 
 const tokenTransferDAOProxyContractId = csDev.getContractWithProxy(
-  csDev.tokenTransferDAO
+  ContractService.FT_DAO
 ).transparentProxyId!;
 
 let tokenTransferDAO = new GovernorTokenDao(tokenTransferDAOProxyContractId);
@@ -43,10 +43,10 @@ const godHolderProxyContractId = csDev.getContractWithProxy(
 let godHolder = new GodHolder(godHolderProxyContractId);
 
 const daoFactoryContract = csDev.getContractWithProxy(
-  csDev.tokenTransferDAOFactory
+  ContractService.FT_DAO_FACTORY
 );
 const proxyId = daoFactoryContract.transparentProxyId!;
-const daoFactory = new TokenTransferDAOFactory(proxyId);
+const daoFactory = new DAOFactory(proxyId, false);
 
 const godTokenHolderFactory =
   InstanceProvider.getInstance().getGODTokenHolderFactory();

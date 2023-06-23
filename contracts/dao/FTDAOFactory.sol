@@ -7,7 +7,7 @@ import "../common/IErrors.sol";
 import "../common/IHederaService.sol";
 import "../common/RoleBasedAccess.sol";
 
-import "../dao/TokenTransferDAO.sol";
+import "../dao/FTDAO.sol";
 import "../governance/ITokenHolderFactory.sol";
 import "../governance/IGovernorTransferToken.sol";
 import "./ISharedDAOModel.sol";
@@ -15,7 +15,7 @@ import "./ISharedDAOModel.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-contract DAOFactory is
+contract FTDAOFactory is
     IErrors,
     IEvents,
     OwnableUpgradeable,
@@ -41,7 +41,7 @@ contract DAOFactory is
 
     address[] private daos;
 
-    IGovernanceDAO private daoLogic;
+    FTDAO private daoLogic;
     ITokenHolderFactory private tokenHolderFactory;
     Governor governors;
 
@@ -55,7 +55,7 @@ contract DAOFactory is
     function initialize(
         address _proxyAdmin,
         IHederaService _hederaService,
-        IGovernanceDAO _daoLogic,
+        FTDAO _daoLogic,
         ITokenHolderFactory _tokenHolderFactory,
         Governor memory _governors
     ) external initializer {
@@ -99,7 +99,7 @@ contract DAOFactory is
     }
 
     function upgradeTokenDaoLogicImplementation(
-        IGovernanceDAO _newImpl
+        FTDAO _newImpl
     ) external ifAdmin {
         emit LogicUpdated(address(daoLogic), address(_newImpl), TokenDAO);
         daoLogic = _newImpl;
@@ -128,7 +128,7 @@ contract DAOFactory is
             _createDAOInputs,
             iTokenHolder
         );
-        TokenTransferDAO dao = TokenTransferDAO(createdDAOAddress);
+        FTDAO dao = FTDAO(createdDAOAddress);
         (
             address governorTokenTransferProxy,
             address governorTextProposalProxy,
@@ -171,16 +171,14 @@ contract DAOFactory is
         CreateDAOInputs memory _createDAOInputs,
         ITokenHolder iTokenHolder
     ) private returns (address daoAddress) {
-        TokenTransferDAO tokenDAO = TokenTransferDAO(
-            _createProxy(address(daoLogic))
-        );
+        FTDAO dao = FTDAO(_createProxy(address(daoLogic)));
         Common memory common;
         common.hederaService = hederaService;
         common.iTokenHolder = iTokenHolder;
         common.proxyAdmin = proxyAdmin;
         common.systemUser = systemUser;
-        tokenDAO.initialize(_createDAOInputs, governors, common);
-        return address(tokenDAO);
+        dao.initialize(_createDAOInputs, governors, common);
+        return address(dao);
     }
 
     function _createProxy(address _logic) private returns (address) {

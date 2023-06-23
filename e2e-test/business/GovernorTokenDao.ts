@@ -87,7 +87,7 @@ export default class GovernorTokenDao extends BaseDao {
     };
 
     const { hex, bytes } = await this.encodeFunctionData(
-      ContractService.TOKEN_TRANSFER_DAO,
+      ContractService.FT_DAO,
       INITIALIZE,
       [Object.values(inputs), Object.values(governance), Object.values(common)]
     );

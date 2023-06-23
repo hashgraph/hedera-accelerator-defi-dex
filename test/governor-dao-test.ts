@@ -72,7 +72,7 @@ describe("GovernanceTokenDAO tests", function () {
       signers[5].address,
     ];
 
-    const governorTokenDAO = await TestHelper.deployLogic("TokenTransferDAO");
+    const governorTokenDAO = await TestHelper.deployLogic("FTDAO");
 
     await governorTokenDAO.initialize(
       Object.values(inputs),
@@ -86,9 +86,7 @@ describe("GovernanceTokenDAO tests", function () {
       dexOwner.address
     );
 
-    const governorDAOFactory = await TestHelper.deployLogic(
-      "TokenTransferDAOFactory"
-    );
+    const governorDAOFactory = await TestHelper.deployLogic("FTDAOFactory");
 
     await governorDAOFactory.initialize(
       dexOwner.address,
@@ -115,7 +113,7 @@ describe("GovernanceTokenDAO tests", function () {
     };
   }
 
-  describe("TokenTransferDAOFactory contract tests", async function () {
+  describe("DAOFactory contract tests", async function () {
     it("Verify contract should be revert for multiple initialization", async function () {
       const {
         governorDAOFactory,
@@ -400,7 +398,7 @@ describe("GovernanceTokenDAO tests", function () {
 
       const daos = await governorDAOFactory.getDAOs();
 
-      const tokenDAO = TestHelper.getContract("IGovernanceDAO", daos[0]);
+      const tokenDAO = TestHelper.getContract("FTDAO", daos[0]);
       expect(tokenDAO).not.equals(TestHelper.ZERO_ADDRESS);
       await expect(
         governorDAOFactory.upgradeHederaService(signers[3].address)
@@ -419,7 +417,7 @@ describe("GovernanceTokenDAO tests", function () {
 
     it("Verify TokenTransferDAO initialize call", async function () {
       const { inputs, governance, common } = await loadFixture(deployFixture);
-      const dao = await TestHelper.deployLogic("TokenTransferDAO");
+      const dao = await TestHelper.deployLogic("FTDAO");
       const newInputsWithNoName = {
         ...inputs,
       };
@@ -620,7 +618,7 @@ describe("GovernanceTokenDAO tests", function () {
       const { inputs, governance, common, daoAdminOne } = await loadFixture(
         deployFixture
       );
-      const governorTokenDAO = await TestHelper.deployLogic("TokenTransferDAO");
+      const governorTokenDAO = await TestHelper.deployLogic("FTDAO");
       const newInputsWithNoName = {
         ...inputs,
       };

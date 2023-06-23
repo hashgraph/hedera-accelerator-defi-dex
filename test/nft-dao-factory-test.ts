@@ -70,7 +70,7 @@ describe("NFTDAOFactory contract tests", function () {
       signers[5].address,
     ];
 
-    const nftTokenDAO = await TestHelper.deployLogic("TokenTransferDAO");
+    const nftTokenDAO = await TestHelper.deployLogic("FTDAO");
 
     const nftHolder = await TestHelper.deployLogic("NFTHolder");
     const nftHolderFactory = await TestHelper.deployProxy(
