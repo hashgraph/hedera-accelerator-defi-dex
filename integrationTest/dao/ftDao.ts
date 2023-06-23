@@ -1,8 +1,8 @@
 import dex from "../../deployment/model/dex";
 import Governor from "../../e2e-test/business/Governor";
 import GodHolder from "../../e2e-test/business/GodHolder";
-import GovernorTokenDao from "../../e2e-test/business/GovernorTokenDao";
-import * as GovernorTokenMetaData from "../../e2e-test/business/GovernorTokenDao";
+import FTDAO from "../../e2e-test/business/FTDAO";
+import * as GovernorTokenMetaData from "../../e2e-test/business/FTDAO";
 
 import { Helper } from "../../utils/Helper";
 import { Deployment } from "../../utils/deployContractOnTestnet";
@@ -25,7 +25,7 @@ const csDev = new ContractService();
 
 export async function executeGovernorTokenTransferFlow(
   godHolder: GodHolder,
-  tokenTransferDAO: GovernorTokenDao,
+  tokenTransferDAO: FTDAO,
   fromAccount: AccountId = clientsInfo.treasureId,
   fromAccountPrivateKey: PrivateKey = clientsInfo.treasureKey,
   toAccount: AccountId = clientsInfo.operatorId,
@@ -103,7 +103,7 @@ export async function executeGovernorTokenTransferFlow(
 
 export async function executeTextProposalFlow(
   godHolder: GodHolder,
-  tokenTransferDAO: GovernorTokenDao,
+  tokenTransferDAO: FTDAO,
   tokenId: TokenId = TOKEN_ID,
   proposalCreatorClient: Client = clientsInfo.operatorClient,
   proposalCreatorAccountId: AccountId = clientsInfo.operatorId,
@@ -166,7 +166,7 @@ export async function executeTextProposalFlow(
 
 export async function executeContractUpgradeFlow(
   godHolder: GodHolder,
-  dao: GovernorTokenDao,
+  dao: FTDAO,
   proxyContract: string,
   contractToUpgrade: string,
   tokenId: TokenId = TOKEN_ID,

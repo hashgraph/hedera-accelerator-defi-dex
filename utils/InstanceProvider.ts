@@ -10,7 +10,7 @@ import NFTHolder from "../e2e-test/business/NFTHolder";
 import TokenHolderFactory from "../e2e-test/business/factories/TokenHolderFactory";
 
 import MultiSigDao from "../e2e-test/business/MultiSigDao";
-import GovernorTokenDao from "../e2e-test/business/GovernorTokenDao";
+import FTDAO from "../e2e-test/business/FTDAO";
 
 import DAOFactory from "../e2e-test/business/factories/DAOFactory";
 import MultiSigDAOFactory from "../e2e-test/business/factories/MultiSigDAOFactory";
@@ -69,7 +69,7 @@ export class InstanceProvider {
 
   public getGovernorTokenDao(id: string | null = null) {
     const _id = this.getProxyId(id, ContractService.FT_DAO);
-    return new GovernorTokenDao(_id);
+    return new FTDAO(_id);
   }
 
   public getGovernor(name: string, id: string | null = null) {
