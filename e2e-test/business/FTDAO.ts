@@ -1,7 +1,7 @@
 import dex from "../../deployment/model/dex";
 import BaseDao from "./BaseDao";
-import GodHolder from "../../e2e-test/business/GodHolder";
-import NFTHolder from "../../e2e-test/business/NFTHolder";
+import GodHolder from "./GodHolder";
+import NFTHolder from "./NFTHolder";
 
 import { clientsInfo } from "../../utils/ClientManagement";
 import { BigNumber } from "bignumber.js";
@@ -30,7 +30,7 @@ export const DEFAULT_VOTING_PERIOD = 100; // blocks means 3 minutes as per test
 export const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
 export const NFT_TOKEN_ID = TokenId.fromString(dex.NFT_TOKEN_ID);
 
-export default class GovernorTokenDao extends BaseDao {
+export default class FTDAO extends BaseDao {
   async initialize(
     admin: string,
     name: string,
@@ -99,7 +99,7 @@ export default class GovernorTokenDao extends BaseDao {
       bytes
     );
 
-    console.log(`- GovernorTokenDao#${INITIALIZE}(): ${receipt.status} \n`);
+    console.log(`- FTDAO#${INITIALIZE}(): ${receipt.status} \n`);
   }
 
   createTokenTransferProposal = async (
@@ -128,9 +128,7 @@ export default class GovernorTokenDao extends BaseDao {
       clientsInfo.operatorKey
     );
     const proposalId = result.getUint256(0).toFixed();
-    console.log(
-      `- GovernorTokenDao#${CREATE_PROPOSAL}(): proposal-id = ${proposalId}\n`
-    );
+    console.log(`- FTDAO#${CREATE_PROPOSAL}(): proposal-id = ${proposalId}\n`);
     return proposalId;
   };
 
@@ -206,7 +204,7 @@ export default class GovernorTokenDao extends BaseDao {
     );
     const proposalIds = Helper.getUint256Array(result);
     console.log(
-      `- GovernorTokenDao#${GET_TOKEN_TRANSFER_PROPOSALS}(): proposal-id = ${proposalIds} length = ${proposalIds.length}}\n`
+      `- FTDAO#${GET_TOKEN_TRANSFER_PROPOSALS}(): proposal-id = ${proposalIds} length = ${proposalIds.length}}\n`
     );
   };
 

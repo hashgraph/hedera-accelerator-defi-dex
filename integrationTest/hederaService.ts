@@ -9,17 +9,18 @@ import {
   Hbar,
   TokenType,
   TokenSupplyType,
-  TokenId,
 } from "@hashgraph/sdk";
 
 import { BigNumber } from "bignumber.js";
 
 import { ContractService } from "../deployment/service/ContractService";
-import ClientManagement, { clientsInfo } from "../utils/ClientManagement";
+import ClientManagement from "../utils/ClientManagement";
 
 const cm = new ClientManagement();
 const { id: userAccountId, key: userPrivateKey } = cm.getOperator();
-const client = clientsInfo.treasureClient;
+const client = cm
+  .createClientAsAdmin()
+  .setDefaultMaxTransactionFee(new Hbar(50));
 const clientDetails = cm.getAdmin();
 
 const contractService = new ContractService();
@@ -29,29 +30,26 @@ const hederaService = contractService.getContract(
 const contractIdObject = ContractId.fromString(hederaService.id);
 
 async function main() {
-  const { tokenId, tokenAddressSol } = await createToken(
-    1000 * 1000 * 100000000
+  const { tokenId, tokenAddressSol } = await createToken(100);
+  await tokenQueryFunction(tokenId);
+  await mintTokenPublic(hederaService.id, tokenAddressSol, 50);
+  await burnTokenPublic(hederaService.id, tokenAddressSol, 25);
+  await tokenQueryFunction(tokenId);
+  await associateTokenPublic(
+    hederaService.id,
+    userAccountId.toSolidityAddress(),
+    userPrivateKey,
+    tokenAddressSol
   );
-  // // await tokenQueryFunction(tokenId);
-  // const token = TokenId.fromString("0.0.3560842");
-  // await mintTokenPublic(hederaService.id, token.toSolidityAddress(), 100000);
-  // await burnTokenPublic(hederaService.id, tokenAddressSol, 25);
-  // await tokenQueryFunction(tokenId);
-  // await associateTokenPublic(
-  //   hederaService.id,
-  //   userAccountId.toSolidityAddress(),
-  //   userPrivateKey,
-  //   tokenAddressSol
-  // );
-  // await transferTokenPublic(
-  //   hederaService.id,
-  //   tokenAddressSol,
-  //   clientDetails.adminId.toSolidityAddress(),
-  //   userAccountId.toSolidityAddress(),
-  //   20
-  // );
-  // await balanceQueryFunction(userAccountId.toString(), tokenId);
-  // await balanceQueryFunction(clientDetails.adminId.toString(), tokenId);
+  await transferTokenPublic(
+    hederaService.id,
+    tokenAddressSol,
+    clientDetails.adminId.toSolidityAddress(),
+    userAccountId.toSolidityAddress(),
+    20
+  );
+  await balanceQueryFunction(userAccountId.toString(), tokenId);
+  await balanceQueryFunction(clientDetails.adminId.toString(), tokenId);
   return "executed successfully";
 }
 
@@ -65,13 +63,13 @@ async function createToken(initialSupply: number) {
     .setTokenName("SampleToken")
     .setTokenSymbol("ST")
     .setInitialSupply(initialSupply)
-    .setDecimals(8)
-    .setTreasuryAccountId(clientsInfo.treasureId)
+    .setDecimals(0)
+    .setTreasuryAccountId(clientDetails.adminId)
     .setTokenType(TokenType.FungibleCommon)
     .setSupplyType(TokenSupplyType.Infinite)
     .setSupplyKey(contractIdObject)
-    .freezeWith(client);
-  //.sign(clientDetails.adminKey);
+    .freezeWith(client)
+    .sign(clientDetails.adminKey);
 
   const txResponse = await tx.execute(client);
   const txReceipt = await txResponse.getReceipt(client);

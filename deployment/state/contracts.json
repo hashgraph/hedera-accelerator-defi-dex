@@ -170,11 +170,11 @@
   },
   {
     "name": "ftdaofactory",
-    "id": "0.0.14967166",
-    "address": "0x0000000000000000000000000000000000e4617e",
-    "timestamp": "2023-06-23T10:12:35.410Z",
+    "id": "0.0.14971863",
+    "address": "0x0000000000000000000000000000000000e473d7",
+    "timestamp": "2023-06-23T14:19:00.790Z",
     "hash": "384d0105e6ba387956e1d7df78b2da11",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000e46185",
-    "transparentProxyId": "0.0.14967173"
+    "transparentProxyAddress": "0x0000000000000000000000000000000000e473e4",
+    "transparentProxyId": "0.0.14971876"
   }
 ]

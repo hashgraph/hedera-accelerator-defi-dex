@@ -12,13 +12,13 @@ import { given, binding, when, then, after } from "cucumber-tsflow/dist";
 import dex from "../../deployment/model/dex";
 import Governor from "../../e2e-test/business/Governor";
 import GodHolder from "../../e2e-test/business/GodHolder";
-import GovernorTokenDao from "../../e2e-test/business/GovernorTokenDao";
+import FTDAO from "../../e2e-test/business/FTDAO";
 import DAOFactory from "../../e2e-test/business/factories/DAOFactory";
 import { expect } from "chai";
 import Common from "../business/Common";
 import { BigNumber } from "bignumber.js";
 import { CommonSteps } from "./CommonSteps";
-import * as GovernorTokenMetaData from "../../e2e-test/business/GovernorTokenDao";
+import * as GovernorTokenMetaData from "../../e2e-test/business/FTDAO";
 import { InstanceProvider } from "../../utils/InstanceProvider";
 
 const DAO_DESC = "Lorem Ipsum is simply dummy text";
@@ -30,7 +30,7 @@ const tokenTransferDAOProxyContractId = csDev.getContractWithProxy(
   ContractService.FT_DAO
 ).transparentProxyId!;
 
-let tokenTransferDAO = new GovernorTokenDao(tokenTransferDAOProxyContractId);
+let tokenTransferDAO = new FTDAO(tokenTransferDAOProxyContractId);
 
 const governorTokenTransferProxyContractId = csDev.getContractWithProxy(
   csDev.governorTTContractName
@@ -86,13 +86,13 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
     let blankTitleOrURL: boolean = false;
     try {
       if (name === "" || url === "") blankTitleOrURL = true;
-      await tokenTransferDAO.initializeDAO(
+      await tokenTransferDAO.initialize(
         adminAddress,
         name,
         url,
         DAO_DESC,
         DAO_WEB_LINKS,
-        governorTokenTransfer,
+        godHolder,
         clientsInfo.operatorClient
       );
     } catch (e: any) {
@@ -111,19 +111,19 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
     30000
   )
   public async initializeSafe(name: string, url: string) {
-    await tokenTransferDAO.initializeDAO(
+    await tokenTransferDAO.initialize(
       adminAddress,
       name,
       url,
       DAO_DESC,
       DAO_WEB_LINKS,
-      governorTokenTransfer,
+      godHolder,
       clientsInfo.operatorClient
     );
   }
 
   @given(/User initialize DAO factory contract/, undefined, 60000)
-  public async initializeDAOFactory() {
+  public async initializeFactory() {
     await godTokenHolderFactory.initialize(clientsInfo.operatorClient);
     await daoFactory.initialize(clientsInfo.operatorClient);
   }
@@ -137,7 +137,7 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
     let blankNameOrURL: boolean = false;
     if (daoName === "" || daoURL === "") blankNameOrURL = true;
     try {
-      daoAddress = await daoFactory.createTokenTransferDao(
+      daoAddress = await daoFactory.createDAO(
         daoName,
         daoURL,
         DAO_DESC,
@@ -167,10 +167,7 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
   )
   public async initializeContractsViaFactory() {
     tokenTransferDAO = daoFactory.getGovernorTokenDaoInstance(daoAddress);
-    governorTokenTransfer = await daoFactory.getGovernorTokenTransferInstance(
-      tokenTransferDAO
-    );
-    godHolder = await daoFactory.getGodHolderInstance(governorTokenTransfer);
+    godHolder = (await daoFactory.getTokenHolderInstance(tokenId)) as GodHolder;
     factoryGODHolderContractId = godHolder.contractId;
   }
 

@@ -1,8 +1,8 @@
 import dex from "../../deployment/model/dex";
 import Governor from "../../e2e-test/business/Governor";
 import NFTHolder from "../../e2e-test/business/NFTHolder";
-import GovernorTokenDao from "../../e2e-test/business/GovernorTokenDao";
-import * as GovernorTokenMetaData from "../../e2e-test/business/GovernorTokenDao";
+import FTDAO from "../../e2e-test/business/FTDAO";
+import * as GovernorTokenMetaData from "../../e2e-test/business/FTDAO";
 
 import { Helper } from "../../utils/Helper";
 import { Deployment } from "../../utils/deployContractOnTestnet";
@@ -70,7 +70,7 @@ if (require.main === module) {
 
 export async function executeGovernorTokenTransferFlow(
   nftHolder: NFTHolder,
-  tokenTransferDAO: GovernorTokenDao,
+  tokenTransferDAO: FTDAO,
   fromAccount: AccountId = clientsInfo.treasureId,
   fromAccountPrivateKey: PrivateKey = clientsInfo.treasureKey,
   toAccount: AccountId = clientsInfo.operatorId,

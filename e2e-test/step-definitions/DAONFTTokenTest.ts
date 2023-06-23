@@ -15,8 +15,8 @@ import { binding, given, then, when } from "cucumber-tsflow";
 import dex from "../../deployment/model/dex";
 import Governor from "../../e2e-test/business/Governor";
 import NFTHolder from "../../e2e-test/business/NFTHolder";
-import GovernorTokenDao from "../../e2e-test/business/GovernorTokenDao";
-import * as GovernorTokenMetaData from "../../e2e-test/business/GovernorTokenDao";
+import FTDAO from "../../e2e-test/business/FTDAO";
+import * as GovernorTokenMetaData from "../../e2e-test/business/FTDAO";
 import { CommonSteps } from "./CommonSteps";
 import Common from "../business/Common";
 import { BigNumber } from "bignumber.js";
@@ -26,7 +26,7 @@ const adminAddress: string = clientsInfo.operatorId.toSolidityAddress();
 const DAO_DESC = "Lorem Ipsum is simply dummy text";
 const DAO_WEB_LINKS = ["LINKEDIN", "https://linkedin.com"];
 
-let govTokenDao: GovernorTokenDao;
+let govTokenDao: FTDAO;
 let governorTT: Governor;
 let nftHolder: NFTHolder;
 let errorMsg: string;
@@ -248,7 +248,7 @@ export class DAONFTTokenTest extends CommonSteps {
       csDev.tokenTransferDAO
     ).transparentProxyId!;
 
-    govTokenDao = new GovernorTokenDao(tokenTransferDAOProxyContractId);
+    govTokenDao = new FTDAO(tokenTransferDAOProxyContractId);
 
     const governorTokenTransferProxyContractId = csDev.getContractWithProxy(
       csDev.governorTTContractName
