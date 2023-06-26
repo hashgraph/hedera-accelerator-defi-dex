@@ -176,5 +176,14 @@
     "hash": "384d0105e6ba387956e1d7df78b2da11",
     "transparentProxyAddress": "0x0000000000000000000000000000000000e473e4",
     "transparentProxyId": "0.0.14971876"
+  },
+  {
+    "name": "ftdaofactory",
+    "id": "0.0.14984586",
+    "address": "0x0000000000000000000000000000000000e4a58a",
+    "timestamp": "2023-06-26T05:43:44.815Z",
+    "hash": "384d0105e6ba387956e1d7df78b2da11",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000e4a58c",
+    "transparentProxyId": "0.0.14984588"
   }
 ]
