@@ -429,7 +429,8 @@ export default class Governor extends Base {
       .addString(link)
       .addAddress(tokenTreasureId.toSolidityAddress())
       .addString(tokenName)
-      .addString(tokenSymbol);
+      .addString(tokenSymbol)
+      .addAddress(clientsInfo.operatorId.toSolidityAddress());
 
     const { result } = await this.execute(
       1_000_000,
