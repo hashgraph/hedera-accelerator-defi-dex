@@ -31,8 +31,7 @@ contract FTDAOFactory is
 
     error NotAdmin(string message);
 
-    string private constant TokenDAO = "TokenDAO";
-    string private constant TransferToken = "TransferToken";
+    string private constant FungibleTokenDAO = "FTDAO";
     string private constant TokenHolderFactory = "TokenHolderFactory";
     string private constant Governors = "Governors";
 
@@ -67,7 +66,7 @@ contract FTDAOFactory is
         tokenHolderFactory = _tokenHolderFactory;
         governors = _governors;
 
-        emit LogicUpdated(address(0), address(daoLogic), TokenDAO);
+        emit LogicUpdated(address(0), address(daoLogic), FungibleTokenDAO);
         emit LogicUpdated(
             address(0),
             address(tokenHolderFactory),
@@ -98,10 +97,12 @@ contract FTDAOFactory is
         tokenHolderFactory = _newTokenHolderFactory;
     }
 
-    function upgradeTokenDaoLogicImplementation(
-        FTDAO _newImpl
-    ) external ifAdmin {
-        emit LogicUpdated(address(daoLogic), address(_newImpl), TokenDAO);
+    function upgradeFTDAOLogicImplementation(FTDAO _newImpl) external ifAdmin {
+        emit LogicUpdated(
+            address(daoLogic),
+            address(_newImpl),
+            FungibleTokenDAO
+        );
         daoLogic = _newImpl;
     }
 
@@ -124,7 +125,7 @@ contract FTDAOFactory is
         ITokenHolder iTokenHolder = tokenHolderFactory.getTokenHolder(
             address(_createDAOInputs.tokenAddress)
         );
-        address createdDAOAddress = _createTokenDAOContractInstance(
+        address createdDAOAddress = _createFTDAOContractInstance(
             _createDAOInputs,
             iTokenHolder
         );
@@ -167,7 +168,7 @@ contract FTDAOFactory is
         return hederaService;
     }
 
-    function _createTokenDAOContractInstance(
+    function _createFTDAOContractInstance(
         CreateDAOInputs memory _createDAOInputs,
         ITokenHolder iTokenHolder
     ) private returns (address daoAddress) {

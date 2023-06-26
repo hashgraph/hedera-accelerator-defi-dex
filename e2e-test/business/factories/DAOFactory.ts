@@ -20,7 +20,7 @@ const CREATE_DAO = "createDAO";
 const INITIALIZE = "initialize";
 const UPGRADE_TOKEN_HOLDER_FACTORY = "upgradeTokenHolderFactory";
 const GET_TOKEN_HOLDER_FACTORY_ADDRESS = "getTokenHolderFactoryAddress";
-const UPGRADE_TOKEN_DAO_LOGIC_IMPL = "upgradeTokenDaoLogicImplementation";
+const UPGRADE_TOKEN_DAO_LOGIC_IMPL = "upgradeFTDAOLogicImplementation";
 const UPGRADE_GOVERNORS_IMPLEMENTATION = "upgradeGovernorsImplementation";
 
 export default class DAOFactory extends Base {
@@ -50,7 +50,7 @@ export default class DAOFactory extends Base {
       const deployedItems = await deployment.deployContracts([
         ContractService.FT_DAO,
       ]);
-      const tokenTransferDAO = deployedItems.get(ContractService.FT_DAO);
+      const ftDao = deployedItems.get(ContractService.FT_DAO);
 
       const governance = {
         tokenTransferLogic: csDev.getContract(ContractService.GOVERNOR_TT)
@@ -69,7 +69,7 @@ export default class DAOFactory extends Base {
         [
           proxyAdmin,
           this.htsAddress,
-          tokenTransferDAO.address,
+          ftDao.address,
           this.getTokenHolderFactoryAddressFromJson(),
           Object.values(governance),
         ]
@@ -178,7 +178,7 @@ export default class DAOFactory extends Base {
     );
   };
 
-  upgradeTokenDaoLogicImplementation = async (_newImpl: string) => {
+  upgradeFTDAOLogicImplementation = async (_newImpl: string) => {
     const args = new ContractFunctionParameters().addAddress(_newImpl);
     await this.execute(
       200000,

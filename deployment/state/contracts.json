@@ -170,20 +170,11 @@
   },
   {
     "name": "ftdaofactory",
-    "id": "0.0.14971863",
-    "address": "0x0000000000000000000000000000000000e473d7",
-    "timestamp": "2023-06-23T14:19:00.790Z",
-    "hash": "384d0105e6ba387956e1d7df78b2da11",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000e473e4",
-    "transparentProxyId": "0.0.14971876"
-  },
-  {
-    "name": "ftdaofactory",
-    "id": "0.0.14984586",
-    "address": "0x0000000000000000000000000000000000e4a58a",
-    "timestamp": "2023-06-26T05:43:44.815Z",
-    "hash": "384d0105e6ba387956e1d7df78b2da11",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000e4a58c",
-    "transparentProxyId": "0.0.14984588"
+    "id": "0.0.14984961",
+    "address": "0x0000000000000000000000000000000000e4a701",
+    "timestamp": "2023-06-26T09:22:55.573Z",
+    "hash": "55c37d09c3feeba4703f94a0572aec7b",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000e4a706",
+    "transparentProxyId": "0.0.14984966"
   }
 ]

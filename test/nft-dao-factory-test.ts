@@ -281,7 +281,7 @@ describe("NFTDAOFactory contract tests", function () {
     await expect(
       governorDAOFactoryInstance
         .connect(daoAdminOne)
-        .upgradeTokenDaoLogicImplementation(zeroAddress)
+        .upgradeFTDAOLogicImplementation(zeroAddress)
     )
       .revertedWithCustomError(governorDAOFactoryInstance, "NotAdmin")
       .withArgs("DAOFactory: auth failed");
@@ -309,11 +309,11 @@ describe("NFTDAOFactory contract tests", function () {
 
     const txn1 = await governorDAOFactoryInstance
       .connect(dexOwner)
-      .upgradeTokenDaoLogicImplementation(oneAddress);
+      .upgradeFTDAOLogicImplementation(oneAddress);
 
     const event1 = (await txn1.wait()).events.pop();
     expect(event1.event).equal("LogicUpdated");
-    expect(event1.args.name).equal("TokenDAO");
+    expect(event1.args.name).equal("FTDAO");
     expect(event1.args.newImplementation).equal(oneAddress);
 
     const txn2 = await governorDAOFactoryInstance
