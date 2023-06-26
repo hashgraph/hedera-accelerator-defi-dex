@@ -43,13 +43,13 @@ export class DAONFTTokenTest extends CommonSteps {
     30000
   )
   public async initializeNFTDAOSafe(name: string, url: string) {
-    await govTokenDao.initializeDAO(
+    await govTokenDao.initialize(
       adminAddress,
       name,
       url,
       DAO_DESC,
       DAO_WEB_LINKS,
-      governorTT,
+      nftHolder,
       clientsInfo.operatorClient
     );
   }
@@ -68,13 +68,13 @@ export class DAONFTTokenTest extends CommonSteps {
         GovernorTokenMetaData.GOD_TOKEN_ID,
         dex.E2E_NFT_TOKEN_ID
       );
-      await govTokenDao.initializeDAO(
+      await govTokenDao.initialize(
         adminAddress,
         name,
         url,
         DAO_DESC,
         DAO_WEB_LINKS,
-        governorTT,
+        nftHolder,
         clientsInfo.operatorClient
       );
     } catch (e: any) {
@@ -245,7 +245,7 @@ export class DAONFTTokenTest extends CommonSteps {
     const csDev = new ContractService();
 
     const tokenTransferDAOProxyContractId = csDev.getContractWithProxy(
-      csDev.tokenTransferDAO
+      ContractService.FT_DAO
     ).transparentProxyId!;
 
     govTokenDao = new FTDAO(tokenTransferDAOProxyContractId);
