@@ -56,7 +56,7 @@ export default class FTDAO extends BaseDao {
       admin,
       name,
       url,
-      tokenAddress: holderTokenId.toSolidityAddress(),
+      tokenAddress: tokenId.toSolidityAddress(),
       quorumThreshold: defaultQuorumThresholdValue,
       votingDelay,
       votingPeriod,

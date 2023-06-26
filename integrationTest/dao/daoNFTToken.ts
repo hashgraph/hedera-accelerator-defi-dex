@@ -23,9 +23,9 @@ const deployment = new Deployment();
 const provider = InstanceProvider.getInstance();
 
 async function main() {
-  const newCopies = await deployment.deployProxies([ContractService.FTDAO]);
+  const newCopies = await deployment.deployProxies([ContractService.FT_DAO]);
 
-  const transferDao = newCopies.get(ContractService.FTDAO);
+  const transferDao = newCopies.get(ContractService.FT_DAO);
 
   const tokenTransferDAO = provider.getGovernorTokenDao(transferDao.id);
 
