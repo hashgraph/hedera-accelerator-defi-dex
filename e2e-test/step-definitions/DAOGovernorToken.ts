@@ -32,10 +32,7 @@ const tokenTransferDAOProxyContractId = csDev.getContractWithProxy(
 
 let tokenTransferDAO = new FTDAO(tokenTransferDAOProxyContractId);
 
-const governorTokenTransferProxyContractId = csDev.getContractWithProxy(
-  csDev.governorTTContractName
-).transparentProxyId!;
-let governorTokenTransfer = new Governor(governorTokenTransferProxyContractId);
+let governorTokenTransfer: Governor;
 
 const godHolderProxyContractId = csDev.getContractWithProxy(
   csDev.godHolderContract
@@ -76,13 +73,6 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
     30000
   )
   public async initializeFail(name: string, url: string) {
-    await this.initializeGovernorContract(
-      governorTokenTransfer,
-      godHolder,
-      clientsInfo.operatorClient,
-      GovernorTokenMetaData.GOD_TOKEN_ID,
-      GovernorTokenMetaData.GOD_TOKEN_ID
-    );
     let blankTitleOrURL: boolean = false;
     try {
       if (name === "" || url === "") blankTitleOrURL = true;
@@ -119,6 +109,12 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
       DAO_WEB_LINKS,
       godHolder,
       clientsInfo.operatorClient
+    );
+
+    const governorAddresses =
+      await tokenTransferDAO.getGovernorTokenTransferContractAddresses();
+    governorTokenTransfer = new Governor(
+      governorAddresses.governorTokenTransferProxyId.toString()
     );
   }
 
