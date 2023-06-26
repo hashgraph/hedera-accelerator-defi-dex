@@ -52,6 +52,12 @@ export class DAONFTTokenTest extends CommonSteps {
       nftHolder,
       clientsInfo.operatorClient
     );
+
+    const governorAddresses =
+      await govTokenDao.getGovernorTokenTransferContractAddresses();
+    governorTT = new Governor(
+      governorAddresses.governorTokenTransferProxyId.toString()
+    );
   }
 
   @given(
@@ -61,13 +67,6 @@ export class DAONFTTokenTest extends CommonSteps {
   )
   public async initializeNFTDAOFail(name: string, url: string) {
     try {
-      await this.initializeGovernorContract(
-        governorTT,
-        nftHolder,
-        clientsInfo.operatorClient,
-        GovernorTokenMetaData.GOD_TOKEN_ID,
-        dex.E2E_NFT_TOKEN_ID
-      );
       await govTokenDao.initialize(
         adminAddress,
         name,
@@ -250,11 +249,6 @@ export class DAONFTTokenTest extends CommonSteps {
 
     govTokenDao = new FTDAO(tokenTransferDAOProxyContractId);
 
-    const governorTokenTransferProxyContractId = csDev.getContractWithProxy(
-      csDev.governorTTContractName
-    ).transparentProxyId!;
-    governorTT = new Governor(governorTokenTransferProxyContractId);
-
     const nftHolderProxyContractId = csDev.getContractWithProxy(
       csDev.nftHolderContract
     ).transparentProxyId!;
@@ -266,10 +260,6 @@ export class DAONFTTokenTest extends CommonSteps {
     console.log(
       "tokenTransferDAOProxyContractId : ",
       tokenTransferDAOProxyContractId
-    );
-    console.log(
-      "governorTokenTransferProxyContractId : ",
-      governorTokenTransferProxyContractId
     );
     console.log("nftHolderProxyContractId : ", nftHolderProxyContractId);
   }
