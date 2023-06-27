@@ -142,15 +142,6 @@
     "transparentProxyId": "0.0.14967151"
   },
   {
-    "name": "ftdaofactory",
-    "id": "0.0.14984961",
-    "address": "0x0000000000000000000000000000000000e4a701",
-    "timestamp": "2023-06-26T09:22:55.573Z",
-    "hash": "55c37d09c3feeba4703f94a0572aec7b",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000e4a706",
-    "transparentProxyId": "0.0.14984966"
-  },
-  {
     "name": "nftholder",
     "id": "0.0.14988964",
     "address": "0x0000000000000000000000000000000000e4b6a4",
