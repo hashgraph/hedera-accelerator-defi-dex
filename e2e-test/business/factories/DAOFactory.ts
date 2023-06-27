@@ -115,7 +115,7 @@ export default class DAOFactory extends Base {
       [Object.values(params)]
     );
     const { result, record } = await this.execute(
-      5_500_000,
+      8_500_000,
       CREATE_DAO,
       client,
       bytes
