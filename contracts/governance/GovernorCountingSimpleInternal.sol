@@ -34,15 +34,31 @@ abstract contract GovernorCountingSimpleInternal is
         address[] voters;
     }
 
+    struct VotingInformation {
+        uint256 quorumValue;
+        bool isQuorumReached;
+        ProposalState proposalState;
+        bool voted;
+        address votedUser;
+        uint256 againstVotes;
+        uint256 forVotes;
+        uint256 abstainVotes;
+    }
+
+    struct Duration {
+        uint256 startBlock;
+        uint256 endBlock;
+    }
+
     event ProposalDetails(
         uint256 proposalId,
         address proposer,
         string title,
         string description,
         string link,
-        uint256 startBlock,
-        uint256 endBlock,
-        bytes data
+        bytes data,
+        Duration duration,
+        VotingInformation votingInformation
     );
 
     uint256 private constant PROPOSAL_CREATION_AMOUNT = 1e8;
@@ -119,16 +135,32 @@ abstract contract GovernorCountingSimpleInternal is
             link,
             EMPTY_VOTERS_LIST
         );
+
+        VotingInformation memory votingInfo;
+        votingInfo.quorumValue = quorum(0);
+        votingInfo.isQuorumReached = false;
+        votingInfo.proposalState = state(proposalId);
+        votingInfo.voted = false;
+        votingInfo.votedUser = msg.sender;
+        votingInfo.abstainVotes = 0;
+        votingInfo.forVotes = 0;
+        votingInfo.againstVotes = 0;
+
+        Duration memory duration;
+        duration.startBlock = proposalSnapshot(proposalId);
+        duration.endBlock = proposalDeadline(proposalId);
+
         emit ProposalDetails(
             proposalId,
             creator,
             title,
             description,
             link,
-            proposalSnapshot(proposalId),
-            proposalDeadline(proposalId),
-            data
+            data,
+            duration,
+            votingInfo
         );
+
         return proposalId;
     }
 
@@ -136,7 +168,6 @@ abstract contract GovernorCountingSimpleInternal is
         uint256 proposalId
     )
         public
-        view
         returns (
             uint256 quorumValue,
             bool isQuorumReached,
@@ -152,11 +183,37 @@ abstract contract GovernorCountingSimpleInternal is
         )
     {
         ProposalInfo memory proposalInfo = _getProposalInfoIfExist(proposalId);
-        quorumValue = quorum(0);
-        isQuorumReached = _quorumReached(proposalId);
-        proposalState = state(proposalId);
-        voted = hasVoted(proposalId, msg.sender);
         (againstVotes, forVotes, abstainVotes) = proposalVotes(proposalId);
+
+        VotingInformation memory votingInfo;
+        votingInfo.quorumValue = quorum(0);
+        votingInfo.isQuorumReached = _quorumReached(proposalId);
+        votingInfo.proposalState = state(proposalId);
+        votingInfo.voted = hasVoted(proposalId, msg.sender);
+        votingInfo.votedUser = msg.sender;
+        votingInfo.abstainVotes = againstVotes;
+        votingInfo.forVotes = forVotes;
+        votingInfo.againstVotes = abstainVotes;
+
+        Duration memory duration;
+        duration.startBlock = proposalSnapshot(proposalId);
+        duration.endBlock = proposalDeadline(proposalId);
+
+        emit ProposalDetails(
+            proposalId,
+            creator,
+            title,
+            proposalInfo.description,
+            link,
+            bytes(""),
+            duration,
+            votingInfo
+        );
+
+        quorumValue = votingInfo.quorumValue;
+        isQuorumReached = votingInfo.isQuorumReached;
+        proposalState = votingInfo.proposalState;
+        voted = votingInfo.voted;
         creator = proposalInfo.creator;
         title = proposalInfo.title;
         descripition = proposalInfo.description;
@@ -208,6 +265,7 @@ abstract contract GovernorCountingSimpleInternal is
         proposalId = super._cancel(targets, values, calldatas, descriptionHash);
         _returnGODToken(proposalInfo.creator);
         _cleanup(proposalId);
+        this.getProposalDetails(proposalId);
     }
 
     /**
@@ -256,6 +314,7 @@ abstract contract GovernorCountingSimpleInternal is
         tokenHolder.addProposalForVoter(voter, proposalId);
         uint256 weight = _castVote(proposalId, voter, support, "");
         proposalInfo.voters.push(voter);
+        this.getProposalDetails(proposalId);
         return weight;
     }
 
@@ -272,6 +331,7 @@ abstract contract GovernorCountingSimpleInternal is
         ProposalInfo memory proposalInfo = _getProposalInfoIfExist(proposalId);
         _returnGODToken(proposalInfo.creator);
         _cleanup(proposalId);
+        this.getProposalDetails(proposalId);
     }
 
     function quorum(

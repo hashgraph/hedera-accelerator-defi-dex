@@ -127,9 +127,20 @@ describe("Governor Tests", function () {
     expect(args.proposalId).not.equals("0");
     expect(args.description).equals(DESC);
     expect(args.link).equals(LINK);
-    expect(args.startBlock).greaterThan(0);
-    expect(args.endBlock).greaterThan(0);
-    expect(ethers.utils.arrayify(args.data).length === 0).equals(empty);
+    expect(args.duration.startBlock).greaterThan(0);
+    expect(args.duration.endBlock).greaterThan(0);
+    expect(args.votingInformation.quorumValue).equals(
+      TestHelper.toPrecision(500) / 100
+    );
+    expect(args.votingInformation.isQuorumReached).equals(false);
+    expect(args.votingInformation.proposalState).equals(0);
+    expect(args.votingInformation.voted).equals(false);
+    expect(args.votingInformation.votedUser).not.equals(
+      TestHelper.ZERO_ADDRESS
+    );
+    expect(args.votingInformation.againstVotes).equals(0);
+    expect(args.votingInformation.forVotes).equals(0);
+    expect(args.votingInformation.abstainVotes).equals(0);
     return { proposalId: args.proposalId, data: args.data };
   };
 

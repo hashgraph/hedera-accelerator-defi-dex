@@ -1,12 +1,10 @@
 [
   {
-    "name": "nftholder",
-    "id": "0.0.14831441",
-    "address": "0x0000000000000000000000000000000000e24f51",
-    "timestamp": "2023-06-19T11:17:03.314Z",
-    "hash": "3331a48978ad4f5fc11d6655512518ea",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000e24f6b",
-    "transparentProxyId": "0.0.14831467"
+    "name": "hederaservice",
+    "id": "0.0.14831415",
+    "address": "0x0000000000000000000000000000000000e24f37",
+    "timestamp": "2023-06-19T11:16:47.351Z",
+    "hash": "23156ce8bab06e08d7c4d7d3e4b55188"
   },
   {
     "name": "configuration",
@@ -16,15 +14,6 @@
     "hash": "1527e85b0e21f064f11dd056841acbd4",
     "transparentProxyAddress": "0x0000000000000000000000000000000000e24f73",
     "transparentProxyId": "0.0.14831475"
-  },
-  {
-    "name": "godholder",
-    "id": "0.0.14831450",
-    "address": "0x0000000000000000000000000000000000e24f5a",
-    "timestamp": "2023-06-19T11:17:05.674Z",
-    "hash": "b0699ccce77f035ca9483daa331f7347",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000e24f76",
-    "transparentProxyId": "0.0.14831478"
   },
   {
     "name": "lptoken",
@@ -135,15 +124,6 @@
     "transparentProxyId": "0.0.14831512"
   },
   {
-    "name": "governortokencreate",
-    "id": "0.0.14831505",
-    "address": "0x0000000000000000000000000000000000e24f91",
-    "timestamp": "2023-06-19T11:17:20.319Z",
-    "hash": "f761b7e6f3feed050bccc70874f488d7",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000e24f9f",
-    "transparentProxyId": "0.0.14831519"
-  },
-  {
     "name": "multisigdao",
     "id": "0.0.14831516",
     "address": "0x0000000000000000000000000000000000e24f9c",
@@ -169,5 +149,77 @@
     "hash": "55c37d09c3feeba4703f94a0572aec7b",
     "transparentProxyAddress": "0x0000000000000000000000000000000000e4a706",
     "transparentProxyId": "0.0.14984966"
+  },
+  {
+    "name": "nftholder",
+    "id": "0.0.14988964",
+    "address": "0x0000000000000000000000000000000000e4b6a4",
+    "timestamp": "2023-06-26T13:27:43.119Z",
+    "hash": "287836b8b46e6f3b10dfbf6666525461",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000e4b6a9",
+    "transparentProxyId": "0.0.14988969"
+  },
+  {
+    "name": "ftdao",
+    "id": "0.0.14989856",
+    "address": "0x0000000000000000000000000000000000e4ba20",
+    "timestamp": "2023-06-26T14:52:26.854Z",
+    "hash": "0c15ad786c9291ff36ae0fe7501449da",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000e4ba27",
+    "transparentProxyId": "0.0.14989863"
+  },
+  {
+    "name": "governorupgrade",
+    "id": "0.0.14994419",
+    "address": "0x0000000000000000000000000000000000e4cbf3",
+    "timestamp": "2023-06-27T07:58:10.455Z",
+    "hash": "8ae778447f7d4117888ca95b1a164531",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000e4cbf5",
+    "transparentProxyId": "0.0.14994421"
+  },
+  {
+    "name": "governortokencreate",
+    "id": "0.0.14994429",
+    "address": "0x0000000000000000000000000000000000e4cbfd",
+    "timestamp": "2023-06-27T08:00:38.626Z",
+    "hash": "5098ef35e928feed11fe5bc75c647aeb",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000e4cbff",
+    "transparentProxyId": "0.0.14994431"
+  },
+  {
+    "name": "godholder",
+    "id": "0.0.14994460",
+    "address": "0x0000000000000000000000000000000000e4cc1c",
+    "timestamp": "2023-06-27T08:14:08.281Z",
+    "hash": "926a1b687631fd9e9da80429f2e9081f",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000e4cc1e",
+    "transparentProxyId": "0.0.14994462"
+  },
+  {
+    "name": "governortextproposal",
+    "id": "0.0.14994530",
+    "address": "0x0000000000000000000000000000000000e4cc62",
+    "timestamp": "2023-06-27T08:26:22.993Z",
+    "hash": "7db7c280faa97d1fdbc70500700f0b88",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000e4cc64",
+    "transparentProxyId": "0.0.14994532"
+  },
+  {
+    "name": "governortransfertoken",
+    "id": "0.0.14994553",
+    "address": "0x0000000000000000000000000000000000e4cc79",
+    "timestamp": "2023-06-27T08:35:04.407Z",
+    "hash": "6711a21b305fbdfd5fb03f912563a8f9",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000e4cc7b",
+    "transparentProxyId": "0.0.14994555"
+  },
+  {
+    "name": "ftdaofactory",
+    "id": "0.0.14994650",
+    "address": "0x0000000000000000000000000000000000e4ccda",
+    "timestamp": "2023-06-27T09:01:43.658Z",
+    "hash": "d5f28caa0983238dd51ad7032bb4ce46",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000e4ccdc",
+    "transparentProxyId": "0.0.14994652"
   }
 ]
