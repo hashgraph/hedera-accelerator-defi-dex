@@ -424,6 +424,9 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
     30000
   )
   public async setAllowanceForProposalCreation() {
+    console.log(
+      `\n governorTokenTransfer contractId ${governorTokenTransfer.contractId} \n`
+    );
     await this.setupAllowanceForProposalCreation(
       governorTokenTransfer,
       clientsInfo.operatorClient,
