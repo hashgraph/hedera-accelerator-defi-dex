@@ -31,6 +31,7 @@ abstract contract GovernorCountingSimpleInternal is
         string title;
         string description;
         string link;
+        bytes data;
         address[] voters;
     }
 
@@ -133,6 +134,7 @@ abstract contract GovernorCountingSimpleInternal is
             title,
             description,
             link,
+            data,
             EMPTY_VOTERS_LIST
         );
 
@@ -199,17 +201,6 @@ abstract contract GovernorCountingSimpleInternal is
         duration.startBlock = proposalSnapshot(proposalId);
         duration.endBlock = proposalDeadline(proposalId);
 
-        emit ProposalDetails(
-            proposalId,
-            creator,
-            title,
-            proposalInfo.description,
-            link,
-            bytes(""),
-            duration,
-            votingInfo
-        );
-
         quorumValue = votingInfo.quorumValue;
         isQuorumReached = votingInfo.isQuorumReached;
         proposalState = votingInfo.proposalState;
@@ -218,6 +209,17 @@ abstract contract GovernorCountingSimpleInternal is
         title = proposalInfo.title;
         descripition = proposalInfo.description;
         link = proposalInfo.link;
+
+        emit ProposalDetails(
+            proposalId,
+            creator,
+            title,
+            descripition,
+            link,
+            proposalInfo.data,
+            duration,
+            votingInfo
+        );
     }
 
     function votingDelay()
@@ -265,7 +267,7 @@ abstract contract GovernorCountingSimpleInternal is
         proposalId = super._cancel(targets, values, calldatas, descriptionHash);
         _returnGODToken(proposalInfo.creator);
         _cleanup(proposalId);
-        this.getProposalDetails(proposalId);
+        getProposalDetails(proposalId);
     }
 
     /**
@@ -314,7 +316,7 @@ abstract contract GovernorCountingSimpleInternal is
         tokenHolder.addProposalForVoter(voter, proposalId);
         uint256 weight = _castVote(proposalId, voter, support, "");
         proposalInfo.voters.push(voter);
-        this.getProposalDetails(proposalId);
+        getProposalDetails(proposalId);
         return weight;
     }
 
@@ -331,7 +333,7 @@ abstract contract GovernorCountingSimpleInternal is
         ProposalInfo memory proposalInfo = _getProposalInfoIfExist(proposalId);
         _returnGODToken(proposalInfo.creator);
         _cleanup(proposalId);
-        this.getProposalDetails(proposalId);
+        getProposalDetails(proposalId);
     }
 
     function quorum(
