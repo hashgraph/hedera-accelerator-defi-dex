@@ -11,6 +11,7 @@ import {
 } from "@hashgraph/sdk";
 import { ContractService } from "../../../deployment/service/ContractService";
 import { InstanceProvider } from "../../../utils/InstanceProvider";
+import TokenHolderFactory from "./TokenHolderFactory";
 
 const deployment = new Deployment();
 const csDev = new ContractService();
@@ -44,8 +45,15 @@ export default class DAOFactory extends Base {
     return this._isNFTType ? "NFT" : "GOD";
   }
 
-  initialize = async (client: Client = clientsInfo.operatorClient) => {
+  initialize = async (
+    client: Client = clientsInfo.operatorClient,
+    tokenHolderFactory: TokenHolderFactory
+  ) => {
     if (await this.isInitializationPending()) {
+      const tokenHolderFactoryContractId = ContractId.fromString(
+        tokenHolderFactory.contractId
+      ).toSolidityAddress();
+      const tokenHolderFactoryAddress = tokenHolderFactoryContractId;
       const proxyAdmin = clientsInfo.dexOwnerId.toSolidityAddress();
       const deployedItems = await deployment.deployContracts([
         ContractService.FT_DAO,
@@ -70,7 +78,7 @@ export default class DAOFactory extends Base {
           proxyAdmin,
           this.htsAddress,
           ftDao.address,
-          this.getTokenHolderFactoryAddressFromJson(),
+          tokenHolderFactoryAddress,
           Object.values(governance),
         ]
       );

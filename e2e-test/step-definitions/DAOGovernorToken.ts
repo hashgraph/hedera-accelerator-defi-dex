@@ -83,7 +83,12 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
         DAO_DESC,
         DAO_WEB_LINKS,
         godHolder,
-        clientsInfo.operatorClient
+        clientsInfo.operatorClient,
+        CommonSteps.DEFAULT_QUORUM_THRESHOLD_IN_BSP,
+        CommonSteps.DEFAULT_VOTING_DELAY,
+        CommonSteps.DEFAULT_VOTING_PERIOD,
+        daoTokenId,
+        daoTokenId
       );
     } catch (e: any) {
       if (blankTitleOrURL) {
@@ -108,20 +113,27 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
       DAO_DESC,
       DAO_WEB_LINKS,
       godHolder,
-      clientsInfo.operatorClient
+      clientsInfo.operatorClient,
+      CommonSteps.DEFAULT_QUORUM_THRESHOLD_IN_BSP,
+      CommonSteps.DEFAULT_VOTING_DELAY,
+      CommonSteps.DEFAULT_VOTING_PERIOD,
+      daoTokenId,
+      daoTokenId
     );
-
-    const governorAddresses =
-      await tokenTransferDAO.getGovernorTokenTransferContractAddresses();
-    governorTokenTransfer = new Governor(
-      governorAddresses.governorTokenTransferProxyId.toString()
-    );
+    await this.updateGovernor(tokenTransferDAO);
   }
 
   @given(/User initialize DAO factory contract/, undefined, 60000)
   public async initializeFactory() {
     await godTokenHolderFactory.initialize(clientsInfo.operatorClient);
-    await daoFactory.initialize(clientsInfo.operatorClient);
+    const godTokenHolderContractId = await godTokenHolderFactory.getTokenHolder(
+      daoTokenId.toSolidityAddress()
+    );
+    godHolder = new GodHolder(godTokenHolderContractId.toString());
+    await daoFactory.initialize(
+      clientsInfo.operatorClient,
+      godTokenHolderFactory
+    );
   }
 
   @when(
@@ -163,7 +175,8 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
   )
   public async initializeContractsViaFactory() {
     tokenTransferDAO = daoFactory.getGovernorTokenDaoInstance(daoAddress);
-    godHolder = (await daoFactory.getTokenHolderInstance(tokenId)) as GodHolder;
+    await this.updateGovernor(tokenTransferDAO);
+    //godHolder = (await daoFactory.getTokenHolderInstance(tokenId)) as GodHolder;
     factoryGODHolderContractId = godHolder.contractId;
   }
 
@@ -449,6 +462,13 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
       clientsInfo.operatorId,
       clientsInfo.operatorKey,
       clientsInfo.operatorClient
+    );
+  }
+  private async updateGovernor(dao: FTDAO) {
+    const governorAddresses =
+      await dao.getGovernorTokenTransferContractAddresses();
+    governorTokenTransfer = new Governor(
+      governorAddresses.governorTokenTransferProxyId.toString()
     );
   }
 }

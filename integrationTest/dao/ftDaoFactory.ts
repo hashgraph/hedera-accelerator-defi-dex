@@ -78,7 +78,9 @@ function getTokenTransferDAOFactoryInfo() {
 
 async function main() {
   const daoFactory = getTokenTransferDAOFactoryInfo();
-  await daoFactory.initialize();
+  const tokenHolderFactory =
+    InstanceProvider.getInstance().getGODTokenHolderFactory();
+  await daoFactory.initialize(clientsInfo.operatorClient, tokenHolderFactory);
   await daoFactory.getTokenHolderFactoryAddress();
   await createDAO(
     daoFactory,

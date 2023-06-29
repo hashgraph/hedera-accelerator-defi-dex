@@ -50,14 +50,14 @@ export class DAONFTTokenTest extends CommonSteps {
       DAO_DESC,
       DAO_WEB_LINKS,
       nftHolder,
-      clientsInfo.operatorClient
+      clientsInfo.operatorClient,
+      CommonSteps.DEFAULT_QUORUM_THRESHOLD_IN_BSP,
+      CommonSteps.DEFAULT_VOTING_DELAY,
+      CommonSteps.DEFAULT_VOTING_PERIOD,
+      TokenId.fromString(dex.GOD_TOKEN_ID),
+      GovernorTokenMetaData.NFT_TOKEN_ID
     );
-
-    const governorAddresses =
-      await govTokenDao.getGovernorTokenTransferContractAddresses();
-    governorTT = new Governor(
-      governorAddresses.governorTokenTransferProxyId.toString()
-    );
+    await this.updateGovernor(govTokenDao);
   }
 
   @given(
@@ -74,7 +74,12 @@ export class DAONFTTokenTest extends CommonSteps {
         DAO_DESC,
         DAO_WEB_LINKS,
         nftHolder,
-        clientsInfo.operatorClient
+        clientsInfo.operatorClient,
+        CommonSteps.DEFAULT_QUORUM_THRESHOLD_IN_BSP,
+        CommonSteps.DEFAULT_VOTING_DELAY,
+        CommonSteps.DEFAULT_VOTING_PERIOD,
+        TokenId.fromString(dex.GOD_TOKEN_ID),
+        GovernorTokenMetaData.NFT_TOKEN_ID
       );
     } catch (e: any) {
       console.log("expected error while initializing NFTDAO");
@@ -359,5 +364,13 @@ export class DAONFTTokenTest extends CommonSteps {
   )
   public async cancelProposal(title: string) {
     await governorTT.cancelProposal(title, clientsInfo.operatorClient);
+  }
+
+  private async updateGovernor(dao: FTDAO) {
+    const governorAddresses =
+      await dao.getGovernorTokenTransferContractAddresses();
+    governorTT = new Governor(
+      governorAddresses.governorTokenTransferProxyId.toString()
+    );
   }
 }
