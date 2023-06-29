@@ -463,6 +463,19 @@ export default class Governor extends Base {
     return TokenId.fromSolidityAddress(tokenAddress);
   };
 
+  getVotes = async (client: Client = clientsInfo.operatorClient) => {
+    const args = new ContractFunctionParameters()
+      .addAddress(clientsInfo.operatorId.toSolidityAddress())
+      .addUint256(0);
+
+    const { result } = await this.execute(5_00_000, "getVotes", client, args);
+    const votingPower = result.getUint256(0);
+    console.log(
+      `- GovernorTokenCreate#${GET_TOKEN_ADDRESSES}(): votingPower = ${votingPower}\n`
+    );
+    return votingPower;
+  };
+
   private createParams(proposalId: string) {
     return new ContractFunctionParameters().addUint256(BigNumber(proposalId));
   }
