@@ -26,11 +26,10 @@ const DAO_WEB_LINKS = ["LINKEDIN", "https://linkedin.com"];
 
 const csDev = new ContractService();
 
-const tokenTransferDAOProxyContractId = csDev.getContractWithProxy(
-  ContractService.FT_DAO
-).transparentProxyId!;
+const ftDaoProxyContractId = csDev.getContractWithProxy(ContractService.FT_DAO)
+  .transparentProxyId!;
 
-let tokenTransferDAO = new FTDAO(tokenTransferDAOProxyContractId);
+let ftDao = new FTDAO(ftDaoProxyContractId);
 
 let governorTokenTransfer: Governor;
 
@@ -76,7 +75,7 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
     let blankTitleOrURL: boolean = false;
     try {
       if (name === "" || url === "") blankTitleOrURL = true;
-      await tokenTransferDAO.initialize(
+      await ftDao.initialize(
         adminAddress,
         name,
         url,
@@ -106,7 +105,7 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
     30000
   )
   public async initializeSafe(name: string, url: string) {
-    await tokenTransferDAO.initialize(
+    await ftDao.initialize(
       adminAddress,
       name,
       url,
@@ -120,7 +119,7 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
       daoTokenId,
       daoTokenId
     );
-    await this.updateGovernor(tokenTransferDAO);
+    await this.updateGovernor(ftDao);
   }
 
   @given(/User initialize DAO factory contract/, undefined, 60000)
@@ -174,8 +173,8 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
     30000
   )
   public async initializeContractsViaFactory() {
-    tokenTransferDAO = daoFactory.getGovernorTokenDaoInstance(daoAddress);
-    await this.updateGovernor(tokenTransferDAO);
+    ftDao = daoFactory.getGovernorTokenDaoInstance(daoAddress);
+    await this.updateGovernor(ftDao);
     //godHolder = (await daoFactory.getTokenHolderInstance(tokenId)) as GodHolder;
     factoryGODHolderContractId = godHolder.contractId;
   }
@@ -193,7 +192,7 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
     );
     tokens = new BigNumber(tokenAmount * CommonSteps.withPrecision);
     try {
-      proposalId = await tokenTransferDAO.createTokenTransferProposal(
+      proposalId = await ftDao.createTokenTransferProposal(
         title,
         fromAccount.toSolidityAddress(),
         toAccount.toSolidityAddress(),
@@ -340,7 +339,7 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
     console.log(
       `DAOGovernorTokenTransfer#createTokenTransferProposalWithHigherAmt() transfer amount  = ${amt}`
     );
-    proposalId = await tokenTransferDAO.createTokenTransferProposal(
+    proposalId = await ftDao.createTokenTransferProposal(
       title,
       fromAccount.toSolidityAddress(),
       toAccount.toSolidityAddress(),
