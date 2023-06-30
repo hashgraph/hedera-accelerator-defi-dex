@@ -114,6 +114,7 @@ export default class ContractMetadata {
       "HederaGnosisSafe",
       "HederaGnosisSafeProxyFactory",
       "ContractUpgradeDAO",
+      "BaseDAO",
     ]
   ) => {
     return await this._readAllContractInfo(contractNameList);

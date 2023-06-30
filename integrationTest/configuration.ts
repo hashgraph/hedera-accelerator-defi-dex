@@ -21,9 +21,6 @@ async function main() {
     clientsInfo.operatorKey
   );
   await configuration.getTransactionsFee();
-  await configuration.getCommaSeparatedUrlKeys();
-  await configuration.addUrlKey("newKey");
-  await configuration.getCommaSeparatedUrlKeys();
   await configuration.getHbarxAddress();
   await configuration.setHbarxAddress(
     dex.HBARX_TOKEN_ADDRESS,

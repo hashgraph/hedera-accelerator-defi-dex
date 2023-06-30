@@ -30,16 +30,16 @@ const PROPOSE_TRANSFER_TRANSACTION = "proposeTransferTransaction";
 const GET_HEDERA_GNOSIS_SAFE_CONTRACT_ADDRESS =
   "getHederaGnosisSafeContractAddress";
 
-export enum Operation {
-  CALL,
-  DELEGATE,
-}
-
 enum TransactionState {
   Pending,
   Approved,
   Executed,
 }
+
+const ADD_MEMBER = 1001;
+const REMOVE_MEMBER = 1002;
+const REPLACE_MEMBER = 1003;
+const CHANGE_THRESHOLD = 1004;
 
 const deployment = new Deployment();
 
@@ -82,10 +82,12 @@ export default class MultiSigDao extends BaseDao {
         .addAddress(gnosisProxy.toSolidityAddress())
         .addAddress(this.htsAddress);
       await this.execute(9_00_000, INITIALIZE, client, args);
-      console.log(`- MultiSigDao#${INITIALIZE}(): done\n`);
+      console.log(`- MultiSigDao#${INITIALIZE}(): ${this.contractId} done\n`);
       return;
     }
-    console.log(`- MultiSigDao#${INITIALIZE}(): already done\n`);
+    console.log(
+      `- MultiSigDao#${INITIALIZE}(): ${this.contractId} already done\n`
+    );
   }
 
   getHederaGnosisSafeContractAddress = async (
@@ -172,7 +174,6 @@ export default class MultiSigDao extends BaseDao {
   proposeTransaction = async (
     to: string,
     data: Uint8Array,
-    operation: Operation,
     transactionType: number = 10,
     client: Client = clientsInfo.operatorClient,
     title: string = TITLE,
@@ -182,7 +183,6 @@ export default class MultiSigDao extends BaseDao {
     const args = new ContractFunctionParameters()
       .addAddress(to)
       .addBytes(data)
-      .addUint8(operation)
       .addUint256(transactionType)
       .addString(title)
       .addString(description)
@@ -231,8 +231,7 @@ export default class MultiSigDao extends BaseDao {
     return await this.proposeTransaction(
       ContractId.fromString(gnosisSafe.contractId).toSolidityAddress(),
       ethers.utils.arrayify(data),
-      Operation.CALL,
-      10,
+      ADD_MEMBER,
       client
     );
   };
@@ -249,8 +248,7 @@ export default class MultiSigDao extends BaseDao {
     return await this.proposeTransaction(
       ContractId.fromString(gnosisSafe.contractId).toSolidityAddress(),
       ethers.utils.arrayify(data),
-      Operation.CALL,
-      10,
+      CHANGE_THRESHOLD,
       client
     );
   };
@@ -271,8 +269,7 @@ export default class MultiSigDao extends BaseDao {
     return await this.proposeTransaction(
       ContractId.fromString(gnosisSafe.contractId).toSolidityAddress(),
       ethers.utils.arrayify(data),
-      Operation.CALL,
-      10,
+      REMOVE_MEMBER,
       client
     );
   };
@@ -293,8 +290,7 @@ export default class MultiSigDao extends BaseDao {
     return await this.proposeTransaction(
       ContractId.fromString(gnosisSafe.contractId).toSolidityAddress(),
       ethers.utils.arrayify(data),
-      Operation.CALL,
-      10,
+      REPLACE_MEMBER,
       client
     );
   };
