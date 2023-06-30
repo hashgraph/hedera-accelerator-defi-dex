@@ -55,7 +55,7 @@ export class DAONFTTokenTest extends CommonSteps {
       CommonSteps.DEFAULT_VOTING_DELAY,
       CommonSteps.DEFAULT_VOTING_PERIOD,
       TokenId.fromString(dex.GOD_TOKEN_ID),
-      GovernorTokenMetaData.NFT_TOKEN_ID
+      dex.E2E_NFT_TOKEN_ID
     );
     await this.updateGovernor(govTokenDao);
   }
@@ -79,7 +79,7 @@ export class DAONFTTokenTest extends CommonSteps {
         CommonSteps.DEFAULT_VOTING_DELAY,
         CommonSteps.DEFAULT_VOTING_PERIOD,
         TokenId.fromString(dex.GOD_TOKEN_ID),
-        GovernorTokenMetaData.NFT_TOKEN_ID
+        dex.E2E_NFT_TOKEN_ID
       );
     } catch (e: any) {
       console.log("expected error while initializing NFTDAO");
