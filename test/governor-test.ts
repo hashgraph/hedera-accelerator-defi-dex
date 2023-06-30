@@ -302,9 +302,8 @@ describe("Governor Tests", function () {
     });
 
     it("Verify creator balance should be one token more after proposal execution", async function () {
-      const { governorText, token, creator, godHolder } = await loadFixture(
-        deployFixture
-      );
+      const { governorText, token, creator, godHolder, signers } =
+        await loadFixture(deployFixture);
 
       await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
       const { proposalId } = await getTextProposalId(governorText, creator);
@@ -312,7 +311,18 @@ describe("Governor Tests", function () {
       const BEFORE = await token.balanceOf(creator.address);
       const AFTER = BEFORE.add(TestHelper.toPrecision(1)).toNumber();
 
-      await governorText.castVotePublic(proposalId, 0, 1);
+      const tx = await governorText.castVotePublic(proposalId, 0, 1);
+      const events = await TestHelper.readEvents(tx, ["ProposalDetails"]);
+      const proposalDetails = events.pop();
+      expect(proposalDetails.args.votingInformation.voted).equals(true);
+      expect(proposalDetails.args.votingInformation.votedUser).equals(
+        signers[0].address
+      );
+      expect(proposalDetails.args.votingInformation.forVotes).equals(
+        1000000000
+      );
+      expect(proposalDetails.args.votingInformation.againstVotes).equals(0);
+      expect(proposalDetails.args.votingInformation.abstainVotes).equals(0);
       await TestHelper.mineNBlocks(BLOCKS_COUNT);
 
       await verifyAccountBalance(token, creator.address, BEFORE);
@@ -649,11 +659,11 @@ describe("Governor Tests", function () {
       await hederaService.setPassTransactionCount(0); // 0 pass transaction
       await hederaService.setRevertCreateToken(true);
       await expect(governorToken.executeProposal(TITLE)).to.revertedWith(
-        "GovernorTokenCreate: Token creation failed."
+        "GTC: Token creation failed."
       );
       await hederaService.setRevertCreateToken(false);
       await expect(governorToken.executeProposal(TITLE)).to.revertedWith(
-        "GovernorTokenCreate: Token creation failed."
+        "GTC: Token creation failed."
       );
     });
 
@@ -691,9 +701,7 @@ describe("Governor Tests", function () {
           governorToken
             .connect(creator)
             .callStatic.mintToken(proposalId, qtyToMint)
-        ).revertedWith(
-          "GovernorTokenCreate: Mint not allowed as token doesn't exist for this proposal."
-        );
+        ).revertedWith("GTC: mint, no proposal");
       });
 
       it("Given user executed token create proposal when minting fails from HTS then minting operation call should fail", async function () {
@@ -716,7 +724,7 @@ describe("Governor Tests", function () {
           governorToken
             .connect(creator)
             .callStatic.mintToken(proposalId, qtyToMint)
-        ).revertedWith("GovernorTokenCreate: Minting token failed");
+        ).revertedWith("GTC: Minting token failed");
       });
 
       it("Given user executed token create proposal when non-treasurer user try to mint then minting should fail", async function () {
@@ -733,7 +741,7 @@ describe("Governor Tests", function () {
           governorToken
             .connect(nonOwnerSigner)
             .callStatic.mintToken(proposalId, qtyToMint)
-        ).revertedWith("GovernorTokenCreate: Only treasurer can mint tokens.");
+        ).revertedWith("GTC: Only treasurer can mint");
       });
     });
 
@@ -776,9 +784,7 @@ describe("Governor Tests", function () {
           governorToken
             .connect(creator)
             .callStatic.burnToken(proposalId, qtyToBurn)
-        ).revertedWith(
-          "GovernorTokenCreate: Burn not allowed as token doesn't exist for this proposal."
-        );
+        ).revertedWith("GTC: burn, no proposal.");
       });
 
       it("Given user executed token create proposal when burning fails from HTS then minting operation call should fail", async function () {
@@ -801,7 +807,7 @@ describe("Governor Tests", function () {
           governorToken
             .connect(creator)
             .callStatic.burnToken(proposalId, qtyToBurn)
-        ).revertedWith("GovernorTokenCreate: Burn token failed");
+        ).revertedWith("GTC: Burn token failed");
       });
 
       it("Given user executed token create proposal when non-treasurer user try to burn then burning should fail", async function () {
@@ -818,7 +824,7 @@ describe("Governor Tests", function () {
           governorToken
             .connect(nonOwnerSigner)
             .callStatic.burnToken(proposalId, qtyToBurn)
-        ).revertedWith("GovernorTokenCreate: Only treasurer can burn tokens.");
+        ).revertedWith("GTC: Only treasurer can burn");
       });
     });
 
@@ -837,9 +843,7 @@ describe("Governor Tests", function () {
           governorToken
             .connect(creator)
             .transferToken(proposalId, signers[1].address, qtyToTransfer)
-        ).revertedWith(
-          "GovernorTokenCreate: Token quantity to transfer should be greater than zero."
-        );
+        ).revertedWith("GTC: Token qty to transfer should be > 0");
       });
 
       it("Given user executed token create proposal when user try to transfer only treasurer is allowed", async function () {
@@ -887,9 +891,7 @@ describe("Governor Tests", function () {
           governorToken
             .connect(creator)
             .transferToken(proposalId, signers[1].address, qtyToTransfer)
-        ).revertedWith(
-          "GovernorTokenCreate: Contract doesn't have sufficient balance please take treasurer help to mint it."
-        );
+        ).revertedWith("GTC: Contract doesn't have balance, mint it.");
       });
 
       it("Given user executed token create proposal when user try to transfer only treasurer is allowed", async function () {
@@ -912,7 +914,7 @@ describe("Governor Tests", function () {
           governorToken
             .connect(creator)
             .transferToken(proposalId, signers[1].address, qtyToTransfer)
-        ).revertedWith("GovernorTokenCreate: Token transfer failed.");
+        ).revertedWith("GTC: Token transfer failed.");
       });
 
       it("Given user executed token create proposal when non-treasurer try to transfer then transfer should fail", async function () {
@@ -929,9 +931,7 @@ describe("Governor Tests", function () {
           governorToken
             .connect(nonTreasurer)
             .transferToken(proposalId, signers[1].address, qtyToTransfer)
-        ).revertedWith(
-          "GovernorTokenCreate: Only treasurer can transfer tokens."
-        );
+        ).revertedWith("GTC: Only treasurer can transfer tokens.");
       });
 
       it("Given user not executed token create proposal when treasurer try to transfer then transfer should fail", async function () {
@@ -951,7 +951,7 @@ describe("Governor Tests", function () {
             .connect(creator)
             .transferToken(proposalId, signers[1].address, qtyToTransfer)
         ).revertedWith(
-          "GovernorTokenCreate: Token transfer not allowed as token doesn't exist for this proposal."
+          "GTC: Token transfer not allowed as no token for this proposal."
         );
       });
 
@@ -996,15 +996,11 @@ describe("Governor Tests", function () {
 
       await expect(
         governorToken.connect(creator).callStatic.mintToken(proposalId, 2)
-      ).revertedWith(
-        "GovernorTokenCreate: Mint not allowed as token doesn't exist for this proposal."
-      );
+      ).revertedWith("GTC: mint, no proposal");
 
       await expect(
         governorToken.connect(creator).callStatic.burnToken(proposalId, 1)
-      ).revertedWith(
-        "GovernorTokenCreate: Burn not allowed as token doesn't exist for this proposal."
-      );
+      ).revertedWith("GTC: burn, no proposal.");
     });
 
     it("Verify contract should return a correct token address", async function () {
