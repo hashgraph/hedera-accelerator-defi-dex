@@ -138,16 +138,6 @@ abstract contract GovernorCountingSimpleInternal is
             EMPTY_VOTERS_LIST
         );
 
-        VotingInformation memory votingInfo;
-        votingInfo.quorumValue = quorum(0);
-        votingInfo.isQuorumReached = false;
-        votingInfo.proposalState = state(proposalId);
-        votingInfo.voted = false;
-        votingInfo.votedUser = msg.sender;
-        votingInfo.abstainVotes = 0;
-        votingInfo.forVotes = 0;
-        votingInfo.againstVotes = 0;
-
         Duration memory duration;
         duration.startBlock = proposalSnapshot(proposalId);
         duration.endBlock = proposalDeadline(proposalId);
@@ -160,10 +150,32 @@ abstract contract GovernorCountingSimpleInternal is
             link,
             data,
             duration,
-            votingInfo
+            getVotingInformation(proposalId)
         );
 
         return proposalId;
+    }
+
+    function getVotingInformation(
+        uint256 proposalId
+    ) private view returns (VotingInformation memory) {
+        (
+            uint256 againstVotes,
+            uint256 forVotes,
+            uint256 abstainVotes
+        ) = proposalVotes(proposalId);
+
+        VotingInformation memory votingInfo;
+        votingInfo.quorumValue = quorum(0);
+        votingInfo.isQuorumReached = _quorumReached(proposalId);
+        votingInfo.proposalState = state(proposalId);
+        votingInfo.voted = hasVoted(proposalId, msg.sender);
+        votingInfo.votedUser = msg.sender;
+        votingInfo.abstainVotes = abstainVotes;
+        votingInfo.forVotes = forVotes;
+        votingInfo.againstVotes = againstVotes;
+
+        return votingInfo;
     }
 
     function getProposalDetails(
@@ -185,30 +197,23 @@ abstract contract GovernorCountingSimpleInternal is
         )
     {
         ProposalInfo memory proposalInfo = _getProposalInfoIfExist(proposalId);
-        (againstVotes, forVotes, abstainVotes) = proposalVotes(proposalId);
-
-        VotingInformation memory votingInfo;
-        votingInfo.quorumValue = quorum(0);
-        votingInfo.isQuorumReached = _quorumReached(proposalId);
-        votingInfo.proposalState = state(proposalId);
-        votingInfo.voted = hasVoted(proposalId, msg.sender);
-        votingInfo.votedUser = msg.sender;
-        votingInfo.abstainVotes = againstVotes;
-        votingInfo.forVotes = forVotes;
-        votingInfo.againstVotes = abstainVotes;
-
-        Duration memory duration;
-        duration.startBlock = proposalSnapshot(proposalId);
-        duration.endBlock = proposalDeadline(proposalId);
+        VotingInformation memory votingInfo = getVotingInformation(proposalId);
 
         quorumValue = votingInfo.quorumValue;
         isQuorumReached = votingInfo.isQuorumReached;
         proposalState = votingInfo.proposalState;
         voted = votingInfo.voted;
+        againstVotes = votingInfo.againstVotes;
+        forVotes = votingInfo.forVotes;
+        abstainVotes = votingInfo.abstainVotes;
         creator = proposalInfo.creator;
         title = proposalInfo.title;
         descripition = proposalInfo.description;
         link = proposalInfo.link;
+
+        Duration memory duration;
+        duration.startBlock = proposalSnapshot(proposalId);
+        duration.endBlock = proposalDeadline(proposalId);
 
         emit ProposalDetails(
             proposalId,
@@ -220,24 +225,6 @@ abstract contract GovernorCountingSimpleInternal is
             duration,
             votingInfo
         );
-    }
-
-    function votingDelay()
-        public
-        view
-        override(IGovernorUpgradeable, GovernorSettingsUpgradeable)
-        returns (uint256)
-    {
-        return super.votingDelay();
-    }
-
-    function votingPeriod()
-        public
-        view
-        override(IGovernorUpgradeable, GovernorSettingsUpgradeable)
-        returns (uint256)
-    {
-        return super.votingPeriod();
     }
 
     function proposalThreshold()
