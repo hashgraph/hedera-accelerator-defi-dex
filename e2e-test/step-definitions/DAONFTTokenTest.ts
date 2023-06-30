@@ -8,7 +8,6 @@ import {
 } from "@hashgraph/sdk";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { ContractService } from "../../deployment/service/ContractService";
-import { InstanceProvider } from "../../utils/InstanceProvider";
 import { expect } from "chai";
 import { binding, given, then, when } from "cucumber-tsflow";
 
@@ -26,7 +25,7 @@ const adminAddress: string = clientsInfo.operatorId.toSolidityAddress();
 const DAO_DESC = "Lorem Ipsum is simply dummy text";
 const DAO_WEB_LINKS = ["LINKEDIN", "https://linkedin.com"];
 
-let govTokenDao: FTDAO;
+let ftDao: FTDAO;
 let governorTT: Governor;
 let nftHolder: NFTHolder;
 let errorMsg: string;
@@ -43,7 +42,7 @@ export class DAONFTTokenTest extends CommonSteps {
     30000
   )
   public async initializeNFTDAOSafe(name: string, url: string) {
-    await govTokenDao.initialize(
+    await ftDao.initialize(
       adminAddress,
       name,
       url,
@@ -57,7 +56,7 @@ export class DAONFTTokenTest extends CommonSteps {
       TokenId.fromString(dex.GOD_TOKEN_ID),
       dex.E2E_NFT_TOKEN_ID
     );
-    await this.updateGovernor(govTokenDao);
+    await this.updateGovernor(ftDao);
   }
 
   @given(
@@ -67,7 +66,7 @@ export class DAONFTTokenTest extends CommonSteps {
   )
   public async initializeNFTDAOFail(name: string, url: string) {
     try {
-      await govTokenDao.initialize(
+      await ftDao.initialize(
         adminAddress,
         name,
         url,
@@ -131,7 +130,7 @@ export class DAONFTTokenTest extends CommonSteps {
   )
   public async createProposal(title: string, tokenAmt: number) {
     tokens = tokenAmt * CommonSteps.withPrecision;
-    proposalId = await govTokenDao.createTokenTransferProposal(
+    proposalId = await ftDao.createTokenTransferProposal(
       title,
       clientsInfo.treasureId.toSolidityAddress(),
       clientsInfo.operatorId.toSolidityAddress(),
@@ -152,7 +151,7 @@ export class DAONFTTokenTest extends CommonSteps {
     const amt = Number(
       fromAcctBal.plus(new BigNumber(1 * CommonSteps.withPrecision))
     );
-    proposalId = await govTokenDao.createTokenTransferProposal(
+    proposalId = await ftDao.createTokenTransferProposal(
       title,
       clientsInfo.treasureId.toSolidityAddress(),
       clientsInfo.operatorId.toSolidityAddress(),
@@ -169,7 +168,7 @@ export class DAONFTTokenTest extends CommonSteps {
   )
   public async createProposalFail(title: string, tokenAmt: number) {
     try {
-      proposalId = await govTokenDao.createTokenTransferProposal(
+      proposalId = await ftDao.createTokenTransferProposal(
         title,
         clientsInfo.treasureId.toSolidityAddress(),
         clientsInfo.operatorId.toSolidityAddress(),
@@ -252,7 +251,7 @@ export class DAONFTTokenTest extends CommonSteps {
       ContractService.FT_DAO
     ).transparentProxyId!;
 
-    govTokenDao = new FTDAO(tokenTransferDAOProxyContractId);
+    ftDao = new FTDAO(tokenTransferDAOProxyContractId);
 
     const nftHolderProxyContractId = csDev.getContractWithProxy(
       csDev.nftHolderContract
