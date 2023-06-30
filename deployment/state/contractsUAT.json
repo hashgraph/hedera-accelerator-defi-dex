@@ -79,15 +79,6 @@
     "transparentProxyId": "0.0.14831499"
   },
   {
-    "name": "nftdaofactory",
-    "id": "0.0.14831470",
-    "address": "0x0000000000000000000000000000000000e24f6e",
-    "timestamp": "2023-06-19T11:17:11.439Z",
-    "hash": "026a57562d3464f67172f7a5dcfda533",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000e24f8d",
-    "transparentProxyId": "0.0.14831501"
-  },
-  {
     "name": "nfttokenholderfactory",
     "id": "0.0.14831463",
     "address": "0x0000000000000000000000000000000000e24f67",
@@ -205,12 +196,30 @@
     "transparentProxyId": "0.0.14994555"
   },
   {
+    "name": "ftdao",
+    "id": "0.0.15021369",
+    "address": "0x0000000000000000000000000000000000e53539",
+    "timestamp": "2023-06-30T10:42:41.565Z",
+    "hash": "0b822af7e01b4fd0992bd9776202eb0d",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000e5353e",
+    "transparentProxyId": "0.0.15021374"
+  },
+  {
     "name": "ftdaofactory",
-    "id": "0.0.14994650",
-    "address": "0x0000000000000000000000000000000000e4ccda",
-    "timestamp": "2023-06-27T09:01:43.658Z",
-    "hash": "d5f28caa0983238dd51ad7032bb4ce46",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000e4ccdc",
-    "transparentProxyId": "0.0.14994652"
+    "id": "0.0.15021383",
+    "address": "0x0000000000000000000000000000000000e53547",
+    "timestamp": "2023-06-30T10:44:30.595Z",
+    "hash": "4529ff38782de5ccf69cdfc9191bce63",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000e53549",
+    "transparentProxyId": "0.0.15021385"
+  },
+  {
+    "name": "nftdaofactory",
+    "id": "0.0.15021409",
+    "address": "0x0000000000000000000000000000000000e53561",
+    "timestamp": "2023-06-30T10:53:46.503Z",
+    "hash": "91b53d6e773b56141cef7ebd77d8853d",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000e53565",
+    "transparentProxyId": "0.0.15021413"
   }
 ]
