@@ -3,7 +3,6 @@ import { TokenId, ContractId } from "@hashgraph/sdk";
 import { executeDAOFlow } from "../../integrationTest/dao/ftDaoFactory";
 
 import DAOFactory from "../../e2e-test/business/factories/DAOFactory";
-import Token from "markdown-it/lib/token";
 
 async function main() {
   const input = Helper.readWorkflowInputs();

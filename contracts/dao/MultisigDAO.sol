@@ -84,6 +84,7 @@ contract MultiSigDAO is BaseDAO, RoleBasedAccess {
         return transactionInfo;
     }
 
+    // we are only supporting the 'call' not 'delegatecall' from dao
     function proposeTransaction(
         address _to,
         bytes memory _data,

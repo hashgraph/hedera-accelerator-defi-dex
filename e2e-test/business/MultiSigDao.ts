@@ -1,5 +1,6 @@
 import Base from "./Base";
 import BaseDao from "./BaseDao";
+import HederaGnosisSafe from "./HederaGnosisSafe";
 import Common from "./Common";
 
 import { ethers } from "ethers";
@@ -15,7 +16,6 @@ import {
   ContractFunctionParameters,
   PrivateKey,
 } from "@hashgraph/sdk";
-import HederaGnosisSafe from "./HederaGnosisSafe";
 
 const TITLE = "TITLE";
 const DESCRIPTION = "DESCRIPTION";
@@ -223,14 +223,14 @@ export default class MultiSigDao extends BaseDao {
     gnosisSafe: HederaGnosisSafe,
     client: Client = clientsInfo.operatorClient
   ) => {
-    const safeInterface = await gnosisSafe.getHederaGnosisSafeInterface();
-    const data = safeInterface.encodeFunctionData("addOwnerWithThreshold", [
-      newOwnerAccountId.toSolidityAddress(),
-      threshold,
-    ]);
+    const data = await this.encodeFunctionData(
+      ContractService.SAFE,
+      "addOwnerWithThreshold",
+      [newOwnerAccountId.toSolidityAddress(), threshold]
+    );
     return await this.proposeTransaction(
       ContractId.fromString(gnosisSafe.contractId).toSolidityAddress(),
-      ethers.utils.arrayify(data),
+      data.bytes,
       ADD_MEMBER,
       client
     );
@@ -241,13 +241,14 @@ export default class MultiSigDao extends BaseDao {
     gnosisSafe: HederaGnosisSafe,
     client: Client = clientsInfo.operatorClient
   ) => {
-    const safeInterface = await gnosisSafe.getHederaGnosisSafeInterface();
-    const data = safeInterface.encodeFunctionData("changeThreshold", [
-      threshold,
-    ]);
+    const data = await this.encodeFunctionData(
+      ContractService.SAFE,
+      "changeThreshold",
+      [threshold]
+    );
     return await this.proposeTransaction(
       ContractId.fromString(gnosisSafe.contractId).toSolidityAddress(),
-      ethers.utils.arrayify(data),
+      data.bytes,
       CHANGE_THRESHOLD,
       client
     );
@@ -260,15 +261,18 @@ export default class MultiSigDao extends BaseDao {
     gnosisSafe: HederaGnosisSafe,
     client: Client = clientsInfo.operatorClient
   ) => {
-    const safeInterface = await gnosisSafe.getHederaGnosisSafeInterface();
-    const data = safeInterface.encodeFunctionData("removeOwner", [
-      previousOwnerAccountId.toSolidityAddress(),
-      ownerAccountId.toSolidityAddress(),
-      threshold,
-    ]);
+    const data = await this.encodeFunctionData(
+      ContractService.SAFE,
+      "removeOwner",
+      [
+        previousOwnerAccountId.toSolidityAddress(),
+        ownerAccountId.toSolidityAddress(),
+        threshold,
+      ]
+    );
     return await this.proposeTransaction(
       ContractId.fromString(gnosisSafe.contractId).toSolidityAddress(),
-      ethers.utils.arrayify(data),
+      data.bytes,
       REMOVE_MEMBER,
       client
     );
@@ -281,15 +285,18 @@ export default class MultiSigDao extends BaseDao {
     gnosisSafe: HederaGnosisSafe,
     client: Client = clientsInfo.operatorClient
   ) => {
-    const safeInterface = await gnosisSafe.getHederaGnosisSafeInterface();
-    const data = safeInterface.encodeFunctionData("swapOwner", [
-      previousOwnerAccountId.toSolidityAddress(),
-      oldOwnerAccountId.toSolidityAddress(),
-      newOwnerAccountId.toSolidityAddress(),
-    ]);
+    const data = await this.encodeFunctionData(
+      ContractService.SAFE,
+      "swapOwner",
+      [
+        previousOwnerAccountId.toSolidityAddress(),
+        oldOwnerAccountId.toSolidityAddress(),
+        newOwnerAccountId.toSolidityAddress(),
+      ]
+    );
     return await this.proposeTransaction(
       ContractId.fromString(gnosisSafe.contractId).toSolidityAddress(),
-      ethers.utils.arrayify(data),
+      data.bytes,
       REPLACE_MEMBER,
       client
     );

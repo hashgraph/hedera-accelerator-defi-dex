@@ -1,5 +1,4 @@
 import Base from "./Base";
-import ContractMetadata from "../../utils/ContractMetadata";
 
 import { clientsInfo } from "../../utils/ClientManagement";
 import { Client, ContractFunctionParameters } from "@hashgraph/sdk";
@@ -34,10 +33,8 @@ export default class BaseDAO extends Base {
 
   getDaoInfo = async (client: Client = clientsInfo.operatorClient) => {
     const { result } = await this.execute(3_00_000, GET_DAO_INFO, client);
-    const baseDAOInterface = await this.getBaseDAOInterface();
-    const output = baseDAOInterface.decodeFunctionResult(
-      GET_DAO_INFO,
-      result.asBytes()
+    const output = (
+      await this.decodeFunctionResult("BaseDAO", GET_DAO_INFO, result.asBytes())
     )[0];
     const info = {
       name: output.name,
@@ -50,8 +47,4 @@ export default class BaseDAO extends Base {
     console.table(info);
     console.log("\n");
   };
-
-  private async getBaseDAOInterface() {
-    return await new ContractMetadata().getContractInterface("BaseDAO");
-  }
 }

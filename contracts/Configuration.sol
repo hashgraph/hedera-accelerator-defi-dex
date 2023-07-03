@@ -9,8 +9,6 @@ contract Configuration is OwnableUpgradeable {
     EnumerableMapUpgradeable.UintToUintMap private feeMap;
     address private hbarxAddress;
 
-    error UrlKeyAlreadyExist(string key, string message);
-
     function initialize() external initializer {
         __Ownable_init();
         _populateFeeMap();
