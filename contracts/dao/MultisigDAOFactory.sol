@@ -18,6 +18,7 @@ contract MultisigDAOFactory is IErrors, IEvents, OwnableUpgradeable {
     event DAOCreated(
         address daoAddress,
         address safeAddress,
+        address multiSendAddress,
         CreateDAOInputs inputs
     );
 
@@ -116,6 +117,7 @@ contract MultisigDAOFactory is IErrors, IEvents, OwnableUpgradeable {
         emit DAOCreated(
             createdDAOAddress,
             address(hederaGnosisSafe),
+            address(multiSend),
             _createDAOInputs
         );
         return createdDAOAddress;

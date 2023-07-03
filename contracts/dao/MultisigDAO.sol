@@ -34,18 +34,9 @@ contract MultiSigDAO is BaseDAO, RoleBasedAccess {
     bytes4 private constant TRANSFER_TOKEN_FROM_SAFE_SELECTOR =
         bytes4(keccak256("transferTokenViaSafe(address,address,uint256)"));
 
-    modifier onlySystemUser() {
-        require(
-            systemUser == _msgSender(),
-            "MultiSigDAO: caller is not the system user"
-        );
-        _;
-    }
-
     uint256 private constant TXN_TYPE_TOKEN_TRANSFER = 1;
     uint256 private constant TXN_TYPE_BATCH = 2;
 
-    address private systemUser;
     HederaMultiSend private multiSend;
     IHederaService private hederaService;
     HederaGnosisSafe private hederaGnosisSafe;
@@ -158,8 +149,47 @@ contract MultiSigDAO is BaseDAO, RoleBasedAccess {
             proposeTransaction(
                 address(hederaGnosisSafe),
                 data,
-                call,
                 1,
+                title,
+                desc,
+                linkToDiscussion
+            );
+    }
+
+    function proposeBatchTransaction(
+        address[] memory _targets,
+        uint256[] memory _values,
+        bytes[] memory _calldatas,
+        string memory title,
+        string memory desc,
+        string memory linkToDiscussion
+    ) public payable returns (bytes32) {
+        require(
+            _targets.length > 0 &&
+                _targets.length == _values.length &&
+                _targets.length == _calldatas.length,
+            "MultiSigDAO: invalid transaction length"
+        );
+        bytes memory transactionsBytes;
+        for (uint256 i = 0; i < _targets.length; i++) {
+            transactionsBytes = abi.encodePacked(
+                transactionsBytes,
+                uint8(0),
+                _targets[i],
+                _values[i],
+                _calldatas[i].length,
+                _calldatas[i]
+            );
+        }
+        bytes memory data = abi.encodeWithSelector(
+            MULTI_SEND_TXN_SELECTOR,
+            transactionsBytes
+        );
+        return
+            proposeTransaction(
+                address(multiSend),
+                data,
+                TXN_TYPE_BATCH,
                 title,
                 desc,
                 linkToDiscussion
