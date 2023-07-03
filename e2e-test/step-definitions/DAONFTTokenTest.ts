@@ -42,6 +42,7 @@ export class DAONFTTokenTest extends CommonSteps {
     30000
   )
   public async initializeNFTDAOSafe(name: string, url: string) {
+    await Helper.delay(15000); // allowing some delay for propagating initialize event from previous call
     await ftDao.initialize(
       adminAddress,
       name,
