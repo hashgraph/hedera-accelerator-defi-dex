@@ -4,18 +4,17 @@ pragma solidity ^0.8.18;
 import "./BaseDAO.sol";
 import "../common/IHederaService.sol";
 import "../common/RoleBasedAccess.sol";
+import "../gnosis/HederaMultiSend.sol";
 import "../gnosis/HederaGnosisSafe.sol";
 import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
 contract MultiSigDAO is BaseDAO, RoleBasedAccess {
     event TransactionCreated(bytes32 txnHash, TransactionInfo info);
-
     enum TransactionState {
         Pending,
         Approved,
         Executed
     }
-
     struct TransactionInfo {
         address to;
         uint256 value;
@@ -29,10 +28,16 @@ contract MultiSigDAO is BaseDAO, RoleBasedAccess {
         address creator;
     }
 
-    // HederaGnosisSafe#transferTokenViaSafe(address token, address receiver, uint256 amount)
+    bytes4 private constant MULTI_SEND_TXN_SELECTOR =
+        bytes4(keccak256("multiSend(bytes)"));
+
     bytes4 private constant TRANSFER_TOKEN_FROM_SAFE_SELECTOR =
         bytes4(keccak256("transferTokenViaSafe(address,address,uint256)"));
 
+    uint256 private constant TXN_TYPE_TOKEN_TRANSFER = 1;
+    uint256 private constant TXN_TYPE_BATCH = 2;
+
+    HederaMultiSend private multiSend;
     IHederaService private hederaService;
     HederaGnosisSafe private hederaGnosisSafe;
     mapping(bytes32 => TransactionInfo) private transactions;
@@ -44,12 +49,14 @@ contract MultiSigDAO is BaseDAO, RoleBasedAccess {
         string memory _description,
         string[] memory _webLinks,
         HederaGnosisSafe _hederaGnosisSafe,
-        IHederaService _hederaService
+        IHederaService _hederaService,
+        HederaMultiSend _multiSend
     ) external initializer {
+        systemUser = msg.sender;
         hederaService = _hederaService;
         hederaGnosisSafe = _hederaGnosisSafe;
+        multiSend = _multiSend;
         __BaseDAO_init(_admin, _name, _logoUrl, _description, _webLinks);
-        systemUser = msg.sender;
     }
 
     function getHederaGnosisSafeContractAddress()
@@ -149,13 +156,63 @@ contract MultiSigDAO is BaseDAO, RoleBasedAccess {
             );
     }
 
+    function proposeBatchTransaction(
+        address[] memory _targets,
+        uint256[] memory _values,
+        bytes[] memory _calldatas,
+        string memory title,
+        string memory desc,
+        string memory linkToDiscussion
+    ) public payable returns (bytes32) {
+        require(
+            _targets.length > 0 &&
+                _targets.length == _values.length &&
+                _targets.length == _calldatas.length,
+            "MultiSigDAO: invalid transaction length"
+        );
+        bytes memory transactionsBytes;
+        for (uint256 i = 0; i < _targets.length; i++) {
+            transactionsBytes = abi.encodePacked(
+                transactionsBytes,
+                uint8(0),
+                _targets[i],
+                _values[i],
+                _calldatas[i].length,
+                _calldatas[i]
+            );
+        }
+        bytes memory data = abi.encodeWithSelector(
+            MULTI_SEND_TXN_SELECTOR,
+            transactionsBytes
+        );
+        return
+            proposeTransaction(
+                address(multiSend),
+                data,
+                TXN_TYPE_BATCH,
+                title,
+                desc,
+                linkToDiscussion
+            );
+    }
+
     function upgradeHederaService(
         IHederaService newHederaService
     ) external onlySystemUser {
         hederaService = newHederaService;
     }
 
+    function upgradeMultiSend(
+        HederaMultiSend _multiSend
+    ) external onlySystemUser {
+        multiSend = _multiSend;
+    }
+
     function getHederaServiceVersion() external view returns (IHederaService) {
         return hederaService;
+    }
+
+    function getMultiSendContractAddress() external view returns (address) {
+        return address(multiSend);
     }
 }
