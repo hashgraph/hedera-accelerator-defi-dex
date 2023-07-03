@@ -121,7 +121,7 @@ export default class Base {
     return this.csDev.getContract(ContractService.MULTI_SEND).address;
   }
 
-  protected async encodeFunctionData(
+  public async encodeFunctionData(
     contractName: string,
     functionName: string,
     data: any[]

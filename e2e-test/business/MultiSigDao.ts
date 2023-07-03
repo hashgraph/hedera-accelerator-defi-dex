@@ -2,7 +2,6 @@ import Base from "./Base";
 import Common from "./Common";
 import BaseDao from "./BaseDao";
 import HederaGnosisSafe from "./HederaGnosisSafe";
-import Common from "./Common";
 
 import { ethers } from "ethers";
 import { Helper } from "../../utils/Helper";
@@ -31,6 +30,7 @@ const PROPOSE_BATCH_TRANSACTION = "proposeBatchTransaction";
 const PROPOSE_TRANSFER_TRANSACTION = "proposeTransferTransaction";
 const GET_HEDERA_GNOSIS_SAFE_CONTRACT_ADDRESS =
   "getHederaGnosisSafeContractAddress";
+const GET_MULTI_SEND_CONTRACT_ADDRESS = "getMultiSendContractAddress";
 
 enum TransactionState {
   Pending,
@@ -104,6 +104,21 @@ export default class MultiSigDao extends BaseDao {
     const address = result.getAddress(0);
     console.log(
       `- MultiSigDao#${GET_HEDERA_GNOSIS_SAFE_CONTRACT_ADDRESS}(): address = ${address}\n`
+    );
+    return ContractId.fromSolidityAddress(address);
+  };
+
+  getMultiSendContractAddressFromDAO = async (
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    const { result } = await this.execute(
+      50_000,
+      GET_MULTI_SEND_CONTRACT_ADDRESS,
+      client
+    );
+    const address = result.getAddress(0);
+    console.log(
+      `- MultiSigDao#${GET_MULTI_SEND_CONTRACT_ADDRESS}(): address = ${address}\n`
     );
     return ContractId.fromSolidityAddress(address);
   };
