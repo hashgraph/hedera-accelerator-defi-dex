@@ -1,6 +1,6 @@
 import { Helper } from "../../utils/Helper";
-import { ContractId } from "@hashgraph/sdk";
-import { executeTokenTransferDAOFlow } from "../../integrationTest/governanceDAOFactory";
+import { TokenId, ContractId } from "@hashgraph/sdk";
+import { executeDAOFlow } from "../../integrationTest/dao/ftDaoFactory";
 
 import DAOFactory from "../../e2e-test/business/factories/DAOFactory";
 
@@ -9,10 +9,11 @@ async function main() {
 
   // below calls are validating input data only
   const contractId = ContractId.fromString(input.contractId);
-  ContractId.fromSolidityAddress(input.daoAddress);
+  const daoId = ContractId.fromSolidityAddress(input.daoAddress);
+  const tokenId = TokenId.fromSolidityAddress(input.tokenAddress);
 
   const daoFactory = new DAOFactory(contractId.toString(), false);
-  await executeTokenTransferDAOFlow(daoFactory, [input.daoAddress]);
+  await executeDAOFlow(daoFactory, daoId.toSolidityAddress(), tokenId);
 }
 
 main()

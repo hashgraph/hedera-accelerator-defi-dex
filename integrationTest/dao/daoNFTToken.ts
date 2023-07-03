@@ -17,7 +17,7 @@ const TOKEN_ID = TokenId.fromString(dex.TOKEN_LAB49_1);
 const adminAddress: string = clientsInfo.operatorId.toSolidityAddress();
 const DAO_ADMIN_CLIENT = clientsInfo.operatorClient;
 const DAO_DESC = "Lorem Ipsum is simply dummy text";
-const DAO_WEB_LINKS = ["LINKEDIN", "https://linkedin.com"];
+const DAO_WEB_LINKS = ["https://linkedin.com"];
 
 const deployment = new Deployment();
 const provider = InstanceProvider.getInstance();
@@ -50,14 +50,14 @@ async function main() {
 
   await executeGovernorTokenTransferFlow(nftHolder, tokenTransferDAO);
 
-  await tokenTransferDAO.addWebLink("GIT", "https://git.com", DAO_ADMIN_CLIENT);
-  await tokenTransferDAO.updateName(
+  DAO_WEB_LINKS.push("https://github.com");
+  await tokenTransferDAO.updateDaoInfo(
     "Governor Token Dao - New",
+    "dao url - New",
+    "desc - New",
+    DAO_WEB_LINKS,
     DAO_ADMIN_CLIENT
   );
-  await tokenTransferDAO.updateLogoURL("dao url - New", DAO_ADMIN_CLIENT);
-  await tokenTransferDAO.updateDescription("desc - New", DAO_ADMIN_CLIENT);
-  await tokenTransferDAO.getDaoDetail();
   await tokenTransferDAO.upgradeHederaService();
   console.log(`\nDone`);
 }

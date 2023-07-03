@@ -31,7 +31,7 @@ export const DAO_OWNERS_INFO = [
 
 export const DAO_NAME = dex.MULTI_SIG_DAO_ONE;
 export const DAO_LOGO = "https://defi-ui.hedera.com/";
-export const DAO_WEB_LINKS = ["LINKEDIN", "https://linkedin.com"];
+export const DAO_WEB_LINKS = ["https://linkedin.com"];
 export const DAO_DESC = "Lorem Ipsum is simply dummy text";
 export const DAO_OWNERS_ADDRESSES = DAO_OWNERS_INFO.map(
   (item: any) => item.address
@@ -46,19 +46,15 @@ async function main() {
   await initDAO(multiSigDAO);
   await executeDAO(multiSigDAO);
 
-  await multiSigDAO.addWebLink(
-    "TWITTER",
-    "https://twitter.com",
-    DAO_ADMIN_CLIENT
-  );
-  await multiSigDAO.updateName(DAO_NAME + "_NEW", DAO_ADMIN_CLIENT);
-  await multiSigDAO.updateLogoURL(DAO_LOGO + "daos", DAO_ADMIN_CLIENT);
-  await multiSigDAO.updateDescription(
+  await multiSigDAO.updateDaoInfo(
+    DAO_NAME + "_NEW",
+    DAO_LOGO + "daos",
     DAO_DESC + "and updated",
+    [...DAO_WEB_LINKS, "https://github.com"],
     DAO_ADMIN_CLIENT
   );
-  await multiSigDAO.getDaoDetail();
-  await multiSigDAO.upgradeHederaService();
+  await multiSigDAO.getDaoInfo();
+  await multiSigDAO.upgradeHederaService(clientsInfo.uiUserClient);
 }
 
 async function initDAO(dao: MultiSigDao) {

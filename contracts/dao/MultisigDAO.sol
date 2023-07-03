@@ -3,11 +3,11 @@ pragma solidity ^0.8.18;
 
 import "./BaseDAO.sol";
 import "../common/IHederaService.sol";
+import "../common/RoleBasedAccess.sol";
 import "../gnosis/HederaGnosisSafe.sol";
 import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
-contract MultiSigDAO is BaseDAO {
-    address private systemUser;
+contract MultiSigDAO is BaseDAO, RoleBasedAccess {
     event TransactionCreated(bytes32 txnHash, TransactionInfo info);
 
     enum TransactionState {
@@ -27,14 +27,6 @@ contract MultiSigDAO is BaseDAO {
         string description;
         string linkToDiscussion;
         address creator;
-    }
-
-    modifier onlySystemUser() {
-        require(
-            systemUser == _msgSender(),
-            "MultiSigDAO: caller is not the system user"
-        );
-        _;
     }
 
     // HederaGnosisSafe#transferTokenViaSafe(address token, address receiver, uint256 amount)
@@ -92,10 +84,10 @@ contract MultiSigDAO is BaseDAO {
         return transactionInfo;
     }
 
+    // we are only supporting the 'call' not 'delegatecall' from dao
     function proposeTransaction(
         address _to,
         bytes memory _data,
-        Enum.Operation _operation,
         uint256 _type,
         string memory title,
         string memory desc,
@@ -103,7 +95,7 @@ contract MultiSigDAO is BaseDAO {
     ) public payable returns (bytes32) {
         require(bytes(title).length != 0, "MultiSigDAO: title can't be blank");
         require(bytes(desc).length != 0, "MultiSigDAO: desc can't be blank");
-
+        Enum.Operation _operation = Enum.Operation.Call;
         (bytes32 txnHash, uint256 txnNonce) = hederaGnosisSafe.getTxnHash(
             _to,
             msg.value,
@@ -146,12 +138,10 @@ contract MultiSigDAO is BaseDAO {
             _receiver,
             _amount
         );
-        Enum.Operation call = Enum.Operation.Call;
         return
             proposeTransaction(
                 address(hederaGnosisSafe),
                 data,
-                call,
                 1,
                 title,
                 desc,

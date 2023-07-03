@@ -114,6 +114,7 @@ export default class ContractMetadata {
       "HederaGnosisSafe",
       "HederaGnosisSafeProxyFactory",
       "ContractUpgradeDAO",
+      "BaseDAO",
     ]
   ) => {
     return await this._readAllContractInfo(contractNameList);
@@ -127,8 +128,8 @@ export default class ContractMetadata {
     )!;
   };
 
-  public getContractInterface = async (contractName: string) => {
-    const info = (await this.getContractsInfo()).find(
+  public static getContractInterface = async (contractName: string) => {
+    const info = (await new ContractMetadata().getContractsInfo()).find(
       (contract: ContractInfo) =>
         contract.artifact.contractName.toLowerCase() ===
         contractName.toLowerCase()
