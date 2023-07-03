@@ -6,6 +6,8 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 describe("MultiSig tests", function () {
+  const TXN_TYPE_TRANSFER = 1;
+  const TXN_TYPE_BATCH = 2;
   const INVALID_TXN_HASH = ethers.utils.formatBytes32String("INVALID_TXN_HASH");
   const TOTAL = 100 * 1e8;
   const TRANSFER_AMOUNT = 10 * 1e8;
@@ -64,12 +66,12 @@ describe("MultiSig tests", function () {
     const txn = await multiSigDAOInstance.proposeTransaction(
       token,
       createTransferTransactionABIData(receiver, amount),
-      10,
+      TXN_TYPE_TRANSFER,
       title,
       description,
       LINK_TO_DISCUSSION
     );
-    return await verifyTransactionCreatedEvent(txn, 10);
+    return await verifyTransactionCreatedEvent(txn, TXN_TYPE_TRANSFER);
   }
 
   async function proposeTransferTransaction(
@@ -86,7 +88,7 @@ describe("MultiSig tests", function () {
       DESCRIPTION,
       LINK_TO_DISCUSSION
     );
-    return await verifyTransactionCreatedEvent(txn, 1, 0);
+    return await verifyTransactionCreatedEvent(txn, TXN_TYPE_TRANSFER);
   }
 
   function createTransferTransactionABIData(
@@ -836,6 +838,113 @@ describe("MultiSig tests", function () {
       );
       expect(userBalanceAfterTransactionExecution).equals(TRANSFER_AMOUNT);
     });
+
+    it("Verify propose batch transaction should be reverted with invalid inputs", async function () {
+      const { multiSigDAOInstance, signers, tokenInstance } = await loadFixture(
+        deployFixture
+      );
+      const receiver = signers[0].address;
+      const callData = createTransferTransactionABIData(
+        receiver,
+        TRANSFER_AMOUNT
+      );
+      const VALUES = [0, 0];
+      const TARGETS = [tokenInstance.address, tokenInstance.address];
+      const CALL_DATA_ARRAY = [callData, callData];
+      // 1- when target length is zero
+      await expect(
+        multiSigDAOInstance.proposeBatchTransaction(
+          [],
+          VALUES,
+          CALL_DATA_ARRAY.slice(0, 1),
+          TITLE,
+          DESCRIPTION,
+          LINK_TO_DISCUSSION
+        )
+      ).rejectedWith("MultiSigDAO: invalid transaction length");
+      // 2- when targets is less
+      await expect(
+        multiSigDAOInstance.proposeBatchTransaction(
+          TARGETS.slice(0, 1),
+          VALUES,
+          CALL_DATA_ARRAY,
+          TITLE,
+          DESCRIPTION,
+          LINK_TO_DISCUSSION
+        )
+      ).rejectedWith("MultiSigDAO: invalid transaction length");
+      // 3- when values is less
+      await expect(
+        multiSigDAOInstance.proposeBatchTransaction(
+          TARGETS,
+          VALUES.slice(0, 1),
+          CALL_DATA_ARRAY,
+          TITLE,
+          DESCRIPTION,
+          LINK_TO_DISCUSSION
+        )
+      ).rejectedWith("MultiSigDAO: invalid transaction length");
+      // 4- when call-data-array is less
+      await expect(
+        multiSigDAOInstance.proposeBatchTransaction(
+          TARGETS,
+          VALUES,
+          CALL_DATA_ARRAY.slice(0, 1),
+          TITLE,
+          DESCRIPTION,
+          LINK_TO_DISCUSSION
+        )
+      ).rejectedWith("MultiSigDAO: invalid transaction length");
+    });
+
+    it("Verify propose batch transaction should be succeeded", async function () {
+      const {
+        signers,
+        daoSigners,
+        tokenInstance,
+        multiSigDAOInstance,
+        hederaGnosisSafeProxyContract,
+      } = await loadFixture(deployFixture);
+
+      const receiverAccount = signers[1];
+      const callData = createTransferTransactionABIData(
+        receiverAccount.address,
+        TRANSFER_AMOUNT
+      );
+      const VALUES = [0, 0];
+      const TARGETS = [tokenInstance.address, tokenInstance.address];
+      const CALL_DATA_ARRAY = [callData, callData];
+      const pTxn = await multiSigDAOInstance.proposeBatchTransaction(
+        TARGETS,
+        VALUES,
+        CALL_DATA_ARRAY,
+        TITLE,
+        DESCRIPTION,
+        LINK_TO_DISCUSSION
+      );
+      const { txnHash, info } = await verifyTransactionCreatedEvent(
+        pTxn,
+        TXN_TYPE_BATCH
+      );
+      for (const signer of daoSigners) {
+        await hederaGnosisSafeProxyContract
+          .connect(signer)
+          .approveHash(txnHash);
+      }
+      expect(await tokenInstance.balanceOf(receiverAccount.address)).equals(0);
+      const eTxn = await hederaGnosisSafeProxyContract.executeTransaction(
+        info.to,
+        info.value,
+        info.data,
+        info.operation,
+        info.nonce
+      );
+      await verifyExecutionSuccessEvent(eTxn, txnHash);
+      expect(await tokenInstance.balanceOf(receiverAccount.address)).equals(
+        TRANSFER_AMOUNT * 2
+      );
+    });
+
     it("Verify propose transaction should be reverted when enough approvals not present", async function () {
       const {
         multiSigDAOInstance,
@@ -890,7 +999,7 @@ describe("MultiSig tests", function () {
         multiSigDAOInstance
           .connect(signers[3])
           .upgradeMultiSend(signers[3].address)
-      ).revertedWith("MultiSigDAO: caller is not the system user");
+      ).revertedWith("RoleBasedAccess: caller is not the system user");
     });
 
     it("Verify upgrade MultiSend service passes with system user", async function () {
@@ -898,7 +1007,7 @@ describe("MultiSig tests", function () {
 
       await expect(
         multiSigDAOInstance.upgradeMultiSend(signers[3].address)
-      ).not.revertedWith("MultiSigDAO: caller is not the system user");
+      ).not.revertedWith("RoleBasedAccess: caller is not the system user");
     });
   });
 });
