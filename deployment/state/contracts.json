@@ -197,12 +197,12 @@
   },
   {
     "name": "multisigdao",
-    "id": "0.0.14990208",
-    "address": "0x0000000000000000000000000000000000e4bb80",
-    "timestamp": "2023-06-26T15:52:31.619Z",
-    "hash": "587858781abb4cc499b0629e90ac45ab",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000e4bb82",
-    "transparentProxyId": "0.0.14990210"
+    "id": "0.0.15039898",
+    "address": "0x0000000000000000000000000000000000e57d9a",
+    "timestamp": "2023-07-03T11:52:41.732Z",
+    "hash": "6627fc8bbe28b58df6961a8623aca891",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000e57d9c",
+    "transparentProxyId": "0.0.15039900"
   },
   {
     "name": "configuration",
@@ -215,11 +215,18 @@
   },
   {
     "name": "multisigdaofactory",
-    "id": "0.0.15003721",
-    "address": "0x0000000000000000000000000000000000e4f049",
-    "timestamp": "2023-06-28T07:09:13.763Z",
-    "hash": "0bda0ada8d6c6aaffe3397cc647a3813",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000e4f04b",
-    "transparentProxyId": "0.0.15003723"
+    "id": "0.0.15039913",
+    "address": "0x0000000000000000000000000000000000e57da9",
+    "timestamp": "2023-07-03T11:55:48.871Z",
+    "hash": "1a2d33b16efada4ef16ea36480b5ae9c",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000e57dab",
+    "transparentProxyId": "0.0.15039915"
+  },
+  {
+    "name": "hederamultisend",
+    "id": "0.0.15039894",
+    "address": "0x0000000000000000000000000000000000e57d96",
+    "timestamp": "2023-07-03T11:51:57.199Z",
+    "hash": "74ad23cc6dbcd19c51c47791ad4c8f3d"
   }
 ]

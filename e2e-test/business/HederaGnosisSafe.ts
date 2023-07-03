@@ -31,7 +31,7 @@ export default class HederaGnosisSafe extends Base {
       .addBytes(_data)
       .addUint8(op)
       .addUint256(nonce);
-    const { result } = await this.execute(
+    const { result, record } = await this.execute(
       5_00_000,
       EXEC_TRANSACTION,
       client,
@@ -40,7 +40,7 @@ export default class HederaGnosisSafe extends Base {
     const hexBytes = ethers.utils.hexlify(result.asBytes());
     const isSuccess = result.getUint256(0).toNumber() === 1;
     console.log(
-      `- GnosisSafe#${EXEC_TRANSACTION}(): resultHex = ${hexBytes}, status = ${isSuccess} \n`
+      `- GnosisSafe#${EXEC_TRANSACTION}(): resultHex = ${hexBytes}, status = ${isSuccess}, TxnId = ${record.transactionId.toString()}\n`
     );
     return isSuccess;
   };

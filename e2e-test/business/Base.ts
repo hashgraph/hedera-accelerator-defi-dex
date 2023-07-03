@@ -117,7 +117,11 @@ export default class Base {
       .transparentProxyAddress!!;
   }
 
-  protected async encodeFunctionData(
+  protected getMultiSendContractAddress(): string {
+    return this.csDev.getContract(ContractService.MULTI_SEND).address;
+  }
+
+  public async encodeFunctionData(
     contractName: string,
     functionName: string,
     data: any[]

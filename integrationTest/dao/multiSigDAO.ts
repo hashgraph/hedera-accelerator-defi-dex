@@ -1,4 +1,5 @@
 import dex from "../../deployment/model/dex";
+import Common from "../../e2e-test/business/Common";
 import MultiSigDao from "../../e2e-test/business/MultiSigDao";
 import HederaGnosisSafe from "../../e2e-test/business/HederaGnosisSafe";
 
@@ -16,7 +17,18 @@ import {
 const csDev = new ContractService();
 
 const TOKEN = TokenId.fromString(dex.TOKEN_LAB49_1);
+const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
 const TOKEN_QTY = 1;
+const TXN_DETAILS_FOR_BATCH = {
+  TOKEN: GOD_TOKEN_ID,
+  FROM_CLIENT: clientsInfo.operatorClient,
+  FROM_ID: clientsInfo.operatorId,
+  FROM_KEY: clientsInfo.operatorKey,
+  TO_CLIENT: clientsInfo.uiUserClient,
+  TO_ID: clientsInfo.uiUserId,
+  TO_KEY: clientsInfo.uiUserKey,
+  AMOUNT: 1,
+};
 
 export const DAO_OWNERS_INFO = [
   {
@@ -119,11 +131,58 @@ export async function executeDAO(
     safeTxnExecutionClient
   );
   await multiSigDAO.state(transferTxnHash);
+
+  // TXN-2 batch
+  const batchTxnHash = await proposeBatchTransaction(multiSigDAO);
+  await multiSigDAO.getApprovalCounts(batchTxnHash);
+  const batchTxnInfo = await multiSigDAO.getTransactionInfo(batchTxnHash);
+  for (const daoOwner of ownersInfo) {
+    await gnosisSafe.approveHash(batchTxnHash, daoOwner.client);
+    await multiSigDAO.getApprovalCounts(batchTxnHash);
+  }
+  const multiSend = await multiSigDAO.getMultiSendContractAddressFromDAO();
+  await Common.setTokenAllowance(
+    TXN_DETAILS_FOR_BATCH.TOKEN,
+    multiSend.toString(),
+    TXN_DETAILS_FOR_BATCH.AMOUNT,
+    TXN_DETAILS_FOR_BATCH.FROM_ID,
+    TXN_DETAILS_FOR_BATCH.FROM_KEY,
+    TXN_DETAILS_FOR_BATCH.FROM_CLIENT
+  );
+  await gnosisSafe.executeTransaction(
+    batchTxnInfo.to,
+    batchTxnInfo.value,
+    batchTxnInfo.data,
+    batchTxnInfo.operation,
+    batchTxnInfo.nonce,
+    safeTxnExecutionClient
+  );
 }
 
 async function getGnosisSafeInstance(multiSigDAO: MultiSigDao) {
   const safeContractId = await multiSigDAO.getHederaGnosisSafeContractAddress();
   return new HederaGnosisSafe(safeContractId.toString());
+}
+
+async function proposeBatchTransaction(multiSigDAO: MultiSigDao) {
+  const targets = [
+    ContractId.fromString(TOKEN.toString()),
+    ContractId.fromString(TXN_DETAILS_FOR_BATCH.TOKEN.toString()),
+  ];
+
+  const callDataArray = [
+    await multiSigDAO.encodeFunctionData("IERC20", "totalSupply", []),
+    await multiSigDAO.encodeFunctionData("IERC20", "transferFrom", [
+      TXN_DETAILS_FOR_BATCH.FROM_ID.toSolidityAddress(),
+      TXN_DETAILS_FOR_BATCH.TO_ID.toSolidityAddress(),
+      TXN_DETAILS_FOR_BATCH.AMOUNT,
+    ]),
+  ].map((data: any) => data.bytes);
+  return await multiSigDAO.proposeBatchTransaction(
+    [0, 0], // 0 HBars
+    targets, // contract address
+    callDataArray // contract call data
+  );
 }
 
 if (require.main === module) {

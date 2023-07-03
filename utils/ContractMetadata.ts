@@ -50,6 +50,7 @@ export default class ContractMetadata {
     "NFTDAOFactory",
     "GODHolder",
     "NFTHolder",
+    "HederaMultiSend",
   ];
 
   static SUPPORTED_PROXY_OPTIONS = ["create", "update"];
@@ -115,6 +116,7 @@ export default class ContractMetadata {
       "HederaGnosisSafeProxyFactory",
       "ContractUpgradeDAO",
       "BaseDAO",
+      "IERC20",
     ]
   ) => {
     return await this._readAllContractInfo(contractNameList);

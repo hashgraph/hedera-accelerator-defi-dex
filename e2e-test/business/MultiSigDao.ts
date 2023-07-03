@@ -1,7 +1,7 @@
 import Base from "./Base";
+import Common from "./Common";
 import BaseDao from "./BaseDao";
 import HederaGnosisSafe from "./HederaGnosisSafe";
-import Common from "./Common";
 
 import { ethers } from "ethers";
 import { Helper } from "../../utils/Helper";
@@ -26,9 +26,11 @@ const INITIALIZE = "initialize";
 const GET_TRANSACTION_INFO = "getTransactionInfo";
 const PROPOSE_TRANSACTION = "proposeTransaction";
 const GET_APPROVAL_COUNTS = "getApprovalCounts";
+const PROPOSE_BATCH_TRANSACTION = "proposeBatchTransaction";
 const PROPOSE_TRANSFER_TRANSACTION = "proposeTransferTransaction";
 const GET_HEDERA_GNOSIS_SAFE_CONTRACT_ADDRESS =
   "getHederaGnosisSafeContractAddress";
+const GET_MULTI_SEND_CONTRACT_ADDRESS = "getMultiSendContractAddress";
 
 enum TransactionState {
   Pending,
@@ -80,7 +82,8 @@ export default class MultiSigDao extends BaseDao {
         .addString(desc)
         .addStringArray(webLinks)
         .addAddress(gnosisProxy.toSolidityAddress())
-        .addAddress(this.htsAddress);
+        .addAddress(this.htsAddress)
+        .addAddress(this.getMultiSendContractAddress());
       await this.execute(9_00_000, INITIALIZE, client, args);
       console.log(`- MultiSigDao#${INITIALIZE}(): ${this.contractId} done\n`);
       return;
@@ -101,6 +104,21 @@ export default class MultiSigDao extends BaseDao {
     const address = result.getAddress(0);
     console.log(
       `- MultiSigDao#${GET_HEDERA_GNOSIS_SAFE_CONTRACT_ADDRESS}(): address = ${address}\n`
+    );
+    return ContractId.fromSolidityAddress(address);
+  };
+
+  getMultiSendContractAddressFromDAO = async (
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    const { result } = await this.execute(
+      50_000,
+      GET_MULTI_SEND_CONTRACT_ADDRESS,
+      client
+    );
+    const address = result.getAddress(0);
+    console.log(
+      `- MultiSigDao#${GET_MULTI_SEND_CONTRACT_ADDRESS}(): address = ${address}\n`
     );
     return ContractId.fromSolidityAddress(address);
   };
@@ -300,6 +318,38 @@ export default class MultiSigDao extends BaseDao {
       REPLACE_MEMBER,
       client
     );
+  };
+
+  proposeBatchTransaction = async (
+    values: number[],
+    targets: ContractId[],
+    callDataArray: Uint8Array[],
+    client: Client = clientsInfo.operatorClient,
+    title: string = TITLE,
+    description: string = DESCRIPTION,
+    linkToDiscussion: string = LINK_TO_DISCUSSION
+  ) => {
+    const args = new ContractFunctionParameters()
+      .addAddressArray(
+        targets.map((address: ContractId) => address.toSolidityAddress())
+      )
+      .addUint256Array(values)
+      .addBytesArray(callDataArray)
+      .addString(title)
+      .addString(description)
+      .addString(linkToDiscussion);
+    const { result } = await this.execute(
+      1_000_000,
+      PROPOSE_BATCH_TRANSACTION,
+      client,
+      args
+    );
+    const txnHash = result.getBytes32(0);
+    const hash = ethers.utils.hexlify(txnHash);
+    console.log(
+      `- MultiSigDao#${PROPOSE_BATCH_TRANSACTION}(): txnHash = ${hash}\n`
+    );
+    return txnHash;
   };
 
   proposeTransferTransaction = async (
