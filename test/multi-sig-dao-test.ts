@@ -29,11 +29,7 @@ describe("MultiSig tests", function () {
     return { proxy: args.proxy };
   }
 
-  async function verifyTransactionCreatedEvent(
-    txn: any,
-    txnType: number,
-    opType: number
-  ) {
+  async function verifyTransactionCreatedEvent(txn: any, txnType: number) {
     const { name, args } = await TestHelper.readLastEvent(txn);
     const txnHash = args.txnHash;
     const info = args.info;
@@ -41,7 +37,7 @@ describe("MultiSig tests", function () {
     expect(name).equal("TransactionCreated");
     expect(txnHash).not.equals(TestHelper.ZERO_ADDRESS);
     expect(info.to).not.equals(TestHelper.ZERO_ADDRESS);
-    expect(info.operation).equals(opType);
+    expect(info.operation).equals(0);
     expect(info.nonce).equals(1);
     expect(info.transactionType).equals(txnType);
     expect(info.title).equals(TITLE);
@@ -56,20 +52,18 @@ describe("MultiSig tests", function () {
     receiver: string,
     token: string,
     amount: number = TRANSFER_AMOUNT,
-    operation: number = 0, // 1 delegate and 0 call (balance verification not working with 1,so default is 0 for unit test)
     title: string = TITLE,
     description: string = DESCRIPTION
   ) {
     const txn = await multiSigDAOInstance.proposeTransaction(
       token,
       createTransferTransactionABIData(receiver, amount),
-      operation,
       10,
       title,
       description,
       LINK_TO_DISCUSSION
     );
-    return await verifyTransactionCreatedEvent(txn, 10, operation);
+    return await verifyTransactionCreatedEvent(txn, 10);
   }
 
   async function proposeTransferTransaction(
@@ -161,13 +155,8 @@ describe("MultiSig tests", function () {
 
     const multiSigDAOInstance = await TestHelper.deployLogic("MultiSigDAO");
     const txn = await multiSigDAOInstance.initialize(...MULTISIG_ARGS);
-    const events = await TestHelper.readEvents(txn, [
-      "WebLinkUpdated",
-      "NameUpdated",
-      "LogoUrlUpdated",
-      "DescriptionUpdated",
-    ]);
-    expect(events.length).equals(4);
+    const events = await TestHelper.readEvents(txn, ["DAOInfoUpdated"]);
+    expect(events.length).equals(1);
 
     // factory setup
     const multiSigDAOFactoryInstance = await TestHelper.deployLogic(
@@ -349,7 +338,6 @@ describe("MultiSig tests", function () {
           signers[1].address,
           tokenInstance.address,
           TRANSFER_AMOUNT,
-          0,
           ""
         )
       ).revertedWith("MultiSigDAO: title can't be blank");
@@ -359,7 +347,6 @@ describe("MultiSig tests", function () {
           signers[1].address,
           tokenInstance.address,
           TRANSFER_AMOUNT,
-          0,
           TITLE,
           ""
         )
@@ -775,44 +762,6 @@ describe("MultiSig tests", function () {
       );
       expect(userBalanceAfterTransactionExecution).equals(TRANSFER_AMOUNT);
     });
-
-    it("Verify propose transaction should be in executed with operation type delegate", async function () {
-      const {
-        multiSigDAOInstance,
-        signers,
-        tokenInstance,
-        hederaGnosisSafeProxyContract,
-        daoSigners,
-      } = await loadFixture(deployFixture);
-      const { txnHash, info } = await proposeTransaction(
-        multiSigDAOInstance,
-        signers[1].address,
-        tokenInstance.address,
-        TRANSFER_AMOUNT,
-        1
-      );
-      for (const signer of daoSigners) {
-        await hederaGnosisSafeProxyContract
-          .connect(signer)
-          .approveHash(txnHash);
-      }
-      const transaction =
-        await hederaGnosisSafeProxyContract.executeTransaction(
-          info.to,
-          info.value,
-          info.data,
-          info.operation,
-          info.nonce
-        );
-      const { name, args } = await TestHelper.readLastEvent(transaction);
-      expect(name).equals("ExecutionSuccess");
-      expect(args.txHash).equals(txnHash);
-      const isTxnExecuted =
-        await hederaGnosisSafeProxyContract.isTransactionExecuted(txnHash);
-      expect(isTxnExecuted).equals(true); // Executed
-      // Note - no balance verification here due to delegate
-    });
-
     it("Verify propose transaction should be reverted when enough approvals not present", async function () {
       const {
         multiSigDAOInstance,
@@ -845,7 +794,7 @@ describe("MultiSig tests", function () {
         multiSigDAOInstance
           .connect(systemUser)
           .upgradeHederaService(signers[3].address)
-      ).not.rejectedWith("MultiSigDAO: caller is not the system user");
+      ).not.rejectedWith("RoleBasedAccess: caller is not the system user");
     });
 
     it("Verify upgrade Hedera service fails with non-system user", async function () {
@@ -857,7 +806,7 @@ describe("MultiSig tests", function () {
         multiSigDAOInstance
           .connect(nonSystemUser)
           .upgradeHederaService(signers[1].address)
-      ).rejectedWith("MultiSigDAO: caller is not the system user");
+      ).rejectedWith("RoleBasedAccess: caller is not the system user");
     });
   });
 });

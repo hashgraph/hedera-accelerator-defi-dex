@@ -1,7 +1,5 @@
 import Base from "../Base";
-import ContractMetadata from "../../../utils/ContractMetadata";
 
-import { ethers } from "hardhat";
 import { Helper } from "../../../utils/Helper";
 import { Deployment } from "../../../utils/deployContractOnTestnet";
 import { clientsInfo } from "../../../utils/ClientManagement";
@@ -155,10 +153,4 @@ export default class MultiSigDAOFactory extends Base {
     const map = await MirrorNodeService.getInstance().decodeLog(result.logs);
     return map.get("LogicUpdated")![0];
   };
-
-  public async getMultiSigDAOFactoryInterface() {
-    return await new ContractMetadata().getContractInterface(
-      "MultiSigDAOFactory"
-    );
-  }
 }

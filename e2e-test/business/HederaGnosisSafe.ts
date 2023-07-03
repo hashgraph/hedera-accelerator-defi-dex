@@ -1,5 +1,4 @@
 import Base from "./Base";
-import ContractMetadata from "../../utils/ContractMetadata";
 
 import { ethers } from "ethers";
 import { Helper } from "../../utils/Helper";
@@ -109,10 +108,4 @@ export default class HederaGnosisSafe extends Base {
     );
     return txnHash;
   };
-
-  public async getHederaGnosisSafeInterface() {
-    return await new ContractMetadata().getContractInterface(
-      "HederaGnosisSafe"
-    );
-  }
 }

@@ -9,7 +9,11 @@ on:
         required: true
         type: string
       daoAddress:
-        description: "Enter TokenTransferDAO address"
+        description: "Enter FTDAO address"
+        required: true
+        type: string
+      tokenAddress:
+        description: "Enter Governance token address"
         required: true
         type: string
 

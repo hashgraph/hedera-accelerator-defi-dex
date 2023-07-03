@@ -8,12 +8,12 @@
   },
   {
     "name": "configuration",
-    "id": "0.0.14831443",
-    "address": "0x0000000000000000000000000000000000e24f53",
-    "timestamp": "2023-06-19T11:17:04.676Z",
-    "hash": "1527e85b0e21f064f11dd056841acbd4",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000e24f73",
-    "transparentProxyId": "0.0.14831475"
+    "id": "0.0.15003474",
+    "address": "0x0000000000000000000000000000000000e4ef52",
+    "timestamp": "2023-06-28T05:57:08.099Z",
+    "hash": "3ed604f0c6f6c59c7348334d80b9efe8",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000e4ef54",
+    "transparentProxyId": "0.0.15003476"
   },
   {
     "name": "lptoken",
@@ -44,12 +44,12 @@
   },
   {
     "name": "multisigdaofactory",
-    "id": "0.0.14831452",
-    "address": "0x0000000000000000000000000000000000e24f5c",
-    "timestamp": "2023-06-19T11:17:08.467Z",
-    "hash": "afb924258013b08ee73ac386f5c71a23",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000e24f7e",
-    "transparentProxyId": "0.0.14831486"
+    "id": "0.0.15003721",
+    "address": "0x0000000000000000000000000000000000e4f049",
+    "timestamp": "2023-06-28T07:09:13.763Z",
+    "hash": "0bda0ada8d6c6aaffe3397cc647a3813",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000e4f04b",
+    "transparentProxyId": "0.0.15003723"
   },
   {
     "name": "pair",
@@ -116,12 +116,12 @@
   },
   {
     "name": "multisigdao",
-    "id": "0.0.14831516",
-    "address": "0x0000000000000000000000000000000000e24f9c",
-    "timestamp": "2023-06-19T11:17:25.433Z",
-    "hash": "7ea82bb7189bf99b3dba8ee37b35195e",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000e24fa0",
-    "transparentProxyId": "0.0.14831520"
+    "id": "0.0.14990208",
+    "address": "0x0000000000000000000000000000000000e4bb80",
+    "timestamp": "2023-06-26T15:52:31.619Z",
+    "hash": "587858781abb4cc499b0629e90ac45ab",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000e4bb82",
+    "transparentProxyId": "0.0.14990210"
   },
   {
     "name": "ftdao",
