@@ -68,8 +68,6 @@ jobs:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     env:
-      OPERATOR_ID: 0.0.6883
-      OPERATOR_KEY: 2cc790b009e400a3ed97363980ae27ddfb58102fa8fb7c1a7b69e212f756c084
       OPERATOR_ID: 0.0.2375093
       OPERATOR_KEY: 805a0b26c8ecee83e903076eebb86928c612590f32afc6d272ced4c73db6d466
       TREASURE_ID: 0.0.6880
@@ -97,8 +95,6 @@ jobs:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     env:
-      OPERATOR_ID: 0.0.2375093
-      OPERATOR_KEY: 805a0b26c8ecee83e903076eebb86928c612590f32afc6d272ced4c73db6d466
       OPERATOR_ID: 0.0.6883
       OPERATOR_KEY: 2cc790b009e400a3ed97363980ae27ddfb58102fa8fb7c1a7b69e212f756c084
       TREASURE_ID: 0.0.6880
@@ -126,8 +122,6 @@ jobs:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     env:
-      OPERATOR_ID: 0.0.6883
-      OPERATOR_KEY: 2cc790b009e400a3ed97363980ae27ddfb58102fa8fb7c1a7b69e212f756c084
       OPERATOR_ID: 0.0.2375093
       OPERATOR_KEY: 805a0b26c8ecee83e903076eebb86928c612590f32afc6d272ced4c73db6d466
       TREASURE_ID: 0.0.6880
