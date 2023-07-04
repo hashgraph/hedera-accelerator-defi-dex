@@ -160,10 +160,10 @@ export default class DAOFactory extends Base {
     contractUpgrade: string
   ) => {
     const args = {
-      tokenTransferLogic: tokenTransferLogic,
-      tokenCreateLogic: tokenCreateLogic,
-      textProposalLogic: textProposalLogic,
-      contractUpgrade: contractUpgrade,
+      tokenTransferLogic,
+      textProposalLogic,
+      contractUpgrade,
+      tokenCreateLogic,
     };
 
     const { bytes } = await this.encodeFunctionData(
