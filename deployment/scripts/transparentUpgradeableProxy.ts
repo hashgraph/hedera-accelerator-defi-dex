@@ -25,7 +25,7 @@ export async function main(_contractName: string) {
   args.addAddress(contractAddress);
   args.addAddress(adminId.toSolidityAddress());
   args.addBytes(new Uint8Array());
-  const { id, address } = await deployment.deployContractAsClient(
+  const { id, address } = await deployment.deployContractFromOperatorAccount(
     filePath,
     args
   );

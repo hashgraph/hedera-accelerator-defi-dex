@@ -35,7 +35,7 @@ export default class Factory extends Base {
       const lpToken = deployedItems.get(ContractService.LP_TOKEN);
       const args = new ContractFunctionParameters()
         .addAddress(this.htsAddress)
-        .addAddress(clientsInfo.dexOwnerId.toSolidityAddress())
+        .addAddress(clientsInfo.childProxyAdminId.toSolidityAddress())
         .addAddress(pair.address)
         .addAddress(lpToken.address)
         .addAddress(this.configuration);
@@ -115,7 +115,12 @@ export default class Factory extends Base {
 
   upgradeLogic = async (implAddress: string, functionName: string) => {
     const args = new ContractFunctionParameters().addAddress(implAddress);
-    this.execute(4000000, functionName, clientsInfo.dexOwnerClient, args);
+    this.execute(
+      4000000,
+      functionName,
+      clientsInfo.childProxyAdminClient,
+      args
+    );
     console.log(`- Factory${functionName}(): done\n`);
   };
 

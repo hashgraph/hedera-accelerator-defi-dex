@@ -23,7 +23,7 @@ const UPGRADE_SAFE_FACTORY_LOGIC_IMPL = "upgradeSafeFactoryAddress";
 export default class MultiSigDAOFactory extends Base {
   initialize = async (client: Client = clientsInfo.operatorClient) => {
     if (await this.isInitializationPending()) {
-      const proxyAdmin = clientsInfo.dexOwnerId.toSolidityAddress();
+      const proxyAdmin = clientsInfo.childProxyAdminId.toSolidityAddress();
       const deployedItems = await deployment.deployContracts([
         ContractService.SAFE_FACTORY,
         ContractService.SAFE,
@@ -105,7 +105,7 @@ export default class MultiSigDAOFactory extends Base {
 
   upgradeSafeLogicAddress = async (
     newImpl: string,
-    client: Client = clientsInfo.dexOwnerClient
+    client: Client = clientsInfo.childProxyAdminClient
   ) => {
     const args = new ContractFunctionParameters().addAddress(newImpl);
     const { result } = await this.execute(
@@ -120,7 +120,7 @@ export default class MultiSigDAOFactory extends Base {
 
   upgradeSafeFactoryAddress = async (
     newImpl: string,
-    client: Client = clientsInfo.dexOwnerClient
+    client: Client = clientsInfo.childProxyAdminClient
   ) => {
     const args = new ContractFunctionParameters().addAddress(newImpl);
     const { result } = await this.execute(
@@ -137,7 +137,7 @@ export default class MultiSigDAOFactory extends Base {
 
   upgradeDaoLogicAddress = async (
     newImpl: string,
-    client: Client = clientsInfo.dexOwnerClient
+    client: Client = clientsInfo.childProxyAdminClient
   ) => {
     const args = new ContractFunctionParameters().addAddress(newImpl);
     const { result } = await this.execute(

@@ -3,7 +3,6 @@ import Long from "long";
 import Common from "../business/Common";
 import Governor from "../business/Governor";
 import GodHolder from "../business/GodHolder";
-import ClientManagement from "../../utils/ClientManagement";
 
 import { expect } from "chai";
 import { binding, given, then, when } from "cucumber-tsflow";
@@ -14,11 +13,12 @@ import { ContractService } from "../../deployment/service/ContractService";
 import { CommonSteps } from "./CommonSteps";
 import { Helper } from "../../utils/Helper";
 
-const clientManagement = new ClientManagement();
 const csDev = new ContractService();
 
-const clientWithNoGODToken = clientManagement.createOperatorClientNoGODToken();
-const { idNoGODToken } = clientManagement.getOperatorNoToken();
+const {
+  operatorIdNoGODToken: idNoGODToken,
+  operatorIdNoGODTokenClient: clientWithNoGODToken,
+} = clientsInfo;
 
 const tokenTransferProxyId = csDev.getContractWithProxy(
   csDev.governorTTContractName

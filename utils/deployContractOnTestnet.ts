@@ -12,7 +12,6 @@ import {
 } from "@hashgraph/sdk";
 import * as hethers from "@hashgraph/hethers";
 import { ContractService } from "../deployment/service/ContractService";
-import ClientManagement from "../utils/ClientManagement";
 import { clientsInfo } from "../utils/ClientManagement";
 import ContractMetadata from "../utils/ContractMetadata";
 
@@ -123,7 +122,6 @@ export class EtherDeployment {
 
 export class Deployment {
   private contractService = new ContractService();
-  private clientManagement = new ClientManagement();
   private contractMetadata = new ContractMetadata();
 
   deployContracts = async (
@@ -159,25 +157,13 @@ export class Deployment {
     return result;
   };
 
-  public deployContractAsAdmin = async (
+  public deployContractFromOperatorAccount = async (
     filePath: string,
     contractConstructorArgs: ContractFunctionParameters = new ContractFunctionParameters()
   ) => {
     return this.deployContract(
-      this.clientManagement.createClientAsAdmin(),
-      this.clientManagement.getAdmin().adminKey,
-      filePath,
-      contractConstructorArgs
-    );
-  };
-
-  public deployContractAsClient = async (
-    filePath: string,
-    contractConstructorArgs: ContractFunctionParameters = new ContractFunctionParameters()
-  ) => {
-    return this.deployContract(
-      this.clientManagement.createOperatorClient(),
-      this.clientManagement.getOperator().key,
+      clientsInfo.operatorClient,
+      clientsInfo.operatorKey,
       filePath,
       contractConstructorArgs
     );
@@ -210,7 +196,7 @@ export class Deployment {
       client,
       new ContractFunctionParameters()
         .addAddress(logic.address)
-        .addAddress(clientsInfo.adminId.toSolidityAddress())
+        .addAddress(clientsInfo.proxyAdminId.toSolidityAddress())
         .addBytes(new Uint8Array())
     );
     const info = {

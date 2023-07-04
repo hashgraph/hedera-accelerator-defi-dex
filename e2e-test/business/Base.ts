@@ -28,8 +28,8 @@ export default class Base {
   }
 
   getCurrentImplementation = async (
-    adminKey: PrivateKey = clientsInfo.adminKey,
-    client: Client = clientsInfo.adminClient
+    adminKey: PrivateKey = clientsInfo.proxyAdminKey,
+    client: Client = clientsInfo.proxyAdminClient
   ) => {
     const { result } = await this.execute(
       2000000,

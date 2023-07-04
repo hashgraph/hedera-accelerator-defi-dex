@@ -19,7 +19,7 @@ export async function main(_contractName: string) {
   console.log(
     `Deploying (${contractName}) contract, where file path is (${filePath})`
   );
-  const deployedContract = await deployment.deployContractAsClient(
+  const deployedContract = await deployment.deployContractFromOperatorAccount(
     filePath,
     new ContractFunctionParameters()
   );

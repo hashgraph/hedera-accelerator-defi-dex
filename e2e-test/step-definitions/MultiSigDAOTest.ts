@@ -58,7 +58,7 @@ export class MultiSigDAOSteps {
     60000
   )
   public async initializeFail(name: string, logo: string): Promise<void> {
-    const daoOwnerAddress = clientsInfo.dexOwnerId.toSolidityAddress();
+    const daoOwnerAddress = clientsInfo.childProxyAdminId.toSolidityAddress();
     console.log(
       "*******************Starting multisigdao test with following credentials*******************"
     );
@@ -96,7 +96,7 @@ export class MultiSigDAOSteps {
     240000
   )
   public async initializeSafe(name: string, logo: string): Promise<void> {
-    const daoOwnerAddress = clientsInfo.dexOwnerId.toSolidityAddress();
+    const daoOwnerAddress = clientsInfo.childProxyAdminId.toSolidityAddress();
     await multiSigDAO.initialize(
       daoOwnerAddress,
       name,
@@ -138,7 +138,7 @@ export class MultiSigDAOSteps {
     targetTokenAmtToBeTransferred = tokenAmount * withPrecision;
     txnHash = await multiSigDAO.proposeTransferTransaction(
       transferTokenId,
-      clientsInfo.adminId,
+      clientsInfo.proxyAdminId,
       targetTokenAmtToBeTransferred,
       clientsInfo.uiUserClient
     );
@@ -154,7 +154,7 @@ export class MultiSigDAOSteps {
       targetTokenAmtToBeTransferred = tokenAmount * withPrecision;
       txnHash = await multiSigDAO.proposeTransferTransaction(
         transferTokenId,
-        clientsInfo.adminId,
+        clientsInfo.proxyAdminId,
         targetTokenAmtToBeTransferred,
         clientsInfo.uiUserClient
       );
@@ -190,7 +190,7 @@ export class MultiSigDAOSteps {
       transferTxnInfo.data,
       transferTxnInfo.operation,
       transferTxnInfo.nonce,
-      clientsInfo.dexOwnerClient
+      clientsInfo.childProxyAdminClient
     );
   }
 
@@ -201,9 +201,9 @@ export class MultiSigDAOSteps {
   )
   public async getTokenBalance() {
     targetTokenBalFromPayeeAcct = await Common.getTokenBalance(
-      clientsInfo.adminId,
+      clientsInfo.proxyAdminId,
       transferTokenId,
-      clientsInfo.adminClient
+      clientsInfo.proxyAdminClient
     );
   }
 
@@ -215,9 +215,9 @@ export class MultiSigDAOSteps {
   public async verifyTokenBalance() {
     await Helper.delay(15000);
     const updatedBalance = await Common.getTokenBalance(
-      clientsInfo.adminId,
+      clientsInfo.proxyAdminId,
       transferTokenId,
-      clientsInfo.adminClient
+      clientsInfo.proxyAdminClient
     );
     expect(Number(updatedBalance)).to.eql(
       Number(targetTokenBalFromPayeeAcct) +
@@ -266,7 +266,7 @@ export class MultiSigDAOSteps {
         targetTokenBalFromPayerAcct / withPrecision + 1;
       txnHash = await multiSigDAO.proposeTransferTransaction(
         transferTokenId,
-        clientsInfo.adminId,
+        clientsInfo.proxyAdminId,
         targetTokenAmtToBeTransferred * withPrecision,
         clientsInfo.uiUserClient
       );
@@ -437,7 +437,7 @@ export class MultiSigDAOSteps {
   public async upgradeDAOLogicAddress() {
     upgradeResult = await daoFactory.upgradeDaoLogicAddress(
       contractNewAddress,
-      clientsInfo.dexOwnerClient
+      clientsInfo.childProxyAdminClient
     );
   }
 
@@ -455,7 +455,7 @@ export class MultiSigDAOSteps {
   public async upgradeSafeLogicAddress() {
     upgradeResult = await daoFactory.upgradeSafeLogicAddress(
       contractNewAddress,
-      clientsInfo.dexOwnerClient
+      clientsInfo.childProxyAdminClient
     );
   }
 
@@ -467,7 +467,7 @@ export class MultiSigDAOSteps {
   public async upgradeGnosisSafeProxyFactory() {
     upgradeResult = await daoFactory.upgradeSafeFactoryAddress(
       contractNewAddress,
-      clientsInfo.dexOwnerClient
+      clientsInfo.childProxyAdminClient
     );
   }
 }
