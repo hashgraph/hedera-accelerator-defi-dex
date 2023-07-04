@@ -1,4 +1,5 @@
 import { Helper } from "../../utils/Helper";
+import { Deployment } from "../../utils/deployContractOnTestnet";
 import { ContractId, TokenId } from "@hashgraph/sdk";
 import { ContractService } from "../../deployment/service/ContractService";
 import {
@@ -96,11 +97,17 @@ async function main() {
     contractId.toString()
   );
   await daoInstance.upgradeHederaService();
+  const deployedItems = await new Deployment().deployContracts([
+    ContractService.GOVERNOR_TT,
+    ContractService.GOVERNOR_TEXT,
+    ContractService.GOVERNOR_UPGRADE,
+    ContractService.GOVERNOR_TOKEN_CREATE,
+  ]);
   await daoFactory.upgradeGovernorsImplementation(
-    csDev.getContract(ContractService.GOVERNOR_TT).address,
-    csDev.getContract(ContractService.GOVERNOR_TOKEN_CREATE).address,
-    csDev.getContract(ContractService.GOVERNOR_TEXT).address,
-    csDev.getContract(ContractService.GOVERNOR_UPGRADE).address
+    deployedItems.get(ContractService.GOVERNOR_TT).address,
+    deployedItems.get(ContractService.GOVERNOR_TOKEN_CREATE).address,
+    deployedItems.get(ContractService.GOVERNOR_TEXT).address,
+    deployedItems.get(ContractService.GOVERNOR_UPGRADE).address
   );
   console.log(`\nDone`);
 }
