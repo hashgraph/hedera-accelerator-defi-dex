@@ -67,7 +67,7 @@ export class FactorySteps {
     console.log("Factory contractId : ", factoryContractId);
     console.log("H address : ", baseContractAddress);
     console.log("adminAddress : ", adminAddress);
-    console.log("TOKEN_USER_ID : ", id.toString());
+    console.log("OPERATOR_ID : ", id.toString());
     console.log("TREASURE_ID :", treasureId.toString());
     try {
       await factory.setupFactory();
