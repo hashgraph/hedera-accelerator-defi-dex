@@ -57,16 +57,20 @@ export default class DAOFactory extends Base {
       const proxyAdmin = clientsInfo.dexOwnerId.toSolidityAddress();
       const deployedItems = await deployment.deployContracts([
         ContractService.FT_DAO,
+        ContractService.GOVERNOR_TT,
+        ContractService.GOVERNOR_TEXT,
+        ContractService.GOVERNOR_UPGRADE,
+        ContractService.GOVERNOR_TOKEN_CREATE,
       ]);
       const ftDao = deployedItems.get(ContractService.FT_DAO);
 
       const governance = {
-        tokenTransferLogic: csDev.getContract(ContractService.GOVERNOR_TT)
+        tokenTransferLogic: deployedItems.get(ContractService.GOVERNOR_TT)
           .address,
-        textLogic: csDev.getContract(ContractService.GOVERNOR_TEXT).address,
-        upgradeLogic: csDev.getContract(ContractService.GOVERNOR_UPGRADE)
+        textLogic: deployedItems.get(ContractService.GOVERNOR_TEXT).address,
+        upgradeLogic: deployedItems.get(ContractService.GOVERNOR_UPGRADE)
           .address,
-        createTokenLogic: csDev.getContract(
+        createTokenLogic: deployedItems.get(
           ContractService.GOVERNOR_TOKEN_CREATE
         ).address,
       };
