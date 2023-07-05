@@ -1,6 +1,6 @@
 import ContractMetadata from "../../utils/ContractMetadata";
 
-import { ethers } from "hardhat";
+import { ethers } from "ethers";
 import { Helper } from "../../utils/Helper";
 import { BigNumber } from "bignumber.js";
 import { clientsInfo } from "../../utils/ClientManagement";
@@ -117,15 +117,30 @@ export default class Base {
       .transparentProxyAddress!!;
   }
 
-  protected async encodeFunctionData(
+  protected getMultiSendContractAddress(): string {
+    return this.csDev.getContract(ContractService.MULTI_SEND).address;
+  }
+
+  public async encodeFunctionData(
     contractName: string,
     functionName: string,
     data: any[]
-  ) {
-    const contractInterface = await new ContractMetadata().getContractInterface(
+  ): Promise<{ bytes: Uint8Array; hex: string }> {
+    const contractInterface = await ContractMetadata.getContractInterface(
       contractName
     );
     const hex = contractInterface.encodeFunctionData(functionName, data);
     return { bytes: ethers.utils.arrayify(hex), hex };
+  }
+
+  protected async decodeFunctionResult(
+    contractName: string,
+    functionName: string,
+    data: Uint8Array
+  ) {
+    const contractInterface = await ContractMetadata.getContractInterface(
+      contractName
+    );
+    return contractInterface.decodeFunctionResult(functionName, data);
   }
 }

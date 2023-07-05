@@ -20,13 +20,14 @@ contract GovernorUpgrade is GovernorCountingSimpleInternal {
         string memory description,
         string memory linkToDiscussion,
         address payable proxyContract,
-        address contractToUpgrade
+        address contractToUpgrade,
+        address creator
     ) public returns (uint256) {
         uint256 proposalId = _createProposal(
             title,
             description,
             linkToDiscussion,
-            msg.sender,
+            creator,
             bytes("")
         );
         _proposalData[proposalId] = TokenUpgradeData(

@@ -1,18 +1,19 @@
 import { Helper } from "../../utils/Helper";
-import { ContractId } from "@hashgraph/sdk";
-import { executeGovernorTokenDAOFlow } from "../../integrationTest/governanceDAOFactory";
+import { TokenId, ContractId } from "@hashgraph/sdk";
+import { executeDAOFlow } from "../../integrationTest/dao/ftDaoFactory";
 
-import GovernanceDAOFactory from "../../e2e-test/business/GovernanceDAOFactory";
+import DAOFactory from "../../e2e-test/business/factories/DAOFactory";
 
 async function main() {
   const input = Helper.readWorkflowInputs();
 
   // below calls are validating input data only
   const contractId = ContractId.fromString(input.contractId);
-  ContractId.fromSolidityAddress(input.daoAddress);
+  const daoId = ContractId.fromSolidityAddress(input.daoAddress);
+  const tokenId = TokenId.fromSolidityAddress(input.tokenAddress);
 
-  const daoFactory = new GovernanceDAOFactory(contractId.toString());
-  await executeGovernorTokenDAOFlow(daoFactory, [input.daoAddress]);
+  const daoFactory = new DAOFactory(contractId.toString(), false);
+  await executeDAOFlow(daoFactory, daoId.toSolidityAddress(), tokenId);
 }
 
 main()

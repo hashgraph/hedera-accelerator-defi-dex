@@ -2,6 +2,7 @@ import dex from "../model/dex";
 import BigNumber from "bignumber.js";
 import Factory from "../../e2e-test/business/Factory";
 
+import { Helper } from "../../utils/Helper";
 import { TokenId } from "@hashgraph/sdk";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { ContractService } from "../service/ContractService";
@@ -12,6 +13,7 @@ const tokenB = TokenId.fromString(dex.TOKEN_LAB49_2);
 const tokenC = TokenId.fromString(dex.TOKEN_LAB49_3);
 const tokenGOD = TokenId.fromString(dex.GOD_TOKEN_ID);
 const tokenHBARX = TokenId.fromString(dex.HBARX_TOKEN_ID);
+const tokenNFT = TokenId.fromString(dex.NFT_TOKEN_ID);
 
 const csDev = new ContractService();
 
@@ -72,39 +74,32 @@ export async function main() {
 
   await factory.getPairs();
 
-  await provider.getFungibleTokenHolder().initialize();
-  await provider.getFungibleTokenHolderFactory().initialize();
-  await provider.getFungibleTokenDAOFactory().initialize();
+  const godTokenHolderFactory = provider.getGODTokenHolderFactory();
+  await godTokenHolderFactory.initialize();
+  const nftTokenHolderFactory = provider.getNFTTokenHolderFactory();
+  await nftTokenHolderFactory.initialize();
 
-  await provider.getNonFungibleTokenHolder().initialize();
-  await provider.getNonFungibleTokenHolderFactory().initialize();
-  await provider.getNonFungibleTokenDAOFactory().initialize();
+  const godHolder = await provider.getGODTokenHolderFromFactory(tokenGOD);
+  await provider.getGODTokenHolderFromFactory(dex.TOKEN_LAB49_1_ID);
+  await provider.getGODTokenHolderFromFactory(dex.GOVERNANCE_DAO_ONE_TOKEN_ID);
+  await provider.getNFTTokenHolderFromFactory(tokenNFT);
 
   await provider.getMultiSigDAOFactory().initialize();
+  await provider
+    .getFungibleTokenDAOFactory()
+    .initialize(clientsInfo.operatorClient, godTokenHolderFactory);
+  await provider
+    .getNonFungibleTokenDAOFactory()
+    .initialize(clientsInfo.operatorClient, nftTokenHolderFactory);
 
   for (const contractName of csDev.allGovernorContracts) {
-    const contract = csDev.getContractWithProxy(contractName);
-    console.log(
-      `\n${contractName} transparent proxy contractId: ${contract.transparentProxyId!}`
-    );
-    try {
-      await provider
-        .getGovernor(contractName)
-        .initialize(provider.getFungibleTokenHolder());
-    } catch (error) {
-      console.log(
-        `Initialization failed ${contractName} ${contract.transparentProxyId} `
-      );
-      console.error(error);
-    }
+    console.log(`- Governor contract name = ${contractName}`);
+    await provider.getGovernor(contractName).initialize(godHolder);
   }
 }
 
 if (require.main === module) {
   main()
     .then(() => process.exit(0))
-    .catch((error) => {
-      console.error(error);
-      process.exit(1);
-    });
+    .catch(Helper.processError);
 }

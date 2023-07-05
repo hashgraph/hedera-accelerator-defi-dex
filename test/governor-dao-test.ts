@@ -14,15 +14,29 @@ describe("GovernanceTokenDAO tests", function () {
   const DAO_NAME = "DAO_NAME";
   const LOGO_URL = "LOGO_URL";
   const DESCRIPTION = "DESCRIPTION";
-  const WEB_LINKS = [
-    "TWITTER",
-    "https://twitter.com",
-    "LINKEDIN",
-    "https://linkedin.com",
-  ];
+  const WEB_LINKS = ["https://twitter.com", "https://linkedin.com"];
 
-  const WEB_KEY = "git";
-  const WEB_URL = "web-url";
+  async function verifyDAOInfoUpdatedEvent(
+    txn: any,
+    admin: string,
+    daoName: string,
+    logoUrl: string,
+    description: string,
+    webLinks: string[]
+  ) {
+    const lastEvent = (
+      await TestHelper.readEvents(txn, ["DAOInfoUpdated"])
+    ).pop();
+    const { name, args } = { name: lastEvent.event, args: lastEvent.args };
+    expect(name).equals("DAOInfoUpdated");
+    const daoInfo = args.daoInfo;
+
+    expect(daoInfo.name).equals(daoName);
+    expect(daoInfo.admin).equals(admin);
+    expect(daoInfo.logoUrl).equals(logoUrl);
+    expect(daoInfo.description).equals(description);
+    expect(daoInfo.webLinks.join(",")).equals(webLinks.join(","));
+  }
 
   async function deployFixture() {
     const dexOwner = await TestHelper.getDexOwner();
@@ -36,28 +50,57 @@ describe("GovernanceTokenDAO tests", function () {
 
     const godHolder = await TestHelper.deployGodHolder(hederaService, token);
 
-    const ARGS = [
-      token.address,
+    const governorTT = await TestHelper.deployLogic("GovernorTransferToken");
+    const governorUpgrade = await TestHelper.deployLogic("GovernorUpgrade");
+    const governorTokenCreate = await TestHelper.deployLogic(
+      "GovernorTokenCreate"
+    );
+    const governorTextProposal = await TestHelper.deployLogic(
+      "GovernorTextProposal"
+    );
+
+    const inputs = {
+      admin: daoAdminOne.address,
+      name: DAO_NAME,
+      urls: LOGO_URL,
+      token: token.address,
+      QUORUM_THRESHOLD_BSP,
       VOTING_DELAY,
       VOTING_PERIOD,
+      isPrivate: false,
+      description: DESCRIPTION,
+      webLinks: WEB_LINKS,
+    };
+
+    const governance = [
+      governorTT.address,
+      governorTextProposal.address,
+      governorUpgrade.address,
+      governorTokenCreate.address,
+    ];
+
+    const common = [
       hederaService.address,
       godHolder.address,
-      QUORUM_THRESHOLD_BSP,
+      signers[4].address,
+      signers[5].address,
     ];
 
-    const governorTT = await TestHelper.deployLogic("GovernorTransferToken");
-    await governorTT.initialize(...ARGS);
+    const governorTokenDAO = await TestHelper.deployLogic("FTDAO");
 
-    const GOVERNOR_TOKEN_DAO_ARGS = [
-      daoAdminOne.address,
-      DAO_NAME,
-      LOGO_URL,
-      DESCRIPTION,
-      WEB_LINKS,
-      governorTT.address,
-    ];
-    const governorTokenDAO = await TestHelper.deployLogic("GovernorTokenDAO");
-    await governorTokenDAO.initialize(...GOVERNOR_TOKEN_DAO_ARGS);
+    const txn = await governorTokenDAO.initialize(
+      Object.values(inputs),
+      governance,
+      common
+    );
+    await verifyDAOInfoUpdatedEvent(
+      txn,
+      inputs.admin,
+      inputs.name,
+      inputs.urls,
+      inputs.description,
+      inputs.webLinks
+    );
 
     const godHolderFactory = await TestHelper.deployGodTokenHolderFactory(
       hederaService,
@@ -65,16 +108,16 @@ describe("GovernanceTokenDAO tests", function () {
       dexOwner.address
     );
 
-    const governorDAOFactory = await TestHelper.deployLogic(
-      "GovernanceDAOFactory"
-    );
+    const governorDAOFactory = await TestHelper.deployLogic("FTDAOFactory");
+
     await governorDAOFactory.initialize(
       dexOwner.address,
       hederaService.address,
       governorTokenDAO.address,
       godHolderFactory.address,
-      governorTT.address
+      governance
     );
+
     return {
       token,
       signers,
@@ -86,11 +129,13 @@ describe("GovernanceTokenDAO tests", function () {
       godHolderFactory,
       governorTokenDAO,
       governorDAOFactory,
-      GOVERNOR_TOKEN_DAO_ARGS,
+      inputs,
+      governance,
+      common,
     };
   }
 
-  describe("GovernanceDAOFactory contract tests", async function () {
+  describe("DAOFactory contract tests", async function () {
     it("Verify contract should be revert for multiple initialization", async function () {
       const {
         governorDAOFactory,
@@ -98,7 +143,7 @@ describe("GovernanceTokenDAO tests", function () {
         hederaService,
         governorTokenDAO,
         godHolderFactory,
-        governorTT,
+        governance,
       } = await loadFixture(deployFixture);
 
       await expect(
@@ -107,7 +152,7 @@ describe("GovernanceTokenDAO tests", function () {
           hederaService.address,
           governorTokenDAO.address,
           godHolderFactory.address,
-          governorTT.address
+          governance
         )
       ).revertedWith("Initializable: contract is already initialized");
     });
@@ -257,13 +302,13 @@ describe("GovernanceTokenDAO tests", function () {
     });
 
     it("Verify upgrade logic call should be reverted for non dex owner", async function () {
-      const { governorDAOFactory, daoAdminOne, daoAdminTwo } =
+      const { governorDAOFactory, daoAdminOne, daoAdminTwo, governance } =
         await loadFixture(deployFixture);
 
       await expect(
         governorDAOFactory
           .connect(daoAdminOne)
-          .upgradeTokenDaoLogicImplementation(TestHelper.ZERO_ADDRESS)
+          .upgradeFTDAOLogicImplementation(TestHelper.ZERO_ADDRESS)
       )
         .revertedWithCustomError(governorDAOFactory, "NotAdmin")
         .withArgs("DAOFactory: auth failed");
@@ -271,7 +316,7 @@ describe("GovernanceTokenDAO tests", function () {
       await expect(
         governorDAOFactory
           .connect(daoAdminTwo)
-          .upgradeTokenTransferLogicImplementation(TestHelper.ZERO_ADDRESS)
+          .upgradeGovernorsImplementation(governance)
       )
         .revertedWithCustomError(governorDAOFactory, "NotAdmin")
         .withArgs("DAOFactory: auth failed");
@@ -286,25 +331,36 @@ describe("GovernanceTokenDAO tests", function () {
     });
 
     it("Verify upgrade logic call should be proceeded for dex owner", async function () {
-      const { governorDAOFactory, dexOwner } = await loadFixture(deployFixture);
+      const { governorDAOFactory, dexOwner, governance } = await loadFixture(
+        deployFixture
+      );
 
       const txn1 = await governorDAOFactory
         .connect(dexOwner)
-        .upgradeTokenDaoLogicImplementation(TestHelper.ONE_ADDRESS);
+        .upgradeFTDAOLogicImplementation(TestHelper.ONE_ADDRESS);
 
       const event1 = (await txn1.wait()).events.pop();
       expect(event1.event).equal("LogicUpdated");
-      expect(event1.args.name).equal("TokenDAO");
+      expect(event1.args.name).equal("FTDAO");
       expect(event1.args.newImplementation).equal(TestHelper.ONE_ADDRESS);
 
       const txn2 = await governorDAOFactory
         .connect(dexOwner)
-        .upgradeTokenTransferLogicImplementation(TestHelper.ONE_ADDRESS);
+        .upgradeGovernorsImplementation(governance);
 
       const event2 = (await txn2.wait()).events.pop();
-      expect(event2.event).equal("LogicUpdated");
-      expect(event2.args.name).equal("TransferToken");
-      expect(event2.args.newImplementation).equal(TestHelper.ONE_ADDRESS);
+      expect(event2.event).equal("GovernorLogicUpdated");
+      expect(event2.args.name).equal("Governors");
+      expect(event2.args.newImplementation.tokenTransferLogic).equal(
+        governance[0]
+      );
+      expect(event2.args.newImplementation.textLogic).equal(governance[1]);
+      expect(event2.args.newImplementation.contractUpgradeLogic).equal(
+        governance[2]
+      );
+      expect(event2.args.newImplementation.createTokenLogic).equal(
+        governance[3]
+      );
 
       const txn3 = await governorDAOFactory
         .connect(dexOwner)
@@ -364,7 +420,7 @@ describe("GovernanceTokenDAO tests", function () {
 
       const daos = await governorDAOFactory.getDAOs();
 
-      const tokenDAO = TestHelper.getContract("ITokenDAO", daos[0]);
+      const tokenDAO = TestHelper.getContract("FTDAO", daos[0]);
       expect(tokenDAO).not.equals(TestHelper.ZERO_ADDRESS);
       await expect(
         governorDAOFactory.upgradeHederaService(signers[3].address)
@@ -372,60 +428,55 @@ describe("GovernanceTokenDAO tests", function () {
     });
   });
 
-  describe("GovernorTokenDAO contract tests", function () {
+  describe("TokenTransferDAO contract tests", function () {
     it("Verify contract should be revert for multiple initialization", async function () {
-      const { governorTokenDAO, GOVERNOR_TOKEN_DAO_ARGS } = await loadFixture(
-        deployFixture
-      );
+      const { governorTokenDAO, inputs, governance, common } =
+        await loadFixture(deployFixture);
       await expect(
-        governorTokenDAO.initialize(...GOVERNOR_TOKEN_DAO_ARGS)
+        governorTokenDAO.initialize(Object.values(inputs), governance, common)
       ).revertedWith("Initializable: contract is already initialized");
     });
 
-    it("Verify GovernorTokenDAO initialize call", async function () {
-      const { governorTT, daoAdminOne } = await loadFixture(deployFixture);
-      const dao = await TestHelper.deployLogic("GovernorTokenDAO");
-
+    it("Verify TokenTransferDAO initialize call", async function () {
+      const { inputs, governance, common } = await loadFixture(deployFixture);
+      const dao = await TestHelper.deployLogic("FTDAO");
+      const newInputsWithNoName = {
+        ...inputs,
+      };
+      newInputsWithNoName.name = "";
       await expect(
-        dao.initialize(
-          daoAdminOne.address,
-          "",
-          LOGO_URL,
-          DESCRIPTION,
-          WEB_LINKS,
-          governorTT.address
-        )
+        dao.initialize(Object.values(newInputsWithNoName), governance, common)
       )
         .revertedWithCustomError(dao, "InvalidInput")
         .withArgs("BaseDAO: name is empty");
 
+      const newInputsWithNoAdmin = {
+        ...inputs,
+      };
+      newInputsWithNoAdmin.admin = TestHelper.ZERO_ADDRESS;
+
       await expect(
-        dao.initialize(
-          TestHelper.ZERO_ADDRESS,
-          DAO_NAME,
-          LOGO_URL,
-          DESCRIPTION,
-          WEB_LINKS,
-          governorTT.address
-        )
+        dao.initialize(Object.values(newInputsWithNoAdmin), governance, common)
       )
         .revertedWithCustomError(dao, "InvalidInput")
         .withArgs("BaseDAO: admin address is zero");
     });
 
-    it("Verify getGovernorTokenTransferContractAddress", async function () {
-      const { governorTokenDAO, governorTT } = await loadFixture(deployFixture);
-      const governor =
-        await governorTokenDAO.getGovernorTokenTransferContractAddress();
-      expect(governor).equals(governorTT.address);
+    it("Verify getGovernorContractAddresses", async function () {
+      const { governorTokenDAO } = await loadFixture(deployFixture);
+      const governors = await governorTokenDAO.getGovernorContractAddresses();
+      expect(governors[0]).not.equals(TestHelper.ZERO_ADDRESS);
+      expect(governors[1]).not.equals(TestHelper.ZERO_ADDRESS);
+      expect(governors[2]).not.equals(TestHelper.ZERO_ADDRESS);
+      expect(governors[3]).not.equals(TestHelper.ZERO_ADDRESS);
     });
 
-    it("Verify createProposal", async function () {
+    it("Verify createTokenTransferProposal", async function () {
       const { governorTokenDAO, signers, daoAdminOne, token } =
         await loadFixture(deployFixture);
       await governorTokenDAO
         .connect(daoAdminOne)
-        .createProposal(
+        .createTokenTransferProposal(
           "proposal",
           "description",
           "linkToDiscussion",
@@ -434,17 +485,17 @@ describe("GovernanceTokenDAO tests", function () {
           token.address,
           100
         );
-      const proposals = await governorTokenDAO.getAllProposals();
+      const proposals = await governorTokenDAO.getTokenTransferProposals();
       expect(proposals.length).equals(1);
     });
 
-    it("Verify createProposal with non admin should fail", async function () {
+    it("Verify createTokenTransferProposal with non admin should fail", async function () {
       const { governorTokenDAO, daoAdminTwo, signers, token } =
         await loadFixture(deployFixture);
       await expect(
         governorTokenDAO
           .connect(daoAdminTwo)
-          .createProposal(
+          .createTokenTransferProposal(
             "proposal",
             "description",
             "linkToDiscussion",
@@ -456,12 +507,121 @@ describe("GovernanceTokenDAO tests", function () {
       ).revertedWith("Ownable: caller is not the owner");
     });
 
+    it("Verify createContractUpgradeProposal", async function () {
+      const { governorTokenDAO, signers, daoAdminOne, hederaService } =
+        await loadFixture(deployFixture);
+
+      const lpTokenLogic = await TestHelper.deployLogic("LPToken");
+      const args = [
+        hederaService.address,
+        signers[0].address,
+        "tokenName",
+        "tokenSymbol",
+      ];
+      const lpTokenProxy = await TestHelper.deployProxy("LPToken", ...args);
+      await governorTokenDAO
+        .connect(daoAdminOne)
+        .createContractUpgradeProposal(
+          "proposal",
+          "description",
+          "linkToDiscussion",
+          lpTokenProxy.address,
+          lpTokenLogic.address
+        );
+      const proposals = await governorTokenDAO.getContractUpgradeProposals();
+      expect(proposals.length).equals(1);
+    });
+
+    it("Verify createContractUpgradeProposal with non admin should fail", async function () {
+      const { governorTokenDAO, daoAdminTwo, signers, hederaService } =
+        await loadFixture(deployFixture);
+      const lpTokenLogic = await TestHelper.deployLogic("LPToken");
+      const args = [
+        hederaService.address,
+        signers[0].address,
+        "tokenName",
+        "tokenSymbol",
+      ];
+      const lpTokenProxy = await TestHelper.deployProxy("LPToken", ...args);
+      await expect(
+        governorTokenDAO
+          .connect(daoAdminTwo)
+          .createContractUpgradeProposal(
+            "proposal",
+            "description",
+            "linkToDiscussion",
+            lpTokenProxy.address,
+            lpTokenLogic.address
+          )
+      ).revertedWith("Ownable: caller is not the owner");
+    });
+
+    it("Verify createTextProposal", async function () {
+      const { governorTokenDAO, daoAdminOne } = await loadFixture(
+        deployFixture
+      );
+
+      await governorTokenDAO
+        .connect(daoAdminOne)
+        .createTextProposal("proposal", "description", "linkToDiscussion");
+      const proposals = await governorTokenDAO.getTextProposals();
+      expect(proposals.length).equals(1);
+    });
+
+    it("Verify createTextProposal with non admin should fail", async function () {
+      const { governorTokenDAO, daoAdminTwo } = await loadFixture(
+        deployFixture
+      );
+      await expect(
+        governorTokenDAO
+          .connect(daoAdminTwo)
+          .createTextProposal("proposal", "description", "linkToDiscussion")
+      ).revertedWith("Ownable: caller is not the owner");
+    });
+
+    it("Verify createTokenCreateProposal", async function () {
+      const { governorTokenDAO, daoAdminOne } = await loadFixture(
+        deployFixture
+      );
+
+      await governorTokenDAO
+        .connect(daoAdminOne)
+        .createTokenCreateProposal(
+          "proposal",
+          "description",
+          "linkToDiscussion",
+          daoAdminOne.address,
+          "TokenName",
+          "TokenSymbol"
+        );
+      const proposals = await governorTokenDAO.getTokenCreateProposals();
+      expect(proposals.length).equals(1);
+    });
+
+    it("Verify createTokenCreateProposal with non admin should fail", async function () {
+      const { governorTokenDAO, daoAdminTwo } = await loadFixture(
+        deployFixture
+      );
+      await expect(
+        governorTokenDAO
+          .connect(daoAdminTwo)
+          .createTokenCreateProposal(
+            "proposal",
+            "description",
+            "linkToDiscussion",
+            daoAdminTwo.address,
+            "TokenName",
+            "TokenSymbol"
+          )
+      ).revertedWith("Ownable: caller is not the owner");
+    });
+
     it("Verify getAllProposals", async function () {
       const { governorTokenDAO, signers, token, daoAdminOne } =
         await loadFixture(deployFixture);
       await governorTokenDAO
         .connect(daoAdminOne)
-        .createProposal(
+        .createTokenTransferProposal(
           "proposal",
           "description",
           "linkToDiscussion",
@@ -470,67 +630,56 @@ describe("GovernanceTokenDAO tests", function () {
           token.address,
           100
         );
-      const proposals = await governorTokenDAO.getAllProposals();
+      const proposals = await governorTokenDAO.getTokenTransferProposals();
       expect(proposals.length).equals(1);
     });
   });
 
   describe("BaseDAO contract tests", function () {
     it("Verify contract should be revert for initialization with invalid inputs", async function () {
-      const { governorTT, daoAdminOne } = await loadFixture(deployFixture);
-      const governorTokenDAO = await TestHelper.deployLogic("GovernorTokenDAO");
-
+      const { inputs, governance, common } = await loadFixture(deployFixture);
+      const governorTokenDAO = await TestHelper.deployLogic("FTDAO");
+      const newInputsWithNoName = {
+        ...inputs,
+        name: "",
+      };
       await expect(
         governorTokenDAO.initialize(
-          daoAdminOne.address,
-          "",
-          LOGO_URL,
-          DESCRIPTION,
-          WEB_LINKS,
-          governorTT.address
+          Object.values(newInputsWithNoName),
+          governance,
+          common
         )
       )
         .revertedWithCustomError(governorTokenDAO, "InvalidInput")
         .withArgs("BaseDAO: name is empty");
 
+      const newInputsWithNoAdmin = {
+        ...inputs,
+        admin: TestHelper.ZERO_ADDRESS,
+      };
       await expect(
         governorTokenDAO.initialize(
-          TestHelper.ZERO_ADDRESS,
-          DAO_NAME,
-          LOGO_URL,
-          DESCRIPTION,
-          WEB_LINKS,
-          governorTT.address
+          Object.values(newInputsWithNoAdmin),
+          governance,
+          common
         )
       )
         .revertedWithCustomError(governorTokenDAO, "InvalidInput")
         .withArgs("BaseDAO: admin address is zero");
 
+      const newInputsWithNoDesc = {
+        ...inputs,
+        description: "",
+      };
       await expect(
         governorTokenDAO.initialize(
-          daoAdminOne.address,
-          DAO_NAME,
-          LOGO_URL,
-          "",
-          WEB_LINKS,
-          governorTT.address
+          Object.values(newInputsWithNoDesc),
+          governance,
+          common
         )
       )
         .revertedWithCustomError(governorTokenDAO, "InvalidInput")
         .withArgs("BaseDAO: description is empty");
-
-      await expect(
-        governorTokenDAO.initialize(
-          daoAdminOne.address,
-          DAO_NAME,
-          LOGO_URL,
-          DESCRIPTION,
-          ["WEB_LINKS"],
-          governorTT.address
-        )
-      )
-        .revertedWithCustomError(governorTokenDAO, "InvalidInput")
-        .withArgs("BaseDAO: links must be even length array");
     });
 
     it("Verify contract should be reverted if __BaseDAO_init called from outside", async function () {
@@ -548,134 +697,86 @@ describe("GovernanceTokenDAO tests", function () {
       ).revertedWith("Initializable: contract is not initializing");
     });
 
-    it("Verify getDaoDetail returns correct values", async function () {
+    it("Verify getDaoInfo returns correct values", async function () {
       const { governorTokenDAO, daoAdminOne } = await loadFixture(
         deployFixture
       );
-      const daoDetails1 = await governorTokenDAO.getDaoDetail();
-      expect(daoDetails1[0]).equals(DAO_NAME);
-      expect(daoDetails1[1]).equals(LOGO_URL);
-      expect(daoDetails1[2]).equals(WEB_LINKS.join(","));
-      expect(daoDetails1[3]).equals(DESCRIPTION);
-      expect(daoDetails1[4]).equals(daoAdminOne.address);
-
-      await governorTokenDAO.connect(daoAdminOne).addWebLink(WEB_KEY, WEB_URL);
-
-      const daoDetails2 = await governorTokenDAO.getDaoDetail();
-      expect(daoDetails2[2]).equals([...WEB_LINKS, WEB_KEY, WEB_URL].join(","));
+      const daoInfo = await governorTokenDAO.getDaoInfo();
+      expect(daoInfo.name).equals(DAO_NAME);
+      expect(daoInfo.admin).equals(daoAdminOne.address);
+      expect(daoInfo.logoUrl).equals(LOGO_URL);
+      expect(daoInfo.description).equals(DESCRIPTION);
+      expect(daoInfo.webLinks.join(",")).equals(WEB_LINKS.join(","));
     });
 
-    it("Verify updating dao details should be reverted for non-admin user", async function () {
+    it("Verify updating dao info should be reverted for non-admin user", async function () {
       const { governorTokenDAO, daoAdminTwo } = await loadFixture(
         deployFixture
       );
 
       await expect(
-        governorTokenDAO.connect(daoAdminTwo).addWebLink(WEB_KEY, WEB_URL)
-      ).revertedWith("Ownable: caller is not the owner");
-
-      await expect(
-        governorTokenDAO.connect(daoAdminTwo).updateName(DAO_NAME)
-      ).revertedWith("Ownable: caller is not the owner");
-
-      await expect(
-        governorTokenDAO.connect(daoAdminTwo).updateLogoURL(LOGO_URL)
-      ).revertedWith("Ownable: caller is not the owner");
-
-      await expect(
-        governorTokenDAO.connect(daoAdminTwo).updateDescription(DESCRIPTION)
+        governorTokenDAO
+          .connect(daoAdminTwo)
+          .updateDaoInfo(DAO_NAME, LOGO_URL, DESCRIPTION, WEB_LINKS)
       ).revertedWith("Ownable: caller is not the owner");
     });
 
-    it("Verify addWebLink, updateName, updateDescription should be reverted for invalid inputs", async function () {
+    it("Verify updating dao info should be reverted for invalid inputs", async function () {
       const { governorTokenDAO, daoAdminOne } = await loadFixture(
         deployFixture
       );
 
       await expect(
-        governorTokenDAO.connect(daoAdminOne).addWebLink("", WEB_URL)
-      ).revertedWith("BaseDAO: invalid key passed");
-
-      await expect(
-        governorTokenDAO.connect(daoAdminOne).addWebLink(WEB_KEY, "")
-      ).revertedWith("BaseDAO: invalid value passed");
-
-      await expect(governorTokenDAO.connect(daoAdminOne).updateName(""))
+        governorTokenDAO
+          .connect(daoAdminOne)
+          .updateDaoInfo("", LOGO_URL, DESCRIPTION, WEB_LINKS)
+      )
         .revertedWithCustomError(governorTokenDAO, "InvalidInput")
         .withArgs("BaseDAO: name is empty");
 
-      await expect(governorTokenDAO.connect(daoAdminOne).updateDescription(""))
+      await expect(
+        governorTokenDAO
+          .connect(daoAdminOne)
+          .updateDaoInfo(DAO_NAME, LOGO_URL, "", WEB_LINKS)
+      )
         .revertedWithCustomError(governorTokenDAO, "InvalidInput")
         .withArgs("BaseDAO: description is empty");
+
+      await expect(
+        governorTokenDAO
+          .connect(daoAdminOne)
+          .updateDaoInfo(DAO_NAME, LOGO_URL, DESCRIPTION, [...WEB_LINKS, ""])
+      )
+        .revertedWithCustomError(governorTokenDAO, "InvalidInput")
+        .withArgs("BaseDAO: invalid link");
     });
 
-    it("Verify addWebLink should be succeeded for valid inputs", async function () {
-      const { governorTokenDAO, daoAdminOne } = await loadFixture(
-        deployFixture
-      );
-      const txn = await governorTokenDAO
-        .connect(daoAdminOne)
-        .addWebLink(WEB_KEY, WEB_URL);
-
-      const { name, args } = await TestHelper.readLastEvent(txn);
-      expect(name).equals("WebLinkUpdated");
-      expect(args.previousLink).equals(WEB_LINKS.join(","));
-      expect(args.currentLink).equals(
-        [...WEB_LINKS, WEB_KEY, WEB_URL].join(",")
-      );
-
-      const result = await governorTokenDAO.getDaoDetail();
-      const links: any[] = result[2].split(",").slice(-2);
-      expect(links[0]).equals(WEB_KEY);
-      expect(links[1]).equals(WEB_URL);
-    });
-
-    it("Verify updateName should be succeeded for valid inputs", async function () {
+    it("Verify updating dao info should be succeeded for valid inputs", async function () {
       const { governorTokenDAO, daoAdminOne } = await loadFixture(
         deployFixture
       );
 
       const UPDATED_DAO_NAME = DAO_NAME + "_1";
-      const txn = await governorTokenDAO
-        .connect(daoAdminOne)
-        .updateName(UPDATED_DAO_NAME);
-
-      const { name, args } = await TestHelper.readLastEvent(txn);
-      expect(name).equals("NameUpdated");
-      expect(args[0]).equals(DAO_NAME);
-      expect(args[1]).equals(UPDATED_DAO_NAME);
-    });
-
-    it("Verify updateLogoUrl should be succeeded for valid inputs", async function () {
-      const { governorTokenDAO, daoAdminOne } = await loadFixture(
-        deployFixture
-      );
-
       const UPDATED_LOGO_URL = LOGO_URL + "_1";
-      const txn = await governorTokenDAO
-        .connect(daoAdminOne)
-        .updateLogoURL(UPDATED_LOGO_URL);
-
-      const { name, args } = await TestHelper.readLastEvent(txn);
-      expect(name).equals("LogoUrlUpdated");
-      expect(args[0]).equals(LOGO_URL);
-      expect(args[1]).equals(UPDATED_LOGO_URL);
-    });
-
-    it("Verify updateDescription should be succeeded for valid inputs", async function () {
-      const { governorTokenDAO, daoAdminOne } = await loadFixture(
-        deployFixture
-      );
-
       const UPDATED_DESCRIPTION = DESCRIPTION + "_1";
+      const UPDATED_WEB_LINKS = ["A", "B"];
       const txn = await governorTokenDAO
         .connect(daoAdminOne)
-        .updateDescription(UPDATED_DESCRIPTION);
+        .updateDaoInfo(
+          UPDATED_DAO_NAME,
+          UPDATED_LOGO_URL,
+          UPDATED_DESCRIPTION,
+          UPDATED_WEB_LINKS
+        );
 
-      const { name, args } = await TestHelper.readLastEvent(txn);
-      expect(name).equals("DescriptionUpdated");
-      expect(args[0]).equals(DESCRIPTION);
-      expect(args[1]).equals(UPDATED_DESCRIPTION);
+      await verifyDAOInfoUpdatedEvent(
+        txn,
+        daoAdminOne.address,
+        UPDATED_DAO_NAME,
+        UPDATED_LOGO_URL,
+        UPDATED_DESCRIPTION,
+        UPDATED_WEB_LINKS
+      );
     });
   });
 });

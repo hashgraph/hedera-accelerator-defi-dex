@@ -1,8 +1,8 @@
-import MultiSigDao from "../e2e-test/business/MultiSigDao";
+import MultiSigDao from "../../e2e-test/business/MultiSigDao";
 
-import { Helper } from "../utils/Helper";
+import { Helper } from "../../utils/Helper";
 import { ContractId } from "@hashgraph/sdk";
-import { InstanceProvider } from "../utils/InstanceProvider";
+import { InstanceProvider } from "../../utils/InstanceProvider";
 import {
   DAO_LOGO,
   DAO_NAME,

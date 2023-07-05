@@ -1,7 +1,5 @@
 import Base from "../Base";
-import ContractMetadata from "../../../utils/ContractMetadata";
 
-import { ethers } from "hardhat";
 import { Helper } from "../../../utils/Helper";
 import { Deployment } from "../../../utils/deployContractOnTestnet";
 import { clientsInfo } from "../../../utils/ClientManagement";
@@ -39,7 +37,8 @@ export default class MultiSigDAOFactory extends Base {
         .addAddress(multiSigDao.address)
         .addAddress(gnosisLogic.address)
         .addAddress(gnosisFactory.address)
-        .addAddress(this.htsAddress);
+        .addAddress(this.htsAddress)
+        .addAddress(this.getMultiSendContractAddress());
       await this.execute(9_00_000, INITIALIZE, client, args);
       console.log(`- MultiSigDAOFactory#${INITIALIZE}(): done\n`);
       return;
@@ -155,10 +154,4 @@ export default class MultiSigDAOFactory extends Base {
     const map = await MirrorNodeService.getInstance().decodeLog(result.logs);
     return map.get("LogicUpdated")![0];
   };
-
-  public async getMultiSigDAOFactoryInterface() {
-    return await new ContractMetadata().getContractInterface(
-      "MultiSigDAOFactory"
-    );
-  }
 }

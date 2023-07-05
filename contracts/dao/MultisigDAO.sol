@@ -3,19 +3,18 @@ pragma solidity ^0.8.18;
 
 import "./BaseDAO.sol";
 import "../common/IHederaService.sol";
+import "../common/RoleBasedAccess.sol";
+import "../gnosis/HederaMultiSend.sol";
 import "../gnosis/HederaGnosisSafe.sol";
 import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
-contract MultiSigDAO is BaseDAO {
-    address private systemUser;
+contract MultiSigDAO is BaseDAO, RoleBasedAccess {
     event TransactionCreated(bytes32 txnHash, TransactionInfo info);
-
     enum TransactionState {
         Pending,
         Approved,
         Executed
     }
-
     struct TransactionInfo {
         address to;
         uint256 value;
@@ -23,20 +22,22 @@ contract MultiSigDAO is BaseDAO {
         Enum.Operation operation;
         uint256 nonce;
         uint256 transactionType;
+        string title;
+        string description;
+        string linkToDiscussion;
+        address creator;
     }
 
-    modifier onlySystemUser() {
-        require(
-            systemUser == _msgSender(),
-            "MultiSigDAO: caller is not the system user"
-        );
-        _;
-    }
+    bytes4 private constant MULTI_SEND_TXN_SELECTOR =
+        bytes4(keccak256("multiSend(bytes)"));
 
-    // HederaGnosisSafe#transferTokenViaSafe(address token, address receiver, uint256 amount)
     bytes4 private constant TRANSFER_TOKEN_FROM_SAFE_SELECTOR =
         bytes4(keccak256("transferTokenViaSafe(address,address,uint256)"));
 
+    uint256 private constant TXN_TYPE_TOKEN_TRANSFER = 1;
+    uint256 private constant TXN_TYPE_BATCH = 2;
+
+    HederaMultiSend private multiSend;
     IHederaService private hederaService;
     HederaGnosisSafe private hederaGnosisSafe;
     mapping(bytes32 => TransactionInfo) private transactions;
@@ -48,12 +49,14 @@ contract MultiSigDAO is BaseDAO {
         string memory _description,
         string[] memory _webLinks,
         HederaGnosisSafe _hederaGnosisSafe,
-        IHederaService _hederaService
+        IHederaService _hederaService,
+        HederaMultiSend _multiSend
     ) external initializer {
+        systemUser = msg.sender;
         hederaService = _hederaService;
         hederaGnosisSafe = _hederaGnosisSafe;
+        multiSend = _multiSend;
         __BaseDAO_init(_admin, _name, _logoUrl, _description, _webLinks);
-        systemUser = msg.sender;
     }
 
     function getHederaGnosisSafeContractAddress()
@@ -76,6 +79,10 @@ contract MultiSigDAO is BaseDAO {
         }
     }
 
+    function getApprovalCounts(bytes32 _txnHash) public view returns (uint256) {
+        return hederaGnosisSafe.getApprovalCounts(_txnHash);
+    }
+
     function getTransactionInfo(
         bytes32 _txnHash
     ) external view returns (TransactionInfo memory) {
@@ -84,12 +91,18 @@ contract MultiSigDAO is BaseDAO {
         return transactionInfo;
     }
 
+    // we are only supporting the 'call' not 'delegatecall' from dao
     function proposeTransaction(
         address _to,
         bytes memory _data,
-        Enum.Operation _operation,
-        uint256 _type
+        uint256 _type,
+        string memory title,
+        string memory desc,
+        string memory linkToDiscussion
     ) public payable returns (bytes32) {
+        require(bytes(title).length != 0, "MultiSigDAO: title can't be blank");
+        require(bytes(desc).length != 0, "MultiSigDAO: desc can't be blank");
+        Enum.Operation _operation = Enum.Operation.Call;
         (bytes32 txnHash, uint256 txnNonce) = hederaGnosisSafe.getTxnHash(
             _to,
             msg.value,
@@ -103,6 +116,10 @@ contract MultiSigDAO is BaseDAO {
         transactionInfo.operation = _operation;
         transactionInfo.nonce = txnNonce;
         transactionInfo.transactionType = _type;
+        transactionInfo.title = title;
+        transactionInfo.description = desc;
+        transactionInfo.linkToDiscussion = linkToDiscussion;
+        transactionInfo.creator = msg.sender;
 
         emit TransactionCreated(txnHash, transactionInfo);
         return txnHash;
@@ -111,7 +128,10 @@ contract MultiSigDAO is BaseDAO {
     function proposeTransferTransaction(
         address _token,
         address _receiver,
-        uint256 _amount
+        uint256 _amount,
+        string memory title,
+        string memory desc,
+        string memory linkToDiscussion
     ) external payable returns (bytes32) {
         hederaGnosisSafe.transferToSafe(
             hederaService,
@@ -125,8 +145,55 @@ contract MultiSigDAO is BaseDAO {
             _receiver,
             _amount
         );
-        Enum.Operation call = Enum.Operation.Call;
-        return proposeTransaction(address(hederaGnosisSafe), data, call, 1);
+        return
+            proposeTransaction(
+                address(hederaGnosisSafe),
+                data,
+                1,
+                title,
+                desc,
+                linkToDiscussion
+            );
+    }
+
+    function proposeBatchTransaction(
+        address[] memory _targets,
+        uint256[] memory _values,
+        bytes[] memory _calldatas,
+        string memory title,
+        string memory desc,
+        string memory linkToDiscussion
+    ) public payable returns (bytes32) {
+        require(
+            _targets.length > 0 &&
+                _targets.length == _values.length &&
+                _targets.length == _calldatas.length,
+            "MultiSigDAO: invalid transaction length"
+        );
+        bytes memory transactionsBytes;
+        for (uint256 i = 0; i < _targets.length; i++) {
+            transactionsBytes = abi.encodePacked(
+                transactionsBytes,
+                uint8(0),
+                _targets[i],
+                _values[i],
+                _calldatas[i].length,
+                _calldatas[i]
+            );
+        }
+        bytes memory data = abi.encodeWithSelector(
+            MULTI_SEND_TXN_SELECTOR,
+            transactionsBytes
+        );
+        return
+            proposeTransaction(
+                address(multiSend),
+                data,
+                TXN_TYPE_BATCH,
+                title,
+                desc,
+                linkToDiscussion
+            );
     }
 
     function upgradeHederaService(
@@ -135,7 +202,17 @@ contract MultiSigDAO is BaseDAO {
         hederaService = newHederaService;
     }
 
+    function upgradeMultiSend(
+        HederaMultiSend _multiSend
+    ) external onlySystemUser {
+        multiSend = _multiSend;
+    }
+
     function getHederaServiceVersion() external view returns (IHederaService) {
         return hederaService;
+    }
+
+    function getMultiSendContractAddress() external view returns (address) {
+        return address(multiSend);
     }
 }

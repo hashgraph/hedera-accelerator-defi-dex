@@ -8,15 +8,14 @@ import {
 } from "@hashgraph/sdk";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { ContractService } from "../../deployment/service/ContractService";
-import { InstanceProvider } from "../../utils/InstanceProvider";
 import { expect } from "chai";
 import { binding, given, then, when } from "cucumber-tsflow";
 
 import dex from "../../deployment/model/dex";
 import Governor from "../../e2e-test/business/Governor";
 import NFTHolder from "../../e2e-test/business/NFTHolder";
-import GovernorTokenDao from "../../e2e-test/business/GovernorTokenDao";
-import * as GovernorTokenMetaData from "../../e2e-test/business/GovernorTokenDao";
+import FTDAO from "../../e2e-test/business/FTDAO";
+import * as GovernorTokenMetaData from "../../e2e-test/business/FTDAO";
 import { CommonSteps } from "./CommonSteps";
 import Common from "../business/Common";
 import { BigNumber } from "bignumber.js";
@@ -26,7 +25,7 @@ const adminAddress: string = clientsInfo.operatorId.toSolidityAddress();
 const DAO_DESC = "Lorem Ipsum is simply dummy text";
 const DAO_WEB_LINKS = ["LINKEDIN", "https://linkedin.com"];
 
-let govTokenDao: GovernorTokenDao;
+let ftDao: FTDAO;
 let governorTT: Governor;
 let nftHolder: NFTHolder;
 let errorMsg: string;
@@ -43,15 +42,22 @@ export class DAONFTTokenTest extends CommonSteps {
     30000
   )
   public async initializeNFTDAOSafe(name: string, url: string) {
-    await govTokenDao.initializeDAO(
+    await Helper.delay(15000); // allowing some delay for propagating initialize event from previous call
+    await ftDao.initialize(
       adminAddress,
       name,
       url,
       DAO_DESC,
       DAO_WEB_LINKS,
-      governorTT,
-      clientsInfo.operatorClient
+      nftHolder,
+      clientsInfo.operatorClient,
+      CommonSteps.DEFAULT_QUORUM_THRESHOLD_IN_BSP,
+      CommonSteps.DEFAULT_VOTING_DELAY,
+      CommonSteps.DEFAULT_VOTING_PERIOD,
+      TokenId.fromString(dex.GOD_TOKEN_ID),
+      dex.E2E_NFT_TOKEN_ID
     );
+    await this.updateGovernor(ftDao);
   }
 
   @given(
@@ -61,21 +67,19 @@ export class DAONFTTokenTest extends CommonSteps {
   )
   public async initializeNFTDAOFail(name: string, url: string) {
     try {
-      await this.initializeGovernorContract(
-        governorTT,
-        nftHolder,
-        clientsInfo.operatorClient,
-        GovernorTokenMetaData.GOD_TOKEN_ID,
-        dex.E2E_NFT_TOKEN_ID
-      );
-      await govTokenDao.initializeDAO(
+      await ftDao.initialize(
         adminAddress,
         name,
         url,
         DAO_DESC,
         DAO_WEB_LINKS,
-        governorTT,
-        clientsInfo.operatorClient
+        nftHolder,
+        clientsInfo.operatorClient,
+        CommonSteps.DEFAULT_QUORUM_THRESHOLD_IN_BSP,
+        CommonSteps.DEFAULT_VOTING_DELAY,
+        CommonSteps.DEFAULT_VOTING_PERIOD,
+        TokenId.fromString(dex.GOD_TOKEN_ID),
+        dex.E2E_NFT_TOKEN_ID
       );
     } catch (e: any) {
       console.log("expected error while initializing NFTDAO");
@@ -127,7 +131,7 @@ export class DAONFTTokenTest extends CommonSteps {
   )
   public async createProposal(title: string, tokenAmt: number) {
     tokens = tokenAmt * CommonSteps.withPrecision;
-    proposalId = await govTokenDao.createTokenTransferProposal(
+    proposalId = await ftDao.createTokenTransferProposal(
       title,
       clientsInfo.treasureId.toSolidityAddress(),
       clientsInfo.operatorId.toSolidityAddress(),
@@ -148,7 +152,7 @@ export class DAONFTTokenTest extends CommonSteps {
     const amt = Number(
       fromAcctBal.plus(new BigNumber(1 * CommonSteps.withPrecision))
     );
-    proposalId = await govTokenDao.createTokenTransferProposal(
+    proposalId = await ftDao.createTokenTransferProposal(
       title,
       clientsInfo.treasureId.toSolidityAddress(),
       clientsInfo.operatorId.toSolidityAddress(),
@@ -165,7 +169,7 @@ export class DAONFTTokenTest extends CommonSteps {
   )
   public async createProposalFail(title: string, tokenAmt: number) {
     try {
-      proposalId = await govTokenDao.createTokenTransferProposal(
+      proposalId = await ftDao.createTokenTransferProposal(
         title,
         clientsInfo.treasureId.toSolidityAddress(),
         clientsInfo.operatorId.toSolidityAddress(),
@@ -244,16 +248,11 @@ export class DAONFTTokenTest extends CommonSteps {
   public async getInstances() {
     const csDev = new ContractService();
 
-    const governorTokenDaoProxyContractId = csDev.getContractWithProxy(
-      csDev.governorTokenDao
+    const tokenTransferDAOProxyContractId = csDev.getContractWithProxy(
+      ContractService.FT_DAO
     ).transparentProxyId!;
 
-    govTokenDao = new GovernorTokenDao(governorTokenDaoProxyContractId);
-
-    const governorTokenTransferProxyContractId = csDev.getContractWithProxy(
-      csDev.governorTTContractName
-    ).transparentProxyId!;
-    governorTT = new Governor(governorTokenTransferProxyContractId);
+    ftDao = new FTDAO(tokenTransferDAOProxyContractId);
 
     const nftHolderProxyContractId = csDev.getContractWithProxy(
       csDev.nftHolderContract
@@ -264,12 +263,8 @@ export class DAONFTTokenTest extends CommonSteps {
       "*******************Starting DAO NFT test with following*******************"
     );
     console.log(
-      "governorTokenDaoProxyContractId : ",
-      governorTokenDaoProxyContractId
-    );
-    console.log(
-      "governorTokenTransferProxyContractId : ",
-      governorTokenTransferProxyContractId
+      "tokenTransferDAOProxyContractId : ",
+      tokenTransferDAOProxyContractId
     );
     console.log("nftHolderProxyContractId : ", nftHolderProxyContractId);
   }
@@ -369,5 +364,13 @@ export class DAONFTTokenTest extends CommonSteps {
   )
   public async cancelProposal(title: string) {
     await governorTT.cancelProposal(title, clientsInfo.operatorClient);
+  }
+
+  private async updateGovernor(dao: FTDAO) {
+    const governorAddresses =
+      await dao.getGovernorTokenTransferContractAddresses();
+    governorTT = new Governor(
+      governorAddresses.governorTokenTransferProxyId.toString()
+    );
   }
 }

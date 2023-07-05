@@ -97,6 +97,7 @@ export default class Governor extends Base {
 
   createTextProposal = async (
     title: string,
+    creator: AccountId,
     client: Client = clientsInfo.operatorClient,
     description: string = DEFAULT_DESCRIPTION,
     link: string = DEFAULT_LINK
@@ -104,7 +105,8 @@ export default class Governor extends Base {
     const args = new ContractFunctionParameters()
       .addString(title)
       .addString(description)
-      .addString(link);
+      .addString(link)
+      .addAddress(creator.toSolidityAddress());
     const { result } = await this.execute(
       1_000_000,
       CREATE_PROPOSAL,
@@ -164,7 +166,8 @@ export default class Governor extends Base {
       .addString(description)
       .addString(link)
       .addAddress(targetProxyId.toSolidityAddress())
-      .addAddress(targetLogicId.toSolidityAddress());
+      .addAddress(targetLogicId.toSolidityAddress())
+      .addAddress(clientsInfo.operatorId.toSolidityAddress());
 
     const { result, receipt } = await this.execute(
       1_000_000,
@@ -426,7 +429,8 @@ export default class Governor extends Base {
       .addString(link)
       .addAddress(tokenTreasureId.toSolidityAddress())
       .addString(tokenName)
-      .addString(tokenSymbol);
+      .addString(tokenSymbol)
+      .addAddress(clientsInfo.operatorId.toSolidityAddress());
 
     const { result } = await this.execute(
       1_000_000,
@@ -457,6 +461,19 @@ export default class Governor extends Base {
       `- GovernorTokenCreate#${GET_TOKEN_ADDRESSES}(): token-address = ${tokenAddress}\n`
     );
     return TokenId.fromSolidityAddress(tokenAddress);
+  };
+
+  getVotes = async (client: Client = clientsInfo.operatorClient) => {
+    const args = new ContractFunctionParameters()
+      .addAddress(clientsInfo.operatorId.toSolidityAddress())
+      .addUint256(0);
+
+    const { result } = await this.execute(5_00_000, "getVotes", client, args);
+    const votingPower = result.getUint256(0);
+    console.log(
+      `- GovernorTokenCreate#${GET_TOKEN_ADDRESSES}(): votingPower = ${votingPower}\n`
+    );
+    return votingPower;
   };
 
   private createParams(proposalId: string) {

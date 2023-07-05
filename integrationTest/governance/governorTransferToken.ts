@@ -1,28 +1,20 @@
 import dex from "../../deployment/model/dex";
-import Governor from "../../e2e-test/business/Governor";
-import GodHolder from "../../e2e-test/business/GodHolder";
 
 import { Helper } from "../../utils/Helper";
 import { TokenId } from "@hashgraph/sdk";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { ContractService } from "../../deployment/service/ContractService";
-
-const csDev = new ContractService();
-
-const godHolderProxyId = csDev.getContractWithProxy(csDev.godHolderContract)
-  .transparentProxyId!;
-
-const governorTransferTokenId = csDev.getContractWithProxy(
-  csDev.governorTTContractName
-).transparentProxyId!;
-
-const governor = new Governor(governorTransferTokenId);
-const godHolder = new GodHolder(godHolderProxyId);
+import { InstanceProvider } from "../../utils/InstanceProvider";
 
 const TOKEN_ID = TokenId.fromString(dex.TOKEN_LAB49_1);
 const TOKEN_QTY = 1e8;
 
+const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
+
 async function main() {
+  const provider = InstanceProvider.getInstance();
+  const godHolder = await provider.getGODTokenHolderFromFactory(GOD_TOKEN_ID);
+  const governor = provider.getGovernor(ContractService.GOVERNOR_TT);
   await governor.initialize(godHolder);
 
   await godHolder.setupAllowanceForTokenLocking();

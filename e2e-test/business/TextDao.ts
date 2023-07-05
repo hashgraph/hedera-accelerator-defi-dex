@@ -1,23 +1,23 @@
 import dex from "../../deployment/model/dex";
 import BaseDao from "./BaseDao";
 import Governor from "./Governor";
-import GodHolder from "../../e2e-test/business/GodHolder";
-import NFTHolder from "../../e2e-test/business/NFTHolder";
+import GodHolder from "./GodHolder";
+import NFTHolder from "./NFTHolder";
 
 import { clientsInfo } from "../../utils/ClientManagement";
-import { BigNumber } from "bignumber.js";
 import {
   Client,
   TokenId,
   ContractId,
   ContractFunctionParameters,
+  ContractExecuteTransaction,
 } from "@hashgraph/sdk";
+import { Helper } from "../../utils/Helper";
 
 const INITIALIZE = "initialize";
 const CREATE_PROPOSAL = "createProposal";
 const GET_ALL_PROPOSALS = "getAllProposals";
-const GET_GOVERNOR_TOKEN_TRANSFER_CONTRACT_ADDRESS =
-  "getGovernorTokenTransferContractAddress";
+const GET_GOVERNOR_ADDRESS = "getGovernorContractAddress";
 
 export const DEFAULT_DESCRIPTION = "description";
 export const DEFAULT_LINK = "https://defi-ui.hedera.com/governance";
@@ -27,14 +27,14 @@ export const DEFAULT_VOTING_PERIOD = 100; // blocks means 3 minutes as per test
 export const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
 export const NFT_TOKEN_ID = TokenId.fromString(dex.NFT_TOKEN_ID);
 
-export default class GovernorTokenDao extends BaseDao {
+export default class TextDao extends BaseDao {
   async initialize(
     admin: string,
     name: string,
     url: string,
     desc: string,
     webLinks: string[],
-    governor: Governor,
+    textGovernor: Governor,
     tokenHolder: GodHolder | NFTHolder,
     client: Client = clientsInfo.operatorClient,
     defaultQuorumThresholdValue: number = DEFAULT_QUORUM_THRESHOLD_IN_BSP,
@@ -43,7 +43,7 @@ export default class GovernorTokenDao extends BaseDao {
     tokenId: TokenId = GOD_TOKEN_ID,
     holderTokenId: TokenId = GOD_TOKEN_ID
   ) {
-    await governor.initialize(
+    await textGovernor.initialize(
       tokenHolder,
       client,
       defaultQuorumThresholdValue,
@@ -58,7 +58,7 @@ export default class GovernorTokenDao extends BaseDao {
       url,
       desc,
       webLinks,
-      governor,
+      textGovernor,
       client
     );
   }
@@ -76,6 +76,7 @@ export default class GovernorTokenDao extends BaseDao {
       const governorId = governor.contractId;
       const governorAddress =
         ContractId.fromString(governorId).toSolidityAddress();
+      console.log(`governorAddress ${governorAddress}`);
       const args = new ContractFunctionParameters()
         .addAddress(admin)
         .addString(name)
@@ -84,18 +85,14 @@ export default class GovernorTokenDao extends BaseDao {
         .addStringArray(webLinks)
         .addAddress(governorAddress);
       await this.execute(9_00_000, INITIALIZE, client, args);
-      console.log(`- GovernorTokenDao#${INITIALIZE}(): done\n`);
+      console.log(`- TextDao#${INITIALIZE}(): done\n`);
       return;
     }
-    console.log(`- GovernorTokenDao#${INITIALIZE}(): already done\n`);
+    console.log(`- TextDao#${INITIALIZE}(): already done\n`);
   }
 
-  createTokenTransferProposal = async (
+  createTextProposal = async (
     title: string,
-    fromAddress: string,
-    toAddress: string,
-    tokenId: string,
-    tokenAmount: number,
     client: Client = clientsInfo.operatorClient,
     description: string = DEFAULT_DESCRIPTION,
     link: string = DEFAULT_LINK
@@ -103,11 +100,8 @@ export default class GovernorTokenDao extends BaseDao {
     const args = new ContractFunctionParameters()
       .addString(title)
       .addString(description)
-      .addString(link)
-      .addAddress(fromAddress) // from
-      .addAddress(toAddress) // to
-      .addAddress(tokenId) // tokenToTransfer
-      .addUint256(BigNumber(tokenAmount)); // amountToTransfer
+      .addString(link);
+
     const { result } = await this.execute(
       1_000_000,
       CREATE_PROPOSAL,
@@ -115,10 +109,13 @@ export default class GovernorTokenDao extends BaseDao {
       args,
       clientsInfo.operatorKey
     );
+
     const proposalId = result.getUint256(0).toFixed();
+
     console.log(
-      `- GovernorTokenDao#${CREATE_PROPOSAL}(): proposal-id = ${proposalId}\n`
+      `- TextDao#${CREATE_PROPOSAL}(): proposal-id = ${proposalId}\n`
     );
+
     return proposalId;
   };
 
@@ -132,22 +129,18 @@ export default class GovernorTokenDao extends BaseDao {
     );
     const proposalId = result.getUint256(0).toFixed();
     console.log(
-      `- GovernorTokenDao#${GET_ALL_PROPOSALS}(): proposal-id = ${proposalId}\n`
+      `- TextDao#${GET_ALL_PROPOSALS}(): proposal-id = ${proposalId}\n`
     );
   };
 
-  getGovernorTokenTransferContractAddress = async (
-    client: Client = clientsInfo.operatorClient
-  ) => {
+  getGovernorAddress = async (client: Client = clientsInfo.operatorClient) => {
     const { result } = await this.execute(
       2000000,
-      GET_GOVERNOR_TOKEN_TRANSFER_CONTRACT_ADDRESS,
+      GET_GOVERNOR_ADDRESS,
       client
     );
     const address = result.getAddress(0);
-    console.log(
-      `- GovernorTokenDao#${GET_GOVERNOR_TOKEN_TRANSFER_CONTRACT_ADDRESS}(): address = ${address}\n`
-    );
+    console.log(`- TextDao#${GET_GOVERNOR_ADDRESS}(): address = ${address}\n`);
     return ContractId.fromSolidityAddress(address);
   };
 }

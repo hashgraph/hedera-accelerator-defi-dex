@@ -8,14 +8,21 @@ export class ContractService {
   public static SAFE = "hederagnosissafe";
   public static SAFE_FACTORY = "hederagnosissafeproxyfactory";
   public static NFT_DAO_FACTORY = "nftdaofactory";
-  public static FT_DAO_FACTORY = "governancedaofactory";
+  public static FT_DAO_FACTORY = "ftdaofactory";
   public static GOVERNOR_TT = "governortransfertoken";
+  public static GOVERNOR_TEXT = "governortextproposal";
+  public static GOVERNOR_UPGRADE = "governorupgrade";
+  public static FT_DAO = "ftdao";
+  public static GOVERNOR_TOKEN_CREATE = "governortokencreate";
+  public static FACTORY = "factory";
   public static PAIR = "pair";
   public static LP_TOKEN = "lptoken";
   public static VAULT = "vault";
   public static SPLITTER = "splitter";
+  public static GOD_HOLDER = "godholder";
+  public static NFT_HOLDER = "nftholder";
+  public static MULTI_SEND = "hederamultisend";
 
-  public governanceDaoFactory = "governancedaofactory";
   public factoryContractName = "factory";
   public pairContractName = "pair";
   public hederaServiceContractName = "hederaservice";
@@ -38,8 +45,6 @@ export class ContractService {
   public configuration = "configuration";
   public godTokenHolderFactory = "godtokenholderfactory";
   public nftTokenHolderFactory = "nfttokenholderfactory";
-
-  public governorTokenDao = "governortokendao";
 
   private contractRecordFile = "./deployment/state/contracts.json";
   static DEV_CONTRACTS_PATH = "./deployment/state/contracts.json";

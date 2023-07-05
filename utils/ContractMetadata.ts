@@ -23,7 +23,8 @@ export default class ContractMetadata {
     "GovernorTokenCreate",
     "Splitter",
     "Configuration",
-    "GovernanceDAOFactory",
+    "FTDAO",
+    "FTDAOFactory",
     "NFTDAOFactory",
     "MultisigDAOFactory",
   ];
@@ -39,16 +40,17 @@ export default class ContractMetadata {
     "GovernorTokenCreate",
     "Splitter",
     "Vault",
-    "GODHolder",
-    "NFTHolder",
     "Configuration",
     "GODTokenHolderFactory",
     "NFTTokenHolderFactory",
-    "GovernanceDAOFactory",
-    "GovernorTokenDAO",
     "MultisigDAOFactory",
     "MultiSigDAO",
+    "FTDAO",
+    "FTDAOFactory",
     "NFTDAOFactory",
+    "GODHolder",
+    "NFTHolder",
+    "HederaMultiSend",
   ];
 
   static SUPPORTED_PROXY_OPTIONS = ["create", "update"];
@@ -112,6 +114,9 @@ export default class ContractMetadata {
       "TransparentUpgradeableProxy",
       "HederaGnosisSafe",
       "HederaGnosisSafeProxyFactory",
+      "ContractUpgradeDAO",
+      "BaseDAO",
+      "IERC20",
     ]
   ) => {
     return await this._readAllContractInfo(contractNameList);
@@ -125,8 +130,8 @@ export default class ContractMetadata {
     )!;
   };
 
-  public getContractInterface = async (contractName: string) => {
-    const info = (await this.getContractsInfo()).find(
+  public static getContractInterface = async (contractName: string) => {
+    const info = (await new ContractMetadata().getContractsInfo()).find(
       (contract: ContractInfo) =>
         contract.artifact.contractName.toLowerCase() ===
         contractName.toLowerCase()

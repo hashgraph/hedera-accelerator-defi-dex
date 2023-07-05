@@ -18,13 +18,14 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
         string memory linkToDiscussion,
         address _treasurer,
         string memory _tokenName,
-        string memory _tokenSymbol
+        string memory _tokenSymbol,
+        address creator
     ) public returns (uint256) {
         uint256 proposalId = _createProposal(
             title,
             description,
             linkToDiscussion,
-            msg.sender,
+            creator,
             bytes("")
         );
         _proposalData[proposalId] = TokenCreateData(
@@ -65,7 +66,7 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
 
         require(
             responseCode == HederaResponseCodes.SUCCESS,
-            "GovernorTokenCreate: Token creation failed."
+            "GTC: Token creation failed."
         );
         tokenCreateData.newTokenAddress = tokenAddress;
     }
@@ -87,12 +88,12 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
 
         require(
             tokenCreateData.newTokenAddress != address(0x0),
-            "GovernorTokenCreate: Mint not allowed as token doesn't exist for this proposal."
+            "GTC: mint, no proposal"
         );
 
         require(
             tokenCreateData.treasurer == msg.sender,
-            "GovernorTokenCreate: Only treasurer can mint tokens."
+            "GTC: Only treasurer can mint"
         );
 
         (int256 responseCode, int64 newTotalSupply) = super.mintToken(
@@ -103,7 +104,7 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
 
         require(
             responseCode == HederaResponseCodes.SUCCESS,
-            "GovernorTokenCreate: Minting token failed"
+            "GTC: Minting token failed"
         );
         return newTotalSupply;
     }
@@ -115,12 +116,12 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
         TokenCreateData storage tokenCreateData = _proposalData[proposalId];
         require(
             tokenCreateData.newTokenAddress != address(0x0),
-            "GovernorTokenCreate: Burn not allowed as token doesn't exist for this proposal."
+            "GTC: burn, no proposal."
         );
 
         require(
             tokenCreateData.treasurer == msg.sender,
-            "GovernorTokenCreate: Only treasurer can burn tokens."
+            "GTC: Only treasurer can burn"
         );
 
         (int256 responseCode, int64 newTotalSupply) = super.burnToken(
@@ -131,7 +132,7 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
 
         require(
             responseCode == HederaResponseCodes.SUCCESS,
-            "GovernorTokenCreate: Burn token failed"
+            "GTC: Burn token failed"
         );
 
         return newTotalSupply;
@@ -144,16 +145,16 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
     ) external {
         require(
             amount > 0,
-            "GovernorTokenCreate: Token quantity to transfer should be greater than zero."
+            "GTC: Token qty to transfer should be > 0"
         );
         TokenCreateData storage tokenCreateData = _proposalData[proposalId];
         require(
             tokenCreateData.newTokenAddress != address(0x0),
-            "GovernorTokenCreate: Token transfer not allowed as token doesn't exist for this proposal."
+            "GTC: Token transfer not allowed as no token for this proposal."
         );
         require(
             tokenCreateData.treasurer == msg.sender,
-            "GovernorTokenCreate: Only treasurer can transfer tokens."
+            "GTC: Only treasurer can transfer tokens."
         );
         uint256 contractBalance = _balanceOf(
             tokenCreateData.newTokenAddress,
@@ -161,7 +162,7 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
         );
         require(
             contractBalance >= amount,
-            "GovernorTokenCreate: Contract doesn't have sufficient balance please take treasurer help to mint it."
+            "GTC: Contract doesn't have balance, mint it."
         );
 
         int256 responseCode = super._transferToken(
@@ -172,7 +173,7 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
         );
         require(
             responseCode == HederaResponseCodes.SUCCESS,
-            "GovernorTokenCreate: Token transfer failed."
+            "GTC: Token transfer failed."
         );
     }
 }

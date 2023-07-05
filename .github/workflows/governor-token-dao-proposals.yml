@@ -4,12 +4,16 @@ on:
   workflow_dispatch:
     inputs:
       contractId:
-        description: "GovernanceDAOFactory contract id"
+        description: "FTDAOFactory contract id"
         default: "0.0.3630071"
         required: true
         type: string
       daoAddress:
-        description: "Enter GovernorTokenDAO address"
+        description: "Enter FTDAO address"
+        required: true
+        type: string
+      tokenAddress:
+        description: "Enter Governance token address"
         required: true
         type: string
 

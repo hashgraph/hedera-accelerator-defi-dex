@@ -1,28 +1,21 @@
+import dex from "../../deployment/model/dex";
 import Common from "../../e2e-test/business/Common";
-import Governor from "../../e2e-test/business/Governor";
-import GodHolder from "../../e2e-test/business/GodHolder";
 
 import { Helper } from "../../utils/Helper";
 import { Deployment } from "../../utils/deployContractOnTestnet";
-import { ContractId } from "@hashgraph/sdk";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { ContractService } from "../../deployment/service/ContractService";
+import { InstanceProvider } from "../../utils/InstanceProvider";
+import { TokenId, ContractId } from "@hashgraph/sdk";
 
-const csDev = new ContractService();
-const deployment = new Deployment();
-
-const godHolderContract = csDev.getContractWithProxy(csDev.godHolderContract);
-const governorUpgradeContract = csDev.getContractWithProxy(
-  csDev.governorUpgradeContract
-);
-const factoryProxyId = csDev.getContractWithProxy(csDev.factoryContractName)
-  .transparentProxyId!;
-
-const governor = new Governor(governorUpgradeContract.transparentProxyId!);
-const godHolder = new GodHolder(godHolderContract.transparentProxyId!);
+const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
 
 async function main() {
-  const { id } = await deployment.deploy(csDev.factoryContractName);
+  const { id } = await new Deployment().deploy(ContractService.FACTORY);
+
+  const provider = InstanceProvider.getInstance();
+  const godHolder = await provider.getGODTokenHolderFromFactory(GOD_TOKEN_ID);
+  const governor = provider.getGovernor(ContractService.GOVERNOR_UPGRADE);
   await governor.initialize(godHolder);
 
   await godHolder.setupAllowanceForTokenLocking();
@@ -36,7 +29,7 @@ async function main() {
 
   const title = Helper.createProposalTitle("Upgrade Proposal");
   const { proposalId } = await governor.createContractUpgradeProposal(
-    ContractId.fromString(factoryProxyId),
+    ContractId.fromString(provider.getFactory().contractId),
     ContractId.fromString(id),
     title,
     clientsInfo.operatorClient
