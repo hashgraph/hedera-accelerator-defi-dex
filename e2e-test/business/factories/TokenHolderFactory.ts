@@ -40,11 +40,10 @@ export default class TokenHolderFactory extends Base {
         ? ContractService.NFT_HOLDER
         : ContractService.GOD_HOLDER;
       const holderLogic = await new Deployment().deploy(logic);
-      const proxyAdmin = clientsInfo.dexOwnerId.toSolidityAddress();
       const args = new ContractFunctionParameters()
         .addAddress(this.htsAddress)
         .addAddress(holderLogic.address)
-        .addAddress(proxyAdmin);
+        .addAddress(clientsInfo.childProxyAdminId.toSolidityAddress());
       await this.execute(4_00_000, INITIALIZE, client, args);
       console.log(
         `- ${this.getPrefix()}TokenHolderFactory#${INITIALIZE}(): done. \n`

@@ -135,8 +135,8 @@ export class GovernorUpgradeSteps extends CommonSteps {
     await Common.upgradeTo(
       upgradeResponse.proxyAddress,
       upgradeResponse.logicAddress,
-      clientsInfo.adminKey,
-      clientsInfo.adminClient
+      clientsInfo.proxyAdminKey,
+      clientsInfo.proxyAdminClient
     );
   }
 

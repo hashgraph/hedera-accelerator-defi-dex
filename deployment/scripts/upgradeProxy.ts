@@ -3,16 +3,15 @@ import {
   ContractExecuteTransaction,
   ContractFunctionParameters,
 } from "@hashgraph/sdk";
-import ClientManagement from "../../utils/ClientManagement";
+import { clientsInfo } from "../../utils/ClientManagement";
 
 import { ContractService } from "../service/ContractService";
 const contractService = new ContractService();
-const clientManagement = new ClientManagement();
 
 let contractId = "";
 
-const client = clientManagement.createClientAsAdmin();
-const { adminId, adminKey } = clientManagement.getAdmin();
+const client = clientsInfo.proxyAdminClient;
+const adminKey = clientsInfo.proxyAdminKey;
 
 const getAdmin = async () => {
   const liquidityPool = await new ContractExecuteTransaction()

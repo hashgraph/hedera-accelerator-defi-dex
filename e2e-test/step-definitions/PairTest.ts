@@ -1,17 +1,15 @@
 import { binding, given, then, when } from "cucumber-tsflow";
 import { expect } from "chai";
 import { ContractService } from "../../deployment/service/ContractService";
-import ClientManagement, { clientsInfo } from "../../utils/ClientManagement";
 import { TokenId, ContractId, AccountId } from "@hashgraph/sdk";
 import { BigNumber } from "bignumber.js";
 import Pair from "../business/Pair";
 import LpToken from "../business/LpToken";
 import Common from "../business/Common";
-import exp from "constants";
 import { Helper } from "../../utils/Helper";
 import { CommonSteps } from "./CommonSteps";
+import { clientsInfo } from "../../utils/ClientManagement";
 
-const clientManagement = new ClientManagement();
 const contractService = new ContractService();
 const lpTokenContract = contractService.getContractWithProxy(
   contractService.lpTokenContractName
@@ -20,9 +18,11 @@ const pairContract = contractService.getContractWithProxy(
   contractService.pairContractName
 );
 
-const { treasureId, treasureKey } = clientManagement.getTreasure();
-const { id, key } = clientManagement.getOperator();
-const client = clientManagement.createOperatorClient();
+const treasureId = clientsInfo.treasureId;
+const treasureKey = clientsInfo.treasureKey;
+const id = clientsInfo.operatorId;
+const key = clientsInfo.operatorKey;
+const client = clientsInfo.operatorClient;
 
 const pair = new Pair(pairContract.transparentProxyId!);
 const lpToken = new LpToken(lpTokenContract.transparentProxyId!);
@@ -61,7 +61,7 @@ export class PairTestSteps {
     console.log(
       "*******************Starting pair test with following credentials*******************"
     );
-    console.log("TOKEN_USER_ID : ", id.toString());
+    console.log("OPERATOR_ID : ", id.toString());
     console.log("treasureId :", treasureId.toString());
     tokenA = await Common.createToken(
       firstTokenName,
