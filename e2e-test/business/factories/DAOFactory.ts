@@ -54,7 +54,6 @@ export default class DAOFactory extends Base {
         tokenHolderFactory.contractId
       ).toSolidityAddress();
       const tokenHolderFactoryAddress = tokenHolderFactoryContractId;
-      const proxyAdmin = clientsInfo.childProxyAdminId.toSolidityAddress();
       const deployedItems = await deployment.deployContracts([
         ContractService.FT_DAO,
         ContractService.GOVERNOR_TT,
@@ -79,7 +78,7 @@ export default class DAOFactory extends Base {
         ContractService.FT_DAO_FACTORY,
         INITIALIZE,
         [
-          proxyAdmin,
+          clientsInfo.childProxyAdminId.toSolidityAddress(),
           this.htsAddress,
           ftDao.address,
           tokenHolderFactoryAddress,

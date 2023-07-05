@@ -49,8 +49,8 @@ export const DAO_OWNERS_ADDRESSES = DAO_OWNERS_INFO.map(
   (item: any) => item.address
 );
 
-const DAO_ADMIN_ADDRESS = clientsInfo.childProxyAdminId.toSolidityAddress();
-const DAO_ADMIN_CLIENT = clientsInfo.childProxyAdminClient;
+const DAO_ADMIN_ADDRESS = clientsInfo.uiUserId.toSolidityAddress();
+const DAO_ADMIN_CLIENT = clientsInfo.uiUserClient;
 
 async function main() {
   const contract = csDev.getContractWithProxy(ContractService.MULTI_SIG);

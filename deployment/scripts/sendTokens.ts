@@ -7,8 +7,8 @@ import Common from "../../e2e-test/business/Common";
 async function main() {
   await Common.transferTokens(
     AccountId.fromString("0.0.6883"),
-    clientsInfo.proxyAdminId,
-    clientsInfo.proxyAdminKey,
+    clientsInfo.uiUserId,
+    clientsInfo.uiUserKey,
     dex.GOD_TOKEN_ID,
     100000 * 1e8
   );

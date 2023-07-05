@@ -63,10 +63,8 @@ export class FactorySteps {
     console.log(
       "*******************Starting factory test with following credentials*******************"
     );
-    const adminAddress = clientsInfo.proxyAdminId.toSolidityAddress();
     console.log("Factory contractId : ", factoryContractId);
     console.log("H address : ", baseContractAddress);
-    console.log("adminAddress : ", adminAddress);
     console.log("OPERATOR_ID : ", id.toString());
     console.log("TREASURE_ID :", treasureId.toString());
     try {

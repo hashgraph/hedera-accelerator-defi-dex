@@ -40,12 +40,12 @@ async function main() {
   await transferTokenPublic(
     hederaService.id,
     tokenAddressSol,
-    clientsInfo.proxyAdminId.toSolidityAddress(),
+    clientsInfo.treasureId.toSolidityAddress(),
     userAccountId.toSolidityAddress(),
     20
   );
   await balanceQueryFunction(userAccountId.toString(), tokenId);
-  await balanceQueryFunction(clientsInfo.proxyAdminId.toString(), tokenId);
+  await balanceQueryFunction(clientsInfo.treasureId.toString(), tokenId);
   return "executed successfully";
 }
 
@@ -60,12 +60,12 @@ async function createToken(initialSupply: number) {
     .setTokenSymbol("ST")
     .setInitialSupply(initialSupply)
     .setDecimals(0)
-    .setTreasuryAccountId(clientsInfo.proxyAdminId)
+    .setTreasuryAccountId(clientsInfo.treasureId)
     .setTokenType(TokenType.FungibleCommon)
     .setSupplyType(TokenSupplyType.Infinite)
     .setSupplyKey(contractIdObject)
     .freezeWith(client)
-    .sign(clientsInfo.proxyAdminKey);
+    .sign(clientsInfo.treasureKey);
 
   const txResponse = await tx.execute(client);
   const txReceipt = await txResponse.getReceipt(client);
