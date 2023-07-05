@@ -11,7 +11,7 @@ import {
   ContractFunctionParameters,
 } from "@hashgraph/sdk";
 
-const NFT_TOKEN_ID = TokenId.fromString(dex.NFT_TOKEN_ID);
+const NFT_TOKEN_ID = dex.NFT_TOKEN_ID;
 const INITIALIZE = "initialize";
 const GET_TOKEN = "getToken";
 const GRAB_TOKENS_FOR_VOTER = "grabTokensFromUser";

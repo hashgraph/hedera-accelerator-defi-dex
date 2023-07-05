@@ -72,7 +72,9 @@ const nonFungibleTokenFlow = async () => {
     ContractService.GOVERNOR_TT
   );
   const provider = InstanceProvider.getInstance();
-  const nftHolder = provider.getNonFungibleTokenHolder();
+  const nftHolder = await provider.getNFTTokenHolderFromFactory(
+    dex.NFT_TOKEN_ID
+  );
   const governor = provider.getGovernor(
     ContractService.GOVERNOR_TT,
     deploymentDetails.proxyId
@@ -83,8 +85,8 @@ const nonFungibleTokenFlow = async () => {
     500,
     0,
     30,
-    TokenId.fromString(dex.NFT_TOKEN_ID),
-    TokenId.fromString(dex.NFT_TOKEN_ID)
+    dex.NFT_TOKEN_ID,
+    dex.NFT_TOKEN_ID
   );
 
   await nftHolder.setupAllowanceForTokenLocking();

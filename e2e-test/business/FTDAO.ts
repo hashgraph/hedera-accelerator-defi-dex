@@ -28,7 +28,7 @@ export const DEFAULT_QUORUM_THRESHOLD_IN_BSP = 500;
 export const DEFAULT_VOTING_DELAY = 0; // blocks
 export const DEFAULT_VOTING_PERIOD = 100; // blocks means 3 minutes as per test
 export const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
-export const NFT_TOKEN_ID = TokenId.fromString(dex.NFT_TOKEN_ID);
+export const NFT_TOKEN_ID = dex.NFT_TOKEN_ID;
 
 export default class FTDAO extends BaseDao {
   async initialize(

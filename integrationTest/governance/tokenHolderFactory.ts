@@ -9,7 +9,7 @@ import { InstanceProvider } from "../../utils/InstanceProvider";
 const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
 const TOKEN_LAB49_1 = TokenId.fromString(dex.TOKEN_LAB49_1);
 
-const NFT_TOKEN_ID = TokenId.fromString(dex.NFT_TOKEN_ID);
+const NFT_TOKEN_ID = dex.NFT_TOKEN_ID;
 
 async function executeTokensHolderFlow(
   factory: TokenHolderFactory,
