@@ -52,22 +52,6 @@ abstract contract GovernorCountingSimpleInternal is
         uint256 endBlock;
     }
 
-    struct VotingInformation {
-        uint256 quorumValue;
-        bool isQuorumReached;
-        ProposalState proposalState;
-        bool voted;
-        address votedUser;
-        uint256 againstVotes;
-        uint256 forVotes;
-        uint256 abstainVotes;
-    }
-
-    struct Duration {
-        uint256 startBlock;
-        uint256 endBlock;
-    }
-
     event ProposalDetails(
         uint256 proposalId,
         address proposer,
@@ -414,7 +398,10 @@ abstract contract GovernorCountingSimpleInternal is
         }
     }
 
-    function _returnGODToken(address creator, uint256 nftTokenSerialId) private {
+    function _returnGODToken(
+        address creator,
+        uint256 nftTokenSerialId
+    ) private {
         if (!tokenHolder.isNFTType()) {
             int256 code = _transferToken(
                 address(token),

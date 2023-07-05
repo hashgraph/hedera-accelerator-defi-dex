@@ -641,7 +641,8 @@ describe("GovernanceTokenDAO tests", function () {
           "description",
           "linkToDiscussion",
           lpTokenProxy.address,
-          lpTokenLogic.address
+          lpTokenLogic.address,
+          1
         );
       const proposals = await governorTokenDAO.getContractUpgradeProposals();
       expect(proposals.length).equals(1);
@@ -666,7 +667,8 @@ describe("GovernanceTokenDAO tests", function () {
             "description",
             "linkToDiscussion",
             lpTokenProxy.address,
-            lpTokenLogic.address
+            lpTokenLogic.address,
+            1
           )
       ).revertedWith("Ownable: caller is not the owner");
     });
@@ -678,7 +680,7 @@ describe("GovernanceTokenDAO tests", function () {
 
       await governorTokenDAO
         .connect(daoAdminOne)
-        .createTextProposal("proposal", "description", "linkToDiscussion");
+        .createTextProposal("proposal", "description", "linkToDiscussion", 1);
       const proposals = await governorTokenDAO.getTextProposals();
       expect(proposals.length).equals(1);
     });
@@ -690,7 +692,7 @@ describe("GovernanceTokenDAO tests", function () {
       await expect(
         governorTokenDAO
           .connect(daoAdminTwo)
-          .createTextProposal("proposal", "description", "linkToDiscussion")
+          .createTextProposal("proposal", "description", "linkToDiscussion", 1)
       ).revertedWith("Ownable: caller is not the owner");
     });
 
@@ -707,7 +709,8 @@ describe("GovernanceTokenDAO tests", function () {
           "linkToDiscussion",
           daoAdminOne.address,
           "TokenName",
-          "TokenSymbol"
+          "TokenSymbol",
+          1
         );
       const proposals = await governorTokenDAO.getTokenCreateProposals();
       expect(proposals.length).equals(1);
@@ -726,7 +729,8 @@ describe("GovernanceTokenDAO tests", function () {
             "linkToDiscussion",
             daoAdminTwo.address,
             "TokenName",
-            "TokenSymbol"
+            "TokenSymbol",
+            1
           )
       ).revertedWith("Ownable: caller is not the owner");
     });
