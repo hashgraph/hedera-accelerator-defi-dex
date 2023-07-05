@@ -437,7 +437,7 @@ export class MultiSigDAOSteps {
   public async upgradeDAOLogicAddress() {
     upgradeResult = await daoFactory.upgradeDaoLogicAddress(
       contractNewAddress,
-      clientsInfo.treasureClient
+      clientsInfo.childProxyAdminClient
     );
   }
 
@@ -455,7 +455,7 @@ export class MultiSigDAOSteps {
   public async upgradeSafeLogicAddress() {
     upgradeResult = await daoFactory.upgradeSafeLogicAddress(
       contractNewAddress,
-      clientsInfo.treasureClient
+      clientsInfo.childProxyAdminClient
     );
   }
 
@@ -467,7 +467,7 @@ export class MultiSigDAOSteps {
   public async upgradeGnosisSafeProxyFactory() {
     upgradeResult = await daoFactory.upgradeSafeFactoryAddress(
       contractNewAddress,
-      clientsInfo.treasureClient
+      clientsInfo.childProxyAdminClient
     );
   }
 }
