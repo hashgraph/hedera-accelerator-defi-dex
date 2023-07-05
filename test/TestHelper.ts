@@ -86,12 +86,7 @@ export class TestHelper {
     return await this.deployLogic("ERC20Mock", name, symbol, total, 0);
   }
 
-  static async deployERC721Mock(
-    total: number = this.toPrecision(100),
-    name: String = "NFT TEST",
-    symbol: String = "NFT",
-    serialId: number = 1
-  ) {
+  static async deployERC721Mock() {
     return await this.deployLogic("ERC721Mock");
   }
 
