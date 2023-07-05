@@ -138,22 +138,17 @@ export class ContractService {
     const contracts: Array<DeployedContract> = this.getAllContracts();
     const allOtherContracts = contracts.filter(
       (contract: DeployedContract) =>
-        contract.address != contractBeingDeployed.address
+        contract.address !== contractBeingDeployed.address
     );
-
     const updatedContracts = [...allOtherContracts, updatedContract];
-
     const data = JSON.stringify(updatedContracts, null, 2);
-
-    console.log(`Contract record updated ${JSON.stringify(updatedContract)}`);
-
     fs.writeFileSync(this.contractRecordFile, data);
   };
 
   public getContract = (contractName: string): DeployedContract => {
     const contracts: Array<DeployedContract> = this.getAllContracts();
     const matchingContracts = contracts.filter(
-      (contract: DeployedContract) => contract.name == contractName
+      (contract: DeployedContract) => contract.name === contractName
     );
     const latestContract = matchingContracts[matchingContracts.length - 1];
     return latestContract;
@@ -163,7 +158,7 @@ export class ContractService {
     const contracts: Array<DeployedContract> = this.getAllContracts();
     const matchingProxyContracts = contracts.filter(
       (contract: DeployedContract) =>
-        contract.name == contractName &&
+        contract.name === contractName &&
         contract.transparentProxyAddress != null &&
         contract.transparentProxyId != null
     );
@@ -177,7 +172,7 @@ export class ContractService {
     const contracts: Array<DeployedContract> = this.getAllContracts();
     const matchingProxyContracts = contracts.filter(
       (contract: DeployedContract) =>
-        contract.name == contractName &&
+        contract.name === contractName &&
         contract.transparentProxyAddress != null &&
         contract.transparentProxyId != null
     );
@@ -191,7 +186,7 @@ export class ContractService {
     const contracts: Array<DeployedContract> = this.getAllContracts();
     const matchingProxyContracts = contracts.filter(
       (contract: DeployedContract) =>
-        contract.name == contractName &&
+        contract.name === contractName &&
         contract.transparentProxyAddress != null &&
         contract.transparentProxyId != null
     );

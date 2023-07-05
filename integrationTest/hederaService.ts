@@ -1,27 +1,23 @@
+import { BigNumber } from "bignumber.js";
+import { clientsInfo } from "../utils/ClientManagement";
+import { ContractService } from "../deployment/service/ContractService";
 import {
-  ContractFunctionParameters,
-  ContractId,
-  AccountBalanceQuery,
-  TokenCreateTransaction,
-  PrivateKey,
-  TokenInfoQuery,
-  ContractExecuteTransaction,
-  Hbar,
   TokenType,
+  PrivateKey,
+  ContractId,
+  TokenInfoQuery,
   TokenSupplyType,
+  AccountBalanceQuery,
+  ContractFunctionParameters,
+  TokenCreateTransaction,
+  ContractExecuteTransaction,
 } from "@hashgraph/sdk";
 
-import { BigNumber } from "bignumber.js";
-
-import { ContractService } from "../deployment/service/ContractService";
-import ClientManagement from "../utils/ClientManagement";
-
-const cm = new ClientManagement();
-const { id: userAccountId, key: userPrivateKey } = cm.getOperator();
-const client = cm
-  .createClientAsAdmin()
-  .setDefaultMaxTransactionFee(new Hbar(50));
-const clientDetails = cm.getAdmin();
+const {
+  operatorId: userAccountId,
+  operatorKey: userPrivateKey,
+  proxyAdminClient: client,
+} = clientsInfo;
 
 const contractService = new ContractService();
 const hederaService = contractService.getContract(
@@ -44,12 +40,12 @@ async function main() {
   await transferTokenPublic(
     hederaService.id,
     tokenAddressSol,
-    clientDetails.adminId.toSolidityAddress(),
+    clientsInfo.proxyAdminId.toSolidityAddress(),
     userAccountId.toSolidityAddress(),
     20
   );
   await balanceQueryFunction(userAccountId.toString(), tokenId);
-  await balanceQueryFunction(clientDetails.adminId.toString(), tokenId);
+  await balanceQueryFunction(clientsInfo.proxyAdminId.toString(), tokenId);
   return "executed successfully";
 }
 
@@ -64,12 +60,12 @@ async function createToken(initialSupply: number) {
     .setTokenSymbol("ST")
     .setInitialSupply(initialSupply)
     .setDecimals(0)
-    .setTreasuryAccountId(clientDetails.adminId)
+    .setTreasuryAccountId(clientsInfo.proxyAdminId)
     .setTokenType(TokenType.FungibleCommon)
     .setSupplyType(TokenSupplyType.Infinite)
     .setSupplyKey(contractIdObject)
     .freezeWith(client)
-    .sign(clientDetails.adminKey);
+    .sign(clientsInfo.proxyAdminKey);
 
   const txResponse = await tx.execute(client);
   const txReceipt = await txResponse.getReceipt(client);

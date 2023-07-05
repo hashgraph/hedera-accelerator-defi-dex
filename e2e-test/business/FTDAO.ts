@@ -82,7 +82,7 @@ export default class FTDAO extends BaseDao {
     const common = {
       hederaService: this.htsAddress,
       iTokenHolder: godHolderProxyAddress,
-      proxyAdmin: clientsInfo.dexOwnerId.toSolidityAddress(),
+      proxyAdmin: clientsInfo.childProxyAdminId.toSolidityAddress(),
       systemUser: clientsInfo.operatorId.toSolidityAddress(),
     };
 

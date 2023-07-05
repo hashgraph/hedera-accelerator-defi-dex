@@ -130,8 +130,8 @@ export default class Common {
   static upgradeTo = async (
     proxyAddress: string,
     logicAddress: string,
-    adminKey: PrivateKey = clientsInfo.adminKey,
-    client: Client = clientsInfo.adminClient
+    adminKey: PrivateKey = clientsInfo.proxyAdminKey,
+    client: Client = clientsInfo.proxyAdminClient
   ) => {
     const proxyContractId = ContractId.fromSolidityAddress(proxyAddress);
     const args = new ContractFunctionParameters().addAddress(logicAddress);

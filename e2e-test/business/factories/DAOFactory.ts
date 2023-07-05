@@ -54,7 +54,7 @@ export default class DAOFactory extends Base {
         tokenHolderFactory.contractId
       ).toSolidityAddress();
       const tokenHolderFactoryAddress = tokenHolderFactoryContractId;
-      const proxyAdmin = clientsInfo.dexOwnerId.toSolidityAddress();
+      const proxyAdmin = clientsInfo.childProxyAdminId.toSolidityAddress();
       const deployedItems = await deployment.deployContracts([
         ContractService.FT_DAO,
         ContractService.GOVERNOR_TT,
@@ -179,7 +179,7 @@ export default class DAOFactory extends Base {
     const { receipt } = await this.execute(
       2_00_000,
       UPGRADE_GOVERNORS_IMPLEMENTATION,
-      clientsInfo.dexOwnerClient,
+      clientsInfo.childProxyAdminClient,
       bytes
     );
 
@@ -195,7 +195,7 @@ export default class DAOFactory extends Base {
     await this.execute(
       200000,
       UPGRADE_TOKEN_DAO_LOGIC_IMPL,
-      clientsInfo.dexOwnerClient,
+      clientsInfo.childProxyAdminClient,
       args
     );
     console.log(
@@ -208,7 +208,7 @@ export default class DAOFactory extends Base {
     await this.execute(
       200000,
       UPGRADE_TOKEN_HOLDER_FACTORY,
-      clientsInfo.dexOwnerClient,
+      clientsInfo.childProxyAdminClient,
       args
     );
     console.log(
@@ -220,7 +220,7 @@ export default class DAOFactory extends Base {
     const { result } = await this.execute(
       200000,
       GET_TOKEN_HOLDER_FACTORY_ADDRESS,
-      clientsInfo.dexOwnerClient
+      clientsInfo.childProxyAdminClient
     );
     const address = result.getAddress(0);
     console.log(

@@ -49,8 +49,8 @@ export const DAO_OWNERS_ADDRESSES = DAO_OWNERS_INFO.map(
   (item: any) => item.address
 );
 
-const DAO_ADMIN_ADDRESS = clientsInfo.dexOwnerId.toSolidityAddress();
-const DAO_ADMIN_CLIENT = clientsInfo.dexOwnerClient;
+const DAO_ADMIN_ADDRESS = clientsInfo.childProxyAdminId.toSolidityAddress();
+const DAO_ADMIN_CLIENT = clientsInfo.childProxyAdminClient;
 
 async function main() {
   const contract = csDev.getContractWithProxy(ContractService.MULTI_SIG);
@@ -91,7 +91,7 @@ export async function executeDAO(
   tokenSenderClient: Client = clientsInfo.uiUserClient,
   tokenSenderAccountId: AccountId = clientsInfo.uiUserId,
   tokenSenderPrivateKey: PrivateKey = clientsInfo.uiUserKey,
-  safeTxnExecutionClient: Client = clientsInfo.dexOwnerClient
+  safeTxnExecutionClient: Client = clientsInfo.childProxyAdminClient
 ) {
   console.log(`- executing Multi-sig DAO = ${multiSigDAO.contractId}\n`);
 
