@@ -1,20 +1,19 @@
-import dotenv from "dotenv";
 import * as fs from "fs";
-import {
-  FileCreateTransaction,
-  FileAppendTransaction,
-  PrivateKey,
-  ContractCreateTransaction,
-  Client,
-  ContractFunctionParameters,
-  Key,
-  ContractCreateFlow,
-} from "@hashgraph/sdk";
 import * as hethers from "@hashgraph/hethers";
-import { ContractService } from "../deployment/service/ContractService";
-import { clientsInfo } from "../utils/ClientManagement";
 import ContractMetadata from "../utils/ContractMetadata";
 
+import { clientsInfo } from "../utils/ClientManagement";
+import { ContractService } from "../deployment/service/ContractService";
+import { DeployedContract } from "../deployment/model/contract";
+import {
+  Key,
+  Client,
+  PrivateKey,
+  ContractCreateFlow,
+  ContractFunctionParameters,
+} from "@hashgraph/sdk";
+
+import dotenv from "dotenv";
 dotenv.config();
 
 export class EtherDeployment {
@@ -124,7 +123,37 @@ export class Deployment {
   private contractService = new ContractService();
   private contractMetadata = new ContractMetadata();
 
-  deployContracts = async (
+  public deploy = async (
+    contractName: string,
+    adminKey: Key = clientsInfo.operatorKey.publicKey,
+    client: Client = clientsInfo.operatorClient,
+    params: ContractFunctionParameters = new ContractFunctionParameters()
+  ) => {
+    console.log(`- Deployment#deploy(): ${contractName} logic deploying...\n`);
+    const result = await this._deployInternally(
+      contractName,
+      adminKey,
+      client,
+      params
+    );
+    console.log(
+      `- Deployment#deploy(): done where contract-name = ${contractName}, id = ${result.id}, address = ${result.address}\n`
+    );
+    return result;
+  };
+
+  public deployAndSave = async (
+    contractName: string,
+    adminKey: Key = clientsInfo.operatorKey.publicKey,
+    client: Client = clientsInfo.operatorClient,
+    params: ContractFunctionParameters = new ContractFunctionParameters()
+  ) => {
+    const result = await this.deploy(contractName, adminKey, client, params);
+    this.contractService.addDeployed(result);
+    return result;
+  };
+
+  public deployContracts = async (
     names: string[],
     adminKey: Key = clientsInfo.operatorKey.publicKey,
     client: Client = clientsInfo.operatorClient
@@ -138,38 +167,33 @@ export class Deployment {
     return deployedItems;
   };
 
-  deploy = async (
+  public deployProxy = async (
     contractName: string,
     adminKey: Key = clientsInfo.operatorKey.publicKey,
-    client: Client = clientsInfo.operatorClient,
-    params: ContractFunctionParameters = new ContractFunctionParameters()
+    client: Client = clientsInfo.operatorClient
   ) => {
-    console.log(`- Deployment#deploy(): ${contractName} logic deploying...\n`);
-    const result = await this.deployInternally(
-      contractName,
-      adminKey,
-      client,
-      params
-    );
     console.log(
-      `- Deployment#deploy(): done where contract-name = ${contractName}, id = ${result.id}, address = ${result.address}\n`
+      `- Deployment#deployProxy(): ${contractName} proxy deploying...\n`
     );
+    const logic = await this._deployInternally(contractName, adminKey, client);
+    const proxy = await this.deployProxyForGivenLogic(logic, adminKey, client);
+    console.log(`- Deployment#deployProxy(): done`);
+    console.table(proxy);
+    console.log("\n");
+    return proxy;
+  };
+
+  public deployProxyAndSave = async (
+    contractName: string,
+    adminKey: Key = clientsInfo.operatorKey.publicKey,
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    const result = await this.deployProxy(contractName, adminKey, client);
+    this.contractService.addDeployed(result);
     return result;
   };
 
-  public deployContractFromOperatorAccount = async (
-    filePath: string,
-    contractConstructorArgs: ContractFunctionParameters = new ContractFunctionParameters()
-  ) => {
-    return this.deployContract(
-      clientsInfo.operatorClient,
-      clientsInfo.operatorKey,
-      filePath,
-      contractConstructorArgs
-    );
-  };
-
-  deployProxies = async (
+  public deployProxies = async (
     names: string[],
     adminKey: Key = clientsInfo.operatorKey.publicKey,
     client: Client = clientsInfo.operatorClient
@@ -183,14 +207,12 @@ export class Deployment {
     return deployedItems;
   };
 
-  deployProxy = async (
-    contractName: string,
+  public deployProxyForGivenLogic = async (
+    logic: DeployedContract,
     adminKey: Key = clientsInfo.operatorKey.publicKey,
     client: Client = clientsInfo.operatorClient
   ) => {
-    console.log(`- Deployment#deploy(): ${contractName} proxy deploying...\n`);
-    const logic = await this.deployInternally(contractName, adminKey, client);
-    const proxy = await this.deployInternally(
+    const proxy = await this._deployInternally(
       "TransparentUpgradeableProxy",
       adminKey,
       client,
@@ -199,78 +221,15 @@ export class Deployment {
         .addAddress(clientsInfo.proxyAdminId.toSolidityAddress())
         .addBytes(new Uint8Array())
     );
-    const info = {
-      ...logic,
-      proxyId: proxy.id,
-      proxyAddress: proxy.address,
-      timestamp: new Date().toISOString(),
-      name: contractName,
-    };
-    console.log(`- Deployment#deploy(): done`);
-    console.table(info);
-    console.log("\n");
-    return info;
-  };
-
-  private deployContract = async (
-    clientArg: Client,
-    operatorKey: PrivateKey,
-    filePath: string,
-    contractConstructorArgs: ContractFunctionParameters = new ContractFunctionParameters()
-  ) => {
-    console.log(`\nSTEP 1 - Create file`);
-    const rawdata: any = fs.readFileSync(filePath);
-    const compiledContract = JSON.parse(rawdata);
-    const contractByteCode = compiledContract.bytecode;
-
-    //Create a file on Hedera and store the hex-encoded bytecode
-    const fileCreateTx = await new FileCreateTransaction()
-      .setKeys([operatorKey])
-      .execute(clientArg);
-    const fileCreateRx = await fileCreateTx.getReceipt(clientArg);
-    const bytecodeFileId = fileCreateRx.fileId;
-    console.log(`- The smart contract bytecode file ID is: ${bytecodeFileId}`);
-
-    // Append contents to the file
-    const fileAppendTx = await new FileAppendTransaction()
-      .setFileId(bytecodeFileId ?? "")
-      .setContents(contractByteCode)
-      .setMaxChunks(100)
-      .execute(clientArg);
-    await fileAppendTx.getReceipt(clientArg);
-    console.log(`- Content added`);
-
-    console.log(`\nSTEP 2 - Create contract`);
-    const contractCreateTx = await new ContractCreateTransaction()
-      .setAdminKey(operatorKey)
-      .setBytecodeFileId(bytecodeFileId ?? "")
-      .setConstructorParameters(contractConstructorArgs)
-      .setGas(2000000)
-      .execute(clientArg);
-
-    const contractCreateRx = await contractCreateTx.getReceipt(clientArg);
-    const contractId = contractCreateRx.contractId;
-    console.log(
-      `- Contract created ${contractId?.toString()}, Contract Address ${contractId?.toSolidityAddress()}`
-    );
-
-    await this.contractService.saveDeployedContract(
-      contractId?.toString()!,
-      contractId?.toSolidityAddress()!,
-      compiledContract.contractName,
-      await this.contractMetadata.calculateHash(compiledContract.contractName)
-    );
-
-    const contractEvmAddress = "0x" + contractId?.toSolidityAddress()!;
-    clientArg.close();
-
     return {
-      id: contractId?.toString()!,
-      address: contractEvmAddress,
+      ...logic,
+      transparentProxyId: proxy.id,
+      transparentProxyAddress: proxy.address,
+      timestamp: new Date().toISOString(),
     };
   };
 
-  private deployInternally = async (
+  private _deployInternally = async (
     contractName: string,
     adminKey: Key = clientsInfo.operatorKey.publicKey,
     client: Client = clientsInfo.operatorClient,
@@ -289,6 +248,7 @@ export class Deployment {
     const address = "0x" + txnReceipt.contractId!.toSolidityAddress();
 
     return {
+      name: contractName.toLowerCase(),
       id,
       hash: info.hash,
       address,
