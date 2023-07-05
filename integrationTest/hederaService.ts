@@ -16,7 +16,7 @@ import {
 const {
   operatorId: userAccountId,
   operatorKey: userPrivateKey,
-  proxyAdminClient: client,
+  operatorClient: client,
 } = clientsInfo;
 
 const contractService = new ContractService();

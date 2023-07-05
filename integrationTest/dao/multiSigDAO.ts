@@ -91,7 +91,7 @@ export async function executeDAO(
   tokenSenderClient: Client = clientsInfo.uiUserClient,
   tokenSenderAccountId: AccountId = clientsInfo.uiUserId,
   tokenSenderPrivateKey: PrivateKey = clientsInfo.uiUserKey,
-  safeTxnExecutionClient: Client = clientsInfo.childProxyAdminClient
+  safeTxnExecutionClient: Client = clientsInfo.treasureClient
 ) {
   console.log(`- executing Multi-sig DAO = ${multiSigDAO.contractId}\n`);
 

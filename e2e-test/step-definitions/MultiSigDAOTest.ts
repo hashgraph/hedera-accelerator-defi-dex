@@ -190,7 +190,7 @@ export class MultiSigDAOSteps {
       transferTxnInfo.data,
       transferTxnInfo.operation,
       transferTxnInfo.nonce,
-      clientsInfo.childProxyAdminClient
+      clientsInfo.treasureClient
     );
   }
 
@@ -203,7 +203,7 @@ export class MultiSigDAOSteps {
     targetTokenBalFromPayeeAcct = await Common.getTokenBalance(
       clientsInfo.treasureId,
       transferTokenId,
-      clientsInfo.proxyAdminClient
+      clientsInfo.treasureClient
     );
   }
 
@@ -217,7 +217,7 @@ export class MultiSigDAOSteps {
     const updatedBalance = await Common.getTokenBalance(
       clientsInfo.treasureId,
       transferTokenId,
-      clientsInfo.proxyAdminClient
+      clientsInfo.treasureClient
     );
     expect(Number(updatedBalance)).to.eql(
       Number(targetTokenBalFromPayeeAcct) +
@@ -437,7 +437,7 @@ export class MultiSigDAOSteps {
   public async upgradeDAOLogicAddress() {
     upgradeResult = await daoFactory.upgradeDaoLogicAddress(
       contractNewAddress,
-      clientsInfo.childProxyAdminClient
+      clientsInfo.treasureClient
     );
   }
 
@@ -455,7 +455,7 @@ export class MultiSigDAOSteps {
   public async upgradeSafeLogicAddress() {
     upgradeResult = await daoFactory.upgradeSafeLogicAddress(
       contractNewAddress,
-      clientsInfo.childProxyAdminClient
+      clientsInfo.treasureClient
     );
   }
 
@@ -467,7 +467,7 @@ export class MultiSigDAOSteps {
   public async upgradeGnosisSafeProxyFactory() {
     upgradeResult = await daoFactory.upgradeSafeFactoryAddress(
       contractNewAddress,
-      clientsInfo.childProxyAdminClient
+      clientsInfo.treasureClient
     );
   }
 }
