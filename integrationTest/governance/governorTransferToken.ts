@@ -21,7 +21,7 @@ const fungibleTokenFlow = async () => {
   const godHolder = await provider.getGODTokenHolderFromFactory(GOD_TOKEN_ID);
   const governor = provider.getGovernor(
     ContractService.GOVERNOR_TT,
-    deploymentDetails.proxyId
+    deploymentDetails.transparentProxyId
   );
   await governor.initialize(godHolder);
 
@@ -77,7 +77,7 @@ const nonFungibleTokenFlow = async () => {
   );
   const governor = provider.getGovernor(
     ContractService.GOVERNOR_TT,
-    deploymentDetails.proxyId
+    deploymentDetails.transparentProxyId
   );
   await governor.initialize(
     nftHolder,

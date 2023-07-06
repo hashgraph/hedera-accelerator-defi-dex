@@ -77,7 +77,7 @@ async function upgradeProxy(
   const pairs = await factory.getPairs();
   for (const pair of pairs) {
     const proxyAddress = await factory.resolveProxyAddress(functionName, pair);
-    const ownerKey = clientsInfo.dexOwnerKey;
+    const ownerKey = clientsInfo.childProxyAdminKey;
     await Common.upgradeTo(proxyAddress, logicAddress, ownerKey);
   }
   await factory.upgradeLogic(logicAddress, functionName);
