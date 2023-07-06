@@ -32,6 +32,21 @@ describe("GODHolder tests", function () {
       voter: signers[0].address,
     };
   }
+
+  async function verifyCanClaimAmountEvent(
+    txn: any,
+    user: string,
+    canClaim: boolean,
+    operation: number
+  ) {
+    const { name, args } = await TestHelper.readLastEvent(txn);
+    expect(name).equals("CanClaimAmount");
+    expect(args.length).equals(3);
+    expect(args.user).equals(user);
+    expect(args.canClaim).equals(canClaim);
+    expect(args.operation).equals(operation);
+  }
+
   describe("GODHolder contract tests", function () {
     it("Verify contract should be reverted for multiple initialization", async function () {
       const { godHolder, hederaService, token } = await loadFixture(
@@ -230,17 +245,19 @@ describe("GODHolder tests", function () {
       expect((await godHolder.getActiveProposalsForUser()).length).equal(0);
 
       await godHolder.grabTokensFromUser(voter, TOTAL_AMOUNT);
-      await godHolder.addProposalForVoter(voter, 1);
+      const txn = await godHolder.addProposalForVoter(voter, 1);
+      await verifyCanClaimAmountEvent(txn, voter, false, 1);
 
       expect((await godHolder.getActiveProposalsForUser()).length).equal(1);
-      expect(await godHolder.canUserClaimTokens()).equals(false);
+      expect(await godHolder.canUserClaimTokens(voter)).equals(false);
 
-      await godHolder.removeActiveProposals([voter], 1);
+      const txn1 = await godHolder.removeActiveProposals([voter], 1);
+      await verifyCanClaimAmountEvent(txn1, voter, true, 2);
       expect((await godHolder.getActiveProposalsForUser()).length).equal(0);
-      expect(await godHolder.canUserClaimTokens()).equals(true);
+      expect(await godHolder.canUserClaimTokens(voter)).equals(true);
 
       await godHolder.revertTokensForVoter(TOTAL_AMOUNT);
-      expect(await godHolder.canUserClaimTokens()).equals(false);
+      expect(await godHolder.canUserClaimTokens(voter)).equals(false);
     });
   });
 

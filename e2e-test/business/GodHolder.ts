@@ -2,6 +2,8 @@ import Base from "./Base";
 import Common from "./Common";
 import dex from "../../deployment/model/dex";
 
+import { Helper } from "../../utils/Helper";
+import { BigNumber } from "bignumber.js";
 import { clientsInfo } from "../../utils/ClientManagement";
 import {
   Client,
@@ -17,6 +19,8 @@ const BALANCE_OF_VOTER = "balanceOfVoter";
 const CAN_USER_CLAIM_TOKENS = "canUserClaimTokens";
 const REVERT_TOKENS_FOR_VOTER = "revertTokensForVoter";
 const GRAB_TOKEN_FROM_USER = "grabTokensFromUser";
+const GET_ACTIVE_PROPOSALS = "getActiveProposalsForUser";
+
 const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
 export default class GodHolder extends Base {
   initialize = async (
@@ -38,19 +42,21 @@ export default class GodHolder extends Base {
     client: Client = clientsInfo.operatorClient,
     accountId: AccountId = clientsInfo.operatorId
   ) => {
-    if (await this.canUserClaimTokens(client)) {
+    if (await this.canUserClaimTokens(accountId, client)) {
       const balance = await this.balanceOfVoter(accountId, client);
       await this.revertTokensForVoter(client, balance);
     }
   };
 
-  canUserClaimTokens = async (client: Client) => {
+  canUserClaimTokens = async (accountId: AccountId, client: Client) => {
+    const args = new ContractFunctionParameters().addAddress(
+      accountId.toSolidityAddress()
+    );
     const { result } = await this.execute(
       3_00_000,
       CAN_USER_CLAIM_TOKENS,
       client,
-      undefined,
-      undefined
+      args
     );
     const canUserClaimTokens = result.getBool(0);
     console.log(
@@ -99,6 +105,20 @@ export default class GodHolder extends Base {
       `- GodHolder#${BALANCE_OF_VOTER}(): accountId = ${accountId.toString()}, balance = ${balance}\n`
     );
     return balance.toNumber();
+  };
+
+  getActiveProposalsForUser = async (client: Client) => {
+    const { result } = await this.execute(
+      5_00_000,
+      GET_ACTIVE_PROPOSALS,
+      client
+    );
+    const balance = Helper.getUint256Array(result).map((vale: BigNumber) =>
+      vale.toFixed()
+    );
+    console.log(
+      `- GodHolder#${GET_ACTIVE_PROPOSALS}(): counts = ${balance.length}, proposals = ${balance}\n`
+    );
   };
 
   lock = async (

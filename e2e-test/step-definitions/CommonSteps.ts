@@ -214,10 +214,6 @@ export class CommonSteps {
     );
   }
 
-  public async claimNFTToken(nftHolder: NFTHolder, client: Client) {
-    await nftHolder.checkAndClaimNFTTokens(client);
-  }
-
   public async deployGivenContract(contracts: string[]) {
     await deployContracts(contracts);
   }
@@ -239,6 +235,7 @@ export class CommonSteps {
       client
     );
   }
+
   private async transferTokens(
     receiverAccountId: AccountId,
     senderAccountId: AccountId,

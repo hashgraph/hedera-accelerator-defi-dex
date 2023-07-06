@@ -37,10 +37,11 @@ export default class NFTHolder extends Base {
   };
 
   checkAndClaimNFTTokens = async (
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
+    accountId: AccountId = clientsInfo.operatorId
   ) => {
     return (
-      (await this.canUserClaimTokens(client)) &&
+      (await this.canUserClaimTokens(accountId, client)) &&
       (await this.revertTokensForVoter(client))
     );
   };
@@ -62,13 +63,15 @@ export default class NFTHolder extends Base {
     return balance.toNumber();
   };
 
-  canUserClaimTokens = async (client: Client) => {
+  canUserClaimTokens = async (accountId: AccountId, client: Client) => {
+    const args = new ContractFunctionParameters().addAddress(
+      accountId.toSolidityAddress()
+    );
     const { result } = await this.execute(
       9000000,
       CAN_USER_CLAIM_TOKEN,
       client,
-      undefined,
-      undefined
+      args
     );
     const canUserClaimTokens = result.getBool(0);
     console.log(
