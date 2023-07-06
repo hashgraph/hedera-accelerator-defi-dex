@@ -28,7 +28,7 @@ export const DEFAULT_QUORUM_THRESHOLD_IN_BSP = 500;
 export const DEFAULT_VOTING_DELAY = 0; // blocks
 export const DEFAULT_VOTING_PERIOD = 100; // blocks means 3 minutes as per test
 export const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
-export const NFT_TOKEN_ID = TokenId.fromString(dex.NFT_TOKEN_ID);
+export const NFT_TOKEN_ID = dex.NFT_TOKEN_ID;
 
 export default class FTDAO extends BaseDao {
   async initialize(
@@ -119,7 +119,9 @@ export default class FTDAO extends BaseDao {
       .addAddress(fromAddress) // from
       .addAddress(toAddress) // to
       .addAddress(tokenId) // tokenToTransfer
-      .addUint256(BigNumber(tokenAmount)); // amountToTransfer
+      .addUint256(BigNumber(tokenAmount)) // amountToTransfer
+      .addUint256(1); //defaulting to 1 - nft token serial id
+
     const { result } = await this.execute(
       1_000_000,
       CREATE_PROPOSAL,
@@ -141,7 +143,8 @@ export default class FTDAO extends BaseDao {
     const args = new ContractFunctionParameters()
       .addString(title)
       .addString(description)
-      .addString(link);
+      .addString(link)
+      .addUint256(1); //defaulting to 1 - nft token serial id
 
     const { result } = await this.execute(
       1_000_000,
@@ -173,7 +176,8 @@ export default class FTDAO extends BaseDao {
       .addString(description)
       .addString(link)
       .addAddress(proxyContract)
-      .addAddress(contractToUpgrade);
+      .addAddress(contractToUpgrade)
+      .addUint256(1); //defaulting to 1 - nft token serial id
 
     const { result } = await this.execute(
       1_000_000,

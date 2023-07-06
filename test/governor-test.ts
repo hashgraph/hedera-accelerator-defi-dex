@@ -21,6 +21,8 @@ describe("Governor Tests", function () {
   const FIFTY_PERCENT = TOTAL_SUPPLY * 0.5;
   const THIRTY_PERCENT = TOTAL_SUPPLY * 0.3;
   const LOCKED_TOKEN = TWENTY_PERCENT / 2;
+  const NFT_TOKEN_AMOUNT = 1;
+  const NFT_TOKEN_SERIAL_ID = 100;
 
   const DESC = "Test";
   const LINK = "Link";
@@ -42,7 +44,15 @@ describe("Governor Tests", function () {
     const creator = signers[0];
     const godHolder = await TestHelper.deployGodHolder(hederaService, token);
 
-    const ARGS = [
+    const nftToken = await TestHelper.deployERC721Mock();
+    await nftToken.setUserBalance(signers[0].address, NFT_TOKEN_AMOUNT);
+
+    const nftGodHolder = await TestHelper.deployNftGodHolder(
+      hederaService,
+      nftToken
+    );
+
+    const FT_ARGS = [
       token.address,
       VOTING_DELAY,
       VOTING_PERIOD,
@@ -51,20 +61,39 @@ describe("Governor Tests", function () {
       QUORUM_THRESHOLD_BSP,
     ];
 
+    const NFT_ARGS = [
+      nftToken.address,
+      VOTING_DELAY,
+      VOTING_PERIOD,
+      hederaService.address,
+      nftGodHolder.address,
+      QUORUM_THRESHOLD_BSP,
+    ];
+
     const governorToken = await TestHelper.deployLogic("GovernorTokenCreate");
-    await governorToken.initialize(...ARGS);
+    await governorToken.initialize(...FT_ARGS);
 
     const governorText = await TestHelper.deployLogic("GovernorTextProposal");
-    await governorText.initialize(...ARGS);
+    await governorText.initialize(...FT_ARGS);
 
     const governorUpgrade = await TestHelper.deployLogic("GovernorUpgrade");
-    await governorUpgrade.initialize(...ARGS);
+    await governorUpgrade.initialize(...FT_ARGS);
 
     const governorTT = await TestHelper.deployLogic("GovernorTransferToken");
-    await governorTT.initialize(...ARGS);
+    await governorTT.initialize(...FT_ARGS);
+
+    const nftTokenTransferGovernor = await TestHelper.deployLogic(
+      "GovernorTransferToken"
+    );
+    await nftTokenTransferGovernor.initialize(...NFT_ARGS);
+
+    const nftGovernorTokenCreate = await TestHelper.deployLogic(
+      "GovernorTokenCreate"
+    );
+    await nftGovernorTokenCreate.initialize(...NFT_ARGS);
 
     return {
-      ARGS,
+      FT_ARGS,
       token,
       hederaService,
       signers,
@@ -74,6 +103,10 @@ describe("Governor Tests", function () {
       governorToken,
       governorUpgrade,
       creator,
+      nftTokenTransferGovernor,
+      nftToken,
+      nftGodHolder,
+      nftGovernorTokenCreate,
     };
   }
 
@@ -99,9 +132,14 @@ describe("Governor Tests", function () {
 
   const verifyTokenTransferProposalCreationEvent = async (
     tx: any,
-    reqData: TokenTransferData
+    reqData: TokenTransferData,
+    nftTokenSerialId: number
   ) => {
-    const info = await verifyProposalCreationEvent(tx, false);
+    const info =
+      nftTokenSerialId == NFT_TOKEN_SERIAL_ID
+        ? await verifyNFTProposalCreationEvent(tx, false)
+        : await verifyFTProposalCreationEvent(tx, false);
+
     const eventData = ethers.utils.defaultAbiCoder.decode(
       [
         "address transferFromAccount",
@@ -120,18 +158,13 @@ describe("Governor Tests", function () {
     return info;
   };
 
-  const verifyProposalCreationEvent = async (tx: any, empty: boolean) => {
-    const { name, args } = await TestHelper.readLastEvent(tx);
-    expect(args.length).equals(8);
+  const verifyCommonProposalCreationEvent = async (name: any, args: any) => {
     expect(name).equals("ProposalDetails");
     expect(args.proposalId).not.equals("0");
     expect(args.description).equals(DESC);
     expect(args.link).equals(LINK);
     expect(args.duration.startBlock).greaterThan(0);
     expect(args.duration.endBlock).greaterThan(0);
-    expect(args.votingInformation.quorumValue).equals(
-      TestHelper.toPrecision(500) / 100
-    );
     expect(args.votingInformation.isQuorumReached).equals(false);
     expect(args.votingInformation.proposalState).equals(0);
     expect(args.votingInformation.voted).equals(false);
@@ -141,23 +174,46 @@ describe("Governor Tests", function () {
     expect(args.votingInformation.againstVotes).equals(0);
     expect(args.votingInformation.forVotes).equals(0);
     expect(args.votingInformation.abstainVotes).equals(0);
+  };
+
+  const verifyFTProposalCreationEvent = async (tx: any, empty: boolean) => {
+    const { name, args } = await TestHelper.readLastEvent(tx);
+    expect(args.length).equals(9);
+    verifyCommonProposalCreationEvent(name, args);
+    expect(args.votingInformation.quorumValue).equals(
+      TestHelper.toPrecision(500) / 100
+    );
+    expect(args.nftTokenSerialId).equals(0);
+    return { proposalId: args.proposalId, data: args.data };
+  };
+
+  const verifyNFTProposalCreationEvent = async (tx: any, empty: boolean) => {
+    const { name, args } = await TestHelper.readLastEvent(tx);
+    expect(args.length).equals(9);
+    expect(args.votingInformation.quorumValue).equals(1);
+    expect(args.nftTokenSerialId).equals(NFT_TOKEN_SERIAL_ID);
+    verifyCommonProposalCreationEvent(name, args);
     return { proposalId: args.proposalId, data: args.data };
   };
 
   async function getTextProposalId(
     governance: Contract,
     account: SignerWithAddress,
-    title: string = TITLE
+    title: string = TITLE,
+    nftTokenSerialId: number = 0
   ) {
     const tx = await governance
       .connect(account)
-      .createProposal(title, DESC, LINK, account.address);
-    return await verifyProposalCreationEvent(tx, true);
+      .createProposal(title, DESC, LINK, account.address, nftTokenSerialId);
+    return nftTokenSerialId == NFT_TOKEN_SERIAL_ID
+      ? await verifyNFTProposalCreationEvent(tx, true)
+      : await verifyFTProposalCreationEvent(tx, true);
   }
 
   async function getUpgradeProposalId(
     instance: Contract,
-    account: SignerWithAddress
+    account: SignerWithAddress,
+    nftTokenSerialId: number = 0
   ) {
     const tx = await instance
       .connect(account)
@@ -167,16 +223,20 @@ describe("Governor Tests", function () {
         LINK,
         TestHelper.ONE_ADDRESS,
         TestHelper.TWO_ADDRESS,
-        account.address
+        account.address,
+        nftTokenSerialId
       );
-    return await verifyProposalCreationEvent(tx, true);
+    return nftTokenSerialId == NFT_TOKEN_SERIAL_ID
+      ? await verifyNFTProposalCreationEvent(tx, true)
+      : await verifyFTProposalCreationEvent(tx, true);
   }
 
   async function getTransferTokenProposalId(
     instance: Contract,
     signers: SignerWithAddress[],
     tokenAddress: string,
-    amount: number
+    amount: number,
+    nftTokenSerialId: number = 0
   ) {
     const data: TokenTransferData = {
       transferFromAccount: signers[1].address,
@@ -194,15 +254,22 @@ describe("Governor Tests", function () {
         data.transferToAccount,
         data.tokenToTransfer,
         data.transferTokenAmount,
-        signers[0].address
+        signers[0].address,
+        nftTokenSerialId
       );
-    return await verifyTokenTransferProposalCreationEvent(tx, data);
+
+    return await verifyTokenTransferProposalCreationEvent(
+      tx,
+      data,
+      nftTokenSerialId
+    );
   }
 
   async function getTokenCreateProposalId(
     governance: Contract,
     tokenName: string = "Token",
-    account: SignerWithAddress
+    account: SignerWithAddress,
+    nftTokenSerialId: number = 0
   ) {
     const tx = await governance
       .connect(account)
@@ -213,9 +280,12 @@ describe("Governor Tests", function () {
         account.address,
         tokenName,
         "Symbol",
-        account.address
+        account.address,
+        nftTokenSerialId
       );
-    return await verifyProposalCreationEvent(tx, true);
+    return nftTokenSerialId == NFT_TOKEN_SERIAL_ID
+      ? await verifyNFTProposalCreationEvent(tx, true)
+      : await verifyFTProposalCreationEvent(tx, true);
   }
 
   const createTokenCreateProposalAndExecute = async (
@@ -243,8 +313,8 @@ describe("Governor Tests", function () {
 
   describe("Common tests", async () => {
     it("Verify contract should be reverted for multiple initialization", async function () {
-      const { governorText, ARGS } = await loadFixture(deployFixture);
-      await expect(governorText.initialize(...ARGS)).revertedWith(
+      const { governorText, FT_ARGS } = await loadFixture(deployFixture);
+      await expect(governorText.initialize(...FT_ARGS)).revertedWith(
         "Initializable: contract is already initialized"
       );
     });
@@ -642,6 +712,101 @@ describe("Governor Tests", function () {
       await governorToken.executeProposal(TITLE);
       expect(await governorToken.getTokenAddress(proposalId)).not.equals(
         TestHelper.ZERO_ADDRESS
+      );
+    });
+
+    it("Given NFT Token used as governance token when proposal executed then execution flow should be successful", async () => {
+      const TOKEN_COUNT = TestHelper.toPrecision(3);
+      const {
+        nftGovernorTokenCreate,
+        token,
+        signers,
+        creator,
+        nftGodHolder,
+        nftToken,
+      } = await loadFixture(deployFixture);
+
+      await verifyAccountBalance(
+        nftToken,
+        signers[0].address,
+        NFT_TOKEN_AMOUNT
+      );
+      await nftGodHolder.grabTokensFromUser(
+        creator.address,
+        NFT_TOKEN_SERIAL_ID
+      );
+
+      const { proposalId } = await getTokenCreateProposalId(
+        nftGovernorTokenCreate,
+        "tokenName",
+        creator,
+        NFT_TOKEN_SERIAL_ID
+      );
+
+      await nftGovernorTokenCreate.castVotePublic(proposalId, 0, 1);
+      await TestHelper.mineNBlocks(BLOCKS_COUNT);
+      await verifyAccountBalance(token, signers[1].address, THIRTY_PERCENT);
+      await verifyAccountBalance(token, signers[2].address, FIFTY_PERCENT);
+      const balanceAfterNftDeduction = NFT_TOKEN_AMOUNT - 1;
+      await verifyAccountBalance(
+        nftToken,
+        signers[0].address,
+        balanceAfterNftDeduction
+      );
+      await nftGovernorTokenCreate.executeProposal(TITLE);
+      expect(
+        await nftGovernorTokenCreate.getTokenAddress(proposalId)
+      ).not.equals(TestHelper.ZERO_ADDRESS);
+      await verifyAccountBalance(
+        nftToken,
+        signers[0].address,
+        NFT_TOKEN_AMOUNT
+      );
+    });
+
+    it("Given NFT Token used as governance token when user cancel proposal then governance token should be returned", async () => {
+      const TOKEN_COUNT = TestHelper.toPrecision(3);
+      const {
+        nftGovernorTokenCreate,
+        token,
+        signers,
+        creator,
+        nftGodHolder,
+        nftToken,
+      } = await loadFixture(deployFixture);
+
+      await verifyAccountBalance(
+        nftToken,
+        signers[0].address,
+        NFT_TOKEN_AMOUNT
+      );
+      await nftGodHolder.grabTokensFromUser(
+        creator.address,
+        NFT_TOKEN_SERIAL_ID
+      );
+
+      const { proposalId } = await getTokenCreateProposalId(
+        nftGovernorTokenCreate,
+        "tokenName",
+        creator,
+        NFT_TOKEN_SERIAL_ID
+      );
+
+      await nftGovernorTokenCreate.castVotePublic(proposalId, 0, 1);
+      await TestHelper.mineNBlocks(BLOCKS_COUNT);
+      await verifyAccountBalance(token, signers[1].address, THIRTY_PERCENT);
+      await verifyAccountBalance(token, signers[2].address, FIFTY_PERCENT);
+      const balanceAfterNftDeduction = NFT_TOKEN_AMOUNT - 1;
+      await verifyAccountBalance(
+        nftToken,
+        signers[0].address,
+        balanceAfterNftDeduction
+      );
+      await nftGovernorTokenCreate.cancelProposal(TITLE);
+      await verifyAccountBalance(
+        nftToken,
+        signers[0].address,
+        NFT_TOKEN_AMOUNT
       );
     });
 
@@ -1119,6 +1284,112 @@ describe("Governor Tests", function () {
       await token.setTransaferFailed(true);
       await expect(governorTT.executeProposal(TITLE)).revertedWith(
         "GovernorTransferToken: transfer token failed."
+      );
+    });
+
+    it("Given NFT Token used as governance token when proposal executed then execution flow should be successful", async () => {
+      const TOKEN_COUNT = TestHelper.toPrecision(3);
+      const {
+        nftTokenTransferGovernor,
+        token,
+        signers,
+        creator,
+        nftGodHolder,
+        nftToken,
+      } = await loadFixture(deployFixture);
+
+      await verifyAccountBalance(
+        nftToken,
+        signers[0].address,
+        NFT_TOKEN_AMOUNT
+      );
+      await nftGodHolder.grabTokensFromUser(
+        creator.address,
+        NFT_TOKEN_SERIAL_ID
+      );
+
+      const { proposalId } = await getTransferTokenProposalId(
+        nftTokenTransferGovernor,
+        signers,
+        token.address,
+        TOKEN_COUNT,
+        NFT_TOKEN_SERIAL_ID
+      );
+
+      await nftTokenTransferGovernor.castVotePublic(proposalId, 0, 1);
+      await TestHelper.mineNBlocks(BLOCKS_COUNT);
+      await verifyAccountBalance(token, signers[1].address, THIRTY_PERCENT);
+      await verifyAccountBalance(token, signers[2].address, FIFTY_PERCENT);
+      const balanceAfterNftDeduction = NFT_TOKEN_AMOUNT - 1;
+      await verifyAccountBalance(
+        nftToken,
+        signers[0].address,
+        balanceAfterNftDeduction
+      );
+      await nftTokenTransferGovernor.executeProposal(TITLE);
+      await verifyAccountBalance(
+        token,
+        signers[1].address,
+        THIRTY_PERCENT - TOKEN_COUNT
+      );
+      await verifyAccountBalance(
+        token,
+        signers[2].address,
+        FIFTY_PERCENT + TOKEN_COUNT
+      );
+      await verifyAccountBalance(
+        nftToken,
+        signers[0].address,
+        NFT_TOKEN_AMOUNT
+      );
+    });
+
+    it("Given NFT Token used as governance token when proposal cancelled then governance token should be return back", async () => {
+      const TOKEN_COUNT = TestHelper.toPrecision(3);
+      const {
+        nftTokenTransferGovernor,
+        token,
+        signers,
+        creator,
+        nftGodHolder,
+        nftToken,
+      } = await loadFixture(deployFixture);
+
+      await verifyAccountBalance(
+        nftToken,
+        signers[0].address,
+        NFT_TOKEN_AMOUNT
+      );
+      await nftGodHolder.grabTokensFromUser(
+        creator.address,
+        NFT_TOKEN_SERIAL_ID
+      );
+
+      const { proposalId } = await getTransferTokenProposalId(
+        nftTokenTransferGovernor,
+        signers,
+        token.address,
+        TOKEN_COUNT,
+        NFT_TOKEN_SERIAL_ID
+      );
+
+      await nftTokenTransferGovernor.castVotePublic(proposalId, 0, 1);
+      await TestHelper.mineNBlocks(BLOCKS_COUNT);
+      await verifyAccountBalance(token, signers[1].address, THIRTY_PERCENT);
+      await verifyAccountBalance(token, signers[2].address, FIFTY_PERCENT);
+      const balanceAfterNftDeduction = NFT_TOKEN_AMOUNT - 1;
+      await verifyAccountBalance(
+        nftToken,
+        signers[0].address,
+        balanceAfterNftDeduction
+      );
+      await nftTokenTransferGovernor.cancelProposal(TITLE);
+      await verifyAccountBalance(token, signers[1].address, THIRTY_PERCENT);
+      await verifyAccountBalance(token, signers[2].address, FIFTY_PERCENT);
+      await verifyAccountBalance(
+        nftToken,
+        signers[0].address,
+        NFT_TOKEN_AMOUNT
       );
     });
   });

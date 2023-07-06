@@ -155,6 +155,19 @@ export class CommonSteps {
     );
   }
 
+  public async setupNFTAllowanceForProposalCreation(
+    governor: Governor,
+    creatorClient: Client,
+    creatorAccountId: AccountId,
+    creatorPrivateKey: PrivateKey
+  ) {
+    await governor.setupNFTAllowanceForProposalCreation(
+      creatorClient,
+      creatorAccountId,
+      creatorPrivateKey
+    );
+  }
+
   public async setupAllowanceForToken(
     governor: Governor,
     tokenId: TokenId,

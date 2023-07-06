@@ -26,7 +26,7 @@ const createVaults = async () => {
       deployment.deployProxy(ContractService.VAULT),
       deployment.deployProxy(ContractService.VAULT),
     ])
-  ).map((item) => new Vault(item.proxyId));
+  ).map((item) => new Vault(item.transparentProxyId));
 };
 
 const vaultsMultiplier = async (splitter: Splitter, vaultsId: ContractId[]) => {

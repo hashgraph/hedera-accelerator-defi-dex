@@ -25,7 +25,8 @@ contract GovernorTransferToken is
         address _transferToAccount,
         address _tokenToTransfer,
         uint256 _transferTokenAmount,
-        address creator
+        address creator,
+        uint256 nftTokenSerialId
     ) external returns (uint256) {
         if (_transferTokenAmount <= 0) {
             revert InvalidInput(
@@ -43,7 +44,8 @@ contract GovernorTransferToken is
             description,
             linkToDiscussion,
             creator,
-            abi.encode(tokenTransferData)
+            abi.encode(tokenTransferData),
+            nftTokenSerialId
         );
         _proposalData[proposalId] = tokenTransferData;
         return proposalId;

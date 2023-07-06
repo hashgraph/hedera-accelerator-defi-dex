@@ -11,7 +11,7 @@ import {
   ContractFunctionParameters,
 } from "@hashgraph/sdk";
 
-const NFT_TOKEN_ID = TokenId.fromString(dex.NFT_TOKEN_ID);
+const NFT_TOKEN_ID = dex.NFT_TOKEN_ID;
 const INITIALIZE = "initialize";
 const GET_TOKEN = "getToken";
 const GRAB_TOKENS_FOR_VOTER = "grabTokensFromUser";
@@ -95,7 +95,7 @@ export default class NFTHolder extends Base {
   };
 
   grabTokensForVoter = async (
-    tokenSerialId: number,
+    nftTokenSerialId: number,
     accountId: AccountId = clientsInfo.operatorId,
     accountPrivateKey: PrivateKey = clientsInfo.operatorKey,
     client: Client = clientsInfo.operatorClient
@@ -110,7 +110,7 @@ export default class NFTHolder extends Base {
     );
     const args = new ContractFunctionParameters()
       .addAddress(accountId.toSolidityAddress())
-      .addUint256(tokenSerialId);
+      .addUint256(nftTokenSerialId);
     const { result } = await this.execute(
       5_00_000,
       GRAB_TOKENS_FOR_VOTER,
@@ -120,7 +120,7 @@ export default class NFTHolder extends Base {
     );
     const code = result.getUint256(0);
     console.log(
-      `- NFTHolder#${GRAB_TOKENS_FOR_VOTER}(): TokenId = ${tokenId.toString()}, serial id = ${tokenSerialId}\n`
+      `- NFTHolder#${GRAB_TOKENS_FOR_VOTER}(): TokenId = ${tokenId.toString()}, serial id = ${nftTokenSerialId}\n`
     );
     return code;
   };
@@ -148,5 +148,15 @@ export default class NFTHolder extends Base {
       `- NFTHolder#${GET_TOKEN}(): address = ${address}, token = ${token.toString()}\n`
     );
     return token;
+  };
+
+  checkAndClaimGodTokens = async (
+    client: Client = clientsInfo.operatorClient,
+    accountId: AccountId = clientsInfo.operatorId
+  ) => {
+    if (await this.canUserClaimTokens(client)) {
+      const balance = await this.balanceOfVoter(accountId, client);
+      await this.revertTokensForVoter(client);
+    }
   };
 }

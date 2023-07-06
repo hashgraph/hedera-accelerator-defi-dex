@@ -13,7 +13,7 @@ const tokenB = TokenId.fromString(dex.TOKEN_LAB49_2);
 const tokenC = TokenId.fromString(dex.TOKEN_LAB49_3);
 const tokenGOD = TokenId.fromString(dex.GOD_TOKEN_ID);
 const tokenHBARX = TokenId.fromString(dex.HBARX_TOKEN_ID);
-const tokenNFT = TokenId.fromString(dex.NFT_TOKEN_ID);
+const tokenNFT = dex.NFT_TOKEN_ID;
 
 const csDev = new ContractService();
 

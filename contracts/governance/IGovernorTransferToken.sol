@@ -11,7 +11,8 @@ interface IGovernorTransferToken is IGovernorBase {
         address transferToAccount,
         address tokenToTransfer,
         uint256 transferTokenAmount,
-        address creator
+        address creator,
+        uint256 nftTokenSerialId
     ) external returns (uint256);
 
     function upgradeHederaService(IHederaService newHederaService) external;

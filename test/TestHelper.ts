@@ -62,6 +62,12 @@ export class TestHelper {
     return instance;
   }
 
+  static async deployNftGodHolder(hederaService: Contract, token: Contract) {
+    const instance = await this.deployLogic("NFTHolder");
+    await instance.initialize(hederaService.address, token.address);
+    return instance;
+  }
+
   static async deployGodTokenHolderFactory(
     hederaService: Contract,
     godHolder: Contract,
@@ -78,6 +84,10 @@ export class TestHelper {
     symbol: String = "TEST"
   ) {
     return await this.deployLogic("ERC20Mock", name, symbol, total, 0);
+  }
+
+  static async deployERC721Mock() {
+    return await this.deployLogic("ERC721Mock");
   }
 
   static async deployMockHederaService(tokenTesting: boolean = true) {
