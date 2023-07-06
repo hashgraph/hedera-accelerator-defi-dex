@@ -181,4 +181,11 @@ export class Helper {
     }
     return txn;
   };
+
+  static isIterable(value: any): boolean {
+    if (value === undefined || value === null) {
+      return false;
+    }
+    return typeof value[Symbol.iterator] === "function";
+  }
 }
