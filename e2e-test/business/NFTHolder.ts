@@ -157,8 +157,7 @@ export default class NFTHolder extends Base {
     client: Client = clientsInfo.operatorClient,
     accountId: AccountId = clientsInfo.operatorId
   ) => {
-    if (await this.canUserClaimTokens(client)) {
-      const balance = await this.balanceOfVoter(accountId, client);
+    if (await this.canUserClaimTokens(accountId, client)) {
       await this.revertTokensForVoter(client);
     }
   };
