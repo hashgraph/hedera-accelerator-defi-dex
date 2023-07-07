@@ -9,7 +9,7 @@ export default class FTDAOFactory extends DAOFactory {
     return ContractService.FT_DAO_FACTORY;
   }
 
-  protected getPrefix() {
+  protected getPrefix(): string {
     return "GOD";
   }
 

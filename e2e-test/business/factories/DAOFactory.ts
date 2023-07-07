@@ -12,6 +12,8 @@ import {
 import { ContractService } from "../../../deployment/service/ContractService";
 import TokenHolderFactory from "./TokenHolderFactory";
 import FTDAO from "../FTDAO";
+import GodHolder from "../GodHolder";
+import NFTHolder from "../NFTHolder";
 
 const deployment = new Deployment();
 
@@ -24,7 +26,7 @@ const UPGRADE_TOKEN_DAO_LOGIC_IMPL = "upgradeFTDAOLogicImplementation";
 const UPGRADE_GOVERNORS_IMPLEMENTATION = "upgradeGovernorsImplementation";
 
 export default abstract class DAOFactory extends Base {
-  protected abstract getPrefix();
+  protected abstract getPrefix(): string;
 
   initialize = async (
     client: Client = clientsInfo.operatorClient,
@@ -215,5 +217,7 @@ export default abstract class DAOFactory extends Base {
     return new FTDAO(ContractId.fromString(tokenTransferDAOProxyId));
   };
 
-  protected abstract getTokenHolderInstance(tokenId: TokenId);
+  protected abstract getTokenHolderInstance(
+    tokenId: TokenId
+  ): Promise<NFTHolder> | Promise<GodHolder>;
 }

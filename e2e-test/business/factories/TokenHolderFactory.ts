@@ -9,17 +9,21 @@ import {
   ContractId,
   ContractFunctionParameters,
 } from "@hashgraph/sdk";
+import GodHolder from "../GodHolder";
+import NFTHolder from "../NFTHolder";
 
 const INITIALIZE = "initialize";
 const GET_TOKEN_HOLDER = "getTokenHolder";
 const GET_TOKEN_HOLDERS = "getTokenHolders";
 
 export default abstract class TokenHolderFactory extends Base {
-  protected abstract getPrefix();
+  protected abstract getPrefix(): string;
 
-  protected abstract getHolderLogic();
+  protected abstract getHolderLogic(): string;
 
-  protected abstract getHolderInstance(contractId: ContractId);
+  protected abstract getHolderInstance(
+    contractId: ContractId
+  ): GodHolder | NFTHolder;
 
   public initialize = async (client: Client = clientsInfo.operatorClient) => {
     if (await this.isInitializationPending()) {

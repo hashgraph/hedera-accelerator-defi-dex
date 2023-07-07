@@ -14,7 +14,7 @@ export default class NFTDAOFactory extends DAOFactory {
     return ContractService.NFT_DAO_FACTORY;
   }
 
-  protected getPrefix() {
+  protected getPrefix(): string {
     return "NFT";
   }
 

@@ -10,7 +10,7 @@ export default class NFTTokenHolderFactory extends TokenHolderFactory {
     return this.csDev.nftTokenHolderFactory;
   }
 
-  protected getPrefix() {
+  protected getPrefix(): string {
     return "NFT";
   }
 
