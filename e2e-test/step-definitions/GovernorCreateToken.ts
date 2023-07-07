@@ -87,7 +87,10 @@ export class GovernorCreateToken extends CommonSteps {
         clientsInfo.operatorId
       );
     } catch (e: any) {
-      await godHolder.checkAndClaimGodTokens(clientsInfo.operatorClient);
+      await godHolder.checkAndClaimGodTokens(
+        clientsInfo.operatorClient,
+        clientsInfo.operatorId
+      );
       throw e;
     }
   }

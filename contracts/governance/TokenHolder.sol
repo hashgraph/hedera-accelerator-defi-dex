@@ -16,11 +16,14 @@ abstract contract TokenHolder is
 {
     uint8 internal constant LOCKED = 1;
     uint8 internal constant UNLOCKED = 2;
+    uint8 internal constant ADD = 1;
+    uint8 internal constant REMOVE = 2;
     event UpdatedAmount(
         address indexed user,
         uint256 idOrAmount,
         uint8 operation
     );
+    event CanClaimAmount(address indexed user, bool canClaim, uint8 operation);
     mapping(address => uint256[]) activeProposalsForUsers;
     IHederaService internal hederaService;
     address internal _token;
@@ -45,6 +48,9 @@ abstract contract TokenHolder is
     ) external override returns (int32) {
         uint256[] storage proposals = activeProposalsForUsers[voter];
         proposals.push(proposalId);
+        if (proposals.length == 1) {
+            emit CanClaimAmount(voter, canUserClaimTokens(voter), ADD);
+        }
         return HederaResponseCodes.SUCCESS;
     }
 
@@ -61,14 +67,20 @@ abstract contract TokenHolder is
         uint256 proposalId
     ) external override returns (int32) {
         for (uint256 i = 0; i < voters.length; i++) {
-            uint256[] storage proposals = activeProposalsForUsers[voters[i]];
+            address voter = voters[i];
+            uint256[] storage proposals = activeProposalsForUsers[voter];
             _removeAnArrayElement(proposalId, proposals);
+            if (proposals.length == 0) {
+                emit CanClaimAmount(voter, canUserClaimTokens(voter), REMOVE);
+            }
         }
         return HederaResponseCodes.SUCCESS;
     }
 
-    function canUserClaimTokens() public view virtual returns (bool) {
-        return activeProposalsForUsers[msg.sender].length == 0;
+    function canUserClaimTokens(
+        address account
+    ) public view virtual returns (bool) {
+        return activeProposalsForUsers[account].length == 0;
     }
 
     function upgradeHederaService(

@@ -98,14 +98,14 @@ describe("NFTHolder Tests", function () {
     await nftHolder.addProposalForVoter(signers[0].address, 1);
     const activeProposals = await nftHolder.getActiveProposalsForUser();
     expect(activeProposals.length).to.be.equal(1);
-    const canClaimNFT = await nftHolder.canUserClaimTokens();
+    const canClaimNFT = await nftHolder.canUserClaimTokens(signers[0].address);
     expect(canClaimNFT).to.be.equal(false);
 
     await nftHolder.removeActiveProposals([signers[0].address], 1);
     const activeProposals1 = await nftHolder.getActiveProposalsForUser();
     expect(activeProposals1.length).to.be.equal(0);
-    const canClaimNFT1 = await nftHolder.canUserClaimTokens();
-    expect(canClaimNFT1).to.be.equal(true);
+    const canClaimNFT1 = await nftHolder.canUserClaimTokens(signers[0].address);
+    expect(canClaimNFT1).to.be.equal(false);
   });
 
   it("Verify NFTHolder revertTokensForVoter revert", async function () {

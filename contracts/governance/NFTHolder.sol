@@ -44,6 +44,13 @@ contract NFTHolder is TokenHolder {
         emit UpdatedAmount(user, nftTokenForUsers[user], LOCKED);
     }
 
+    function canUserClaimTokens(
+        address account
+    ) public view override returns (bool) {
+        return
+            super.canUserClaimTokens(account) && nftTokenForUsers[account] > 0;
+    }
+
     function isNFTType() external pure returns (bool) {
         return true;
     }

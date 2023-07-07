@@ -114,7 +114,9 @@ export class MirrorNodeService {
     let url = `${BASE_URL}/api/v1/contracts/${contractId}/results/logs?order=asc&limit=100`;
     while ((url = await this.readRecords(url, allLogs, "logs")));
     const events = await this.decodeLog(allLogs);
-    this.isLogEnabled && console.log("-", events);
+    events.forEach((value: any, key: string) => {
+      this.isLogEnabled && console.log(key, "=>", value);
+    });
     return events;
   }
 
@@ -134,7 +136,10 @@ export class MirrorNodeService {
             eventAbi.anonymous === false ? topics.splice(1) : topics
           );
           const events = eventsMap.get(eventAbi.name) ?? [];
-          eventsMap.set(eventAbi.name, [...events, event]);
+          eventsMap.set(eventAbi.name, [
+            ...events,
+            this.getEventArgumentsByName(event, eventAbi.name),
+          ]);
         } else {
           this.isLogEnabled &&
             console.log(`- No mapping found for topic = ${topics[0]}`);
@@ -167,5 +172,26 @@ export class MirrorNodeService {
         String.fromCharCode(...ethers.utils.arrayify(call.result_data))
       );
     return [...new Set(errorMessages)].join(",");
+  }
+
+  private getEventArgumentsByName(
+    args: any,
+    eventName: string,
+    excludedKeys: string[] = ["__length__"]
+  ) {
+    const namedArguments: Record<string, any> = {};
+    for (const key in args) {
+      if (Number.isNaN(Number(key)) && !excludedKeys.includes(key)) {
+        const arg = args[key];
+        const refilter =
+          Helper.isIterable(arg) &&
+          !Array.isArray(arg) &&
+          typeof arg !== "string";
+        namedArguments[key] = refilter
+          ? this.getEventArgumentsByName(arg, eventName, excludedKeys)
+          : arg;
+      }
+    }
+    return namedArguments;
   }
 }
