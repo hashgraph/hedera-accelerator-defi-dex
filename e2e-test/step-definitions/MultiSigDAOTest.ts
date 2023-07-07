@@ -18,7 +18,7 @@ const transferTokenId = TokenId.fromString(dex.TOKEN_LAB49_1);
 const contract = csDev.getContractWithProxy(ContractService.MULTI_SIG);
 const multiSigDAOContractId = contract.transparentProxyId!;
 let multiSigDAO: MultiSigDao;
-multiSigDAO = new MultiSigDao(multiSigDAOContractId);
+multiSigDAO = new MultiSigDao(ContractId.fromString(multiSigDAOContractId));
 const withPrecision = 1e8;
 const DAO_OWNERS_INFO = [
   {
@@ -37,7 +37,9 @@ const DAO_DESC = "Lorem Ipsum is simply dummy text";
 const factoryContractId = new ContractService().getContractWithProxy(
   ContractService.MULTI_SIG_FACTORY
 ).transparentProxyId!;
-const daoFactory = new MultiSigDAOFactory(factoryContractId);
+const daoFactory = new MultiSigDAOFactory(
+  ContractId.fromString(factoryContractId)
+);
 
 let gnosisSafe: HederaGnosisSafe;
 let txnHash: any;
@@ -78,7 +80,7 @@ export class MultiSigDAOSteps {
 
       const safeContractId =
         await multiSigDAO.getHederaGnosisSafeContractAddress();
-      gnosisSafe = new HederaGnosisSafe(safeContractId.toString());
+      gnosisSafe = new HederaGnosisSafe(safeContractId);
     } catch (e: any) {
       errorMsg = e.message;
     }
@@ -110,7 +112,7 @@ export class MultiSigDAOSteps {
 
     const safeContractId =
       await multiSigDAO.getHederaGnosisSafeContractAddress();
-    gnosisSafe = new HederaGnosisSafe(safeContractId.toString());
+    gnosisSafe = new HederaGnosisSafe(safeContractId);
   }
 
   @when(
@@ -391,11 +393,11 @@ export class MultiSigDAOSteps {
       clientsInfo.uiUserClient
     );
 
-    const multiSigDAOId = ContractId.fromSolidityAddress(daoAddress).toString();
+    const multiSigDAOId = ContractId.fromSolidityAddress(daoAddress);
     multiSigDAO = new MultiSigDao(multiSigDAOId);
     const safeContractId =
       await multiSigDAO.getHederaGnosisSafeContractAddress();
-    gnosisSafe = new HederaGnosisSafe(safeContractId.toString());
+    gnosisSafe = new HederaGnosisSafe(safeContractId);
   }
 
   @when(
@@ -417,12 +419,11 @@ export class MultiSigDAOSteps {
         clientsInfo.uiUserClient
       );
 
-      const multiSigDAOId =
-        ContractId.fromSolidityAddress(daoAddress).toString();
+      const multiSigDAOId = ContractId.fromSolidityAddress(daoAddress);
       multiSigDAO = new MultiSigDao(multiSigDAOId);
       const safeContractId =
         await multiSigDAO.getHederaGnosisSafeContractAddress();
-      gnosisSafe = new HederaGnosisSafe(safeContractId.toString());
+      gnosisSafe = new HederaGnosisSafe(safeContractId);
     } catch (e: any) {
       errorMsg = e.message;
     }

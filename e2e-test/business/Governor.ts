@@ -18,36 +18,6 @@ import {
   ContractFunctionParameters,
 } from "@hashgraph/sdk";
 
-const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
-const DEFAULT_QUORUM_THRESHOLD_IN_BSP = 500;
-const DEFAULT_VOTING_DELAY = 0; // blocks
-const DEFAULT_VOTING_PERIOD = 100; // blocks means 3 minutes as per test
-const DEFAULT_MAX_WAITING_TIME = DEFAULT_VOTING_PERIOD * 12 * 300;
-const EACH_ITERATION_DELAY = DEFAULT_VOTING_PERIOD * 0.3 * 1000;
-const DEFAULT_DESCRIPTION = "description";
-const DEFAULT_LINK = "https://defi-ui.hedera.com/governance";
-
-const INITIALIZE = "initialize";
-const STATE = "state";
-const CAST_VOTE = "castVotePublic";
-
-const QUORUM_REACHED = "quorumReached";
-const VOTE_SUCCEEDED = "voteSucceeded";
-const PROPOSAL_VOTES = "proposalVotes";
-
-const CREATE_PROPOSAL = "createProposal";
-const CANCEL_PROPOSAL = "cancelProposal";
-const EXECUTE_PROPOSAL = "executeProposal";
-const PROPOSAL_DETAILS = "getProposalDetails";
-
-const GET_CONTRACT_ADDRESSES = "getContractAddresses";
-const GET_TOKEN_ADDRESSES = "getTokenAddress";
-const GET_GOD_TOKEN_ADDRESSES = "getGODTokenAddress";
-const MINT_TOKEN = "mintToken";
-const BURN_TOKEN = "burnToken";
-const TRANSFER_TOKEN = "transferToken";
-const DEFAULT_NFT_TOKEN_SERIAL_NO = 19;
-
 enum ProposalState {
   Pending,
   Active,
@@ -66,14 +36,44 @@ enum VoteType {
 }
 
 export default class Governor extends Base {
+  protected GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
+  protected DEFAULT_QUORUM_THRESHOLD_IN_BSP = 500;
+  protected DEFAULT_VOTING_DELAY = 0; // blocks
+  protected DEFAULT_VOTING_PERIOD = 100; // blocks means 3 minutes as per test
+  protected DEFAULT_MAX_WAITING_TIME = this.DEFAULT_VOTING_PERIOD * 12 * 300;
+  protected EACH_ITERATION_DELAY = this.DEFAULT_VOTING_PERIOD * 0.3 * 1000;
+  protected DEFAULT_DESCRIPTION = "description";
+  protected DEFAULT_LINK = "https://defi-ui.hedera.com/governance";
+
+  protected INITIALIZE = "initialize";
+  protected STATE = "state";
+  protected CAST_VOTE = "castVotePublic";
+
+  protected QUORUM_REACHED = "quorumReached";
+  protected VOTE_SUCCEEDED = "voteSucceeded";
+  protected PROPOSAL_VOTES = "proposalVotes";
+
+  protected CREATE_PROPOSAL = "createProposal";
+  protected CANCEL_PROPOSAL = "cancelProposal";
+  protected EXECUTE_PROPOSAL = "executeProposal";
+  protected PROPOSAL_DETAILS = "getProposalDetails";
+
+  protected GET_CONTRACT_ADDRESSES = "getContractAddresses";
+  protected GET_TOKEN_ADDRESSES = "getTokenAddress";
+  protected GET_GOD_TOKEN_ADDRESSES = "getGODTokenAddress";
+  protected MINT_TOKEN = "mintToken";
+  protected BURN_TOKEN = "burnToken";
+  protected TRANSFER_TOKEN = "transferToken";
+  protected DEFAULT_NFT_TOKEN_SERIAL_NO = 19;
+
   async initialize(
     tokenHolder: GodHolder | NFTHolder,
     client: Client = clientsInfo.operatorClient,
-    defaultQuorumThresholdValue: number = DEFAULT_QUORUM_THRESHOLD_IN_BSP,
-    votingDelay: number = DEFAULT_VOTING_DELAY,
-    votingPeriod: number = DEFAULT_VOTING_PERIOD,
-    governorTokenId: TokenId = GOD_TOKEN_ID,
-    holderTokenId: TokenId = GOD_TOKEN_ID
+    defaultQuorumThresholdValue: number = this.DEFAULT_QUORUM_THRESHOLD_IN_BSP,
+    votingDelay: number = this.DEFAULT_VOTING_DELAY,
+    votingPeriod: number = this.DEFAULT_VOTING_PERIOD,
+    governorTokenId: TokenId = this.GOD_TOKEN_ID,
+    holderTokenId: TokenId = this.GOD_TOKEN_ID
   ) {
     await tokenHolder.initialize(client, holderTokenId.toSolidityAddress());
 
@@ -89,111 +89,16 @@ export default class Governor extends Base {
         .addAddress(this.htsAddress)
         .addAddress(godHolderProxyAddress)
         .addUint256(defaultQuorumThresholdValue);
-      await this.execute(1_500_000, INITIALIZE, client, args);
-      console.log(`- Governor#${INITIALIZE}(): done\n`);
+      await this.execute(1_500_000, this.INITIALIZE, client, args);
+      console.log(`- Governor#${this.INITIALIZE}(): done\n`);
       return;
     }
-    console.log(`- Governor#${INITIALIZE}(): already done\n`);
+    console.log(`- Governor#${this.INITIALIZE}(): already done\n`);
   }
 
-  createTextProposal = async (
-    title: string,
-    creator: AccountId,
-    client: Client = clientsInfo.operatorClient,
-    description: string = DEFAULT_DESCRIPTION,
-    link: string = DEFAULT_LINK,
-    nftTokenSerialId: number = DEFAULT_NFT_TOKEN_SERIAL_NO
-  ) => {
-    const args = new ContractFunctionParameters()
-      .addString(title)
-      .addString(description)
-      .addString(link)
-      .addAddress(creator.toSolidityAddress())
-      .addUint256(nftTokenSerialId);
-
-    const { result } = await this.execute(
-      1_000_000,
-      CREATE_PROPOSAL,
-      client,
-      args
-    );
-    const proposalId = result.getUint256(0).toFixed();
-    console.log(
-      `- Governor#${CREATE_PROPOSAL}(): proposal-id = ${proposalId}  proposal-title = ${title}\n`
-    );
-    return proposalId;
-  };
-
-  createTokenTransferProposal = async (
-    title: string,
-    fromAddress: string,
-    toAddress: string,
-    tokenId: string,
-    tokenAmount: number,
-    client: Client = clientsInfo.operatorClient,
-    nftTokenSerialId: number = DEFAULT_NFT_TOKEN_SERIAL_NO,
-    description: string = DEFAULT_DESCRIPTION,
-    link: string = DEFAULT_LINK,
-    creator: string = clientsInfo.operatorId.toSolidityAddress()
-  ) => {
-    const args = new ContractFunctionParameters()
-      .addString(title)
-      .addString(description)
-      .addString(link)
-      .addAddress(fromAddress) // from
-      .addAddress(toAddress) // to
-      .addAddress(tokenId) // tokenToTransfer
-      .addUint256(BigNumber(tokenAmount)) // amountToTransfer
-      .addAddress(creator) // proposal creator
-      .addUint256(nftTokenSerialId);
-
-    const { result } = await this.execute(
-      1_000_000,
-      CREATE_PROPOSAL,
-      client,
-      args
-    );
-    const proposalId = result.getUint256(0).toFixed();
-    console.log(
-      `- Governor#${CREATE_PROPOSAL}(): proposal-id = ${proposalId}\n`
-    );
-    return proposalId;
-  };
-
-  createContractUpgradeProposal = async (
-    targetProxyId: ContractId,
-    targetLogicId: ContractId,
-    title: string,
-    client: Client = clientsInfo.operatorClient,
-    description: string = DEFAULT_DESCRIPTION,
-    link: string = DEFAULT_LINK,
-    nftTokenSerialId: number = DEFAULT_NFT_TOKEN_SERIAL_NO
-  ) => {
-    const args = new ContractFunctionParameters()
-      .addString(title)
-      .addString(description)
-      .addString(link)
-      .addAddress(targetProxyId.toSolidityAddress())
-      .addAddress(targetLogicId.toSolidityAddress())
-      .addAddress(clientsInfo.operatorId.toSolidityAddress())
-      .addUint256(nftTokenSerialId);
-
-    const { result, receipt } = await this.execute(
-      1_000_000,
-      CREATE_PROPOSAL,
-      client,
-      args
-    );
-    const proposalId = result.getUint256(0).toFixed();
-    const success = receipt.status.toString().toLowerCase() === "success";
-    console.log(
-      `- Governor#${CREATE_PROPOSAL}(): proposal-id = ${proposalId}\n`
-    );
-    return {
-      proposalId,
-      success,
-    };
-  };
+  protected getContractName() {
+    return "Governor";
+  }
 
   againstVote = async (
     proposalId: string,
@@ -222,21 +127,21 @@ export default class Governor extends Base {
     const args = this.createParams(proposalId)
       .addUint256(BigNumber(tokenId))
       .addUint8(support);
-    await this.execute(5_00_000, CAST_VOTE, client, args);
+    await this.execute(5_00_000, this.CAST_VOTE, client, args);
     console.log(
-      `- Governor#${CAST_VOTE}(): proposal-id = ${proposalId}, support = ${support}\n`
+      `- Governor#${this.CAST_VOTE}(): proposal-id = ${proposalId}, support = ${support}\n`
     );
   };
 
   getGODTokenAddress = async (client: Client = clientsInfo.operatorClient) => {
     const { result } = await this.execute(
       2_00_000,
-      GET_GOD_TOKEN_ADDRESSES,
+      this.GET_GOD_TOKEN_ADDRESSES,
       client
     );
     const address = result.getAddress(0);
     console.log(
-      `- Governor#${GET_GOD_TOKEN_ADDRESSES}(): GOD token address = ${address}\n`
+      `- Governor#${this.GET_GOD_TOKEN_ADDRESSES}(): GOD token address = ${address}\n`
     );
     return TokenId.fromSolidityAddress(address);
   };
@@ -248,13 +153,13 @@ export default class Governor extends Base {
     const args = this.createParams(proposalId);
     const { result } = await this.execute(
       5_00_000,
-      QUORUM_REACHED,
+      this.QUORUM_REACHED,
       client,
       args
     );
     const isQuorumReached = result.getBool(0);
     console.log(
-      `- Governor#${QUORUM_REACHED}(): proposal-id = ${proposalId}, isQuorumReached = ${isQuorumReached}\n`
+      `- Governor#${this.QUORUM_REACHED}(): proposal-id = ${proposalId}, isQuorumReached = ${isQuorumReached}\n`
     );
     return isQuorumReached;
   };
@@ -266,13 +171,13 @@ export default class Governor extends Base {
     const args = this.createParams(proposalId);
     const { result } = await this.execute(
       5_00_000,
-      VOTE_SUCCEEDED,
+      this.VOTE_SUCCEEDED,
       client,
       args
     );
     const isVoteSucceeded = result.getBool(0);
     console.log(
-      `- Governor#${VOTE_SUCCEEDED}(): proposal-id = ${proposalId}, isVoteSucceeded = ${isVoteSucceeded}\n`
+      `- Governor#${this.VOTE_SUCCEEDED}(): proposal-id = ${proposalId}, isVoteSucceeded = ${isVoteSucceeded}\n`
     );
     return isVoteSucceeded;
   };
@@ -284,7 +189,7 @@ export default class Governor extends Base {
     const args = this.createParams(proposalId);
     const { result } = await this.execute(
       5_00_000,
-      PROPOSAL_VOTES,
+      this.PROPOSAL_VOTES,
       client,
       args
     );
@@ -292,7 +197,7 @@ export default class Governor extends Base {
     const forVote = result.getInt256(1);
     const abstain = result.getInt256(2);
     console.log(
-      `- Governor#${PROPOSAL_VOTES}(): proposal-id = ${proposalId}, against = ${against}, forVote = ${forVote}, abstain = ${abstain}\n`
+      `- Governor#${this.PROPOSAL_VOTES}(): proposal-id = ${proposalId}, against = ${against}, forVote = ${forVote}, abstain = ${abstain}\n`
     );
     return { against, forVote, abstain };
   };
@@ -302,10 +207,10 @@ export default class Governor extends Base {
     client: Client = clientsInfo.operatorClient
   ) => {
     const args = this.createParams(proposalId);
-    const { result } = await this.execute(5_00_000, STATE, client, args);
+    const { result } = await this.execute(5_00_000, this.STATE, client, args);
     const state = result.getInt256(0);
     console.log(
-      `- Governor#${STATE}(): proposal-id = ${proposalId}, state = ${state}\n`
+      `- Governor#${this.STATE}(): proposal-id = ${proposalId}, state = ${state}\n`
     );
     return state;
   };
@@ -323,7 +228,7 @@ export default class Governor extends Base {
     const args = new ContractFunctionParameters().addString(title);
     const { receipt, result } = await this.execute(
       1_000_000,
-      EXECUTE_PROPOSAL,
+      this.EXECUTE_PROPOSAL,
       client,
       args,
       fromPrivateKey,
@@ -331,7 +236,7 @@ export default class Governor extends Base {
     );
     const proposalId = result.getUint256(0).toFixed();
     console.log(
-      `- Governor#${EXECUTE_PROPOSAL}(): proposal-id = ${proposalId}, status = ${receipt.status}\n`
+      `- Governor#${this.EXECUTE_PROPOSAL}(): proposal-id = ${proposalId}, status = ${receipt.status}\n`
     );
     return receipt.status.toString() === "SUCCESS";
   };
@@ -340,13 +245,13 @@ export default class Governor extends Base {
     const args = new ContractFunctionParameters().addString(title);
     const { result } = await this.execute(
       9_00_000,
-      CANCEL_PROPOSAL,
+      this.CANCEL_PROPOSAL,
       client,
       args
     );
     const proposalId = result.getUint256(0).toFixed();
     console.log(
-      `- Governor#${CANCEL_PROPOSAL}(): proposal-id = ${proposalId}\n`
+      `- Governor#${this.CANCEL_PROPOSAL}(): proposal-id = ${proposalId}\n`
     );
   };
 
@@ -357,7 +262,7 @@ export default class Governor extends Base {
     const args = this.createParams(proposalId);
     const { result } = await this.execute(
       5_00_000,
-      PROPOSAL_DETAILS,
+      this.PROPOSAL_DETAILS,
       client,
       args
     );
@@ -387,91 +292,9 @@ export default class Governor extends Base {
       description,
       link,
     };
-    console.log(`- Governor#${PROPOSAL_DETAILS}():`);
+    console.log(`- Governor#${this.PROPOSAL_DETAILS}():`);
     console.table(info);
     return info;
-  };
-
-  getContractAddressesFromGovernorUpgradeContract = async (
-    proposalId: string,
-    client: Client = clientsInfo.operatorClient
-  ) => {
-    const args = this.createParams(proposalId);
-    const { result } = await this.execute(
-      5_00_000,
-      GET_CONTRACT_ADDRESSES,
-      client,
-      args
-    );
-    const proxyAddress = result.getAddress(0);
-    const logicAddress = result.getAddress(1);
-    const proxyId = ContractId.fromSolidityAddress(proxyAddress);
-    const logicId = ContractId.fromSolidityAddress(logicAddress);
-    const proxyIdString = proxyId.toString();
-    const logicIdString = logicId.toString();
-    const response = {
-      proxyId,
-      proxyIdString,
-      proxyAddress,
-      logicId,
-      logicIdString,
-      logicAddress,
-    };
-    console.log(
-      `- Governor#${GET_CONTRACT_ADDRESSES}(): proxyAddress = ${proxyAddress}, logicAddress = ${logicAddress}\n`
-    );
-    return response;
-  };
-
-  createTokenProposal = async (
-    title: string,
-    tokenName: string,
-    tokenSymbol: string,
-    tokenTreasureId: AccountId,
-    client: Client = clientsInfo.operatorClient,
-    description: string = DEFAULT_DESCRIPTION,
-    link: string = DEFAULT_LINK,
-    nftTokenSerialId: number = DEFAULT_NFT_TOKEN_SERIAL_NO
-  ) => {
-    const args = new ContractFunctionParameters()
-      .addString(title)
-      .addString(description)
-      .addString(link)
-      .addAddress(tokenTreasureId.toSolidityAddress())
-      .addString(tokenName)
-      .addString(tokenSymbol)
-      .addAddress(clientsInfo.operatorId.toSolidityAddress())
-      .addUint256(nftTokenSerialId);
-
-    const { result } = await this.execute(
-      1_000_000,
-      CREATE_PROPOSAL,
-      client,
-      args
-    );
-    const proposalId = result.getUint256(0).toFixed();
-    console.log(
-      `- GovernorTokenCreate#${CREATE_PROPOSAL}(): proposal-id = ${proposalId}\n`
-    );
-    return proposalId;
-  };
-
-  getTokenAddressFromGovernorTokenCreate = async (
-    proposalId: string,
-    client: Client = clientsInfo.operatorClient
-  ) => {
-    const args = this.createParams(proposalId);
-    const { result } = await this.execute(
-      5_00_000,
-      GET_TOKEN_ADDRESSES,
-      client,
-      args
-    );
-    const tokenAddress = result.getAddress(0);
-    console.log(
-      `- GovernorTokenCreate#${GET_TOKEN_ADDRESSES}(): token-address = ${tokenAddress}\n`
-    );
-    return TokenId.fromSolidityAddress(tokenAddress);
   };
 
   getVotes = async (client: Client = clientsInfo.operatorClient) => {
@@ -482,12 +305,12 @@ export default class Governor extends Base {
     const { result } = await this.execute(5_00_000, "getVotes", client, args);
     const votingPower = result.getUint256(0);
     console.log(
-      `- GovernorTokenCreate#${GET_TOKEN_ADDRESSES}(): votingPower = ${votingPower}\n`
+      `- GovernorTokenCreate#${this.GET_TOKEN_ADDRESSES}(): votingPower = ${votingPower}\n`
     );
     return votingPower;
   };
 
-  private createParams(proposalId: string) {
+  protected createParams(proposalId: string) {
     return new ContractFunctionParameters().addUint256(BigNumber(proposalId));
   }
 
@@ -540,73 +363,11 @@ export default class Governor extends Base {
     );
   }
 
-  async mintToken(
-    proposalId: string,
-    amount: BigNumber,
-    client: Client = clientsInfo.operatorClient
-  ) {
-    const args = new ContractFunctionParameters()
-      .addUint256(BigNumber(proposalId))
-      .addUint256(amount);
-
-    const { result } = await this.execute(3000000, MINT_TOKEN, client, args);
-
-    const newTokenSupply = result.getInt64(0).toFixed();
-    console.log(
-      `- GovernorTokenCreate#${MINT_TOKEN}(): new token supply = ${newTokenSupply}\n`
-    );
-
-    return newTokenSupply;
-  }
-
-  async burnToken(
-    proposalId: string,
-    amount: BigNumber,
-    client: Client = clientsInfo.operatorClient
-  ) {
-    const args = new ContractFunctionParameters()
-      .addUint256(BigNumber(proposalId))
-      .addUint256(amount);
-
-    const { result } = await this.execute(3000000, BURN_TOKEN, client, args);
-
-    const newTokenSupply = result.getInt64(0).toFixed();
-    console.log(
-      `- GovernorTokenCreate#${BURN_TOKEN}(): new token supply = ${newTokenSupply}\n`
-    );
-
-    return newTokenSupply;
-  }
-
-  async transferToken(
-    proposalId: string,
-    to: string,
-    amount: BigNumber,
-    client: Client = clientsInfo.operatorClient
-  ) {
-    const args = new ContractFunctionParameters()
-      .addUint256(BigNumber(proposalId))
-      .addAddress(to)
-      .addUint256(amount);
-
-    const { receipt } = await this.execute(
-      3000000,
-      TRANSFER_TOKEN,
-      client,
-      args,
-      clientsInfo.treasureKey
-    );
-
-    console.log(
-      `- GovernorTokenCreate#${TRANSFER_TOKEN}(): token transfer tx status = ${receipt.status}\n`
-    );
-  }
-
   public getStateWithTimeout = async (
     proposalId: string,
     requiredState: number,
-    maxWaitInMs: number = DEFAULT_MAX_WAITING_TIME,
-    eachIterationDelayInMS: number = EACH_ITERATION_DELAY,
+    maxWaitInMs: number = this.DEFAULT_MAX_WAITING_TIME,
+    eachIterationDelayInMS: number = this.EACH_ITERATION_DELAY,
     client: Client = clientsInfo.operatorClient
   ): Promise<number> => {
     console.log(

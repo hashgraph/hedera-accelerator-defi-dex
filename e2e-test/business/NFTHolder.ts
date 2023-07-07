@@ -10,6 +10,7 @@ import {
   PrivateKey,
   ContractFunctionParameters,
 } from "@hashgraph/sdk";
+import { ContractService } from "../../deployment/service/ContractService";
 
 const NFT_TOKEN_ID = dex.NFT_TOKEN_ID;
 const INITIALIZE = "initialize";
@@ -35,6 +36,10 @@ export default class NFTHolder extends Base {
     }
     console.log(`- NFTHolder#${INITIALIZE}(): already done\n`);
   };
+
+  protected getContractName() {
+    return ContractService.NFT_HOLDER;
+  }
 
   checkAndClaimNFTTokens = async (
     client: Client = clientsInfo.operatorClient,

@@ -1,9 +1,9 @@
 import Common from "../e2e-test/business/Common";
 
 import { Helper } from "../utils/Helper";
-import { TokenId } from "@hashgraph/sdk";
+import { ContractId, TokenId } from "@hashgraph/sdk";
 import { clientsInfo } from "../utils/ClientManagement";
-import { InstanceProvider } from "../utils/InstanceProvider";
+import LpToken from "../e2e-test/business/LpToken";
 
 const TOKEN_A_QTY = Common.withPrecision(10, 1e8);
 const TOKEN_B_QTY = Common.withPrecision(10, 1e8);
@@ -13,7 +13,7 @@ const TOKEN_NAME = "LP-Token-Name";
 const TOKEN_SYMBOL = "LP-Token-Symbol";
 
 async function main() {
-  const lpToken = InstanceProvider.getInstance().getLpToken();
+  const lpToken = new LpToken();
   await lpToken.initialize(
     TOKEN_NAME,
     TOKEN_SYMBOL,

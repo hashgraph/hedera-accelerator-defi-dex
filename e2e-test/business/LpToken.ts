@@ -8,6 +8,7 @@ import {
   ContractFunctionParameters,
   ContractId,
 } from "@hashgraph/sdk";
+import { ContractService } from "../../deployment/service/ContractService";
 
 const INITIALIZE = "initialize";
 const ALLOT_LP_TOKEN = "allotLPTokenFor";
@@ -18,6 +19,10 @@ const GET_LP_TOKEN_ADDRESS = "getLpTokenAddress";
 const LPTOKEN_COUNT_FOR_GIVEN_TOKENS_QTY = "lpTokenCountForGivenTokensQty";
 
 export default class LpToken extends Base {
+  protected getContractName() {
+    return ContractService.LP_TOKEN;
+  }
+
   initialize = async (
     tokenName: string,
     tokenSymbol: string,

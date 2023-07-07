@@ -8,10 +8,15 @@ import {
   AccountId,
   ContractId,
 } from "@hashgraph/sdk";
+import { ContractService } from "../../deployment/service/ContractService";
 
 const ASSOCIATE_TOKEN_PUBLIC = "associateTokenPublic";
 
 export default class HederaService extends Base {
+  protected getContractName() {
+    return this.csDev.hederaServiceContractName;
+  }
+
   associateTokenPublic = async (
     tokenId: TokenId,
     accountId: AccountId | ContractId,

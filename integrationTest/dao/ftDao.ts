@@ -1,5 +1,4 @@
 import dex from "../../deployment/model/dex";
-import Governor from "../../e2e-test/business/Governor";
 import GodHolder from "../../e2e-test/business/GodHolder";
 import FTDAO from "../../e2e-test/business/FTDAO";
 import * as GovernorTokenMetaData from "../../e2e-test/business/FTDAO";
@@ -8,9 +7,18 @@ import { Helper } from "../../utils/Helper";
 import { Deployment } from "../../utils/deployContractOnTestnet";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { ContractService } from "../../deployment/service/ContractService";
-import { InstanceProvider } from "../../utils/InstanceProvider";
-import { Client, TokenId, AccountId, PrivateKey } from "@hashgraph/sdk";
+import {
+  Client,
+  TokenId,
+  AccountId,
+  PrivateKey,
+  ContractId,
+} from "@hashgraph/sdk";
 import Common from "../../e2e-test/business/Common";
+import TokenTransferGovernor from "../../e2e-test/business/TokenTransferGovernor";
+import TextGovernor from "../../e2e-test/business/TextGovernor";
+import ContractUpgradeGovernor from "../../e2e-test/business/ContractUpgradeGovernor";
+import FTTokenHolderFactory from "../../e2e-test/business/factories/FTTokenHolderFactory";
 
 const TOKEN_QTY = 1 * 1e8;
 const TOKEN_ID = TokenId.fromString(dex.TOKEN_LAB49_1);
@@ -18,9 +26,9 @@ const DOA_ADMIN_ADDRESS = clientsInfo.operatorId.toSolidityAddress();
 const DAO_ADMIN_CLIENT = clientsInfo.operatorClient;
 const DAO_DESC = "Lorem Ipsum is simply dummy text";
 const DAO_WEB_LINKS = ["https://linkedin.com"];
+const PROPOSAL_CREATE_NFT_SERIAL_ID = 1;
 
 const deployment = new Deployment();
-const provider = InstanceProvider.getInstance();
 const csDev = new ContractService();
 
 export async function executeGovernorTokenTransferFlow(
@@ -60,8 +68,8 @@ export async function executeGovernorTokenTransferFlow(
 
   const governorAddresses =
     await tokenTransferDAO.getGovernorTokenTransferContractAddresses();
-  const governorTokenTransfer = new Governor(
-    governorAddresses.governorTokenTransferProxyId.toString()
+  const governorTokenTransfer = new TokenTransferGovernor(
+    governorAddresses.governorTokenTransferProxyId
   );
 
   await governorTokenTransfer.setupAllowanceForProposalCreation(
@@ -79,7 +87,8 @@ export async function executeGovernorTokenTransferFlow(
     tokenAmount,
     proposalCreatorClient,
     GovernorTokenMetaData.DEFAULT_DESCRIPTION,
-    GovernorTokenMetaData.DEFAULT_LINK
+    GovernorTokenMetaData.DEFAULT_LINK,
+    PROPOSAL_CREATE_NFT_SERIAL_ID
   );
   await governorTokenTransfer.getProposalDetails(proposalId);
   await governorTokenTransfer.forVote(proposalId, 0, voterClient);
@@ -128,8 +137,8 @@ export async function executeTextProposalFlow(
 
   const governorAddresses =
     await tokenTransferDAO.getGovernorTokenTransferContractAddresses();
-  const governorTextProposal = new Governor(
-    governorAddresses.governorTextProposalProxyId.toString()
+  const governorTextProposal = new TextGovernor(
+    governorAddresses.governorTextProposalProxyId
   );
 
   await governorTextProposal.setupAllowanceForProposalCreation(
@@ -144,7 +153,8 @@ export async function executeTextProposalFlow(
     title,
     proposalCreatorClient,
     GovernorTokenMetaData.DEFAULT_DESCRIPTION,
-    GovernorTokenMetaData.DEFAULT_LINK
+    GovernorTokenMetaData.DEFAULT_LINK,
+    PROPOSAL_CREATE_NFT_SERIAL_ID
   );
 
   await governorTextProposal.getProposalDetails(proposalId);
@@ -193,8 +203,8 @@ export async function executeContractUpgradeFlow(
 
   const governorAddresses =
     await dao.getGovernorTokenTransferContractAddresses();
-  const governorContractUpgrade = new Governor(
-    governorAddresses.governorUpgradeProxyId.toString()
+  const governorContractUpgrade = new ContractUpgradeGovernor(
+    governorAddresses.governorUpgradeProxyId
   );
 
   await governorContractUpgrade.setupAllowanceForProposalCreation(
@@ -211,7 +221,8 @@ export async function executeContractUpgradeFlow(
     contractToUpgrade,
     proposalCreatorClient,
     GovernorTokenMetaData.DEFAULT_DESCRIPTION,
-    GovernorTokenMetaData.DEFAULT_LINK
+    GovernorTokenMetaData.DEFAULT_LINK,
+    PROPOSAL_CREATE_NFT_SERIAL_ID
   );
 
   await governorContractUpgrade.getProposalDetails(proposalId);
@@ -229,7 +240,10 @@ export async function executeContractUpgradeFlow(
       await governorContractUpgrade.getContractAddressesFromGovernorUpgradeContract(
         proposalId
       );
-    await Common.upgradeTo(proxyAddress, logicAddress);
+    await new Common(ContractId.fromSolidityAddress(proxyAddress)).upgradeTo(
+      proxyAddress,
+      logicAddress
+    );
   } else {
     await governorContractUpgrade.cancelProposal(title, proposalCreatorClient);
   }
@@ -240,10 +254,13 @@ async function main() {
   const newCopies = await deployment.deployProxies([ContractService.FT_DAO]);
 
   const transferDao = newCopies.get(ContractService.FT_DAO);
-  const tokenTransferDAO = provider.getGovernorTokenDao(transferDao.id);
-  const godHolder = await provider.getGODTokenHolderFromFactory(
-    dex.GOVERNANCE_DAO_ONE_TOKEN_ID
+  const tokenTransferDAO = new FTDAO(ContractId.fromString(transferDao.id));
+
+  const tokenHolderFactory = new FTTokenHolderFactory();
+  const godHolderContractId = await tokenHolderFactory.getTokenHolder(
+    dex.GOVERNANCE_DAO_TWO_TOKEN_ID.toSolidityAddress()
   );
+  const godHolder = new GodHolder(godHolderContractId);
 
   await tokenTransferDAO.initialize(
     DOA_ADMIN_ADDRESS,

@@ -13,6 +13,7 @@ import {
   ContractExecuteTransaction,
 } from "@hashgraph/sdk";
 import { Helper } from "../../utils/Helper";
+import { ContractService } from "../../deployment/service/ContractService";
 
 const INITIALIZE = "initialize";
 const CREATE_PROPOSAL = "createProposal";
@@ -88,6 +89,10 @@ export default class ContractUpgradeDao extends BaseDao {
       return;
     }
     console.log(`- ContractUpgradeDao#${INITIALIZE}(): already done\n`);
+  }
+
+  protected getContractName() {
+    return ContractService.FT_DAO;
   }
 
   createContractUpgradeProposal = async (

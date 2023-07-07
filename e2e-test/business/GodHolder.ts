@@ -12,6 +12,7 @@ import {
   AccountId,
   PrivateKey,
 } from "@hashgraph/sdk";
+import { ContractService } from "../../deployment/service/ContractService";
 
 const GET_TOKEN = "getToken";
 const INITIALIZE = "initialize";
@@ -37,6 +38,10 @@ export default class GodHolder extends Base {
     }
     console.log(`- GodHolder#${INITIALIZE}(): already done\n`);
   };
+
+  protected getContractName() {
+    return ContractService.GOD_HOLDER;
+  }
 
   checkAndClaimGodTokens = async (
     client: Client = clientsInfo.operatorClient,

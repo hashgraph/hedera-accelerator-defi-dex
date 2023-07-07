@@ -45,6 +45,10 @@ export default class MultiSigDAOFactory extends Base {
     console.log(`- MultiSigDAOFactory#${INITIALIZE}(): already done\n`);
   };
 
+  protected getContractName() {
+    return ContractService.MULTI_SIG_FACTORY;
+  }
+
   createDAO = async (
     name: string,
     logoUrl: string,

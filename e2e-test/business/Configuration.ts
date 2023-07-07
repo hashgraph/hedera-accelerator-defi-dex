@@ -20,6 +20,10 @@ export default class Configuration extends Base {
     console.log(`- Configuration#${INITIALIZE}(): already done\n`);
   };
 
+  protected getContractName() {
+    return this.csDev.configuration;
+  }
+
   setTransactionFee = async (
     key: BigNumber,
     value: BigNumber,

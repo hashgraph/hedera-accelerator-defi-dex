@@ -9,6 +9,7 @@ import {
   AccountId,
   ContractFunctionParameters,
 } from "@hashgraph/sdk";
+import { ContractService } from "../../deployment/service/ContractService";
 
 const INITIALIZE = "initialize";
 
@@ -39,6 +40,10 @@ export default class Splitter extends Base {
       `- Splitter#${INITIALIZE}(): already done, contract-id = ${this.contractId}\n`
     );
   };
+
+  protected getContractName() {
+    return ContractService.SPLITTER;
+  }
 
   public vaults = async (client: Client = clientsInfo.operatorClient) => {
     const { result } = await this.execute(1_00_000, GET_VAULTS, client);

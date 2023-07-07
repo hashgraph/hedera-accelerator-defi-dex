@@ -13,39 +13,39 @@ import dex from "../../deployment/model/dex";
 import Governor from "../../e2e-test/business/Governor";
 import GodHolder from "../../e2e-test/business/GodHolder";
 import FTDAO from "../../e2e-test/business/FTDAO";
-import DAOFactory from "../../e2e-test/business/factories/DAOFactory";
+import FTDAOFactory from "../../e2e-test/business/factories/FTDAOFactory";
 import { expect } from "chai";
 import Common from "../business/Common";
 import { BigNumber } from "bignumber.js";
 import { CommonSteps } from "./CommonSteps";
-import * as GovernorTokenMetaData from "../../e2e-test/business/FTDAO";
-import { InstanceProvider } from "../../utils/InstanceProvider";
+import FTTokenHolderFactory from "../business/factories/FTTokenHolderFactory";
+import TokenTransferGovernor from "../business/TokenTransferGovernor";
 
 const DAO_DESC = "Lorem Ipsum is simply dummy text";
 const DAO_WEB_LINKS = ["LINKEDIN", "https://linkedin.com"];
+const DEFAULT_LINK = "https://defi-ui.hedera.com/governance";
 
 const csDev = new ContractService();
 
 const ftDaoProxyContractId = csDev.getContractWithProxy(ContractService.FT_DAO)
   .transparentProxyId!;
 
-let ftDao = new FTDAO(ftDaoProxyContractId);
+let ftDao = new FTDAO(ContractId.fromString(ftDaoProxyContractId));
 
 let governorTokenTransfer: Governor;
 
 const godHolderProxyContractId = csDev.getContractWithProxy(
   csDev.godHolderContract
 ).transparentProxyId!;
-let godHolder = new GodHolder(godHolderProxyContractId);
+let godHolder = new GodHolder(ContractId.fromString(godHolderProxyContractId));
 
 const daoFactoryContract = csDev.getContractWithProxy(
   ContractService.FT_DAO_FACTORY
 );
 const proxyId = daoFactoryContract.transparentProxyId!;
-const daoFactory = new DAOFactory(proxyId, false);
+const daoFactory = new FTDAOFactory(ContractId.fromString(proxyId));
 
-const godTokenHolderFactory =
-  InstanceProvider.getInstance().getGODTokenHolderFactory();
+const godTokenHolderFactory = new FTTokenHolderFactory(undefined);
 const adminAddress: string = clientsInfo.operatorId.toSolidityAddress();
 
 const toAccount: AccountId = clientsInfo.treasureId;
@@ -129,7 +129,7 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
     const godTokenHolderContractId = await godTokenHolderFactory.getTokenHolder(
       daoTokenId.toSolidityAddress()
     );
-    godHolder = new GodHolder(godTokenHolderContractId.toString());
+    godHolder = new GodHolder(godTokenHolderContractId);
     await daoFactory.initialize(
       clientsInfo.operatorClient,
       godTokenHolderFactory
@@ -176,7 +176,6 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
   public async initializeContractsViaFactory() {
     ftDao = daoFactory.getGovernorTokenDaoInstance(daoAddress);
     await this.updateGovernor(ftDao);
-    //godHolder = (await daoFactory.getTokenHolderInstance(tokenId)) as GodHolder;
     factoryGODHolderContractId = godHolder.contractId;
   }
 
@@ -467,8 +466,8 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
   private async updateGovernor(dao: FTDAO) {
     const governorAddresses =
       await dao.getGovernorTokenTransferContractAddresses();
-    governorTokenTransfer = new Governor(
-      governorAddresses.governorTokenTransferProxyId.toString()
+    governorTokenTransfer = new TokenTransferGovernor(
+      governorAddresses.governorTokenTransferProxyId
     );
   }
 }

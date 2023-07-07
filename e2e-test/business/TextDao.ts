@@ -13,6 +13,7 @@ import {
   ContractExecuteTransaction,
 } from "@hashgraph/sdk";
 import { Helper } from "../../utils/Helper";
+import { ContractService } from "../../deployment/service/ContractService";
 
 const INITIALIZE = "initialize";
 const CREATE_PROPOSAL = "createProposal";
@@ -61,6 +62,10 @@ export default class TextDao extends BaseDao {
       textGovernor,
       client
     );
+  }
+
+  protected getContractName() {
+    return ContractService.FT_DAO;
   }
 
   async initializeDAO(

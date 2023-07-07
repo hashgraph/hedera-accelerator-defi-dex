@@ -11,21 +11,51 @@ import {
   PrivateKey,
   ContractExecuteTransaction,
   ContractFunctionParameters,
+  ContractId,
 } from "@hashgraph/sdk";
+import assert from "assert";
 
-export default class Base {
-  private csDev: ContractService = new ContractService();
+export default abstract class Base {
+  protected csDev: ContractService = new ContractService();
   protected htsAddress: string;
   protected configuration: string;
   contractId: string;
+  contractName: string;
   private UPGRADE_HEDERA_SERVICE = "upgradeHederaService";
   private OWNER = "owner";
 
-  constructor(_contractId: string) {
+  constructor(_contractId: ContractId | null = null) {
     this.htsAddress = this.getHederaServiceContractAddress();
     this.configuration = this.getConfigurationContractAddress();
-    this.contractId = _contractId;
+    const _contractName = this.getContractName();
+    this.contractId = this.getLatestContractIdIfMissingInArgument(
+      _contractId,
+      _contractName
+    );
+    this.printContractInformation(_contractName);
   }
+
+  protected getBusinessClassName = (): string => this.constructor.name;
+
+  protected abstract getContractName(): string;
+
+  private getLatestContractIdIfMissingInArgument = (
+    _contractId: ContractId | null = null,
+    _contractName: string
+  ): string => {
+    const transparentProxyId =
+      _contractId?.toString() ??
+      this.csDev.getContractWithProxy(_contractName).transparentProxyId;
+    assert(transparentProxyId !== undefined, "Contract Id is must");
+    return transparentProxyId;
+  };
+
+  private printContractInformation = (_contractName: string) => {
+    const businessClassName = this.getBusinessClassName();
+    console.log(
+      `\n Using business class[${businessClassName}], contract-id [${this.contractId}], and contract-name [${_contractName}] \n`
+    );
+  };
 
   getCurrentImplementation = async (
     adminKey: PrivateKey = clientsInfo.proxyAdminKey,

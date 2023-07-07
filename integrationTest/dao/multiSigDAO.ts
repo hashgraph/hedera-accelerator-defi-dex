@@ -54,7 +54,9 @@ const DAO_ADMIN_CLIENT = clientsInfo.uiUserClient;
 
 async function main() {
   const contract = csDev.getContractWithProxy(ContractService.MULTI_SIG);
-  const multiSigDAO = new MultiSigDao(contract.transparentProxyId!);
+  const multiSigDAO = new MultiSigDao(
+    ContractId.fromString(contract.transparentProxyId!)
+  );
   await initDAO(multiSigDAO);
   await executeDAO(multiSigDAO);
 
@@ -161,7 +163,7 @@ export async function executeDAO(
 
 async function getGnosisSafeInstance(multiSigDAO: MultiSigDao) {
   const safeContractId = await multiSigDAO.getHederaGnosisSafeContractAddress();
-  return new HederaGnosisSafe(safeContractId.toString());
+  return new HederaGnosisSafe(safeContractId);
 }
 
 async function proposeBatchTransaction(multiSigDAO: MultiSigDao) {
