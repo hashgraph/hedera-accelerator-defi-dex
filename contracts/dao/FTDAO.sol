@@ -1,14 +1,14 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.18;
 import "./BaseDAO.sol";
-import "../governance/GovernorTransferToken.sol";
-import "../governance/GovernorUpgrade.sol";
-import "../governance/GovernorTextProposal.sol";
-import "../governance/GovernorTokenCreate.sol";
 import "./ISharedDAOModel.sol";
-import "../common/RoleBasedAccess.sol";
 
-contract FTDAO is BaseDAO, ISharedDAOModel, RoleBasedAccess {
+import "../governance/GovernorUpgrade.sol";
+import "../governance/GovernorTokenCreate.sol";
+import "../governance/GovernorTextProposal.sol";
+import "../governance/GovernorTransferToken.sol";
+
+contract FTDAO is BaseDAO, ISharedDAOModel {
     address payable private governorTokenTransferProxy;
     address payable private governorUpgradeProxy;
     address payable private governorTextProposalProxy;
@@ -22,9 +22,15 @@ contract FTDAO is BaseDAO, ISharedDAOModel, RoleBasedAccess {
     function initialize(
         CreateDAOInputs memory inputs,
         Governor memory governor,
-        Common memory common
+        Common memory common,
+        SystemUsers memory _systemUsers
     ) external initializer {
-        systemUser = common.systemUser;
+        _grantRole(DEFAULT_ADMIN_ROLE, _systemUsers.superAdmin);
+        _grantRole(PROXY_ADMIN_ROLE, _systemUsers.proxyAdmin);
+        _grantRole(CHILD_PROXY_ADMIN_ROLE, _systemUsers.childProxyAdmin);
+
+        systemUsers = _systemUsers;
+
         governorTokenTransferProxy = _createGovernorContractInstance(
             inputs,
             common,
@@ -105,7 +111,7 @@ contract FTDAO is BaseDAO, ISharedDAOModel, RoleBasedAccess {
         address _tokenToTransfer,
         uint256 _transferTokenAmount,
         uint256 nftTokenSerialId
-    ) external onlyOwner returns (uint256) {
+    ) external onlyRole(DAO_ADMIN) returns (uint256) {
         GovernorTransferToken governorTransferToken = GovernorTransferToken(
             governorTokenTransferProxy
         );
@@ -131,7 +137,7 @@ contract FTDAO is BaseDAO, ISharedDAOModel, RoleBasedAccess {
         address payable _proxyContract,
         address _contractToUpgrade,
         uint256 nftTokenSerialId
-    ) external onlyOwner returns (uint256) {
+    ) external onlyRole(DAO_ADMIN) returns (uint256) {
         GovernorUpgrade governorUpgrade = GovernorUpgrade(governorUpgradeProxy);
         uint256 proposalId = governorUpgrade.createProposal(
             _title,
@@ -151,7 +157,7 @@ contract FTDAO is BaseDAO, ISharedDAOModel, RoleBasedAccess {
         string memory _description,
         string memory _linkToDiscussion,
         uint256 nftTokenSerialId
-    ) external onlyOwner returns (uint256) {
+    ) external onlyRole(DAO_ADMIN) returns (uint256) {
         GovernorTextProposal governorTextProposal = GovernorTextProposal(
             governorTextProposalProxy
         );
@@ -174,7 +180,7 @@ contract FTDAO is BaseDAO, ISharedDAOModel, RoleBasedAccess {
         string memory tokenName,
         string memory tokenSymbol,
         uint256 nftTokenSerialId
-    ) external onlyOwner returns (uint256) {
+    ) external onlyRole(DAO_ADMIN) returns (uint256) {
         GovernorTokenCreate governorTokenCreate = GovernorTokenCreate(
             governorTokenCreateProxy
         );
@@ -194,7 +200,7 @@ contract FTDAO is BaseDAO, ISharedDAOModel, RoleBasedAccess {
 
     function upgradeHederaService(
         IHederaService newHederaService
-    ) external onlySystemUser {
+    ) external onlyRole(CHILD_PROXY_ADMIN_ROLE) {
         IGovernorBase(governorTokenTransferProxy).upgradeHederaService(
             newHederaService
         );
@@ -215,7 +221,7 @@ contract FTDAO is BaseDAO, ISharedDAOModel, RoleBasedAccess {
         address governor
     ) private returns (address payable governorBase) {
         IGovernorBase iGovernorBase = IGovernorBase(
-            _createProxy(governor, common.proxyAdmin)
+            _createProxy(governor, systemUsers.proxyAdmin)
         );
 
         iGovernorBase.initialize(

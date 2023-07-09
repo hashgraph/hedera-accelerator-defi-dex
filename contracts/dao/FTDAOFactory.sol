@@ -12,16 +12,9 @@ import "../governance/ITokenHolderFactory.sol";
 import "../governance/IGovernorTransferToken.sol";
 import "./ISharedDAOModel.sol";
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-contract FTDAOFactory is
-    IErrors,
-    IEvents,
-    OwnableUpgradeable,
-    ISharedDAOModel,
-    RoleBasedAccess
-{
+contract FTDAOFactory is IErrors, IEvents, ISharedDAOModel, RoleBasedAccess {
     event DAOCreated(
         address daoAddress,
         Governor governors,
@@ -29,14 +22,11 @@ contract FTDAOFactory is
         CreateDAOInputs inputs
     );
 
-    error NotAdmin(string message);
-
     string private constant FungibleTokenDAO = "FTDAO";
     string private constant TokenHolderFactory = "TokenHolderFactory";
     string private constant Governors = "Governors";
 
     IHederaService private hederaService;
-    address private proxyAdmin;
 
     address[] private daos;
 
@@ -44,23 +34,18 @@ contract FTDAOFactory is
     ITokenHolderFactory private tokenHolderFactory;
     Governor governors;
 
-    modifier ifAdmin() {
-        if (msg.sender != proxyAdmin) {
-            revert NotAdmin("DAOFactory: auth failed");
-        }
-        _;
-    }
-
     function initialize(
-        address _proxyAdmin,
+        SystemUsers memory _systemUsers,
         IHederaService _hederaService,
         FTDAO _daoLogic,
         ITokenHolderFactory _tokenHolderFactory,
         Governor memory _governors
     ) external initializer {
-        systemUser = msg.sender;
-        __Ownable_init();
-        proxyAdmin = _proxyAdmin;
+        _grantRole(DEFAULT_ADMIN_ROLE, _systemUsers.superAdmin);
+        _grantRole(PROXY_ADMIN_ROLE, _systemUsers.proxyAdmin);
+        _grantRole(CHILD_PROXY_ADMIN_ROLE, _systemUsers.childProxyAdmin);
+
+        systemUsers = _systemUsers;
         hederaService = _hederaService;
         daoLogic = _daoLogic;
         tokenHolderFactory = _tokenHolderFactory;
@@ -77,18 +62,9 @@ contract FTDAOFactory is
         emit GovernorLogicUpdated(oldGovernors, _governors, Governors);
     }
 
-    function getTokenHolderFactoryAddress()
-        external
-        view
-        ifAdmin
-        returns (address)
-    {
-        return address(tokenHolderFactory);
-    }
-
     function upgradeTokenHolderFactory(
         ITokenHolderFactory _newTokenHolderFactory
-    ) external ifAdmin {
+    ) external onlyRole(CHILD_PROXY_ADMIN_ROLE) {
         emit LogicUpdated(
             address(tokenHolderFactory),
             address(_newTokenHolderFactory),
@@ -97,7 +73,9 @@ contract FTDAOFactory is
         tokenHolderFactory = _newTokenHolderFactory;
     }
 
-    function upgradeFTDAOLogicImplementation(FTDAO _newImpl) external ifAdmin {
+    function upgradeFTDAOLogicImplementation(
+        FTDAO _newImpl
+    ) external onlyRole(CHILD_PROXY_ADMIN_ROLE) {
         emit LogicUpdated(
             address(daoLogic),
             address(_newImpl),
@@ -108,9 +86,32 @@ contract FTDAOFactory is
 
     function upgradeGovernorsImplementation(
         Governor memory _newImpl
-    ) external ifAdmin {
+    ) external onlyRole(CHILD_PROXY_ADMIN_ROLE) {
         emit GovernorLogicUpdated(governors, _newImpl, Governors);
         governors = _newImpl;
+    }
+
+    function upgradeHederaService(
+        IHederaService newHederaService
+    ) external onlyRole(CHILD_PROXY_ADMIN_ROLE) {
+        hederaService = newHederaService;
+    }
+
+    function getTokenHolderFactoryAddress()
+        external
+        view
+        onlyRole(CHILD_PROXY_ADMIN_ROLE)
+        returns (address)
+    {
+        return address(tokenHolderFactory);
+    }
+
+    function getDAOs() external view returns (address[] memory) {
+        return daos;
+    }
+
+    function getHederaServiceVersion() external view returns (IHederaService) {
+        return hederaService;
     }
 
     function createDAO(
@@ -154,20 +155,6 @@ contract FTDAOFactory is
         return createdDAOAddress;
     }
 
-    function getDAOs() external view returns (address[] memory) {
-        return daos;
-    }
-
-    function upgradeHederaService(
-        IHederaService newHederaService
-    ) external onlyOwner {
-        hederaService = newHederaService;
-    }
-
-    function getHederaServiceVersion() external view returns (IHederaService) {
-        return hederaService;
-    }
-
     function _createFTDAOContractInstance(
         CreateDAOInputs memory _createDAOInputs,
         ITokenHolder iTokenHolder
@@ -176,15 +163,20 @@ contract FTDAOFactory is
         Common memory common;
         common.hederaService = hederaService;
         common.iTokenHolder = iTokenHolder;
-        common.proxyAdmin = proxyAdmin;
-        common.systemUser = systemUser;
-        dao.initialize(_createDAOInputs, governors, common);
+
+        dao.initialize(_createDAOInputs, governors, common, systemUsers);
         return address(dao);
     }
 
     function _createProxy(address _logic) private returns (address) {
         bytes memory _data;
         return
-            address(new TransparentUpgradeableProxy(_logic, proxyAdmin, _data));
+            address(
+                new TransparentUpgradeableProxy(
+                    _logic,
+                    systemUsers.proxyAdmin,
+                    _data
+                )
+            );
     }
 }

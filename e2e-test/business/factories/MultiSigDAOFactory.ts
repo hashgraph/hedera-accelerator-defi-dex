@@ -31,18 +31,28 @@ export default class MultiSigDAOFactory extends Base {
       const gnosisFactory = deployedItems.get(ContractService.SAFE_FACTORY);
       const gnosisLogic = deployedItems.get(ContractService.SAFE);
       const multiSigDao = deployedItems.get(ContractService.MULTI_SIG);
-      const args = new ContractFunctionParameters()
-        .addAddress(clientsInfo.childProxyAdminId.toSolidityAddress())
-        .addAddress(multiSigDao.address)
-        .addAddress(gnosisLogic.address)
-        .addAddress(gnosisFactory.address)
-        .addAddress(this.htsAddress)
-        .addAddress(this.getMultiSendContractAddress());
-      await this.execute(9_00_000, INITIALIZE, client, args);
-      console.log(`- MultiSigDAOFactory#${INITIALIZE}(): done\n`);
+      const data = {
+        _systemUsers: this.getSystemUsersAddressArray(),
+        _daoLogic: multiSigDao.address,
+        _safeLogic: gnosisLogic.address,
+        _safeFactory: gnosisFactory.address,
+        _hederaService: this.htsAddress,
+        _multiSend: this.getMultiSendContractAddress(),
+      };
+      const { bytes, hex } = await this.encodeFunctionData(
+        ContractService.MULTI_SIG_FACTORY,
+        INITIALIZE,
+        Object.values(data)
+      );
+      await this.execute(9_00_000, INITIALIZE, client, bytes);
+      console.log(
+        `- MultiSigDAOFactory#${INITIALIZE}(): ${this.contractId} done with data = ${hex}\n`
+      );
       return;
     }
-    console.log(`- MultiSigDAOFactory#${INITIALIZE}(): already done\n`);
+    console.log(
+      `- MultiSigDAOFactory#${INITIALIZE}(): ${this.contractId} already done\n`
+    );
   };
 
   protected getContractName() {

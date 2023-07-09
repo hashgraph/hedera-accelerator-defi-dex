@@ -3,12 +3,11 @@ pragma solidity ^0.8.18;
 
 import "./BaseDAO.sol";
 import "../common/IHederaService.sol";
-import "../common/RoleBasedAccess.sol";
 import "../gnosis/HederaMultiSend.sol";
 import "../gnosis/HederaGnosisSafe.sol";
 import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
-contract MultiSigDAO is BaseDAO, RoleBasedAccess {
+contract MultiSigDAO is BaseDAO {
     event TransactionCreated(bytes32 txnHash, TransactionInfo info);
     enum TransactionState {
         Pending,
@@ -50,9 +49,13 @@ contract MultiSigDAO is BaseDAO, RoleBasedAccess {
         string[] memory _webLinks,
         HederaGnosisSafe _hederaGnosisSafe,
         IHederaService _hederaService,
-        HederaMultiSend _multiSend
+        HederaMultiSend _multiSend,
+        SystemUsers memory _systemUsers
     ) external initializer {
-        systemUser = msg.sender;
+        _grantRole(DEFAULT_ADMIN_ROLE, _systemUsers.superAdmin);
+        _grantRole(PROXY_ADMIN_ROLE, _systemUsers.proxyAdmin);
+        _grantRole(CHILD_PROXY_ADMIN_ROLE, _systemUsers.childProxyAdmin);
+
         hederaService = _hederaService;
         hederaGnosisSafe = _hederaGnosisSafe;
         multiSend = _multiSend;
@@ -198,13 +201,13 @@ contract MultiSigDAO is BaseDAO, RoleBasedAccess {
 
     function upgradeHederaService(
         IHederaService newHederaService
-    ) external onlySystemUser {
+    ) external onlyRole(CHILD_PROXY_ADMIN_ROLE) {
         hederaService = newHederaService;
     }
 
     function upgradeMultiSend(
         HederaMultiSend _multiSend
-    ) external onlySystemUser {
+    ) external onlyRole(CHILD_PROXY_ADMIN_ROLE) {
         multiSend = _multiSend;
     }
 

@@ -8,6 +8,7 @@ import { ContractService } from "../../deployment/service/ContractService";
 import { MirrorNodeService } from "../../utils/MirrorNodeService";
 import {
   Client,
+  AccountId,
   PrivateKey,
   ContractExecuteTransaction,
   ContractFunctionParameters,
@@ -50,6 +51,71 @@ export default abstract class Base {
     const businessClassName = this.getBusinessClassName();
     console.log(
       `\n Using business class[${businessClassName}], contract-id [${this.contractId}], and contract-name [${this.contractName}] \n`
+    );
+  };
+
+  public getRoleAdmin = async (
+    role: Uint8Array,
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    const args = new ContractFunctionParameters().addBytes32(role);
+    const { result } = await this.execute(
+      2_00_000,
+      "getRoleAdmin",
+      client,
+      args
+    );
+    const roleHex = ethers.utils.hexlify(role);
+    const roleAdminHex = ethers.utils.hexlify(result.getBytes32(0));
+    console.log(
+      `- Base#getRoleAdmin(): done, role = ${roleHex}, roleAdmin = ${roleAdminHex}\n`
+    );
+  };
+
+  public hasRole = async (
+    role: Uint8Array,
+    accountId: AccountId,
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    const args = new ContractFunctionParameters()
+      .addBytes32(role)
+      .addAddress(accountId.toSolidityAddress());
+    const { result } = await this.execute(5_00_000, "hasRole", client, args);
+    const roleHex = ethers.utils.hexlify(role);
+    const hasRoleHex = ethers.utils.hexlify(result.asBytes());
+    const hasRole = result.getBool(0);
+    console.log(
+      `- Base#hasRole(): done, role = ${roleHex}, hasRole = ${hasRole}, hasRoleHex = ${hasRoleHex}\n`
+    );
+  };
+
+  public grantRole = async (
+    role: Uint8Array,
+    accountId: AccountId,
+    superAdminClient: Client
+  ) => {
+    const args = new ContractFunctionParameters()
+      .addBytes32(role)
+      .addAddress(accountId.toSolidityAddress());
+    await this.execute(5_00_000, "grantRole", superAdminClient, args);
+    const roleHex = ethers.utils.hexlify(role);
+    console.log(
+      `- Base#grantRole(): done, role = ${roleHex}, account = ${accountId.toString()}\n`
+    );
+  };
+
+  public revokeRole = async (
+    role: Uint8Array,
+    accountId: AccountId,
+    superAdminClient: Client
+  ) => {
+    const args = new ContractFunctionParameters()
+      .addBytes32(role)
+      .addAddress(accountId.toSolidityAddress());
+    await this.execute(5_00_000, "revokeRole", superAdminClient, args);
+    const roleHex = ethers.utils.hexlify(role);
+    console.log(
+      `- Base#revokeRole(): done, role = ${roleHex}, account = ${accountId.toString()}\n`
     );
   };
 
@@ -168,5 +234,13 @@ export default abstract class Base {
       contractName
     );
     return contractInterface.decodeFunctionResult(functionName, data);
+  }
+
+  protected getSystemUsersAddressArray() {
+    return Object.values({
+      superAdmin: clientsInfo.operatorId.toSolidityAddress(),
+      proxyAdmin: clientsInfo.proxyAdminId.toSolidityAddress(),
+      childProxyAdmin: clientsInfo.childProxyAdminId.toSolidityAddress(),
+    });
   }
 }
