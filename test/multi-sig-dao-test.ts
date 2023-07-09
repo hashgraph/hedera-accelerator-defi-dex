@@ -113,12 +113,14 @@ describe("MultiSig tests", function () {
 
     const systemUsersSigners = {
       superAdmin: signers[5],
-      childProxyAdmin: signers[6],
+      proxyAdmin: signers[6],
+      childProxyAdmin: signers[7],
     };
 
     const systemUsers = Object.values({
       superAdmin: signers[5].address,
-      childProxyAdmin: signers[6].address,
+      proxyAdmin: signers[6].address,
+      childProxyAdmin: signers[7].address,
     });
 
     const multiSigDAOLogicInstance = await TestHelper.deployLogic(
