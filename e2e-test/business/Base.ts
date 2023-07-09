@@ -1,3 +1,4 @@
+import dex from "../../deployment/model/dex";
 import ContractMetadata from "../../utils/ContractMetadata";
 
 import { ethers } from "ethers";
@@ -65,10 +66,10 @@ export default abstract class Base {
       client,
       args
     );
-    const roleHex = ethers.utils.hexlify(role);
+    const roleInfo = this.getRoleInfo(role);
     const roleAdminHex = ethers.utils.hexlify(result.getBytes32(0));
     console.log(
-      `- Base#getRoleAdmin(): done, role = ${roleHex}, roleAdmin = ${roleAdminHex}\n`
+      `- Base#getRoleAdmin(): done ${roleInfo}, roleAdmin = ${roleAdminHex}\n`
     );
   };
 
@@ -81,12 +82,13 @@ export default abstract class Base {
       .addBytes32(role)
       .addAddress(accountId.toSolidityAddress());
     const { result } = await this.execute(5_00_000, "hasRole", client, args);
-    const roleHex = ethers.utils.hexlify(role);
+    const roleInfo = this.getRoleInfo(role);
     const hasRoleHex = ethers.utils.hexlify(result.asBytes());
     const hasRole = result.getBool(0);
     console.log(
-      `- Base#hasRole(): done, role = ${roleHex}, hasRole = ${hasRole}, hasRoleHex = ${hasRoleHex}\n`
+      `- Base#hasRole(): done ${roleInfo}, hasRole = ${hasRole}, hasRoleHex = ${hasRoleHex}\n`
     );
+    return hasRole;
   };
 
   public grantRole = async (
@@ -98,9 +100,9 @@ export default abstract class Base {
       .addBytes32(role)
       .addAddress(accountId.toSolidityAddress());
     await this.execute(5_00_000, "grantRole", superAdminClient, args);
-    const roleHex = ethers.utils.hexlify(role);
+    const roleInfo = this.getRoleInfo(role);
     console.log(
-      `- Base#grantRole(): done, role = ${roleHex}, account = ${accountId.toString()}\n`
+      `- Base#grantRole(): done ${roleInfo}, account = ${accountId.toString()}\n`
     );
   };
 
@@ -113,9 +115,9 @@ export default abstract class Base {
       .addBytes32(role)
       .addAddress(accountId.toSolidityAddress());
     await this.execute(5_00_000, "revokeRole", superAdminClient, args);
-    const roleHex = ethers.utils.hexlify(role);
+    const roleInfo = this.getRoleInfo(role);
     console.log(
-      `- Base#revokeRole(): done, role = ${roleHex}, account = ${accountId.toString()}\n`
+      `- Base#revokeRole(): done ${roleInfo}, account = ${accountId.toString()}\n`
     );
   };
 
@@ -242,5 +244,17 @@ export default abstract class Base {
       proxyAdmin: clientsInfo.proxyAdminId.toSolidityAddress(),
       childProxyAdmin: clientsInfo.childProxyAdminId.toSolidityAddress(),
     });
+  }
+
+  private getRoleInfo(role: Uint8Array) {
+    const roleIndex = Object.values(dex.ROLES).findIndex(
+      (eachRole: Uint8Array) => role === eachRole
+    );
+    if (roleIndex !== -1) {
+      const roleName = Object.keys(dex.ROLES)[roleIndex];
+      const roleHex = ethers.utils.hexlify(role);
+      return `role = ${roleHex}, roleName = ${roleName}`;
+    }
+    return "FAILED TO FIND ROLE INFO";
   }
 }

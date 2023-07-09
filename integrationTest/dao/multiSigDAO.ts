@@ -1,4 +1,5 @@
 import dex from "../../deployment/model/dex";
+import Base from "../../e2e-test/business/Base";
 import Common from "../../e2e-test/business/Common";
 import MultiSigDao from "../../e2e-test/business/MultiSigDao";
 import HederaGnosisSafe from "../../e2e-test/business/HederaGnosisSafe";
@@ -58,6 +59,7 @@ async function main() {
     ContractId.fromString(contract.transparentProxyId!)
   );
   await initDAO(multiSigDAO);
+
   await executeDAO(multiSigDAO);
 
   await multiSigDAO.updateDaoInfo(
@@ -68,7 +70,7 @@ async function main() {
     DAO_ADMIN_CLIENT
   );
   await multiSigDAO.getDaoInfo();
-  await multiSigDAO.upgradeHederaService(clientsInfo.uiUserClient);
+  await checkRoles(multiSigDAO);
 }
 
 async function initDAO(dao: MultiSigDao) {
@@ -159,6 +161,34 @@ export async function executeDAO(
     batchTxnInfo.nonce,
     safeTxnExecutionClient
   );
+}
+
+export async function checkRoles(base: Base) {
+  await base.getRoleAdmin(dex.ROLES.CHILD_PROXY_ADMIN_ROLE);
+
+  await base.hasRole(
+    dex.ROLES.CHILD_PROXY_ADMIN_ROLE,
+    clientsInfo.childProxyAdminId
+  );
+
+  await base.revokeRole(
+    dex.ROLES.CHILD_PROXY_ADMIN_ROLE,
+    clientsInfo.childProxyAdminId,
+    clientsInfo.operatorClient
+  );
+
+  await base.hasRole(
+    dex.ROLES.CHILD_PROXY_ADMIN_ROLE,
+    clientsInfo.childProxyAdminId
+  );
+
+  await base.grantRole(
+    dex.ROLES.CHILD_PROXY_ADMIN_ROLE,
+    clientsInfo.childProxyAdminId,
+    clientsInfo.operatorClient
+  );
+
+  await base.upgradeHederaService(clientsInfo.childProxyAdminClient);
 }
 
 async function getGnosisSafeInstance(multiSigDAO: MultiSigDao) {
