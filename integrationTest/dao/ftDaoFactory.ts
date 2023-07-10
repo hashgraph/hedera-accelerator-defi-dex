@@ -1,6 +1,7 @@
 import { Helper } from "../../utils/Helper";
+import { TokenId } from "@hashgraph/sdk";
 import { Deployment } from "../../utils/deployContractOnTestnet";
-import { ContractId, TokenId } from "@hashgraph/sdk";
+import { checkRoles } from "./multiSigDAO";
 import { ContractService } from "../../deployment/service/ContractService";
 import {
   executeGovernorTokenTransferFlow,
@@ -101,9 +102,7 @@ async function main() {
   const daoAddresses = await daoFactory.getDAOs();
   const daoAddress = daoAddresses.pop()!;
   await executeDAOFlow(daoFactory, daoAddress, dex.GOVERNANCE_DAO_TWO_TOKEN_ID);
-  const contractId = ContractId.fromSolidityAddress(daoAddress);
-  const daoInstance = new FTDAO(contractId);
-  await daoInstance.upgradeHederaService();
+  await checkRoles(daoFactory);
   const deployedItems = await new Deployment().deployContracts([
     ContractService.GOVERNOR_TT,
     ContractService.GOVERNOR_TEXT,

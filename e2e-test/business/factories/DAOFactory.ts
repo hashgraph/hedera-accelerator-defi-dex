@@ -46,31 +46,33 @@ export default abstract class DAOFactory extends Base {
       ]);
       const ftDao = deployedItems.get(ContractService.FT_DAO);
 
-      const governance = {
-        tokenTransferLogic: deployedItems.get(ContractService.GOVERNOR_TT)
-          .address,
-        textLogic: deployedItems.get(ContractService.GOVERNOR_TEXT).address,
-        upgradeLogic: deployedItems.get(ContractService.GOVERNOR_UPGRADE)
-          .address,
-        createTokenLogic: deployedItems.get(
-          ContractService.GOVERNOR_TOKEN_CREATE
-        ).address,
+      const data = {
+        _systemUsers: this.getSystemUsersAddressArray(),
+        _hederaService: this.htsAddress,
+        _daoLogic: ftDao.address,
+        _tokenHolderFactory: tokenHolderFactoryAddress,
+        _governors: Object.values({
+          tokenTransferLogic: deployedItems.get(ContractService.GOVERNOR_TT)
+            .address,
+          textLogic: deployedItems.get(ContractService.GOVERNOR_TEXT).address,
+          upgradeLogic: deployedItems.get(ContractService.GOVERNOR_UPGRADE)
+            .address,
+          createTokenLogic: deployedItems.get(
+            ContractService.GOVERNOR_TOKEN_CREATE
+          ).address,
+        }),
       };
 
-      const { bytes } = await this.encodeFunctionData(
+      const { bytes, hex } = await this.encodeFunctionData(
         ContractService.FT_DAO_FACTORY,
         INITIALIZE,
-        [
-          clientsInfo.childProxyAdminId.toSolidityAddress(),
-          this.htsAddress,
-          ftDao.address,
-          tokenHolderFactoryAddress,
-          Object.values(governance),
-        ]
+        Object.values(data)
       );
 
       await this.execute(800000, INITIALIZE, client, bytes);
-      console.log(`- ${this.getPrefix()}DAOFactory#${INITIALIZE}(): done\n`);
+      console.log(
+        `- ${this.getPrefix()}DAOFactory#${INITIALIZE}(): done with hex-data = ${hex}\n`
+      );
       return;
     }
     console.log(
