@@ -54,45 +54,43 @@ export default class FTDAO extends BaseDao {
       ContractId.fromString(godHolderContractId).toSolidityAddress();
 
     const contractService = new ContractService();
-
-    const inputs = {
-      admin,
-      name,
-      url,
-      tokenAddress: tokenId.toSolidityAddress(),
-      quorumThreshold: defaultQuorumThresholdValue,
-      votingDelay,
-      votingPeriod,
-      isPrivate: false,
-      description: desc,
-      webLinks,
-    };
-
-    const governance = {
-      tokenTransferLogic: contractService.getContract(
-        ContractService.GOVERNOR_TT
-      ).address,
-      textLogic: contractService.getContract(ContractService.GOVERNOR_TEXT)
-        .address,
-      contractUpgradeLogic: contractService.getContract(
-        ContractService.GOVERNOR_UPGRADE
-      ).address,
-      createTokenLogic: contractService.getContract(
-        ContractService.GOVERNOR_TOKEN_CREATE
-      ).address,
-    };
-
-    const common = {
-      hederaService: this.htsAddress,
-      iTokenHolder: godHolderProxyAddress,
-      proxyAdmin: clientsInfo.childProxyAdminId.toSolidityAddress(),
-      systemUser: clientsInfo.operatorId.toSolidityAddress(),
+    const data = {
+      inputs: Object.values({
+        admin,
+        name,
+        url,
+        tokenAddress: tokenId.toSolidityAddress(),
+        quorumThreshold: defaultQuorumThresholdValue,
+        votingDelay,
+        votingPeriod,
+        isPrivate: false,
+        description: desc,
+        webLinks,
+      }),
+      governor: Object.values({
+        tokenTransferLogic: contractService.getContract(
+          ContractService.GOVERNOR_TT
+        ).address,
+        textLogic: contractService.getContract(ContractService.GOVERNOR_TEXT)
+          .address,
+        contractUpgradeLogic: contractService.getContract(
+          ContractService.GOVERNOR_UPGRADE
+        ).address,
+        createTokenLogic: contractService.getContract(
+          ContractService.GOVERNOR_TOKEN_CREATE
+        ).address,
+      }),
+      common: Object.values({
+        hederaService: this.htsAddress,
+        iTokenHolder: godHolderProxyAddress,
+      }),
+      _systemUsers: this.getSystemUsersAddressArray(),
     };
 
     const { hex, bytes } = await this.encodeFunctionData(
       ContractService.FT_DAO,
       INITIALIZE,
-      [Object.values(inputs), Object.values(governance), Object.values(common)]
+      Object.values(data)
     );
 
     const { receipt } = await this.execute(
@@ -102,7 +100,9 @@ export default class FTDAO extends BaseDao {
       bytes
     );
 
-    console.log(`- FTDAO#${INITIALIZE}(): ${receipt.status} \n`);
+    console.log(
+      `- FTDAO#${INITIALIZE}(): hex-data = ${hex}, status = ${receipt.status} \n`
+    );
   }
 
   protected getContractName() {
