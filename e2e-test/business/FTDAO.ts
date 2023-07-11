@@ -29,6 +29,7 @@ export const DEFAULT_VOTING_DELAY = 0; // blocks
 export const DEFAULT_VOTING_PERIOD = 100; // blocks means 3 minutes as per test
 export const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
 export const NFT_TOKEN_ID = dex.NFT_TOKEN_ID;
+export const DEFAULT_NFT_TOKEN_SERIAL_ID = 1;
 
 export default class FTDAO extends BaseDao {
   async initialize(
@@ -115,7 +116,7 @@ export default class FTDAO extends BaseDao {
     client: Client = clientsInfo.operatorClient,
     description: string = DEFAULT_DESCRIPTION,
     link: string = DEFAULT_LINK,
-    nftTokenSerialId: number = 1
+    nftTokenSerialId: number = DEFAULT_NFT_TOKEN_SERIAL_ID
   ) => {
     const args = new ContractFunctionParameters()
       .addString(title)
@@ -144,7 +145,7 @@ export default class FTDAO extends BaseDao {
     client: Client = clientsInfo.operatorClient,
     description: string = DEFAULT_DESCRIPTION,
     link: string = DEFAULT_LINK,
-    nftTokenSerialId: number
+    nftTokenSerialId: number = DEFAULT_NFT_TOKEN_SERIAL_ID
   ) => {
     const args = new ContractFunctionParameters()
       .addString(title)
@@ -176,7 +177,7 @@ export default class FTDAO extends BaseDao {
     client: Client = clientsInfo.operatorClient,
     description: string = DEFAULT_DESCRIPTION,
     link: string = DEFAULT_LINK,
-    nftTokenSerialId: number
+    nftTokenSerialId: number = DEFAULT_NFT_TOKEN_SERIAL_ID
   ) => {
     const args = new ContractFunctionParameters()
       .addString(title)

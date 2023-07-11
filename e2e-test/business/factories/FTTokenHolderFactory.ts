@@ -18,6 +18,6 @@ export default class FTTokenHolderFactory extends TokenHolderFactory {
   }
 
   protected getHolderLogic() {
-    return ContractService.NFT_HOLDER;
+    return ContractService.GOD_HOLDER;
   }
 }
