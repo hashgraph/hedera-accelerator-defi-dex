@@ -19,14 +19,16 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
         address _treasurer,
         string memory _tokenName,
         string memory _tokenSymbol,
-        address creator
+        address creator,
+        uint256 nftTokenSerialId
     ) public returns (uint256) {
         uint256 proposalId = _createProposal(
             title,
             description,
             linkToDiscussion,
             creator,
-            bytes("")
+            bytes(""),
+            nftTokenSerialId
         );
         _proposalData[proposalId] = TokenCreateData(
             _treasurer,
@@ -143,10 +145,7 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
         address to,
         uint256 amount
     ) external {
-        require(
-            amount > 0,
-            "GTC: Token qty to transfer should be > 0"
-        );
+        require(amount > 0, "GTC: Token qty to transfer should be > 0");
         TokenCreateData storage tokenCreateData = _proposalData[proposalId];
         require(
             tokenCreateData.newTokenAddress != address(0x0),

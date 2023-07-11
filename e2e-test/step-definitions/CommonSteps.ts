@@ -155,6 +155,19 @@ export class CommonSteps {
     );
   }
 
+  public async setupNFTAllowanceForProposalCreation(
+    governor: Governor,
+    creatorClient: Client,
+    creatorAccountId: AccountId,
+    creatorPrivateKey: PrivateKey
+  ) {
+    await governor.setupNFTAllowanceForProposalCreation(
+      creatorClient,
+      creatorAccountId,
+      creatorPrivateKey
+    );
+  }
+
   public async setupAllowanceForToken(
     governor: Governor,
     tokenId: TokenId,
@@ -201,10 +214,6 @@ export class CommonSteps {
     );
   }
 
-  public async claimNFTToken(nftHolder: NFTHolder, client: Client) {
-    await nftHolder.checkAndClaimNFTTokens(client);
-  }
-
   public async deployGivenContract(contracts: string[]) {
     await deployContracts(contracts);
   }
@@ -226,6 +235,7 @@ export class CommonSteps {
       client
     );
   }
+
   private async transferTokens(
     receiverAccountId: AccountId,
     senderAccountId: AccountId,

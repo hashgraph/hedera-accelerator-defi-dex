@@ -24,6 +24,10 @@ export const METHOD_PAIR_IMPL = "upgradePairImplementation";
 export const METHOD_LP_IMPL = "upgradeLpTokenImplementation";
 
 export default class Factory extends Base {
+  protected getContractName() {
+    return ContractService.FACTORY;
+  }
+
   setupFactory = async (client: Client = clientsInfo.operatorClient) => {
     if (await this.isInitializationPending()) {
       const deployment = new Deployment();
@@ -35,7 +39,7 @@ export default class Factory extends Base {
       const lpToken = deployedItems.get(ContractService.LP_TOKEN);
       const args = new ContractFunctionParameters()
         .addAddress(this.htsAddress)
-        .addAddress(clientsInfo.dexOwnerId.toSolidityAddress())
+        .addAddress(clientsInfo.childProxyAdminId.toSolidityAddress())
         .addAddress(pair.address)
         .addAddress(lpToken.address)
         .addAddress(this.configuration);
@@ -115,7 +119,12 @@ export default class Factory extends Base {
 
   upgradeLogic = async (implAddress: string, functionName: string) => {
     const args = new ContractFunctionParameters().addAddress(implAddress);
-    this.execute(4000000, functionName, clientsInfo.dexOwnerClient, args);
+    this.execute(
+      4000000,
+      functionName,
+      clientsInfo.childProxyAdminClient,
+      args
+    );
     console.log(`- Factory${functionName}(): done\n`);
   };
 
@@ -124,7 +133,7 @@ export default class Factory extends Base {
       return proxyAddress;
     }
     if (functionName === METHOD_LP_IMPL) {
-      const cId = ContractId.fromSolidityAddress(proxyAddress).toString();
+      const cId = ContractId.fromSolidityAddress(proxyAddress);
       return await new Pair(cId).getLpContractAddress();
     }
     throw Error(`Invalid function name passed: ${functionName}`);

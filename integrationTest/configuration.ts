@@ -1,16 +1,11 @@
 import { Helper } from "../utils/Helper";
 import { BigNumber } from "bignumber.js";
 import { clientsInfo } from "../utils/ClientManagement";
-import { ContractService } from "../deployment/service/ContractService";
 
 import Configuration from "../e2e-test/business/Configuration";
 import dex from "../deployment/model/dex";
 
-const csDev = new ContractService();
-const configurationContractId = csDev.getContractWithProxy(csDev.configuration)
-  .transparentProxyId!;
-
-const configuration = new Configuration(configurationContractId);
+const configuration = new Configuration();
 
 async function main() {
   await configuration.initialize();

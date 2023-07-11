@@ -10,6 +10,7 @@ import { TokenId, ContractId, AccountId } from "@hashgraph/sdk";
 import { BigNumber } from "bignumber.js";
 import { Helper } from "../../utils/Helper";
 import { CommonSteps } from "./CommonSteps";
+import TextGovernor from "../business/TextGovernor";
 
 const csDev = new ContractService();
 const godHolderContract = csDev.getContractWithProxy(csDev.godHolderContract);
@@ -18,8 +19,8 @@ const governorTextContract = csDev.getContractWithProxy(
 );
 const governorContractId = governorTextContract.transparentProxyId!;
 const godHolderContractId = godHolderContract.transparentProxyId!;
-const governor = new Governor(governorContractId);
-const godHolder = new GodHolder(godHolderContractId);
+const governor = new TextGovernor(ContractId.fromString(governorContractId));
+const godHolder = new GodHolder(ContractId.fromString(godHolderContractId));
 const tokenGOD = dex.GOD_TOKEN_ID;
 
 let errorMsg: string = "";

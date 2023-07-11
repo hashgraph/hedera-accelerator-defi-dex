@@ -3,7 +3,7 @@ import { TokenId } from "@hashgraph/sdk";
 const GOD_TOKEN_ID = "0.0.8576";
 const GOD_TOKEN_ADDRESS = "0x0000000000000000000000000000000000002180";
 
-const NFT_TOKEN_ID = "0.0.4066871";
+const NFT_TOKEN_ID = TokenId.fromString("0.0.4066871");
 const NFT_TOKEN_ADDRESS = "0x00000000000000000000000000000000003e0e37";
 
 const E2E_NFT_TOKEN_ID = TokenId.fromString("0.0.13391710");

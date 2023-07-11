@@ -23,7 +23,6 @@ const UPGRADE_SAFE_FACTORY_LOGIC_IMPL = "upgradeSafeFactoryAddress";
 export default class MultiSigDAOFactory extends Base {
   initialize = async (client: Client = clientsInfo.operatorClient) => {
     if (await this.isInitializationPending()) {
-      const proxyAdmin = clientsInfo.dexOwnerId.toSolidityAddress();
       const deployedItems = await deployment.deployContracts([
         ContractService.SAFE_FACTORY,
         ContractService.SAFE,
@@ -33,7 +32,7 @@ export default class MultiSigDAOFactory extends Base {
       const gnosisLogic = deployedItems.get(ContractService.SAFE);
       const multiSigDao = deployedItems.get(ContractService.MULTI_SIG);
       const args = new ContractFunctionParameters()
-        .addAddress(proxyAdmin)
+        .addAddress(clientsInfo.childProxyAdminId.toSolidityAddress())
         .addAddress(multiSigDao.address)
         .addAddress(gnosisLogic.address)
         .addAddress(gnosisFactory.address)
@@ -45,6 +44,10 @@ export default class MultiSigDAOFactory extends Base {
     }
     console.log(`- MultiSigDAOFactory#${INITIALIZE}(): already done\n`);
   };
+
+  protected getContractName() {
+    return ContractService.MULTI_SIG_FACTORY;
+  }
 
   createDAO = async (
     name: string,
@@ -105,7 +108,7 @@ export default class MultiSigDAOFactory extends Base {
 
   upgradeSafeLogicAddress = async (
     newImpl: string,
-    client: Client = clientsInfo.dexOwnerClient
+    client: Client = clientsInfo.childProxyAdminClient
   ) => {
     const args = new ContractFunctionParameters().addAddress(newImpl);
     const { result } = await this.execute(
@@ -120,7 +123,7 @@ export default class MultiSigDAOFactory extends Base {
 
   upgradeSafeFactoryAddress = async (
     newImpl: string,
-    client: Client = clientsInfo.dexOwnerClient
+    client: Client = clientsInfo.childProxyAdminClient
   ) => {
     const args = new ContractFunctionParameters().addAddress(newImpl);
     const { result } = await this.execute(
@@ -137,7 +140,7 @@ export default class MultiSigDAOFactory extends Base {
 
   upgradeDaoLogicAddress = async (
     newImpl: string,
-    client: Client = clientsInfo.dexOwnerClient
+    client: Client = clientsInfo.childProxyAdminClient
   ) => {
     const args = new ContractFunctionParameters().addAddress(newImpl);
     const { result } = await this.execute(

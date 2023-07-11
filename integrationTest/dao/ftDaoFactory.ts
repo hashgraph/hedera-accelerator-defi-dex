@@ -10,16 +10,17 @@ import {
 import { clientsInfo } from "../../utils/ClientManagement";
 
 import dex from "../../deployment/model/dex";
-import DAOFactory from "../../e2e-test/business/factories/DAOFactory";
-import { InstanceProvider } from "../../utils/InstanceProvider";
+import FTDAOFactory from "../../e2e-test/business/factories/FTDAOFactory";
 import GodHolder from "../../e2e-test/business/GodHolder";
+import FTDAO from "../../e2e-test/business/FTDAO";
+import FTTokenHolderFactory from "../../e2e-test/business/factories/FTTokenHolderFactory";
 const DAO_WEB_LINKS = ["LINKEDIN", "https://linkedin.com"];
 const DAO_DESC = "Lorem Ipsum is simply dummy text";
 
 const csDev = new ContractService();
 
 export async function executeDAOFlow(
-  daoFactory: DAOFactory,
+  daoFactory: FTDAOFactory,
   daoProxyAddress: string,
   tokenId: TokenId
 ) {
@@ -53,7 +54,7 @@ export async function executeDAOFlow(
 }
 
 async function createDAO(
-  daoFactory: DAOFactory,
+  daoFactory: FTDAOFactory,
   name: string,
   tokenId: TokenId,
   isPrivate: boolean
@@ -74,13 +75,12 @@ async function createDAO(
 function getTokenTransferDAOFactoryInfo() {
   const contract = csDev.getContractWithProxy(ContractService.FT_DAO_FACTORY);
   const proxyId = contract.transparentProxyId!;
-  return new DAOFactory(proxyId, false);
+  return new FTDAOFactory(ContractId.fromString(proxyId));
 }
 
 async function main() {
   const daoFactory = getTokenTransferDAOFactoryInfo();
-  const tokenHolderFactory =
-    InstanceProvider.getInstance().getGODTokenHolderFactory();
+  const tokenHolderFactory = new FTTokenHolderFactory();
   await daoFactory.initialize(clientsInfo.operatorClient, tokenHolderFactory);
   await daoFactory.getTokenHolderFactoryAddress();
   await createDAO(
@@ -93,9 +93,7 @@ async function main() {
   const daoAddress = daoAddresses.pop()!;
   await executeDAOFlow(daoFactory, daoAddress, dex.GOVERNANCE_DAO_TWO_TOKEN_ID);
   const contractId = ContractId.fromSolidityAddress(daoAddress);
-  const daoInstance = InstanceProvider.getInstance().getGovernorTokenDao(
-    contractId.toString()
-  );
+  const daoInstance = new FTDAO(contractId);
   await daoInstance.upgradeHederaService();
   const deployedItems = await new Deployment().deployContracts([
     ContractService.GOVERNOR_TT,

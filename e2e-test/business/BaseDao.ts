@@ -6,7 +6,7 @@ import { Client, ContractFunctionParameters } from "@hashgraph/sdk";
 const GET_DAO_INFO = "getDaoInfo";
 const UPDATE_DAO_INFO = "updateDaoInfo";
 
-export default class BaseDAO extends Base {
+export default abstract class BaseDAO extends Base {
   updateDaoInfo = async (
     name: string,
     logoUrl: string,

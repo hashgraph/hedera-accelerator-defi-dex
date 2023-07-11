@@ -10,6 +10,7 @@ import Factory from "../business/Factory";
 import { main as deployContract } from "../../deployment/scripts/logic";
 import { CommonSteps } from "./CommonSteps";
 import dex from "../../deployment/model/dex";
+import ContractUpgradeGovernor from "../business/ContractUpgradeGovernor";
 
 const csDev = new ContractService();
 const godHolderContract = csDev.getContractWithProxy(csDev.godHolderContract);
@@ -24,8 +25,10 @@ let factoryProxyId = csDev.getContractWithProxy(csDev.factoryContractName)
   .transparentProxyId!; // factoryProxyId contains both logic and proxy id
 const governorContractId = governorUpgradeContract.transparentProxyId!;
 const godHolderContractId = godHolderContract.transparentProxyId!;
-const governor = new Governor(governorContractId);
-const godHolder = new GodHolder(godHolderContractId);
+const governor = new ContractUpgradeGovernor(
+  ContractId.fromString(governorContractId)
+);
+const godHolder = new GodHolder(ContractId.fromString(godHolderContractId));
 
 let proposalId: string;
 let upgradeResponse: any;
@@ -132,11 +135,13 @@ export class GovernorUpgradeSteps extends CommonSteps {
 
   @when(/User upgrade the contract/, undefined, 30000)
   public async upgradeContract() {
-    await Common.upgradeTo(
+    await new Common(
+      ContractId.fromSolidityAddress(upgradeResponse.proxyAddress)
+    ).upgradeTo(
       upgradeResponse.proxyAddress,
       upgradeResponse.logicAddress,
-      clientsInfo.adminKey,
-      clientsInfo.adminClient
+      clientsInfo.proxyAdminKey,
+      clientsInfo.proxyAdminClient
     );
   }
 
@@ -150,7 +155,7 @@ export class GovernorUpgradeSteps extends CommonSteps {
       csDev.factoryContractName
     ).transparentProxyId!;
     const factoryLogicIdNew = await new Factory(
-      newFactoryProxyId
+      ContractId.fromString(newFactoryProxyId)
     ).getCurrentImplementation();
     expect(factoryLogicIdNew).not.eql(factoryLogicIdOld);
     expect(newFactoryProxyId).eql(factoryProxyId);
@@ -166,7 +171,7 @@ export class GovernorUpgradeSteps extends CommonSteps {
       csDev.factoryContractName
     ).transparentProxyId!;
     const factoryLogicIdNew = await new Factory(
-      newFactoryProxyId
+      ContractId.fromString(newFactoryProxyId)
     ).getCurrentImplementation();
     expect(factoryLogicIdNew).eql(factoryLogicIdOld);
     expect(newFactoryProxyId).eql(factoryProxyId);
@@ -181,7 +186,7 @@ export class GovernorUpgradeSteps extends CommonSteps {
     factoryProxyId = csDev.getContractWithProxy(csDev.factoryContractName)
       .transparentProxyId!;
     factoryLogicIdOld = await new Factory(
-      factoryProxyId
+      ContractId.fromString(factoryProxyId)
     ).getCurrentImplementation();
     console.log("factoryProxyId--", factoryProxyId);
     console.log("factoryLogicIdOld--", factoryLogicIdOld);

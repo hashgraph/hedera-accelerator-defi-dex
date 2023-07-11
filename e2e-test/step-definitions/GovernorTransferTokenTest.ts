@@ -3,7 +3,6 @@ import Long from "long";
 import Common from "../business/Common";
 import Governor from "../business/Governor";
 import GodHolder from "../business/GodHolder";
-import ClientManagement from "../../utils/ClientManagement";
 
 import { expect } from "chai";
 import { binding, given, then, when } from "cucumber-tsflow";
@@ -13,12 +12,14 @@ import { clientsInfo } from "../../utils/ClientManagement";
 import { ContractService } from "../../deployment/service/ContractService";
 import { CommonSteps } from "./CommonSteps";
 import { Helper } from "../../utils/Helper";
+import TokenTransferGovernor from "../business/TokenTransferGovernor";
 
-const clientManagement = new ClientManagement();
 const csDev = new ContractService();
 
-const clientWithNoGODToken = clientManagement.createOperatorClientNoGODToken();
-const { idNoGODToken } = clientManagement.getOperatorNoToken();
+const {
+  operatorIdNoGODToken: idNoGODToken,
+  operatorIdNoGODTokenClient: clientWithNoGODToken,
+} = clientsInfo;
 
 const tokenTransferProxyId = csDev.getContractWithProxy(
   csDev.governorTTContractName
@@ -27,8 +28,10 @@ const tokenTransferProxyId = csDev.getContractWithProxy(
 const godHolderProxyId = csDev.getContract(csDev.godHolderContract)
   .transparentProxyId!;
 
-const governor = new Governor(tokenTransferProxyId);
-const godHolder = new GodHolder(godHolderProxyId);
+const governor = new TokenTransferGovernor(
+  ContractId.fromString(tokenTransferProxyId)
+);
+const godHolder = new GodHolder(ContractId.fromString(godHolderProxyId));
 
 let proposalId: string;
 let msg: string;
@@ -95,6 +98,7 @@ export class GovernorSteps extends CommonSteps {
       TRANSFER_TOKEN_ID.toSolidityAddress(),
       tokenQty,
       clientsInfo.operatorClient,
+      1,
       description,
       link,
       clientsInfo.operatorId.toSolidityAddress()
@@ -123,6 +127,7 @@ export class GovernorSteps extends CommonSteps {
         TRANSFER_TOKEN_ID.toSolidityAddress(),
         tokenQty,
         clientsInfo.operatorClient,
+        1,
         description,
         link,
         clientsInfo.operatorId.toSolidityAddress()
@@ -166,6 +171,7 @@ export class GovernorSteps extends CommonSteps {
         TRANSFER_TOKEN_ID.toSolidityAddress(),
         tokenQty,
         clientWithNoGODToken,
+        1,
         description,
         link,
         clientsInfo.operatorId.toSolidityAddress()

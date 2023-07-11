@@ -1,7 +1,6 @@
 import { Helper } from "../utils/Helper";
 import { BigNumber } from "bignumber.js";
 import { clientsInfo } from "../utils/ClientManagement";
-import { ContractService } from "../deployment/service/ContractService";
 import { ContractId, TokenId, AccountId } from "@hashgraph/sdk";
 
 import dex from "../deployment/model/dex";
@@ -16,18 +15,11 @@ const tokenC = TokenId.fromString(dex.TOKEN_LAB49_3);
 const tokenGOD = TokenId.fromString(dex.GOD_TOKEN_ID);
 const tokenHBARX = TokenId.fromString(dex.HBARX_TOKEN_ID);
 
-const csDev = new ContractService();
-const factoryContractId = csDev.getContractWithProxy(csDev.factoryContractName)
-  .transparentProxyId!;
-
 let pair: Pair;
 let precision = BigNumber(0);
-const factory = new Factory(factoryContractId);
+const factory = new Factory();
 
-const configurationContractId = csDev.getContractWithProxy(csDev.configuration)
-  .transparentProxyId!;
-
-const configuration = new Configuration(configurationContractId);
+const configuration = new Configuration();
 
 const getPrecisionValue = async () => {
   precision = await pair.getPrecisionValue();
@@ -199,7 +191,7 @@ async function testForSinglePair(
   const pairContractAddress = await createPair(token0, token1, fee);
   const pairContractId = ContractId.fromSolidityAddress(pairContractAddress);
   const pairContractIdAsString = pairContractId.toString();
-  pair = new Pair(pairContractIdAsString);
+  pair = new Pair(pairContractId);
   await getPrecisionValue();
   await getTreasureBalance(pairContractId, [token0, token1]);
   const tokenAddresses = await getTokenPairAddress();
@@ -217,7 +209,7 @@ async function testForSinglePair(
   await getTreasureBalance(pairContractId, [token0, token1]);
   await swapToken(token1, pairContractId.toString());
   await getTreasureBalance(pairContractId, [token0, token1]);
-  await factory.upgradeHederaService(clientsInfo.dexOwnerClient);
+  await factory.upgradeHederaService(clientsInfo.childProxyAdminClient);
 }
 
 main()

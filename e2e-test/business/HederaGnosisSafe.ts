@@ -5,6 +5,7 @@ import { Helper } from "../../utils/Helper";
 import { BigNumber } from "bignumber.js";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { Client, ContractFunctionParameters } from "@hashgraph/sdk";
+import { ContractService } from "../../deployment/service/ContractService";
 
 const GET_OWNERS = "getOwners";
 const APPROVE_HASH = "approveHash";
@@ -13,6 +14,10 @@ const EXEC_TRANSACTION = "executeTransaction";
 const GET_TRANSACTION_HASH = "getTransactionHash";
 
 export default class HederaGnosisSafe extends Base {
+  protected getContractName() {
+    return ContractService.SAFE;
+  }
+
   executeTransaction = async (
     to: string,
     value: number | BigNumber,

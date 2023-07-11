@@ -10,11 +10,12 @@ import {
   TokenId,
 } from "@hashgraph/sdk";
 import { ContractService } from "../../../deployment/service/ContractService";
-import { InstanceProvider } from "../../../utils/InstanceProvider";
 import TokenHolderFactory from "./TokenHolderFactory";
+import FTDAO from "../FTDAO";
+import GodHolder from "../GodHolder";
+import NFTHolder from "../NFTHolder";
 
 const deployment = new Deployment();
-const csDev = new ContractService();
 
 const GET_DAOS = "getDAOs";
 const CREATE_DAO = "createDAO";
@@ -24,26 +25,8 @@ const GET_TOKEN_HOLDER_FACTORY_ADDRESS = "getTokenHolderFactoryAddress";
 const UPGRADE_TOKEN_DAO_LOGIC_IMPL = "upgradeFTDAOLogicImplementation";
 const UPGRADE_GOVERNORS_IMPLEMENTATION = "upgradeGovernorsImplementation";
 
-export default class DAOFactory extends Base {
-  private _isNFTType: Boolean;
-  private _provider = InstanceProvider.getInstance();
-
-  constructor(contractId: string, isNFTType: Boolean) {
-    super(contractId);
-    this._isNFTType = isNFTType;
-  }
-
-  private getTokenHolderFactoryAddressFromJson() {
-    const holderFactoryName = this._isNFTType
-      ? csDev.nftTokenHolderFactory
-      : csDev.godTokenHolderFactory;
-    return csDev.getContractWithProxy(holderFactoryName)
-      .transparentProxyAddress!;
-  }
-
-  private getPrefix() {
-    return this._isNFTType ? "NFT" : "GOD";
-  }
+export default abstract class DAOFactory extends Base {
+  protected abstract getPrefix(): string;
 
   initialize = async (
     client: Client = clientsInfo.operatorClient,
@@ -54,7 +37,6 @@ export default class DAOFactory extends Base {
         tokenHolderFactory.contractId
       ).toSolidityAddress();
       const tokenHolderFactoryAddress = tokenHolderFactoryContractId;
-      const proxyAdmin = clientsInfo.dexOwnerId.toSolidityAddress();
       const deployedItems = await deployment.deployContracts([
         ContractService.FT_DAO,
         ContractService.GOVERNOR_TT,
@@ -79,7 +61,7 @@ export default class DAOFactory extends Base {
         ContractService.FT_DAO_FACTORY,
         INITIALIZE,
         [
-          proxyAdmin,
+          clientsInfo.childProxyAdminId.toSolidityAddress(),
           this.htsAddress,
           ftDao.address,
           tokenHolderFactoryAddress,
@@ -179,7 +161,7 @@ export default class DAOFactory extends Base {
     const { receipt } = await this.execute(
       2_00_000,
       UPGRADE_GOVERNORS_IMPLEMENTATION,
-      clientsInfo.dexOwnerClient,
+      clientsInfo.childProxyAdminClient,
       bytes
     );
 
@@ -195,7 +177,7 @@ export default class DAOFactory extends Base {
     await this.execute(
       200000,
       UPGRADE_TOKEN_DAO_LOGIC_IMPL,
-      clientsInfo.dexOwnerClient,
+      clientsInfo.childProxyAdminClient,
       args
     );
     console.log(
@@ -208,7 +190,7 @@ export default class DAOFactory extends Base {
     await this.execute(
       200000,
       UPGRADE_TOKEN_HOLDER_FACTORY,
-      clientsInfo.dexOwnerClient,
+      clientsInfo.childProxyAdminClient,
       args
     );
     console.log(
@@ -216,11 +198,11 @@ export default class DAOFactory extends Base {
     );
   };
 
-  getTokenHolderFactoryAddress = async () => {
+  public getTokenHolderFactoryAddress = async () => {
     const { result } = await this.execute(
       200000,
       GET_TOKEN_HOLDER_FACTORY_ADDRESS,
-      clientsInfo.dexOwnerClient
+      clientsInfo.childProxyAdminClient
     );
     const address = result.getAddress(0);
     console.log(
@@ -232,16 +214,10 @@ export default class DAOFactory extends Base {
   getGovernorTokenDaoInstance = (daoProxyAddress: string) => {
     const tokenTransferDAOProxyId =
       ContractId.fromSolidityAddress(daoProxyAddress).toString();
-    return this._provider.getGovernorTokenDao(tokenTransferDAOProxyId);
+    return new FTDAO(ContractId.fromString(tokenTransferDAOProxyId));
   };
 
-  getTokenHolderInstance = async (tokenId: TokenId) => {
-    const factoryProxyId = (
-      await this.getTokenHolderFactoryAddress()
-    ).toString();
-
-    return await (this._isNFTType
-      ? this._provider.getNFTTokenHolderFromFactory(tokenId, factoryProxyId)
-      : this._provider.getGODTokenHolderFromFactory(tokenId, factoryProxyId));
-  };
+  protected abstract getTokenHolderInstance(
+    tokenId: TokenId
+  ): Promise<NFTHolder> | Promise<GodHolder>;
 }

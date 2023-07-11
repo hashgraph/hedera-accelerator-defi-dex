@@ -5,7 +5,6 @@ import Common from "../../e2e-test/business/Common";
 import { Helper } from "../../utils/Helper";
 import { TokenId } from "@hashgraph/sdk";
 import { clientsInfo } from "../../utils/ClientManagement";
-import { InstanceProvider } from "../../utils/InstanceProvider";
 
 const LOCKING_PERIOD_IN_SECONDS = 15; // 15 second locking period
 
@@ -46,7 +45,7 @@ const stake = async (vault: Vault) => {
 };
 
 async function main() {
-  const vault = InstanceProvider.getInstance().getVault();
+  const vault = new Vault();
   await vault.initialize(STAKING_TOKEN, LOCKING_PERIOD_IN_SECONDS);
   await vault.getStakingTokenAddress();
   await vault.getStakingTokenLockingPeriod();

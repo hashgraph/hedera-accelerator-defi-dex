@@ -1,7 +1,7 @@
 import { Helper } from "../../utils/Helper";
 import { TokenId, AccountId, ContractId } from "@hashgraph/sdk";
 
-import DAOFactory from "../../e2e-test/business/factories/DAOFactory";
+import FTDAOFactory from "../../e2e-test/business/factories/FTDAOFactory";
 
 async function main() {
   const input = Helper.readWorkflowInputs();
@@ -11,8 +11,7 @@ async function main() {
   TokenId.fromSolidityAddress(input.tokenAddress);
   AccountId.fromSolidityAddress(input.daoAdmin);
   const webLinks = input.daoWebLinks.split(",");
-
-  const governanceDAOFactory = new DAOFactory(contractId.toString(), false);
+  const governanceDAOFactory = new FTDAOFactory(contractId);
   await governanceDAOFactory.createDAO(
     input.daoName,
     "https://defi-ui.hedera.com/",

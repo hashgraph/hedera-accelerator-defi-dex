@@ -1,50 +1,38 @@
 import Base from "../Base";
-import GodHolder from "../GodHolder";
-import NFTHolder from "../NFTHolder";
 
 import { Helper } from "../../../utils/Helper";
 import { Deployment } from "../../../utils/deployContractOnTestnet";
 import { clientsInfo } from "../../../utils/ClientManagement";
-import { ContractService } from "../../../deployment/service/ContractService";
 import {
   Client,
   TokenId,
   ContractId,
   ContractFunctionParameters,
 } from "@hashgraph/sdk";
+import GodHolder from "../GodHolder";
+import NFTHolder from "../NFTHolder";
 
 const INITIALIZE = "initialize";
 const GET_TOKEN_HOLDER = "getTokenHolder";
 const GET_TOKEN_HOLDERS = "getTokenHolders";
 
-export default class TokenHolderFactory extends Base {
-  private _isNFTType: Boolean;
+export default abstract class TokenHolderFactory extends Base {
+  protected abstract getPrefix(): string;
 
-  constructor(contractId: string, isNFTType: Boolean) {
-    super(contractId);
-    this._isNFTType = isNFTType;
-  }
+  protected abstract getHolderLogic(): string;
 
-  private getPrefix() {
-    return this._isNFTType ? "NFT" : "GOD";
-  }
+  protected abstract getHolderInstance(
+    contractId: ContractId
+  ): GodHolder | NFTHolder;
 
-  private getHolderInstance(contractId: ContractId) {
-    const cId = contractId.toString();
-    return this._isNFTType ? new NFTHolder(cId) : new GodHolder(cId);
-  }
-
-  initialize = async (client: Client = clientsInfo.operatorClient) => {
+  public initialize = async (client: Client = clientsInfo.operatorClient) => {
     if (await this.isInitializationPending()) {
-      const logic = this._isNFTType
-        ? ContractService.NFT_HOLDER
-        : ContractService.GOD_HOLDER;
+      const logic = this.getHolderLogic();
       const holderLogic = await new Deployment().deploy(logic);
-      const proxyAdmin = clientsInfo.dexOwnerId.toSolidityAddress();
       const args = new ContractFunctionParameters()
         .addAddress(this.htsAddress)
         .addAddress(holderLogic.address)
-        .addAddress(proxyAdmin);
+        .addAddress(clientsInfo.childProxyAdminId.toSolidityAddress());
       await this.execute(4_00_000, INITIALIZE, client, args);
       console.log(
         `- ${this.getPrefix()}TokenHolderFactory#${INITIALIZE}(): done. \n`
@@ -56,7 +44,7 @@ export default class TokenHolderFactory extends Base {
     );
   };
 
-  getTokenHolder = async (
+  public getTokenHolder = async (
     tokenAddress: string,
     client: Client = clientsInfo.operatorClient
   ) => {
@@ -82,7 +70,9 @@ export default class TokenHolderFactory extends Base {
     return ContractId.fromSolidityAddress(address);
   };
 
-  getTokenHolders = async (client: Client = clientsInfo.operatorClient) => {
+  public getTokenHolders = async (
+    client: Client = clientsInfo.operatorClient
+  ) => {
     const { result } = await this.execute(9_00_000, GET_TOKEN_HOLDERS, client);
     const contractIds = Helper.getAddressArray(result);
     const tokensId = await Promise.all(

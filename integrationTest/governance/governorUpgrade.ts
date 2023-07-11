@@ -5,17 +5,24 @@ import { Helper } from "../../utils/Helper";
 import { Deployment } from "../../utils/deployContractOnTestnet";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { ContractService } from "../../deployment/service/ContractService";
-import { InstanceProvider } from "../../utils/InstanceProvider";
 import { TokenId, ContractId } from "@hashgraph/sdk";
+import ContractUpgradeGovernor from "../../e2e-test/business/ContractUpgradeGovernor";
+import FTTokenHolderFactory from "../../e2e-test/business/factories/FTTokenHolderFactory";
+import GodHolder from "../../e2e-test/business/GodHolder";
+import Factory from "../../e2e-test/business/Factory";
 
 const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
 
 async function main() {
   const { id } = await new Deployment().deploy(ContractService.FACTORY);
 
-  const provider = InstanceProvider.getInstance();
-  const godHolder = await provider.getGODTokenHolderFromFactory(GOD_TOKEN_ID);
-  const governor = provider.getGovernor(ContractService.GOVERNOR_UPGRADE);
+  const governor = new ContractUpgradeGovernor();
+  const godHolderFactory = new FTTokenHolderFactory();
+  const godHolderContractId = await godHolderFactory.getTokenHolder(
+    GOD_TOKEN_ID.toSolidityAddress()
+  );
+  const godHolder = new GodHolder(godHolderContractId);
+
   await governor.initialize(godHolder);
 
   await godHolder.setupAllowanceForTokenLocking();
@@ -29,7 +36,7 @@ async function main() {
 
   const title = Helper.createProposalTitle("Upgrade Proposal");
   const { proposalId } = await governor.createContractUpgradeProposal(
-    ContractId.fromString(provider.getFactory().contractId),
+    ContractId.fromString(new Factory().contractId),
     ContractId.fromString(id),
     title,
     clientsInfo.operatorClient
@@ -46,7 +53,10 @@ async function main() {
       await governor.getContractAddressesFromGovernorUpgradeContract(
         proposalId
       );
-    await Common.upgradeTo(proxyAddress, logicAddress);
+    await new Common(ContractId.fromSolidityAddress(proxyAddress)).upgradeTo(
+      proxyAddress,
+      logicAddress
+    );
   } else {
     await governor.cancelProposal(title, clientsInfo.operatorClient);
   }

@@ -483,7 +483,8 @@ describe("GovernanceTokenDAO tests", function () {
           signers[0].address,
           signers[1].address,
           token.address,
-          100
+          100,
+          1
         );
       const proposals = await governorTokenDAO.getTokenTransferProposals();
       expect(proposals.length).equals(1);
@@ -502,7 +503,8 @@ describe("GovernanceTokenDAO tests", function () {
             signers[0].address,
             signers[1].address,
             token.address,
-            100
+            100,
+            1
           )
       ).revertedWith("Ownable: caller is not the owner");
     });
@@ -526,7 +528,8 @@ describe("GovernanceTokenDAO tests", function () {
           "description",
           "linkToDiscussion",
           lpTokenProxy.address,
-          lpTokenLogic.address
+          lpTokenLogic.address,
+          1
         );
       const proposals = await governorTokenDAO.getContractUpgradeProposals();
       expect(proposals.length).equals(1);
@@ -551,7 +554,8 @@ describe("GovernanceTokenDAO tests", function () {
             "description",
             "linkToDiscussion",
             lpTokenProxy.address,
-            lpTokenLogic.address
+            lpTokenLogic.address,
+            1
           )
       ).revertedWith("Ownable: caller is not the owner");
     });
@@ -563,7 +567,7 @@ describe("GovernanceTokenDAO tests", function () {
 
       await governorTokenDAO
         .connect(daoAdminOne)
-        .createTextProposal("proposal", "description", "linkToDiscussion");
+        .createTextProposal("proposal", "description", "linkToDiscussion", 1);
       const proposals = await governorTokenDAO.getTextProposals();
       expect(proposals.length).equals(1);
     });
@@ -575,7 +579,7 @@ describe("GovernanceTokenDAO tests", function () {
       await expect(
         governorTokenDAO
           .connect(daoAdminTwo)
-          .createTextProposal("proposal", "description", "linkToDiscussion")
+          .createTextProposal("proposal", "description", "linkToDiscussion", 1)
       ).revertedWith("Ownable: caller is not the owner");
     });
 
@@ -592,7 +596,8 @@ describe("GovernanceTokenDAO tests", function () {
           "linkToDiscussion",
           daoAdminOne.address,
           "TokenName",
-          "TokenSymbol"
+          "TokenSymbol",
+          1
         );
       const proposals = await governorTokenDAO.getTokenCreateProposals();
       expect(proposals.length).equals(1);
@@ -611,7 +616,121 @@ describe("GovernanceTokenDAO tests", function () {
             "linkToDiscussion",
             daoAdminTwo.address,
             "TokenName",
-            "TokenSymbol"
+            "TokenSymbol",
+            1
+          )
+      ).revertedWith("Ownable: caller is not the owner");
+    });
+
+    it("Verify createContractUpgradeProposal", async function () {
+      const { governorTokenDAO, signers, daoAdminOne, hederaService } =
+        await loadFixture(deployFixture);
+
+      const lpTokenLogic = await TestHelper.deployLogic("LPToken");
+      const args = [
+        hederaService.address,
+        signers[0].address,
+        "tokenName",
+        "tokenSymbol",
+      ];
+      const lpTokenProxy = await TestHelper.deployProxy("LPToken", ...args);
+      await governorTokenDAO
+        .connect(daoAdminOne)
+        .createContractUpgradeProposal(
+          "proposal",
+          "description",
+          "linkToDiscussion",
+          lpTokenProxy.address,
+          lpTokenLogic.address,
+          1
+        );
+      const proposals = await governorTokenDAO.getContractUpgradeProposals();
+      expect(proposals.length).equals(1);
+    });
+
+    it("Verify createContractUpgradeProposal with non admin should fail", async function () {
+      const { governorTokenDAO, daoAdminTwo, signers, hederaService } =
+        await loadFixture(deployFixture);
+      const lpTokenLogic = await TestHelper.deployLogic("LPToken");
+      const args = [
+        hederaService.address,
+        signers[0].address,
+        "tokenName",
+        "tokenSymbol",
+      ];
+      const lpTokenProxy = await TestHelper.deployProxy("LPToken", ...args);
+      await expect(
+        governorTokenDAO
+          .connect(daoAdminTwo)
+          .createContractUpgradeProposal(
+            "proposal",
+            "description",
+            "linkToDiscussion",
+            lpTokenProxy.address,
+            lpTokenLogic.address,
+            1
+          )
+      ).revertedWith("Ownable: caller is not the owner");
+    });
+
+    it("Verify createTextProposal", async function () {
+      const { governorTokenDAO, daoAdminOne } = await loadFixture(
+        deployFixture
+      );
+
+      await governorTokenDAO
+        .connect(daoAdminOne)
+        .createTextProposal("proposal", "description", "linkToDiscussion", 1);
+      const proposals = await governorTokenDAO.getTextProposals();
+      expect(proposals.length).equals(1);
+    });
+
+    it("Verify createTextProposal with non admin should fail", async function () {
+      const { governorTokenDAO, daoAdminTwo } = await loadFixture(
+        deployFixture
+      );
+      await expect(
+        governorTokenDAO
+          .connect(daoAdminTwo)
+          .createTextProposal("proposal", "description", "linkToDiscussion", 1)
+      ).revertedWith("Ownable: caller is not the owner");
+    });
+
+    it("Verify createTokenCreateProposal", async function () {
+      const { governorTokenDAO, daoAdminOne } = await loadFixture(
+        deployFixture
+      );
+
+      await governorTokenDAO
+        .connect(daoAdminOne)
+        .createTokenCreateProposal(
+          "proposal",
+          "description",
+          "linkToDiscussion",
+          daoAdminOne.address,
+          "TokenName",
+          "TokenSymbol",
+          1
+        );
+      const proposals = await governorTokenDAO.getTokenCreateProposals();
+      expect(proposals.length).equals(1);
+    });
+
+    it("Verify createTokenCreateProposal with non admin should fail", async function () {
+      const { governorTokenDAO, daoAdminTwo } = await loadFixture(
+        deployFixture
+      );
+      await expect(
+        governorTokenDAO
+          .connect(daoAdminTwo)
+          .createTokenCreateProposal(
+            "proposal",
+            "description",
+            "linkToDiscussion",
+            daoAdminTwo.address,
+            "TokenName",
+            "TokenSymbol",
+            1
           )
       ).revertedWith("Ownable: caller is not the owner");
     });
@@ -628,7 +747,8 @@ describe("GovernanceTokenDAO tests", function () {
           signers[0].address,
           signers[1].address,
           token.address,
-          100
+          100,
+          1
         );
       const proposals = await governorTokenDAO.getTokenTransferProposals();
       expect(proposals.length).equals(1);

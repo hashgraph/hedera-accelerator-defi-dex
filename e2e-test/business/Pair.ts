@@ -10,6 +10,7 @@ import {
   Client,
   AccountId,
 } from "@hashgraph/sdk";
+import { ContractService } from "../../deployment/service/ContractService";
 
 const tokenHBARX = TokenId.fromString(dex.HBARX_TOKEN_ID);
 
@@ -58,6 +59,10 @@ export default class Pair extends Base {
     }
     console.log(`- Pair#${INITIALIZE}(): already done\n`);
   };
+
+  protected getContractName() {
+    return ContractService.PAIR;
+  }
 
   public getLpContractAddress = async (
     client: Client = clientsInfo.operatorClient

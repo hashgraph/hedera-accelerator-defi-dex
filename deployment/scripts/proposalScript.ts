@@ -5,6 +5,8 @@ import { DeployedContract } from "../model/contract";
 import { main as onPostExecute } from "./proposalPostExecutionScript";
 
 import dotenv from "dotenv";
+import TokenTransferGovernor from "../../e2e-test/business/TokenTransferGovernor";
+import { ContractId } from "@hashgraph/sdk";
 dotenv.config();
 
 const contractService = new ContractService();
@@ -20,7 +22,7 @@ export async function main() {
   if (!contract) {
     throw Error("Failed to get contract details.");
   }
-  governor = new Governor(contractId);
+  governor = new TokenTransferGovernor(ContractId.fromString(contractId));
   const events = await eventReader(contractId);
   const executedProposals = events.get("ProposalExecuted") ?? [];
   const cancelledProposals = events.get("ProposalCanceled") ?? [];

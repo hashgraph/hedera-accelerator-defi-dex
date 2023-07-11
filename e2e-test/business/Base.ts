@@ -11,25 +11,51 @@ import {
   PrivateKey,
   ContractExecuteTransaction,
   ContractFunctionParameters,
+  ContractId,
 } from "@hashgraph/sdk";
+import assert from "assert";
 
-export default class Base {
-  private csDev: ContractService = new ContractService();
+export default abstract class Base {
+  protected csDev: ContractService = new ContractService();
   protected htsAddress: string;
   protected configuration: string;
   contractId: string;
+  contractName: string;
   private UPGRADE_HEDERA_SERVICE = "upgradeHederaService";
   private OWNER = "owner";
 
-  constructor(_contractId: string) {
+  constructor(_contractId: ContractId | null = null) {
     this.htsAddress = this.getHederaServiceContractAddress();
     this.configuration = this.getConfigurationContractAddress();
-    this.contractId = _contractId;
+    this.contractName = this.getContractName() ?? "Base";
+    this.contractId = this.getLatestContractIdIfMissingInArgument(_contractId);
+    this.printContractInformation();
   }
 
+  protected getBusinessClassName = (): string => this.constructor.name;
+
+  protected abstract getContractName(): string;
+
+  private getLatestContractIdIfMissingInArgument = (
+    _contractId: ContractId | null = null
+  ): string => {
+    const transparentProxyId =
+      _contractId?.toString() ??
+      this.csDev.getContractWithProxy(this.contractName).transparentProxyId;
+    assert(transparentProxyId !== undefined, "Contract Id is must");
+    return transparentProxyId;
+  };
+
+  private printContractInformation = () => {
+    const businessClassName = this.getBusinessClassName();
+    console.log(
+      `\n Using business class[${businessClassName}], contract-id [${this.contractId}], and contract-name [${this.contractName}] \n`
+    );
+  };
+
   getCurrentImplementation = async (
-    adminKey: PrivateKey = clientsInfo.adminKey,
-    client: Client = clientsInfo.adminClient
+    adminKey: PrivateKey = clientsInfo.proxyAdminKey,
+    client: Client = clientsInfo.proxyAdminClient
   ) => {
     const { result } = await this.execute(
       2000000,

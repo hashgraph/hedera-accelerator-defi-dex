@@ -18,7 +18,7 @@ const transferTokenId = TokenId.fromString(dex.TOKEN_LAB49_1);
 const contract = csDev.getContractWithProxy(ContractService.MULTI_SIG);
 const multiSigDAOContractId = contract.transparentProxyId!;
 let multiSigDAO: MultiSigDao;
-multiSigDAO = new MultiSigDao(multiSigDAOContractId);
+multiSigDAO = new MultiSigDao(ContractId.fromString(multiSigDAOContractId));
 const withPrecision = 1e8;
 const DAO_OWNERS_INFO = [
   {
@@ -37,7 +37,9 @@ const DAO_DESC = "Lorem Ipsum is simply dummy text";
 const factoryContractId = new ContractService().getContractWithProxy(
   ContractService.MULTI_SIG_FACTORY
 ).transparentProxyId!;
-const daoFactory = new MultiSigDAOFactory(factoryContractId);
+const daoFactory = new MultiSigDAOFactory(
+  ContractId.fromString(factoryContractId)
+);
 
 let gnosisSafe: HederaGnosisSafe;
 let txnHash: any;
@@ -58,15 +60,15 @@ export class MultiSigDAOSteps {
     60000
   )
   public async initializeFail(name: string, logo: string): Promise<void> {
-    const daoOwnerAddress = clientsInfo.dexOwnerId.toSolidityAddress();
+    const daoAdminAddress = clientsInfo.uiUserId.toSolidityAddress();
     console.log(
       "*******************Starting multisigdao test with following credentials*******************"
     );
     console.log("MultiSigContractId :", multiSigDAO.contractId);
-    console.log("DAO Owner Address :", daoOwnerAddress);
+    console.log("DAO Admin Address :", daoAdminAddress);
     try {
       await multiSigDAO.initialize(
-        daoOwnerAddress,
+        daoAdminAddress,
         name,
         logo,
         DAO_DESC,
@@ -78,7 +80,7 @@ export class MultiSigDAOSteps {
 
       const safeContractId =
         await multiSigDAO.getHederaGnosisSafeContractAddress();
-      gnosisSafe = new HederaGnosisSafe(safeContractId.toString());
+      gnosisSafe = new HederaGnosisSafe(safeContractId);
     } catch (e: any) {
       errorMsg = e.message;
     }
@@ -96,9 +98,9 @@ export class MultiSigDAOSteps {
     240000
   )
   public async initializeSafe(name: string, logo: string): Promise<void> {
-    const daoOwnerAddress = clientsInfo.dexOwnerId.toSolidityAddress();
+    const daoAdminAddress = clientsInfo.uiUserId.toSolidityAddress();
     await multiSigDAO.initialize(
-      daoOwnerAddress,
+      daoAdminAddress,
       name,
       logo,
       DAO_DESC,
@@ -110,7 +112,7 @@ export class MultiSigDAOSteps {
 
     const safeContractId =
       await multiSigDAO.getHederaGnosisSafeContractAddress();
-    gnosisSafe = new HederaGnosisSafe(safeContractId.toString());
+    gnosisSafe = new HederaGnosisSafe(safeContractId);
   }
 
   @when(
@@ -138,7 +140,7 @@ export class MultiSigDAOSteps {
     targetTokenAmtToBeTransferred = tokenAmount * withPrecision;
     txnHash = await multiSigDAO.proposeTransferTransaction(
       transferTokenId,
-      clientsInfo.adminId,
+      clientsInfo.treasureId,
       targetTokenAmtToBeTransferred,
       clientsInfo.uiUserClient
     );
@@ -154,7 +156,7 @@ export class MultiSigDAOSteps {
       targetTokenAmtToBeTransferred = tokenAmount * withPrecision;
       txnHash = await multiSigDAO.proposeTransferTransaction(
         transferTokenId,
-        clientsInfo.adminId,
+        clientsInfo.treasureId,
         targetTokenAmtToBeTransferred,
         clientsInfo.uiUserClient
       );
@@ -190,7 +192,7 @@ export class MultiSigDAOSteps {
       transferTxnInfo.data,
       transferTxnInfo.operation,
       transferTxnInfo.nonce,
-      clientsInfo.dexOwnerClient
+      clientsInfo.treasureClient
     );
   }
 
@@ -201,9 +203,9 @@ export class MultiSigDAOSteps {
   )
   public async getTokenBalance() {
     targetTokenBalFromPayeeAcct = await Common.getTokenBalance(
-      clientsInfo.adminId,
+      clientsInfo.treasureId,
       transferTokenId,
-      clientsInfo.adminClient
+      clientsInfo.treasureClient
     );
   }
 
@@ -215,9 +217,9 @@ export class MultiSigDAOSteps {
   public async verifyTokenBalance() {
     await Helper.delay(15000);
     const updatedBalance = await Common.getTokenBalance(
-      clientsInfo.adminId,
+      clientsInfo.treasureId,
       transferTokenId,
-      clientsInfo.adminClient
+      clientsInfo.treasureClient
     );
     expect(Number(updatedBalance)).to.eql(
       Number(targetTokenBalFromPayeeAcct) +
@@ -266,7 +268,7 @@ export class MultiSigDAOSteps {
         targetTokenBalFromPayerAcct / withPrecision + 1;
       txnHash = await multiSigDAO.proposeTransferTransaction(
         transferTokenId,
-        clientsInfo.adminId,
+        clientsInfo.treasureId,
         targetTokenAmtToBeTransferred * withPrecision,
         clientsInfo.uiUserClient
       );
@@ -391,11 +393,11 @@ export class MultiSigDAOSteps {
       clientsInfo.uiUserClient
     );
 
-    const multiSigDAOId = ContractId.fromSolidityAddress(daoAddress).toString();
+    const multiSigDAOId = ContractId.fromSolidityAddress(daoAddress);
     multiSigDAO = new MultiSigDao(multiSigDAOId);
     const safeContractId =
       await multiSigDAO.getHederaGnosisSafeContractAddress();
-    gnosisSafe = new HederaGnosisSafe(safeContractId.toString());
+    gnosisSafe = new HederaGnosisSafe(safeContractId);
   }
 
   @when(
@@ -417,12 +419,11 @@ export class MultiSigDAOSteps {
         clientsInfo.uiUserClient
       );
 
-      const multiSigDAOId =
-        ContractId.fromSolidityAddress(daoAddress).toString();
+      const multiSigDAOId = ContractId.fromSolidityAddress(daoAddress);
       multiSigDAO = new MultiSigDao(multiSigDAOId);
       const safeContractId =
         await multiSigDAO.getHederaGnosisSafeContractAddress();
-      gnosisSafe = new HederaGnosisSafe(safeContractId.toString());
+      gnosisSafe = new HederaGnosisSafe(safeContractId);
     } catch (e: any) {
       errorMsg = e.message;
     }
@@ -437,7 +438,7 @@ export class MultiSigDAOSteps {
   public async upgradeDAOLogicAddress() {
     upgradeResult = await daoFactory.upgradeDaoLogicAddress(
       contractNewAddress,
-      clientsInfo.dexOwnerClient
+      clientsInfo.childProxyAdminClient
     );
   }
 
@@ -455,7 +456,7 @@ export class MultiSigDAOSteps {
   public async upgradeSafeLogicAddress() {
     upgradeResult = await daoFactory.upgradeSafeLogicAddress(
       contractNewAddress,
-      clientsInfo.dexOwnerClient
+      clientsInfo.childProxyAdminClient
     );
   }
 
@@ -467,7 +468,7 @@ export class MultiSigDAOSteps {
   public async upgradeGnosisSafeProxyFactory() {
     upgradeResult = await daoFactory.upgradeSafeFactoryAddress(
       contractNewAddress,
-      clientsInfo.dexOwnerClient
+      clientsInfo.childProxyAdminClient
     );
   }
 }

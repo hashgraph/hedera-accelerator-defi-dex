@@ -21,14 +21,16 @@ contract GovernorUpgrade is GovernorCountingSimpleInternal {
         string memory linkToDiscussion,
         address payable proxyContract,
         address contractToUpgrade,
-        address creator
+        address creator,
+        uint256 nftTokenSerialId
     ) public returns (uint256) {
         uint256 proposalId = _createProposal(
             title,
             description,
             linkToDiscussion,
             creator,
-            bytes("")
+            bytes(""),
+            nftTokenSerialId
         );
         _proposalData[proposalId] = TokenUpgradeData(
             proxyContract,

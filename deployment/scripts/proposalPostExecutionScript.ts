@@ -6,10 +6,10 @@ import {
   METHOD_PAIR_IMPL,
 } from "../../e2e-test/business/Factory";
 import ContractMetadata from "../../utils/ContractMetadata";
-import Governor from "../../e2e-test/business/Governor";
 import Factory from "../../e2e-test/business/Factory";
 import { clientsInfo } from "../../utils/ClientManagement";
 import Common from "../../e2e-test/business/Common";
+import ContractUpgradeGovernor from "../../e2e-test/business/ContractUpgradeGovernor";
 
 const contractService = new ContractService();
 const contractMetadata = new ContractMetadata();
@@ -22,11 +22,13 @@ const factory = new Factory(getFactoryProxyId()!);
 function getFactoryProxyId() {
   const name = contractUATService.factoryContractName;
   const factory = contractUATService.getContract(name);
-  return factory.transparentProxyId;
+  return ContractId.fromString(factory.transparentProxyId!);
 }
 
 async function updateProxy(contractId: string, proposalId: string) {
-  const governor = new Governor(contractId);
+  const governor = new ContractUpgradeGovernor(
+    ContractId.fromString(contractId)
+  );
   const response =
     await governor.getContractAddressesFromGovernorUpgradeContract(proposalId);
   const proxyId = response.proxyId;
@@ -77,8 +79,12 @@ async function upgradeProxy(
   const pairs = await factory.getPairs();
   for (const pair of pairs) {
     const proxyAddress = await factory.resolveProxyAddress(functionName, pair);
-    const ownerKey = clientsInfo.dexOwnerKey;
-    await Common.upgradeTo(proxyAddress, logicAddress, ownerKey);
+    const ownerKey = clientsInfo.childProxyAdminKey;
+    await new Common(ContractId.fromSolidityAddress(proxyAddress)).upgradeTo(
+      proxyAddress,
+      logicAddress,
+      ownerKey
+    );
   }
   await factory.upgradeLogic(logicAddress, functionName);
   await updateDirectProxy(proxyId, logicId, oldVersionContract);
@@ -95,7 +101,7 @@ async function updateDirectProxy(
   logicId: ContractId,
   oldVersionContract: DeployedContract
 ) {
-  await Common.upgradeTo(
+  new Common(proxyId).upgradeTo(
     proxyId.toSolidityAddress(),
     logicId.toSolidityAddress()
   );

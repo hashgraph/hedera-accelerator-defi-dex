@@ -1,11 +1,11 @@
+import dex from "../model/dex";
+
+import { clientsInfo } from "../../utils/ClientManagement";
 import {
-  TokenCreateTransaction,
   TokenType,
   TokenSupplyType,
+  TokenCreateTransaction,
 } from "@hashgraph/sdk";
-
-import ClientManagement from "../../utils/ClientManagement";
-import dex from "../model/dex";
 
 async function main() {
   await createGODToken(200000 * 100000000);
@@ -27,20 +27,19 @@ async function main() {
 }
 
 async function createGODToken(initialSupply: number) {
-  const cm = new ClientManagement();
-  const opClient = cm.createOperatorClient();
+  const opClient = clientsInfo.operatorClient;
   const tx = await new TokenCreateTransaction()
     .setTokenName("Governance Hedera Open DEX")
     .setTokenSymbol("GOD")
     .setInitialSupply(initialSupply)
     .setDecimals(8)
-    .setTreasuryAccountId(cm.getOperator().id)
+    .setTreasuryAccountId(clientsInfo.operatorId)
     .setTokenType(TokenType.FungibleCommon)
     .setSupplyType(TokenSupplyType.Infinite)
-    .setAdminKey(cm.getOperator().key)
-    .setSupplyKey(cm.getOperator().key)
+    .setAdminKey(clientsInfo.operatorKey)
+    .setSupplyKey(clientsInfo.operatorKey)
     .freezeWith(opClient)
-    .sign(cm.getOperator().key);
+    .sign(clientsInfo.operatorKey);
 
   const txResponse = await tx.execute(opClient);
   const txReceipt = await txResponse.getReceipt(opClient);
@@ -60,10 +59,9 @@ async function createToken(
   tokenSymbol: string,
   initialSupply: number
 ) {
-  const cm = new ClientManagement();
-  const treasuryClient = cm.createClient();
-  const treasureId = cm.getTreasure().treasureId;
-  const treasuryKey = cm.getTreasure().treasureKey;
+  const treasuryClient = clientsInfo.treasureClient;
+  const treasureId = clientsInfo.treasureId;
+  const treasuryKey = clientsInfo.treasureKey;
   const tx = await new TokenCreateTransaction()
     .setTokenName(tokenName)
     .setTokenSymbol(tokenSymbol)

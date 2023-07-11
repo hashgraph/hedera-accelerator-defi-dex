@@ -1,7 +1,6 @@
 import { binding, given, then, when } from "cucumber-tsflow";
 import { expect } from "chai";
 import { ContractService } from "../../deployment/service/ContractService";
-import ClientManagement from "../../utils/ClientManagement";
 import { ContractId, TokenId } from "@hashgraph/sdk";
 import dex from "../../deployment/model/dex";
 import Pair from "../business/Pair";
@@ -13,9 +12,6 @@ import { Helper } from "../../utils/Helper";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { CommonSteps } from "./CommonSteps";
 
-const clientManagement = new ClientManagement();
-const client = clientManagement.createOperatorClient();
-const { treasureId, treasureKey } = clientManagement.getTreasure();
 const contractService = new ContractService();
 const baseContract = contractService.getContract(
   contractService.hederaServiceContractName
@@ -24,9 +20,15 @@ const factoryContractId = contractService.getContractWithProxy(
   contractService.factoryContractName
 ).transparentProxyId!;
 const baseContractAddress = baseContract.address;
-const { id, key } = clientManagement.getOperator();
+const {
+  operatorId: id,
+  operatorKey: key,
+  treasureId,
+  treasureKey,
+  operatorClient: client,
+} = clientsInfo;
 
-const factory = new Factory(factoryContractId);
+const factory = new Factory(ContractId.fromString(factoryContractId));
 let pair: Pair;
 let tokenOne: TokenId;
 let tokenTwo: TokenId;
@@ -61,13 +63,9 @@ export class FactorySteps {
     console.log(
       "*******************Starting factory test with following credentials*******************"
     );
-    const adminAddress = clientManagement
-      .getAdmin()
-      .adminId.toSolidityAddress();
     console.log("Factory contractId : ", factoryContractId);
     console.log("H address : ", baseContractAddress);
-    console.log("adminAddress : ", adminAddress);
-    console.log("TOKEN_USER_ID : ", id.toString());
+    console.log("OPERATOR_ID : ", id.toString());
     console.log("TREASURE_ID :", treasureId.toString());
     try {
       await factory.setupFactory();

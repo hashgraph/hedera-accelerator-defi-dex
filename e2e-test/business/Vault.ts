@@ -10,6 +10,7 @@ import {
   AccountId,
   ContractFunctionParameters,
 } from "@hashgraph/sdk";
+import { ContractService } from "../../deployment/service/ContractService";
 
 const INITIALIZE = "initialize";
 
@@ -48,6 +49,10 @@ export default class Vault extends Base {
       `- Vault#${INITIALIZE}(): already done, contract-id = ${this.contractId}\n`
     );
   };
+
+  protected getContractName() {
+    return ContractService.VAULT;
+  }
 
   stake = async (amount: BigNumber | number, client: Client) => {
     const args = new ContractFunctionParameters().addUint256(amount);

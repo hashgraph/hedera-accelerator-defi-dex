@@ -78,8 +78,11 @@ contract GODHolder is TokenHolder {
         emit UpdatedAmount(user, godTokenForUsers[user], LOCKED);
     }
 
-    function canUserClaimTokens() public view override returns (bool) {
-        return super.canUserClaimTokens() && godTokenForUsers[msg.sender] > 0;
+    function canUserClaimTokens(
+        address account
+    ) public view override returns (bool) {
+        return
+            super.canUserClaimTokens(account) && godTokenForUsers[account] > 0;
     }
 
     function isNFTType() external pure returns (bool) {

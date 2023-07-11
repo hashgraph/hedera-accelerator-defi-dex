@@ -1,27 +1,30 @@
 import dex from "../../deployment/model/dex";
 import Common from "../../e2e-test/business/Common";
 import Factory from "../../e2e-test/business/Factory";
-import Governor from "../../e2e-test/business/Governor";
 import GodHolder from "../../e2e-test/business/GodHolder";
 
 import { Helper } from "../../utils/Helper";
 import { TokenId } from "@hashgraph/sdk";
 import { BigNumber } from "bignumber.js";
 import { clientsInfo } from "../../utils/ClientManagement";
-import { ContractService } from "../../deployment/service/ContractService";
-import { InstanceProvider } from "../../utils/InstanceProvider";
+import TokenCreateGovernor from "../../e2e-test/business/TokenCreateGovernor";
+import FTTokenHolderFactory from "../../e2e-test/business/factories/FTTokenHolderFactory";
 
 const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
 
 let factory: Factory;
-let governor: Governor;
+let governor: TokenCreateGovernor;
 let godHolder: GodHolder;
 
 async function main() {
-  const provider = InstanceProvider.getInstance();
-  factory = provider.getFactory();
-  governor = provider.getGovernor(ContractService.GOVERNOR_TOKEN_CREATE);
-  godHolder = await provider.getGODTokenHolderFromFactory(GOD_TOKEN_ID);
+  factory = new Factory();
+  governor = new TokenCreateGovernor();
+
+  const godHolderFactory = new FTTokenHolderFactory(); //GOD token factory
+  const godHolderContractId = await godHolderFactory.getTokenHolder(
+    GOD_TOKEN_ID.toSolidityAddress()
+  );
+  godHolder = new GodHolder(godHolderContractId);
 
   await governor.initialize(godHolder);
   const token1 = await createTokenViaProposal("TEST-A", "TEST-A");
