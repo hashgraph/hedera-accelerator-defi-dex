@@ -6,6 +6,7 @@ import {
   executeGovernorTokenTransferFlow,
   executeContractUpgradeFlow,
   executeTextProposalFlow,
+  executeTokenCreateFlow,
 } from "./ftDao";
 import { clientsInfo } from "../../utils/ClientManagement";
 
@@ -26,30 +27,38 @@ export async function executeDAOFlow(
 ) {
   console.log(`- executing TokenTransferDAO i.e ${daoProxyAddress}\n`);
 
-  const tokenTransferDAO =
-    daoFactory.getGovernorTokenDaoInstance(daoProxyAddress);
+  const ftDao = daoFactory.getGovernorTokenDaoInstance(daoProxyAddress);
 
   const genericHolder = await daoFactory.getTokenHolderInstance(tokenId);
+
   const godHolder = genericHolder as GodHolder;
 
   await executeGovernorTokenTransferFlow(
     godHolder as GodHolder,
-    tokenTransferDAO,
+    ftDao,
     clientsInfo.treasureId,
     clientsInfo.treasureKey,
     clientsInfo.operatorId,
     tokenId
   );
 
-  await executeTextProposalFlow(godHolder, tokenTransferDAO, tokenId);
+  await executeTextProposalFlow(godHolder, ftDao, tokenId);
 
   await executeContractUpgradeFlow(
     godHolder,
-    tokenTransferDAO,
+    ftDao,
     csDev.getContractWithProxy(csDev.factoryContractName)
       .transparentProxyAddress!,
     csDev.getContract(csDev.factoryContractName).address,
     tokenId
+  );
+
+  await executeTokenCreateFlow(
+    godHolder,
+    ftDao,
+    "tokenName",
+    "tokenSymbol",
+    clientsInfo.treasureId
   );
 }
 
