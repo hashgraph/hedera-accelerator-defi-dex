@@ -14,6 +14,7 @@ import Pair from "../business/Pair";
 import BigNumber from "bignumber.js";
 import HederaService from "../business/HederaService";
 import { CommonSteps } from "./CommonSteps";
+import TokenCreateGovernor from "../business/TokenCreateGovernor";
 
 const csDev = new ContractService();
 const factoryContractId = csDev.getContractWithProxy(csDev.factoryContractName)
@@ -26,11 +27,13 @@ const tokenCreateContractId = csDev.getContractWithProxy(
 const godHolderContractId = csDev.getContractWithProxy(csDev.godHolderContract)
   .transparentProxyId!;
 
-const factory = new Factory(factoryContractId);
-const governor = new Governor(tokenCreateContractId);
-const godHolder = new GodHolder(godHolderContractId);
+const factory = new Factory(ContractId.fromString(factoryContractId));
+const governor = new TokenCreateGovernor(
+  ContractId.fromString(tokenCreateContractId)
+);
+const godHolder = new GodHolder(ContractId.fromString(godHolderContractId));
 const hederaService = new HederaService(
-  csDev.getContract(csDev.hederaServiceContractName).id
+  ContractId.fromString(csDev.getContract(csDev.hederaServiceContractName).id)
 );
 const tokenHBARX = TokenId.fromString(dex.HBARX_TOKEN_ID);
 

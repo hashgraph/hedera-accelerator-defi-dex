@@ -24,6 +24,10 @@ export const METHOD_PAIR_IMPL = "upgradePairImplementation";
 export const METHOD_LP_IMPL = "upgradeLpTokenImplementation";
 
 export default class Factory extends Base {
+  protected getContractName() {
+    return ContractService.FACTORY;
+  }
+
   setupFactory = async (client: Client = clientsInfo.operatorClient) => {
     if (await this.isInitializationPending()) {
       const deployment = new Deployment();
@@ -129,7 +133,7 @@ export default class Factory extends Base {
       return proxyAddress;
     }
     if (functionName === METHOD_LP_IMPL) {
-      const cId = ContractId.fromSolidityAddress(proxyAddress).toString();
+      const cId = ContractId.fromSolidityAddress(proxyAddress);
       return await new Pair(cId).getLpContractAddress();
     }
     throw Error(`Invalid function name passed: ${functionName}`);

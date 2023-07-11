@@ -24,8 +24,12 @@ import { BigNumber } from "bignumber.js";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { MirrorNodeService } from "../../utils/MirrorNodeService";
 
-export default class Common {
+export default class Common extends Base {
   static baseUrl: string = "https://testnet.mirrornode.hedera.com/";
+
+  protected getContractName(): string {
+    return this.constructor.name;
+  }
 
   static setNFTTokenAllowance = async (
     tokenId: string | TokenId,
@@ -127,7 +131,7 @@ export default class Common {
     );
   };
 
-  static upgradeTo = async (
+  upgradeTo = async (
     proxyAddress: string,
     logicAddress: string,
     adminKey: PrivateKey = clientsInfo.proxyAdminKey,
@@ -135,13 +139,7 @@ export default class Common {
   ) => {
     const proxyContractId = ContractId.fromSolidityAddress(proxyAddress);
     const args = new ContractFunctionParameters().addAddress(logicAddress);
-    await new Base(proxyContractId.toString()).execute(
-      2_00_000,
-      "upgradeTo",
-      client,
-      args,
-      adminKey
-    );
+    this.execute(2_00_000, "upgradeTo", client, args, adminKey);
     console.log(
       `- Common#upgradeTo(): proxyId = ${proxyContractId.toString()}, new-implementation =  ${logicAddress}\n`
     );

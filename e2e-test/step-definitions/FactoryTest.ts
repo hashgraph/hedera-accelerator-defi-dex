@@ -28,7 +28,7 @@ const {
   operatorClient: client,
 } = clientsInfo;
 
-const factory = new Factory(factoryContractId);
+const factory = new Factory(ContractId.fromString(factoryContractId));
 let pair: Pair;
 let tokenOne: TokenId;
 let tokenTwo: TokenId;

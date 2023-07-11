@@ -1,10 +1,10 @@
 import dex from "../../deployment/model/dex";
-import TokenHolderFactory from "../../e2e-test/business/factories/TokenHolderFactory";
+import FTTokenHolderFactory from "../../e2e-test/business/factories/FTTokenHolderFactory";
+import NFTTokenHolderFactory from "../../e2e-test/business/factories/NFTTokenHolderFactory";
 
 import { Helper } from "../../utils/Helper";
 import { TokenId } from "@hashgraph/sdk";
 import { clientsInfo } from "../../utils/ClientManagement";
-import { InstanceProvider } from "../../utils/InstanceProvider";
 
 const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
 const TOKEN_LAB49_1 = TokenId.fromString(dex.TOKEN_LAB49_1);
@@ -12,7 +12,7 @@ const TOKEN_LAB49_1 = TokenId.fromString(dex.TOKEN_LAB49_1);
 const NFT_TOKEN_ID = dex.NFT_TOKEN_ID;
 
 async function executeTokensHolderFlow(
-  factory: TokenHolderFactory,
+  factory: FTTokenHolderFactory | NFTTokenHolderFactory,
   tokens: TokenId[]
 ) {
   await factory.initialize();
@@ -27,9 +27,8 @@ async function executeTokensHolderFlow(
 }
 
 async function main() {
-  const provider = InstanceProvider.getInstance();
-  const godTokenHolderFactory = provider.getGODTokenHolderFactory();
-  const nftTokenHolderFactory = provider.getNFTTokenHolderFactory();
+  const godTokenHolderFactory = new FTTokenHolderFactory();
+  const nftTokenHolderFactory = new NFTTokenHolderFactory();
   await executeTokensHolderFlow(godTokenHolderFactory, [
     GOD_TOKEN_ID,
     TOKEN_LAB49_1,

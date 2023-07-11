@@ -12,6 +12,7 @@ import { clientsInfo } from "../../utils/ClientManagement";
 import { ContractService } from "../../deployment/service/ContractService";
 import { CommonSteps } from "./CommonSteps";
 import { Helper } from "../../utils/Helper";
+import TokenTransferGovernor from "../business/TokenTransferGovernor";
 
 const csDev = new ContractService();
 
@@ -27,8 +28,10 @@ const tokenTransferProxyId = csDev.getContractWithProxy(
 const godHolderProxyId = csDev.getContract(csDev.godHolderContract)
   .transparentProxyId!;
 
-const governor = new Governor(tokenTransferProxyId);
-const godHolder = new GodHolder(godHolderProxyId);
+const governor = new TokenTransferGovernor(
+  ContractId.fromString(tokenTransferProxyId)
+);
+const godHolder = new GodHolder(ContractId.fromString(godHolderProxyId));
 
 let proposalId: string;
 let msg: string;

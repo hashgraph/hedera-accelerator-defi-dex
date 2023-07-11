@@ -93,6 +93,10 @@ export default class MultiSigDao extends BaseDao {
     );
   }
 
+  protected getContractName() {
+    return ContractService.MULTI_SIG;
+  }
+
   getHederaGnosisSafeContractAddress = async (
     client: Client = clientsInfo.operatorClient
   ) => {
@@ -392,7 +396,7 @@ export default class MultiSigDao extends BaseDao {
     const createProxyArgs = new ContractFunctionParameters()
       .addAddress(logicAddress)
       .addBytes(new Uint8Array());
-    const gnosisFactory = new Base(contractId.toString());
+    const gnosisFactory = new Common(contractId);
     const { result } = await gnosisFactory.execute(
       2_00_000,
       "createProxy",
@@ -415,7 +419,7 @@ export default class MultiSigDao extends BaseDao {
       .addAddress("0x0000000000000000000000000000000000000000")
       .addUint256(0)
       .addAddress("0x0000000000000000000000000000000000000000");
-    const gnosis = new Base(cId.toString());
+    const gnosis = new Common(cId);
     await gnosis.execute(5_00_000, "setup", client, setupArgs);
     console.log(` - GnosisSafe#setup(): done\n`);
     return cId;

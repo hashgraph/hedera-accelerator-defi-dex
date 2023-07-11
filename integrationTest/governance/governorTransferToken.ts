@@ -1,11 +1,15 @@
 import dex from "../../deployment/model/dex";
 
 import { Helper } from "../../utils/Helper";
-import { TokenId } from "@hashgraph/sdk";
+import { ContractId, TokenId } from "@hashgraph/sdk";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { ContractService } from "../../deployment/service/ContractService";
-import { InstanceProvider } from "../../utils/InstanceProvider";
 import { Deployment } from "../../utils/deployContractOnTestnet";
+import TokenTransferGovernor from "../../e2e-test/business/TokenTransferGovernor";
+import FTTokenHolderFactory from "../../e2e-test/business/factories/FTTokenHolderFactory";
+import NFTTokenHolderFactory from "../../e2e-test/business/factories/NFTTokenHolderFactory";
+import GodHolder from "../../e2e-test/business/GodHolder";
+import NFTHolder from "../../e2e-test/business/NFTHolder";
 const deployment = new Deployment();
 
 const TOKEN_ID = TokenId.fromString(dex.TOKEN_LAB49_1);
@@ -17,12 +21,15 @@ const fungibleTokenFlow = async () => {
   const deploymentDetails = await deployment.deployProxy(
     ContractService.GOVERNOR_TT
   );
-  const provider = InstanceProvider.getInstance();
-  const godHolder = await provider.getGODTokenHolderFromFactory(GOD_TOKEN_ID);
-  const governor = provider.getGovernor(
-    ContractService.GOVERNOR_TT,
-    deploymentDetails.transparentProxyId
+  const governor = new TokenTransferGovernor(
+    ContractId.fromString(deploymentDetails.transparentProxyId)
   );
+  const godHolderFactory = new FTTokenHolderFactory();
+  const godHolderContractId = await godHolderFactory.getTokenHolder(
+    GOD_TOKEN_ID.toSolidityAddress()
+  );
+  const godHolder = new GodHolder(godHolderContractId);
+
   await governor.initialize(godHolder);
 
   await godHolder.setupAllowanceForTokenLocking();
@@ -71,14 +78,15 @@ const nonFungibleTokenFlow = async () => {
   const deploymentDetails = await deployment.deployProxy(
     ContractService.GOVERNOR_TT
   );
-  const provider = InstanceProvider.getInstance();
-  const nftHolder = await provider.getNFTTokenHolderFromFactory(
-    dex.NFT_TOKEN_ID
+  const governor = new TokenTransferGovernor(
+    ContractId.fromString(deploymentDetails.transparentProxyId)
   );
-  const governor = provider.getGovernor(
-    ContractService.GOVERNOR_TT,
-    deploymentDetails.transparentProxyId
+  const nftHolderFactory = new NFTTokenHolderFactory();
+  const nftHolderContractId = await nftHolderFactory.getTokenHolder(
+    dex.NFT_TOKEN_ID.toSolidityAddress()
   );
+  const nftHolder = new NFTHolder(nftHolderContractId);
+
   await governor.initialize(
     nftHolder,
     clientsInfo.operatorClient,

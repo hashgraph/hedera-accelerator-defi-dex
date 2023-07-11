@@ -24,8 +24,10 @@ const id = clientsInfo.operatorId;
 const key = clientsInfo.operatorKey;
 const client = clientsInfo.operatorClient;
 
-const pair = new Pair(pairContract.transparentProxyId!);
-const lpToken = new LpToken(lpTokenContract.transparentProxyId!);
+const pair = new Pair(ContractId.fromString(pairContract.transparentProxyId!));
+const lpToken = new LpToken(
+  ContractId.fromString(lpTokenContract.transparentProxyId!)
+);
 let tokenNameIdMap = new Map();
 
 let tokenA: TokenId;

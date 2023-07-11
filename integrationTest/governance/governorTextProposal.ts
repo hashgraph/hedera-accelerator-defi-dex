@@ -3,15 +3,21 @@ import dex from "../../deployment/model/dex";
 import { Helper } from "../../utils/Helper";
 import { TokenId } from "@hashgraph/sdk";
 import { clientsInfo } from "../../utils/ClientManagement";
-import { ContractService } from "../../deployment/service/ContractService";
-import { InstanceProvider } from "../../utils/InstanceProvider";
+import TextGovernor from "../../e2e-test/business/TextGovernor";
+import FTTokenHolderFactory from "../../e2e-test/business/factories/FTTokenHolderFactory";
+import GodHolder from "../../e2e-test/business/GodHolder";
 
 const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
 
 async function main() {
-  const provider = InstanceProvider.getInstance();
-  const godHolder = await provider.getGODTokenHolderFromFactory(GOD_TOKEN_ID);
-  const governor = provider.getGovernor(ContractService.GOVERNOR_TEXT);
+  const governor = new TextGovernor();
+  const godHolderFactory = new FTTokenHolderFactory(); //GOD token factory
+  await godHolderFactory.initialize();
+  const godHolderContractId = await godHolderFactory.getTokenHolder(
+    GOD_TOKEN_ID.toSolidityAddress()
+  );
+  const godHolder = new GodHolder(godHolderContractId);
+
   await governor.initialize(godHolder);
 
   await godHolder.setupAllowanceForTokenLocking();

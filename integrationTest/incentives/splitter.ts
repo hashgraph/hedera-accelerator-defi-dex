@@ -5,7 +5,6 @@ import Splitter from "../../e2e-test/business/Splitter";
 
 import { Helper } from "../../utils/Helper";
 import { clientsInfo } from "../../utils/ClientManagement";
-import { InstanceProvider } from "../../utils/InstanceProvider";
 import { TokenId, ContractId } from "@hashgraph/sdk";
 import { Deployment } from "../../utils/deployContractOnTestnet";
 import { ContractService } from "../../deployment/service/ContractService";
@@ -26,7 +25,7 @@ const createVaults = async () => {
       deployment.deployProxy(ContractService.VAULT),
       deployment.deployProxy(ContractService.VAULT),
     ])
-  ).map((item) => new Vault(item.transparentProxyId));
+  ).map((item) => new Vault(ContractId.fromString(item.transparentProxyId)));
 };
 
 const vaultsMultiplier = async (splitter: Splitter, vaultsId: ContractId[]) => {
@@ -84,7 +83,7 @@ const initialize = async (splitter: Splitter) => {
 };
 
 async function main() {
-  const splitter = InstanceProvider.getInstance().getSplitter();
+  const splitter = new Splitter();
   await initialize(splitter);
   const vaultsId = await splitter.vaults();
   await vaultsMultiplier(splitter, vaultsId);

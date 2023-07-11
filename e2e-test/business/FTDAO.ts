@@ -29,6 +29,7 @@ export const DEFAULT_VOTING_DELAY = 0; // blocks
 export const DEFAULT_VOTING_PERIOD = 100; // blocks means 3 minutes as per test
 export const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
 export const NFT_TOKEN_ID = dex.NFT_TOKEN_ID;
+export const DEFAULT_NFT_TOKEN_SERIAL_ID = 1;
 
 export default class FTDAO extends BaseDao {
   async initialize(
@@ -102,6 +103,10 @@ export default class FTDAO extends BaseDao {
     console.log(`- FTDAO#${INITIALIZE}(): ${receipt.status} \n`);
   }
 
+  protected getContractName() {
+    return ContractService.FT_DAO;
+  }
+
   createTokenTransferProposal = async (
     title: string,
     fromAddress: string,
@@ -110,7 +115,8 @@ export default class FTDAO extends BaseDao {
     tokenAmount: number,
     client: Client = clientsInfo.operatorClient,
     description: string = DEFAULT_DESCRIPTION,
-    link: string = DEFAULT_LINK
+    link: string = DEFAULT_LINK,
+    nftTokenSerialId: number = DEFAULT_NFT_TOKEN_SERIAL_ID
   ) => {
     const args = new ContractFunctionParameters()
       .addString(title)
@@ -120,7 +126,7 @@ export default class FTDAO extends BaseDao {
       .addAddress(toAddress) // to
       .addAddress(tokenId) // tokenToTransfer
       .addUint256(BigNumber(tokenAmount)) // amountToTransfer
-      .addUint256(1); //defaulting to 1 - nft token serial id
+      .addUint256(nftTokenSerialId);
 
     const { result } = await this.execute(
       1_000_000,
@@ -138,13 +144,14 @@ export default class FTDAO extends BaseDao {
     title: string,
     client: Client = clientsInfo.operatorClient,
     description: string = DEFAULT_DESCRIPTION,
-    link: string = DEFAULT_LINK
+    link: string = DEFAULT_LINK,
+    nftTokenSerialId: number = DEFAULT_NFT_TOKEN_SERIAL_ID
   ) => {
     const args = new ContractFunctionParameters()
       .addString(title)
       .addString(description)
       .addString(link)
-      .addUint256(1); //defaulting to 1 - nft token serial id
+      .addUint256(nftTokenSerialId);
 
     const { result } = await this.execute(
       1_000_000,
@@ -169,7 +176,8 @@ export default class FTDAO extends BaseDao {
     contractToUpgrade: string,
     client: Client = clientsInfo.operatorClient,
     description: string = DEFAULT_DESCRIPTION,
-    link: string = DEFAULT_LINK
+    link: string = DEFAULT_LINK,
+    nftTokenSerialId: number = DEFAULT_NFT_TOKEN_SERIAL_ID
   ) => {
     const args = new ContractFunctionParameters()
       .addString(title)
@@ -177,7 +185,7 @@ export default class FTDAO extends BaseDao {
       .addString(link)
       .addAddress(proxyContract)
       .addAddress(contractToUpgrade)
-      .addUint256(1); //defaulting to 1 - nft token serial id
+      .addUint256(nftTokenSerialId);
 
     const { result } = await this.execute(
       1_000_000,
@@ -227,18 +235,27 @@ export default class FTDAO extends BaseDao {
       governorTokenCreateProxy: result.getAddress(3),
       governorTokenTransferProxyId: ContractId.fromSolidityAddress(
         result.getAddress(0)
-      ).toString(),
+      ),
       governorTextProposalProxyId: ContractId.fromSolidityAddress(
         result.getAddress(1)
-      ).toString(),
+      ),
       governorUpgradeProxyId: ContractId.fromSolidityAddress(
         result.getAddress(2)
-      ).toString(),
+      ),
       governorTokenCreateProxyId: ContractId.fromSolidityAddress(
         result.getAddress(3)
-      ).toString(),
+      ),
     };
-    console.table(addresses);
+    console.table({
+      ...addresses,
+      governorTokenTransferProxyId:
+        addresses.governorTokenTransferProxyId.toString(),
+      governorTextProposalProxyId:
+        addresses.governorTextProposalProxyId.toString(),
+      governorUpgradeProxyId: addresses.governorUpgradeProxyId.toString(),
+      governorTokenCreateProxyId:
+        addresses.governorTokenCreateProxyId.toString(),
+    });
     return addresses;
   };
 }
