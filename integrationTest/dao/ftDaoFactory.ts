@@ -2,23 +2,22 @@ import { Helper } from "../../utils/Helper";
 import { TokenId } from "@hashgraph/sdk";
 import { Deployment } from "../../utils/deployContractOnTestnet";
 import { checkRoles } from "./multiSigDAO";
+import { clientsInfo } from "../../utils/ClientManagement";
 import { ContractService } from "../../deployment/service/ContractService";
 import {
-  executeGovernorTokenTransferFlow,
-  executeContractUpgradeFlow,
   executeTextProposalFlow,
+  executeContractUpgradeFlow,
+  executeGovernorTokenTransferFlow,
   executeTokenCreateFlow,
 } from "./ftDao";
-import { clientsInfo } from "../../utils/ClientManagement";
 
 import dex from "../../deployment/model/dex";
-import FTDAOFactory from "../../e2e-test/business/factories/FTDAOFactory";
 import GodHolder from "../../e2e-test/business/GodHolder";
-import FTDAO from "../../e2e-test/business/FTDAO";
+import FTDAOFactory from "../../e2e-test/business/factories/FTDAOFactory";
 import FTTokenHolderFactory from "../../e2e-test/business/factories/FTTokenHolderFactory";
+
 const DAO_WEB_LINKS = ["LINKEDIN", "https://linkedin.com"];
 const DAO_DESC = "Lorem Ipsum is simply dummy text";
-
 const csDev = new ContractService();
 
 export async function executeDAOFlow(
@@ -82,16 +81,10 @@ async function createDAO(
   );
 }
 
-function getTokenTransferDAOFactoryInfo() {
-  const contract = csDev.getContractWithProxy(ContractService.FT_DAO_FACTORY);
-  const proxyId = contract.transparentProxyId!;
-  return new FTDAOFactory(ContractId.fromString(proxyId));
-}
-
 async function main() {
-  const daoFactory = getTokenTransferDAOFactoryInfo();
-  const tokenHolderFactory = new FTTokenHolderFactory();
-  await daoFactory.initialize(clientsInfo.operatorClient, tokenHolderFactory);
+  const daoFactory = new FTDAOFactory();
+  const ftTokenHolderFactory = new FTTokenHolderFactory();
+  await daoFactory.initialize(clientsInfo.operatorClient, ftTokenHolderFactory);
   await daoFactory.getTokenHolderFactoryAddress();
   await createDAO(
     daoFactory,
