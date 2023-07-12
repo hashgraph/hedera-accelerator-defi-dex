@@ -78,10 +78,10 @@
   },
   {
     "name": "nftdaofactory",
-    "id": "0.0.15070839",
-    "hash": "17e8d25795c46d230f05b55fb5f69bd1",
-    "address": "0x0000000000000000000000000000000000e5f677",
-    "timestamp": "2023-07-10T07:16:07.646Z",
+    "id": "0.0.15273255",
+    "hash": "25bb73c5cc5de61903a5f4544989bd8a",
+    "address": "0x0000000000000000000000000000000000e90d27",
+    "timestamp": "2023-07-12T05:34:39.528Z",
     "transparentProxyId": "0.0.15070841",
     "transparentProxyAddress": "0x0000000000000000000000000000000000e5f679"
   },
@@ -96,19 +96,19 @@
   },
   {
     "name": "ftdaofactory",
-    "id": "0.0.15070830",
-    "hash": "98254be4698394178a5d3fcb23e7c7bc",
-    "address": "0x0000000000000000000000000000000000e5f66e",
-    "timestamp": "2023-07-10T07:13:30.068Z",
+    "id": "0.0.15273480",
+    "hash": "13ae71095e376f09199db191e7f8faa4",
+    "address": "0x0000000000000000000000000000000000e90e08",
+    "timestamp": "2023-07-12T05:36:12.266Z",
     "transparentProxyId": "0.0.15070835",
     "transparentProxyAddress": "0x0000000000000000000000000000000000e5f673"
   },
   {
     "name": "multisigdaofactory",
-    "id": "0.0.15067971",
-    "hash": "8383aa6157f01b401f2ae6e2cc20d69e",
-    "address": "0x0000000000000000000000000000000000e5eb43",
-    "timestamp": "2023-07-09T10:20:54.816Z",
+    "id": "0.0.15273108",
+    "hash": "11fc44feda6601c6b16e2a1ec8468269",
+    "address": "0x0000000000000000000000000000000000e90c94",
+    "timestamp": "2023-07-12T05:33:10.043Z",
     "transparentProxyId": "0.0.15067973",
     "transparentProxyAddress": "0x0000000000000000000000000000000000e5eb45"
   },
