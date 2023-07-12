@@ -229,6 +229,11 @@ export default abstract class Base {
     return this.csDev.getContract(ContractService.MULTI_SEND).address;
   }
 
+  protected getSystemBasedRoleAccessContractAddress(): string {
+    return this.csDev.getContract(ContractService.SYSTEM_ROLE_BASED_ACCESS)
+      .transparentProxyAddress!;
+  }
+
   public async encodeFunctionData(
     contractName: string,
     functionName: string,
@@ -241,13 +246,6 @@ export default abstract class Base {
     return { bytes: ethers.utils.arrayify(hex), hex };
   }
 
-  public async checkIfChildProxyAdminRoleGiven(
-    accountId: AccountId = clientsInfo.childProxyAdminId
-  ) {
-    await this.getRoleAdmin(dex.ROLES.CHILD_PROXY_ADMIN_ROLE);
-    return await this.hasRole(dex.ROLES.CHILD_PROXY_ADMIN_ROLE, accountId);
-  }
-
   protected async decodeFunctionResult(
     contractName: string,
     functionName: string,
@@ -257,14 +255,6 @@ export default abstract class Base {
       contractName
     );
     return contractInterface.decodeFunctionResult(functionName, data);
-  }
-
-  protected getSystemUsersAddressArray() {
-    return Object.values({
-      superAdmin: clientsInfo.operatorId.toSolidityAddress(),
-      proxyAdmin: clientsInfo.proxyAdminId.toSolidityAddress(),
-      childProxyAdmin: clientsInfo.childProxyAdminId.toSolidityAddress(),
-    });
   }
 
   private getRoleInfo(role: Uint8Array) {

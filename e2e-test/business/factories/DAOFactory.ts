@@ -47,7 +47,7 @@ export default abstract class DAOFactory extends Base {
       const ftDao = deployedItems.get(ContractService.FT_DAO);
 
       const data = {
-        _systemUsers: this.getSystemUsersAddressArray(),
+        _iSystemRoleBasedAccess: this.getSystemBasedRoleAccessContractAddress(),
         _hederaService: this.htsAddress,
         _daoLogic: ftDao.address,
         _tokenHolderFactory: tokenHolderFactoryAddress,

@@ -5,7 +5,6 @@ import Factory from "../../e2e-test/business/Factory";
 import { Helper } from "../../utils/Helper";
 import { TokenId } from "@hashgraph/sdk";
 import { clientsInfo } from "../../utils/ClientManagement";
-import { ContractService } from "../service/ContractService";
 import Configuration from "../../e2e-test/business/Configuration";
 import MultiSigDAOFactory from "../../e2e-test/business/factories/MultiSigDAOFactory";
 import FTDAOFactory from "../../e2e-test/business/factories/FTDAOFactory";
@@ -17,6 +16,7 @@ import ContractUpgradeGovernor from "../../e2e-test/business/ContractUpgradeGove
 import TextGovernor from "../../e2e-test/business/TextGovernor";
 import FTTokenHolderFactory from "../../e2e-test/business/factories/FTTokenHolderFactory";
 import NFTTokenHolderFactory from "../../e2e-test/business/factories/NFTTokenHolderFactory";
+import SystemRoleBasedAccess from "../../e2e-test/business/common/SystemRoleBasedAccess";
 
 const tokenA = TokenId.fromString(dex.TOKEN_LAB49_1);
 const tokenB = TokenId.fromString(dex.TOKEN_LAB49_2);
@@ -44,6 +44,9 @@ const createPair = async (
 };
 
 export async function main() {
+  const systemBasedControlAccess = new SystemRoleBasedAccess();
+  await systemBasedControlAccess.initialize();
+
   const configuration = new Configuration();
   await configuration.initialize();
   const fees = await configuration.getTransactionsFee();

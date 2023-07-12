@@ -84,7 +84,7 @@ export default class MultiSigDao extends BaseDao {
         _hederaGnosisSafe: gnosisProxy.toSolidityAddress(),
         _hederaService: this.htsAddress,
         _multiSend: this.getMultiSendContractAddress(),
-        _systemUsers: this.getSystemUsersAddressArray(),
+        _iSystemRoleBasedAccess: this.getSystemBasedRoleAccessContractAddress(),
       };
 
       const { bytes, hex } = await this.encodeFunctionData(

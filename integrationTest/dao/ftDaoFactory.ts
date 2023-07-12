@@ -14,6 +14,7 @@ import dex from "../../deployment/model/dex";
 import GodHolder from "../../e2e-test/business/GodHolder";
 import FTDAOFactory from "../../e2e-test/business/factories/FTDAOFactory";
 import FTTokenHolderFactory from "../../e2e-test/business/factories/FTTokenHolderFactory";
+import SystemRoleBasedAccess from "../../e2e-test/business/common/SystemRoleBasedAccess";
 
 const DAO_WEB_LINKS = ["LINKEDIN", "https://linkedin.com"];
 const DAO_DESC = "Lorem Ipsum is simply dummy text";
@@ -81,6 +82,7 @@ async function createDAO(
 }
 
 async function main() {
+  const roleBasedAccess = new SystemRoleBasedAccess();
   const daoFactory = new FTDAOFactory();
   const ftTokenHolderFactory = new FTTokenHolderFactory();
   await daoFactory.initialize(clientsInfo.operatorClient, ftTokenHolderFactory);
@@ -94,7 +96,7 @@ async function main() {
   const daoAddresses = await daoFactory.getDAOs();
   const daoAddress = daoAddresses.pop()!;
   await executeDAOFlow(daoFactory, daoAddress, dex.GOVERNANCE_DAO_TWO_TOKEN_ID);
-  const hasRole = await daoFactory.checkIfChildProxyAdminRoleGiven();
+  const hasRole = await roleBasedAccess.checkIfChildProxyAdminRoleGiven();
   hasRole &&
     (await daoFactory.upgradeHederaService(clientsInfo.childProxyAdminClient));
   const deployedItems = await new Deployment().deployContracts([

@@ -32,7 +32,7 @@ export default class MultiSigDAOFactory extends Base {
       const gnosisLogic = deployedItems.get(ContractService.SAFE);
       const multiSigDao = deployedItems.get(ContractService.MULTI_SIG);
       const data = {
-        _systemUsers: this.getSystemUsersAddressArray(),
+        _iSystemRoleBasedAccess: this.getSystemBasedRoleAccessContractAddress(),
         _daoLogic: multiSigDao.address,
         _safeLogic: gnosisLogic.address,
         _safeFactory: gnosisFactory.address,

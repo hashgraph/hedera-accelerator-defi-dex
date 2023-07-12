@@ -84,7 +84,7 @@ export default class FTDAO extends BaseDao {
         hederaService: this.htsAddress,
         iTokenHolder: godHolderProxyAddress,
       }),
-      _systemUsers: this.getSystemUsersAddressArray(),
+      _iSystemRoleBasedAccess: this.getSystemBasedRoleAccessContractAddress(),
     };
 
     const { hex, bytes } = await this.encodeFunctionData(
