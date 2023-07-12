@@ -10,6 +10,7 @@ import {
   TokenId,
   ContractId,
   ContractFunctionParameters,
+  AccountId,
 } from "@hashgraph/sdk";
 import { ContractService } from "../../deployment/service/ContractService";
 import { Helper } from "../../utils/Helper";
@@ -18,6 +19,7 @@ const INITIALIZE = "initialize";
 const CREATE_PROPOSAL = "createTokenTransferProposal";
 const CREATE_TEXT_PROPOSAL = "createTextProposal";
 const CREATE_CONTRACT_UPGRADE_PROPOSAL = "createContractUpgradeProposal";
+const CREATE_TOKEN_CREATE_PROPOSAL = "createTokenCreateProposal";
 const GET_TOKEN_TRANSFER_PROPOSALS = "getTokenTransferProposals";
 const GET_GOVERNOR_TOKEN_TRANSFER_CONTRACT_ADDRESSES =
   "getGovernorContractAddresses";
@@ -201,6 +203,38 @@ export default class FTDAO extends BaseDao {
       `- ContractUpgradeDao#${CREATE_PROPOSAL}(): proposal-id = ${proposalId}\n`
     );
 
+    return proposalId;
+  };
+
+  createTokenProposal = async (
+    title: string,
+    tokenName: string,
+    tokenSymbol: string,
+    tokenTreasureId: AccountId,
+    client: Client = clientsInfo.operatorClient,
+    description: string = DEFAULT_DESCRIPTION,
+    link: string = DEFAULT_LINK,
+    nftTokenSerialId: number = DEFAULT_NFT_TOKEN_SERIAL_ID
+  ) => {
+    const args = new ContractFunctionParameters()
+      .addString(title)
+      .addString(description)
+      .addString(link)
+      .addAddress(tokenTreasureId.toSolidityAddress())
+      .addString(tokenName)
+      .addString(tokenSymbol)
+      .addUint256(nftTokenSerialId);
+
+    const { result } = await this.execute(
+      1_000_000,
+      CREATE_TOKEN_CREATE_PROPOSAL,
+      client,
+      args
+    );
+    const proposalId = result.getUint256(0).toFixed();
+    console.log(
+      `- FTDAO#${CREATE_TOKEN_CREATE_PROPOSAL}(): proposal-id = ${proposalId}\n`
+    );
     return proposalId;
   };
 

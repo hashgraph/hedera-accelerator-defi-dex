@@ -19,6 +19,7 @@ import TokenTransferGovernor from "../../e2e-test/business/TokenTransferGovernor
 import TextGovernor from "../../e2e-test/business/TextGovernor";
 import ContractUpgradeGovernor from "../../e2e-test/business/ContractUpgradeGovernor";
 import FTTokenHolderFactory from "../../e2e-test/business/factories/FTTokenHolderFactory";
+import TokenCreateGovernor from "../../e2e-test/business/TokenCreateGovernor";
 
 const TOKEN_QTY = 1 * 1e8;
 const TOKEN_ID = TokenId.fromString(dex.TOKEN_LAB49_1);
@@ -250,19 +251,92 @@ export async function executeContractUpgradeFlow(
   await godHolder.checkAndClaimGodTokens(voterClient, voterAccountId);
 }
 
+export async function executeTokenCreateFlow(
+  godHolder: GodHolder,
+  dao: FTDAO,
+  tokenName: string,
+  tokenSymbol: string,
+  treasurer: AccountId = clientsInfo.treasureId,
+  proposalCreatorClient: Client = clientsInfo.operatorClient,
+  proposalCreatorAccountId: AccountId = clientsInfo.operatorId,
+  proposalCreatorAccountPrivateKey: PrivateKey = clientsInfo.operatorKey,
+  voterClient: Client = clientsInfo.operatorClient,
+  voterAccountId: AccountId = clientsInfo.operatorId,
+  voterAccountPrivateKey: PrivateKey = clientsInfo.operatorKey
+) {
+  await godHolder.setupAllowanceForTokenLocking(
+    10005e8,
+    voterAccountId,
+    voterAccountPrivateKey,
+    voterClient
+  );
+
+  await godHolder.lock(
+    10005e8,
+    voterAccountId,
+    voterAccountPrivateKey,
+    voterClient
+  );
+
+  const governorAddresses =
+    await dao.getGovernorTokenTransferContractAddresses();
+
+  const governorTokenCreate = new TokenCreateGovernor(
+    governorAddresses.governorTokenCreateProxyId
+  );
+
+  await governorTokenCreate.setupAllowanceForProposalCreation(
+    proposalCreatorClient,
+    proposalCreatorAccountId,
+    proposalCreatorAccountPrivateKey
+  );
+
+  const title = Helper.createProposalTitle("Token create proposal");
+
+  const proposalId = await dao.createTokenProposal(
+    title,
+    tokenName,
+    tokenSymbol,
+    treasurer,
+    clientsInfo.operatorClient,
+    GovernorTokenMetaData.DEFAULT_DESCRIPTION,
+    GovernorTokenMetaData.DEFAULT_LINK,
+    PROPOSAL_CREATE_NFT_SERIAL_ID
+  );
+
+  await governorTokenCreate.getProposalDetails(proposalId);
+  await governorTokenCreate.forVote(proposalId, 0, voterClient);
+  await governorTokenCreate.isQuorumReached(proposalId);
+  await governorTokenCreate.isVoteSucceeded(proposalId);
+  await governorTokenCreate.proposalVotes(proposalId);
+  if (await governorTokenCreate.isSucceeded(proposalId)) {
+    await governorTokenCreate.executeProposal(
+      title,
+      clientsInfo.operatorKey,
+      clientsInfo.operatorClient
+    );
+    await governorTokenCreate.getTokenAddressFromGovernorTokenCreate(
+      proposalId
+    );
+  } else {
+    await governorTokenCreate.cancelProposal(title, proposalCreatorClient);
+  }
+  await godHolder.checkAndClaimGodTokens(voterClient, voterAccountId);
+}
+
 async function main() {
   const newCopies = await deployment.deployProxies([ContractService.FT_DAO]);
 
-  const transferDao = newCopies.get(ContractService.FT_DAO);
-  const tokenTransferDAO = new FTDAO(ContractId.fromString(transferDao.id));
+  const ftDaoDeployed = newCopies.get(ContractService.FT_DAO);
+  const ftDao = new FTDAO(ContractId.fromString(ftDaoDeployed.id));
 
   const tokenHolderFactory = new FTTokenHolderFactory();
   const godHolderContractId = await tokenHolderFactory.getTokenHolder(
-    dex.GOVERNANCE_DAO_TWO_TOKEN_ID.toSolidityAddress()
+    dex.GOVERNANCE_DAO_ONE_TOKEN_ID.toSolidityAddress()
   );
   const godHolder = new GodHolder(godHolderContractId);
 
-  await tokenTransferDAO.initialize(
+  await ftDao.initialize(
     DOA_ADMIN_ADDRESS,
     "Governor Token Dao",
     "dao url",
@@ -277,23 +351,20 @@ async function main() {
     dex.GOVERNANCE_DAO_ONE_TOKEN_ID
   );
 
-  const governorAddresses =
-    await tokenTransferDAO.getGovernorTokenTransferContractAddresses();
+  await executeGovernorTokenTransferFlow(godHolder, ftDao);
 
-  await executeGovernorTokenTransferFlow(godHolder, tokenTransferDAO);
+  await executeTextProposalFlow(godHolder, ftDao);
 
-  await executeTextProposalFlow(godHolder, tokenTransferDAO);
-
-  await executeContractUpgradeFlow(
+  await executeTokenCreateFlow(
     godHolder,
-    tokenTransferDAO,
-    csDev.getContractWithProxy(csDev.factoryContractName)
-      .transparentProxyAddress!,
-    csDev.getContract(csDev.factoryContractName).address
+    ftDao,
+    "Name",
+    "Symbol",
+    clientsInfo.treasureId
   );
 
   DAO_WEB_LINKS.push("https://github.com");
-  await tokenTransferDAO.updateDaoInfo(
+  await ftDao.updateDaoInfo(
     "Governor Token Dao - New",
     "dao url - New",
     "desc - New",
@@ -301,8 +372,8 @@ async function main() {
     DAO_ADMIN_CLIENT
   );
 
-  await tokenTransferDAO.getTokenTransferProposals();
-  await tokenTransferDAO.upgradeHederaService();
+  await ftDao.getTokenTransferProposals();
+  await ftDao.upgradeHederaService();
   console.log(`\nDone`);
 }
 
