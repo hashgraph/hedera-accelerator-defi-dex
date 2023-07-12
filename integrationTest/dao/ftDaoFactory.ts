@@ -1,7 +1,6 @@
 import { Helper } from "../../utils/Helper";
 import { TokenId } from "@hashgraph/sdk";
 import { Deployment } from "../../utils/deployContractOnTestnet";
-import { checkRoles } from "./multiSigDAO";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { ContractService } from "../../deployment/service/ContractService";
 import {
@@ -95,8 +94,9 @@ async function main() {
   const daoAddresses = await daoFactory.getDAOs();
   const daoAddress = daoAddresses.pop()!;
   await executeDAOFlow(daoFactory, daoAddress, dex.GOVERNANCE_DAO_TWO_TOKEN_ID);
-  await checkRoles(daoFactory);
-  await daoFactory.upgradeHederaService(clientsInfo.childProxyAdminClient);
+  const hasRole = await daoFactory.checkIfChildProxyAdminRoleGiven();
+  hasRole &&
+    (await daoFactory.upgradeHederaService(clientsInfo.childProxyAdminClient));
   const deployedItems = await new Deployment().deployContracts([
     ContractService.GOVERNOR_TT,
     ContractService.GOVERNOR_TEXT,

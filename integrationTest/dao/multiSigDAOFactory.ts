@@ -7,7 +7,6 @@ import {
   DAO_LOGO,
   DAO_NAME,
   DAO_DESC,
-  checkRoles,
   executeDAO,
   DAO_WEB_LINKS,
   DAO_OWNERS_ADDRESSES,
@@ -33,8 +32,9 @@ async function main() {
     const multiSigDAOInstance = new MultiSigDao(multiSigDAOId);
     await executeDAO(multiSigDAOInstance);
   }
-  await checkRoles(daoFactory);
-  await daoFactory.upgradeHederaService(clientsInfo.childProxyAdminClient);
+  const hasRole = await daoFactory.checkIfChildProxyAdminRoleGiven();
+  hasRole &&
+    (await daoFactory.upgradeHederaService(clientsInfo.childProxyAdminClient));
 }
 
 main()

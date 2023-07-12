@@ -4,7 +4,6 @@ import FTDAO from "../../e2e-test/business/FTDAO";
 import * as GovernorTokenMetaData from "../../e2e-test/business/FTDAO";
 
 import { Helper } from "../../utils/Helper";
-import { checkRoles } from "./multiSigDAO";
 import { Deployment } from "../../utils/deployContractOnTestnet";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { ContractService } from "../../deployment/service/ContractService";
@@ -374,7 +373,9 @@ async function main() {
   );
 
   await ftDao.getTokenTransferProposals();
-  await ftDao.upgradeHederaService();
+  const hasRole = await ftDao.checkIfChildProxyAdminRoleGiven();
+  hasRole &&
+    (await ftDao.upgradeHederaService(clientsInfo.childProxyAdminClient));
   console.log(`\nDone`);
 }
 

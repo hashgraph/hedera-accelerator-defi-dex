@@ -241,6 +241,13 @@ export default abstract class Base {
     return { bytes: ethers.utils.arrayify(hex), hex };
   }
 
+  public async checkIfChildProxyAdminRoleGiven(
+    accountId: AccountId = clientsInfo.childProxyAdminId
+  ) {
+    await this.getRoleAdmin(dex.ROLES.CHILD_PROXY_ADMIN_ROLE);
+    return await this.hasRole(dex.ROLES.CHILD_PROXY_ADMIN_ROLE, accountId);
+  }
+
   protected async decodeFunctionResult(
     contractName: string,
     functionName: string,
