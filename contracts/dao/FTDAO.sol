@@ -2,6 +2,7 @@
 pragma solidity ^0.8.18;
 import "./BaseDAO.sol";
 import "./ISharedDAOModel.sol";
+import "../common/ISystemRoleBasedAccess.sol";
 
 import "../governance/GovernorUpgrade.sol";
 import "../governance/GovernorTokenCreate.sol";
@@ -18,18 +19,15 @@ contract FTDAO is BaseDAO, ISharedDAOModel {
     uint256[] private tokenCreateProposals;
     uint256[] private contractUpgraeProposals;
     uint256[] private tokenTransferProposals;
+    ISystemRoleBasedAccess private iSystemRoleBasedAccess;
 
     function initialize(
         CreateDAOInputs memory inputs,
         Governor memory governor,
         Common memory common,
-        SystemUsers memory _systemUsers
+        ISystemRoleBasedAccess _iSystemRoleBasedAccess
     ) external initializer {
-        _grantRole(DEFAULT_ADMIN_ROLE, _systemUsers.superAdmin);
-        _grantRole(PROXY_ADMIN_ROLE, _systemUsers.proxyAdmin);
-        _grantRole(CHILD_PROXY_ADMIN_ROLE, _systemUsers.childProxyAdmin);
-
-        systemUsers = _systemUsers;
+        iSystemRoleBasedAccess = _iSystemRoleBasedAccess;
 
         governorTokenTransferProxy = _createGovernorContractInstance(
             inputs,
@@ -198,9 +196,8 @@ contract FTDAO is BaseDAO, ISharedDAOModel {
         return proposalId;
     }
 
-    function upgradeHederaService(
-        IHederaService newHederaService
-    ) external onlyRole(CHILD_PROXY_ADMIN_ROLE) {
+    function upgradeHederaService(IHederaService newHederaService) external {
+        iSystemRoleBasedAccess.checkChildProxyAdminRole(msg.sender);
         IGovernorBase(governorTokenTransferProxy).upgradeHederaService(
             newHederaService
         );
@@ -220,8 +217,9 @@ contract FTDAO is BaseDAO, ISharedDAOModel {
         Common memory common,
         address governor
     ) private returns (address payable governorBase) {
+        address proxyAdmin = iSystemRoleBasedAccess.getSystemUsers().proxyAdmin;
         IGovernorBase iGovernorBase = IGovernorBase(
-            _createProxy(governor, systemUsers.proxyAdmin)
+            _createProxy(governor, proxyAdmin)
         );
 
         iGovernorBase.initialize(

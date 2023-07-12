@@ -3,6 +3,7 @@ pragma solidity ^0.8.18;
 
 import "./BaseDAO.sol";
 import "../common/IHederaService.sol";
+import "../common/ISystemRoleBasedAccess.sol";
 import "../gnosis/HederaMultiSend.sol";
 import "../gnosis/HederaGnosisSafe.sol";
 import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
@@ -39,6 +40,7 @@ contract MultiSigDAO is BaseDAO {
     HederaMultiSend private multiSend;
     IHederaService private hederaService;
     HederaGnosisSafe private hederaGnosisSafe;
+    ISystemRoleBasedAccess private iSystemRoleBasedAccess;
     mapping(bytes32 => TransactionInfo) private transactions;
 
     function initialize(
@@ -50,15 +52,12 @@ contract MultiSigDAO is BaseDAO {
         HederaGnosisSafe _hederaGnosisSafe,
         IHederaService _hederaService,
         HederaMultiSend _multiSend,
-        SystemUsers memory _systemUsers
+        ISystemRoleBasedAccess _iSystemRoleBasedAccess
     ) external initializer {
-        _grantRole(DEFAULT_ADMIN_ROLE, _systemUsers.superAdmin);
-        _grantRole(PROXY_ADMIN_ROLE, _systemUsers.proxyAdmin);
-        _grantRole(CHILD_PROXY_ADMIN_ROLE, _systemUsers.childProxyAdmin);
-
         hederaService = _hederaService;
         hederaGnosisSafe = _hederaGnosisSafe;
         multiSend = _multiSend;
+        iSystemRoleBasedAccess = _iSystemRoleBasedAccess;
         __BaseDAO_init(_admin, _name, _logoUrl, _description, _webLinks);
     }
 
@@ -199,15 +198,13 @@ contract MultiSigDAO is BaseDAO {
             );
     }
 
-    function upgradeHederaService(
-        IHederaService newHederaService
-    ) external onlyRole(CHILD_PROXY_ADMIN_ROLE) {
+    function upgradeHederaService(IHederaService newHederaService) external {
+        iSystemRoleBasedAccess.checkChildProxyAdminRole(msg.sender);
         hederaService = newHederaService;
     }
 
-    function upgradeMultiSend(
-        HederaMultiSend _multiSend
-    ) external onlyRole(CHILD_PROXY_ADMIN_ROLE) {
+    function upgradeMultiSend(HederaMultiSend _multiSend) external {
+        iSystemRoleBasedAccess.checkChildProxyAdminRole(msg.sender);
         multiSend = _multiSend;
     }
 

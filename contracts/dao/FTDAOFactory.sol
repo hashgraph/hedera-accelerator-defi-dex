@@ -5,16 +5,16 @@ import "../common/IERC20.sol";
 import "../common/IEvents.sol";
 import "../common/IErrors.sol";
 import "../common/IHederaService.sol";
-import "../common/RoleBasedAccess.sol";
 
 import "../dao/FTDAO.sol";
 import "../governance/ITokenHolderFactory.sol";
 import "../governance/IGovernorTransferToken.sol";
 import "./ISharedDAOModel.sol";
 
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-contract FTDAOFactory is IErrors, IEvents, ISharedDAOModel, RoleBasedAccess {
+contract FTDAOFactory is IErrors, IEvents, Initializable, ISharedDAOModel {
     event DAOCreated(
         address daoAddress,
         Governor governors,
@@ -26,26 +26,21 @@ contract FTDAOFactory is IErrors, IEvents, ISharedDAOModel, RoleBasedAccess {
     string private constant TokenHolderFactory = "TokenHolderFactory";
     string private constant Governors = "Governors";
 
-    IHederaService private hederaService;
-
     address[] private daos;
-
     FTDAO private daoLogic;
+    Governor private governors;
+    IHederaService private hederaService;
     ITokenHolderFactory private tokenHolderFactory;
-    Governor governors;
+    ISystemRoleBasedAccess private iSystemRoleBasedAccess;
 
     function initialize(
-        SystemUsers memory _systemUsers,
+        ISystemRoleBasedAccess _iSystemRoleBasedAccess,
         IHederaService _hederaService,
         FTDAO _daoLogic,
         ITokenHolderFactory _tokenHolderFactory,
         Governor memory _governors
     ) external initializer {
-        _grantRole(DEFAULT_ADMIN_ROLE, _systemUsers.superAdmin);
-        _grantRole(PROXY_ADMIN_ROLE, _systemUsers.proxyAdmin);
-        _grantRole(CHILD_PROXY_ADMIN_ROLE, _systemUsers.childProxyAdmin);
-
-        systemUsers = _systemUsers;
+        iSystemRoleBasedAccess = _iSystemRoleBasedAccess;
         hederaService = _hederaService;
         daoLogic = _daoLogic;
         tokenHolderFactory = _tokenHolderFactory;
@@ -64,7 +59,8 @@ contract FTDAOFactory is IErrors, IEvents, ISharedDAOModel, RoleBasedAccess {
 
     function upgradeTokenHolderFactory(
         ITokenHolderFactory _newTokenHolderFactory
-    ) external onlyRole(CHILD_PROXY_ADMIN_ROLE) {
+    ) external {
+        iSystemRoleBasedAccess.checkChildProxyAdminRole(msg.sender);
         emit LogicUpdated(
             address(tokenHolderFactory),
             address(_newTokenHolderFactory),
@@ -73,9 +69,8 @@ contract FTDAOFactory is IErrors, IEvents, ISharedDAOModel, RoleBasedAccess {
         tokenHolderFactory = _newTokenHolderFactory;
     }
 
-    function upgradeFTDAOLogicImplementation(
-        FTDAO _newImpl
-    ) external onlyRole(CHILD_PROXY_ADMIN_ROLE) {
+    function upgradeFTDAOLogicImplementation(FTDAO _newImpl) external {
+        iSystemRoleBasedAccess.checkChildProxyAdminRole(msg.sender);
         emit LogicUpdated(
             address(daoLogic),
             address(_newImpl),
@@ -84,16 +79,14 @@ contract FTDAOFactory is IErrors, IEvents, ISharedDAOModel, RoleBasedAccess {
         daoLogic = _newImpl;
     }
 
-    function upgradeGovernorsImplementation(
-        Governor memory _newImpl
-    ) external onlyRole(CHILD_PROXY_ADMIN_ROLE) {
+    function upgradeGovernorsImplementation(Governor memory _newImpl) external {
+        iSystemRoleBasedAccess.checkChildProxyAdminRole(msg.sender);
         emit GovernorLogicUpdated(governors, _newImpl, Governors);
         governors = _newImpl;
     }
 
-    function upgradeHederaService(
-        IHederaService newHederaService
-    ) external onlyRole(CHILD_PROXY_ADMIN_ROLE) {
+    function upgradeHederaService(IHederaService newHederaService) external {
+        iSystemRoleBasedAccess.checkChildProxyAdminRole(msg.sender);
         hederaService = newHederaService;
     }
 
@@ -159,19 +152,19 @@ contract FTDAOFactory is IErrors, IEvents, ISharedDAOModel, RoleBasedAccess {
         common.hederaService = hederaService;
         common.iTokenHolder = iTokenHolder;
 
-        dao.initialize(_createDAOInputs, governors, common, systemUsers);
+        dao.initialize(
+            _createDAOInputs,
+            governors,
+            common,
+            iSystemRoleBasedAccess
+        );
         return address(dao);
     }
 
     function _createProxy(address _logic) private returns (address) {
+        address proxyAdmin = iSystemRoleBasedAccess.getSystemUsers().proxyAdmin;
         bytes memory _data;
         return
-            address(
-                new TransparentUpgradeableProxy(
-                    _logic,
-                    systemUsers.proxyAdmin,
-                    _data
-                )
-            );
+            address(new TransparentUpgradeableProxy(_logic, proxyAdmin, _data));
     }
 }

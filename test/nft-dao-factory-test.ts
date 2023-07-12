@@ -2,7 +2,6 @@ import { expect } from "chai";
 import { BigNumber } from "ethers";
 import { TestHelper } from "./TestHelper";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 describe("NFTDAOFactory contract tests", function () {
   const QUORUM_THRESHOLD = 5;
@@ -66,15 +65,10 @@ describe("NFTDAOFactory contract tests", function () {
 
     const common = [bastHTS.address, godHolder.address];
 
-    const systemUsersSigners = {
-      superAdmin: signers[5],
-      proxyAdmin: signers[6],
-      childProxyAdmin: signers[7],
-    };
-
-    const systemUsers = Object.values(systemUsersSigners).map(
-      (item: SignerWithAddress) => item.address
-    );
+    const systemUsersSigners = await TestHelper.systemUsersSigners();
+    const systemRoleBasedAccess = (
+      await TestHelper.deploySystemRoleBasedAccess()
+    ).address;
 
     const nftTokenDAO = await TestHelper.deployLogic("FTDAO");
 
@@ -92,7 +86,7 @@ describe("NFTDAOFactory contract tests", function () {
 
     const governorDAOFactoryInstance = await TestHelper.deployProxy(
       "NFTDAOFactory",
-      Object.values(systemUsers),
+      systemRoleBasedAccess,
       bastHTS.address,
       nftTokenDAO.address,
       nftHolderFactory.address,
@@ -113,7 +107,7 @@ describe("NFTDAOFactory contract tests", function () {
       inputs,
       governance,
       common,
-      systemUsers,
+      systemRoleBasedAccess,
       systemUsersSigners,
     };
   }
@@ -125,12 +119,12 @@ describe("NFTDAOFactory contract tests", function () {
       nftTokenDAO,
       nftHolderFactory,
       governance,
-      systemUsers,
+      systemRoleBasedAccess,
     } = await loadFixture(deployFixture);
 
     await expect(
       governorDAOFactoryInstance.initialize(
-        Object.values(systemUsers),
+        systemRoleBasedAccess,
         bastHTS.address,
         nftTokenDAO.address,
         nftHolderFactory.address,

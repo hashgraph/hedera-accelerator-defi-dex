@@ -111,15 +111,10 @@ describe("MultiSig tests", function () {
     const daoAdminOne = await TestHelper.getDAOAdminOne();
     const tokenInstance = await TestHelper.deployERC20Mock();
 
-    const systemUsersSigners = {
-      superAdmin: signers[5],
-      proxyAdmin: signers[6],
-      childProxyAdmin: signers[7],
-    };
-
-    const systemUsers = Object.values(systemUsersSigners).map(
-      (item: SignerWithAddress) => item.address
-    );
+    const systemUsersSigners = await TestHelper.systemUsersSigners();
+    const systemRoleBasedAccess = (
+      await TestHelper.deploySystemRoleBasedAccess()
+    ).address;
 
     const multiSigDAOLogicInstance = await TestHelper.deployLogic(
       "MultiSigDAO"
@@ -171,7 +166,7 @@ describe("MultiSig tests", function () {
       hederaGnosisSafeProxyInstance,
       hederaService.address,
       multiSend.address,
-      systemUsers,
+      systemRoleBasedAccess,
     ];
 
     const multiSigDAOInstance = await TestHelper.deployLogic("MultiSigDAO");
@@ -184,7 +179,7 @@ describe("MultiSig tests", function () {
       "MultisigDAOFactory"
     );
     await multiSigDAOFactoryInstance.initialize(
-      systemUsers,
+      systemRoleBasedAccess,
       multiSigDAOLogicInstance.address,
       hederaGnosisSafeLogicInstance.address,
       hederaGnosisSafeProxyFactoryInstance.address,
@@ -216,7 +211,7 @@ describe("MultiSig tests", function () {
       hederaService,
       MULTISIG_ARGS,
       multiSend,
-      systemUsers,
+      systemRoleBasedAccess,
       systemUsersSigners,
     };
   }
@@ -419,7 +414,7 @@ describe("MultiSig tests", function () {
     it("Verify MultiSigDAOFactory contract revert for multiple initialization", async function () {
       const {
         multiSigDAOFactoryInstance,
-        systemUsers,
+        systemRoleBasedAccess,
         multiSigDAOLogicInstance,
         hederaGnosisSafeLogicInstance,
         hederaGnosisSafeProxyFactoryInstance,
@@ -428,7 +423,7 @@ describe("MultiSig tests", function () {
       } = await loadFixture(deployFixture);
       await expect(
         multiSigDAOFactoryInstance.initialize(
-          systemUsers,
+          systemRoleBasedAccess,
           multiSigDAOLogicInstance.address,
           hederaGnosisSafeLogicInstance.address,
           hederaGnosisSafeProxyFactoryInstance.address,

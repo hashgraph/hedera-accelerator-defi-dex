@@ -2,7 +2,6 @@ import { expect } from "chai";
 import { BigNumber } from "ethers";
 import { TestHelper } from "./TestHelper";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 describe("GovernanceTokenDAO tests", function () {
   const QUORUM_THRESHOLD = 5;
@@ -82,15 +81,10 @@ describe("GovernanceTokenDAO tests", function () {
 
     const common = [hederaService.address, godHolder.address];
 
-    const systemUsersSigners = {
-      superAdmin: signers[5],
-      proxyAdmin: signers[6],
-      childProxyAdmin: signers[7],
-    };
-
-    const systemUsers = Object.values(systemUsersSigners).map(
-      (item: SignerWithAddress) => item.address
-    );
+    const systemUsersSigners = await TestHelper.systemUsersSigners();
+    const systemRoleBasedAccess = (
+      await TestHelper.deploySystemRoleBasedAccess()
+    ).address;
 
     const governorTokenDAO = await TestHelper.deployLogic("FTDAO");
 
@@ -98,7 +92,7 @@ describe("GovernanceTokenDAO tests", function () {
       Object.values(inputs),
       governance,
       common,
-      Object.values(systemUsers)
+      systemRoleBasedAccess
     );
     await verifyDAOInfoUpdatedEvent(
       txn,
@@ -118,7 +112,7 @@ describe("GovernanceTokenDAO tests", function () {
     const governorDAOFactory = await TestHelper.deployLogic("FTDAOFactory");
 
     await governorDAOFactory.initialize(
-      Object.values(systemUsers),
+      systemRoleBasedAccess,
       hederaService.address,
       governorTokenDAO.address,
       godHolderFactory.address,
@@ -138,7 +132,7 @@ describe("GovernanceTokenDAO tests", function () {
       inputs,
       governance,
       common,
-      systemUsers,
+      systemRoleBasedAccess,
       systemUsersSigners,
     };
   }
@@ -147,7 +141,7 @@ describe("GovernanceTokenDAO tests", function () {
     it("Verify contract should be revert for multiple initialization", async function () {
       const {
         governorDAOFactory,
-        systemUsers,
+        systemRoleBasedAccess,
         hederaService,
         governorTokenDAO,
         godHolderFactory,
@@ -156,7 +150,7 @@ describe("GovernanceTokenDAO tests", function () {
 
       await expect(
         governorDAOFactory.initialize(
-          Object.values(systemUsers),
+          systemRoleBasedAccess,
           hederaService.address,
           governorTokenDAO.address,
           godHolderFactory.address,
@@ -412,22 +406,26 @@ describe("GovernanceTokenDAO tests", function () {
 
   describe("TokenTransferDAO contract tests", function () {
     it("Verify contract should be revert for multiple initialization", async function () {
-      const { governorTokenDAO, inputs, governance, common, systemUsers } =
-        await loadFixture(deployFixture);
+      const {
+        governorTokenDAO,
+        inputs,
+        governance,
+        common,
+        systemRoleBasedAccess,
+      } = await loadFixture(deployFixture);
       await expect(
         governorTokenDAO.initialize(
           Object.values(inputs),
           governance,
           common,
-          Object.values(systemUsers)
+          systemRoleBasedAccess
         )
       ).revertedWith("Initializable: contract is already initialized");
     });
 
     it("Verify TokenTransferDAO initialize call", async function () {
-      const { inputs, governance, common, systemUsers } = await loadFixture(
-        deployFixture
-      );
+      const { inputs, governance, common, systemRoleBasedAccess } =
+        await loadFixture(deployFixture);
       const dao = await TestHelper.deployLogic("FTDAO");
       const newInputsWithNoName = {
         ...inputs,
@@ -438,7 +436,7 @@ describe("GovernanceTokenDAO tests", function () {
           Object.values(newInputsWithNoName),
           governance,
           common,
-          Object.values(systemUsers)
+          systemRoleBasedAccess
         )
       )
         .revertedWithCustomError(dao, "InvalidInput")
@@ -453,7 +451,7 @@ describe("GovernanceTokenDAO tests", function () {
           Object.values(newInputsWithNoAdmin),
           governance,
           common,
-          Object.values(systemUsers)
+          systemRoleBasedAccess
         )
       )
         .revertedWithCustomError(dao, "InvalidInput")
@@ -792,9 +790,8 @@ describe("GovernanceTokenDAO tests", function () {
 
   describe("BaseDAO contract tests", function () {
     it("Verify contract should be revert for initialization with invalid inputs", async function () {
-      const { inputs, governance, common, systemUsers } = await loadFixture(
-        deployFixture
-      );
+      const { inputs, governance, common, systemRoleBasedAccess } =
+        await loadFixture(deployFixture);
       const governorTokenDAO = await TestHelper.deployLogic("FTDAO");
       const newInputsWithNoName = {
         ...inputs,
@@ -805,7 +802,7 @@ describe("GovernanceTokenDAO tests", function () {
           Object.values(newInputsWithNoName),
           governance,
           common,
-          Object.values(systemUsers)
+          systemRoleBasedAccess
         )
       )
         .revertedWithCustomError(governorTokenDAO, "InvalidInput")
@@ -820,7 +817,7 @@ describe("GovernanceTokenDAO tests", function () {
           Object.values(newInputsWithNoAdmin),
           governance,
           common,
-          Object.values(systemUsers)
+          systemRoleBasedAccess
         )
       )
         .revertedWithCustomError(governorTokenDAO, "InvalidInput")
@@ -835,7 +832,7 @@ describe("GovernanceTokenDAO tests", function () {
           Object.values(newInputsWithNoDesc),
           governance,
           common,
-          Object.values(systemUsers)
+          systemRoleBasedAccess
         )
       )
         .revertedWithCustomError(governorTokenDAO, "InvalidInput")

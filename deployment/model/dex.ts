@@ -35,7 +35,6 @@ const MULTI_SIG_DAO_ONE = "MULTI_SIG_DAO_ONE";
 
 const ROLES = {
   DAO_ADMIN: Helper.role("DAO_ADMIN"),
-  PROXY_ADMIN_ROLE: Helper.role("PROXY_ADMIN_ROLE"),
   DEFAULT_ADMIN_ROLE: new Uint8Array(), // it is zero inside contract i.e 0x00
   CHILD_PROXY_ADMIN_ROLE: Helper.role("CHILD_PROXY_ADMIN_ROLE"),
 };
