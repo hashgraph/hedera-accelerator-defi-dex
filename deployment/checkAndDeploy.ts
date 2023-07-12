@@ -20,7 +20,6 @@ const gitLastCommitMessage = Helper.getGitLastCommitMessage();
 async function main() {
   const contractsToDeploy = await contractMetadata.getAllChangedContractNames();
   console.log(`Eligible contracts for upgrade: [${contractsToDeploy}]\n`);
-  return;
   for (const contractName of contractsToDeploy) {
     const oldVersion = csUAT.getContractWithProxy(contractName);
     const newVersion = await deployment.deploy(contractName);

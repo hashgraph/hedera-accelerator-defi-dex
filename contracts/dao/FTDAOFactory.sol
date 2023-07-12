@@ -97,12 +97,7 @@ contract FTDAOFactory is IErrors, IEvents, ISharedDAOModel, RoleBasedAccess {
         hederaService = newHederaService;
     }
 
-    function getTokenHolderFactoryAddress()
-        external
-        view
-        onlyRole(CHILD_PROXY_ADMIN_ROLE)
-        returns (address)
-    {
+    function getTokenHolderFactoryAddress() external view returns (address) {
         return address(tokenHolderFactory);
     }
 

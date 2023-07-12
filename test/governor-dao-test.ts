@@ -2,6 +2,7 @@ import { expect } from "chai";
 import { BigNumber } from "ethers";
 import { TestHelper } from "./TestHelper";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 describe("GovernanceTokenDAO tests", function () {
   const QUORUM_THRESHOLD = 5;
@@ -87,11 +88,9 @@ describe("GovernanceTokenDAO tests", function () {
       childProxyAdmin: signers[7],
     };
 
-    const systemUsers = Object.values({
-      superAdmin: signers[5].address,
-      proxyAdmin: signers[6].address,
-      childProxyAdmin: signers[7].address,
-    });
+    const systemUsers = Object.values(systemUsersSigners).map(
+      (item: SignerWithAddress) => item.address
+    );
 
     const governorTokenDAO = await TestHelper.deployLogic("FTDAO");
 
@@ -374,23 +373,13 @@ describe("GovernanceTokenDAO tests", function () {
       expect(event3.args.newImplementation).equal(TestHelper.ONE_ADDRESS);
     });
 
-    it("Verify getTokenHolderFactoryAddress guard check ", async function () {
-      const {
-        governorDAOFactory,
-        daoAdminOne,
-        godHolderFactory,
-        systemUsersSigners,
-      } = await loadFixture(deployFixture);
-
-      await expect(
-        governorDAOFactory.connect(daoAdminOne).getTokenHolderFactoryAddress()
-      ).reverted;
-
-      const address = await governorDAOFactory
-        .connect(systemUsersSigners.childProxyAdmin)
-        .getTokenHolderFactoryAddress();
-
-      expect(address).equals(godHolderFactory.address);
+    it("Verify getTokenHolderFactoryAddress return correct address", async function () {
+      const { governorDAOFactory, godHolderFactory } = await loadFixture(
+        deployFixture
+      );
+      expect(await governorDAOFactory.getTokenHolderFactoryAddress()).equals(
+        godHolderFactory.address
+      );
     });
 
     it("Verify upgradeHederaService should fail when non-owner try to upgrade Hedera service", async function () {

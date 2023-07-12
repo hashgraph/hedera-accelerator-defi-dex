@@ -96,6 +96,7 @@ async function main() {
   const daoAddress = daoAddresses.pop()!;
   await executeDAOFlow(daoFactory, daoAddress, dex.GOVERNANCE_DAO_TWO_TOKEN_ID);
   await checkRoles(daoFactory);
+  await daoFactory.upgradeHederaService(clientsInfo.childProxyAdminClient);
   const deployedItems = await new Deployment().deployContracts([
     ContractService.GOVERNOR_TT,
     ContractService.GOVERNOR_TEXT,

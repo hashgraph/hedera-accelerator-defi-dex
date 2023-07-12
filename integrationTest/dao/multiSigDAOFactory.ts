@@ -2,6 +2,7 @@ import MultiSigDao from "../../e2e-test/business/MultiSigDao";
 
 import { Helper } from "../../utils/Helper";
 import { ContractId } from "@hashgraph/sdk";
+import { clientsInfo } from "../../utils/ClientManagement";
 import {
   DAO_LOGO,
   DAO_NAME,
@@ -33,6 +34,7 @@ async function main() {
     await executeDAO(multiSigDAOInstance);
   }
   await checkRoles(daoFactory);
+  await daoFactory.upgradeHederaService(clientsInfo.childProxyAdminClient);
 }
 
 main()

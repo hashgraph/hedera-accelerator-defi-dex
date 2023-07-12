@@ -29,8 +29,6 @@ contract MultisigDAOFactory is
         MultiSigCreateDAOInputs inputs
     );
 
-    error NotAdmin(string message);
-
     bytes private constant NO_DATA = "";
     string private constant DaoLogic = "DaoLogic";
     string private constant SafeLogic = "SafeLogic";

@@ -71,6 +71,7 @@ async function main() {
   );
   await multiSigDAO.getDaoInfo();
   await checkRoles(multiSigDAO);
+  await multiSigDAO.upgradeHederaService(clientsInfo.childProxyAdminClient);
 }
 
 async function initDAO(dao: MultiSigDao) {
@@ -187,8 +188,6 @@ export async function checkRoles(base: Base) {
     clientsInfo.childProxyAdminId,
     clientsInfo.operatorClient
   );
-
-  await base.upgradeHederaService(clientsInfo.childProxyAdminClient);
 }
 
 async function getGnosisSafeInstance(multiSigDAO: MultiSigDao) {

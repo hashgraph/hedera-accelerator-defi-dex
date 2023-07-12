@@ -68,6 +68,9 @@ async function main() {
     DAO_ADMIN_CLIENT
   );
   await checkRoles(tokenTransferDAO);
+  await tokenTransferDAO.upgradeHederaService(
+    clientsInfo.childProxyAdminClient
+  );
   console.log(`\nDone`);
 }
 

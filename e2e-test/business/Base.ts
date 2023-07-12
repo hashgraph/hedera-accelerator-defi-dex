@@ -25,6 +25,11 @@ export default abstract class Base {
   contractName: string;
   private UPGRADE_HEDERA_SERVICE = "upgradeHederaService";
   private OWNER = "owner";
+  private GET_ROLE_ADMIN = "getRoleAdmin";
+  private HAS_ROLE = "hasRole";
+  private GRANT_ROLE = "grantRole";
+  private REVOKE_ROLE = "revokeRole";
+  private IMPLEMENTATION = "implementation";
 
   constructor(_contractId: ContractId | null = null) {
     this.htsAddress = this.getHederaServiceContractAddress();
@@ -62,14 +67,14 @@ export default abstract class Base {
     const args = new ContractFunctionParameters().addBytes32(role);
     const { result } = await this.execute(
       2_00_000,
-      "getRoleAdmin",
+      this.GET_ROLE_ADMIN,
       client,
       args
     );
     const roleInfo = this.getRoleInfo(role);
     const roleAdminHex = ethers.utils.hexlify(result.getBytes32(0));
     console.log(
-      `- Base#getRoleAdmin(): done ${roleInfo}, roleAdmin = ${roleAdminHex}\n`
+      `- Base#${this.GET_ROLE_ADMIN}(): done ${roleInfo}, roleAdmin = ${roleAdminHex}\n`
     );
   };
 
@@ -81,12 +86,17 @@ export default abstract class Base {
     const args = new ContractFunctionParameters()
       .addBytes32(role)
       .addAddress(accountId.toSolidityAddress());
-    const { result } = await this.execute(5_00_000, "hasRole", client, args);
+    const { result } = await this.execute(
+      5_00_000,
+      this.HAS_ROLE,
+      client,
+      args
+    );
     const roleInfo = this.getRoleInfo(role);
     const hasRoleHex = ethers.utils.hexlify(result.asBytes());
     const hasRole = result.getBool(0);
     console.log(
-      `- Base#hasRole(): done ${roleInfo}, hasRole = ${hasRole}, hasRoleHex = ${hasRoleHex}\n`
+      `- Base#${this.HAS_ROLE}(): done ${roleInfo}, hasRole = ${hasRole}, hasRoleHex = ${hasRoleHex}\n`
     );
     return hasRole;
   };
@@ -99,10 +109,12 @@ export default abstract class Base {
     const args = new ContractFunctionParameters()
       .addBytes32(role)
       .addAddress(accountId.toSolidityAddress());
-    await this.execute(5_00_000, "grantRole", superAdminClient, args);
+    await this.execute(5_00_000, this.GRANT_ROLE, superAdminClient, args);
     const roleInfo = this.getRoleInfo(role);
     console.log(
-      `- Base#grantRole(): done ${roleInfo}, account = ${accountId.toString()}\n`
+      `- Base#${
+        this.GRANT_ROLE
+      }(): done ${roleInfo}, account = ${accountId.toString()}\n`
     );
   };
 
@@ -114,10 +126,12 @@ export default abstract class Base {
     const args = new ContractFunctionParameters()
       .addBytes32(role)
       .addAddress(accountId.toSolidityAddress());
-    await this.execute(5_00_000, "revokeRole", superAdminClient, args);
+    await this.execute(5_00_000, this.REVOKE_ROLE, superAdminClient, args);
     const roleInfo = this.getRoleInfo(role);
     console.log(
-      `- Base#revokeRole(): done ${roleInfo}, account = ${accountId.toString()}\n`
+      `- Base#${
+        this.REVOKE_ROLE
+      }(): done ${roleInfo}, account = ${accountId.toString()}\n`
     );
   };
 
@@ -127,14 +141,14 @@ export default abstract class Base {
   ) => {
     const { result } = await this.execute(
       2000000,
-      "implementation",
+      this.IMPLEMENTATION,
       client,
       undefined,
       adminKey
     );
     const impAddress = result.getAddress(0);
     console.log(
-      `- Base#implementation(): proxyId = ${this.contractId}, implementation =  ${impAddress}\n`
+      `- Base#${this.IMPLEMENTATION}(): proxyId = ${this.contractId}, implementation =  ${impAddress}\n`
     );
     return impAddress;
   };

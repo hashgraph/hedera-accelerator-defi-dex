@@ -2,6 +2,7 @@ import { expect } from "chai";
 import { BigNumber } from "ethers";
 import { TestHelper } from "./TestHelper";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 describe("NFTDAOFactory contract tests", function () {
   const QUORUM_THRESHOLD = 5;
@@ -71,11 +72,9 @@ describe("NFTDAOFactory contract tests", function () {
       childProxyAdmin: signers[7],
     };
 
-    const systemUsers = Object.values({
-      superAdmin: signers[5].address,
-      proxyAdmin: signers[6].address,
-      childProxyAdmin: signers[7].address,
-    });
+    const systemUsers = Object.values(systemUsersSigners).map(
+      (item: SignerWithAddress) => item.address
+    );
 
     const nftTokenDAO = await TestHelper.deployLogic("FTDAO");
 
@@ -339,18 +338,13 @@ describe("NFTDAOFactory contract tests", function () {
     expect(event3.args.newImplementation).equal(oneAddress);
   });
 
-  it("Verify getNFTTokenHolderFactoryAddress guard check ", async function () {
-    const { governorDAOFactoryInstance, nftHolderFactory, systemUsersSigners } =
-      await loadFixture(deployFixture);
-
-    await expect(governorDAOFactoryInstance.getTokenHolderFactoryAddress())
-      .reverted;
-
-    const address = await governorDAOFactoryInstance
-      .connect(systemUsersSigners.childProxyAdmin)
-      .getTokenHolderFactoryAddress();
-
-    expect(address).equals(nftHolderFactory.address);
+  it("Verify getTokenHolderFactoryAddress return correct address", async function () {
+    const { governorDAOFactoryInstance, nftHolderFactory } = await loadFixture(
+      deployFixture
+    );
+    expect(
+      await governorDAOFactoryInstance.getTokenHolderFactoryAddress()
+    ).equals(nftHolderFactory.address);
   });
 
   it("Verify upgradeHederaService should fail when non-owner try to upgrade Hedera service", async function () {
