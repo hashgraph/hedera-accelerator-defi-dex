@@ -353,12 +353,19 @@ export default class Common extends Base {
   ) => {
     let balance = new BigNumber(0);
     const url = `${Common.baseUrl}api/v1/accounts/${accountId}/tokens?token.id=${tokenId}`;
-    const response = await fetch(url, { cache: "no-store" });
-    const data = await response.json();
-    balance = new BigNumber(data.tokens[0].balance);
-    console.log(
-      `Common#fetchTokenBalanceFromMirrorNode(): id = ${accountId}, TokenId = ${tokenId}, Balance = ${balance}`
-    );
+    try {
+      const response = await fetch(url, { cache: "no-store" });
+      const data = await response.json();
+      balance = new BigNumber(data.tokens[0].balance);
+      console.log(
+        `Common#fetchTokenBalanceFromMirrorNode(): id = ${accountId}, TokenId = ${tokenId}, Balance = ${balance}`
+      );
+    } catch (error) {
+      console.log(
+        `Common#fetchTokenBalanceFromMirrorNode(): failed for id = ${accountId}, TokenId = ${tokenId}`
+      );
+      console.error(error);
+    }
     return balance;
   };
 
