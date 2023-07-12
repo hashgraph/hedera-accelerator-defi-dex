@@ -140,7 +140,8 @@ export class DAONFTTokenTest extends CommonSteps {
       tokens,
       clientsInfo.operatorClient,
       GovernorTokenMetaData.DEFAULT_LINK,
-      GovernorTokenMetaData.DEFAULT_DESCRIPTION
+      GovernorTokenMetaData.DEFAULT_DESCRIPTION,
+      12
     );
   }
 
@@ -161,7 +162,8 @@ export class DAONFTTokenTest extends CommonSteps {
       amt,
       clientsInfo.operatorClient,
       GovernorTokenMetaData.DEFAULT_LINK,
-      GovernorTokenMetaData.DEFAULT_DESCRIPTION
+      GovernorTokenMetaData.DEFAULT_DESCRIPTION,
+      12
     );
   }
 
@@ -178,7 +180,8 @@ export class DAONFTTokenTest extends CommonSteps {
         tokenAmt * CommonSteps.withPrecision,
         clientsInfo.operatorClient,
         GovernorTokenMetaData.DEFAULT_LINK,
-        GovernorTokenMetaData.DEFAULT_DESCRIPTION
+        GovernorTokenMetaData.DEFAULT_DESCRIPTION,
+        12
       );
     } catch (e: any) {
       errorMsg = e.message;
