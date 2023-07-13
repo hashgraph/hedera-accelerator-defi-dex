@@ -95,8 +95,8 @@ jobs:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     env:
-      OPERATOR_ID: 0.0.6869
-      OPERATOR_KEY: 302e020100300506032b65700422042014138f9d2fbcc9969d9efe28b7fc5281995587c2587ed62d19b78058241dd838
+      OPERATOR_ID: 0.0.15388888
+      OPERATOR_KEY: 302e020100300506032b657004220420dc5dbfafa659c787661a01ffeb5d31e8fbc19f3dc2fdac2a559b1119dd1d1478
       TREASURE_ID: 0.0.6880
       TREASURE_KEY: c372f05c182ae62e04603081f6abc8cbd3a712401e1d1f88401cf310c91f644b
 
