@@ -104,13 +104,17 @@ describe("MultiSig tests", function () {
   async function deployFixture() {
     const signers = await TestHelper.getSigners();
     const hederaService = await TestHelper.deployMockHederaService();
-    const dexOwner = await TestHelper.getDexOwner();
 
     const daoSigners = await TestHelper.getDAOSigners();
     expect(daoSigners.length).not.equals(0);
 
     const daoAdminOne = await TestHelper.getDAOAdminOne();
     const tokenInstance = await TestHelper.deployERC20Mock();
+
+    const systemUsersSigners = await TestHelper.systemUsersSigners();
+    const systemRoleBasedAccess = (
+      await TestHelper.deploySystemRoleBasedAccess()
+    ).address;
 
     const multiSigDAOLogicInstance = await TestHelper.deployLogic(
       "MultiSigDAO"
@@ -154,7 +158,7 @@ describe("MultiSig tests", function () {
     );
 
     const MULTISIG_ARGS = [
-      dexOwner.address,
+      daoAdminOne.address,
       DAO_NAME,
       LOGO_URL,
       DESCRIPTION,
@@ -162,6 +166,7 @@ describe("MultiSig tests", function () {
       hederaGnosisSafeProxyInstance,
       hederaService.address,
       multiSend.address,
+      systemRoleBasedAccess,
     ];
 
     const multiSigDAOInstance = await TestHelper.deployLogic("MultiSigDAO");
@@ -174,7 +179,7 @@ describe("MultiSig tests", function () {
       "MultisigDAOFactory"
     );
     await multiSigDAOFactoryInstance.initialize(
-      dexOwner.address,
+      systemRoleBasedAccess,
       multiSigDAOLogicInstance.address,
       hederaGnosisSafeLogicInstance.address,
       hederaGnosisSafeProxyFactoryInstance.address,
@@ -199,7 +204,6 @@ describe("MultiSig tests", function () {
       hederaGnosisSafeProxyContract,
       hederaGnosisSafeProxyFactoryInstance,
       tokenInstance,
-      dexOwner,
       signers,
       daoSigners,
       doaSignersAddresses,
@@ -207,6 +211,8 @@ describe("MultiSig tests", function () {
       hederaService,
       MULTISIG_ARGS,
       multiSend,
+      systemRoleBasedAccess,
+      systemUsersSigners,
     };
   }
 
@@ -408,7 +414,7 @@ describe("MultiSig tests", function () {
     it("Verify MultiSigDAOFactory contract revert for multiple initialization", async function () {
       const {
         multiSigDAOFactoryInstance,
-        dexOwner,
+        systemRoleBasedAccess,
         multiSigDAOLogicInstance,
         hederaGnosisSafeLogicInstance,
         hederaGnosisSafeProxyFactoryInstance,
@@ -417,7 +423,7 @@ describe("MultiSig tests", function () {
       } = await loadFixture(deployFixture);
       await expect(
         multiSigDAOFactoryInstance.initialize(
-          dexOwner.address,
+          systemRoleBasedAccess,
           multiSigDAOLogicInstance.address,
           hederaGnosisSafeLogicInstance.address,
           hederaGnosisSafeProxyFactoryInstance.address,
@@ -528,34 +534,27 @@ describe("MultiSig tests", function () {
         multiSigDAOFactoryInstance
           .connect(daoAdminOne)
           .upgradeSafeFactoryAddress(TestHelper.ZERO_ADDRESS)
-      )
-        .revertedWithCustomError(multiSigDAOFactoryInstance, "NotAdmin")
-        .withArgs("MultisigDAOFactory: auth failed");
+      ).reverted;
 
       await expect(
         multiSigDAOFactoryInstance
           .connect(daoAdminOne)
           .upgradeSafeLogicAddress(TestHelper.ZERO_ADDRESS)
-      )
-        .revertedWithCustomError(multiSigDAOFactoryInstance, "NotAdmin")
-        .withArgs("MultisigDAOFactory: auth failed");
+      ).reverted;
 
       await expect(
         multiSigDAOFactoryInstance
           .connect(daoAdminOne)
           .upgradeDaoLogicAddress(TestHelper.ZERO_ADDRESS)
-      )
-        .revertedWithCustomError(multiSigDAOFactoryInstance, "NotAdmin")
-        .withArgs("MultisigDAOFactory: auth failed");
+      ).reverted;
     });
 
     it("Verify upgrade logic call should be proceeded for dex owner", async function () {
-      const { multiSigDAOFactoryInstance, dexOwner } = await loadFixture(
-        deployFixture
-      );
+      const { multiSigDAOFactoryInstance, systemUsersSigners } =
+        await loadFixture(deployFixture);
 
       const safeFactoryTxn = await multiSigDAOFactoryInstance
-        .connect(dexOwner)
+        .connect(systemUsersSigners.childProxyAdmin)
         .upgradeSafeFactoryAddress(TestHelper.ONE_ADDRESS);
       const safeFactoryTxnEvent = await TestHelper.readLastEvent(
         safeFactoryTxn
@@ -567,7 +566,7 @@ describe("MultiSig tests", function () {
       );
 
       const safeLogicTxn = await multiSigDAOFactoryInstance
-        .connect(dexOwner)
+        .connect(systemUsersSigners.childProxyAdmin)
         .upgradeSafeLogicAddress(TestHelper.ONE_ADDRESS);
       const safeLogicTxnEvent = await TestHelper.readLastEvent(safeLogicTxn);
       expect(safeLogicTxnEvent.name).equal("LogicUpdated");
@@ -577,7 +576,7 @@ describe("MultiSig tests", function () {
       );
 
       const daoLogicTxn = await multiSigDAOFactoryInstance
-        .connect(dexOwner)
+        .connect(systemUsersSigners.childProxyAdmin)
         .upgradeDaoLogicAddress(TestHelper.ONE_ADDRESS);
       const daoLogicTxnEvent = await TestHelper.readLastEvent(daoLogicTxn);
       expect(daoLogicTxnEvent.name).equal("LogicUpdated");
@@ -596,54 +595,32 @@ describe("MultiSig tests", function () {
         multiSigDAOFactoryInstance
           .connect(nonOwner)
           .upgradeHederaService(signers[3].address)
-      ).revertedWith("Ownable: caller is not the owner");
+      ).reverted;
     });
 
-    it("Verify upgrade Hedera service should pass when owner try to upgrade it", async function () {
+    it("Verify upgrade Hedera service for factory should pass when owner try to upgrade it", async function () {
       const {
         multiSigDAOFactoryInstance,
         signers,
-        daoAdminOne,
-        doaSignersAddresses,
         hederaService,
+        systemUsersSigners,
       } = await loadFixture(deployFixture);
 
-      const CREATE_DAO_ARGS = [
-        daoAdminOne.address,
-        DAO_NAME,
-        LOGO_URL,
-        doaSignersAddresses,
-        doaSignersAddresses.length,
-        false,
-        DESCRIPTION,
-        WEB_LINKS,
-      ];
-
-      await multiSigDAOFactoryInstance.createDAO(CREATE_DAO_ARGS);
-
-      const daos = await multiSigDAOFactoryInstance.getDAOs();
-
-      const tokenDAO = await TestHelper.getContract("MultiSigDAO", daos[0]);
-      expect(tokenDAO).not.equals(TestHelper.ZERO_ADDRESS);
-
       expect(await multiSigDAOFactoryInstance.getHederaServiceVersion()).equals(
-        hederaService.address
-      );
-      expect(await tokenDAO.getHederaServiceVersion()).equals(
         hederaService.address
       );
 
       const newAddress = signers[3].address;
-
-      await multiSigDAOFactoryInstance.upgradeHederaService(newAddress);
+      await multiSigDAOFactoryInstance
+        .connect(systemUsersSigners.childProxyAdmin)
+        .upgradeHederaService(newAddress);
 
       expect(await multiSigDAOFactoryInstance.getHederaServiceVersion()).equals(
         newAddress
       );
-      expect(await tokenDAO.getHederaServiceVersion()).equals(newAddress);
     });
 
-    it("Verify upgradeMultiSend should fail when non-owner try to upgrade MultiSend service", async function () {
+    it("Verify upgradeMultiSend for factory should fail when non-owner try to upgrade MultiSend service", async function () {
       const { multiSigDAOFactoryInstance, signers } = await loadFixture(
         deployFixture
       );
@@ -652,55 +629,25 @@ describe("MultiSig tests", function () {
         multiSigDAOFactoryInstance
           .connect(nonOwner)
           .upgradeMultiSend(signers[3].address)
-      ).revertedWith("Ownable: caller is not the owner");
+      ).reverted;
     });
 
-    it("Verify upgradeMultiSend should be succeeded when owner try to upgrade MultiSend service", async function () {
-      const {
-        signers,
-        multiSend,
-        daoAdminOne,
-        doaSignersAddresses,
-        multiSigDAOFactoryInstance,
-      } = await loadFixture(deployFixture);
-
-      const CREATE_DAO_ARGS = [
-        daoAdminOne.address,
-        DAO_NAME,
-        LOGO_URL,
-        doaSignersAddresses,
-        doaSignersAddresses.length,
-        false,
-        DESCRIPTION,
-        WEB_LINKS,
-      ];
-
-      await multiSigDAOFactoryInstance.createDAO(CREATE_DAO_ARGS);
-
-      const daos = await multiSigDAOFactoryInstance.getDAOs();
-
-      const multiSigDAO = await TestHelper.getContract("MultiSigDAO", daos[0]);
-      expect(multiSigDAO.address).equals(daos[0]);
+    it("Verify upgradeMultiSend for factory should be succeeded when owner try to upgrade MultiSend service", async function () {
+      const { multiSend, systemUsersSigners, multiSigDAOFactoryInstance } =
+        await loadFixture(deployFixture);
 
       expect(
         await multiSigDAOFactoryInstance.getMultiSendContractAddress()
       ).equals(multiSend.address);
 
-      expect(await multiSigDAO.getMultiSendContractAddress()).equals(
-        multiSend.address
-      );
-
-      const newAddress = signers[3].address;
-
-      await multiSigDAOFactoryInstance.upgradeMultiSend(newAddress);
+      const newHederaService = await TestHelper.deployMockHederaService();
+      await multiSigDAOFactoryInstance
+        .connect(systemUsersSigners.childProxyAdmin)
+        .upgradeMultiSend(newHederaService.address);
 
       expect(
         await multiSigDAOFactoryInstance.getMultiSendContractAddress()
-      ).equals(newAddress);
-
-      expect(await multiSigDAO.getMultiSendContractAddress()).equals(
-        newAddress
-      );
+      ).equals(newHederaService.address);
     });
   });
 
@@ -969,27 +916,32 @@ describe("MultiSig tests", function () {
     });
 
     it("Verify upgrade Hedera service passes with system user", async function () {
-      const { multiSigDAOInstance, signers } = await loadFixture(deployFixture);
+      const { multiSigDAOInstance, systemUsersSigners, hederaService } =
+        await loadFixture(deployFixture);
 
-      const systemUser = signers[0];
+      expect(await multiSigDAOInstance.getHederaServiceVersion()).equals(
+        hederaService.address
+      );
 
-      await expect(
-        multiSigDAOInstance
-          .connect(systemUser)
-          .upgradeHederaService(signers[3].address)
-      ).not.rejectedWith("RoleBasedAccess: caller is not the system user");
+      const newHederaService = await TestHelper.deployMockHederaService();
+      await multiSigDAOInstance
+        .connect(systemUsersSigners.childProxyAdmin)
+        .upgradeHederaService(newHederaService.address);
+
+      expect(await multiSigDAOInstance.getHederaServiceVersion()).equals(
+        newHederaService.address
+      );
     });
 
     it("Verify upgrade Hedera service fails with non-system user", async function () {
       const { multiSigDAOInstance, signers } = await loadFixture(deployFixture);
-
       const nonSystemUser = signers[3];
-
+      const newHederaService = await TestHelper.deployMockHederaService();
       await expect(
         multiSigDAOInstance
           .connect(nonSystemUser)
-          .upgradeHederaService(signers[1].address)
-      ).rejectedWith("RoleBasedAccess: caller is not the system user");
+          .upgradeHederaService(newHederaService.address)
+      ).reverted;
     });
 
     it("Verify upgrade MultiSend service fails with non-system user", async function () {
@@ -999,15 +951,25 @@ describe("MultiSig tests", function () {
         multiSigDAOInstance
           .connect(signers[3])
           .upgradeMultiSend(signers[3].address)
-      ).revertedWith("RoleBasedAccess: caller is not the system user");
+      ).reverted;
     });
 
     it("Verify upgrade MultiSend service passes with system user", async function () {
-      const { multiSigDAOInstance, signers } = await loadFixture(deployFixture);
+      const { multiSigDAOInstance, systemUsersSigners, multiSend } =
+        await loadFixture(deployFixture);
 
-      await expect(
-        multiSigDAOInstance.upgradeMultiSend(signers[3].address)
-      ).not.revertedWith("RoleBasedAccess: caller is not the system user");
+      expect(await multiSigDAOInstance.getMultiSendContractAddress()).equals(
+        multiSend.address
+      );
+
+      const newMultiSend = await TestHelper.deployLogic("HederaMultiSend");
+      await multiSigDAOInstance
+        .connect(systemUsersSigners.childProxyAdmin)
+        .upgradeMultiSend(newMultiSend.address);
+
+      expect(await multiSigDAOInstance.getMultiSendContractAddress()).equals(
+        newMultiSend.address
+      );
     });
   });
 });

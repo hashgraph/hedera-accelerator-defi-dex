@@ -3,6 +3,7 @@ import Web3 from "web3";
 import prompts from "prompts";
 import ContractMetadata from "./ContractMetadata";
 
+import { ethers } from "ethers";
 import { execSync } from "child_process";
 import { BigNumber } from "bignumber.js";
 import {
@@ -180,6 +181,12 @@ export class Helper {
       txn = await txn.sign(key);
     }
     return txn;
+  };
+
+  static role = (role: string) => {
+    const toUtf8Bytes = ethers.utils.toUtf8Bytes(role);
+    const keccak256 = ethers.utils.keccak256(toUtf8Bytes);
+    return ethers.utils.arrayify(keccak256);
   };
 
   static isIterable(value: any): boolean {

@@ -75,17 +75,27 @@ export default class MultiSigDao extends BaseDao {
         client
       );
 
-      const args = new ContractFunctionParameters()
-        .addAddress(admin)
-        .addString(name)
-        .addString(logoURL)
-        .addString(desc)
-        .addStringArray(webLinks)
-        .addAddress(gnosisProxy.toSolidityAddress())
-        .addAddress(this.htsAddress)
-        .addAddress(this.getMultiSendContractAddress());
-      await this.execute(9_00_000, INITIALIZE, client, args);
-      console.log(`- MultiSigDao#${INITIALIZE}(): ${this.contractId} done\n`);
+      const data = {
+        _admin: admin,
+        _name: name,
+        _logoUrl: logoURL,
+        _description: desc,
+        _webLinks: webLinks,
+        _hederaGnosisSafe: gnosisProxy.toSolidityAddress(),
+        _hederaService: this.htsAddress,
+        _multiSend: this.getMultiSendContractAddress(),
+        _iSystemRoleBasedAccess: this.getSystemBasedRoleAccessContractAddress(),
+      };
+
+      const { bytes, hex } = await this.encodeFunctionData(
+        ContractService.MULTI_SIG,
+        INITIALIZE,
+        Object.values(data)
+      );
+      await this.execute(9_00_000, INITIALIZE, client, bytes);
+      console.log(
+        `- MultiSigDao#${INITIALIZE}(): ${this.contractId} done with hex data = ${hex}`
+      );
       return;
     }
     console.log(

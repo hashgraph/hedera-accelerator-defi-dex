@@ -23,7 +23,6 @@ export default class ContractMetadata {
     "GovernorTokenCreate",
     "Splitter",
     "Configuration",
-    "FTDAO",
     "FTDAOFactory",
     "NFTDAOFactory",
     "MultisigDAOFactory",
@@ -51,6 +50,7 @@ export default class ContractMetadata {
     "GODHolder",
     "NFTHolder",
     "HederaMultiSend",
+    "SystemRoleBasedAccess",
   ];
 
   static SUPPORTED_PROXY_OPTIONS = ["create", "update"];

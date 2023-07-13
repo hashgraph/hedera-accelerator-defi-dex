@@ -16,6 +16,7 @@ import {
 } from "@hashgraph/sdk";
 import TokenTransferGovernor from "../../e2e-test/business/TokenTransferGovernor";
 import NFTTokenHolderFactory from "../../e2e-test/business/factories/NFTTokenHolderFactory";
+import SystemRoleBasedAccess from "../../e2e-test/business/common/SystemRoleBasedAccess";
 
 const NFT_ID_FOR_VOTING = 12;
 const PROPOSAL_CREATE_NFT_SERIAL_ID = 13;
@@ -34,6 +35,8 @@ async function main() {
   const transferDao = newCopies.get(ContractService.FT_DAO);
 
   const tokenTransferDAO = new FTDAO(ContractId.fromString(transferDao.id));
+
+  const roleBasedAccess = new SystemRoleBasedAccess();
 
   const tokenHolderFactory = new NFTTokenHolderFactory();
   const nftHolderContractId = await tokenHolderFactory.getTokenHolder(
@@ -66,7 +69,11 @@ async function main() {
     DAO_WEB_LINKS,
     DAO_ADMIN_CLIENT
   );
-  await tokenTransferDAO.upgradeHederaService();
+  const hasRole = await roleBasedAccess.checkIfChildProxyAdminRoleGiven();
+  hasRole &&
+    (await tokenTransferDAO.upgradeHederaService(
+      clientsInfo.childProxyAdminClient
+    ));
   console.log(`\nDone`);
 }
 

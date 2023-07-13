@@ -1,3 +1,4 @@
+import { Helper } from "../../utils/Helper";
 import { TokenId } from "@hashgraph/sdk";
 
 const GOD_TOKEN_ID = "0.0.8576";
@@ -32,6 +33,12 @@ const GOVERNANCE_DAO_TWO_TOKEN_ID = TokenId.fromString("0.0.3560880");
 
 const MULTI_SIG_DAO_ONE = "MULTI_SIG_DAO_ONE";
 
+const ROLES = {
+  DAO_ADMIN: Helper.role("DAO_ADMIN"),
+  DEFAULT_ADMIN_ROLE: new Uint8Array(), // it is zero inside contract i.e 0x00
+  CHILD_PROXY_ADMIN_ROLE: Helper.role("CHILD_PROXY_ADMIN_ROLE"),
+};
+
 export default {
   GOD_TOKEN_ID,
   GOD_TOKEN_ADDRESS,
@@ -54,4 +61,5 @@ export default {
   MULTI_SIG_DAO_ONE,
   E2E_NFT_TOKEN_ID,
   TOKEN_LAB49_1_ID,
+  ROLES,
 };

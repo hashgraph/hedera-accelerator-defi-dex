@@ -1,34 +1,28 @@
-import { ContractId } from "@hashgraph/sdk";
-import { DeployedContract } from "./model/contract";
-import { main as deployContract } from "./scripts/logic";
-import { ContractService } from "./service/ContractService";
-import { Helper } from "../utils/Helper";
-import ContractMetadata from "../utils/ContractMetadata";
-import Governor from "../e2e-test/business/Governor";
-import { clientsInfo } from "../utils/ClientManagement";
 import Web3 from "web3";
+import ContractMetadata from "../utils/ContractMetadata";
+import ContractUpgradeGovernor from "../e2e-test/business/ContractUpgradeGovernor";
+
+import { Helper } from "../utils/Helper";
+import { Deployment } from "../utils/deployContractOnTestnet";
+import { ContractId } from "@hashgraph/sdk";
+import { clientsInfo } from "../utils/ClientManagement";
+import { ContractService } from "./service/ContractService";
+import { DeployedContract } from "./model/contract";
 
 const web3 = new Web3();
+const deployment = new Deployment();
 
 const contractMetadata = new ContractMetadata();
-const contractDevService = new ContractService();
-const contractUATService = new ContractService(
-  ContractService.UAT_CONTRACTS_PATH
-);
-const gitLastCommitMessage = Helper.getGitLastCommitMessage();
-const upgradeGovernor = contractDevService.getContract(
-  contractDevService.governorUpgradeContract
-);
+const csUAT = new ContractService(ContractService.UAT_CONTRACTS_PATH);
 
-const governor = new Governor(upgradeGovernor.transparentProxyId!);
+const gitLastCommitMessage = Helper.getGitLastCommitMessage();
 
 async function main() {
   const contractsToDeploy = await contractMetadata.getAllChangedContractNames();
   console.log(`Eligible contracts for upgrade: [${contractsToDeploy}]\n`);
   for (const contractName of contractsToDeploy) {
-    const oldVersion = contractUATService.getContractWithProxy(contractName);
-    const newVersion = await deployContract(contractName);
-    contractDevService.remove(newVersion.id); // remove entry from dev json
+    const oldVersion = csUAT.getContractWithProxy(contractName);
+    const newVersion = await deployment.deploy(contractName);
     await createProposal(oldVersion, newVersion.id);
   }
 }
@@ -42,6 +36,7 @@ async function createProposal(
     oldVersion.name
   }, New Logic Id =  ${newVersionContractId}, Old Logic Id = ${oldVersion.id!}, Proxy Id = ${oldVersion.transparentProxyId!}`;
 
+  const governor = new ContractUpgradeGovernor();
   await governor.setupAllowanceForProposalCreation(
     clientsInfo.operatorClient,
     clientsInfo.operatorId,
@@ -61,7 +56,4 @@ async function createProposal(
 
 main()
   .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
+  .catch(Helper.processError);

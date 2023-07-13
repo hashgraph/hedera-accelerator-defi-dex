@@ -1,3 +1,4 @@
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { Contract } from "ethers";
 import { ethers, upgrades } from "hardhat";
 
@@ -76,6 +77,25 @@ export class TestHelper {
     const instance = await this.deployLogic("GODTokenHolderFactory");
     await instance.initialize(hederaService.address, godHolder.address, admin);
     return instance;
+  }
+
+  static async systemUsersSigners() {
+    const signers = await TestHelper.getSigners();
+    return {
+      superAdmin: signers[5],
+      proxyAdmin: signers[6],
+      childProxyAdmin: signers[7],
+    };
+  }
+
+  static async deploySystemRoleBasedAccess() {
+    const systemUsersSigners = await TestHelper.systemUsersSigners();
+    const systemUsersAddresses = Object.values(systemUsersSigners).map(
+      (user: SignerWithAddress) => user.address
+    );
+    const contract = await this.deployLogic("SystemRoleBasedAccess");
+    await contract.initialize(systemUsersAddresses);
+    return contract;
   }
 
   static async deployERC20Mock(

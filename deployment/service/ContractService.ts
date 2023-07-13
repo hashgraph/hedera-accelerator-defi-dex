@@ -22,6 +22,7 @@ export class ContractService {
   public static GOD_HOLDER = "godholder";
   public static NFT_HOLDER = "nftholder";
   public static MULTI_SEND = "hederamultisend";
+  public static SYSTEM_ROLE_BASED_ACCESS = "systemrolebasedaccess";
 
   public factoryContractName = "factory";
   public pairContractName = "pair";

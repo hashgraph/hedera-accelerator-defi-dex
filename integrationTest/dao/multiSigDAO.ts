@@ -2,6 +2,7 @@ import dex from "../../deployment/model/dex";
 import Common from "../../e2e-test/business/Common";
 import MultiSigDao from "../../e2e-test/business/MultiSigDao";
 import HederaGnosisSafe from "../../e2e-test/business/HederaGnosisSafe";
+import SystemRoleBasedAccess from "../../e2e-test/business/common/SystemRoleBasedAccess";
 
 import { Helper } from "../../utils/Helper";
 import { clientsInfo } from "../../utils/ClientManagement";
@@ -53,11 +54,13 @@ const DAO_ADMIN_ADDRESS = clientsInfo.uiUserId.toSolidityAddress();
 const DAO_ADMIN_CLIENT = clientsInfo.uiUserClient;
 
 async function main() {
+  const roleBasedAccess = new SystemRoleBasedAccess();
   const contract = csDev.getContractWithProxy(ContractService.MULTI_SIG);
   const multiSigDAO = new MultiSigDao(
     ContractId.fromString(contract.transparentProxyId!)
   );
   await initDAO(multiSigDAO);
+
   await executeDAO(multiSigDAO);
 
   await multiSigDAO.updateDaoInfo(
@@ -68,7 +71,9 @@ async function main() {
     DAO_ADMIN_CLIENT
   );
   await multiSigDAO.getDaoInfo();
-  await multiSigDAO.upgradeHederaService(clientsInfo.uiUserClient);
+  const hasRole = await roleBasedAccess.checkIfChildProxyAdminRoleGiven();
+  hasRole &&
+    (await multiSigDAO.upgradeHederaService(clientsInfo.childProxyAdminClient));
 }
 
 async function initDAO(dao: MultiSigDao) {

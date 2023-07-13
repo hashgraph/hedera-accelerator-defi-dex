@@ -1,23 +1,23 @@
 import { Helper } from "../../utils/Helper";
+import { TokenId } from "@hashgraph/sdk";
 import { Deployment } from "../../utils/deployContractOnTestnet";
-import { ContractId, TokenId } from "@hashgraph/sdk";
+import { clientsInfo } from "../../utils/ClientManagement";
 import { ContractService } from "../../deployment/service/ContractService";
 import {
-  executeGovernorTokenTransferFlow,
-  executeContractUpgradeFlow,
   executeTextProposalFlow,
+  executeContractUpgradeFlow,
+  executeGovernorTokenTransferFlow,
   executeTokenCreateFlow,
 } from "./ftDao";
-import { clientsInfo } from "../../utils/ClientManagement";
 
 import dex from "../../deployment/model/dex";
-import FTDAOFactory from "../../e2e-test/business/factories/FTDAOFactory";
 import GodHolder from "../../e2e-test/business/GodHolder";
-import FTDAO from "../../e2e-test/business/FTDAO";
+import FTDAOFactory from "../../e2e-test/business/factories/FTDAOFactory";
 import FTTokenHolderFactory from "../../e2e-test/business/factories/FTTokenHolderFactory";
+import SystemRoleBasedAccess from "../../e2e-test/business/common/SystemRoleBasedAccess";
+
 const DAO_WEB_LINKS = ["LINKEDIN", "https://linkedin.com"];
 const DAO_DESC = "Lorem Ipsum is simply dummy text";
-
 const csDev = new ContractService();
 
 export async function executeDAOFlow(
@@ -81,16 +81,11 @@ async function createDAO(
   );
 }
 
-function getTokenTransferDAOFactoryInfo() {
-  const contract = csDev.getContractWithProxy(ContractService.FT_DAO_FACTORY);
-  const proxyId = contract.transparentProxyId!;
-  return new FTDAOFactory(ContractId.fromString(proxyId));
-}
-
 async function main() {
-  const daoFactory = getTokenTransferDAOFactoryInfo();
-  const tokenHolderFactory = new FTTokenHolderFactory();
-  await daoFactory.initialize(clientsInfo.operatorClient, tokenHolderFactory);
+  const roleBasedAccess = new SystemRoleBasedAccess();
+  const daoFactory = new FTDAOFactory();
+  const ftTokenHolderFactory = new FTTokenHolderFactory();
+  await daoFactory.initialize(clientsInfo.operatorClient, ftTokenHolderFactory);
   await daoFactory.getTokenHolderFactoryAddress();
   await createDAO(
     daoFactory,
@@ -101,9 +96,9 @@ async function main() {
   const daoAddresses = await daoFactory.getDAOs();
   const daoAddress = daoAddresses.pop()!;
   await executeDAOFlow(daoFactory, daoAddress, dex.GOVERNANCE_DAO_TWO_TOKEN_ID);
-  const contractId = ContractId.fromSolidityAddress(daoAddress);
-  const daoInstance = new FTDAO(contractId);
-  await daoInstance.upgradeHederaService();
+  const hasRole = await roleBasedAccess.checkIfChildProxyAdminRoleGiven();
+  hasRole &&
+    (await daoFactory.upgradeHederaService(clientsInfo.childProxyAdminClient));
   const deployedItems = await new Deployment().deployContracts([
     ContractService.GOVERNOR_TT,
     ContractService.GOVERNOR_TEXT,
