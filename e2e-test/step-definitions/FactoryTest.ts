@@ -41,7 +41,7 @@ let fees: BigNumber;
 let tokenAHBARPairAddress: string;
 let tokensBefore: BigNumber[];
 let tokensAfter: BigNumber[];
-let lpTokensInPool: Long;
+let lpTokensInPool: BigNumber;
 let lpTokenContractId: string;
 let lpTokenQty: BigNumber;
 let tokenAQty: BigNumber;
