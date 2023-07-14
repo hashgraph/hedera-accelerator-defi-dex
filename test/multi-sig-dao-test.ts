@@ -1005,7 +1005,7 @@ describe("MultiSig tests", function () {
       );
     });
 
-    describe.only("Text proposal test cases", () => {
+    describe("Text proposal test cases", () => {
       it("Verify text proposal workflow - proposal to execution ", async function () {
         const {
           multiSigDAOInstance,
