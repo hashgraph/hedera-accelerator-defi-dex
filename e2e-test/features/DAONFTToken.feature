@@ -1,4 +1,5 @@
 @DAONFTToken
+@TestSuite-4
 Feature: DAONFT Token e2e test
 
     This feature file contains e2e test for DAO NFT Token
