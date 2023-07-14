@@ -211,7 +211,6 @@ export class GovernorSteps extends CommonSteps {
     30000
   )
   public async verifyTokenBalance() {
-    await Helper.delay(15000);
     const updatedBalance = await Common.getTokenBalance(
       clientsInfo.treasureId,
       TRANSFER_TOKEN_ID,

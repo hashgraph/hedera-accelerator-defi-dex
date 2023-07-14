@@ -215,7 +215,6 @@ export class MultiSigDAOSteps {
     60000
   )
   public async verifyTokenBalance() {
-    await Helper.delay(15000);
     const updatedBalance = await Common.getTokenBalance(
       clientsInfo.treasureId,
       transferTokenId,
