@@ -36,6 +36,7 @@ contract MultiSigDAO is BaseDAO {
 
     uint256 private constant TXN_TYPE_TOKEN_TRANSFER = 1;
     uint256 private constant TXN_TYPE_BATCH = 2;
+    uint256 private constant TXN_TYPE_TEXT = 3;
 
     HederaMultiSend private multiSend;
     IHederaService private hederaService;
@@ -214,5 +215,21 @@ contract MultiSigDAO is BaseDAO {
 
     function getMultiSendContractAddress() external view returns (address) {
         return address(multiSend);
+    }
+
+    /**
+     * This functon is used to uniquely identify text proposals. Transaction data is created using encoding of
+     * this function. As the text and creator are unique hence will generate unique hash for transactions.
+     *  Gnosis safe executes this function once transaction is approved by owners.
+     */
+    function setText(
+        address creator,
+        string memory text
+    ) public view returns (address, string memory) {
+        require(
+            address(hederaGnosisSafe) == msg.sender,
+            "Only HederaGnosisSafe can execute it."
+        );
+        return (creator, text);
     }
 }

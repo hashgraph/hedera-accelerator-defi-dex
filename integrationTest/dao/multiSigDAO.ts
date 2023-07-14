@@ -63,6 +63,8 @@ async function main() {
 
   await executeDAO(multiSigDAO);
 
+  await executeDAOTextProposal(multiSigDAO);
+
   await multiSigDAO.updateDaoInfo(
     DAO_NAME + "_NEW",
     DAO_LOGO + "daos",
@@ -164,6 +166,58 @@ export async function executeDAO(
     batchTxnInfo.nonce,
     safeTxnExecutionClient
   );
+}
+
+export async function executeDAOTextProposal(
+  multiSigDAO: MultiSigDao,
+  ownersInfo: any[] = DAO_OWNERS_INFO,
+  safeTxnExecutionClient: Client = clientsInfo.treasureClient
+) {
+  console.log(
+    `- executing text proposal using Multi-sig DAO  = ${multiSigDAO.contractId}\n`
+  );
+
+  const gnosisSafe = await getGnosisSafeInstance(multiSigDAO);
+
+  const textProposalText = "TEXT";
+
+  const textTxData = await multiSigDAO.encodeFunctionData(
+    "MultiSigDAO",
+    "setText",
+    [clientsInfo.operatorId.toSolidityAddress(), textProposalText]
+  );
+
+  const textTxnHash = await multiSigDAO.proposeTransaction(
+    ContractId.fromString(multiSigDAO.contractId).toSolidityAddress(),
+    textTxData.bytes,
+    3,
+    clientsInfo.operatorClient,
+    "textTitle",
+    textProposalText
+  );
+
+  const textTxnInfo = await multiSigDAO.getTransactionInfo(textTxnHash);
+
+  await multiSigDAO.state(textTxnHash);
+
+  await gnosisSafe.getOwners();
+
+  for (const daoOwner of ownersInfo) {
+    await gnosisSafe.approveHash(textTxnHash, daoOwner.client);
+  }
+
+  await multiSigDAO.state(textTxnHash);
+
+  await gnosisSafe.executeTransaction(
+    textTxnInfo.to,
+    textTxnInfo.value,
+    textTxnInfo.data,
+    textTxnInfo.operation,
+    textTxnInfo.nonce,
+    safeTxnExecutionClient
+  );
+
+  await multiSigDAO.state(textTxnHash);
 }
 
 async function getGnosisSafeInstance(multiSigDAO: MultiSigDao) {
