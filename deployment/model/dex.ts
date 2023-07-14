@@ -39,6 +39,49 @@ const ROLES = {
   CHILD_PROXY_ADMIN_ROLE: Helper.role("CHILD_PROXY_ADMIN_ROLE"),
 };
 
+const ACCOUNTS = [
+  {
+    id: "0.0.2375093",
+    key: "805a0b26c8ecee83e903076eebb86928c612590f32afc6d272ced4c73db6d466",
+  },
+  {
+    id: "0.0.6883",
+    key: "2cc790b009e400a3ed97363980ae27ddfb58102fa8fb7c1a7b69e212f756c084",
+  },
+  {
+    id: "0.0.6950",
+    key: " b936fa8294df98d66e36eb20094fb12a8c69735a995fdf5e9da478642d28305a",
+  },
+  {
+    id: "0.0.3065652",
+    key: "8e8fe8f694707f2e578f5ced24304a5190b59ef014a0b978d9db0732eaf6445d",
+  },
+  {
+    id: "0.0.6948",
+    key: "c8cb72a0addffcbd898689e5b5641c0abff4399ddeb90a04071433e3724e14dd",
+  },
+  {
+    id: "0.0.11674",
+    key: "899ec4fb7e8153a36bd37dd9500b9057982bf76bc1f0efa5b8cb170ee2329997",
+  },
+  {
+    id: "0.0.6880",
+    key: "c372f05c182ae62e04603081f6abc8cbd3a712401e1d1f88401cf310c91f644b",
+  },
+  {
+    id: "0.0.8255",
+    key: "0bf5b9ac3f3066f6046a778409891e9f2081c349b4cf8688d29023312cc2d632",
+  },
+  {
+    id: "0.0.4602608",
+    key: "302e020100300506032b657004220420c9874f71ab8d3efe30684175d6b5bc54bae9a8a69ecb3e01dfa8e47578ac5447",
+  },
+  {
+    id: "0.0.6869",
+    key: "302e020100300506032b65700422042014138f9d2fbcc9969d9efe28b7fc5281995587c2587ed62d19b78058241dd838",
+  },
+];
+
 export default {
   GOD_TOKEN_ID,
   GOD_TOKEN_ADDRESS,
@@ -62,4 +105,5 @@ export default {
   E2E_NFT_TOKEN_ID,
   TOKEN_LAB49_1_ID,
   ROLES,
+  ACCOUNTS,
 };
