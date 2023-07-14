@@ -450,7 +450,11 @@ export class FactorySteps {
       );
     } else {
       tokenBalance = Number(
-        await Common.getTokenBalance(pairContractId, tokenId, client)
+        await Common.getTokenBalance(
+          ContractId.fromString(pairContractId),
+          tokenId,
+          client
+        )
       );
     }
     const withPrecision = Number(Common.withPrecision(1, precision));
