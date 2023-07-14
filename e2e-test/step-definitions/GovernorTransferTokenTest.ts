@@ -35,7 +35,7 @@ const godHolder = new GodHolder(ContractId.fromString(godHolderProxyId));
 
 let proposalId: string;
 let msg: string;
-let balance: Long;
+let balance: BigNumber;
 let tokens: BigNumber;
 
 const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
