@@ -218,16 +218,6 @@ export default class Common extends Base {
   ) => {
     const token = new Token(ContractId.fromString(tokenId.toString()));
     const tokenBalance = await token.getBalance(id);
-
-    // const response = await this.getBalanceInternally(id, client);
-    // let tokenBalance = response.tokens?.get(tokenId);
-    // if (!tokenBalance) {
-    //   const mirrorNodeService = MirrorNodeService.getInstance();
-    //   const tokens = await mirrorNodeService.getTokenBalance(id, [tokenId]);
-    //   tokenBalance = tokens.get(tokenId.toString());
-    // }
-    // tokenBalance = tokenBalance ?? new Long(0);
-
     console.log(
       `- Common#getTokenBalance(): id = ${id}, TokenId = ${tokenId}, Balance = ${tokenBalance}\n`
     );
@@ -356,21 +346,6 @@ export default class Common extends Base {
     accountId: string,
     tokenId: string
   ) => {
-    // let balance = new BigNumber(0);
-    // const url = `${Common.baseUrl}api/v1/accounts/${accountId}/tokens?token.id=${tokenId}`;
-    // try {
-    //   const response = await fetch(url, { cache: "no-store" });
-    //   const data = await response.json();
-    //   balance = new BigNumber(data.tokens[0].balance);
-    //   console.log(
-    //     `Common#fetchTokenBalanceFromMirrorNode(): id = ${accountId}, TokenId = ${tokenId}, Balance = ${balance}`
-    //   );
-    // } catch (error) {
-    //   console.log(
-    //     `Common#fetchTokenBalanceFromMirrorNode(): failed for id = ${accountId}, TokenId = ${tokenId}`
-    //   );
-    //   console.error(error);
-    // }
     const token = new Token(ContractId.fromString(tokenId.toString()));
     const tokenBalance = await token.getBalance(
       AccountId.fromString(accountId)

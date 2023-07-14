@@ -25,6 +25,7 @@ const TOKEN_ID = TokenId.fromString(dex.TOKEN_LAB49_1);
 const adminAddress: string = clientsInfo.operatorId.toSolidityAddress();
 const DAO_DESC = "Lorem Ipsum is simply dummy text";
 const DAO_WEB_LINKS = ["LINKEDIN", "https://linkedin.com"];
+const PROPOSAL_CREATE_SERIAL_ID = 12;
 
 let ftDao: FTDAO;
 let governorTT: Governor;
@@ -141,7 +142,7 @@ export class DAONFTTokenTest extends CommonSteps {
       clientsInfo.operatorClient,
       GovernorTokenMetaData.DEFAULT_LINK,
       GovernorTokenMetaData.DEFAULT_DESCRIPTION,
-      12
+      PROPOSAL_CREATE_SERIAL_ID
     );
   }
 
@@ -163,7 +164,7 @@ export class DAONFTTokenTest extends CommonSteps {
       clientsInfo.operatorClient,
       GovernorTokenMetaData.DEFAULT_LINK,
       GovernorTokenMetaData.DEFAULT_DESCRIPTION,
-      12
+      PROPOSAL_CREATE_SERIAL_ID
     );
   }
 
@@ -181,7 +182,7 @@ export class DAONFTTokenTest extends CommonSteps {
         clientsInfo.operatorClient,
         GovernorTokenMetaData.DEFAULT_LINK,
         GovernorTokenMetaData.DEFAULT_DESCRIPTION,
-        12
+        PROPOSAL_CREATE_SERIAL_ID
       );
     } catch (e: any) {
       errorMsg = e.message;
