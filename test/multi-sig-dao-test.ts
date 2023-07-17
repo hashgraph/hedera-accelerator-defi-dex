@@ -7,6 +7,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 describe("MultiSig tests", function () {
   const TXN_TYPE_TRANSFER = 1;
+  const TXN_TYPE_TEXT = 3;
   const TXN_TYPE_BATCH = 2;
   const INVALID_TXN_HASH = ethers.utils.formatBytes32String("INVALID_TXN_HASH");
   const TOTAL = 100 * 1e8;
@@ -14,6 +15,7 @@ describe("MultiSig tests", function () {
   const DAO_NAME = "DAO_NAME";
   const LOGO_URL = "LOGO_URL";
   const DESCRIPTION = "DESCRIPTION";
+  const TEXT_PROPOSAL_TEXT = "TEXT_PROPOSAL_TEXT";
   const WEB_LINKS = [
     "TWITTER",
     "https://twitter.com",
@@ -49,7 +51,9 @@ describe("MultiSig tests", function () {
     expect(info.nonce).equals(1);
     expect(info.transactionType).equals(txnType);
     expect(info.title).equals(TITLE);
-    expect(info.description).equals(DESCRIPTION);
+    txnType == TXN_TYPE_TEXT
+      ? expect(info.description).equals(TEXT_PROPOSAL_TEXT)
+      : expect(info.description).equals(DESCRIPTION);
     expect(info.linkToDiscussion).equals(LINK_TO_DISCUSSION);
     expect(info.creator).not.equals(TestHelper.ZERO_ADDRESS);
     return { txnHash, info };
@@ -72,6 +76,23 @@ describe("MultiSig tests", function () {
       LINK_TO_DISCUSSION
     );
     return await verifyTransactionCreatedEvent(txn, TXN_TYPE_TRANSFER);
+  }
+
+  async function proposeTextTransaction(
+    multiSigDAOInstance: Contract,
+    text: string,
+    creator: string,
+    title: string = TITLE
+  ) {
+    const txn = await multiSigDAOInstance.proposeTransaction(
+      multiSigDAOInstance.address,
+      createTextTransaction(creator, text),
+      TXN_TYPE_TEXT,
+      title,
+      text,
+      LINK_TO_DISCUSSION
+    );
+    return await verifyTransactionCreatedEvent(txn, TXN_TYPE_TEXT);
   }
 
   async function proposeTransferTransaction(
@@ -98,6 +119,18 @@ describe("MultiSig tests", function () {
     const ABI = ["function transfer(address to, uint amount) returns (bool)"];
     const iface = new ethers.utils.Interface(ABI);
     const data = iface.encodeFunctionData("transfer", [receiver, amount]);
+    return ethers.utils.arrayify(data);
+  }
+
+  function createTextTransaction(
+    creator: string,
+    textAsHash: string
+  ): Uint8Array {
+    const ABI = [
+      "function setText(address,string) external returns (address,string)",
+    ];
+    const iface = new ethers.utils.Interface(ABI);
+    const data = iface.encodeFunctionData("setText", [creator, textAsHash]);
     return ethers.utils.arrayify(data);
   }
 
@@ -970,6 +1003,77 @@ describe("MultiSig tests", function () {
       expect(await multiSigDAOInstance.getMultiSendContractAddress()).equals(
         newMultiSend.address
       );
+    });
+
+    describe("Text proposal test cases", () => {
+      it("Verify text proposal workflow - proposal to execution ", async function () {
+        const {
+          multiSigDAOInstance,
+          signers,
+          hederaGnosisSafeProxyContract,
+          daoSigners,
+        } = await loadFixture(deployFixture);
+
+        const { txnHash: textProposalTxnHash, info } =
+          await proposeTextTransaction(
+            multiSigDAOInstance,
+            TEXT_PROPOSAL_TEXT,
+            signers[0].address
+          );
+
+        const approvalStatus1 =
+          await hederaGnosisSafeProxyContract.checkApprovals(
+            textProposalTxnHash
+          );
+        expect(approvalStatus1).equals(false);
+
+        // took all approvals except from first singer
+        for (const signer of daoSigners.slice(1)) {
+          await hederaGnosisSafeProxyContract
+            .connect(signer)
+            .approveHash(textProposalTxnHash);
+        }
+
+        const approvalStatus2 =
+          await hederaGnosisSafeProxyContract.checkApprovals(
+            textProposalTxnHash
+          );
+        expect(approvalStatus2).equals(false);
+
+        // took first signer approval now
+        await hederaGnosisSafeProxyContract
+          .connect(daoSigners.at(0)!)
+          .approveHash(textProposalTxnHash);
+
+        const approvalStatus3 =
+          await hederaGnosisSafeProxyContract.checkApprovals(
+            textProposalTxnHash
+          );
+        expect(approvalStatus3).equals(true);
+
+        expect(await multiSigDAOInstance.state(textProposalTxnHash)).equals(1); // Approved
+
+        await hederaGnosisSafeProxyContract.executeTransaction(
+          info.to,
+          info.value,
+          info.data,
+          info.operation,
+          info.nonce
+        );
+      });
+
+      it("Verify setText can be called via HederaGnosisSafe ", async function () {
+        const {
+          multiSigDAOInstance,
+          signers,
+          hederaGnosisSafeProxyContract,
+          daoSigners,
+        } = await loadFixture(deployFixture);
+
+        await expect(
+          multiSigDAOInstance.setText(TestHelper.ONE_ADDRESS, "Anything")
+        ).revertedWith("Only HederaGnosisSafe can execute it.");
+      });
     });
   });
 });
