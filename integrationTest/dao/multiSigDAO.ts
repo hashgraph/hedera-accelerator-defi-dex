@@ -182,8 +182,8 @@ export async function executeDAOTextProposal(
   const textProposalText = "TEXT";
 
   const textTxData = await multiSigDAO.encodeFunctionData(
-    "MultiSigDAO",
-    "setText",
+    ContractService.MULTI_SIG,
+    multiSigDAO.SET_TEXT,
     [clientsInfo.operatorId.toSolidityAddress(), textProposalText]
   );
 

@@ -46,6 +46,7 @@ const CHANGE_THRESHOLD = 1004;
 const deployment = new Deployment();
 
 export default class MultiSigDao extends BaseDao {
+  public SET_TEXT = "setText";
   async initialize(
     admin: string,
     name: string,

@@ -36,7 +36,6 @@ contract MultiSigDAO is BaseDAO {
 
     uint256 private constant TXN_TYPE_TOKEN_TRANSFER = 1;
     uint256 private constant TXN_TYPE_BATCH = 2;
-    uint256 private constant TXN_TYPE_TEXT = 3;
 
     HederaMultiSend private multiSend;
     IHederaService private hederaService;
