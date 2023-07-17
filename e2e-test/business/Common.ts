@@ -343,13 +343,11 @@ export default class Common extends Base {
   };
 
   static fetchTokenBalanceFromMirrorNode = async (
-    accountId: string,
+    accountId: AccountId,
     tokenId: string
   ) => {
     const token = new Token(ContractId.fromString(tokenId.toString()));
-    const tokenBalance = await token.getBalance(
-      AccountId.fromString(accountId)
-    );
+    const tokenBalance = await token.getBalance(accountId);
     return tokenBalance;
   };
 

@@ -292,7 +292,7 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
   )
   public async getTokenBalance() {
     balance = await Common.fetchTokenBalanceFromMirrorNode(
-      toAccount.toString(),
+      toAccount,
       tokenId.toString()
     );
     console.log(
@@ -307,7 +307,7 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
   )
   public async verifyTokenBalanceIsGreaterThanTransferAmt(transferAmt: number) {
     fromAcctBal = await Common.fetchTokenBalanceFromMirrorNode(
-      fromAccount.toString(),
+      fromAccount,
       tokenId.toString()
     );
     expect(
@@ -322,7 +322,7 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
   )
   public async verifyTokenBalance() {
     const updatedBalance = await Common.fetchTokenBalanceFromMirrorNode(
-      toAccount.toString(),
+      toAccount,
       tokenId.toString()
     );
     expect(updatedBalance).to.eql(balance.plus(tokens));

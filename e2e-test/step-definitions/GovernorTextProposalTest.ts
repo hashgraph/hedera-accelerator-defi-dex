@@ -116,7 +116,7 @@ export class GovernorTextProposal extends CommonSteps {
   @when(/User fetches GOD token balance/, undefined, 30000)
   public async fetchGODTokenBalance() {
     godToken = await Common.fetchTokenBalanceFromMirrorNode(
-      clientsInfo.operatorId.toString(),
+      clientsInfo.operatorId,
       tokenGOD
     );
   }
@@ -125,7 +125,7 @@ export class GovernorTextProposal extends CommonSteps {
   public async verifyGODTokensAreReturned() {
     await Helper.delay(10000);
     const updatedGODToken = await Common.fetchTokenBalanceFromMirrorNode(
-      clientsInfo.operatorId.toString(),
+      clientsInfo.operatorId,
       tokenGOD
     );
     console.log(

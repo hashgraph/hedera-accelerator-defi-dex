@@ -27,7 +27,9 @@ export default class Token extends Base {
     const { result } = await this.execute(50_000, BALANCE_OF, client, args);
     const balance = result.getUint256(0);
     console.log(
-      `- Token#${BALANCE_OF}(): address = ${user} balance ${balance}\n`
+      `- Token#${BALANCE_OF}(): token ${
+        this.contractId
+      } address = ${user.toSolidityAddress()} balance ${balance}\n`
     );
     return balance;
   };
