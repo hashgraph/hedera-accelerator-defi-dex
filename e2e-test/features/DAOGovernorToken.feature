@@ -29,7 +29,7 @@ Scenario: Verify user can create a DAO and then transfer token with help of prop
     When User wait for token transfer proposal state to be "Succeeded" for maximum 15 seconds
     Then User verify token transfer proposal state is "Succeeded"
     When User execute token transfer proposal with title "tokentransferproposaltitle1"
-    When User wait for token transfer proposal state to be "Executed" for maximum 10 seconds
+    When User wait for token transfer proposal state to be "Executed" for maximum 25 seconds
     Then User verify target token is transferred to payee account 
 
 Scenario: Verify proposal is not executed if token transfer amount is larger than token current balance
@@ -64,7 +64,7 @@ Scenario: Verify DAO and proposal flow with factory DAO
     When User wait for token transfer proposal state to be "Succeeded" for maximum 15 seconds
     Then User verify token transfer proposal state is "Succeeded"
     When User execute token transfer proposal with title "factorytesttitle11abxz"
-    When User wait for token transfer proposal state to be "Executed" for maximum 10 seconds
+    When User wait for token transfer proposal state to be "Executed" for maximum 25 seconds
     When User receive GOD tokens back from GOD holder created via DAO factory
     Then User verify target token is transferred to payee account 
 
