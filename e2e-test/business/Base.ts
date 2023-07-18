@@ -18,7 +18,7 @@ import {
 import assert from "assert";
 
 export default abstract class Base {
-  protected csDev: ContractService = new ContractService();
+  protected csDev: ContractService;
   protected htsAddress: string;
   protected configuration: string;
   contractId: string;
@@ -31,7 +31,11 @@ export default abstract class Base {
   private REVOKE_ROLE = "revokeRole";
   private IMPLEMENTATION = "implementation";
 
-  constructor(_contractId: ContractId | null = null) {
+  constructor(
+    _contractId: ContractId | null = null,
+    _targetService: ContractService | null = null
+  ) {
+    this.csDev = _targetService ?? new ContractService();
     this.htsAddress = this.getHederaServiceContractAddress();
     this.configuration = this.getConfigurationContractAddress();
     this.contractName = this.getContractName() ?? "Base";

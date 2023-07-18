@@ -122,14 +122,29 @@ export class EtherDeployment {
 export class Deployment {
   private contractService = new ContractService();
   private contractMetadata = new ContractMetadata();
+  private csLogic = ContractService.getLogicPathContractService();
 
   public deploy = async (
     contractName: string,
     adminKey: Key = clientsInfo.operatorKey.publicKey,
     client: Client = clientsInfo.operatorClient,
-    params: ContractFunctionParameters = new ContractFunctionParameters()
+    params: ContractFunctionParameters = new ContractFunctionParameters(),
+    enableLogs: boolean = true
   ) => {
-    console.log(`- Deployment#deploy(): ${contractName} logic deploying...\n`);
+    const copy = await this.getLogicCopyIfExist(contractName);
+    if (copy) {
+      if (enableLogs) {
+        console.log(`- Deployment#deploy(): done where copy already exist :-`);
+        console.table(copy);
+        console.log("");
+      }
+      return copy;
+    }
+    if (enableLogs) {
+      console.log(
+        `- Deployment#deploy(): ${contractName} logic deploying...\n`
+      );
+    }
     const result = await this._deployInternally(
       contractName,
       "",
@@ -137,9 +152,13 @@ export class Deployment {
       client,
       params
     );
-    console.log(
-      `- Deployment#deploy(): done where contract-name = ${contractName}, id = ${result.id}, address = ${result.address}\n`
-    );
+    this.csLogic.addDeployed(result);
+    this.csLogic.makeLatestDeploymentAsDefault(false);
+    if (enableLogs) {
+      console.log(`- Deployment#deploy(): done`);
+      console.table(result);
+      console.log("");
+    }
     return result;
   };
 
@@ -176,16 +195,17 @@ export class Deployment {
     console.log(
       `- Deployment#deployProxy(): ${contractName} proxy deploying...\n`
     );
-    const logic = await this._deployInternally(
+    const logic = await this.deploy(
       contractName,
-      "",
       adminKey,
-      client
+      client,
+      new ContractFunctionParameters(),
+      false
     );
     const proxy = await this.deployProxyForGivenLogic(logic, adminKey, client);
     console.log(`- Deployment#deployProxy(): done`);
     console.table(proxy);
-    console.log("\n");
+    console.log("");
     return proxy;
   };
 
@@ -267,5 +287,10 @@ export class Deployment {
       address,
       timestamp: new Date().toISOString(),
     };
+  };
+
+  private getLogicCopyIfExist = async (contractName: string) => {
+    const info = await this.contractMetadata.getContractInfo(contractName);
+    return this.csLogic.findLogicContract(contractName, info.hash);
   };
 }

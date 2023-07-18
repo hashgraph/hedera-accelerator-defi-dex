@@ -52,6 +52,7 @@ export class ContractService {
   static DEV_CONTRACTS_PATH = "./deployment/state/contracts.json";
   static UAT_CONTRACTS_PATH = "./deployment/state/contractsUAT.json";
   private static CONTRACTS_IDS = "./deployment/state/contractIds.json";
+  static LOGIC_CONTRACTS_PATH = "./deployment/state/logics.json";
 
   constructor(filePath?: string) {
     this.contractRecordFile = filePath ?? ContractService.DEV_CONTRACTS_PATH;
@@ -59,6 +60,10 @@ export class ContractService {
 
   static getContractServiceForIds() {
     return new ContractService(this.CONTRACTS_IDS);
+  }
+
+  public static getLogicPathContractService() {
+    return new ContractService(ContractService.LOGIC_CONTRACTS_PATH);
   }
 
   private readFileContent = () => {
@@ -233,15 +238,15 @@ export class ContractService {
     fs.writeFileSync(this.contractRecordFile, data);
   };
 
-  public makeLatestDeploymentAsDefault = () => {
+  public makeLatestDeploymentAsDefault = (enableLogs: Boolean = true) => {
     const contracts: [DeployedContract] = this.readFileContent();
     const oldContents = JSON.stringify(contracts, null, 2);
-    console.log(`Contract details oldContents ${oldContents}`);
+    enableLogs && console.log(`Contract details oldContents ${oldContents}`);
     const mergedContracts = [
       ...new Map(contracts.map((x) => [x.name, x])).values(),
     ];
     const newContents = JSON.stringify(mergedContracts, null, 2);
-    console.log(`Contract details newContents ${newContents}`);
+    enableLogs && console.log(`Contract details newContents ${newContents}`);
     fs.writeFileSync(this.contractRecordFile, newContents);
   };
 
@@ -255,5 +260,12 @@ export class ContractService {
         contract.address.includes(idOrAddress)
     );
     return matchingContracts.length > 0 ? matchingContracts.at(0) : undefined;
+  };
+
+  public findLogicContract = (name: string, hash: string) => {
+    const contracts: DeployedContract[] = this.readFileContent();
+    return contracts.find(
+      (item) => item && item.name === name.toLowerCase() && item.hash === hash
+    );
   };
 }

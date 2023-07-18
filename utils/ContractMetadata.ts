@@ -13,44 +13,35 @@ interface ContractInfo {
 }
 
 export default class ContractMetadata {
-  static SUPPORTED_CONTRACTS_FOR_UPGRADE = [
-    "Factory",
-    "LPToken",
-    "Pair",
-    "GovernorUpgrade",
-    "GovernorTransferToken",
-    "GovernorTextProposal",
-    "GovernorTokenCreate",
-    "Splitter",
-    "Configuration",
-    "FTDAOFactory",
-    "NFTDAOFactory",
-    "MultisigDAOFactory",
+  static NON_PROXY_CONTRACTS = [
+    "HederaService",
+    "HederaMultiSend",
+    "HederaGnosisSafe",
+    "HederaGnosisSafeProxyFactory",
   ];
 
   static SUPPORTED_CONTRACTS_FOR_DEPLOYMENT = [
     "Factory",
-    "LPToken",
-    "Pair",
-    "HederaService",
-    "GovernorUpgrade",
-    "GovernorTransferToken",
-    "GovernorTextProposal",
-    "GovernorTokenCreate",
-    "Splitter",
-    "Vault",
-    "Configuration",
-    "GODTokenHolderFactory",
-    "NFTTokenHolderFactory",
-    "MultisigDAOFactory",
-    "MultiSigDAO",
-    "FTDAO",
     "FTDAOFactory",
     "NFTDAOFactory",
+    "MultisigDAOFactory",
+    "NFTTokenHolderFactory",
+    "GODTokenHolderFactory",
+    "Configuration",
+    "FTDAO",
+    "MultiSigDAO",
+    "Pair",
+    "LPToken",
+    "Splitter",
+    "Vault",
     "GODHolder",
     "NFTHolder",
-    "HederaMultiSend",
     "SystemRoleBasedAccess",
+    "GovernorUpgrade",
+    "GovernorTextProposal",
+    "GovernorTransferToken",
+    "GovernorTokenCreate",
+    ...ContractMetadata.NON_PROXY_CONTRACTS,
   ];
 
   static SUPPORTED_PROXY_OPTIONS = ["create", "update"];
@@ -65,8 +56,6 @@ export default class ContractMetadata {
     name: "Panic",
     type: "error",
   };
-
-  private csUAT = new ContractService(ContractService.UAT_CONTRACTS_PATH);
 
   private _readAllContractInfo = async (supportedContractsName: string[]) => {
     const contractsInfo: ContractInfo[] = [];
@@ -96,14 +85,13 @@ export default class ContractMetadata {
   public getAllChangedContractNames = async () => {
     const eligibleContractsForDeployments: string[] = [];
     const contractsInfo = await this.getContractsInfo(
-      ContractMetadata.SUPPORTED_CONTRACTS_FOR_UPGRADE
+      ContractMetadata.SUPPORTED_CONTRACTS_FOR_DEPLOYMENT
     );
+    const csLogic = ContractService.getLogicPathContractService();
     for (const contractInfo of contractsInfo) {
       const name = contractInfo.artifact.contractName.toLowerCase();
-      const contract = this.csUAT.getContractWithProxy(name);
-      if (contract?.hash !== contractInfo.hash) {
-        eligibleContractsForDeployments.push(name);
-      }
+      const contract = csLogic.findLogicContract(name, contractInfo.hash);
+      !contract && eligibleContractsForDeployments.push(name);
     }
     return eligibleContractsForDeployments;
   };
@@ -112,9 +100,6 @@ export default class ContractMetadata {
     contractNameList: string[] = [
       ...ContractMetadata.SUPPORTED_CONTRACTS_FOR_DEPLOYMENT,
       "TransparentUpgradeableProxy",
-      "HederaGnosisSafe",
-      "HederaGnosisSafeProxyFactory",
-      "ContractUpgradeDAO",
       "BaseDAO",
       "IERC20",
     ]

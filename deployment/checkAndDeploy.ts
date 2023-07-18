@@ -1,56 +1,52 @@
-import Web3 from "web3";
 import ContractMetadata from "../utils/ContractMetadata";
-import ContractUpgradeGovernor from "../e2e-test/business/ContractUpgradeGovernor";
 
 import { Helper } from "../utils/Helper";
 import { Deployment } from "../utils/deployContractOnTestnet";
-import { clientsInfo } from "../utils/ClientManagement";
 import { ContractService } from "./service/ContractService";
-import { DeployedContract } from "./model/contract";
+import { main as initializeContracts } from "./scripts/initializeContracts";
 
-const web3 = new Web3();
-const deployment = new Deployment();
+const NON_PROXY_CONTRACTS_WITH_LOWER_CASE_NAME =
+  ContractMetadata.NON_PROXY_CONTRACTS.map((item: string) =>
+    item.toLowerCase()
+  );
 
-const contractMetadata = new ContractMetadata();
 const csUAT = new ContractService(ContractService.UAT_CONTRACTS_PATH);
-
-const gitLastCommitMessage = Helper.getGitLastCommitMessage();
+const deployment = new Deployment();
+const contractMetadata = new ContractMetadata();
 
 async function main() {
-  const contractsToDeploy = await contractMetadata.getAllChangedContractNames();
-  console.log(`Eligible contracts for upgrade: [${contractsToDeploy}]\n`);
-  for (const contractName of contractsToDeploy) {
-    const oldVersion = csUAT.getContractWithProxy(contractName);
-    const newVersion = await deployment.deploy(contractName);
-    await createProposal(oldVersion, newVersion.address);
+  const allContractsToDeploy =
+    await contractMetadata.getAllChangedContractNames();
+  if (allContractsToDeploy.length === 0) {
+    console.log(`No contract for auto upgrade available`);
+    return;
   }
-}
+  console.log(`Eligible contracts for auto upgrade:`, allContractsToDeploy);
 
-async function createProposal(
-  oldVersion: DeployedContract,
-  newVersionAddress: string
-) {
-  const uniqueId = web3.utils.randomHex(20);
-  const desc = `Contract Name - ${
-    oldVersion.name
-  }, New Logic Address =  ${newVersionAddress}, Old Logic Id = ${oldVersion.id!}, Proxy Id = ${oldVersion.transparentProxyId!}`;
-
-  const governor = new ContractUpgradeGovernor();
-  await governor.setupAllowanceForProposalCreation(
-    clientsInfo.operatorClient,
-    clientsInfo.operatorId,
-    clientsInfo.operatorKey
+  const proxyContractsToDeploy = allContractsToDeploy.filter(
+    (item: string) => !NON_PROXY_CONTRACTS_WITH_LOWER_CASE_NAME.includes(item)
   );
 
-  const result = await governor.createContractUpgradeProposal(
-    oldVersion.transparentProxyAddress!,
-    newVersionAddress,
-    `${gitLastCommitMessage} (${uniqueId})`,
-    clientsInfo.operatorClient,
-    desc
+  const nonProxyContractsToDeploy = allContractsToDeploy.filter(
+    (item: string) => NON_PROXY_CONTRACTS_WITH_LOWER_CASE_NAME.includes(item)
   );
-  console.log("Proposal creation status :", result.success, result.proposalId);
-  return result.success;
+
+  await Promise.all(
+    nonProxyContractsToDeploy.map(async (name: string) => {
+      const item = await deployment.deploy(name);
+      csUAT.addDeployed(item);
+    })
+  );
+
+  await Promise.all(
+    proxyContractsToDeploy.map(async (name: string) => {
+      const item = await deployment.deployProxy(name);
+      csUAT.addDeployed(item);
+    })
+  );
+
+  allContractsToDeploy.length > 0 && csUAT.makeLatestDeploymentAsDefault(false);
+  proxyContractsToDeploy.length > 0 && (await initializeContracts(csUAT));
 }
 
 main()
