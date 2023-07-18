@@ -326,7 +326,7 @@ export class DAONFTTokenTest extends CommonSteps {
     30000
   )
   public async getTokenBalance() {
-    balance = await Common.fetchTokenBalanceFromMirrorNode(
+    balance = await Common.getTokenBalance(
       clientsInfo.operatorId,
       TOKEN_ID.toString()
     );
@@ -339,7 +339,7 @@ export class DAONFTTokenTest extends CommonSteps {
     30000
   )
   public async verifyTokenBalanceIsGreaterThanTransferAmt(transferAmt: number) {
-    fromAcctBal = await Common.fetchTokenBalanceFromMirrorNode(
+    fromAcctBal = await Common.getTokenBalance(
       clientsInfo.treasureId,
       TOKEN_ID.toString()
     );
@@ -354,7 +354,7 @@ export class DAONFTTokenTest extends CommonSteps {
     30000
   )
   public async verifyTokenBalance() {
-    const updatedBalance = await Common.fetchTokenBalanceFromMirrorNode(
+    const updatedBalance = await Common.getTokenBalance(
       clientsInfo.operatorId,
       TOKEN_ID.toString()
     );

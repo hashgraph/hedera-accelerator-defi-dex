@@ -42,7 +42,7 @@ Scenario: Verify user can create a dao and transfer the token via proposal
     Then User wait for "Succeeded" state of token transfer proposal for maximum 25 seconds
     Then User checks token transfer proposal state is "Succeeded"
     When User executes proposal with title "NFTDAOTokenTransferProposalTest11"
-    When User wait for "Executed" state of token transfer proposal for maximum 25 seconds
+    When User wait for "Executed" state of token transfer proposal for maximum 15 seconds
     Then User checks token transfer proposal state is "Executed"
     Then User confirms target token is transferred to payee account 
   
@@ -57,7 +57,7 @@ Scenario: Verify user cannot execute proposal if token transfer amount is greate
     When User wait for "Active" state of token transfer proposal for maximum 25 seconds
     Then User checks token transfer proposal state is "Active"
     When User cast vote "For" proposal
-    Then User wait for "Succeeded" state of token transfer proposal for maximum 25 seconds
+    Then User wait for "Succeeded" state of token transfer proposal for maximum 15 seconds
     Then User checks token transfer proposal state is "Succeeded"
     When User tries to execute proposal with title "NFTDAOTokenTransferProposalTest22"
     Then User receive the error message "CONTRACT_REVERT_EXECUTED" 

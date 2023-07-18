@@ -1,5 +1,4 @@
 import Base from "./Base";
-import Long from "long";
 import dex from "../../deployment/model/dex";
 
 import {
@@ -22,7 +21,6 @@ import {
 } from "@hashgraph/sdk";
 import { BigNumber } from "bignumber.js";
 import { clientsInfo } from "../../utils/ClientManagement";
-import { MirrorNodeService } from "../../utils/MirrorNodeService";
 import Token from "./Token";
 
 export default class Common extends Base {
@@ -340,15 +338,6 @@ export default class Common extends Base {
     console.log(
       `Common#mintToken(): TokenId = ${tokenId},  mintAmt = ${mintAmt}, transaction status is: ${transactionStatus.toString()}`
     );
-  };
-
-  static fetchTokenBalanceFromMirrorNode = async (
-    accountId: AccountId,
-    tokenId: string
-  ) => {
-    const token = new Token(ContractId.fromString(tokenId.toString()));
-    const tokenBalance = await token.getBalance(accountId);
-    return tokenBalance;
   };
 
   static associateTokensToAccount = async (
