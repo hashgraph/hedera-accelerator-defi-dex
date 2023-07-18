@@ -1,4 +1,4 @@
-import { AccountId } from "@hashgraph/sdk";
+import { AccountId, TokenId } from "@hashgraph/sdk";
 import { clientsInfo } from "../../utils/ClientManagement";
 
 import dex from "../model/dex";
@@ -12,7 +12,10 @@ async function main() {
     dex.GOD_TOKEN_ID,
     100000 * 1e8
   );
-  await Common.fetchTokenBalanceFromMirrorNode("0.0.6869", dex.GOD_TOKEN_ID);
+  await Common.getTokenBalance(
+    AccountId.fromString("0.0.6869"),
+    TokenId.fromString(dex.GOD_TOKEN_ID)
+  );
   return "executed successfully";
 }
 

@@ -21,7 +21,7 @@ const governorContractId = governorTextContract.transparentProxyId!;
 const godHolderContractId = godHolderContract.transparentProxyId!;
 const governor = new TextGovernor(ContractId.fromString(governorContractId));
 const godHolder = new GodHolder(ContractId.fromString(godHolderContractId));
-const tokenGOD = dex.GOD_TOKEN_ID;
+const tokenGOD = TokenId.fromString(dex.GOD_TOKEN_ID);
 
 let errorMsg: string = "";
 let proposalId: string;
@@ -115,17 +115,14 @@ export class GovernorTextProposal extends CommonSteps {
 
   @when(/User fetches GOD token balance/, undefined, 30000)
   public async fetchGODTokenBalance() {
-    godToken = await Common.fetchTokenBalanceFromMirrorNode(
-      clientsInfo.operatorId.toString(),
-      tokenGOD
-    );
+    godToken = await Common.getTokenBalance(clientsInfo.operatorId, tokenGOD);
   }
 
   @then(/User verify GOD tokens are returned to user/, undefined, 30000)
   public async verifyGODTokensAreReturned() {
     await Helper.delay(10000);
-    const updatedGODToken = await Common.fetchTokenBalanceFromMirrorNode(
-      clientsInfo.operatorId.toString(),
+    const updatedGODToken = await Common.getTokenBalance(
+      clientsInfo.operatorId,
       tokenGOD
     );
     console.log(

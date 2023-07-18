@@ -39,6 +39,7 @@ async function main() {
   const roleBasedAccess = new SystemRoleBasedAccess();
 
   const tokenHolderFactory = new NFTTokenHolderFactory();
+
   const nftHolderContractId = await tokenHolderFactory.getTokenHolder(
     GovernorTokenMetaData.NFT_TOKEN_ID.toSolidityAddress()
   );
@@ -55,7 +56,7 @@ async function main() {
     GovernorTokenMetaData.DEFAULT_QUORUM_THRESHOLD_IN_BSP,
     GovernorTokenMetaData.DEFAULT_VOTING_DELAY,
     GovernorTokenMetaData.DEFAULT_VOTING_PERIOD,
-    GovernorTokenMetaData.GOD_TOKEN_ID,
+    GovernorTokenMetaData.NFT_TOKEN_ID,
     GovernorTokenMetaData.NFT_TOKEN_ID
   );
 
@@ -103,6 +104,7 @@ export async function executeGovernorTokenTransferFlow(
     voterAccountPrivateKey,
     voterClient
   );
+
   await nftHolder.grabTokensForVoter(
     NFT_ID_FOR_VOTING,
     voterAccountId,
@@ -112,17 +114,19 @@ export async function executeGovernorTokenTransferFlow(
 
   const governorAddresses =
     await tokenTransferDAO.getGovernorTokenTransferContractAddresses();
+
   const governorTokenTransfer = new TokenTransferGovernor(
     governorAddresses.governorTokenTransferProxyId
   );
 
-  await governorTokenTransfer.setupAllowanceForProposalCreation(
+  await governorTokenTransfer.setupNFTAllowanceForProposalCreation(
     proposalCreatorClient,
     proposalCreatorAccountId,
     proposalCreatorAccountPrivateKey
   );
 
   const title = Helper.createProposalTitle("Token Transfer Proposal");
+
   const proposalId = await tokenTransferDAO.createTokenTransferProposal(
     title,
     fromAccount.toSolidityAddress(),
@@ -157,5 +161,6 @@ export async function executeGovernorTokenTransferFlow(
   } else {
     await governorTokenTransfer.cancelProposal(title, proposalCreatorClient);
   }
+
   await nftHolder.checkAndClaimNFTTokens(voterClient, voterAccountId);
 }

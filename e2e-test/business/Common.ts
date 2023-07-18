@@ -1,5 +1,4 @@
 import Base from "./Base";
-import Long from "long";
 import dex from "../../deployment/model/dex";
 
 import {
@@ -22,7 +21,7 @@ import {
 } from "@hashgraph/sdk";
 import { BigNumber } from "bignumber.js";
 import { clientsInfo } from "../../utils/ClientManagement";
-import { MirrorNodeService } from "../../utils/MirrorNodeService";
+import Token from "./Token";
 
 export default class Common extends Base {
   static baseUrl: string = "https://testnet.mirrornode.hedera.com/";
@@ -215,14 +214,8 @@ export default class Common extends Base {
     tokenId: TokenId,
     client: Client = clientsInfo.operatorClient
   ) => {
-    const response = await this.getBalanceInternally(id, client);
-    let tokenBalance = response.tokens?.get(tokenId);
-    if (!tokenBalance) {
-      const mirrorNodeService = MirrorNodeService.getInstance();
-      const tokens = await mirrorNodeService.getTokenBalance(id, [tokenId]);
-      tokenBalance = tokens.get(tokenId.toString());
-    }
-    tokenBalance = tokenBalance ?? new Long(0);
+    const token = new Token(ContractId.fromString(tokenId.toString()));
+    const tokenBalance = await token.getBalance(id);
     console.log(
       `- Common#getTokenBalance(): id = ${id}, TokenId = ${tokenId}, Balance = ${tokenBalance}\n`
     );
@@ -345,21 +338,6 @@ export default class Common extends Base {
     console.log(
       `Common#mintToken(): TokenId = ${tokenId},  mintAmt = ${mintAmt}, transaction status is: ${transactionStatus.toString()}`
     );
-  };
-
-  static fetchTokenBalanceFromMirrorNode = async (
-    accountId: string,
-    tokenId: string
-  ) => {
-    let balance = new BigNumber(0);
-    const url = `${Common.baseUrl}api/v1/accounts/${accountId}/tokens?token.id=${tokenId}`;
-    const response = await fetch(url, { cache: "no-store" });
-    const data = await response.json();
-    balance = new BigNumber(data.tokens[0].balance);
-    console.log(
-      `Common#fetchTokenBalanceFromMirrorNode(): id = ${accountId}, TokenId = ${tokenId}, Balance = ${balance}`
-    );
-    return balance;
   };
 
   static associateTokensToAccount = async (
