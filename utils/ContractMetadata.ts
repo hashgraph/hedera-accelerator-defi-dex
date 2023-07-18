@@ -82,15 +82,14 @@ export default class ContractMetadata {
     return (await this.getContractInfo(contractName)).hash;
   };
 
-  public getAllChangedContractNames = async () => {
+  public getAllChangedContractNames = async (targetCs: ContractService) => {
     const eligibleContractsForDeployments: string[] = [];
     const contractsInfo = await this.getContractsInfo(
       ContractMetadata.SUPPORTED_CONTRACTS_FOR_DEPLOYMENT
     );
-    const csLogic = ContractService.getLogicPathContractService();
     for (const contractInfo of contractsInfo) {
       const name = contractInfo.artifact.contractName.toLowerCase();
-      const contract = csLogic.findLogicContract(name, contractInfo.hash);
+      const contract = targetCs.findLogicContract(name, contractInfo.hash);
       !contract && eligibleContractsForDeployments.push(name);
     }
     return eligibleContractsForDeployments;

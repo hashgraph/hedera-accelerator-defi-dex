@@ -10,13 +10,13 @@ const NON_PROXY_CONTRACTS_WITH_LOWER_CASE_NAME =
     item.toLowerCase()
   );
 
-const csUAT = new ContractService(ContractService.UAT_CONTRACTS_PATH);
 const deployment = new Deployment();
 const contractMetadata = new ContractMetadata();
 
 async function main() {
+  const service = getContractService();
   const allContractsToDeploy =
-    await contractMetadata.getAllChangedContractNames();
+    await contractMetadata.getAllChangedContractNames(service);
   if (allContractsToDeploy.length === 0) {
     console.log(`No contract for auto upgrade available`);
     return;
@@ -34,19 +34,26 @@ async function main() {
   await Promise.all(
     nonProxyContractsToDeploy.map(async (name: string) => {
       const item = await deployment.deploy(name);
-      csUAT.addDeployed(item);
+      service.addDeployed(item);
     })
   );
 
   await Promise.all(
     proxyContractsToDeploy.map(async (name: string) => {
       const item = await deployment.deployProxy(name);
-      csUAT.addDeployed(item);
+      service.addDeployed(item);
     })
   );
 
-  allContractsToDeploy.length > 0 && csUAT.makeLatestDeploymentAsDefault(false);
-  proxyContractsToDeploy.length > 0 && (await initializeContracts(csUAT));
+  allContractsToDeploy.length > 0 &&
+    service.makeLatestDeploymentAsDefault(false);
+  proxyContractsToDeploy.length > 0 && (await initializeContracts(service));
+}
+
+function getContractService() {
+  const path =
+    process.env.CONTRACT_SERVICE_PATH ?? ContractService.UAT_CONTRACTS_PATH;
+  return new ContractService(path);
 }
 
 main()
