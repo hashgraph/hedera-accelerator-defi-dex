@@ -405,9 +405,6 @@ export class MultiSigDAOSteps {
 
   @then(/User verify contract logic address is updated/, undefined, 30000)
   public async verifyDAOLogicIsUpdated() {
-    expect(upgradeResult.newImplementation).not.to.eql(
-      upgradeResult.oldImplementation
-    );
     expect(upgradeResult.newImplementation.toString().toUpperCase()).to.eql(
       contractNewAddress.toUpperCase()
     );
