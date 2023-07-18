@@ -22,7 +22,7 @@ Feature: Governor Contract Upgrade E2E Test
         When User wait for upgrade proposal state to be "Executed" for max 5 seconds  
         When User get the address of target contract from governor upgrade contract
         When User upgrade the contract    
-        Then User verify logic address of target factory contract is different before and after upgrade
+        Then User verify logic address of target factory contract is updated
 
     Scenario: Verify proposal is executed even if user gives same contract to upgrade
         When User get the current logic address of factory contract 
