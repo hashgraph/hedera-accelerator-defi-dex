@@ -1,4 +1,4 @@
-import { AccountId } from "@hashgraph/sdk";
+import { AccountId, TokenId } from "@hashgraph/sdk";
 import { clientsInfo } from "../../utils/ClientManagement";
 
 import dex from "../model/dex";
@@ -14,7 +14,7 @@ async function main() {
   );
   await Common.getTokenBalance(
     AccountId.fromString("0.0.6869"),
-    dex.GOD_TOKEN_ID
+    TokenId.fromString(dex.GOD_TOKEN_ID)
   );
   return "executed successfully";
 }

@@ -21,7 +21,7 @@ const governorContractId = governorTextContract.transparentProxyId!;
 const godHolderContractId = godHolderContract.transparentProxyId!;
 const governor = new TextGovernor(ContractId.fromString(governorContractId));
 const godHolder = new GodHolder(ContractId.fromString(godHolderContractId));
-const tokenGOD = dex.GOD_TOKEN_ID;
+const tokenGOD = TokenId.fromString(dex.GOD_TOKEN_ID);
 
 let errorMsg: string = "";
 let proposalId: string;
