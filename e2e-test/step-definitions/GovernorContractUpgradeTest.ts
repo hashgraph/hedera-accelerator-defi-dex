@@ -177,7 +177,7 @@ export class GovernorUpgradeSteps extends CommonSteps {
   @when(/User deploy the contract "([^"]*)"/, undefined, 60000)
   public async deployContract(contractName: string) {
     const item = await new Deployment().deploy(contractName);
-    proposedLogicAddressForFactory = item.address;
+    proposedLogicAddressForFactory = item.address.substring(2); // excluding '0x' from beginning
   }
 
   @when(
