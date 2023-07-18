@@ -258,7 +258,11 @@ export class GovernorSteps extends CommonSteps {
     );
   }
 
-  @when(/User fetches GOD token back from GOD holder/, undefined, 30000)
+  @when(
+    /User fetches GOD token back from GOD holder for GovernorTransferToken/,
+    undefined,
+    30000
+  )
   public async revertGOD() {
     await this.revertTokens(
       ContractId.fromString(godHolderProxyId),
