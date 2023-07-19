@@ -5,49 +5,34 @@ import { Deployment } from "../utils/deployContractOnTestnet";
 import { ContractService } from "./service/ContractService";
 import { main as initializeContracts } from "./scripts/initializeContracts";
 
-const NON_PROXY_CONTRACTS_WITH_LOWER_CASE_NAME =
-  ContractMetadata.NON_PROXY_CONTRACTS.map((item: string) =>
-    item.toLowerCase()
-  );
-
 const deployment = new Deployment();
 const contractMetadata = new ContractMetadata();
 
 async function main() {
   const service = getContractService();
-  const allContractsToDeploy =
-    await contractMetadata.getAllChangedContractNames(service);
-  if (allContractsToDeploy.length === 0) {
+  const response = await contractMetadata.getAllChangedContractNames(service);
+  if (response.all.length === 0) {
     console.log(`No contract for auto upgrade available`);
     return;
   }
-  console.log(`Eligible contracts for auto upgrade:`, allContractsToDeploy);
-
-  const proxyContractsToDeploy = allContractsToDeploy.filter(
-    (item: string) => !NON_PROXY_CONTRACTS_WITH_LOWER_CASE_NAME.includes(item)
-  );
-
-  const nonProxyContractsToDeploy = allContractsToDeploy.filter(
-    (item: string) => NON_PROXY_CONTRACTS_WITH_LOWER_CASE_NAME.includes(item)
-  );
+  console.log(`Eligible contracts for auto upgrade:`, response.all);
 
   await Promise.all(
-    nonProxyContractsToDeploy.map(async (name: string) => {
+    response.nonProxies.map(async (name: string) => {
       const item = await deployment.deploy(name);
       service.addDeployed(item);
     })
   );
 
   await Promise.all(
-    proxyContractsToDeploy.map(async (name: string) => {
+    response.proxies.map(async (name: string) => {
       const item = await deployment.deployProxy(name);
       service.addDeployed(item);
     })
   );
 
-  allContractsToDeploy.length > 0 &&
-    service.makeLatestDeploymentAsDefault(false);
-  proxyContractsToDeploy.length > 0 && (await initializeContracts(service));
+  service.makeLatestDeploymentAsDefault(false);
+  response.proxies.length > 0 && (await initializeContracts(service));
 }
 
 function getContractService() {

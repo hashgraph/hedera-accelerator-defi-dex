@@ -20,6 +20,11 @@ export default class ContractMetadata {
     "HederaGnosisSafeProxyFactory",
   ];
 
+  static NON_PROXY_CONTRACTS_LOWER_CASE =
+    ContractMetadata.NON_PROXY_CONTRACTS.map((item: string) =>
+      item.toLowerCase()
+    );
+
   static SUPPORTED_CONTRACTS_FOR_DEPLOYMENT = [
     "Factory",
     "FTDAOFactory",
@@ -83,16 +88,30 @@ export default class ContractMetadata {
   };
 
   public getAllChangedContractNames = async (targetCs: ContractService) => {
-    const eligibleContractsForDeployments: string[] = [];
+    const proxyContractsForDeployments: string[] = [];
+    const nonProxyContractsForDeployments: string[] = [];
     const contractsInfo = await this.getContractsInfo(
       ContractMetadata.SUPPORTED_CONTRACTS_FOR_DEPLOYMENT
     );
     for (const contractInfo of contractsInfo) {
       const name = contractInfo.artifact.contractName.toLowerCase();
       const contract = targetCs.findLogicContract(name, contractInfo.hash);
-      !contract && eligibleContractsForDeployments.push(name);
+      if (!contract) {
+        if (ContractMetadata.NON_PROXY_CONTRACTS_LOWER_CASE.includes(name)) {
+          nonProxyContractsForDeployments.push(name);
+        } else {
+          proxyContractsForDeployments.push(name);
+        }
+      }
     }
-    return eligibleContractsForDeployments;
+    return {
+      proxies: proxyContractsForDeployments,
+      nonProxies: nonProxyContractsForDeployments,
+      all: [
+        ...nonProxyContractsForDeployments,
+        ...proxyContractsForDeployments,
+      ],
+    };
   };
 
   public getContractsInfo = async (
