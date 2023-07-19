@@ -22,7 +22,7 @@ Feature: Governor Contract Upgrade E2E Test
         When User wait for upgrade proposal state to be "Executed" for max 5 seconds  
         When User get the address of target contract from governor upgrade contract
         When User upgrade the contract    
-        Then User verify logic address of target factory contract is different before and after upgrade
+        Then User verify logic address of target factory contract is updated
 
     Scenario: Verify proposal is executed even if user gives same contract to upgrade
         When User get the current logic address of factory contract 
@@ -78,7 +78,7 @@ Feature: Governor Contract Upgrade E2E Test
         Then User verify logic address of target contract is not changed
 
      Scenario: Verify user gets back locked GOD tokens
-        When User fetch GOD tokens back from GOD holder
+        When User fetch GOD tokens back from GOD holder for GovernorUpgrade
     
     Scenario: User reset allowance
         When User setup 0 as allowance amount for token locking for contract upgrade proposal 

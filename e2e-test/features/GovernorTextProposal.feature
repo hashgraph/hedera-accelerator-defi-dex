@@ -21,7 +21,7 @@ Scenario: Verify governor text proposal execution
     When User execute the text proposal with title "sampletextproposal11"
     When User wait for text proposal state to be "Executed" for max 5 seconds
     Then User verify text proposal state is "Executed"
-    When User fetch GOD tokens back from GOD holder
+    When User fetch GOD tokens back from GOD holder for GovernorText
     Then User verify GOD tokens are returned to user
 
 Scenario: Verify governor text proposal state is not changed if user abstain from voting
@@ -51,7 +51,7 @@ Scenario: Verify GOD tokens are returned on text proposal cancellation
     When User fetches GOD token balance
     When User cancel the text proposal with title "sampletextproposal44"
     Then  User verify text proposal state is "Canceled"
-    When User fetch GOD tokens back from GOD holder
+    When User fetch GOD tokens back from GOD holder for GovernorText
     Then User verify GOD tokens are returned to user
 
 

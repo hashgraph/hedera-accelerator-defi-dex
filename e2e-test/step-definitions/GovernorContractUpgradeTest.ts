@@ -1,40 +1,27 @@
-import { ContractId, AccountId, TokenId } from "@hashgraph/sdk";
-import { ContractService } from "../../deployment/service/ContractService";
-import Governor from "../business/Governor";
-import Common from "../business/Common";
-import GodHolder from "../business/GodHolder";
-import { given, binding, when, then } from "cucumber-tsflow/dist";
-import { clientsInfo } from "../../utils/ClientManagement";
-import { expect } from "chai";
-import Factory from "../business/Factory";
-import { main as deployContract } from "../../deployment/scripts/logic";
-import { CommonSteps } from "./CommonSteps";
 import dex from "../../deployment/model/dex";
+import Common from "../business/Common";
+import Factory from "../business/Factory";
+import GodHolder from "../business/GodHolder";
 import ContractUpgradeGovernor from "../business/ContractUpgradeGovernor";
 
-const csDev = new ContractService();
-const godHolderContract = csDev.getContractWithProxy(csDev.godHolderContract);
-const godHolderProxyContractId = csDev.getContractWithProxy(
-  csDev.godHolderContract
-).transparentProxyId!;
-const governorUpgradeContract = csDev.getContractWithProxy(
-  csDev.governorUpgradeContract
-);
+import { expect } from "chai";
+import { Deployment } from "../../utils/deployContractOnTestnet";
+import { CommonSteps } from "./CommonSteps";
+import { clientsInfo } from "../../utils/ClientManagement";
+import { given, binding, when, then } from "cucumber-tsflow/dist";
+import { ContractId, AccountId, TokenId } from "@hashgraph/sdk";
 
-let factoryProxyId = csDev.getContractWithProxy(csDev.factoryContractName)
-  .transparentProxyId!; // factoryProxyId contains both logic and proxy id
-const governorContractId = governorUpgradeContract.transparentProxyId!;
-const godHolderContractId = godHolderContract.transparentProxyId!;
-const governor = new ContractUpgradeGovernor(
-  ContractId.fromString(governorContractId)
-);
-const godHolder = new GodHolder(ContractId.fromString(godHolderContractId));
+const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
+
+let godHolder: GodHolder;
+let governor: ContractUpgradeGovernor;
 
 let proposalId: string;
 let upgradeResponse: any;
-let afterUpgradeResponse: any;
-let factoryLogicIdOld: string;
-let factoryLogicIdNew: string;
+
+let factory: Factory;
+let currentLogicAddressForFactory: string;
+let proposedLogicAddressForFactory: string;
 
 @binding()
 export class GovernorUpgradeSteps extends CommonSteps {
@@ -47,16 +34,23 @@ export class GovernorUpgradeSteps extends CommonSteps {
     console.log(
       "*******************Starting governor contract upgrade test with following credentials*******************"
     );
-    console.log("governorContractId :", governorContractId);
-    console.log("godHolderContractId :", godHolderContractId);
-    console.log("treasureId :", clientsInfo.treasureId.toString());
-    console.log("operatorId :", clientsInfo.operatorId.toString());
+
+    factory = new Factory();
+    godHolder = new GodHolder();
+    governor = new ContractUpgradeGovernor();
+
+    console.log("TokenID   :", GOD_TOKEN_ID.toString());
+    console.log("Factory   :", factory.contractId);
+    console.log("GodHolder :", godHolder.contractId);
+    console.log("ContractUpgradeGovernor :", governor.contractId);
+    console.log("Operator Account ID :", clientsInfo.operatorId.toString());
+
     await this.initializeGovernorContract(
       governor,
       godHolder,
       clientsInfo.operatorClient,
-      TokenId.fromString(dex.GOD_TOKEN_ID),
-      TokenId.fromString(dex.GOD_TOKEN_ID)
+      GOD_TOKEN_ID,
+      GOD_TOKEN_ID
     );
   }
 
@@ -66,11 +60,10 @@ export class GovernorUpgradeSteps extends CommonSteps {
     30000
   )
   public async createContractUpgradeProposal(title: string) {
-    factoryLogicIdNew = csDev.getContract(csDev.factoryContractName).id!;
     const proposalDetails: { proposalId: string; success: boolean } =
       await governor.createContractUpgradeProposal(
-        ContractId.fromString(factoryProxyId),
-        ContractId.fromString(factoryLogicIdNew), // new contract id
+        ContractId.fromString(factory.contractId),
+        ContractId.fromSolidityAddress(proposedLogicAddressForFactory), // new contract id
         title,
         clientsInfo.operatorClient
       );
@@ -135,9 +128,10 @@ export class GovernorUpgradeSteps extends CommonSteps {
 
   @when(/User upgrade the contract/, undefined, 30000)
   public async upgradeContract() {
-    await new Common(
-      ContractId.fromSolidityAddress(upgradeResponse.proxyAddress)
-    ).upgradeTo(
+    const targetContractId = ContractId.fromSolidityAddress(
+      upgradeResponse.proxyAddress
+    );
+    await new Common(targetContractId).upgradeTo(
       upgradeResponse.proxyAddress,
       upgradeResponse.logicAddress,
       clientsInfo.proxyAdminKey,
@@ -146,19 +140,16 @@ export class GovernorUpgradeSteps extends CommonSteps {
   }
 
   @then(
-    /User verify logic address of target factory contract is different before and after upgrade/,
+    /User verify logic address of target factory contract is updated/,
     undefined,
     30000
   )
-  public async verifyLogicAddressAreDifferent() {
-    const newFactoryProxyId = csDev.getContractWithProxy(
-      csDev.factoryContractName
-    ).transparentProxyId!;
-    const factoryLogicIdNew = await new Factory(
-      ContractId.fromString(newFactoryProxyId)
-    ).getCurrentImplementation();
-    expect(factoryLogicIdNew).not.eql(factoryLogicIdOld);
-    expect(newFactoryProxyId).eql(factoryProxyId);
+  public async verifyLogicAddressUpdated() {
+    console.log("---------verification-------------");
+    console.log("--verifyLogicAddressUpdated---");
+    const nowLogic = await factory.getCurrentImplementation();
+    console.table({ nowLogic, proposedLogic: proposedLogicAddressForFactory });
+    expect(nowLogic).eql(proposedLogicAddressForFactory);
   }
 
   @then(
@@ -167,14 +158,11 @@ export class GovernorUpgradeSteps extends CommonSteps {
     30000
   )
   public async verifyLogicAddressAreSame() {
-    const newFactoryProxyId = csDev.getContractWithProxy(
-      csDev.factoryContractName
-    ).transparentProxyId!;
-    const factoryLogicIdNew = await new Factory(
-      ContractId.fromString(newFactoryProxyId)
-    ).getCurrentImplementation();
-    expect(factoryLogicIdNew).eql(factoryLogicIdOld);
-    expect(newFactoryProxyId).eql(factoryProxyId);
+    console.log("---------verification-------------");
+    console.log("--verifyLogicAddressAreSame--");
+    const nowLogic = await factory.getCurrentImplementation();
+    console.table({ nowLogic, previousLogic: currentLogicAddressForFactory });
+    expect(nowLogic).eql(currentLogicAddressForFactory);
   }
 
   @when(
@@ -183,18 +171,13 @@ export class GovernorUpgradeSteps extends CommonSteps {
     30000
   )
   public async getAddressOfFactoryContract() {
-    factoryProxyId = csDev.getContractWithProxy(csDev.factoryContractName)
-      .transparentProxyId!;
-    factoryLogicIdOld = await new Factory(
-      ContractId.fromString(factoryProxyId)
-    ).getCurrentImplementation();
-    console.log("factoryProxyId--", factoryProxyId);
-    console.log("factoryLogicIdOld--", factoryLogicIdOld);
+    currentLogicAddressForFactory = await factory.getCurrentImplementation();
   }
 
   @when(/User deploy the contract "([^"]*)"/, undefined, 60000)
   public async deployContract(contractName: string) {
-    await deployContract(contractName);
+    const item = await new Deployment().deploy(contractName);
+    proposedLogicAddressForFactory = item.address.substring(2); // excluding '0x' from beginning
   }
 
   @when(
@@ -221,14 +204,18 @@ export class GovernorUpgradeSteps extends CommonSteps {
     );
   }
 
-  @when(/User fetch GOD tokens back from GOD holder/, undefined, 30000)
+  @when(
+    /User fetch GOD tokens back from GOD holder for GovernorUpgrade/,
+    undefined,
+    30000
+  )
   public async revertGOD() {
     await this.revertTokens(
-      ContractId.fromString(godHolderProxyContractId),
+      ContractId.fromString(godHolder.contractId),
       clientsInfo.operatorId,
-      AccountId.fromString(godHolderProxyContractId),
+      AccountId.fromString(godHolder.contractId),
       clientsInfo.operatorKey,
-      TokenId.fromString(dex.GOD_TOKEN_ID),
+      GOD_TOKEN_ID,
       clientsInfo.operatorClient
     );
   }
