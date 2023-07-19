@@ -34,7 +34,7 @@ jobs:
       - name: Run code coverage
         run: npx hardhat coverage
       - name: Deploy if contract changed
-        run: npx hardhat run deployment/checkAndDeploy.ts
+        run: npx hardhat clean && npx hardhat run deployment/checkAndDeploy.ts
       - name: Reformat code before auto commit
         run: npm run code-format && git add -A
       - uses: stefanzweifel/git-auto-commit-action@v4
