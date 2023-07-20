@@ -69,6 +69,10 @@ contract MultiSigDAO is BaseDAO {
         return address(hederaGnosisSafe);
     }
 
+    function associateTokenToSafe(address _token) external {
+        hederaGnosisSafe.associateToken(hederaService, _token);
+    }
+
     function state(bytes32 _txnHash) external view returns (TransactionState) {
         TransactionInfo memory transactionInfo = transactions[_txnHash];
         require(transactionInfo.nonce != 0, "MultiSigDAO: no txn exist");
@@ -135,12 +139,6 @@ contract MultiSigDAO is BaseDAO {
         string memory desc,
         string memory linkToDiscussion
     ) external payable returns (bytes32) {
-        hederaGnosisSafe.transferToSafe(
-            hederaService,
-            _token,
-            _amount,
-            msg.sender
-        );
         bytes memory data = abi.encodeWithSelector(
             TRANSFER_TOKEN_FROM_SAFE_SELECTOR,
             _token,

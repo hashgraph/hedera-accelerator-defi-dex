@@ -41,21 +41,17 @@ contract HederaGnosisSafe is
         return approvedCount > 0 && approvedCount >= threshold;
     }
 
-    function transferToSafe(
+    function associateToken(
         IHederaService _hederaService,
-        address _token,
-        uint256 _amount,
-        address _sender
+        address _token
     ) external {
         int256 code = _associateToken(_hederaService, address(this), _token);
         if (code == HederaResponseCodes.SUCCESS) {
             emit TokenAssociated(_token);
-        }
-        code = _transferToken(_token, _sender, address(this), _amount);
-        if (code == HederaResponseCodes.SUCCESS) {
-            emit TokenTransferred(_token, _sender, _amount);
-        } else {
-            revert("HederaGnosisSafe: transfer token to safe failed");
+        } else if (
+            code != HederaResponseCodes.TOKEN_ALREADY_ASSOCIATED_TO_ACCOUNT
+        ) {
+            revert("HederaGnosisSafe: associateToken failed");
         }
     }
 
@@ -75,9 +71,13 @@ contract HederaGnosisSafe is
         address token,
         address receiver,
         uint256 amount
-    ) external returns (bool transferred) {
+    ) external {
         require(msg.sender == address(this), "GS031"); // only via safe txn
-        return super.transferToken(token, receiver, amount);
+        int256 rCode = _transferToken(token, address(this), receiver, amount);
+        require(
+            rCode == HederaResponseCodes.SUCCESS,
+            "HederaGnosisSafe: failed to transfer"
+        );
     }
 
     function getTxnHash(

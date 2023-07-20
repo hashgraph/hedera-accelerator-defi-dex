@@ -252,7 +252,7 @@ export default class Common extends Base {
     const txnReceipt = await txnResponse.getReceipt(client);
     const status = txnReceipt.status;
     console.log(
-      `- Common#transferTokens(): TokenId = ${tokenId}, TokenQty = ${tokenQty}, sender = ${senderAccountId}, receiver = ${receiverAccountId}, status = ${status}`
+      `- Common#transferTokens(): TokenId = ${tokenId}, TokenQty = ${tokenQty}, sender = ${senderAccountId}, receiver = ${receiverAccountId}, status = ${status}\n`
     );
   };
 

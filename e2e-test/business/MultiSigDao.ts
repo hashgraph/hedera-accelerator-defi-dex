@@ -31,6 +31,7 @@ const PROPOSE_TRANSFER_TRANSACTION = "proposeTransferTransaction";
 const GET_HEDERA_GNOSIS_SAFE_CONTRACT_ADDRESS =
   "getHederaGnosisSafeContractAddress";
 const GET_MULTI_SEND_CONTRACT_ADDRESS = "getMultiSendContractAddress";
+const ASSOCIATE_TOKEN_TO_SAFE = "associateTokenToSafe";
 
 enum TransactionState {
   Pending,
@@ -107,6 +108,24 @@ export default class MultiSigDao extends BaseDao {
   protected getContractName() {
     return ContractService.MULTI_SIG;
   }
+
+  public associateTokenToSafe = async (
+    token: TokenId,
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    const args = new ContractFunctionParameters().addAddress(
+      token.toSolidityAddress()
+    );
+    const { record } = await this.execute(
+      1_000_000,
+      ASSOCIATE_TOKEN_TO_SAFE,
+      client,
+      args
+    );
+    console.log(
+      `- MultiSigDao#${ASSOCIATE_TOKEN_TO_SAFE}() done, TxnId = ${record.transactionId.toString()}\n`
+    );
+  };
 
   getHederaGnosisSafeContractAddress = async (
     client: Client = clientsInfo.operatorClient

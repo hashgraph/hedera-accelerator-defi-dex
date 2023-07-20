@@ -3,12 +3,20 @@ import { ContractId } from "@hashgraph/sdk";
 import { MirrorNodeService } from "./MirrorNodeService";
 
 export class AddressHelper {
-  static async addressToId(address: string) {
-    await Helper.delay(3000);
-    return await MirrorNodeService.getInstance().getContractId(address);
+  private static async getContractInfo(idOrAddress: string): Promise<any> {
+    await Helper.delay(6000);
+    return await MirrorNodeService.getInstance().getContractInfo(idOrAddress);
   }
 
-  static async addressToIdObject(address: string) {
-    return ContractId.fromString(await AddressHelper.addressToId(address));
+  static async addressToId(address: string): Promise<string> {
+    return (await this.getContractInfo(address)).contract_id;
+  }
+
+  static async idToAddress(id: string): Promise<string> {
+    return (await this.getContractInfo(id)).evm_address;
+  }
+
+  static async addressToIdObject(address: string): Promise<ContractId> {
+    return ContractId.fromString(await this.addressToId(address));
   }
 }

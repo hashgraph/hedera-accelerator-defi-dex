@@ -105,12 +105,12 @@
   },
   {
     "name": "multisigdaofactory",
-    "id": "0.0.15418109",
-    "hash": "c6543b9c8a5b5a28a022b1a0de156bca",
-    "address": "0x0000000000000000000000000000000000eb42fd",
-    "timestamp": "2023-07-17T08:36:00.807Z",
-    "transparentProxyId": "0.0.15418111",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000eb42ff"
+    "id": "0.0.15509600",
+    "hash": "ace44646ea5c29ffca0da6ba6a8c702e",
+    "address": "0x0000000000000000000000000000000000eca860",
+    "timestamp": "2023-07-20T10:02:11.995Z",
+    "transparentProxyId": "0.0.15509617",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000eca871"
   },
   {
     "name": "vault",
@@ -132,12 +132,12 @@
   },
   {
     "name": "multisigdao",
-    "id": "0.0.15418105",
-    "hash": "c5c9e59c2173e2b03b47886991a00f4d",
-    "address": "0x0000000000000000000000000000000000eb42f9",
-    "timestamp": "2023-07-17T08:35:16.513Z",
-    "transparentProxyId": "0.0.15418107",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000eb42fb"
+    "id": "0.0.15508145",
+    "hash": "f669cd169df56fb6bf995415e1524f04",
+    "address": "0x0000000000000000000000000000000000eca2b1",
+    "timestamp": "2023-07-20T09:46:13.275Z",
+    "transparentProxyId": "0.0.15508169",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000eca2c9"
   },
   {
     "name": "ftdao",
