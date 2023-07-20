@@ -1,4 +1,3 @@
-import Base from "./Base";
 import Common from "./Common";
 import BaseDao from "./BaseDao";
 import HederaGnosisSafe from "./HederaGnosisSafe";
@@ -7,6 +6,7 @@ import { ethers } from "ethers";
 import { Helper } from "../../utils/Helper";
 import { Deployment } from "../../utils/deployContractOnTestnet";
 import { clientsInfo } from "../../utils/ClientManagement";
+import { AddressHelper } from "../../utils/AddressHelper";
 import { ContractService } from "../../deployment/service/ContractService";
 import {
   Client,
@@ -64,7 +64,7 @@ export default class MultiSigDao extends BaseDao {
       ]);
       const gnosisLogic = deployedItems.get(ContractService.SAFE);
       const gnosisFactory = deployedItems.get(ContractService.SAFE_FACTORY);
-      const gnosisFactoryId = ContractId.fromSolidityAddress(
+      const gnosisFactoryId = await AddressHelper.addressToIdObject(
         gnosisFactory.address
       );
 
@@ -82,7 +82,7 @@ export default class MultiSigDao extends BaseDao {
         _logoUrl: logoURL,
         _description: desc,
         _webLinks: webLinks,
-        _hederaGnosisSafe: gnosisProxy.toSolidityAddress(),
+        _hederaGnosisSafe: gnosisProxy,
         _hederaService: this.htsAddress,
         _multiSend: this.getMultiSendContractAddress(),
         _iSystemRoleBasedAccess: this.getSystemBasedRoleAccessContractAddress(),
@@ -120,7 +120,7 @@ export default class MultiSigDao extends BaseDao {
     console.log(
       `- MultiSigDao#${GET_HEDERA_GNOSIS_SAFE_CONTRACT_ADDRESS}(): address = ${address}\n`
     );
-    return ContractId.fromSolidityAddress(address);
+    return AddressHelper.addressToIdObject(address);
   };
 
   getMultiSendContractAddressFromDAO = async (
@@ -418,9 +418,7 @@ export default class MultiSigDao extends BaseDao {
     console.log(
       ` - GnosisSafeProxyFactory#createProxy(): address = ${gnosisProxyAddress}\n`
     );
-
-    const cId = ContractId.fromSolidityAddress(gnosisProxyAddress);
-
+    const cId = await AddressHelper.addressToIdObject(gnosisProxyAddress);
     const setupArgs = new ContractFunctionParameters()
       .addAddressArray(owners)
       .addUint256(threshold)
@@ -433,7 +431,7 @@ export default class MultiSigDao extends BaseDao {
     const gnosis = new Common(cId);
     await gnosis.execute(5_00_000, "setup", client, setupArgs);
     console.log(` - GnosisSafe#setup(): done\n`);
-    return cId;
+    return gnosisProxyAddress;
   }
 
   getTransactionNumericState = async (transactionState: string) => {
