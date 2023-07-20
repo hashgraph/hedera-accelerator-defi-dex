@@ -60,6 +60,8 @@ async function main() {
 
   await executeDAOTextProposal(multiSigDAO);
 
+  await executeHbarTransfer(multiSigDAO);
+
   await multiSigDAO.updateDaoInfo(
     DAO_NAME + "_NEW",
     DAO_LOGO + "daos",
@@ -222,6 +224,58 @@ export async function executeBatchTransaction(
     batchTxnInfo.nonce,
     safeTxnExecutionClient
   );
+}
+
+export async function executeHbarTransfer(
+  multiSigDAO: MultiSigDao,
+  ownersInfo: any[] = DAO_OWNERS_INFO,
+  tokenQty: number = TOKEN_QTY,
+  tokenReceiver: AccountId | ContractId = clientsInfo.treasureId,
+  tokenSenderClient: Client = clientsInfo.uiUserClient,
+  tokenSenderAccountId: AccountId = clientsInfo.uiUserId,
+  tokenSenderPrivateKey: PrivateKey = clientsInfo.uiUserKey,
+  safeTxnExecutionClient: Client = clientsInfo.treasureClient
+) {
+  console.log(`- executing Multi-sig DAO = ${multiSigDAO.contractId}\n`);
+
+  const gnosisSafe = await getGnosisSafeInstance(multiSigDAO);
+
+  await multiSigDAO.setupHbarAllowanceForTransferTransaction(
+    tokenQty,
+    tokenSenderClient,
+    tokenSenderAccountId,
+    tokenSenderPrivateKey,
+    gnosisSafe
+  );
+
+  const hbarTransferTxnHash = await multiSigDAO.proposeHbarTransferTransaction(
+    tokenReceiver,
+    tokenQty,
+    tokenSenderClient
+  );
+
+  const transferTxnInfo = await multiSigDAO.getTransactionInfo(
+    hbarTransferTxnHash
+  );
+
+  await multiSigDAO.state(hbarTransferTxnHash);
+
+  await gnosisSafe.getOwners();
+
+  for (const daoOwner of ownersInfo) {
+    await gnosisSafe.approveHash(hbarTransferTxnHash, daoOwner.client);
+  }
+  await multiSigDAO.state(hbarTransferTxnHash);
+
+  await gnosisSafe.executeTransaction(
+    transferTxnInfo.to,
+    transferTxnInfo.value,
+    transferTxnInfo.data,
+    transferTxnInfo.operation,
+    transferTxnInfo.nonce,
+    safeTxnExecutionClient
+  );
+  await multiSigDAO.state(hbarTransferTxnHash);
 }
 
 export async function executeDAOTextProposal(

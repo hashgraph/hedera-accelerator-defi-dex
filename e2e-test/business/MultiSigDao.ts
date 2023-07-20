@@ -27,6 +27,7 @@ const GET_TRANSACTION_INFO = "getTransactionInfo";
 const PROPOSE_TRANSACTION = "proposeTransaction";
 const GET_APPROVAL_COUNTS = "getApprovalCounts";
 const PROPOSE_BATCH_TRANSACTION = "proposeBatchTransaction";
+const PROPOSE_HBAR_TRANSFER_TRANSACTION = "proposeHbarTransferTransaction";
 const GET_HEDERA_GNOSIS_SAFE_CONTRACT_ADDRESS =
   "getHederaGnosisSafeContractAddress";
 const GET_MULTI_SEND_CONTRACT_ADDRESS = "getMultiSendContractAddress";
@@ -252,6 +253,22 @@ export default class MultiSigDao extends BaseDao {
     );
   };
 
+  setupHbarAllowanceForTransferTransaction = async (
+    allowanceAmount: number,
+    tokenSenderClient: Client = clientsInfo.uiUserClient,
+    tokenSenderAccountId: AccountId = clientsInfo.uiUserId,
+    tokenSenderPrivateKey: PrivateKey = clientsInfo.uiUserKey,
+    gnosisSafe: HederaGnosisSafe
+  ) => {
+    await Common.approveHbarAllowance(
+      gnosisSafe.contractId,
+      allowanceAmount,
+      tokenSenderAccountId,
+      tokenSenderPrivateKey,
+      tokenSenderClient
+    );
+  };
+
   proposeAddOwnerWithThreshold = async (
     threshold: number,
     newOwnerAccountId: AccountId,
@@ -443,6 +460,38 @@ export default class MultiSigDao extends BaseDao {
       description,
       linkToDiscussion
     );
+  };
+
+  public proposeHbarTransferTransaction = async (
+    receiver: AccountId | ContractId,
+    amount: number,
+    tokenSenderClient: Client = clientsInfo.uiUserClient,
+    title: string = TITLE,
+    description: string = DESCRIPTION,
+    linkToDiscussion: string = LINK_TO_DISCUSSION
+  ) => {
+    const args = new ContractFunctionParameters()
+      .addAddress(receiver.toSolidityAddress())
+      .addString(title)
+      .addString(description)
+      .addString(linkToDiscussion);
+
+    const { result } = await this.execute(
+      3_000_000,
+      PROPOSE_HBAR_TRANSFER_TRANSACTION,
+      tokenSenderClient,
+      args,
+      clientsInfo.uiUserKey,
+      amount
+    );
+
+    const txnHash = result.getBytes32(0);
+    const hash = ethers.utils.hexlify(txnHash);
+
+    console.log(
+      `- MultiSigDao#${PROPOSE_HBAR_TRANSFER_TRANSACTION}(): txnHash = ${hash}\n`
+    );
+    return txnHash;
   };
 
   private async createProxy(
