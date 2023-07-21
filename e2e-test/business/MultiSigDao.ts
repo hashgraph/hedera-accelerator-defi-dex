@@ -16,6 +16,7 @@ import {
   ContractFunctionParameters,
   PrivateKey,
 } from "@hashgraph/sdk";
+import { AddressHelper } from "../../utils/AddressHelper";
 
 const TITLE = "TITLE";
 const DESCRIPTION = "DESCRIPTION";
@@ -67,7 +68,7 @@ export default class MultiSigDao extends BaseDao {
       ]);
       const gnosisLogic = deployedItems.get(ContractService.SAFE);
       const gnosisFactory = deployedItems.get(ContractService.SAFE_FACTORY);
-      const gnosisFactoryId = ContractId.fromSolidityAddress(
+      const gnosisFactoryId = await AddressHelper.addressToIdObject(
         gnosisFactory.address
       );
 
@@ -123,7 +124,11 @@ export default class MultiSigDao extends BaseDao {
     console.log(
       `- MultiSigDao#${GET_HEDERA_GNOSIS_SAFE_CONTRACT_ADDRESS}(): address = ${address}\n`
     );
+<<<<<<< HEAD
     return AddressHelper.addressToIdObject(address);
+=======
+    return await AddressHelper.addressToIdObject(address);
+>>>>>>> aaa64ab (testnet break fix)
   };
 
   getMultiSendContractAddressFromDAO = async (
@@ -528,6 +533,10 @@ export default class MultiSigDao extends BaseDao {
     const gnosis = new Common(cId);
     await gnosis.execute(5_00_000, "setup", client, setupArgs);
     console.log(` - GnosisSafe#setup(): done\n`);
+<<<<<<< HEAD
+=======
+
+>>>>>>> aaa64ab (testnet break fix)
     return gnosisProxyAddress;
   }
 

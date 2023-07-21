@@ -13,6 +13,7 @@ import {
   ContractId,
   PrivateKey,
 } from "@hashgraph/sdk";
+import { AddressHelper } from "../../utils/AddressHelper";
 
 const TOKEN = TokenId.fromString(dex.TOKEN_LAB49_1);
 const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
@@ -246,6 +247,14 @@ export async function executeHbarTransfer(
     tokenSenderAccountId,
     tokenSenderPrivateKey,
     gnosisSafe
+  );
+
+  await Common.transferHbarsToContract(
+    tokenQty,
+    ContractId.fromString(gnosisSafe.contractId),
+    tokenSenderAccountId,
+    tokenSenderPrivateKey,
+    tokenSenderClient
   );
 
   const hbarTransferTxnHash = await multiSigDAO.proposeHbarTransferTransaction(

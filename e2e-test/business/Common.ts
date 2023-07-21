@@ -18,6 +18,7 @@ import {
   TokenMintTransaction,
   TokenAssociateTransaction,
   AccountAllowanceApproveTransaction,
+  ContractExecuteTransaction,
 } from "@hashgraph/sdk";
 import { BigNumber } from "bignumber.js";
 import { clientsInfo } from "../../utils/ClientManagement";
@@ -253,6 +254,24 @@ export default class Common extends Base {
     const status = txnReceipt.status;
     console.log(
       `- Common#transferTokens(): TokenId = ${tokenId}, TokenQty = ${tokenQty}, sender = ${senderAccountId}, receiver = ${receiverAccountId}, status = ${status}\n`
+    );
+  };
+
+  static transferHbarsToContract = async (
+    amount: number,
+    contractId: ContractId,
+    senderAccountId: AccountId = clientsInfo.operatorId,
+    senderPrivateKey: PrivateKey = clientsInfo.operatorKey,
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    const contractExecuteTx = new ContractExecuteTransaction()
+      .setContractId(contractId)
+      .setGas(500_000)
+      .setPayableAmount(amount);
+    const contractExecuteSubmit = await contractExecuteTx.execute(client);
+    const contractExecuteRx = await contractExecuteSubmit.getReceipt(client);
+    console.log(
+      `- Common#transferHbarsToContract(): sender = ${senderAccountId}, receiver = ${contractId}, amount = ${amount} status = ${contractExecuteRx.status}`
     );
   };
 
