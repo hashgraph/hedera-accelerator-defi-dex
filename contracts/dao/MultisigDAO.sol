@@ -28,14 +28,8 @@ contract MultiSigDAO is BaseDAO {
         address creator;
     }
 
-    bytes4 private constant MULTI_SEND_TXN_SELECTOR =
-        bytes4(keccak256("multiSend(bytes)"));
-
-    bytes4 private constant TRANSFER_TOKEN_FROM_SAFE_SELECTOR =
-        bytes4(keccak256("transferTokenViaSafe(address,address,uint256)"));
-
-    uint256 private constant TXN_TYPE_TOKEN_TRANSFER = 1;
-    uint256 private constant TXN_TYPE_BATCH = 2;
+    uint256 private constant TXN_TYPE_BATCH = 1;
+    uint256 private constant TXN_TYPE_TOKEN_ASSOCIATE = 2;
 
     HederaMultiSend private multiSend;
     IHederaService private hederaService;
@@ -127,34 +121,25 @@ contract MultiSigDAO is BaseDAO {
         return txnHash;
     }
 
-    function proposeTransferTransaction(
+    function proposeTokenAssociateTransaction(
         address _token,
-        address _receiver,
-        uint256 _amount,
-        string memory title,
-        string memory desc,
-        string memory linkToDiscussion
+        string memory _title,
+        string memory _desc,
+        string memory _linkToDiscussion
     ) external payable returns (bytes32) {
-        hederaGnosisSafe.transferToSafe(
-            hederaService,
-            _token,
-            _amount,
-            msg.sender
-        );
         bytes memory data = abi.encodeWithSelector(
-            TRANSFER_TOKEN_FROM_SAFE_SELECTOR,
-            _token,
-            _receiver,
-            _amount
+            HederaGnosisSafe.associateToken.selector,
+            hederaService,
+            _token
         );
         return
             proposeTransaction(
                 address(hederaGnosisSafe),
                 data,
-                1,
-                title,
-                desc,
-                linkToDiscussion
+                TXN_TYPE_TOKEN_ASSOCIATE,
+                _title,
+                _desc,
+                _linkToDiscussion
             );
     }
 
@@ -184,7 +169,7 @@ contract MultiSigDAO is BaseDAO {
             );
         }
         bytes memory data = abi.encodeWithSelector(
-            MULTI_SEND_TXN_SELECTOR,
+            MultiSendCallOnly.multiSend.selector,
             transactionsBytes
         );
         return

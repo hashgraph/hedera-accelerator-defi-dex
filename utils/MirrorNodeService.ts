@@ -215,4 +215,11 @@ export class MirrorNodeService {
     await this.readRecords(url1, info);
     return info.pop()!.from;
   }
+
+  public async getContractInfo(idOrAddress: string): Promise<any> {
+    const info: any[] = [];
+    const url = `${BASE_URL}/api/v1/contracts/${idOrAddress}`;
+    await this.readRecords(url, info);
+    return info[0];
+  }
 }

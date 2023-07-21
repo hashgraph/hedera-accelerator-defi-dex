@@ -6,9 +6,12 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 describe("MultiSig tests", function () {
-  const TXN_TYPE_TRANSFER = 1;
-  const TXN_TYPE_TEXT = 3;
-  const TXN_TYPE_BATCH = 2;
+  const TXN_TYPE_BATCH = 1;
+  const TXN_TYPE_TOKEN_ASSOCIATE = 2;
+
+  const TXN_TYPE_TEXT = 1005;
+  const TXN_TYPE_TRANSFER = 1006;
+
   const INVALID_TXN_HASH = ethers.utils.formatBytes32String("INVALID_TXN_HASH");
   const TOTAL = 100 * 1e8;
   const TRANSFER_AMOUNT = 10 * 1e8;
@@ -51,7 +54,7 @@ describe("MultiSig tests", function () {
     expect(info.nonce).equals(1);
     expect(info.transactionType).equals(txnType);
     expect(info.title).equals(TITLE);
-    txnType == TXN_TYPE_TEXT
+    txnType === TXN_TYPE_TEXT
       ? expect(info.description).equals(TEXT_PROPOSAL_TEXT)
       : expect(info.description).equals(DESCRIPTION);
     expect(info.linkToDiscussion).equals(LINK_TO_DISCUSSION);
@@ -97,16 +100,28 @@ describe("MultiSig tests", function () {
 
   async function proposeTransferTransaction(
     multiSigDAOInstance: Contract,
+    gnosis: Contract,
     receiver: string,
     token: string,
-    amount: number = TRANSFER_AMOUNT
+    amount: number = TRANSFER_AMOUNT,
+    title: string = TITLE,
+    description: string = DESCRIPTION
   ) {
-    const txn = await multiSigDAOInstance.proposeTransferTransaction(
+    const ABI = [
+      "function transferTokenViaSafe(address,address,uint256) external",
+    ];
+    const iface = new ethers.utils.Interface(ABI);
+    const data = iface.encodeFunctionData("transferTokenViaSafe", [
       token,
       receiver,
       amount,
-      TITLE,
-      DESCRIPTION,
+    ]);
+    const txn = await multiSigDAOInstance.proposeTransaction(
+      gnosis.address,
+      ethers.utils.arrayify(data),
+      TXN_TYPE_TRANSFER,
+      title,
+      description,
       LINK_TO_DISCUSSION
     );
     return await verifyTransactionCreatedEvent(txn, TXN_TYPE_TRANSFER);
@@ -290,55 +305,17 @@ describe("MultiSig tests", function () {
       expect(await multiSigDAOInstance.state(txnHash)).equals(1); // Approved
     });
 
-    it("Verify transfer token to contract should revert", async function () {
-      const {
-        tokenInstance,
-        hederaGnosisSafeProxyContract,
-        hederaService,
-        daoAdminOne,
-      } = await loadFixture(deployFixture);
+    it("Verify associate token to safe should be reverted if called without safe txn", async function () {
+      const { tokenInstance, hederaGnosisSafeProxyContract, hederaService } =
+        await loadFixture(deployFixture);
 
       await tokenInstance.setTransaferFailed(true);
       await expect(
-        hederaGnosisSafeProxyContract.transferToSafe(
+        hederaGnosisSafeProxyContract.associateToken(
           hederaService.address,
-          tokenInstance.address,
-          1e8,
-          daoAdminOne.address
+          tokenInstance.address
         )
-      ).revertedWith("HederaGnosisSafe: transfer token to safe failed");
-    });
-
-    it("Verify transfer token to contract should emit event once transferred", async function () {
-      const {
-        tokenInstance,
-        hederaGnosisSafeProxyContract,
-        hederaService,
-        daoAdminOne,
-      } = await loadFixture(deployFixture);
-
-      const TOKEN_BALANCE = 10e8;
-      const TOKEN_TRANSFER_AMOUNT = 1e8;
-
-      await tokenInstance.setUserBalance(daoAdminOne.address, TOKEN_BALANCE);
-
-      const beforeBalance = await tokenInstance.balanceOf(daoAdminOne.address);
-      expect(beforeBalance).equals(TOKEN_BALANCE);
-
-      const transaction = await hederaGnosisSafeProxyContract.transferToSafe(
-        hederaService.address,
-        tokenInstance.address,
-        TOKEN_TRANSFER_AMOUNT,
-        daoAdminOne.address
-      );
-      const lastEvent = await TestHelper.readLastEvent(transaction);
-      expect(lastEvent.name).equals("TokenTransferred");
-      expect(lastEvent.args[0]).equals(tokenInstance.address);
-      expect(lastEvent.args[1]).equals(daoAdminOne.address);
-      expect(lastEvent.args[2]).equals(TOKEN_TRANSFER_AMOUNT);
-
-      const balance = await tokenInstance.balanceOf(daoAdminOne.address);
-      expect(balance).equals(TOKEN_BALANCE - TOKEN_TRANSFER_AMOUNT);
+      ).revertedWith("GS031");
     });
 
     it("Verify transfer token from safe should be reverted if called without safe txn", async function () {
@@ -379,31 +356,6 @@ describe("MultiSig tests", function () {
           info.data
         )
       ).revertedWith("HederaGnosisSafe: API not available");
-    });
-
-    it("Verify propose transaction should be reverted when title / description empty", async function () {
-      const { signers, tokenInstance, multiSigDAOInstance } = await loadFixture(
-        deployFixture
-      );
-      await expect(
-        proposeTransaction(
-          multiSigDAOInstance,
-          signers[1].address,
-          tokenInstance.address,
-          TRANSFER_AMOUNT,
-          ""
-        )
-      ).revertedWith("MultiSigDAO: title can't be blank");
-      await expect(
-        proposeTransaction(
-          multiSigDAOInstance,
-          signers[1].address,
-          tokenInstance.address,
-          TRANSFER_AMOUNT,
-          TITLE,
-          ""
-        )
-      ).revertedWith("MultiSigDAO: desc can't be blank");
     });
 
     it("Verify propose transaction should be reverted for twice execution", async function () {
@@ -777,6 +729,7 @@ describe("MultiSig tests", function () {
       } = await loadFixture(deployFixture);
       const { txnHash, info } = await proposeTransferTransaction(
         multiSigDAOInstance,
+        hederaGnosisSafeProxyContract,
         signers[1].address,
         tokenInstance.address
       );
@@ -1005,6 +958,45 @@ describe("MultiSig tests", function () {
       );
     });
 
+    it("Verify propose transaction should be reverted when title / description empty", async function () {
+      const { signers, tokenInstance, multiSigDAOInstance } = await loadFixture(
+        deployFixture
+      );
+      await expect(
+        proposeTransaction(
+          multiSigDAOInstance,
+          signers[1].address,
+          tokenInstance.address,
+          TRANSFER_AMOUNT,
+          ""
+        )
+      ).revertedWith("MultiSigDAO: title can't be blank");
+      await expect(
+        proposeTransaction(
+          multiSigDAOInstance,
+          signers[1].address,
+          tokenInstance.address,
+          TRANSFER_AMOUNT,
+          TITLE,
+          ""
+        )
+      ).revertedWith("MultiSigDAO: desc can't be blank");
+    });
+
+    it("Verify token association propose transaction should be created successfully ", async function () {
+      const { tokenInstance, multiSigDAOInstance } = await loadFixture(
+        deployFixture
+      );
+
+      const txn = await multiSigDAOInstance.proposeTokenAssociateTransaction(
+        tokenInstance.address,
+        TITLE,
+        DESCRIPTION,
+        LINK_TO_DISCUSSION
+      );
+      await verifyTransactionCreatedEvent(txn, TXN_TYPE_TOKEN_ASSOCIATE);
+    });
+
     describe("Text proposal test cases", () => {
       it("Verify text proposal workflow - proposal to execution ", async function () {
         const {
@@ -1063,12 +1055,7 @@ describe("MultiSig tests", function () {
       });
 
       it("Verify setText can be called via HederaGnosisSafe ", async function () {
-        const {
-          multiSigDAOInstance,
-          signers,
-          hederaGnosisSafeProxyContract,
-          daoSigners,
-        } = await loadFixture(deployFixture);
+        const { multiSigDAOInstance } = await loadFixture(deployFixture);
 
         await expect(
           multiSigDAOInstance.setText(TestHelper.ONE_ADDRESS, "Anything")
