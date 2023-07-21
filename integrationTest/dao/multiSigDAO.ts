@@ -93,6 +93,8 @@ export async function executeDAOTokenTransferProposal(
   token: TokenId = TOKEN,
   tokenQty: number = TOKEN_QTY,
   tokenReceiver: AccountId | ContractId = clientsInfo.treasureId,
+  tokenReceiverPrivateKey: PrivateKey = clientsInfo.treasureKey,
+  tokenReceiverClient: Client = clientsInfo.treasureClient,
   tokenSenderClient: Client = clientsInfo.uiUserClient,
   tokenSenderAccountId: AccountId = clientsInfo.uiUserId,
   tokenSenderPrivateKey: PrivateKey = clientsInfo.uiUserKey,
@@ -131,7 +133,15 @@ export async function executeDAOTokenTransferProposal(
     tokenQty
   );
 
-  // Step - 3 token transfer from safe to other account
+  // Step - 3 associate token to other account
+  await Common.associateTokensToAccount(
+    tokenReceiver.toString(),
+    [token],
+    tokenReceiverClient,
+    tokenReceiverPrivateKey
+  );
+
+  // Step - 4 token transfer from safe to other account
   const transferTxnHash = await multiSigDAO.proposeTransferTransaction(
     token,
     tokenReceiver,
