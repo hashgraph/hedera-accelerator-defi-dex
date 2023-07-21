@@ -66,7 +66,7 @@ export default class MultiSigDao extends BaseDao {
       ]);
       const gnosisLogic = deployedItems.get(ContractService.SAFE);
       const gnosisFactory = deployedItems.get(ContractService.SAFE_FACTORY);
-      const gnosisFactoryId = await AddressHelper.addressToIdObject(
+      const gnosisFactoryId = ContractId.fromSolidityAddress(
         gnosisFactory.address
       );
 
