@@ -17,12 +17,6 @@ contract HederaGnosisSafe is
 
     event TokenAssociated(address token);
 
-    event TokenTransferred(
-        address indexed token,
-        address indexed sender,
-        uint256 indexed amount
-    );
-
     bytes private constant BYTES_ZERO = "";
     uint256 private constant UINT_ZERO = 0;
     address payable private constant ADDRESS_ZERO = payable(address(0));
