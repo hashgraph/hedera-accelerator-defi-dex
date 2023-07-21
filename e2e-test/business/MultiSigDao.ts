@@ -1,6 +1,6 @@
 import Common from "./Common";
 import BaseDao from "./BaseDao";
-import HederaGnosisSafe from "./HederaGnosisSafe";
+import HederaGnosisSafe, { TRANSFER_TOKEN_VAI_SAFE } from "./HederaGnosisSafe";
 
 import { ethers } from "ethers";
 import { Helper } from "../../utils/Helper";
@@ -27,11 +27,11 @@ const GET_TRANSACTION_INFO = "getTransactionInfo";
 const PROPOSE_TRANSACTION = "proposeTransaction";
 const GET_APPROVAL_COUNTS = "getApprovalCounts";
 const PROPOSE_BATCH_TRANSACTION = "proposeBatchTransaction";
-const PROPOSE_TRANSFER_TRANSACTION = "proposeTransferTransaction";
 const GET_HEDERA_GNOSIS_SAFE_CONTRACT_ADDRESS =
   "getHederaGnosisSafeContractAddress";
 const GET_MULTI_SEND_CONTRACT_ADDRESS = "getMultiSendContractAddress";
-const ASSOCIATE_TOKEN_TO_SAFE = "associateTokenToSafe";
+const PROPOSE_TOKEN_ASSOCIATE_TRANSACTION = "proposeTokenAssociateTransaction";
+const SET_TEXT = "setText";
 
 enum TransactionState {
   Pending,
@@ -43,11 +43,12 @@ const ADD_MEMBER = 1001;
 const REMOVE_MEMBER = 1002;
 const REPLACE_MEMBER = 1003;
 const CHANGE_THRESHOLD = 1004;
+const TYPE_SET_TEXT = 1005;
+const TOKEN_TRANSFER = 1006;
 
 const deployment = new Deployment();
 
 export default class MultiSigDao extends BaseDao {
-  public SET_TEXT = "setText";
   async initialize(
     admin: string,
     name: string,
@@ -108,24 +109,6 @@ export default class MultiSigDao extends BaseDao {
   protected getContractName() {
     return ContractService.MULTI_SIG;
   }
-
-  public associateTokenToSafe = async (
-    token: TokenId,
-    client: Client = clientsInfo.operatorClient
-  ) => {
-    const args = new ContractFunctionParameters().addAddress(
-      token.toSolidityAddress()
-    );
-    const { record } = await this.execute(
-      1_000_000,
-      ASSOCIATE_TOKEN_TO_SAFE,
-      client,
-      args
-    );
-    console.log(
-      `- MultiSigDao#${ASSOCIATE_TOKEN_TO_SAFE}() done, TxnId = ${record.transactionId.toString()}\n`
-    );
-  };
 
   getHederaGnosisSafeContractAddress = async (
     client: Client = clientsInfo.operatorClient
@@ -386,34 +369,80 @@ export default class MultiSigDao extends BaseDao {
     return txnHash;
   };
 
-  proposeTransferTransaction = async (
+  public proposeTransferTransaction = async (
     token: TokenId,
     receiver: AccountId | ContractId,
     amount: number,
-    tokenSenderClient: Client = clientsInfo.uiUserClient,
+    gnosisSafe: HederaGnosisSafe,
+    client: Client = clientsInfo.operatorClient,
+    title: string = TITLE,
+    description: string = DESCRIPTION,
+    linkToDiscussion: string = LINK_TO_DISCUSSION
+  ) => {
+    const data = await this.encodeFunctionData(
+      ContractService.SAFE,
+      TRANSFER_TOKEN_VAI_SAFE,
+      [token.toSolidityAddress(), receiver.toSolidityAddress(), amount]
+    );
+    return await this.proposeTransaction(
+      await AddressHelper.idToEvmAddress(gnosisSafe.contractId),
+      data.bytes,
+      TOKEN_TRANSFER,
+      client,
+      title,
+      description,
+      linkToDiscussion
+    );
+  };
+
+  public proposeTokenAssociateTransaction = async (
+    token: TokenId,
+    client: Client = clientsInfo.operatorClient,
     title: string = TITLE,
     description: string = DESCRIPTION,
     linkToDiscussion: string = LINK_TO_DISCUSSION
   ) => {
     const args = new ContractFunctionParameters()
       .addAddress(token.toSolidityAddress())
-      .addAddress(receiver.toSolidityAddress())
-      .addUint256(amount)
       .addString(title)
       .addString(description)
       .addString(linkToDiscussion);
     const { result } = await this.execute(
-      3_000_000,
-      PROPOSE_TRANSFER_TRANSACTION,
-      tokenSenderClient,
+      1_000_000,
+      PROPOSE_TOKEN_ASSOCIATE_TRANSACTION,
+      client,
       args
     );
     const txnHash = result.getBytes32(0);
     const hash = ethers.utils.hexlify(txnHash);
     console.log(
-      `- MultiSigDao#${PROPOSE_TRANSFER_TRANSACTION}(): txnHash = ${hash}\n`
+      `- MultiSigDao#${PROPOSE_TOKEN_ASSOCIATE_TRANSACTION}(): txnHash = ${hash}\n`
     );
     return txnHash;
+  };
+
+  public proposeTextTransaction = async (
+    textProposalText: string,
+    creator: AccountId,
+    client: Client = clientsInfo.operatorClient,
+    title: string = TITLE,
+    description: string = DESCRIPTION,
+    linkToDiscussion: string = LINK_TO_DISCUSSION
+  ) => {
+    const textTxData = await this.encodeFunctionData(
+      this.getContractName(),
+      SET_TEXT,
+      [creator.toSolidityAddress(), textProposalText]
+    );
+    return await this.proposeTransaction(
+      await AddressHelper.idToEvmAddress(this.contractId),
+      textTxData.bytes,
+      TYPE_SET_TEXT,
+      client,
+      title,
+      description,
+      linkToDiscussion
+    );
   };
 
   private async createProxy(

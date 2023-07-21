@@ -12,6 +12,7 @@ const APPROVE_HASH = "approveHash";
 const GET_THRESHOLD = "getThreshold";
 const EXEC_TRANSACTION = "executeTransaction";
 const GET_TRANSACTION_HASH = "getTransactionHash";
+export const TRANSFER_TOKEN_VAI_SAFE = "transferTokenViaSafe";
 
 export default class HederaGnosisSafe extends Base {
   protected getContractName() {
@@ -37,7 +38,7 @@ export default class HederaGnosisSafe extends Base {
       .addUint8(op)
       .addUint256(nonce);
     const { result, record } = await this.execute(
-      5_00_000,
+      1_000_000,
       EXEC_TRANSACTION,
       client,
       args

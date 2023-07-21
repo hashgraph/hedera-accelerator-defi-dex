@@ -6,8 +6,6 @@ import SystemRoleBasedAccess from "../../e2e-test/business/common/SystemRoleBase
 
 import { Helper } from "../../utils/Helper";
 import { clientsInfo } from "../../utils/ClientManagement";
-import { AddressHelper } from "../../utils/AddressHelper";
-import { ContractService } from "../../deployment/service/ContractService";
 import {
   Client,
   TokenId,
@@ -15,8 +13,6 @@ import {
   ContractId,
   PrivateKey,
 } from "@hashgraph/sdk";
-
-const csDev = new ContractService();
 
 const TOKEN = TokenId.fromString(dex.TOKEN_LAB49_1);
 const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
@@ -32,14 +28,17 @@ const TXN_DETAILS_FOR_BATCH = {
   AMOUNT: 1,
 };
 
+const DAO_ADMIN_ADDRESS = clientsInfo.uiUserId.toSolidityAddress();
+const DAO_ADMIN_CLIENT = clientsInfo.uiUserClient;
+
 export const DAO_OWNERS_INFO = [
+  {
+    address: DAO_ADMIN_ADDRESS,
+    client: DAO_ADMIN_CLIENT,
+  },
   {
     address: clientsInfo.treasureId.toSolidityAddress(),
     client: clientsInfo.treasureClient,
-  },
-  {
-    address: clientsInfo.uiUserId.toSolidityAddress(),
-    client: clientsInfo.uiUserClient,
   },
 ];
 
@@ -51,15 +50,8 @@ export const DAO_OWNERS_ADDRESSES = DAO_OWNERS_INFO.map(
   (item: any) => item.address
 );
 
-const DAO_ADMIN_ADDRESS = clientsInfo.uiUserId.toSolidityAddress();
-const DAO_ADMIN_CLIENT = clientsInfo.uiUserClient;
-
 async function main() {
-  const roleBasedAccess = new SystemRoleBasedAccess();
-  const contract = csDev.getContractWithProxy(ContractService.MULTI_SIG);
-  const multiSigDAO = new MultiSigDao(
-    ContractId.fromString(contract.transparentProxyId!)
-  );
+  const multiSigDAO = new MultiSigDao();
   await initDAO(multiSigDAO);
 
   await executeBatchTransaction(multiSigDAO);
@@ -77,6 +69,7 @@ async function main() {
   );
   await multiSigDAO.getDaoInfo();
 
+  const roleBasedAccess = new SystemRoleBasedAccess();
   (await roleBasedAccess.checkIfChildProxyAdminRoleGiven()) &&
     (await multiSigDAO.upgradeHederaService(clientsInfo.childProxyAdminClient));
 }
@@ -106,13 +99,30 @@ export async function executeDAOTokenTransferProposal(
   safeTxnExecutionClient: Client = clientsInfo.treasureClient
 ) {
   console.log(
-    `- executing Multi-sig DAO's token transfer = ${multiSigDAO.contractId}\n`
+    `- executing token transfer Multi-sig DAO = ${multiSigDAO.contractId}\n`
   );
 
+  // Step - 1 token associate
   const gnosisSafe = await getGnosisSafeInstance(multiSigDAO);
+  const tokenAssociateTxnHash =
+    await multiSigDAO.proposeTokenAssociateTransaction(token);
+  const tokenAssociateTxnInfo = await multiSigDAO.getTransactionInfo(
+    tokenAssociateTxnHash
+  );
+  for (const daoOwner of ownersInfo) {
+    await gnosisSafe.approveHash(tokenAssociateTxnHash, daoOwner.client);
+  }
 
-  await multiSigDAO.associateTokenToSafe(token);
+  await gnosisSafe.executeTransaction(
+    tokenAssociateTxnInfo.to,
+    tokenAssociateTxnInfo.value,
+    tokenAssociateTxnInfo.data,
+    tokenAssociateTxnInfo.operation,
+    tokenAssociateTxnInfo.nonce,
+    safeTxnExecutionClient
+  );
 
+  // Step - 2 token transfer from wallet
   await Common.transferTokens(
     AccountId.fromString(gnosisSafe.contractId),
     tokenSenderAccountId,
@@ -120,23 +130,19 @@ export async function executeDAOTokenTransferProposal(
     token,
     tokenQty
   );
+
+  // Step - 3 token transfer from safe to other account
   const transferTxnHash = await multiSigDAO.proposeTransferTransaction(
     token,
     tokenReceiver,
     tokenQty,
+    gnosisSafe,
     tokenSenderClient
   );
   const transferTxnInfo = await multiSigDAO.getTransactionInfo(transferTxnHash);
-
-  await multiSigDAO.state(transferTxnHash);
-
-  await gnosisSafe.getOwners();
-
   for (const daoOwner of ownersInfo) {
     await gnosisSafe.approveHash(transferTxnHash, daoOwner.client);
   }
-  await multiSigDAO.state(transferTxnHash);
-
   await gnosisSafe.executeTransaction(
     transferTxnInfo.to,
     transferTxnInfo.value,
@@ -145,7 +151,6 @@ export async function executeDAOTokenTransferProposal(
     transferTxnInfo.nonce,
     safeTxnExecutionClient
   );
-  await multiSigDAO.state(transferTxnHash);
 }
 
 export async function executeBatchTransaction(
@@ -154,7 +159,7 @@ export async function executeBatchTransaction(
   safeTxnExecutionClient: Client = clientsInfo.treasureClient
 ) {
   console.log(
-    `- executing Multi-sig DAO's batch operation = ${multiSigDAO.contractId}\n`
+    `- executing batch operation using Multi-sig DAO = ${multiSigDAO.contractId}\n`
   );
 
   async function proposeBatchTransaction(multiSigDAO: MultiSigDao) {
@@ -219,24 +224,10 @@ export async function executeDAOTextProposal(
   );
 
   const gnosisSafe = await getGnosisSafeInstance(multiSigDAO);
-
-  const textProposalText = "TEXT";
-
-  const textTxData = await multiSigDAO.encodeFunctionData(
-    ContractService.MULTI_SIG,
-    multiSigDAO.SET_TEXT,
-    [clientsInfo.operatorId.toSolidityAddress(), textProposalText]
-  );
-  const contractAddress = await AddressHelper.idToAddress(
-    multiSigDAO.contractId
-  );
-  const textTxnHash = await multiSigDAO.proposeTransaction(
-    contractAddress,
-    textTxData.bytes,
-    3,
-    clientsInfo.operatorClient,
-    "textTitle",
-    textProposalText
+  const textTxnHash = await multiSigDAO.proposeTextTransaction(
+    Helper.createProposalTitle("MultiSig Text Proposal"),
+    clientsInfo.operatorId,
+    clientsInfo.operatorClient
   );
 
   const textTxnInfo = await multiSigDAO.getTransactionInfo(textTxnHash);

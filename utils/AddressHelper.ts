@@ -12,7 +12,7 @@ export class AddressHelper {
     return (await this.getContractInfo(address)).contract_id;
   }
 
-  static async idToAddress(id: string): Promise<string> {
+  static async idToEvmAddress(id: string): Promise<string> {
     return (await this.getContractInfo(id)).evm_address;
   }
 

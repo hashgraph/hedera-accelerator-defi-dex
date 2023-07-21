@@ -41,20 +41,6 @@ contract HederaGnosisSafe is
         return approvedCount > 0 && approvedCount >= threshold;
     }
 
-    function associateToken(
-        IHederaService _hederaService,
-        address _token
-    ) external {
-        int256 code = _associateToken(_hederaService, address(this), _token);
-        if (code == HederaResponseCodes.SUCCESS) {
-            emit TokenAssociated(_token);
-        } else if (
-            code != HederaResponseCodes.TOKEN_ALREADY_ASSOCIATED_TO_ACCOUNT
-        ) {
-            revert("HederaGnosisSafe: associateToken failed");
-        }
-    }
-
     function getApprovalCounts(
         bytes32 dataHash
     ) public view returns (uint256 approvedCount) {
@@ -67,6 +53,21 @@ contract HederaGnosisSafe is
         }
     }
 
+    function associateToken(
+        IHederaService _hederaService,
+        address _token
+    ) external {
+        require(msg.sender == address(this), "GS031"); // only via safe txn
+        int256 code = _associateToken(_hederaService, address(this), _token);
+        if (code == HederaResponseCodes.SUCCESS) {
+            emit TokenAssociated(_token);
+        } else if (
+            code != HederaResponseCodes.TOKEN_ALREADY_ASSOCIATED_TO_ACCOUNT
+        ) {
+            revert("HederaGnosisSafe: association failed to safe");
+        }
+    }
+
     function transferTokenViaSafe(
         address token,
         address receiver,
@@ -76,7 +77,7 @@ contract HederaGnosisSafe is
         int256 rCode = _transferToken(token, address(this), receiver, amount);
         require(
             rCode == HederaResponseCodes.SUCCESS,
-            "HederaGnosisSafe: failed to transfer"
+            "HederaGnosisSafe: transfer failed from safe"
         );
     }
 
