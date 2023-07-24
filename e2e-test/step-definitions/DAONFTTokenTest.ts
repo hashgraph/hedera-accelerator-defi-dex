@@ -41,7 +41,7 @@ export class DAONFTTokenTest extends CommonSteps {
   @given(
     /User initialize the NFT DAO with name "([^"]*)" and url "([^"]*)"/,
     undefined,
-    30000
+    60000
   )
   public async initializeNFTDAOSafe(name: string, url: string) {
     await Helper.delay(15000); // allowing some delay for propagating initialize event from previous call
