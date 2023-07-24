@@ -1,6 +1,7 @@
 import { Helper } from "../utils/Helper";
 import { BigNumber } from "bignumber.js";
 import { clientsInfo } from "../utils/ClientManagement";
+import { AddressHelper } from "../utils/AddressHelper";
 import { ContractId, TokenId, AccountId } from "@hashgraph/sdk";
 
 import dex from "../deployment/model/dex";
@@ -40,7 +41,7 @@ const getTokensInfo = async (token0: TokenId, token1: TokenId) => {
 
 const getLPTokenContractId = async () => {
   const address = await pair.getLpContractAddress();
-  return ContractId.fromSolidityAddress(address).toString();
+  return await AddressHelper.addressToIdObject(address);
 };
 
 const createPair = async (token0: TokenId, token1: TokenId, fee: BigNumber) => {
@@ -115,7 +116,7 @@ const removeLiquidity = async (lpTokenAddress: string) => {
 
   await Common.setTokenAllowance(
     TokenId.fromSolidityAddress(lpTokenAddress),
-    lpTokenContractId,
+    lpTokenContractId.toString(),
     Number(lpTokenQty),
     clientsInfo.uiUserId,
     clientsInfo.uiUserKey,
@@ -189,7 +190,9 @@ async function testForSinglePair(
 ) {
   await getTokensInfo(token0, token1);
   const pairContractAddress = await createPair(token0, token1, fee);
-  const pairContractId = ContractId.fromSolidityAddress(pairContractAddress);
+  const pairContractId = await AddressHelper.addressToIdObject(
+    pairContractAddress
+  );
   const pairContractIdAsString = pairContractId.toString();
   pair = new Pair(pairContractId);
   await getPrecisionValue();

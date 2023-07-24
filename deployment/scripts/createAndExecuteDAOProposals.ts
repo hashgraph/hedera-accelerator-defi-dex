@@ -9,11 +9,10 @@ async function main() {
 
   // below calls are validating input data only
   const contractId = ContractId.fromString(input.contractId);
-  const daoId = ContractId.fromSolidityAddress(input.daoAddress);
   const tokenId = TokenId.fromSolidityAddress(input.tokenAddress);
 
   const daoFactory = new FTDAOFactory(contractId);
-  await executeDAOFlow(daoFactory, daoId.toSolidityAddress(), tokenId);
+  await executeDAOFlow(daoFactory, input.daoAddress, tokenId);
 }
 
 main()

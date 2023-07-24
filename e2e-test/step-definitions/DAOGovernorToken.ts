@@ -174,7 +174,7 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
     30000
   )
   public async initializeContractsViaFactory() {
-    ftDao = daoFactory.getGovernorTokenDaoInstance(daoAddress);
+    ftDao = await daoFactory.getGovernorTokenDaoInstance(daoAddress);
     await this.updateGovernor(ftDao);
     factoryGODHolderContractId = godHolder.contractId;
   }
@@ -453,6 +453,7 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
       clientsInfo.operatorClient
     );
   }
+
   private async updateGovernor(dao: FTDAO) {
     const governorAddresses =
       await dao.getGovernorTokenTransferContractAddresses();

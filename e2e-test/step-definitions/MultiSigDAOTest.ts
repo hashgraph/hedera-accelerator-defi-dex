@@ -1,54 +1,47 @@
 import dex from "../../deployment/model/dex";
+import Common from "../business/Common";
+import BigNumber from "bignumber.js";
 import MultiSigDao from "../business/MultiSigDao";
 import HederaGnosisSafe from "../business/HederaGnosisSafe";
-import { clientsInfo } from "../../utils/ClientManagement";
-import { ContractService } from "../../deployment/service/ContractService";
-import Common from "../business/Common";
-import { expect } from "chai";
-import { binding, given, then, when } from "cucumber-tsflow";
-import { TokenId, AccountId } from "@hashgraph/sdk";
-import { Helper } from "../../utils/Helper";
 import MultiSigDAOFactory from "../../e2e-test/business/factories/MultiSigDAOFactory";
-import { ContractId } from "@hashgraph/sdk";
+
+import { expect } from "chai";
+import { AccountId } from "@hashgraph/sdk";
+import { clientsInfo } from "../../utils/ClientManagement";
 import { main as deployContract } from "../../deployment/scripts/logic";
+import { binding, given, then, when } from "cucumber-tsflow";
+import { AddressHelper } from "../../utils/AddressHelper";
 
-const csDev = new ContractService();
-const transferTokenId = TokenId.fromString(dex.TOKEN_LAB49_1);
+const PRECISION = 1e8;
+const TOKEN_ID = dex.TOKEN_LAB49_1_ID;
 
-const contract = csDev.getContractWithProxy(ContractService.MULTI_SIG);
-const multiSigDAOContractId = contract.transparentProxyId!;
-let multiSigDAO: MultiSigDao;
-multiSigDAO = new MultiSigDao(ContractId.fromString(multiSigDAOContractId));
-const withPrecision = 1e8;
+const DAO_DESC = "Lorem Ipsum is simply dummy text";
+const DAO_WEB_LINKS = ["https://linkedin.com"];
+
+const DAO_ADMIN_ADDRESS = clientsInfo.uiUserId.toSolidityAddress();
+const DAO_ADMIN_CLIENT = clientsInfo.uiUserClient;
+
 const DAO_OWNERS_INFO = [
   {
     address: clientsInfo.treasureId.toSolidityAddress(),
     client: clientsInfo.treasureClient,
   },
   {
-    address: clientsInfo.uiUserId.toSolidityAddress(),
-    client: clientsInfo.uiUserClient,
+    address: DAO_ADMIN_ADDRESS,
+    client: DAO_ADMIN_CLIENT,
   },
 ];
 const DAO_OWNERS_ADDRESSES = DAO_OWNERS_INFO.map((item: any) => item.address);
-const DAO_WEB_LINKS = ["LINKEDIN", "https://linkedin.com"];
-const DAO_DESC = "Lorem Ipsum is simply dummy text";
 
-const factoryContractId = new ContractService().getContractWithProxy(
-  ContractService.MULTI_SIG_FACTORY
-).transparentProxyId!;
-const daoFactory = new MultiSigDAOFactory(
-  ContractId.fromString(factoryContractId)
-);
-
+const multiSigDAOFactory = new MultiSigDAOFactory();
+let multiSigDao = new MultiSigDao();
 let gnosisSafe: HederaGnosisSafe;
-let txnHash: any;
-let targetTokenBalFromPayeeAcct: any;
-let targetTokenAmtToBeTransferred: number;
+let txnHash: Uint8Array;
+let balanceInUserAccount: BigNumber;
+let proposedAmtFromSafe: number;
 let errorMsg: string;
-let targetTokenBalFromPayerAcct: any;
+let balanceInSafe: BigNumber;
 let listOfOwners: string[];
-let daoAddress: string;
 let contractNewAddress: string;
 let upgradeResult: any;
 
@@ -60,27 +53,22 @@ export class MultiSigDAOSteps {
     60000
   )
   public async initializeFail(name: string, logo: string): Promise<void> {
-    const daoAdminAddress = clientsInfo.uiUserId.toSolidityAddress();
     console.log(
       "*******************Starting multisigdao test with following credentials*******************"
     );
-    console.log("MultiSigContractId :", multiSigDAO.contractId);
-    console.log("DAO Admin Address :", daoAdminAddress);
+    console.log("MultiSigDao contract-id :", multiSigDao.contractId);
+    console.log("Dao admin address :", DAO_ADMIN_ADDRESS);
     try {
-      await multiSigDAO.initialize(
-        daoAdminAddress,
+      await multiSigDao.initialize(
+        DAO_ADMIN_ADDRESS,
         name,
         logo,
         DAO_DESC,
         DAO_WEB_LINKS,
         DAO_OWNERS_ADDRESSES,
-        clientsInfo.uiUserClient,
+        DAO_ADMIN_CLIENT,
         DAO_OWNERS_ADDRESSES.length
       );
-
-      const safeContractId =
-        await multiSigDAO.getHederaGnosisSafeContractAddress();
-      gnosisSafe = new HederaGnosisSafe(safeContractId);
     } catch (e: any) {
       errorMsg = e.message;
     }
@@ -98,51 +86,18 @@ export class MultiSigDAOSteps {
     240000
   )
   public async initializeSafe(name: string, logo: string): Promise<void> {
-    const daoAdminAddress = clientsInfo.uiUserId.toSolidityAddress();
-    await multiSigDAO.initialize(
-      daoAdminAddress,
+    await multiSigDao.initialize(
+      DAO_ADMIN_ADDRESS,
       name,
       logo,
       DAO_DESC,
       DAO_WEB_LINKS,
       DAO_OWNERS_ADDRESSES,
-      clientsInfo.uiUserClient,
+      DAO_ADMIN_CLIENT,
       DAO_OWNERS_ADDRESSES.length
     );
-
-    const safeContractId =
-      await multiSigDAO.getHederaGnosisSafeContractAddress();
-    gnosisSafe = new HederaGnosisSafe(safeContractId);
-  }
-
-  @when(
-    /User setup allowance amount as (\d+\.?\d*) for target token/,
-    undefined,
-    60000
-  )
-  public async setAllowance(allowanceAmount: number) {
-    await multiSigDAO.setupAllowanceForTransferTransaction(
-      transferTokenId,
-      allowanceAmount * withPrecision,
-      clientsInfo.uiUserClient,
-      clientsInfo.uiUserId,
-      clientsInfo.uiUserKey,
-      gnosisSafe
-    );
-  }
-
-  @when(
-    /User propose the transaction for transferring (\d+\.?\d*) unit of the target token/,
-    undefined,
-    60000
-  )
-  public async setTransaction(tokenAmount: number) {
-    targetTokenAmtToBeTransferred = tokenAmount * withPrecision;
-    txnHash = await multiSigDAO.proposeTransferTransaction(
-      transferTokenId,
-      clientsInfo.treasureId,
-      targetTokenAmtToBeTransferred,
-      clientsInfo.uiUserClient
+    gnosisSafe = new HederaGnosisSafe(
+      await multiSigDao.getHederaGnosisSafeContractAddress()
     );
   }
 
@@ -153,12 +108,12 @@ export class MultiSigDAOSteps {
   )
   public async setFailTransaction(tokenAmount: number) {
     try {
-      targetTokenAmtToBeTransferred = tokenAmount * withPrecision;
-      txnHash = await multiSigDAO.proposeTransferTransaction(
-        transferTokenId,
+      proposedAmtFromSafe = tokenAmount * PRECISION;
+      txnHash = await multiSigDao.proposeTransferTransaction(
+        TOKEN_ID,
         clientsInfo.treasureId,
-        targetTokenAmtToBeTransferred,
-        clientsInfo.uiUserClient
+        proposedAmtFromSafe,
+        gnosisSafe
       );
     } catch (e: any) {
       errorMsg = e.message;
@@ -167,8 +122,8 @@ export class MultiSigDAOSteps {
 
   @then(/User verify transaction state is "([^"]*)"/, undefined, 60000)
   public async verifyTransactionState(state: string) {
-    const expectedState = await multiSigDAO.getTransactionNumericState(state);
-    const actualState = await multiSigDAO.state(txnHash);
+    const expectedState = await multiSigDao.getTransactionNumericState(state);
+    const actualState = await multiSigDao.state(txnHash);
     expect(Number(actualState)).to.eql(expectedState);
   }
 
@@ -185,15 +140,34 @@ export class MultiSigDAOSteps {
 
   @when(/User execute the transaction/, undefined, 60000)
   public async executeTransaction() {
-    const transferTxnInfo = await multiSigDAO.getTransactionInfo(txnHash);
+    const txnInfo = await multiSigDao.getTransactionInfo(txnHash);
     await gnosisSafe.executeTransaction(
-      transferTxnInfo.to,
-      transferTxnInfo.value,
-      transferTxnInfo.data,
-      transferTxnInfo.operation,
-      transferTxnInfo.nonce,
-      clientsInfo.treasureClient
+      txnInfo.to,
+      txnInfo.value,
+      txnInfo.data,
+      txnInfo.operation,
+      txnInfo.nonce
     );
+  }
+
+  @when(
+    /User try to execute the transaction and receives the error message "([^"]*)"/,
+    undefined,
+    60000
+  )
+  public async executeAndRevertTransaction(message: string) {
+    const txnInfo = await multiSigDao.getTransactionInfo(txnHash);
+    try {
+      await gnosisSafe.executeTransaction(
+        txnInfo.to,
+        txnInfo.value,
+        txnInfo.data,
+        txnInfo.operation,
+        txnInfo.nonce
+      );
+    } catch (e: any) {
+      expect(e.message).contains(message);
+    }
   }
 
   @when(
@@ -202,10 +176,9 @@ export class MultiSigDAOSteps {
     60000
   )
   public async getTokenBalance() {
-    targetTokenBalFromPayeeAcct = await Common.getTokenBalance(
+    balanceInUserAccount = await Common.getTokenBalance(
       clientsInfo.treasureId,
-      transferTokenId,
-      clientsInfo.treasureClient
+      TOKEN_ID
     );
   }
 
@@ -215,65 +188,57 @@ export class MultiSigDAOSteps {
     60000
   )
   public async verifyTokenBalance() {
-    const updatedBalance = await Common.getTokenBalance(
+    const balanceInUserAccountAfter = await Common.getTokenBalance(
       clientsInfo.treasureId,
-      transferTokenId,
-      clientsInfo.treasureClient
+      TOKEN_ID
     );
-    expect(Number(updatedBalance)).to.eql(
-      Number(targetTokenBalFromPayeeAcct) +
-        Number(targetTokenAmtToBeTransferred)
+    const tokenBalanceInUserAccountBefore =
+      balanceInUserAccount.plus(proposedAmtFromSafe);
+    expect(
+      balanceInUserAccountAfter.isGreaterThanOrEqualTo(
+        tokenBalanceInUserAccountBefore
+      )
     );
   }
 
-  @when(
-    /User fetch balance of the target token from payer account/,
-    undefined,
-    60000
-  )
-  public async getTokenBalanceFromPayerAcct() {
-    targetTokenBalFromPayerAcct = await Common.getTokenBalance(
-      clientsInfo.uiUserId,
-      transferTokenId,
+  @when(/User fetch balance of the target token from safe/, undefined, 60000)
+  public async getTokenBalanceFromSafe() {
+    gnosisSafe = new HederaGnosisSafe(
+      await multiSigDao.getHederaGnosisSafeContractAddress()
+    );
+    balanceInSafe = await Common.getTokenBalance(
+      await AddressHelper.idToEvmAddress(gnosisSafe.contractId),
+      TOKEN_ID,
       clientsInfo.uiUserClient
     );
   }
 
   @when(
-    /User setup allowance amount greater than balance of target token in payer account/,
+    /User propose the transaction for transferring (\d+\.?\d*) unit of the token/,
     undefined,
     60000
   )
-  public async setAllowanceGreaterThanTargetTokenBalInPayerAcct() {
-    const allownceAmt = targetTokenBalFromPayerAcct / withPrecision + 1;
-    await multiSigDAO.setupAllowanceForTransferTransaction(
-      transferTokenId,
-      allownceAmt * withPrecision,
-      clientsInfo.uiUserClient,
-      clientsInfo.uiUserId,
-      clientsInfo.uiUserKey,
+  public async proposeTransferTransfer(amount: number) {
+    txnHash = await multiSigDao.proposeTransferTransaction(
+      TOKEN_ID,
+      clientsInfo.treasureId,
+      amount * PRECISION,
       gnosisSafe
     );
   }
 
   @when(
-    /User propose the transaction for transferring amount greater than balance of target token in payer account/,
+    /User propose the transaction for transferring token amount greater than safe balance of token/,
     undefined,
     60000
   )
-  public async setTransactionGreaterThanTargetTokenBalance() {
-    try {
-      targetTokenAmtToBeTransferred =
-        targetTokenBalFromPayerAcct / withPrecision + 1;
-      txnHash = await multiSigDAO.proposeTransferTransaction(
-        transferTokenId,
-        clientsInfo.treasureId,
-        targetTokenAmtToBeTransferred * withPrecision,
-        clientsInfo.uiUserClient
-      );
-    } catch (e: any) {
-      errorMsg = e.message;
-    }
+  public async proposeTransferTransferWithGreaterAmount() {
+    txnHash = await multiSigDao.proposeTransferTransaction(
+      TOKEN_ID,
+      clientsInfo.treasureId,
+      balanceInSafe.plus(PRECISION).toNumber(),
+      gnosisSafe
+    );
   }
 
   @when(
@@ -284,7 +249,7 @@ export class MultiSigDAOSteps {
   public async proposeTransactionForChangingApprovalThreshold(
     numberOfApprovals: number
   ) {
-    txnHash = await multiSigDAO.proposeChangeThreshold(
+    txnHash = await multiSigDao.proposeChangeThreshold(
       numberOfApprovals,
       gnosisSafe,
       clientsInfo.uiUserClient
@@ -309,7 +274,7 @@ export class MultiSigDAOSteps {
     60000
   )
   public async proposeTxnForRemovingOwner(numberOfOwners: number) {
-    txnHash = await multiSigDAO.proposeRemoveOwnerWithThreshold(
+    txnHash = await multiSigDao.proposeRemoveOwnerWithThreshold(
       numberOfOwners,
       AccountId.fromSolidityAddress(listOfOwners[0]),
       AccountId.fromSolidityAddress(listOfOwners[1]),
@@ -324,7 +289,7 @@ export class MultiSigDAOSteps {
     60000
   )
   public async proposeTxnForAddingOwner(numberOfOwners: number) {
-    txnHash = await multiSigDAO.proposeAddOwnerWithThreshold(
+    txnHash = await multiSigDao.proposeAddOwnerWithThreshold(
       numberOfOwners,
       AccountId.fromSolidityAddress(clientsInfo.uiUserId.toSolidityAddress()),
       gnosisSafe,
@@ -334,7 +299,7 @@ export class MultiSigDAOSteps {
 
   @when(/User propose the transaction for swapping owner/, undefined, 60000)
   public async proposeTxnForSwappingOwner() {
-    txnHash = await multiSigDAO.proposeSwapOwnerWithThreshold(
+    txnHash = await multiSigDao.proposeSwapOwnerWithThreshold(
       AccountId.fromSolidityAddress(listOfOwners[0]),
       AccountId.fromSolidityAddress(listOfOwners[1]),
       AccountId.fromSolidityAddress(clientsInfo.operatorId.toSolidityAddress()),
@@ -370,8 +335,11 @@ export class MultiSigDAOSteps {
     console.log(
       "*******************Starting multisigdao factory test with following credentials*******************"
     );
-    console.log("MultiSigDAOFactoryContractId :", daoFactory.contractId);
-    await daoFactory.initialize();
+    console.log(
+      "MultiSigDaoFactory contract-id :",
+      multiSigDAOFactory.contractId
+    );
+    await multiSigDAOFactory.initialize();
   }
 
   @when(
@@ -380,7 +348,7 @@ export class MultiSigDAOSteps {
     30000
   )
   public async createDAOSafe(name: string, logo: string) {
-    daoAddress = await daoFactory.createDAO(
+    const daoAddress = await multiSigDAOFactory.createDAO(
       name,
       logo,
       DAO_DESC,
@@ -388,15 +356,15 @@ export class MultiSigDAOSteps {
       DAO_OWNERS_ADDRESSES,
       DAO_OWNERS_ADDRESSES.length,
       false,
-      clientsInfo.uiUserId.toSolidityAddress(),
-      clientsInfo.uiUserClient
+      DAO_ADMIN_ADDRESS,
+      DAO_ADMIN_CLIENT
     );
-
-    const multiSigDAOId = ContractId.fromSolidityAddress(daoAddress);
-    multiSigDAO = new MultiSigDao(multiSigDAOId);
-    const safeContractId =
-      await multiSigDAO.getHederaGnosisSafeContractAddress();
-    gnosisSafe = new HederaGnosisSafe(safeContractId);
+    multiSigDao = new MultiSigDao(
+      await AddressHelper.addressToIdObject(daoAddress)
+    );
+    gnosisSafe = new HederaGnosisSafe(
+      await multiSigDao.getHederaGnosisSafeContractAddress()
+    );
   }
 
   @when(
@@ -406,7 +374,7 @@ export class MultiSigDAOSteps {
   )
   public async createDAOFail(name: string, logo: string) {
     try {
-      daoAddress = await daoFactory.createDAO(
+      await multiSigDAOFactory.createDAO(
         name,
         logo,
         DAO_DESC,
@@ -414,15 +382,9 @@ export class MultiSigDAOSteps {
         DAO_OWNERS_ADDRESSES,
         DAO_OWNERS_ADDRESSES.length,
         false,
-        clientsInfo.uiUserId.toSolidityAddress(),
-        clientsInfo.uiUserClient
+        DAO_ADMIN_ADDRESS,
+        DAO_ADMIN_CLIENT
       );
-
-      const multiSigDAOId = ContractId.fromSolidityAddress(daoAddress);
-      multiSigDAO = new MultiSigDao(multiSigDAOId);
-      const safeContractId =
-        await multiSigDAO.getHederaGnosisSafeContractAddress();
-      gnosisSafe = new HederaGnosisSafe(safeContractId);
     } catch (e: any) {
       errorMsg = e.message;
     }
@@ -435,7 +397,7 @@ export class MultiSigDAOSteps {
 
   @when(/User upgrade the DAO logic address/, undefined, 30000)
   public async upgradeDAOLogicAddress() {
-    upgradeResult = await daoFactory.upgradeDaoLogicAddress(
+    upgradeResult = await multiSigDAOFactory.upgradeDaoLogicAddress(
       contractNewAddress,
       clientsInfo.childProxyAdminClient
     );
@@ -451,9 +413,22 @@ export class MultiSigDAOSteps {
     );
   }
 
+  @then(/User transfer balance from safe to eoa account/, undefined, 30000)
+  public async transferBalanceFromSafeToEOA() {
+    if (balanceInSafe.isGreaterThan(0)) {
+      await Common.transferTokens(
+        clientsInfo.treasureId,
+        AccountId.fromString(gnosisSafe.contractId),
+        clientsInfo.operatorKey,
+        TOKEN_ID,
+        balanceInSafe.toNumber()
+      );
+    }
+  }
+
   @when(/User upgrade the hedera gnosis safe logic address/, undefined, 30000)
   public async upgradeSafeLogicAddress() {
-    upgradeResult = await daoFactory.upgradeSafeLogicAddress(
+    upgradeResult = await multiSigDAOFactory.upgradeSafeLogicAddress(
       contractNewAddress,
       clientsInfo.childProxyAdminClient
     );
@@ -465,9 +440,29 @@ export class MultiSigDAOSteps {
     30000
   )
   public async upgradeGnosisSafeProxyFactory() {
-    upgradeResult = await daoFactory.upgradeSafeFactoryAddress(
+    upgradeResult = await multiSigDAOFactory.upgradeSafeFactoryAddress(
       contractNewAddress,
       clientsInfo.childProxyAdminClient
+    );
+  }
+
+  @when(
+    /User propose the transaction for associating the token/,
+    undefined,
+    30000
+  )
+  public async proposeTokenAssociateTransaction() {
+    txnHash = await multiSigDao.proposeTokenAssociateTransaction(TOKEN_ID);
+  }
+
+  @when(/User transfer (\d+\.?\d*) uint of tokens to safe/, undefined, 60000)
+  public async transferAmountToSafe(amount: number) {
+    await Common.transferTokens(
+      AccountId.fromString(gnosisSafe.contractId),
+      clientsInfo.treasureId,
+      clientsInfo.treasureKey,
+      TOKEN_ID,
+      amount * PRECISION
     );
   }
 }
