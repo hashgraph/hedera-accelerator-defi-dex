@@ -228,5 +228,23 @@
     "timestamp": "2023-07-21T11:22:41.627Z",
     "transparentProxyId": "0.0.15543481",
     "transparentProxyAddress": "0x0000000000000000000000000000000000ed2cb9"
+  },
+  {
+    "name": "multisigdao",
+    "id": "0.0.15573845",
+    "hash": "a29a66d992630e794f722ca569b5472a",
+    "address": "0x0000000000000000000000000000000000eda355",
+    "timestamp": "2023-07-24T07:33:58.129Z",
+    "transparentProxyId": "0.0.15573847",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000eda357"
+  },
+  {
+    "name": "multisigdao",
+    "id": "0.0.15573911",
+    "hash": "963927d65bb72bfa189305341c360321",
+    "address": "0x0000000000000000000000000000000000eda397",
+    "timestamp": "2023-07-24T08:30:36.381Z",
+    "transparentProxyId": "0.0.15573915",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000eda39b"
   }
 ]

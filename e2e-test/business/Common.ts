@@ -31,6 +31,17 @@ export default class Common extends Base {
     return this.constructor.name;
   }
 
+  static getHbarBalance = async (
+    id: AccountId | string,
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    const query = new AccountBalanceQuery().setAccountId(id);
+    const accountBalance = await query.execute(client);
+    console.log(
+      `- The hbar account balance for ${id} is ${accountBalance.hbars} \n `
+    );
+  };
+
   static setNFTTokenAllowance = async (
     tokenId: string | TokenId,
     spenderAccountId: string | AccountId,
@@ -271,7 +282,7 @@ export default class Common extends Base {
     const contractExecuteSubmit = await contractExecuteTx.execute(client);
     const contractExecuteRx = await contractExecuteSubmit.getReceipt(client);
     console.log(
-      `- Common#transferHbarsToContract(): sender = ${senderAccountId}, receiver = ${contractId}, amount = ${amount} status = ${contractExecuteRx.status}`
+      `- Common#transferHbarsToContract(): sender = ${senderAccountId}, receiver = ${contractId}, amount = ${amount} status = ${contractExecuteRx.status} \n`
     );
   };
 

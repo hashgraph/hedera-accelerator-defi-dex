@@ -124,11 +124,7 @@ export default class MultiSigDao extends BaseDao {
     console.log(
       `- MultiSigDao#${GET_HEDERA_GNOSIS_SAFE_CONTRACT_ADDRESS}(): address = ${address}\n`
     );
-<<<<<<< HEAD
     return AddressHelper.addressToIdObject(address);
-=======
-    return await AddressHelper.addressToIdObject(address);
->>>>>>> aaa64ab (testnet break fix)
   };
 
   getMultiSendContractAddressFromDAO = async (
@@ -533,10 +529,6 @@ export default class MultiSigDao extends BaseDao {
     const gnosis = new Common(cId);
     await gnosis.execute(5_00_000, "setup", client, setupArgs);
     console.log(` - GnosisSafe#setup(): done\n`);
-<<<<<<< HEAD
-=======
-
->>>>>>> aaa64ab (testnet break fix)
     return gnosisProxyAddress;
   }
 

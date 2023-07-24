@@ -1,3 +1,4 @@
+import { ethers } from "hardhat";
 import dex from "../../deployment/model/dex";
 import Common from "../../e2e-test/business/Common";
 import MultiSigDao from "../../e2e-test/business/MultiSigDao";
@@ -17,7 +18,7 @@ import { AddressHelper } from "../../utils/AddressHelper";
 
 const TOKEN = TokenId.fromString(dex.TOKEN_LAB49_1);
 const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
-const TOKEN_QTY = 1;
+const TOKEN_QTY = 10;
 const TXN_DETAILS_FOR_BATCH = {
   TOKEN: GOD_TOKEN_ID,
   FROM_CLIENT: clientsInfo.operatorClient,
@@ -55,26 +56,26 @@ async function main() {
   const multiSigDAO = new MultiSigDao();
   await initDAO(multiSigDAO);
 
-  await executeBatchTransaction(multiSigDAO);
+  // await executeBatchTransaction(multiSigDAO);
 
-  await executeDAOTokenTransferProposal(multiSigDAO);
+  // await executeDAOTokenTransferProposal(multiSigDAO);
 
-  await executeDAOTextProposal(multiSigDAO);
+  // await executeDAOTextProposal(multiSigDAO);
 
   await executeHbarTransfer(multiSigDAO);
 
-  await multiSigDAO.updateDaoInfo(
-    DAO_NAME + "_NEW",
-    DAO_LOGO + "daos",
-    DAO_DESC + "and updated",
-    [...DAO_WEB_LINKS, "https://github.com"],
-    DAO_ADMIN_CLIENT
-  );
-  await multiSigDAO.getDaoInfo();
+  // await multiSigDAO.updateDaoInfo(
+  //   DAO_NAME + "_NEW",
+  //   DAO_LOGO + "daos",
+  //   DAO_DESC + "and updated",
+  //   [...DAO_WEB_LINKS, "https://github.com"],
+  //   DAO_ADMIN_CLIENT
+  // );
+  // await multiSigDAO.getDaoInfo();
 
-  const roleBasedAccess = new SystemRoleBasedAccess();
-  (await roleBasedAccess.checkIfChildProxyAdminRoleGiven()) &&
-    (await multiSigDAO.upgradeHederaService(clientsInfo.childProxyAdminClient));
+  // const roleBasedAccess = new SystemRoleBasedAccess();
+  // (await roleBasedAccess.checkIfChildProxyAdminRoleGiven()) &&
+  //   (await multiSigDAO.upgradeHederaService(clientsInfo.childProxyAdminClient));
 }
 
 async function initDAO(dao: MultiSigDao) {
@@ -276,6 +277,8 @@ export async function executeHbarTransfer(
   }
   await multiSigDAO.state(hbarTransferTxnHash);
 
+  await Common.getHbarBalance(clientsInfo.treasureId);
+
   await gnosisSafe.executeTransaction(
     transferTxnInfo.to,
     transferTxnInfo.value,
@@ -284,7 +287,10 @@ export async function executeHbarTransfer(
     transferTxnInfo.nonce,
     safeTxnExecutionClient
   );
+
   await multiSigDAO.state(hbarTransferTxnHash);
+
+  await Common.getHbarBalance(clientsInfo.treasureId);
 }
 
 export async function executeDAOTextProposal(

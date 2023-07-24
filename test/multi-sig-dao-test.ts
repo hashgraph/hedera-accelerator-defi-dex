@@ -1062,5 +1062,69 @@ describe("MultiSig tests", function () {
         ).revertedWith("Only HederaGnosisSafe can execute it.");
       });
     });
+
+    // describe("Hbar transfer tests", () => {
+
+    //   it("Transfer hbar", async () => {
+    //     const { multiSigDAOInstance, signers, hederaGnosisSafeProxyContract,
+    //       daoSigners, } = await loadFixture(deployFixture);
+    //     const ABI = [
+    //       "function call(string)",
+    //     ];
+    //     const iface = new ethers.utils.Interface(ABI);
+    //     const data = iface.encodeFunctionData("call", [
+    //       "",
+    //     ]);
+
+    //     const { txnHash: textProposalTxnHash, info } = const txn = await multiSigDAOInstance.proposeTransaction(
+    //       token,
+    //       createTransferTransactionABIData(receiver, amount),
+    //       TXN_TYPE_TRANSFER,
+    //       title,
+    //       description,
+    //       LINK_TO_DISCUSSION
+    //     );
+    //     const approvalStatus1 =
+    //       await hederaGnosisSafeProxyContract.checkApprovals(
+    //         textProposalTxnHash
+    //       );
+    //     expect(approvalStatus1).equals(false);
+
+    //     // took all approvals except from first singer
+    //     for (const signer of daoSigners.slice(1)) {
+    //       await hederaGnosisSafeProxyContract
+    //         .connect(signer)
+    //         .approveHash(textProposalTxnHash);
+    //     }
+
+    //     const approvalStatus2 =
+    //       await hederaGnosisSafeProxyContract.checkApprovals(
+    //         textProposalTxnHash
+    //       );
+    //     expect(approvalStatus2).equals(false);
+
+    //     // took first signer approval now
+    //     await hederaGnosisSafeProxyContract
+    //       .connect(daoSigners.at(0)!)
+    //       .approveHash(textProposalTxnHash);
+
+    //     const approvalStatus3 =
+    //       await hederaGnosisSafeProxyContract.checkApprovals(
+    //         textProposalTxnHash
+    //       );
+    //     expect(approvalStatus3).equals(true);
+
+    //     expect(await multiSigDAOInstance.state(textProposalTxnHash)).equals(1); // Approved
+
+    //     await hederaGnosisSafeProxyContract.executeTransaction(
+    //       info.to,
+    //       info.value,
+    //       info.data,
+    //       info.operation,
+    //       info.nonce
+    //     );
+
+    //   })
+    // })
   });
 });

@@ -160,7 +160,7 @@ contract MultiSigDAO is BaseDAO {
 
         return
             proposeTransaction(
-                address(_receiver),
+                _receiver,
                 data,
                 TXN_TYPE_HBAR_TRANSFER,
                 title,
