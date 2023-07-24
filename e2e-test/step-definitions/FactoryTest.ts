@@ -11,6 +11,7 @@ import { httpRequest } from "../../deployment/api/HttpsService";
 import { Helper } from "../../utils/Helper";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { CommonSteps } from "./CommonSteps";
+import { AddressHelper } from "../../utils/AddressHelper";
 
 const contractService = new ContractService();
 const baseContract = contractService.getContract(
@@ -53,7 +54,7 @@ let errorMsg: string = "";
 let sportPrice: BigNumber;
 let tokenNameIdMap = new Map();
 let pairAdd: any;
-let lpTokenAdd: string;
+let lpTokenContractIdAsString: string;
 let pairWithSameTokenAndFeeAddress: string;
 
 @binding()
@@ -180,7 +181,7 @@ export class FactorySteps {
     }
   }
 
-  @when(/User create pair of "([^"]*)" and HBAR/, undefined, 30000)
+  @when(/User create pair of "([^"]*)" and HBAR/, undefined, 60000)
   public async createPairOfTokenAWithHBAR(tokenName: string): Promise<void> {
     tokenOne = await Common.createToken(tokenName, tokenName, id, key, client);
     tokenAHBARPairAddress = await factory.createPair(
@@ -195,7 +196,8 @@ export class FactorySteps {
     const pairAddress = await factory.getPair(tokenOne, tokenHBARX);
     pairContractId = await this.fetchContractID(pairAddress);
     pair = new Pair(pairContractId);
-    lpTokenAdd = await pair.getLpContractAddress();
+    const lpTokenAdd = await pair.getLpContractAddress();
+    lpTokenContractIdAsString = await AddressHelper.addressToId(lpTokenAdd);
     precision = await pair.getPrecisionValue(client);
   }
 
@@ -548,9 +550,7 @@ export class FactorySteps {
     const tokenId = tokenNameIdMap.get(tokenName);
 
     const contractId =
-      tokenName === "lptoken"
-        ? ContractId.fromSolidityAddress(lpTokenAdd).toString()
-        : pairContractId;
+      tokenName === "lptoken" ? lpTokenContractIdAsString : pairContractId;
     await Common.setTokenAllowance(
       tokenId,
       contractId,
