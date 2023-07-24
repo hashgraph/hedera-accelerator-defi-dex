@@ -17,7 +17,7 @@ import {
 
 const TOKEN = TokenId.fromString(dex.TOKEN_LAB49_1);
 const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
-const TOKEN_QTY = 10;
+const TOKEN_QTY = 1;
 const TXN_DETAILS_FOR_BATCH = {
   TOKEN: GOD_TOKEN_ID,
   FROM_CLIENT: clientsInfo.operatorClient,
