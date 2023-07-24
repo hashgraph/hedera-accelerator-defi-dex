@@ -14,7 +14,6 @@ import {
   ContractId,
   PrivateKey,
 } from "@hashgraph/sdk";
-import { AddressHelper } from "../../utils/AddressHelper";
 
 const TOKEN = TokenId.fromString(dex.TOKEN_LAB49_1);
 const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
@@ -56,26 +55,26 @@ async function main() {
   const multiSigDAO = new MultiSigDao();
   await initDAO(multiSigDAO);
 
-  // await executeBatchTransaction(multiSigDAO);
+  await executeBatchTransaction(multiSigDAO);
 
-  // await executeDAOTokenTransferProposal(multiSigDAO);
+  await executeDAOTokenTransferProposal(multiSigDAO);
 
-  // await executeDAOTextProposal(multiSigDAO);
+  await executeDAOTextProposal(multiSigDAO);
 
   await executeHbarTransfer(multiSigDAO);
 
-  // await multiSigDAO.updateDaoInfo(
-  //   DAO_NAME + "_NEW",
-  //   DAO_LOGO + "daos",
-  //   DAO_DESC + "and updated",
-  //   [...DAO_WEB_LINKS, "https://github.com"],
-  //   DAO_ADMIN_CLIENT
-  // );
-  // await multiSigDAO.getDaoInfo();
+  await multiSigDAO.updateDaoInfo(
+    DAO_NAME + "_NEW",
+    DAO_LOGO + "daos",
+    DAO_DESC + "and updated",
+    [...DAO_WEB_LINKS, "https://github.com"],
+    DAO_ADMIN_CLIENT
+  );
+  await multiSigDAO.getDaoInfo();
 
-  // const roleBasedAccess = new SystemRoleBasedAccess();
-  // (await roleBasedAccess.checkIfChildProxyAdminRoleGiven()) &&
-  //   (await multiSigDAO.upgradeHederaService(clientsInfo.childProxyAdminClient));
+  const roleBasedAccess = new SystemRoleBasedAccess();
+  (await roleBasedAccess.checkIfChildProxyAdminRoleGiven()) &&
+    (await multiSigDAO.upgradeHederaService(clientsInfo.childProxyAdminClient));
 }
 
 async function initDAO(dao: MultiSigDao) {
@@ -258,10 +257,11 @@ export async function executeHbarTransfer(
     tokenSenderClient
   );
 
-  const hbarTransferTxnHash = await multiSigDAO.proposeHbarTransferTransaction(
-    tokenReceiver,
-    tokenQty,
-    tokenSenderClient
+  const hbarTransferTxnHash = await multiSigDAO.proposeTransaction(
+    clientsInfo.treasureId.toSolidityAddress(),
+    getHbarTransferCalldata(),
+    4,
+    tokenQty
   );
 
   const transferTxnInfo = await multiSigDAO.getTransactionInfo(
@@ -337,6 +337,15 @@ async function getGnosisSafeInstance(multiSigDAO: MultiSigDao) {
   const safeContractId = await multiSigDAO.getHederaGnosisSafeContractAddress();
   return new HederaGnosisSafe(safeContractId);
 }
+
+const getHbarTransferCalldata = () => {
+  const ABI = ["function call()"];
+
+  const iface = new ethers.utils.Interface(ABI);
+  const data = iface.encodeFunctionData("call", []);
+
+  return ethers.utils.arrayify(data);
+};
 
 if (require.main === module) {
   main()

@@ -30,10 +30,6 @@ contract MultiSigDAO is BaseDAO {
 
     uint256 private constant TXN_TYPE_BATCH = 1;
     uint256 private constant TXN_TYPE_TOKEN_ASSOCIATE = 2;
-    uint256 private constant TXN_TYPE_HBAR_TRANSFER = 4;
-
-    bytes4 private constant HABR_TRANSFER_FROM_SAFE_SELECTOR =
-        bytes4(keccak256("call(string)"));
 
     HederaMultiSend private multiSend;
     IHederaService private hederaService;
@@ -144,28 +140,6 @@ contract MultiSigDAO is BaseDAO {
                 _title,
                 _desc,
                 _linkToDiscussion
-            );
-    }
-
-    function proposeHbarTransferTransaction(
-        address _receiver,
-        string memory title,
-        string memory desc,
-        string memory linkToDiscussion
-    ) external payable returns (bytes32) {
-        bytes memory data = abi.encodeWithSelector(
-            HABR_TRANSFER_FROM_SAFE_SELECTOR,
-            ""
-        );
-
-        return
-            proposeTransaction(
-                _receiver,
-                data,
-                TXN_TYPE_HBAR_TRANSFER,
-                title,
-                desc,
-                linkToDiscussion
             );
     }
 

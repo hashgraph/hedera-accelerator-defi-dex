@@ -16,7 +16,6 @@ import {
   ContractFunctionParameters,
   PrivateKey,
 } from "@hashgraph/sdk";
-import { AddressHelper } from "../../utils/AddressHelper";
 
 const TITLE = "TITLE";
 const DESCRIPTION = "DESCRIPTION";
@@ -28,7 +27,6 @@ const GET_TRANSACTION_INFO = "getTransactionInfo";
 const PROPOSE_TRANSACTION = "proposeTransaction";
 const GET_APPROVAL_COUNTS = "getApprovalCounts";
 const PROPOSE_BATCH_TRANSACTION = "proposeBatchTransaction";
-const PROPOSE_HBAR_TRANSFER_TRANSACTION = "proposeHbarTransferTransaction";
 const GET_HEDERA_GNOSIS_SAFE_CONTRACT_ADDRESS =
   "getHederaGnosisSafeContractAddress";
 const GET_MULTI_SEND_CONTRACT_ADDRESS = "getMultiSendContractAddress";
@@ -68,7 +66,7 @@ export default class MultiSigDao extends BaseDao {
       ]);
       const gnosisLogic = deployedItems.get(ContractService.SAFE);
       const gnosisFactory = deployedItems.get(ContractService.SAFE_FACTORY);
-      const gnosisFactoryId = await AddressHelper.addressToIdObject(
+      const gnosisFactoryId = ContractId.fromSolidityAddress(
         gnosisFactory.address
       );
 
@@ -212,6 +210,7 @@ export default class MultiSigDao extends BaseDao {
     to: string,
     data: Uint8Array,
     transactionType: number = 10,
+    value: number = 0,
     client: Client = clientsInfo.operatorClient,
     title: string = TITLE,
     description: string = DESCRIPTION,
@@ -228,7 +227,9 @@ export default class MultiSigDao extends BaseDao {
       3_000_000,
       PROPOSE_TRANSACTION,
       client,
-      args
+      args,
+      clientsInfo.operatorKey,
+      value
     );
     const txnHash = result.getBytes32(0);
     const hash = ethers.utils.hexlify(txnHash);
@@ -285,6 +286,7 @@ export default class MultiSigDao extends BaseDao {
       ContractId.fromString(gnosisSafe.contractId).toSolidityAddress(),
       data.bytes,
       ADD_MEMBER,
+      0,
       client
     );
   };
@@ -303,6 +305,7 @@ export default class MultiSigDao extends BaseDao {
       ContractId.fromString(gnosisSafe.contractId).toSolidityAddress(),
       data.bytes,
       CHANGE_THRESHOLD,
+      0,
       client
     );
   };
@@ -327,6 +330,7 @@ export default class MultiSigDao extends BaseDao {
       ContractId.fromString(gnosisSafe.contractId).toSolidityAddress(),
       data.bytes,
       REMOVE_MEMBER,
+      0,
       client
     );
   };
@@ -351,6 +355,7 @@ export default class MultiSigDao extends BaseDao {
       ContractId.fromString(gnosisSafe.contractId).toSolidityAddress(),
       data.bytes,
       REPLACE_MEMBER,
+      0,
       client
     );
   };
@@ -406,6 +411,7 @@ export default class MultiSigDao extends BaseDao {
       await AddressHelper.idToEvmAddress(gnosisSafe.contractId),
       data.bytes,
       TOKEN_TRANSFER,
+      0,
       client,
       title,
       description,
@@ -456,43 +462,12 @@ export default class MultiSigDao extends BaseDao {
       await AddressHelper.idToEvmAddress(this.contractId),
       textTxData.bytes,
       TYPE_SET_TEXT,
+      0,
       client,
       title,
       description,
       linkToDiscussion
     );
-  };
-
-  public proposeHbarTransferTransaction = async (
-    receiver: AccountId | ContractId,
-    amount: number,
-    tokenSenderClient: Client = clientsInfo.uiUserClient,
-    title: string = TITLE,
-    description: string = DESCRIPTION,
-    linkToDiscussion: string = LINK_TO_DISCUSSION
-  ) => {
-    const args = new ContractFunctionParameters()
-      .addAddress(receiver.toSolidityAddress())
-      .addString(title)
-      .addString(description)
-      .addString(linkToDiscussion);
-
-    const { result } = await this.execute(
-      3_000_000,
-      PROPOSE_HBAR_TRANSFER_TRANSACTION,
-      tokenSenderClient,
-      args,
-      clientsInfo.uiUserKey,
-      amount
-    );
-
-    const txnHash = result.getBytes32(0);
-    const hash = ethers.utils.hexlify(txnHash);
-
-    console.log(
-      `- MultiSigDao#${PROPOSE_HBAR_TRANSFER_TRANSACTION}(): txnHash = ${hash}\n`
-    );
-    return txnHash;
   };
 
   private async createProxy(
