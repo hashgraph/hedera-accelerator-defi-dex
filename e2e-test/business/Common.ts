@@ -210,12 +210,12 @@ export default class Common extends Base {
   };
 
   static getTokenBalance = async (
-    id: AccountId | ContractId | string,
+    idOrEvmAddress: AccountId | ContractId | string,
     tokenId: TokenId,
     client: Client = clientsInfo.operatorClient
   ) => {
     const token = new Token(ContractId.fromString(tokenId.toString()));
-    return await token.getBalance(id);
+    return await token.getBalance(idOrEvmAddress);
   };
 
   static getTokenInfo = async (

@@ -102,7 +102,7 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
   @given(
     /User initialize the DAO governor token contract with name "([^"]*)" and url "([^"]*)"/,
     undefined,
-    30000
+    60000
   )
   public async initializeSafe(name: string, url: string) {
     await Helper.delay(15000); // allowing some delay for propagating initialize event from previous call
