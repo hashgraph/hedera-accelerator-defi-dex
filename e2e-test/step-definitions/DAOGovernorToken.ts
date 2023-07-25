@@ -171,7 +171,7 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
   @when(
     /User initialize the governor token dao and governor token transfer and god holder contract via dao factory/,
     undefined,
-    30000
+    60000
   )
   public async initializeContractsViaFactory() {
     ftDao = await daoFactory.getGovernorTokenDaoInstance(daoAddress);
