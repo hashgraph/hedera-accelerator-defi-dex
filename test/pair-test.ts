@@ -432,7 +432,7 @@ describe("LPToken, Pair and Factory tests", function () {
         );
       });
 
-      it("Given one pool of pair exists when user asks for swap recommendation then that should be returned ", async function () {
+      it("Given one pool of pair exists when user asks for swap recommendation for tokenA swap then that should be returned ", async function () {
         const {
           pair,
           factory,
@@ -470,8 +470,72 @@ describe("LPToken, Pair and Factory tests", function () {
         );
 
         const pool1 = await pair.attach(pair1);
-        let tokenAPoolQty = BigNumber.from(200).mul(precision);
-        let tokenBPoolQty = BigNumber.from(210).mul(precision);
+        let tokenAPoolQty = BigNumber.from(9).mul(precision);
+        let tokenBPoolQty = BigNumber.from(24).mul(precision);
+        await pool1
+          .connect(signers[1])
+          .addLiquidity(
+            signers[1].address,
+            token1Address,
+            token2Address,
+            tokenAPoolQty,
+            tokenBPoolQty
+          );
+
+        const token1SwapResult = await factory.recommendedPairToSwap(
+          token1Address,
+          token2Address,
+          BigNumber.from(1).mul(precision)
+        );
+
+        expect(token1SwapResult[0]).not.to.be.equals(
+          "0x0000000000000000000000000000000000000000"
+        );
+        expect(token1SwapResult[1]).to.be.equals(token2Address);
+        expect(token1SwapResult[2]).to.be.equals(228721806);
+        expect(token1SwapResult[3]).to.be.equals(poolFee);
+      });
+
+      it("Given one pool of pair exists when user asks for swap recommendation for tokenB swap then that should be returned ", async function () {
+        const {
+          pair,
+          factory,
+          mockHederaService,
+          signers,
+          token1Address,
+          token2Address,
+          configuration,
+          lpTokenCont,
+        } = await loadFixture(deployFixture);
+        await factory.setUpFactory(
+          mockHederaService.address,
+          signers[0].address,
+          pair.address,
+          lpTokenCont.address,
+          configuration.address
+        );
+
+        const initialFees = Helper.convertToFeeObjectArray(
+          await configuration.getTransactionsFee()
+        );
+
+        const poolFee = initialFees[0].value;
+
+        await factory.createPair(
+          token1Address,
+          token2Address,
+          treasury,
+          poolFee
+        );
+        const pair1 = await factory.getPair(
+          token1Address,
+          token2Address,
+          poolFee
+        );
+
+        const pool1 = await pair.attach(pair1);
+        let tokenAPoolQty = BigNumber.from(9).mul(precision);
+        let tokenBPoolQty = BigNumber.from(24).mul(precision);
         await pool1
           .connect(signers[1])
           .addLiquidity(
@@ -485,13 +549,14 @@ describe("LPToken, Pair and Factory tests", function () {
         const token2SwapResult = await factory.recommendedPairToSwap(
           token2Address,
           token1Address,
-          BigNumber.from(10).mul(precision)
+          BigNumber.from(1).mul(precision)
         );
 
         expect(token2SwapResult[0]).not.to.be.equals(
           "0x0000000000000000000000000000000000000000"
         );
         expect(token2SwapResult[1]).to.be.equals(token1Address);
+        expect(token2SwapResult[2]).to.be.equals(34256758);
         expect(token2SwapResult[3]).to.be.equals(poolFee);
       });
 
