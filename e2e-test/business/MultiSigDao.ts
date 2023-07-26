@@ -32,6 +32,7 @@ const GET_HEDERA_GNOSIS_SAFE_CONTRACT_ADDRESS =
 const GET_MULTI_SEND_CONTRACT_ADDRESS = "getMultiSendContractAddress";
 const PROPOSE_TOKEN_ASSOCIATE_TRANSACTION = "proposeTokenAssociateTransaction";
 const SET_TEXT = "setText";
+const PROPOSE_UPGRADE_PROXY_TRANSACTION = "proposeUpgradeProxyTransaction";
 
 enum TransactionState {
   Pending,
@@ -402,6 +403,34 @@ export default class MultiSigDao extends BaseDao {
       linkToDiscussion
     );
   };
+
+  public async proposeUpgradeProxyTransaction(
+    proxyAddress: string,
+    proxyLogicAddress: string,
+    client: Client = clientsInfo.operatorClient,
+    title: string = TITLE,
+    description: string = DESCRIPTION,
+    linkToDiscussion: string = LINK_TO_DISCUSSION
+  ) {
+    const args = new ContractFunctionParameters()
+      .addAddress(proxyAddress)
+      .addAddress(proxyLogicAddress)
+      .addString(title)
+      .addString(description)
+      .addString(linkToDiscussion);
+    const { result } = await this.execute(
+      5_00_000,
+      PROPOSE_UPGRADE_PROXY_TRANSACTION,
+      client,
+      args
+    );
+    const txnHash = result.getBytes32(0);
+    const hash = ethers.utils.hexlify(txnHash);
+    console.log(
+      `- MultiSigDao#${PROPOSE_UPGRADE_PROXY_TRANSACTION}(): txnHash = ${hash}\n`
+    );
+    return txnHash;
+  }
 
   public proposeTokenAssociateTransaction = async (
     token: TokenId,

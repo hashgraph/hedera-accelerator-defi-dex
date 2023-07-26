@@ -11,6 +11,7 @@ import {
   DAO_DESC,
   executeDAOTextProposal,
   executeBatchTransaction,
+  executeDAOUpgradeProposal,
   executeDAOTokenTransferProposal,
   DAO_WEB_LINKS,
   DAO_OWNERS_ADDRESSES,
@@ -37,6 +38,7 @@ async function main() {
     await executeDAOTextProposal(multiSigDAOInstance);
     await executeBatchTransaction(multiSigDAOInstance);
     await executeDAOTokenTransferProposal(multiSigDAOInstance);
+    await executeDAOUpgradeProposal(multiSigDAOInstance);
   }
   const hasRole = await roleBasedAccess.checkIfChildProxyAdminRoleGiven();
   hasRole &&
