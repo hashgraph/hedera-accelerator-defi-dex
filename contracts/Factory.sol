@@ -163,7 +163,7 @@ contract Factory is IEvents, OwnableUpgradeable, ReentrancyGuardUpgradeable {
                     _token = _token1;
                     _slippage = pair.slippageOutGivenIn(_qtyToSwap);
                 } else {
-                    (, _qty, , ) = pair.getInGivenOut(_qtyToSwap);
+                    (, , _qty, ) = pair.getInGivenOut(_qtyToSwap);
                     _token = _token0;
                     _slippage = pair.slippageInGivenOut(_qtyToSwap);
                 }
