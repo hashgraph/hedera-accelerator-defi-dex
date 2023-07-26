@@ -56,7 +56,7 @@ export default abstract class Base {
   private printContractInformation = () => {
     const businessClassName = this.getBusinessClassName();
     console.log(
-      `\n Using business class[${businessClassName}], contract-id [${this.contractId}], and contract-name [${this.contractName}] \n`
+      `\n- Using business class[${businessClassName}], contract-id [${this.contractId}], and contract-name [${this.contractName}] \n`
     );
   };
 
