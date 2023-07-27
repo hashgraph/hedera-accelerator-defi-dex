@@ -241,26 +241,17 @@ export async function executeHbarTransfer(
 
   const gnosisSafe = await getGnosisSafeInstance(multiSigDAO);
 
-  await multiSigDAO.setupHbarAllowanceForTransferTransaction(
-    tokenQty,
-    tokenSenderClient,
-    tokenSenderAccountId,
-    tokenSenderPrivateKey,
-    gnosisSafe
-  );
-
   await Common.transferHbarsToContract(
     tokenQty,
     ContractId.fromString(gnosisSafe.contractId),
     tokenSenderAccountId,
-    tokenSenderPrivateKey,
     tokenSenderClient
   );
 
   const hbarTransferTxnHash = await multiSigDAO.proposeTransaction(
     clientsInfo.treasureId.toSolidityAddress(),
     getHbarTransferCalldata(),
-    4,
+    40001,
     tokenQty
   );
 
@@ -277,7 +268,7 @@ export async function executeHbarTransfer(
   }
   await multiSigDAO.state(hbarTransferTxnHash);
 
-  await Common.getHbarBalance(clientsInfo.treasureId);
+  await Common.getAccountBalance(clientsInfo.treasureId);
 
   await gnosisSafe.executeTransaction(
     transferTxnInfo.to,
@@ -290,7 +281,7 @@ export async function executeHbarTransfer(
 
   await multiSigDAO.state(hbarTransferTxnHash);
 
-  await Common.getHbarBalance(clientsInfo.treasureId);
+  await Common.getAccountBalance(clientsInfo.treasureId);
 }
 
 export async function executeDAOTextProposal(

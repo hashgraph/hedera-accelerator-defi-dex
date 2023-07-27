@@ -205,7 +205,7 @@ export default class Common extends Base {
 
   static getAccountBalance = async (
     accountId: AccountId | ContractId,
-    tokens: TokenId[] | undefined,
+    tokens: TokenId[] | undefined = undefined,
     client: Client = clientsInfo.operatorClient
   ) => {
     console.log(`- Common#getAccountBalance(): account-id = ${accountId}`);
@@ -272,15 +272,16 @@ export default class Common extends Base {
     amount: number,
     contractId: ContractId,
     senderAccountId: AccountId = clientsInfo.operatorId,
-    senderPrivateKey: PrivateKey = clientsInfo.operatorKey,
-    client: Client = clientsInfo.operatorClient
+    senderClient: Client = clientsInfo.operatorClient
   ) => {
     const contractExecuteTx = new ContractExecuteTransaction()
       .setContractId(contractId)
       .setGas(500_000)
       .setPayableAmount(amount);
-    const contractExecuteSubmit = await contractExecuteTx.execute(client);
-    const contractExecuteRx = await contractExecuteSubmit.getReceipt(client);
+    const contractExecuteSubmit = await contractExecuteTx.execute(senderClient);
+    const contractExecuteRx = await contractExecuteSubmit.getReceipt(
+      senderClient
+    );
     console.log(
       `- Common#transferHbarsToContract(): sender = ${senderAccountId}, receiver = ${contractId}, amount = ${amount} status = ${contractExecuteRx.status} \n`
     );
