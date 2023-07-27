@@ -210,6 +210,7 @@ export default class MultiSigDao extends BaseDao {
     to: string,
     data: Uint8Array,
     transactionType: number = 10,
+    value: number = 0,
     client: Client = clientsInfo.operatorClient,
     title: string = TITLE,
     description: string = DESCRIPTION,
@@ -226,7 +227,9 @@ export default class MultiSigDao extends BaseDao {
       3_000_000,
       PROPOSE_TRANSACTION,
       client,
-      args
+      args,
+      clientsInfo.operatorKey,
+      value
     );
     const txnHash = result.getBytes32(0);
     const hash = ethers.utils.hexlify(txnHash);
@@ -267,6 +270,7 @@ export default class MultiSigDao extends BaseDao {
       ContractId.fromString(gnosisSafe.contractId).toSolidityAddress(),
       data.bytes,
       ADD_MEMBER,
+      0,
       client
     );
   };
@@ -285,6 +289,7 @@ export default class MultiSigDao extends BaseDao {
       ContractId.fromString(gnosisSafe.contractId).toSolidityAddress(),
       data.bytes,
       CHANGE_THRESHOLD,
+      0,
       client
     );
   };
@@ -309,6 +314,7 @@ export default class MultiSigDao extends BaseDao {
       ContractId.fromString(gnosisSafe.contractId).toSolidityAddress(),
       data.bytes,
       REMOVE_MEMBER,
+      0,
       client
     );
   };
@@ -333,6 +339,7 @@ export default class MultiSigDao extends BaseDao {
       ContractId.fromString(gnosisSafe.contractId).toSolidityAddress(),
       data.bytes,
       REPLACE_MEMBER,
+      0,
       client
     );
   };
@@ -388,6 +395,7 @@ export default class MultiSigDao extends BaseDao {
       await AddressHelper.idToEvmAddress(gnosisSafe.contractId),
       data.bytes,
       TOKEN_TRANSFER,
+      0,
       client,
       title,
       description,
@@ -438,6 +446,7 @@ export default class MultiSigDao extends BaseDao {
       await AddressHelper.idToEvmAddress(this.contractId),
       textTxData.bytes,
       TYPE_SET_TEXT,
+      0,
       client,
       title,
       description,

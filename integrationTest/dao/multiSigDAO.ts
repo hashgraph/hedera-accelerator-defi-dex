@@ -1,3 +1,4 @@
+import { ethers } from "hardhat";
 import dex from "../../deployment/model/dex";
 import Common from "../../e2e-test/business/Common";
 import MultiSigDao from "../../e2e-test/business/MultiSigDao";
@@ -59,6 +60,8 @@ async function main() {
   await executeDAOTokenTransferProposal(multiSigDAO);
 
   await executeDAOTextProposal(multiSigDAO);
+
+  await executeHbarTransfer(multiSigDAO);
 
   await multiSigDAO.updateDaoInfo(
     DAO_NAME + "_NEW",
@@ -224,6 +227,63 @@ export async function executeBatchTransaction(
   );
 }
 
+export async function executeHbarTransfer(
+  multiSigDAO: MultiSigDao,
+  ownersInfo: any[] = DAO_OWNERS_INFO,
+  tokenQty: number = TOKEN_QTY,
+  tokenReceiver: AccountId | ContractId = clientsInfo.treasureId,
+  tokenSenderClient: Client = clientsInfo.uiUserClient,
+  tokenSenderAccountId: AccountId = clientsInfo.uiUserId,
+  tokenSenderPrivateKey: PrivateKey = clientsInfo.uiUserKey,
+  safeTxnExecutionClient: Client = clientsInfo.treasureClient
+) {
+  console.log(`- executing Multi-sig DAO = ${multiSigDAO.contractId}\n`);
+
+  const gnosisSafe = await getGnosisSafeInstance(multiSigDAO);
+
+  await Common.transferHbarsToContract(
+    tokenQty,
+    ContractId.fromString(gnosisSafe.contractId),
+    tokenSenderAccountId,
+    tokenSenderClient
+  );
+
+  const hbarTransferTxnHash = await multiSigDAO.proposeTransaction(
+    clientsInfo.treasureId.toSolidityAddress(),
+    getHbarTransferCalldata(),
+    40001,
+    tokenQty
+  );
+
+  const transferTxnInfo = await multiSigDAO.getTransactionInfo(
+    hbarTransferTxnHash
+  );
+
+  await multiSigDAO.state(hbarTransferTxnHash);
+
+  await gnosisSafe.getOwners();
+
+  for (const daoOwner of ownersInfo) {
+    await gnosisSafe.approveHash(hbarTransferTxnHash, daoOwner.client);
+  }
+  await multiSigDAO.state(hbarTransferTxnHash);
+
+  await Common.getAccountBalance(clientsInfo.treasureId);
+
+  await gnosisSafe.executeTransaction(
+    transferTxnInfo.to,
+    transferTxnInfo.value,
+    transferTxnInfo.data,
+    transferTxnInfo.operation,
+    transferTxnInfo.nonce,
+    safeTxnExecutionClient
+  );
+
+  await multiSigDAO.state(hbarTransferTxnHash);
+
+  await Common.getAccountBalance(clientsInfo.treasureId);
+}
+
 export async function executeDAOTextProposal(
   multiSigDAO: MultiSigDao,
   ownersInfo: any[] = DAO_OWNERS_INFO,
@@ -268,6 +328,15 @@ async function getGnosisSafeInstance(multiSigDAO: MultiSigDao) {
   const safeContractId = await multiSigDAO.getHederaGnosisSafeContractAddress();
   return new HederaGnosisSafe(safeContractId);
 }
+
+const getHbarTransferCalldata = () => {
+  const ABI = ["function call()"];
+
+  const iface = new ethers.utils.Interface(ABI);
+  const data = iface.encodeFunctionData("call", []);
+
+  return ethers.utils.arrayify(data);
+};
 
 if (require.main === module) {
   main()
