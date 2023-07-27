@@ -59,7 +59,6 @@ async function main() {
   await executeBatchTransaction(multiSigDAO);
   await executeDAOTokenTransferProposal(multiSigDAO);
   await executeDAOUpgradeProposal(multiSigDAO);
-
   await executeHbarTransfer(multiSigDAO);
   await multiSigDAO.updateDaoInfo(
     DAO_NAME + "_NEW",
@@ -292,7 +291,7 @@ export async function executeDAOUpgradeProposal(
   safeTxnExecutionClient: Client = clientsInfo.treasureClient
 ) {
   console.log(
-    `- executing Multi-sig DAO upgradeTo via batch = ${multiSigDAO.contractId}\n`
+    `- executing Multi-sig DAO upgrade contract flow = ${multiSigDAO.contractId}\n`
   );
   const gnosisSafe = await getGnosisSafeInstance(multiSigDAO);
   const safeEvmAddress = await AddressHelper.idToEvmAddress(
