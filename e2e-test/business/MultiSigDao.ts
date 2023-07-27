@@ -255,22 +255,6 @@ export default class MultiSigDao extends BaseDao {
     );
   };
 
-  setupHbarAllowanceForTransferTransaction = async (
-    allowanceAmount: number,
-    tokenSenderClient: Client = clientsInfo.uiUserClient,
-    tokenSenderAccountId: AccountId = clientsInfo.uiUserId,
-    tokenSenderPrivateKey: PrivateKey = clientsInfo.uiUserKey,
-    gnosisSafe: HederaGnosisSafe
-  ) => {
-    await Common.approveHbarAllowance(
-      gnosisSafe.contractId,
-      allowanceAmount,
-      tokenSenderAccountId,
-      tokenSenderPrivateKey,
-      tokenSenderClient
-    );
-  };
-
   proposeAddOwnerWithThreshold = async (
     threshold: number,
     newOwnerAccountId: AccountId,
