@@ -50,9 +50,14 @@ export class ContractService {
   private contractRecordFile = "./deployment/state/contracts.json";
   static DEV_CONTRACTS_PATH = "./deployment/state/contracts.json";
   static UAT_CONTRACTS_PATH = "./deployment/state/contractsUAT.json";
+  private static CONTRACTS_IDS = "./deployment/state/contractIds.json";
 
   constructor(filePath?: string) {
     this.contractRecordFile = filePath ?? ContractService.DEV_CONTRACTS_PATH;
+  }
+
+  static getContractServiceForIds() {
+    return new ContractService(this.CONTRACTS_IDS);
   }
 
   private readFileContent = () => {
@@ -205,7 +210,7 @@ export class ContractService {
     return matchingProxyContracts[matchingProxyContracts.length - 1];
   };
 
-  public addDeployed = (contract: DeployedContract) => {
+  public addDeployed = (contract: DeployedContract | any) => {
     const contracts: [DeployedContract] = this.readFileContent();
     contracts.push(contract);
     const data = JSON.stringify(contracts, null, 2);
@@ -237,5 +242,17 @@ export class ContractService {
     const newContents = JSON.stringify(mergedContracts, null, 2);
     console.log(`Contract details newContents ${newContents}`);
     fs.writeFileSync(this.contractRecordFile, newContents);
+  };
+
+  public getContractInfo = (
+    idOrAddress: string
+  ): DeployedContract | undefined => {
+    const contracts: Array<DeployedContract> = this.getAllContracts();
+    const matchingContracts = contracts.filter(
+      (contract: DeployedContract) =>
+        contract.id.includes(idOrAddress) ||
+        contract.address.includes(idOrAddress)
+    );
+    return matchingContracts.length > 0 ? matchingContracts.at(0) : undefined;
   };
 }

@@ -267,7 +267,7 @@ export default class MultiSigDao extends BaseDao {
       [newOwnerAccountId.toSolidityAddress(), threshold]
     );
     return await this.proposeTransaction(
-      ContractId.fromString(gnosisSafe.contractId).toSolidityAddress(),
+      await AddressHelper.idToEvmAddress(gnosisSafe.contractId),
       data.bytes,
       ADD_MEMBER,
       0,
@@ -286,7 +286,7 @@ export default class MultiSigDao extends BaseDao {
       [threshold]
     );
     return await this.proposeTransaction(
-      ContractId.fromString(gnosisSafe.contractId).toSolidityAddress(),
+      await AddressHelper.idToEvmAddress(gnosisSafe.contractId),
       data.bytes,
       CHANGE_THRESHOLD,
       0,
@@ -311,7 +311,7 @@ export default class MultiSigDao extends BaseDao {
       ]
     );
     return await this.proposeTransaction(
-      ContractId.fromString(gnosisSafe.contractId).toSolidityAddress(),
+      await AddressHelper.idToEvmAddress(gnosisSafe.contractId),
       data.bytes,
       REMOVE_MEMBER,
       0,
@@ -336,7 +336,7 @@ export default class MultiSigDao extends BaseDao {
       ]
     );
     return await this.proposeTransaction(
-      ContractId.fromString(gnosisSafe.contractId).toSolidityAddress(),
+      await AddressHelper.idToEvmAddress(gnosisSafe.contractId),
       data.bytes,
       REPLACE_MEMBER,
       0,

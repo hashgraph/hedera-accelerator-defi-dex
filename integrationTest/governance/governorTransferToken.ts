@@ -100,9 +100,9 @@ const nonFungibleTokenFlow = async () => {
   await nftHolder.setupAllowanceForTokenLocking();
   await nftHolder.grabTokensForVoter(
     20,
-    clientsInfo.uiUserId,
-    clientsInfo.uiUserKey,
-    clientsInfo.uiUserClient
+    clientsInfo.operatorId,
+    clientsInfo.operatorKey,
+    clientsInfo.operatorClient
   );
 
   await governor.setupNFTAllowanceForProposalCreation(
@@ -122,7 +122,7 @@ const nonFungibleTokenFlow = async () => {
     18
   );
   await governor.getProposalDetails(proposalId);
-  await governor.forVote(proposalId, 0, clientsInfo.uiUserClient);
+  await governor.forVote(proposalId, 0, clientsInfo.operatorClient);
   await governor.isQuorumReached(proposalId);
   await governor.isVoteSucceeded(proposalId);
   await governor.proposalVotes(proposalId);
@@ -139,8 +139,8 @@ const nonFungibleTokenFlow = async () => {
     await governor.cancelProposal(title, clientsInfo.operatorClient);
   }
   await nftHolder.checkAndClaimGodTokens(
-    clientsInfo.uiUserClient,
-    clientsInfo.uiUserId
+    clientsInfo.operatorClient,
+    clientsInfo.operatorId
   );
   await governor.upgradeHederaService();
 };

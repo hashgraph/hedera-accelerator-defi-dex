@@ -14,6 +14,7 @@ import TokenHolderFactory from "./TokenHolderFactory";
 import FTDAO from "../FTDAO";
 import GodHolder from "../GodHolder";
 import NFTHolder from "../NFTHolder";
+import { AddressHelper } from "../../../utils/AddressHelper";
 
 const deployment = new Deployment();
 
@@ -213,10 +214,9 @@ export default abstract class DAOFactory extends Base {
     return ContractId.fromSolidityAddress(address);
   };
 
-  getGovernorTokenDaoInstance = (daoProxyAddress: string) => {
-    const tokenTransferDAOProxyId =
-      ContractId.fromSolidityAddress(daoProxyAddress).toString();
-    return new FTDAO(ContractId.fromString(tokenTransferDAOProxyId));
+  public getGovernorTokenDaoInstance = async (daoProxyAddress: string) => {
+    const contractId = await AddressHelper.addressToIdObject(daoProxyAddress);
+    return new FTDAO(contractId);
   };
 
   protected abstract getTokenHolderInstance(

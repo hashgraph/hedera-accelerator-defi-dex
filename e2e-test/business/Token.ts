@@ -18,18 +18,15 @@ export default class Token extends Base {
   }
 
   getBalance = async (
-    user: AccountId | ContractId,
+    user: AccountId | ContractId | string,
     client: Client = clientsInfo.operatorClient
   ) => {
-    const args = new ContractFunctionParameters().addAddress(
-      user.toSolidityAddress()
-    );
+    const address = typeof user === "string" ? user : user.toSolidityAddress();
+    const args = new ContractFunctionParameters().addAddress(address);
     const { result } = await this.execute(50_000, BALANCE_OF, client, args);
     const balance = result.getUint256(0);
     console.log(
-      `- Token#${BALANCE_OF}(): token ${
-        this.contractId
-      } address = ${user.toSolidityAddress()} balance ${balance}\n`
+      `- Token#${BALANCE_OF}(): token ${this.contractId}, address = ${address}, balance = ${balance}\n`
     );
     return balance;
   };

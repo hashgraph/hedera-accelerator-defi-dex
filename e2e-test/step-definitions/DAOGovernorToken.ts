@@ -102,7 +102,7 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
   @given(
     /User initialize the DAO governor token contract with name "([^"]*)" and url "([^"]*)"/,
     undefined,
-    30000
+    60000
   )
   public async initializeSafe(name: string, url: string) {
     await Helper.delay(15000); // allowing some delay for propagating initialize event from previous call
@@ -171,10 +171,10 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
   @when(
     /User initialize the governor token dao and governor token transfer and god holder contract via dao factory/,
     undefined,
-    30000
+    60000
   )
   public async initializeContractsViaFactory() {
-    ftDao = daoFactory.getGovernorTokenDaoInstance(daoAddress);
+    ftDao = await daoFactory.getGovernorTokenDaoInstance(daoAddress);
     await this.updateGovernor(ftDao);
     factoryGODHolderContractId = godHolder.contractId;
   }
@@ -453,6 +453,7 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
       clientsInfo.operatorClient
     );
   }
+
   private async updateGovernor(dao: FTDAO) {
     const governorAddresses =
       await dao.getGovernorTokenTransferContractAddresses();

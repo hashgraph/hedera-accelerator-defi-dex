@@ -7,14 +7,13 @@ import GodHolder from "../../e2e-test/business/GodHolder";
 import { Helper } from "../../utils/Helper";
 import { BigNumber } from "bignumber.js";
 import { clientsInfo } from "../../utils/ClientManagement";
+import { AddressHelper } from "../../utils/AddressHelper";
 
 import {
   Client,
   TokenId,
-  PublicKey,
   AccountId,
   PrivateKey,
-  ContractId,
   ContractFunctionParameters,
 } from "@hashgraph/sdk";
 
@@ -76,10 +75,9 @@ export default class Governor extends Base {
     holderTokenId: TokenId = this.GOD_TOKEN_ID
   ) {
     await tokenHolder.initialize(client, holderTokenId.toSolidityAddress());
-
-    const godHolderContractId = tokenHolder.contractId;
-    const godHolderProxyAddress =
-      ContractId.fromString(godHolderContractId).toSolidityAddress();
+    const godHolderProxyAddress = await AddressHelper.idToEvmAddress(
+      tokenHolder.contractId
+    );
 
     if (await this.isInitializationPending()) {
       const args = new ContractFunctionParameters()

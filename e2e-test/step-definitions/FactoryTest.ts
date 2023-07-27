@@ -7,10 +7,11 @@ import Pair from "../business/Pair";
 import Common from "../business/Common";
 import Factory from "../business/Factory";
 import { BigNumber } from "bignumber.js";
-import { httpRequest } from "../../deployment/api/HttpsService";
-import { Helper } from "../../utils/Helper";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { CommonSteps } from "./CommonSteps";
+import { AddressHelper } from "../../utils/AddressHelper";
+
+const HBAR = "HBAR";
 
 const contractService = new ContractService();
 const baseContract = contractService.getContract(
@@ -48,12 +49,13 @@ let tokenAQty: BigNumber;
 let slippageOutGivenIn: BigNumber;
 let slippageInGivenOut: BigNumber;
 let precision: BigNumber;
-let pairContractId: any;
+let pairEvmAddress: string;
+let pairContractId: ContractId;
 let errorMsg: string = "";
 let sportPrice: BigNumber;
 let tokenNameIdMap = new Map();
 let pairAdd: any;
-let lpTokenAdd: string;
+let lpTokenContractIdAsString: string;
 let pairWithSameTokenAndFeeAddress: string;
 
 @binding()
@@ -107,8 +109,8 @@ export class FactorySteps {
     );
     tokenNameIdMap.set(firstToken, tokenOne);
     tokenNameIdMap.set(secondToken, tokenTwo);
-    const pairAddress = await factory.getPair(tokenOne, tokenTwo);
-    pairContractId = await this.fetchContractID(pairAddress);
+    pairEvmAddress = await factory.getPair(tokenOne, tokenTwo, fees);
+    pairContractId = await AddressHelper.addressToIdObject(pairEvmAddress);
   }
 
   @then(
@@ -180,7 +182,7 @@ export class FactorySteps {
     }
   }
 
-  @when(/User create pair of "([^"]*)" and HBAR/, undefined, 30000)
+  @when(/User create pair of "([^"]*)" and HBAR/, undefined, 70000)
   public async createPairOfTokenAWithHBAR(tokenName: string): Promise<void> {
     tokenOne = await Common.createToken(tokenName, tokenName, id, key, client);
     tokenAHBARPairAddress = await factory.createPair(
@@ -192,10 +194,11 @@ export class FactorySteps {
     );
     tokenNameIdMap.set(tokenName, tokenOne);
     tokenNameIdMap.set("HBAR", tokenHBARX);
-    const pairAddress = await factory.getPair(tokenOne, tokenHBARX);
-    pairContractId = await this.fetchContractID(pairAddress);
+    pairEvmAddress = await factory.getPair(tokenOne, tokenHBARX);
+    pairContractId = await AddressHelper.addressToIdObject(pairEvmAddress);
     pair = new Pair(pairContractId);
-    lpTokenAdd = await pair.getLpContractAddress();
+    const lpTokenAdd = await pair.getLpContractAddress();
+    lpTokenContractIdAsString = await AddressHelper.addressToId(lpTokenAdd);
     precision = await pair.getPrecisionValue(client);
   }
 
@@ -442,27 +445,13 @@ export class FactorySteps {
     tokenName: string,
     tokenQty: number
   ) {
+    console.log("--fetchTokenBalanceFromContract--", tokenName, tokenQty);
     const tokenId = tokenNameIdMap.get(tokenName);
-    let tokenBalance: number;
-    if (tokenName === "HBAR") {
-      tokenBalance = Number(
-        await Common.getAccountBalance(pairContractId, [tokenId], client)
-      );
-    } else {
-      tokenBalance = Number(
-        await Common.getTokenBalance(
-          ContractId.fromString(pairContractId),
-          tokenId,
-          client
-        )
-      );
-    }
-    const withPrecision = Number(Common.withPrecision(1, precision));
-    console.log("pairContractID -", pairContractId.toString());
-    console.log(
-      `token name is - ${tokenName} tokenId is - ${tokenId} and tokenBalance is - ${tokenBalance}`
-    );
-    expect(Number(tokenBalance / withPrecision)).to.eql(Number(tokenQty));
+    const tokenBalance =
+      tokenName === HBAR
+        ? await Common.getAccountBalance(pairContractId)
+        : await Common.getTokenBalance(pairEvmAddress, tokenId);
+    expect(tokenBalance.div(precision).isEqualTo(BigNumber(tokenQty)));
   }
 
   @when(
@@ -549,8 +538,8 @@ export class FactorySteps {
 
     const contractId =
       tokenName === "lptoken"
-        ? ContractId.fromSolidityAddress(lpTokenAdd).toString()
-        : pairContractId;
+        ? lpTokenContractIdAsString
+        : pairContractId.toString();
     await Common.setTokenAllowance(
       tokenId,
       contractId,
@@ -559,11 +548,5 @@ export class FactorySteps {
       key,
       client
     );
-  }
-
-  private async fetchContractID(pairAddress: string): Promise<ContractId> {
-    await Helper.delay(15000);
-    const response = await httpRequest(pairAddress, undefined);
-    return response.contract_id;
   }
 }

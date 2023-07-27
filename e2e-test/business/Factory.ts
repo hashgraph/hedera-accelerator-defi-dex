@@ -64,7 +64,7 @@ export default class Factory extends Base {
       .addAddress(feeCollectionAccountId.toSolidityAddress())
       .addUint256(fee);
     const { result } = await this.execute(
-      9999900,
+      3_000_000,
       CREATE_PAIR,
       client,
       args,
@@ -120,7 +120,7 @@ export default class Factory extends Base {
   upgradeLogic = async (implAddress: string, functionName: string) => {
     const args = new ContractFunctionParameters().addAddress(implAddress);
     this.execute(
-      4000000,
+      1_00_000,
       functionName,
       clientsInfo.childProxyAdminClient,
       args

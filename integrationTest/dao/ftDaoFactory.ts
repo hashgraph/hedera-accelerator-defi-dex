@@ -27,7 +27,7 @@ export async function executeDAOFlow(
 ) {
   console.log(`- executing TokenTransferDAO i.e ${daoProxyAddress}\n`);
 
-  const ftDao = daoFactory.getGovernorTokenDaoInstance(daoProxyAddress);
+  const ftDao = await daoFactory.getGovernorTokenDaoInstance(daoProxyAddress);
 
   const genericHolder = await daoFactory.getTokenHolderInstance(tokenId);
 

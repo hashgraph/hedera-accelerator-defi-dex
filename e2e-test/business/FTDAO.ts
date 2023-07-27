@@ -8,12 +8,12 @@ import { BigNumber } from "bignumber.js";
 import {
   Client,
   TokenId,
-  ContractId,
-  ContractFunctionParameters,
   AccountId,
+  ContractFunctionParameters,
 } from "@hashgraph/sdk";
 import { ContractService } from "../../deployment/service/ContractService";
 import { Helper } from "../../utils/Helper";
+import { AddressHelper } from "../../utils/AddressHelper";
 
 const INITIALIZE = "initialize";
 const CREATE_PROPOSAL = "createTokenTransferProposal";
@@ -49,9 +49,9 @@ export default class FTDAO extends BaseDao {
     holderTokenId: TokenId = GOD_TOKEN_ID
   ) {
     await tokenHolder.initialize(client, holderTokenId.toSolidityAddress());
-    const godHolderContractId = tokenHolder.contractId;
-    const godHolderProxyAddress =
-      ContractId.fromString(godHolderContractId).toSolidityAddress();
+    const godHolderProxyAddress = await AddressHelper.idToEvmAddress(
+      tokenHolder.contractId
+    );
 
     const contractService = new ContractService();
     const data = {
@@ -258,7 +258,7 @@ export default class FTDAO extends BaseDao {
     client: Client = clientsInfo.operatorClient
   ) => {
     const { result } = await this.execute(
-      2000000,
+      2_000_000,
       GET_GOVERNOR_TOKEN_TRANSFER_CONTRACT_ADDRESSES,
       client
     );
@@ -267,16 +267,16 @@ export default class FTDAO extends BaseDao {
       governorTextProposalProxy: result.getAddress(1),
       governorUpgradeProxy: result.getAddress(2),
       governorTokenCreateProxy: result.getAddress(3),
-      governorTokenTransferProxyId: ContractId.fromSolidityAddress(
+      governorTokenTransferProxyId: await AddressHelper.addressToIdObject(
         result.getAddress(0)
       ),
-      governorTextProposalProxyId: ContractId.fromSolidityAddress(
+      governorTextProposalProxyId: await AddressHelper.addressToIdObject(
         result.getAddress(1)
       ),
-      governorUpgradeProxyId: ContractId.fromSolidityAddress(
+      governorUpgradeProxyId: await AddressHelper.addressToIdObject(
         result.getAddress(2)
       ),
-      governorTokenCreateProxyId: ContractId.fromSolidityAddress(
+      governorTokenCreateProxyId: await AddressHelper.addressToIdObject(
         result.getAddress(3)
       ),
     };

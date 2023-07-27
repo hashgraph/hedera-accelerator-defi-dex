@@ -1,56 +1,21 @@
-let common = [
-  'e2e-test/features/**/*.feature',
-  '--require-module ts-node/register',
-  '--require e2e-test/step-definitions/**/*.ts',
-  '--publish',
-].join(' ');
-
-let testSuite1 = [
-  'e2e-test/features/**/*.feature',
-  '--require-module ts-node/register',
-  '--require e2e-test/step-definitions/**/*.ts',
-  '--publish',
-  '--tags=@TestSuite-1'
-].join(' ');
-
-let testSuite2 = [
-  'e2e-test/features/**/*.feature',
-  '--require-module ts-node/register',
-  '--require e2e-test/step-definitions/**/*.ts',
-  '--publish',
-  '--tags=@TestSuite-2'
-].join(' ');
-
-let testSuite3 = [
-  'e2e-test/features/**/*.feature',
-  '--require-module ts-node/register',
-  '--require e2e-test/step-definitions/**/*.ts',
-  '--publish',
-  '--tags=@TestSuite-3'
-].join(' ');
-
-let testSuite4 = [
-  'e2e-test/features/**/*.feature',
-  '--require-module ts-node/register',
-  '--require e2e-test/step-definitions/**/*.ts',
-  '--publish',
-  '--tags=@TestSuite-4'
-].join(' ');
-
-let testSuite5 = [
-  'e2e-test/features/**/*.feature',
-  '--require-module ts-node/register',
-  '--require e2e-test/step-definitions/**/*.ts',
-  '--publish',
-  '--tags=@TestSuite-5'
-].join(' ');
+const COMMON = [
+  "e2e-test/features/**/*.feature",
+  "--require-module ts-node/register",
+  "--require e2e-test/step-definitions/**/*.ts",
+  "--publish",
+];
+const testSuite1 = [...COMMON, "--tags=@TestSuite-1"];
+const testSuite2 = [...COMMON, "--tags=@TestSuite-2"];
+const testSuite3 = [...COMMON, "--tags=@TestSuite-3"];
+const testSuite4 = [...COMMON, "--tags=@TestSuite-4"];
+const testSuite5 = [...COMMON, "--tags=@TestSuite-5"];
 
 module.exports = {
-  default: common,
-  suiteOne: testSuite1,
-  suiteTwo: testSuite2,
-  suiteThree: testSuite3,
-  suiteFour:testSuite4,
-  suiteFive:testSuite5
+  default: COMMON.join(" "),
+  suiteOne: testSuite1.join(" "),
+  suiteTwo: testSuite2.join(" "),
+  suiteThree: testSuite3.join(" "),
+  suiteFour: testSuite4.join(" "),
+  suiteFive: testSuite5.join(" "),
   // More profiles can be added if desired
 };

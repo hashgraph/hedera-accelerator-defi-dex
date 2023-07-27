@@ -137,11 +137,10 @@ export default class Common extends Base {
     adminKey: PrivateKey = clientsInfo.proxyAdminKey,
     client: Client = clientsInfo.proxyAdminClient
   ) => {
-    const proxyContractId = ContractId.fromSolidityAddress(proxyAddress);
     const args = new ContractFunctionParameters().addAddress(logicAddress);
     this.execute(2_00_000, "upgradeTo", client, args, adminKey);
     console.log(
-      `- Common#upgradeTo(): proxyId = ${proxyContractId.toString()}, new-implementation =  ${logicAddress}\n`
+      `- Common#upgradeTo(): proxyId = ${this.contractId}, new-implementation =  ${logicAddress}\n`
     );
   };
 
@@ -211,16 +210,12 @@ export default class Common extends Base {
   };
 
   static getTokenBalance = async (
-    id: AccountId | ContractId,
+    idOrEvmAddress: AccountId | ContractId | string,
     tokenId: TokenId,
     client: Client = clientsInfo.operatorClient
   ) => {
     const token = new Token(ContractId.fromString(tokenId.toString()));
-    const tokenBalance = await token.getBalance(id);
-    console.log(
-      `- Common#getTokenBalance(): id = ${id}, TokenId = ${tokenId}, Balance = ${tokenBalance}\n`
-    );
-    return tokenBalance;
+    return await token.getBalance(idOrEvmAddress);
   };
 
   static getTokenInfo = async (

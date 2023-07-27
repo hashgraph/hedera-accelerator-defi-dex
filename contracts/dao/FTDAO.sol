@@ -9,6 +9,8 @@ import "../governance/GovernorTokenCreate.sol";
 import "../governance/GovernorTextProposal.sol";
 import "../governance/GovernorTransferToken.sol";
 
+import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+
 contract FTDAO is BaseDAO, ISharedDAOModel {
     address payable private governorTokenTransferProxy;
     address payable private governorUpgradeProxy;

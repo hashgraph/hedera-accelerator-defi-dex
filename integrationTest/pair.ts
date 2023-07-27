@@ -219,8 +219,8 @@ async function testForSinglePair(
   console.log(` - Lp contractId = ${lpContract.transparentProxyId}`);
   console.log(` - Token Id = ${tokenA}`);
   console.log(` - Token Id = ${tokenB}\n`);
-  lpToken = new LpToken(lpContract.transparentProxyId!);
-  pair = new Pair(pairContract.transparentProxyId!);
+  lpToken = new LpToken(ContractId.fromString(lpContract.transparentProxyId!));
+  pair = new Pair(ContractId.fromString(pairContract.transparentProxyId!));
 
   await initializeLPTokenContract();
   const lpTokenAddress = await getLpTokenAddress();
