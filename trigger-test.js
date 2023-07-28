@@ -10,6 +10,7 @@ proc.stdout.on("data", (data) => {
   if (E2E_FAILED_CODE_REGEX.exec(data)) {
     flag = true;
   }
+  console.log(`stdout: ${data}`);
   if (data.includes("View your Cucumber Report at")) {
     console.log("test run completed");
     setTimeout(() => {
