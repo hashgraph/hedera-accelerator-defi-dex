@@ -5,7 +5,7 @@ on:
     inputs:
       contractId:
         description: "FTDAOFactory contract id"
-        default: "0.0.3630071"
+        default: "0.0.89731"
         required: true
         type: string
       daoAddress:
