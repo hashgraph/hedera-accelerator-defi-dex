@@ -6,14 +6,14 @@ import Common from "../../e2e-test/business/Common";
 
 async function main() {
   await Common.transferTokens(
-    AccountId.fromString("0.0.6869"),
+    AccountId.fromString("0.0.78391"),
     clientsInfo.uiUserId,
     clientsInfo.uiUserKey,
     dex.GOD_TOKEN_ID,
     100000 * 1e8
   );
   await Common.getTokenBalance(
-    AccountId.fromString("0.0.6869"),
+    AccountId.fromString("0.0.78391"),
     TokenId.fromString(dex.GOD_TOKEN_ID)
   );
   return "executed successfully";
