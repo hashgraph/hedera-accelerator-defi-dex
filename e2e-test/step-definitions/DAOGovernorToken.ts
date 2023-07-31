@@ -48,9 +48,10 @@ const daoFactory = new FTDAOFactory(ContractId.fromString(proxyId));
 const godTokenHolderFactory = new FTTokenHolderFactory(undefined);
 const adminAddress: string = clientsInfo.operatorId.toSolidityAddress();
 
-const toAccount: AccountId = clientsInfo.treasureId;
-const fromAccount: AccountId = clientsInfo.operatorId;
-const fromAccountPrivateKey: PrivateKey = clientsInfo.operatorKey;
+const toAccount: AccountId = clientsInfo.uiUserId;
+const fromAccount: AccountId = clientsInfo.treasureId;
+const fromAccountPrivateKey: PrivateKey = clientsInfo.treasureKey;
+const fromAccountClient: Client = clientsInfo.treasureClient;
 const tokenId: TokenId = TokenId.fromString(dex.TOKEN_LAB49_1);
 const daoTokenId: TokenId = TokenId.fromString(dex.GOD_TOKEN_ID);
 
@@ -246,6 +247,7 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
       clientsInfo.operatorClient
     );
   }
+
   @then(
     /User verify token transfer proposal state is "([^"]*)"/,
     undefined,
@@ -448,9 +450,9 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
       tokenId,
       allowanceAmt * CommonSteps.withPrecision,
       governorTokenTransfer.contractId,
-      clientsInfo.operatorId,
-      clientsInfo.operatorKey,
-      clientsInfo.operatorClient
+      fromAccount,
+      fromAccountPrivateKey,
+      fromAccountClient
     );
   }
 
