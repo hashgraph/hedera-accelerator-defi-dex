@@ -68,10 +68,10 @@ jobs:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     env:
-      OPERATOR_ID: 0.0.2375093
-      OPERATOR_KEY: 805a0b26c8ecee83e903076eebb86928c612590f32afc6d272ced4c73db6d466
-      TREASURE_ID: 0.0.15419845
-      TREASURE_KEY: 302e020100300506032b657004220420a55010885810475ba805711145a6b7a32b640af78d0b71c75804a0c89a8b15f0
+      OPERATOR_ID: 0.0.78619
+      OPERATOR_KEY: 302e020100300506032b657004220420c8cb72a0addffcbd898689e5b5641c0abff4399ddeb90a04071433e3724e14dd
+      TREASURE_ID: 0.0.405576
+      TREASURE_KEY: 302e020100300506032b6570042204202cc790b009e400a3ed97363980ae27ddfb58102fa8fb7c1a7b69e212f756c084
 
     steps:
       - uses: actions/checkout@v3
@@ -95,10 +95,8 @@ jobs:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     env:
-      OPERATOR_ID: 0.0.15388888
-      OPERATOR_KEY: 302e020100300506032b657004220420dc5dbfafa659c787661a01ffeb5d31e8fbc19f3dc2fdac2a559b1119dd1d1478
-      TREASURE_ID: 0.0.6880
-      TREASURE_KEY: c372f05c182ae62e04603081f6abc8cbd3a712401e1d1f88401cf310c91f644b
+      OPERATOR_ID: 0.0.405652
+      OPERATOR_KEY: 302e020100300506032b6570042204208e8fe8f694707f2e578f5ced24304a5190b59ef014a0b978d9db0732eaf6445d
 
     steps:
       - uses: actions/checkout@v3
