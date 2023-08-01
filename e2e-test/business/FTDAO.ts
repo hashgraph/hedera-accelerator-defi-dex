@@ -8,7 +8,6 @@ import { BigNumber } from "bignumber.js";
 import {
   Client,
   TokenId,
-  AccountId,
   ContractFunctionParameters,
   AccountId,
 } from "@hashgraph/sdk";
