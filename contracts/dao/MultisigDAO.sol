@@ -30,6 +30,7 @@ contract MultiSigDAO is BaseDAO {
 
     uint256 private constant TXN_TYPE_BATCH = 1;
     uint256 private constant TXN_TYPE_TOKEN_ASSOCIATE = 2;
+    uint256 private constant TXN_TYPE_UPGRADE_PROXY = 3;
 
     HederaMultiSend private multiSend;
     IHederaService private hederaService;
@@ -180,6 +181,32 @@ contract MultiSigDAO is BaseDAO {
                 title,
                 desc,
                 linkToDiscussion
+            );
+    }
+
+    function proposeUpgradeProxyTransaction(
+        address _proxy,
+        address _proxyLogic,
+        string memory _title,
+        string memory _desc,
+        string memory _linkToDiscussion
+    ) external payable returns (bytes32) {
+        require(_proxy != address(0), "MultiSigDAO: proxy can't be zero");
+        require(_proxyLogic != address(0), "MultiSigDAO: logic can't be zero");
+        bytes memory data = abi.encodeWithSelector(
+            HederaGnosisSafe.upgradeProxy.selector,
+            _proxy,
+            _proxyLogic,
+            iSystemRoleBasedAccess.getSystemUsers().proxyAdmin
+        );
+        return
+            proposeTransaction(
+                address(hederaGnosisSafe),
+                data,
+                TXN_TYPE_UPGRADE_PROXY,
+                _title,
+                _desc,
+                _linkToDiscussion
             );
     }
 

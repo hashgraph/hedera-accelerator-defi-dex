@@ -7,6 +7,7 @@ import SystemRoleBasedAccess from "../../e2e-test/business/common/SystemRoleBase
 
 import { Helper } from "../../utils/Helper";
 import { clientsInfo } from "../../utils/ClientManagement";
+import { AddressHelper } from "../../utils/AddressHelper";
 import {
   Client,
   TokenId,
@@ -54,15 +55,11 @@ export const DAO_OWNERS_ADDRESSES = DAO_OWNERS_INFO.map(
 async function main() {
   const multiSigDAO = new MultiSigDao();
   await initDAO(multiSigDAO);
-
-  await executeBatchTransaction(multiSigDAO);
-
-  await executeDAOTokenTransferProposal(multiSigDAO);
-
   await executeDAOTextProposal(multiSigDAO);
-
+  await executeBatchTransaction(multiSigDAO);
+  await executeDAOTokenTransferProposal(multiSigDAO);
+  await executeDAOUpgradeProposal(multiSigDAO);
   await executeHbarTransfer(multiSigDAO);
-
   await multiSigDAO.updateDaoInfo(
     DAO_NAME + "_NEW",
     DAO_LOGO + "daos",
@@ -71,7 +68,6 @@ async function main() {
     DAO_ADMIN_CLIENT
   );
   await multiSigDAO.getDaoInfo();
-
   const roleBasedAccess = new SystemRoleBasedAccess();
   (await roleBasedAccess.checkIfChildProxyAdminRoleGiven()) &&
     (await multiSigDAO.upgradeHederaService(clientsInfo.childProxyAdminClient));
@@ -287,6 +283,51 @@ export async function executeHbarTransfer(
   await multiSigDAO.state(hbarTransferTxnHash);
 
   await Common.getAccountBalance(tokenReceiver);
+}
+
+export async function executeDAOUpgradeProposal(
+  multiSigDAO: MultiSigDao,
+  ownersInfo: any[] = DAO_OWNERS_INFO,
+  safeTxnExecutionClient: Client = clientsInfo.treasureClient
+) {
+  console.log(
+    `- executing Multi-sig DAO upgrade contract flow = ${multiSigDAO.contractId}\n`
+  );
+  const gnosisSafe = await getGnosisSafeInstance(multiSigDAO);
+  const safeEvmAddress = await AddressHelper.idToEvmAddress(
+    gnosisSafe.contractId
+  );
+
+  const proxyId = ContractId.fromString(multiSigDAO.contractId);
+  const proxyLogic = await new Common(proxyId).getCurrentImplementation();
+  const proxyAddress = await AddressHelper.idToEvmAddress(proxyId.toString());
+
+  const updateTxnHash = await multiSigDAO.proposeUpgradeProxyTransaction(
+    proxyAddress,
+    proxyLogic
+  );
+  const updateTxnInfo = await multiSigDAO.getTransactionInfo(updateTxnHash);
+  for (const daoOwner of ownersInfo) {
+    await gnosisSafe.approveHash(updateTxnHash, daoOwner.client);
+  }
+
+  // step-1 setting safe as new admin
+  await new Common(proxyId).changeAdmin(
+    safeEvmAddress,
+    clientsInfo.proxyAdminKey,
+    clientsInfo.proxyAdminClient
+  );
+  // step-2 running safe txn with 2 operation internally
+  // a - upgradeTo
+  // b - changeAdmin (back to proxyAdmin)
+  await gnosisSafe.executeTransaction(
+    updateTxnInfo.to,
+    updateTxnInfo.value,
+    updateTxnInfo.data,
+    updateTxnInfo.operation,
+    updateTxnInfo.nonce,
+    safeTxnExecutionClient
+  );
 }
 
 export async function executeDAOTextProposal(

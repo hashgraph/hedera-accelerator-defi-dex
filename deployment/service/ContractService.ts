@@ -3,6 +3,7 @@ import { DeployedContract } from "../model/contract";
 import { httpRequest } from "../api/HttpsService";
 
 export class ContractService {
+  public static BASE_DAO = "BaseDAO";
   public static MULTI_SIG = "multisigdao";
   public static MULTI_SIG_FACTORY = "multisigdaofactory";
   public static SAFE = "hederagnosissafe";

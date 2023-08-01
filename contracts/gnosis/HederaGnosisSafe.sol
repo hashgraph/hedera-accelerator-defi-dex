@@ -47,6 +47,22 @@ contract HederaGnosisSafe is
         }
     }
 
+    function upgradeProxy(
+        address _proxy,
+        address _proxyLogic,
+        address _proxyAdmin
+    ) external {
+        require(msg.sender == address(this), "GS031"); // only via safe txn
+        (bool success, ) = _proxy.call(
+            abi.encodeWithSignature("upgradeTo(address)", _proxyLogic)
+        );
+        require(success, "HederaGnosisSafe: failed to upgrade proxy");
+        (success, ) = _proxy.call(
+            abi.encodeWithSignature("changeAdmin(address)", _proxyAdmin)
+        );
+        require(success, "HederaGnosisSafe: failed to change admin");
+    }
+
     function associateToken(
         IHederaService _hederaService,
         address _token

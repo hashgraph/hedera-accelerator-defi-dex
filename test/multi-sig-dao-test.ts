@@ -8,6 +8,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 describe("MultiSig tests", function () {
   const TXN_TYPE_BATCH = 1;
   const TXN_TYPE_TOKEN_ASSOCIATE = 2;
+  const TXN_TYPE_UPGRADE_PROXY = 3;
 
   const TXN_TYPE_TEXT = 1005;
   const TXN_TYPE_TRANSFER = 1006;
@@ -244,6 +245,12 @@ describe("MultiSig tests", function () {
       TOTAL
     );
 
+    const multiSendProxy = await TestHelper.deployLogic(
+      "ProxyPatternMock",
+      multiSend.address,
+      systemUsersSigners.proxyAdmin.address
+    );
+
     return {
       multiSigDAOInstance,
       multiSigDAOLogicInstance,
@@ -261,6 +268,7 @@ describe("MultiSig tests", function () {
       multiSend,
       systemRoleBasedAccess,
       systemUsersSigners,
+      multiSendProxy,
     };
   }
 
@@ -1060,6 +1068,152 @@ describe("MultiSig tests", function () {
         await expect(
           multiSigDAOInstance.setText(TestHelper.ONE_ADDRESS, "Anything")
         ).revertedWith("Only HederaGnosisSafe can execute it.");
+      });
+    });
+
+    describe("Upgrade proposal tests", () => {
+      it("Verify propose transaction should be reverted if proxy address is zero", async function () {
+        const { multiSigDAOInstance } = await loadFixture(deployFixture);
+        await expect(
+          multiSigDAOInstance.proposeUpgradeProxyTransaction(
+            TestHelper.ZERO_ADDRESS,
+            multiSigDAOInstance.address,
+            TITLE,
+            DESCRIPTION,
+            LINK_TO_DISCUSSION
+          )
+        ).revertedWith("MultiSigDAO: proxy can't be zero");
+      });
+
+      it("Verify propose transaction should be reverted if logic address is zero", async function () {
+        const { multiSigDAOInstance } = await loadFixture(deployFixture);
+        await expect(
+          multiSigDAOInstance.proposeUpgradeProxyTransaction(
+            multiSigDAOInstance.address,
+            TestHelper.ZERO_ADDRESS,
+            TITLE,
+            DESCRIPTION,
+            LINK_TO_DISCUSSION
+          )
+        ).revertedWith("MultiSigDAO: logic can't be zero");
+      });
+
+      it("Verify calling safe's upgradeProxy directly should be reverted", async function () {
+        const { hederaGnosisSafeLogicInstance } = await loadFixture(
+          deployFixture
+        );
+        await expect(
+          hederaGnosisSafeLogicInstance.upgradeProxy(
+            TestHelper.ZERO_ADDRESS,
+            TestHelper.ZERO_ADDRESS,
+            TestHelper.ZERO_ADDRESS
+          )
+        ).revertedWith("GS031");
+      });
+
+      it("Verify upgrade proposal workflow should be reverted if rights not transferred to safe", async function () {
+        const {
+          daoSigners,
+          multiSendProxy,
+          multiSigDAOInstance,
+          hederaGnosisSafeProxyContract,
+        } = await loadFixture(deployFixture);
+        const newMultiSend = await TestHelper.deployLogic("HederaMultiSend");
+        const txn = await multiSigDAOInstance.proposeUpgradeProxyTransaction(
+          multiSendProxy.address,
+          newMultiSend.address,
+          TITLE,
+          DESCRIPTION,
+          LINK_TO_DISCUSSION
+        );
+        const { txnHash, info } = await verifyTransactionCreatedEvent(
+          txn,
+          TXN_TYPE_UPGRADE_PROXY
+        );
+        for (const signer of daoSigners) {
+          await hederaGnosisSafeProxyContract
+            .connect(signer)
+            .approveHash(txnHash);
+        }
+        await expect(
+          hederaGnosisSafeProxyContract.executeTransaction(
+            info.to,
+            info.value,
+            info.data,
+            info.operation,
+            info.nonce
+          )
+        ).revertedWith("GS013");
+      });
+
+      it("Verify upgrade proposal workflow - proposal to execution", async function () {
+        const {
+          daoSigners,
+          multiSend,
+          multiSendProxy,
+          systemUsersSigners,
+          multiSigDAOInstance,
+          hederaGnosisSafeProxyContract,
+        } = await loadFixture(deployFixture);
+
+        const proxyAdmin = systemUsersSigners.proxyAdmin;
+        const newMultiSend = await TestHelper.deployLogic("HederaMultiSend");
+
+        const txn = await multiSigDAOInstance.proposeUpgradeProxyTransaction(
+          multiSendProxy.address,
+          newMultiSend.address,
+          TITLE,
+          DESCRIPTION,
+          LINK_TO_DISCUSSION
+        );
+
+        const { txnHash, info } = await verifyTransactionCreatedEvent(
+          txn,
+          TXN_TYPE_UPGRADE_PROXY
+        );
+
+        for (const signer of daoSigners) {
+          await hederaGnosisSafeProxyContract
+            .connect(signer)
+            .approveHash(txnHash);
+        }
+
+        expect(
+          await multiSendProxy.connect(proxyAdmin).implementation()
+        ).equals(multiSend.address);
+
+        expect(await multiSendProxy.connect(proxyAdmin).admin()).equals(
+          proxyAdmin.address
+        );
+
+        // step : 1
+        await multiSendProxy
+          .connect(proxyAdmin)
+          .changeAdmin(hederaGnosisSafeProxyContract.address);
+
+        // verification if we changed the rights
+        await expect(
+          multiSendProxy
+            .connect(proxyAdmin)
+            .changeAdmin(hederaGnosisSafeProxyContract.address)
+        ).reverted;
+
+        // step : 2
+        await hederaGnosisSafeProxyContract.executeTransaction(
+          info.to,
+          info.value,
+          info.data,
+          info.operation,
+          info.nonce
+        );
+
+        expect(
+          await multiSendProxy.connect(proxyAdmin).implementation()
+        ).equals(newMultiSend.address);
+
+        expect(await multiSendProxy.connect(proxyAdmin).admin()).equals(
+          proxyAdmin.address
+        );
       });
     });
   });

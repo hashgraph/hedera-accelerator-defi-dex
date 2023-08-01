@@ -26,6 +26,8 @@ import Token from "./Token";
 
 export default class Common extends Base {
   static baseUrl: string = "https://testnet.mirrornode.hedera.com/";
+  static UPGRADE_TO: string = "upgradeTo";
+  static CHANGE_ADMIN: string = "changeAdmin";
 
   protected getContractName(): string {
     return this.constructor.name;
@@ -131,16 +133,28 @@ export default class Common extends Base {
     );
   };
 
-  upgradeTo = async (
+  public upgradeTo = async (
     proxyAddress: string,
     logicAddress: string,
     adminKey: PrivateKey = clientsInfo.proxyAdminKey,
     client: Client = clientsInfo.proxyAdminClient
   ) => {
     const args = new ContractFunctionParameters().addAddress(logicAddress);
-    this.execute(2_00_000, "upgradeTo", client, args, adminKey);
+    await this.execute(2_00_000, Common.UPGRADE_TO, client, args, adminKey);
     console.log(
       `- Common#upgradeTo(): proxyId = ${this.contractId}, new-implementation =  ${logicAddress}\n`
+    );
+  };
+
+  public changeAdmin = async (
+    newAdminAddress: string,
+    adminKey: PrivateKey = clientsInfo.proxyAdminKey,
+    client: Client = clientsInfo.proxyAdminClient
+  ) => {
+    const args = new ContractFunctionParameters().addAddress(newAdminAddress);
+    await this.execute(50_000, Common.CHANGE_ADMIN, client, args, adminKey);
+    console.log(
+      `- Common#changeAdmin(): proxyId = ${this.contractId.toString()}, new-admin-address = ${newAdminAddress}\n`
     );
   };
 
