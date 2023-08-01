@@ -12,7 +12,7 @@ contract Configuration is OwnableUpgradeable {
     function initialize() external initializer {
         __Ownable_init();
         _populateFeeMap();
-        hbarxAddress = address(0x0000000000000000000000000000000000002182);
+        hbarxAddress = address(0x0000000000000000000000000000000000013925);
     }
 
     function setTransactionFee(

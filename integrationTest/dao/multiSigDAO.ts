@@ -20,9 +20,9 @@ const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
 const TOKEN_QTY = 1;
 const TXN_DETAILS_FOR_BATCH = {
   TOKEN: GOD_TOKEN_ID,
-  FROM_CLIENT: clientsInfo.operatorClient,
-  FROM_ID: clientsInfo.operatorId,
-  FROM_KEY: clientsInfo.operatorKey,
+  FROM_CLIENT: clientsInfo.treasureClient,
+  FROM_ID: clientsInfo.treasureId,
+  FROM_KEY: clientsInfo.treasureKey,
   TO_CLIENT: clientsInfo.uiUserClient,
   TO_ID: clientsInfo.uiUserId,
   TO_KEY: clientsInfo.uiUserKey,
@@ -95,12 +95,12 @@ export async function executeDAOTokenTransferProposal(
   ownersInfo: any[] = DAO_OWNERS_INFO,
   token: TokenId = TOKEN,
   tokenQty: number = TOKEN_QTY,
-  tokenReceiver: AccountId | ContractId = clientsInfo.treasureId,
-  tokenReceiverPrivateKey: PrivateKey = clientsInfo.treasureKey,
-  tokenReceiverClient: Client = clientsInfo.treasureClient,
-  tokenSenderClient: Client = clientsInfo.uiUserClient,
-  tokenSenderAccountId: AccountId = clientsInfo.uiUserId,
-  tokenSenderPrivateKey: PrivateKey = clientsInfo.uiUserKey,
+  tokenReceiver: AccountId | ContractId = clientsInfo.uiUserId,
+  tokenReceiverPrivateKey: PrivateKey = clientsInfo.uiUserKey,
+  tokenReceiverClient: Client = clientsInfo.uiUserClient,
+  tokenSenderClient: Client = clientsInfo.treasureClient,
+  tokenSenderAccountId: AccountId = clientsInfo.treasureId,
+  tokenSenderPrivateKey: PrivateKey = clientsInfo.treasureKey,
   safeTxnExecutionClient: Client = clientsInfo.treasureClient
 ) {
   console.log(
@@ -208,6 +208,12 @@ export async function executeBatchTransaction(
     await multiSigDAO.getApprovalCounts(batchTxnHash);
   }
 
+  await Common.associateTokensToAccount(
+    TXN_DETAILS_FOR_BATCH.TO_ID,
+    [TXN_DETAILS_FOR_BATCH.TOKEN],
+    TXN_DETAILS_FOR_BATCH.TO_CLIENT,
+    TXN_DETAILS_FOR_BATCH.TO_KEY
+  );
   await Common.setTokenAllowance(
     TXN_DETAILS_FOR_BATCH.TOKEN,
     multiSend.toString(),
@@ -231,10 +237,9 @@ export async function executeHbarTransfer(
   multiSigDAO: MultiSigDao,
   ownersInfo: any[] = DAO_OWNERS_INFO,
   tokenQty: number = TOKEN_QTY,
-  tokenReceiver: AccountId | ContractId = clientsInfo.treasureId,
-  tokenSenderClient: Client = clientsInfo.uiUserClient,
-  tokenSenderAccountId: AccountId = clientsInfo.uiUserId,
-  tokenSenderPrivateKey: PrivateKey = clientsInfo.uiUserKey,
+  tokenReceiver: AccountId | ContractId = clientsInfo.uiUserId,
+  tokenSenderClient: Client = clientsInfo.treasureClient,
+  tokenSenderAccountId: AccountId = clientsInfo.treasureId,
   safeTxnExecutionClient: Client = clientsInfo.treasureClient
 ) {
   console.log(`- executing Multi-sig DAO = ${multiSigDAO.contractId}\n`);
@@ -249,7 +254,7 @@ export async function executeHbarTransfer(
   );
 
   const hbarTransferTxnHash = await multiSigDAO.proposeTransaction(
-    clientsInfo.treasureId.toSolidityAddress(),
+    tokenReceiver.toSolidityAddress(),
     getHbarTransferCalldata(),
     40001,
     tokenQty
@@ -268,7 +273,7 @@ export async function executeHbarTransfer(
   }
   await multiSigDAO.state(hbarTransferTxnHash);
 
-  await Common.getAccountBalance(clientsInfo.treasureId);
+  await Common.getAccountBalance(tokenReceiver);
 
   await gnosisSafe.executeTransaction(
     transferTxnInfo.to,
@@ -281,12 +286,14 @@ export async function executeHbarTransfer(
 
   await multiSigDAO.state(hbarTransferTxnHash);
 
-  await Common.getAccountBalance(clientsInfo.treasureId);
+  await Common.getAccountBalance(tokenReceiver);
 }
 
 export async function executeDAOTextProposal(
   multiSigDAO: MultiSigDao,
   ownersInfo: any[] = DAO_OWNERS_INFO,
+  creatorAccountId: AccountId = clientsInfo.treasureId,
+  creatorAccountClient: Client = clientsInfo.treasureClient,
   safeTxnExecutionClient: Client = clientsInfo.treasureClient
 ) {
   console.log(
@@ -296,8 +303,8 @@ export async function executeDAOTextProposal(
   const gnosisSafe = await getGnosisSafeInstance(multiSigDAO);
   const textTxnHash = await multiSigDAO.proposeTextTransaction(
     Helper.createProposalTitle("MultiSig Text Proposal"),
-    clientsInfo.operatorId,
-    clientsInfo.operatorClient
+    creatorAccountId,
+    creatorAccountClient
   );
 
   const textTxnInfo = await multiSigDAO.getTransactionInfo(textTxnHash);
