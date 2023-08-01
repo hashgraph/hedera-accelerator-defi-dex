@@ -17,12 +17,6 @@ contract HederaGnosisSafe is
 
     event TokenAssociated(address token);
 
-    event TokenTransferred(
-        address indexed token,
-        address indexed sender,
-        uint256 indexed amount
-    );
-
     bytes private constant BYTES_ZERO = "";
     uint256 private constant UINT_ZERO = 0;
     address payable private constant ADDRESS_ZERO = payable(address(0));
@@ -41,24 +35,6 @@ contract HederaGnosisSafe is
         return approvedCount > 0 && approvedCount >= threshold;
     }
 
-    function transferToSafe(
-        IHederaService _hederaService,
-        address _token,
-        uint256 _amount,
-        address _sender
-    ) external {
-        int256 code = _associateToken(_hederaService, address(this), _token);
-        if (code == HederaResponseCodes.SUCCESS) {
-            emit TokenAssociated(_token);
-        }
-        code = _transferToken(_token, _sender, address(this), _amount);
-        if (code == HederaResponseCodes.SUCCESS) {
-            emit TokenTransferred(_token, _sender, _amount);
-        } else {
-            revert("HederaGnosisSafe: transfer token to safe failed");
-        }
-    }
-
     function getApprovalCounts(
         bytes32 dataHash
     ) public view returns (uint256 approvedCount) {
@@ -71,13 +47,48 @@ contract HederaGnosisSafe is
         }
     }
 
+    function upgradeProxy(
+        address _proxy,
+        address _proxyLogic,
+        address _proxyAdmin
+    ) external {
+        require(msg.sender == address(this), "GS031"); // only via safe txn
+        (bool success, ) = _proxy.call(
+            abi.encodeWithSignature("upgradeTo(address)", _proxyLogic)
+        );
+        require(success, "HederaGnosisSafe: failed to upgrade proxy");
+        (success, ) = _proxy.call(
+            abi.encodeWithSignature("changeAdmin(address)", _proxyAdmin)
+        );
+        require(success, "HederaGnosisSafe: failed to change admin");
+    }
+
+    function associateToken(
+        IHederaService _hederaService,
+        address _token
+    ) external {
+        require(msg.sender == address(this), "GS031"); // only via safe txn
+        int256 code = _associateToken(_hederaService, address(this), _token);
+        if (code == HederaResponseCodes.SUCCESS) {
+            emit TokenAssociated(_token);
+        } else if (
+            code != HederaResponseCodes.TOKEN_ALREADY_ASSOCIATED_TO_ACCOUNT
+        ) {
+            revert("HederaGnosisSafe: association failed to safe");
+        }
+    }
+
     function transferTokenViaSafe(
         address token,
         address receiver,
         uint256 amount
-    ) external returns (bool transferred) {
+    ) external {
         require(msg.sender == address(this), "GS031"); // only via safe txn
-        return super.transferToken(token, receiver, amount);
+        int256 rCode = _transferToken(token, address(this), receiver, amount);
+        require(
+            rCode == HederaResponseCodes.SUCCESS,
+            "HederaGnosisSafe: transfer failed from safe"
+        );
     }
 
     function getTxnHash(

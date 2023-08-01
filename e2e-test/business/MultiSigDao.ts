@@ -1,12 +1,12 @@
-import Base from "./Base";
 import Common from "./Common";
 import BaseDao from "./BaseDao";
-import HederaGnosisSafe from "./HederaGnosisSafe";
+import HederaGnosisSafe, { TRANSFER_TOKEN_VAI_SAFE } from "./HederaGnosisSafe";
 
 import { ethers } from "ethers";
 import { Helper } from "../../utils/Helper";
 import { Deployment } from "../../utils/deployContractOnTestnet";
 import { clientsInfo } from "../../utils/ClientManagement";
+import { AddressHelper } from "../../utils/AddressHelper";
 import { ContractService } from "../../deployment/service/ContractService";
 import {
   Client,
@@ -27,10 +27,12 @@ const GET_TRANSACTION_INFO = "getTransactionInfo";
 const PROPOSE_TRANSACTION = "proposeTransaction";
 const GET_APPROVAL_COUNTS = "getApprovalCounts";
 const PROPOSE_BATCH_TRANSACTION = "proposeBatchTransaction";
-const PROPOSE_TRANSFER_TRANSACTION = "proposeTransferTransaction";
 const GET_HEDERA_GNOSIS_SAFE_CONTRACT_ADDRESS =
   "getHederaGnosisSafeContractAddress";
 const GET_MULTI_SEND_CONTRACT_ADDRESS = "getMultiSendContractAddress";
+const PROPOSE_TOKEN_ASSOCIATE_TRANSACTION = "proposeTokenAssociateTransaction";
+const SET_TEXT = "setText";
+const PROPOSE_UPGRADE_PROXY_TRANSACTION = "proposeUpgradeProxyTransaction";
 
 enum TransactionState {
   Pending,
@@ -42,6 +44,8 @@ const ADD_MEMBER = 1001;
 const REMOVE_MEMBER = 1002;
 const REPLACE_MEMBER = 1003;
 const CHANGE_THRESHOLD = 1004;
+const TYPE_SET_TEXT = 1005;
+const TOKEN_TRANSFER = 1006;
 
 const deployment = new Deployment();
 
@@ -75,17 +79,27 @@ export default class MultiSigDao extends BaseDao {
         client
       );
 
-      const args = new ContractFunctionParameters()
-        .addAddress(admin)
-        .addString(name)
-        .addString(logoURL)
-        .addString(desc)
-        .addStringArray(webLinks)
-        .addAddress(gnosisProxy.toSolidityAddress())
-        .addAddress(this.htsAddress)
-        .addAddress(this.getMultiSendContractAddress());
-      await this.execute(9_00_000, INITIALIZE, client, args);
-      console.log(`- MultiSigDao#${INITIALIZE}(): ${this.contractId} done\n`);
+      const data = {
+        _admin: admin,
+        _name: name,
+        _logoUrl: logoURL,
+        _description: desc,
+        _webLinks: webLinks,
+        _hederaGnosisSafe: gnosisProxy,
+        _hederaService: this.htsAddress,
+        _multiSend: this.getMultiSendContractAddress(),
+        _iSystemRoleBasedAccess: this.getSystemBasedRoleAccessContractAddress(),
+      };
+
+      const { bytes, hex } = await this.encodeFunctionData(
+        ContractService.MULTI_SIG,
+        INITIALIZE,
+        Object.values(data)
+      );
+      await this.execute(9_00_000, INITIALIZE, client, bytes);
+      console.log(
+        `- MultiSigDao#${INITIALIZE}(): ${this.contractId} done with hex data = ${hex}`
+      );
       return;
     }
     console.log(
@@ -109,7 +123,7 @@ export default class MultiSigDao extends BaseDao {
     console.log(
       `- MultiSigDao#${GET_HEDERA_GNOSIS_SAFE_CONTRACT_ADDRESS}(): address = ${address}\n`
     );
-    return ContractId.fromSolidityAddress(address);
+    return AddressHelper.addressToIdObject(address);
   };
 
   getMultiSendContractAddressFromDAO = async (
@@ -197,6 +211,7 @@ export default class MultiSigDao extends BaseDao {
     to: string,
     data: Uint8Array,
     transactionType: number = 10,
+    value: number = 0,
     client: Client = clientsInfo.operatorClient,
     title: string = TITLE,
     description: string = DESCRIPTION,
@@ -213,7 +228,9 @@ export default class MultiSigDao extends BaseDao {
       3_000_000,
       PROPOSE_TRANSACTION,
       client,
-      args
+      args,
+      clientsInfo.operatorKey,
+      value
     );
     const txnHash = result.getBytes32(0);
     const hash = ethers.utils.hexlify(txnHash);
@@ -251,9 +268,10 @@ export default class MultiSigDao extends BaseDao {
       [newOwnerAccountId.toSolidityAddress(), threshold]
     );
     return await this.proposeTransaction(
-      ContractId.fromString(gnosisSafe.contractId).toSolidityAddress(),
+      await AddressHelper.idToEvmAddress(gnosisSafe.contractId),
       data.bytes,
       ADD_MEMBER,
+      0,
       client
     );
   };
@@ -269,9 +287,10 @@ export default class MultiSigDao extends BaseDao {
       [threshold]
     );
     return await this.proposeTransaction(
-      ContractId.fromString(gnosisSafe.contractId).toSolidityAddress(),
+      await AddressHelper.idToEvmAddress(gnosisSafe.contractId),
       data.bytes,
       CHANGE_THRESHOLD,
+      0,
       client
     );
   };
@@ -293,9 +312,10 @@ export default class MultiSigDao extends BaseDao {
       ]
     );
     return await this.proposeTransaction(
-      ContractId.fromString(gnosisSafe.contractId).toSolidityAddress(),
+      await AddressHelper.idToEvmAddress(gnosisSafe.contractId),
       data.bytes,
       REMOVE_MEMBER,
+      0,
       client
     );
   };
@@ -317,9 +337,10 @@ export default class MultiSigDao extends BaseDao {
       ]
     );
     return await this.proposeTransaction(
-      ContractId.fromString(gnosisSafe.contractId).toSolidityAddress(),
+      await AddressHelper.idToEvmAddress(gnosisSafe.contractId),
       data.bytes,
       REPLACE_MEMBER,
+      0,
       client
     );
   };
@@ -356,34 +377,110 @@ export default class MultiSigDao extends BaseDao {
     return txnHash;
   };
 
-  proposeTransferTransaction = async (
+  public proposeTransferTransaction = async (
     token: TokenId,
     receiver: AccountId | ContractId,
     amount: number,
-    tokenSenderClient: Client = clientsInfo.uiUserClient,
+    gnosisSafe: HederaGnosisSafe,
+    client: Client = clientsInfo.operatorClient,
+    title: string = TITLE,
+    description: string = DESCRIPTION,
+    linkToDiscussion: string = LINK_TO_DISCUSSION
+  ) => {
+    const data = await this.encodeFunctionData(
+      ContractService.SAFE,
+      TRANSFER_TOKEN_VAI_SAFE,
+      [token.toSolidityAddress(), receiver.toSolidityAddress(), amount]
+    );
+    return await this.proposeTransaction(
+      await AddressHelper.idToEvmAddress(gnosisSafe.contractId),
+      data.bytes,
+      TOKEN_TRANSFER,
+      0,
+      client,
+      title,
+      description,
+      linkToDiscussion
+    );
+  };
+
+  public async proposeUpgradeProxyTransaction(
+    proxyAddress: string,
+    proxyLogicAddress: string,
+    client: Client = clientsInfo.operatorClient,
+    title: string = TITLE,
+    description: string = DESCRIPTION,
+    linkToDiscussion: string = LINK_TO_DISCUSSION
+  ) {
+    const args = new ContractFunctionParameters()
+      .addAddress(proxyAddress)
+      .addAddress(proxyLogicAddress)
+      .addString(title)
+      .addString(description)
+      .addString(linkToDiscussion);
+    const { result } = await this.execute(
+      5_00_000,
+      PROPOSE_UPGRADE_PROXY_TRANSACTION,
+      client,
+      args
+    );
+    const txnHash = result.getBytes32(0);
+    const hash = ethers.utils.hexlify(txnHash);
+    console.log(
+      `- MultiSigDao#${PROPOSE_UPGRADE_PROXY_TRANSACTION}(): txnHash = ${hash}\n`
+    );
+    return txnHash;
+  }
+
+  public proposeTokenAssociateTransaction = async (
+    token: TokenId,
+    client: Client = clientsInfo.operatorClient,
     title: string = TITLE,
     description: string = DESCRIPTION,
     linkToDiscussion: string = LINK_TO_DISCUSSION
   ) => {
     const args = new ContractFunctionParameters()
       .addAddress(token.toSolidityAddress())
-      .addAddress(receiver.toSolidityAddress())
-      .addUint256(amount)
       .addString(title)
       .addString(description)
       .addString(linkToDiscussion);
     const { result } = await this.execute(
-      3_000_000,
-      PROPOSE_TRANSFER_TRANSACTION,
-      tokenSenderClient,
+      1_000_000,
+      PROPOSE_TOKEN_ASSOCIATE_TRANSACTION,
+      client,
       args
     );
     const txnHash = result.getBytes32(0);
     const hash = ethers.utils.hexlify(txnHash);
     console.log(
-      `- MultiSigDao#${PROPOSE_TRANSFER_TRANSACTION}(): txnHash = ${hash}\n`
+      `- MultiSigDao#${PROPOSE_TOKEN_ASSOCIATE_TRANSACTION}(): txnHash = ${hash}\n`
     );
     return txnHash;
+  };
+
+  public proposeTextTransaction = async (
+    textProposalText: string,
+    creator: AccountId,
+    client: Client = clientsInfo.operatorClient,
+    title: string = TITLE,
+    description: string = DESCRIPTION,
+    linkToDiscussion: string = LINK_TO_DISCUSSION
+  ) => {
+    const textTxData = await this.encodeFunctionData(
+      this.getContractName(),
+      SET_TEXT,
+      [creator.toSolidityAddress(), textProposalText]
+    );
+    return await this.proposeTransaction(
+      await AddressHelper.idToEvmAddress(this.contractId),
+      textTxData.bytes,
+      TYPE_SET_TEXT,
+      0,
+      client,
+      title,
+      description,
+      linkToDiscussion
+    );
   };
 
   private async createProxy(
@@ -407,9 +504,7 @@ export default class MultiSigDao extends BaseDao {
     console.log(
       ` - GnosisSafeProxyFactory#createProxy(): address = ${gnosisProxyAddress}\n`
     );
-
-    const cId = ContractId.fromSolidityAddress(gnosisProxyAddress);
-
+    const cId = await AddressHelper.addressToIdObject(gnosisProxyAddress);
     const setupArgs = new ContractFunctionParameters()
       .addAddressArray(owners)
       .addUint256(threshold)
@@ -422,7 +517,7 @@ export default class MultiSigDao extends BaseDao {
     const gnosis = new Common(cId);
     await gnosis.execute(5_00_000, "setup", client, setupArgs);
     console.log(` - GnosisSafe#setup(): done\n`);
-    return cId;
+    return gnosisProxyAddress;
   }
 
   getTransactionNumericState = async (transactionState: string) => {

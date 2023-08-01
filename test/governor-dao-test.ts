@@ -79,19 +79,20 @@ describe("GovernanceTokenDAO tests", function () {
       governorTokenCreate.address,
     ];
 
-    const common = [
-      hederaService.address,
-      godHolder.address,
-      signers[4].address,
-      signers[5].address,
-    ];
+    const common = [hederaService.address, godHolder.address];
+
+    const systemUsersSigners = await TestHelper.systemUsersSigners();
+    const systemRoleBasedAccess = (
+      await TestHelper.deploySystemRoleBasedAccess()
+    ).address;
 
     const governorTokenDAO = await TestHelper.deployLogic("FTDAO");
 
     const txn = await governorTokenDAO.initialize(
       Object.values(inputs),
       governance,
-      common
+      common,
+      systemRoleBasedAccess
     );
     await verifyDAOInfoUpdatedEvent(
       txn,
@@ -111,7 +112,7 @@ describe("GovernanceTokenDAO tests", function () {
     const governorDAOFactory = await TestHelper.deployLogic("FTDAOFactory");
 
     await governorDAOFactory.initialize(
-      dexOwner.address,
+      systemRoleBasedAccess,
       hederaService.address,
       governorTokenDAO.address,
       godHolderFactory.address,
@@ -122,7 +123,6 @@ describe("GovernanceTokenDAO tests", function () {
       token,
       signers,
       hederaService,
-      dexOwner,
       governorTT,
       daoAdminOne,
       daoAdminTwo,
@@ -132,6 +132,8 @@ describe("GovernanceTokenDAO tests", function () {
       inputs,
       governance,
       common,
+      systemRoleBasedAccess,
+      systemUsersSigners,
     };
   }
 
@@ -139,7 +141,7 @@ describe("GovernanceTokenDAO tests", function () {
     it("Verify contract should be revert for multiple initialization", async function () {
       const {
         governorDAOFactory,
-        dexOwner,
+        systemRoleBasedAccess,
         hederaService,
         governorTokenDAO,
         godHolderFactory,
@@ -148,7 +150,7 @@ describe("GovernanceTokenDAO tests", function () {
 
       await expect(
         governorDAOFactory.initialize(
-          dexOwner.address,
+          systemRoleBasedAccess,
           hederaService.address,
           governorTokenDAO.address,
           godHolderFactory.address,
@@ -309,34 +311,27 @@ describe("GovernanceTokenDAO tests", function () {
         governorDAOFactory
           .connect(daoAdminOne)
           .upgradeFTDAOLogicImplementation(TestHelper.ZERO_ADDRESS)
-      )
-        .revertedWithCustomError(governorDAOFactory, "NotAdmin")
-        .withArgs("DAOFactory: auth failed");
+      ).reverted;
 
       await expect(
         governorDAOFactory
           .connect(daoAdminTwo)
           .upgradeGovernorsImplementation(governance)
-      )
-        .revertedWithCustomError(governorDAOFactory, "NotAdmin")
-        .withArgs("DAOFactory: auth failed");
+      ).reverted;
 
       await expect(
         governorDAOFactory
           .connect(daoAdminTwo)
           .upgradeTokenHolderFactory(TestHelper.ZERO_ADDRESS)
-      )
-        .revertedWithCustomError(governorDAOFactory, "NotAdmin")
-        .withArgs("DAOFactory: auth failed");
+      ).reverted;
     });
 
     it("Verify upgrade logic call should be proceeded for dex owner", async function () {
-      const { governorDAOFactory, dexOwner, governance } = await loadFixture(
-        deployFixture
-      );
+      const { governorDAOFactory, systemUsersSigners, governance } =
+        await loadFixture(deployFixture);
 
       const txn1 = await governorDAOFactory
-        .connect(dexOwner)
+        .connect(systemUsersSigners.childProxyAdmin)
         .upgradeFTDAOLogicImplementation(TestHelper.ONE_ADDRESS);
 
       const event1 = (await txn1.wait()).events.pop();
@@ -345,7 +340,7 @@ describe("GovernanceTokenDAO tests", function () {
       expect(event1.args.newImplementation).equal(TestHelper.ONE_ADDRESS);
 
       const txn2 = await governorDAOFactory
-        .connect(dexOwner)
+        .connect(systemUsersSigners.childProxyAdmin)
         .upgradeGovernorsImplementation(governance);
 
       const event2 = (await txn2.wait()).events.pop();
@@ -363,7 +358,7 @@ describe("GovernanceTokenDAO tests", function () {
       );
 
       const txn3 = await governorDAOFactory
-        .connect(dexOwner)
+        .connect(systemUsersSigners.childProxyAdmin)
         .upgradeTokenHolderFactory(TestHelper.ONE_ADDRESS);
 
       const event3 = (await txn3.wait()).events.pop();
@@ -372,91 +367,92 @@ describe("GovernanceTokenDAO tests", function () {
       expect(event3.args.newImplementation).equal(TestHelper.ONE_ADDRESS);
     });
 
-    it("Verify getTokenHolderFactoryAddress guard check ", async function () {
-      const { governorDAOFactory, daoAdminOne, godHolderFactory, dexOwner } =
-        await loadFixture(deployFixture);
-
-      await expect(
-        governorDAOFactory.connect(daoAdminOne).getTokenHolderFactoryAddress()
-      )
-        .revertedWithCustomError(governorDAOFactory, "NotAdmin")
-        .withArgs("DAOFactory: auth failed");
-
-      const address = await governorDAOFactory
-        .connect(dexOwner)
-        .getTokenHolderFactoryAddress();
-
-      expect(address).equals(godHolderFactory.address);
+    it("Verify getTokenHolderFactoryAddress return correct address", async function () {
+      const { governorDAOFactory, godHolderFactory } = await loadFixture(
+        deployFixture
+      );
+      expect(await governorDAOFactory.getTokenHolderFactoryAddress()).equals(
+        godHolderFactory.address
+      );
     });
 
     it("Verify upgradeHederaService should fail when non-owner try to upgrade Hedera service", async function () {
       const { governorDAOFactory, signers } = await loadFixture(deployFixture);
-      const nonOwner = signers[3];
       await expect(
         governorDAOFactory
-          .connect(nonOwner)
+          .connect(signers[3])
           .upgradeHederaService(signers[3].address)
-      ).revertedWith("Ownable: caller is not the owner");
+      ).reverted;
     });
 
-    it("Verify upgrade Hedera service should pass when owner try to upgrade it", async function () {
-      const { governorDAOFactory, signers, daoAdminOne, token } =
+    it("Verify upgrade Hedera service should pass when child-proxy-admin try to upgrade it", async function () {
+      const { governorDAOFactory, hederaService, systemUsersSigners } =
         await loadFixture(deployFixture);
 
-      const CREATE_DAO_ARGS = [
-        daoAdminOne.address,
-        DAO_NAME,
-        LOGO_URL,
-        token.address,
-        BigNumber.from(500),
-        BigNumber.from(0),
-        BigNumber.from(100),
-        false,
-        DESCRIPTION,
-        WEB_LINKS,
-      ];
+      expect(await governorDAOFactory.getHederaServiceVersion()).equals(
+        hederaService.address
+      );
 
-      await governorDAOFactory.createDAO(CREATE_DAO_ARGS);
+      const newHederaService = await TestHelper.deployMockHederaService();
+      await governorDAOFactory
+        .connect(systemUsersSigners.childProxyAdmin)
+        .upgradeHederaService(newHederaService.address);
 
-      const daos = await governorDAOFactory.getDAOs();
-
-      const tokenDAO = TestHelper.getContract("FTDAO", daos[0]);
-      expect(tokenDAO).not.equals(TestHelper.ZERO_ADDRESS);
-      await expect(
-        governorDAOFactory.upgradeHederaService(signers[3].address)
-      ).not.revertedWith("Ownable: caller is not the owner");
+      expect(await governorDAOFactory.getHederaServiceVersion()).equals(
+        newHederaService.address
+      );
     });
   });
 
   describe("TokenTransferDAO contract tests", function () {
     it("Verify contract should be revert for multiple initialization", async function () {
-      const { governorTokenDAO, inputs, governance, common } =
-        await loadFixture(deployFixture);
+      const {
+        governorTokenDAO,
+        inputs,
+        governance,
+        common,
+        systemRoleBasedAccess,
+      } = await loadFixture(deployFixture);
       await expect(
-        governorTokenDAO.initialize(Object.values(inputs), governance, common)
+        governorTokenDAO.initialize(
+          Object.values(inputs),
+          governance,
+          common,
+          systemRoleBasedAccess
+        )
       ).revertedWith("Initializable: contract is already initialized");
     });
 
     it("Verify TokenTransferDAO initialize call", async function () {
-      const { inputs, governance, common } = await loadFixture(deployFixture);
+      const { inputs, governance, common, systemRoleBasedAccess } =
+        await loadFixture(deployFixture);
       const dao = await TestHelper.deployLogic("FTDAO");
       const newInputsWithNoName = {
         ...inputs,
+        name: "",
       };
-      newInputsWithNoName.name = "";
       await expect(
-        dao.initialize(Object.values(newInputsWithNoName), governance, common)
+        dao.initialize(
+          Object.values(newInputsWithNoName),
+          governance,
+          common,
+          systemRoleBasedAccess
+        )
       )
         .revertedWithCustomError(dao, "InvalidInput")
         .withArgs("BaseDAO: name is empty");
 
       const newInputsWithNoAdmin = {
         ...inputs,
+        admin: TestHelper.ZERO_ADDRESS,
       };
-      newInputsWithNoAdmin.admin = TestHelper.ZERO_ADDRESS;
-
       await expect(
-        dao.initialize(Object.values(newInputsWithNoAdmin), governance, common)
+        dao.initialize(
+          Object.values(newInputsWithNoAdmin),
+          governance,
+          common,
+          systemRoleBasedAccess
+        )
       )
         .revertedWithCustomError(dao, "InvalidInput")
         .withArgs("BaseDAO: admin address is zero");
@@ -506,7 +502,7 @@ describe("GovernanceTokenDAO tests", function () {
             100,
             1
           )
-      ).revertedWith("Ownable: caller is not the owner");
+      ).reverted;
     });
 
     it("Verify createContractUpgradeProposal", async function () {
@@ -557,7 +553,7 @@ describe("GovernanceTokenDAO tests", function () {
             lpTokenLogic.address,
             1
           )
-      ).revertedWith("Ownable: caller is not the owner");
+      ).reverted;
     });
 
     it("Verify createTextProposal", async function () {
@@ -580,7 +576,7 @@ describe("GovernanceTokenDAO tests", function () {
         governorTokenDAO
           .connect(daoAdminTwo)
           .createTextProposal("proposal", "description", "linkToDiscussion", 1)
-      ).revertedWith("Ownable: caller is not the owner");
+      ).reverted;
     });
 
     it("Verify createTokenCreateProposal", async function () {
@@ -619,7 +615,7 @@ describe("GovernanceTokenDAO tests", function () {
             "TokenSymbol",
             1
           )
-      ).revertedWith("Ownable: caller is not the owner");
+      ).reverted;
     });
 
     it("Verify createContractUpgradeProposal", async function () {
@@ -670,7 +666,7 @@ describe("GovernanceTokenDAO tests", function () {
             lpTokenLogic.address,
             1
           )
-      ).revertedWith("Ownable: caller is not the owner");
+      ).reverted;
     });
 
     it("Verify createTextProposal", async function () {
@@ -693,7 +689,7 @@ describe("GovernanceTokenDAO tests", function () {
         governorTokenDAO
           .connect(daoAdminTwo)
           .createTextProposal("proposal", "description", "linkToDiscussion", 1)
-      ).revertedWith("Ownable: caller is not the owner");
+      ).reverted;
     });
 
     it("Verify createTokenCreateProposal", async function () {
@@ -732,7 +728,7 @@ describe("GovernanceTokenDAO tests", function () {
             "TokenSymbol",
             1
           )
-      ).revertedWith("Ownable: caller is not the owner");
+      ).reverted;
     });
 
     it("Verify getAllProposals", async function () {
@@ -753,11 +749,49 @@ describe("GovernanceTokenDAO tests", function () {
       const proposals = await governorTokenDAO.getTokenTransferProposals();
       expect(proposals.length).equals(1);
     });
+
+    it("Verify upgrade Hedera service passes with system user", async function () {
+      const { governorTokenDAO, systemUsersSigners, hederaService } =
+        await loadFixture(deployFixture);
+
+      const allGovernors =
+        await governorTokenDAO.getGovernorContractAddresses();
+
+      const governor = await TestHelper.getContract(
+        "GovernorTokenCreate",
+        allGovernors.at(-1)
+      );
+
+      expect(await governor.getHederaServiceVersion()).equals(
+        hederaService.address
+      );
+
+      const newHederaService = await TestHelper.deployMockHederaService();
+      await governorTokenDAO
+        .connect(systemUsersSigners.childProxyAdmin)
+        .upgradeHederaService(newHederaService.address);
+
+      expect(await governor.getHederaServiceVersion()).equals(
+        newHederaService.address
+      );
+    });
+
+    it("Verify upgrade Hedera service fails with non-system user", async function () {
+      const { governorTokenDAO, signers } = await loadFixture(deployFixture);
+      const nonSystemUser = signers[3];
+      const newHederaService = await TestHelper.deployMockHederaService();
+      await expect(
+        governorTokenDAO
+          .connect(nonSystemUser)
+          .upgradeHederaService(newHederaService.address)
+      ).reverted;
+    });
   });
 
   describe("BaseDAO contract tests", function () {
     it("Verify contract should be revert for initialization with invalid inputs", async function () {
-      const { inputs, governance, common } = await loadFixture(deployFixture);
+      const { inputs, governance, common, systemRoleBasedAccess } =
+        await loadFixture(deployFixture);
       const governorTokenDAO = await TestHelper.deployLogic("FTDAO");
       const newInputsWithNoName = {
         ...inputs,
@@ -767,7 +801,8 @@ describe("GovernanceTokenDAO tests", function () {
         governorTokenDAO.initialize(
           Object.values(newInputsWithNoName),
           governance,
-          common
+          common,
+          systemRoleBasedAccess
         )
       )
         .revertedWithCustomError(governorTokenDAO, "InvalidInput")
@@ -781,7 +816,8 @@ describe("GovernanceTokenDAO tests", function () {
         governorTokenDAO.initialize(
           Object.values(newInputsWithNoAdmin),
           governance,
-          common
+          common,
+          systemRoleBasedAccess
         )
       )
         .revertedWithCustomError(governorTokenDAO, "InvalidInput")
@@ -795,7 +831,8 @@ describe("GovernanceTokenDAO tests", function () {
         governorTokenDAO.initialize(
           Object.values(newInputsWithNoDesc),
           governance,
-          common
+          common,
+          systemRoleBasedAccess
         )
       )
         .revertedWithCustomError(governorTokenDAO, "InvalidInput")
@@ -838,7 +875,7 @@ describe("GovernanceTokenDAO tests", function () {
         governorTokenDAO
           .connect(daoAdminTwo)
           .updateDaoInfo(DAO_NAME, LOGO_URL, DESCRIPTION, WEB_LINKS)
-      ).revertedWith("Ownable: caller is not the owner");
+      ).reverted;
     });
 
     it("Verify updating dao info should be reverted for invalid inputs", async function () {

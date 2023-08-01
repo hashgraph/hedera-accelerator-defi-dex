@@ -97,7 +97,7 @@ export class CommonSteps {
     client: Client
   ) {
     const qty = await this.getTokenBal(id, tokenId, client);
-    if (qty.greaterThan(0.0)) {
+    if (qty.isGreaterThan(0.0)) {
       await this.transferTokens(
         receiverAccountId,
         senderAccountId,

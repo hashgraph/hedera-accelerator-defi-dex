@@ -83,4 +83,4 @@ Scenario: Verify proposal is executed for creating a token with the same name as
 
 
 Scenario: Verify user gets back locked GOD tokens
-    When User fetch GOD tokens back from GOD holder
+    When User fetch GOD tokens back from GOD holder for GovernorCreateToken

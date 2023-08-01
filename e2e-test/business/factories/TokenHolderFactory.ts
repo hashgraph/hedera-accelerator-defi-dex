@@ -1,16 +1,17 @@
 import Base from "../Base";
+import GodHolder from "../GodHolder";
+import NFTHolder from "../NFTHolder";
 
 import { Helper } from "../../../utils/Helper";
 import { Deployment } from "../../../utils/deployContractOnTestnet";
 import { clientsInfo } from "../../../utils/ClientManagement";
+import { AddressHelper } from "../../../utils/AddressHelper";
 import {
   Client,
   TokenId,
   ContractId,
   ContractFunctionParameters,
 } from "@hashgraph/sdk";
-import GodHolder from "../GodHolder";
-import NFTHolder from "../NFTHolder";
 
 const INITIALIZE = "initialize";
 const GET_TOKEN_HOLDER = "getTokenHolder";
@@ -57,39 +58,42 @@ export default abstract class TokenHolderFactory extends Base {
       args
     );
     const address = result.getAddress(0);
+    const contractId = await AddressHelper.addressToIdObject(address);
     const items = [
       {
         TokenId: TokenId.fromSolidityAddress(tokenAddress).toString(),
-        HolderContractId: ContractId.fromSolidityAddress(address).toString(),
+        HolderContractId: contractId.toString(),
       },
     ];
     console.log(
       `- ${this.getPrefix()}TokenHolderFactory#${GET_TOKEN_HOLDER}():`
     );
     console.table(items);
-    return ContractId.fromSolidityAddress(address);
+    return contractId;
   };
 
   public getTokenHolders = async (
     client: Client = clientsInfo.operatorClient
   ) => {
     const { result } = await this.execute(9_00_000, GET_TOKEN_HOLDERS, client);
-    const contractIds = Helper.getAddressArray(result);
-    const tokensId = await Promise.all(
-      contractIds.map((item: string) => {
-        const cId = ContractId.fromSolidityAddress(item);
-        return this.getHolderInstance(cId).getToken(client);
+    const contractAddresses = Helper.getAddressArray(result);
+    const items: any[] = [];
+    await Promise.all(
+      contractAddresses.map(async (address: string) => {
+        const contractId = await AddressHelper.addressToIdObject(address);
+        const tokenId = await this.getHolderInstance(contractId).getToken(
+          client
+        );
+        items.push({
+          TokenId: tokenId.toString(),
+          HolderContractId: contractId.toString(),
+        });
       })
     );
-    const items = contractIds.map((item: string, index: number) => {
-      return {
-        TokenId: tokensId[index].toString(),
-        HolderContractId: ContractId.fromSolidityAddress(item).toString(),
-      };
-    });
     console.log(
       `- ${this.getPrefix()}TokenHolderFactory#${GET_TOKEN_HOLDERS}():`
     );
     console.table(items);
+    return items;
   };
 }

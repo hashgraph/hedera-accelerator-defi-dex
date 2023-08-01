@@ -1,5 +1,4 @@
 import Base from "./Base";
-import Long from "long";
 import dex from "../../deployment/model/dex";
 
 import {
@@ -19,13 +18,16 @@ import {
   TokenMintTransaction,
   TokenAssociateTransaction,
   AccountAllowanceApproveTransaction,
+  ContractExecuteTransaction,
 } from "@hashgraph/sdk";
 import { BigNumber } from "bignumber.js";
 import { clientsInfo } from "../../utils/ClientManagement";
-import { MirrorNodeService } from "../../utils/MirrorNodeService";
+import Token from "./Token";
 
 export default class Common extends Base {
   static baseUrl: string = "https://testnet.mirrornode.hedera.com/";
+  static UPGRADE_TO: string = "upgradeTo";
+  static CHANGE_ADMIN: string = "changeAdmin";
 
   protected getContractName(): string {
     return this.constructor.name;
@@ -131,17 +133,28 @@ export default class Common extends Base {
     );
   };
 
-  upgradeTo = async (
+  public upgradeTo = async (
     proxyAddress: string,
     logicAddress: string,
     adminKey: PrivateKey = clientsInfo.proxyAdminKey,
     client: Client = clientsInfo.proxyAdminClient
   ) => {
-    const proxyContractId = ContractId.fromSolidityAddress(proxyAddress);
     const args = new ContractFunctionParameters().addAddress(logicAddress);
-    this.execute(2_00_000, "upgradeTo", client, args, adminKey);
+    await this.execute(2_00_000, Common.UPGRADE_TO, client, args, adminKey);
     console.log(
-      `- Common#upgradeTo(): proxyId = ${proxyContractId.toString()}, new-implementation =  ${logicAddress}\n`
+      `- Common#upgradeTo(): proxyId = ${this.contractId}, new-implementation =  ${logicAddress}\n`
+    );
+  };
+
+  public changeAdmin = async (
+    newAdminAddress: string,
+    adminKey: PrivateKey = clientsInfo.proxyAdminKey,
+    client: Client = clientsInfo.proxyAdminClient
+  ) => {
+    const args = new ContractFunctionParameters().addAddress(newAdminAddress);
+    await this.execute(50_000, Common.CHANGE_ADMIN, client, args, adminKey);
+    console.log(
+      `- Common#changeAdmin(): proxyId = ${this.contractId.toString()}, new-admin-address = ${newAdminAddress}\n`
     );
   };
 
@@ -194,7 +207,7 @@ export default class Common extends Base {
 
   static getAccountBalance = async (
     accountId: AccountId | ContractId,
-    tokens: TokenId[] | undefined,
+    tokens: TokenId[] | undefined = undefined,
     client: Client = clientsInfo.operatorClient
   ) => {
     console.log(`- Common#getAccountBalance(): account-id = ${accountId}`);
@@ -211,22 +224,12 @@ export default class Common extends Base {
   };
 
   static getTokenBalance = async (
-    id: AccountId | ContractId,
+    idOrEvmAddress: AccountId | ContractId | string,
     tokenId: TokenId,
     client: Client = clientsInfo.operatorClient
   ) => {
-    const response = await this.getBalanceInternally(id, client);
-    let tokenBalance = response.tokens?.get(tokenId);
-    if (!tokenBalance) {
-      const mirrorNodeService = MirrorNodeService.getInstance();
-      const tokens = await mirrorNodeService.getTokenBalance(id, [tokenId]);
-      tokenBalance = tokens.get(tokenId.toString());
-    }
-    tokenBalance = tokenBalance ?? new Long(0);
-    console.log(
-      `- Common#getTokenBalance(): id = ${id}, TokenId = ${tokenId}, Balance = ${tokenBalance}\n`
-    );
-    return tokenBalance;
+    const token = new Token(ContractId.fromString(tokenId.toString()));
+    return await token.getBalance(idOrEvmAddress);
   };
 
   static getTokenInfo = async (
@@ -259,7 +262,26 @@ export default class Common extends Base {
     const txnReceipt = await txnResponse.getReceipt(client);
     const status = txnReceipt.status;
     console.log(
-      `- Common#transferTokens(): TokenId = ${tokenId}, TokenQty = ${tokenQty}, sender = ${senderAccountId}, receiver = ${receiverAccountId}, status = ${status}`
+      `- Common#transferTokens(): TokenId = ${tokenId}, TokenQty = ${tokenQty}, sender = ${senderAccountId}, receiver = ${receiverAccountId}, status = ${status}\n`
+    );
+  };
+
+  static transferHbarsToContract = async (
+    amount: number,
+    contractId: ContractId,
+    senderAccountId: AccountId = clientsInfo.operatorId,
+    senderClient: Client = clientsInfo.operatorClient
+  ) => {
+    const contractExecuteTx = new ContractExecuteTransaction()
+      .setContractId(contractId)
+      .setGas(500_000)
+      .setPayableAmount(amount);
+    const contractExecuteSubmit = await contractExecuteTx.execute(senderClient);
+    const contractExecuteRx = await contractExecuteSubmit.getReceipt(
+      senderClient
+    );
+    console.log(
+      `- Common#transferHbarsToContract(): sender = ${senderAccountId}, receiver = ${contractId}, amount = ${amount} status = ${contractExecuteRx.status} \n`
     );
   };
 
@@ -345,21 +367,6 @@ export default class Common extends Base {
     console.log(
       `Common#mintToken(): TokenId = ${tokenId},  mintAmt = ${mintAmt}, transaction status is: ${transactionStatus.toString()}`
     );
-  };
-
-  static fetchTokenBalanceFromMirrorNode = async (
-    accountId: string,
-    tokenId: string
-  ) => {
-    let balance = new BigNumber(0);
-    const url = `${Common.baseUrl}api/v1/accounts/${accountId}/tokens?token.id=${tokenId}`;
-    const response = await fetch(url, { cache: "no-store" });
-    const data = await response.json();
-    balance = new BigNumber(data.tokens[0].balance);
-    console.log(
-      `Common#fetchTokenBalanceFromMirrorNode(): id = ${accountId}, TokenId = ${tokenId}, Balance = ${balance}`
-    );
-    return balance;
   };
 
   static associateTokensToAccount = async (

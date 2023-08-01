@@ -25,6 +25,7 @@ const TOKEN_ID = TokenId.fromString(dex.TOKEN_LAB49_1);
 const adminAddress: string = clientsInfo.operatorId.toSolidityAddress();
 const DAO_DESC = "Lorem Ipsum is simply dummy text";
 const DAO_WEB_LINKS = ["LINKEDIN", "https://linkedin.com"];
+const PROPOSAL_CREATE_SERIAL_ID = 12;
 
 let ftDao: FTDAO;
 let governorTT: Governor;
@@ -40,7 +41,7 @@ export class DAONFTTokenTest extends CommonSteps {
   @given(
     /User initialize the NFT DAO with name "([^"]*)" and url "([^"]*)"/,
     undefined,
-    30000
+    60000
   )
   public async initializeNFTDAOSafe(name: string, url: string) {
     await Helper.delay(15000); // allowing some delay for propagating initialize event from previous call
@@ -140,7 +141,8 @@ export class DAONFTTokenTest extends CommonSteps {
       tokens,
       clientsInfo.operatorClient,
       GovernorTokenMetaData.DEFAULT_LINK,
-      GovernorTokenMetaData.DEFAULT_DESCRIPTION
+      GovernorTokenMetaData.DEFAULT_DESCRIPTION,
+      PROPOSAL_CREATE_SERIAL_ID
     );
   }
 
@@ -161,7 +163,8 @@ export class DAONFTTokenTest extends CommonSteps {
       amt,
       clientsInfo.operatorClient,
       GovernorTokenMetaData.DEFAULT_LINK,
-      GovernorTokenMetaData.DEFAULT_DESCRIPTION
+      GovernorTokenMetaData.DEFAULT_DESCRIPTION,
+      PROPOSAL_CREATE_SERIAL_ID
     );
   }
 
@@ -178,7 +181,8 @@ export class DAONFTTokenTest extends CommonSteps {
         tokenAmt * CommonSteps.withPrecision,
         clientsInfo.operatorClient,
         GovernorTokenMetaData.DEFAULT_LINK,
-        GovernorTokenMetaData.DEFAULT_DESCRIPTION
+        GovernorTokenMetaData.DEFAULT_DESCRIPTION,
+        PROPOSAL_CREATE_SERIAL_ID
       );
     } catch (e: any) {
       errorMsg = e.message;
@@ -322,10 +326,7 @@ export class DAONFTTokenTest extends CommonSteps {
     30000
   )
   public async getTokenBalance() {
-    balance = await Common.fetchTokenBalanceFromMirrorNode(
-      clientsInfo.operatorId.toSolidityAddress(),
-      TOKEN_ID.toString()
-    );
+    balance = await Common.getTokenBalance(clientsInfo.operatorId, TOKEN_ID);
     console.log(`DAONFTTokenTest#getTokenBalance() balance = ${balance}`);
   }
 
@@ -335,9 +336,9 @@ export class DAONFTTokenTest extends CommonSteps {
     30000
   )
   public async verifyTokenBalanceIsGreaterThanTransferAmt(transferAmt: number) {
-    fromAcctBal = await Common.fetchTokenBalanceFromMirrorNode(
-      clientsInfo.treasureId.toString(),
-      TOKEN_ID.toString()
+    fromAcctBal = await Common.getTokenBalance(
+      clientsInfo.treasureId,
+      TOKEN_ID
     );
     expect(
       Number(fromAcctBal.dividedBy(CommonSteps.withPrecision))
@@ -350,10 +351,9 @@ export class DAONFTTokenTest extends CommonSteps {
     30000
   )
   public async verifyTokenBalance() {
-    await Helper.delay(15000);
-    const updatedBalance = await Common.fetchTokenBalanceFromMirrorNode(
-      clientsInfo.operatorId.toString(),
-      TOKEN_ID.toString()
+    const updatedBalance = await Common.getTokenBalance(
+      clientsInfo.operatorId,
+      TOKEN_ID
     );
     expect(updatedBalance).to.eql(balance.plus(tokens));
   }

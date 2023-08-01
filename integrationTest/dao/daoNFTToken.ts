@@ -16,6 +16,7 @@ import {
 } from "@hashgraph/sdk";
 import TokenTransferGovernor from "../../e2e-test/business/TokenTransferGovernor";
 import NFTTokenHolderFactory from "../../e2e-test/business/factories/NFTTokenHolderFactory";
+import SystemRoleBasedAccess from "../../e2e-test/business/common/SystemRoleBasedAccess";
 
 const NFT_ID_FOR_VOTING = 12;
 const PROPOSAL_CREATE_NFT_SERIAL_ID = 13;
@@ -35,7 +36,10 @@ async function main() {
 
   const tokenTransferDAO = new FTDAO(ContractId.fromString(transferDao.id));
 
+  const roleBasedAccess = new SystemRoleBasedAccess();
+
   const tokenHolderFactory = new NFTTokenHolderFactory();
+
   const nftHolderContractId = await tokenHolderFactory.getTokenHolder(
     GovernorTokenMetaData.NFT_TOKEN_ID.toSolidityAddress()
   );
@@ -52,7 +56,7 @@ async function main() {
     GovernorTokenMetaData.DEFAULT_QUORUM_THRESHOLD_IN_BSP,
     GovernorTokenMetaData.DEFAULT_VOTING_DELAY,
     GovernorTokenMetaData.DEFAULT_VOTING_PERIOD,
-    GovernorTokenMetaData.GOD_TOKEN_ID,
+    GovernorTokenMetaData.NFT_TOKEN_ID,
     GovernorTokenMetaData.NFT_TOKEN_ID
   );
 
@@ -66,7 +70,11 @@ async function main() {
     DAO_WEB_LINKS,
     DAO_ADMIN_CLIENT
   );
-  await tokenTransferDAO.upgradeHederaService();
+  const hasRole = await roleBasedAccess.checkIfChildProxyAdminRoleGiven();
+  hasRole &&
+    (await tokenTransferDAO.upgradeHederaService(
+      clientsInfo.childProxyAdminClient
+    ));
   console.log(`\nDone`);
 }
 
@@ -96,6 +104,7 @@ export async function executeGovernorTokenTransferFlow(
     voterAccountPrivateKey,
     voterClient
   );
+
   await nftHolder.grabTokensForVoter(
     NFT_ID_FOR_VOTING,
     voterAccountId,
@@ -105,17 +114,19 @@ export async function executeGovernorTokenTransferFlow(
 
   const governorAddresses =
     await tokenTransferDAO.getGovernorTokenTransferContractAddresses();
+
   const governorTokenTransfer = new TokenTransferGovernor(
     governorAddresses.governorTokenTransferProxyId
   );
 
-  await governorTokenTransfer.setupAllowanceForProposalCreation(
+  await governorTokenTransfer.setupNFTAllowanceForProposalCreation(
     proposalCreatorClient,
     proposalCreatorAccountId,
     proposalCreatorAccountPrivateKey
   );
 
   const title = Helper.createProposalTitle("Token Transfer Proposal");
+
   const proposalId = await tokenTransferDAO.createTokenTransferProposal(
     title,
     fromAccount.toSolidityAddress(),
@@ -150,5 +161,6 @@ export async function executeGovernorTokenTransferFlow(
   } else {
     await governorTokenTransfer.cancelProposal(title, proposalCreatorClient);
   }
+
   await nftHolder.checkAndClaimNFTTokens(voterClient, voterAccountId);
 }

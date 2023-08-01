@@ -3,12 +3,12 @@ pragma solidity ^0.8.18;
 
 import "./BaseDAO.sol";
 import "../common/IHederaService.sol";
-import "../common/RoleBasedAccess.sol";
+import "../common/ISystemRoleBasedAccess.sol";
 import "../gnosis/HederaMultiSend.sol";
 import "../gnosis/HederaGnosisSafe.sol";
 import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
-contract MultiSigDAO is BaseDAO, RoleBasedAccess {
+contract MultiSigDAO is BaseDAO {
     event TransactionCreated(bytes32 txnHash, TransactionInfo info);
     enum TransactionState {
         Pending,
@@ -28,18 +28,14 @@ contract MultiSigDAO is BaseDAO, RoleBasedAccess {
         address creator;
     }
 
-    bytes4 private constant MULTI_SEND_TXN_SELECTOR =
-        bytes4(keccak256("multiSend(bytes)"));
-
-    bytes4 private constant TRANSFER_TOKEN_FROM_SAFE_SELECTOR =
-        bytes4(keccak256("transferTokenViaSafe(address,address,uint256)"));
-
-    uint256 private constant TXN_TYPE_TOKEN_TRANSFER = 1;
-    uint256 private constant TXN_TYPE_BATCH = 2;
+    uint256 private constant TXN_TYPE_BATCH = 1;
+    uint256 private constant TXN_TYPE_TOKEN_ASSOCIATE = 2;
+    uint256 private constant TXN_TYPE_UPGRADE_PROXY = 3;
 
     HederaMultiSend private multiSend;
     IHederaService private hederaService;
     HederaGnosisSafe private hederaGnosisSafe;
+    ISystemRoleBasedAccess private iSystemRoleBasedAccess;
     mapping(bytes32 => TransactionInfo) private transactions;
 
     function initialize(
@@ -50,12 +46,13 @@ contract MultiSigDAO is BaseDAO, RoleBasedAccess {
         string[] memory _webLinks,
         HederaGnosisSafe _hederaGnosisSafe,
         IHederaService _hederaService,
-        HederaMultiSend _multiSend
+        HederaMultiSend _multiSend,
+        ISystemRoleBasedAccess _iSystemRoleBasedAccess
     ) external initializer {
-        systemUser = msg.sender;
         hederaService = _hederaService;
         hederaGnosisSafe = _hederaGnosisSafe;
         multiSend = _multiSend;
+        iSystemRoleBasedAccess = _iSystemRoleBasedAccess;
         __BaseDAO_init(_admin, _name, _logoUrl, _description, _webLinks);
     }
 
@@ -125,34 +122,25 @@ contract MultiSigDAO is BaseDAO, RoleBasedAccess {
         return txnHash;
     }
 
-    function proposeTransferTransaction(
+    function proposeTokenAssociateTransaction(
         address _token,
-        address _receiver,
-        uint256 _amount,
-        string memory title,
-        string memory desc,
-        string memory linkToDiscussion
+        string memory _title,
+        string memory _desc,
+        string memory _linkToDiscussion
     ) external payable returns (bytes32) {
-        hederaGnosisSafe.transferToSafe(
-            hederaService,
-            _token,
-            _amount,
-            msg.sender
-        );
         bytes memory data = abi.encodeWithSelector(
-            TRANSFER_TOKEN_FROM_SAFE_SELECTOR,
-            _token,
-            _receiver,
-            _amount
+            HederaGnosisSafe.associateToken.selector,
+            hederaService,
+            _token
         );
         return
             proposeTransaction(
                 address(hederaGnosisSafe),
                 data,
-                1,
-                title,
-                desc,
-                linkToDiscussion
+                TXN_TYPE_TOKEN_ASSOCIATE,
+                _title,
+                _desc,
+                _linkToDiscussion
             );
     }
 
@@ -182,7 +170,7 @@ contract MultiSigDAO is BaseDAO, RoleBasedAccess {
             );
         }
         bytes memory data = abi.encodeWithSelector(
-            MULTI_SEND_TXN_SELECTOR,
+            MultiSendCallOnly.multiSend.selector,
             transactionsBytes
         );
         return
@@ -196,15 +184,39 @@ contract MultiSigDAO is BaseDAO, RoleBasedAccess {
             );
     }
 
-    function upgradeHederaService(
-        IHederaService newHederaService
-    ) external onlySystemUser {
+    function proposeUpgradeProxyTransaction(
+        address _proxy,
+        address _proxyLogic,
+        string memory _title,
+        string memory _desc,
+        string memory _linkToDiscussion
+    ) external payable returns (bytes32) {
+        require(_proxy != address(0), "MultiSigDAO: proxy can't be zero");
+        require(_proxyLogic != address(0), "MultiSigDAO: logic can't be zero");
+        bytes memory data = abi.encodeWithSelector(
+            HederaGnosisSafe.upgradeProxy.selector,
+            _proxy,
+            _proxyLogic,
+            iSystemRoleBasedAccess.getSystemUsers().proxyAdmin
+        );
+        return
+            proposeTransaction(
+                address(hederaGnosisSafe),
+                data,
+                TXN_TYPE_UPGRADE_PROXY,
+                _title,
+                _desc,
+                _linkToDiscussion
+            );
+    }
+
+    function upgradeHederaService(IHederaService newHederaService) external {
+        iSystemRoleBasedAccess.checkChildProxyAdminRole(msg.sender);
         hederaService = newHederaService;
     }
 
-    function upgradeMultiSend(
-        HederaMultiSend _multiSend
-    ) external onlySystemUser {
+    function upgradeMultiSend(HederaMultiSend _multiSend) external {
+        iSystemRoleBasedAccess.checkChildProxyAdminRole(msg.sender);
         multiSend = _multiSend;
     }
 
@@ -214,5 +226,21 @@ contract MultiSigDAO is BaseDAO, RoleBasedAccess {
 
     function getMultiSendContractAddress() external view returns (address) {
         return address(multiSend);
+    }
+
+    /**
+     * This functon is used to uniquely identify text proposals. Transaction data is created using encoding of
+     * this function. As the text and creator are unique hence will generate unique hash for transactions.
+     *  Gnosis safe executes this function once transaction is approved by owners.
+     */
+    function setText(
+        address creator,
+        string memory text
+    ) public view returns (address, string memory) {
+        require(
+            address(hederaGnosisSafe) == msg.sender,
+            "Only HederaGnosisSafe can execute it."
+        );
+        return (creator, text);
     }
 }

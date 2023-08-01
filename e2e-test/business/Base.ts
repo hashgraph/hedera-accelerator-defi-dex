@@ -1,3 +1,4 @@
+import dex from "../../deployment/model/dex";
 import ContractMetadata from "../../utils/ContractMetadata";
 
 import { ethers } from "ethers";
@@ -8,6 +9,7 @@ import { ContractService } from "../../deployment/service/ContractService";
 import { MirrorNodeService } from "../../utils/MirrorNodeService";
 import {
   Client,
+  AccountId,
   PrivateKey,
   ContractExecuteTransaction,
   ContractFunctionParameters,
@@ -23,6 +25,11 @@ export default abstract class Base {
   contractName: string;
   private UPGRADE_HEDERA_SERVICE = "upgradeHederaService";
   private OWNER = "owner";
+  private GET_ROLE_ADMIN = "getRoleAdmin";
+  private HAS_ROLE = "hasRole";
+  private GRANT_ROLE = "grantRole";
+  private REVOKE_ROLE = "revokeRole";
+  private IMPLEMENTATION = "implementation";
 
   constructor(_contractId: ContractId | null = null) {
     this.htsAddress = this.getHederaServiceContractAddress();
@@ -49,7 +56,82 @@ export default abstract class Base {
   private printContractInformation = () => {
     const businessClassName = this.getBusinessClassName();
     console.log(
-      `\n Using business class[${businessClassName}], contract-id [${this.contractId}], and contract-name [${this.contractName}] \n`
+      `\n- Using business class[${businessClassName}], contract-id [${this.contractId}], and contract-name [${this.contractName}] \n`
+    );
+  };
+
+  public getRoleAdmin = async (
+    role: Uint8Array,
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    const args = new ContractFunctionParameters().addBytes32(role);
+    const { result } = await this.execute(
+      2_00_000,
+      this.GET_ROLE_ADMIN,
+      client,
+      args
+    );
+    const roleInfo = this.getRoleInfo(role);
+    const roleAdminHex = ethers.utils.hexlify(result.getBytes32(0));
+    console.log(
+      `- Base#${this.GET_ROLE_ADMIN}(): done ${roleInfo}, roleAdmin = ${roleAdminHex}\n`
+    );
+  };
+
+  public hasRole = async (
+    role: Uint8Array,
+    accountId: AccountId,
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    const args = new ContractFunctionParameters()
+      .addBytes32(role)
+      .addAddress(accountId.toSolidityAddress());
+    const { result } = await this.execute(
+      5_00_000,
+      this.HAS_ROLE,
+      client,
+      args
+    );
+    const roleInfo = this.getRoleInfo(role);
+    const hasRoleHex = ethers.utils.hexlify(result.asBytes());
+    const hasRole = result.getBool(0);
+    console.log(
+      `- Base#${this.HAS_ROLE}(): done ${roleInfo}, hasRole = ${hasRole}, hasRoleHex = ${hasRoleHex}\n`
+    );
+    return hasRole;
+  };
+
+  public grantRole = async (
+    role: Uint8Array,
+    accountId: AccountId,
+    superAdminClient: Client
+  ) => {
+    const args = new ContractFunctionParameters()
+      .addBytes32(role)
+      .addAddress(accountId.toSolidityAddress());
+    await this.execute(5_00_000, this.GRANT_ROLE, superAdminClient, args);
+    const roleInfo = this.getRoleInfo(role);
+    console.log(
+      `- Base#${
+        this.GRANT_ROLE
+      }(): done ${roleInfo}, account = ${accountId.toString()}\n`
+    );
+  };
+
+  public revokeRole = async (
+    role: Uint8Array,
+    accountId: AccountId,
+    superAdminClient: Client
+  ) => {
+    const args = new ContractFunctionParameters()
+      .addBytes32(role)
+      .addAddress(accountId.toSolidityAddress());
+    await this.execute(5_00_000, this.REVOKE_ROLE, superAdminClient, args);
+    const roleInfo = this.getRoleInfo(role);
+    console.log(
+      `- Base#${
+        this.REVOKE_ROLE
+      }(): done ${roleInfo}, account = ${accountId.toString()}\n`
     );
   };
 
@@ -59,14 +141,14 @@ export default abstract class Base {
   ) => {
     const { result } = await this.execute(
       2000000,
-      "implementation",
+      this.IMPLEMENTATION,
       client,
       undefined,
       adminKey
     );
     const impAddress = result.getAddress(0);
     console.log(
-      `- Base#implementation(): proxyId = ${this.contractId}, implementation =  ${impAddress}\n`
+      `- Base#${this.IMPLEMENTATION}(): proxyId = ${this.contractId}, implementation =  ${impAddress}\n`
     );
     return impAddress;
   };
@@ -147,6 +229,11 @@ export default abstract class Base {
     return this.csDev.getContract(ContractService.MULTI_SEND).address;
   }
 
+  protected getSystemBasedRoleAccessContractAddress(): string {
+    return this.csDev.getContract(ContractService.SYSTEM_ROLE_BASED_ACCESS)
+      .transparentProxyAddress!;
+  }
+
   public async encodeFunctionData(
     contractName: string,
     functionName: string,
@@ -168,5 +255,17 @@ export default abstract class Base {
       contractName
     );
     return contractInterface.decodeFunctionResult(functionName, data);
+  }
+
+  private getRoleInfo(role: Uint8Array) {
+    const roleIndex = Object.values(dex.ROLES).findIndex(
+      (eachRole: Uint8Array) => role === eachRole
+    );
+    if (roleIndex !== -1) {
+      const roleName = Object.keys(dex.ROLES)[roleIndex];
+      const roleHex = ethers.utils.hexlify(role);
+      return `role = ${roleHex}, roleName = ${roleName}`;
+    }
+    return "FAILED TO FIND ROLE INFO";
   }
 }

@@ -48,9 +48,10 @@ const daoFactory = new FTDAOFactory(ContractId.fromString(proxyId));
 const godTokenHolderFactory = new FTTokenHolderFactory(undefined);
 const adminAddress: string = clientsInfo.operatorId.toSolidityAddress();
 
-const toAccount: AccountId = clientsInfo.treasureId;
-const fromAccount: AccountId = clientsInfo.operatorId;
-const fromAccountPrivateKey: PrivateKey = clientsInfo.operatorKey;
+const toAccount: AccountId = clientsInfo.uiUserId;
+const fromAccount: AccountId = clientsInfo.treasureId;
+const fromAccountPrivateKey: PrivateKey = clientsInfo.treasureKey;
+const fromAccountClient: Client = clientsInfo.treasureClient;
 const tokenId: TokenId = TokenId.fromString(dex.TOKEN_LAB49_1);
 const daoTokenId: TokenId = TokenId.fromString(dex.GOD_TOKEN_ID);
 
@@ -102,7 +103,7 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
   @given(
     /User initialize the DAO governor token contract with name "([^"]*)" and url "([^"]*)"/,
     undefined,
-    30000
+    60000
   )
   public async initializeSafe(name: string, url: string) {
     await Helper.delay(15000); // allowing some delay for propagating initialize event from previous call
@@ -171,10 +172,10 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
   @when(
     /User initialize the governor token dao and governor token transfer and god holder contract via dao factory/,
     undefined,
-    30000
+    60000
   )
   public async initializeContractsViaFactory() {
-    ftDao = daoFactory.getGovernorTokenDaoInstance(daoAddress);
+    ftDao = await daoFactory.getGovernorTokenDaoInstance(daoAddress);
     await this.updateGovernor(ftDao);
     factoryGODHolderContractId = godHolder.contractId;
   }
@@ -246,6 +247,7 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
       clientsInfo.operatorClient
     );
   }
+
   @then(
     /User verify token transfer proposal state is "([^"]*)"/,
     undefined,
@@ -291,10 +293,7 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
     30000
   )
   public async getTokenBalance() {
-    balance = await Common.fetchTokenBalanceFromMirrorNode(
-      toAccount.toString(),
-      tokenId.toString()
-    );
+    balance = await Common.getTokenBalance(toAccount, tokenId);
     console.log(
       `DAOGovernorTokenTransfer#getTokenBalance() balance = ${balance}`
     );
@@ -306,10 +305,7 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
     30000
   )
   public async verifyTokenBalanceIsGreaterThanTransferAmt(transferAmt: number) {
-    fromAcctBal = await Common.fetchTokenBalanceFromMirrorNode(
-      fromAccount.toString(),
-      tokenId.toString()
-    );
+    fromAcctBal = await Common.getTokenBalance(fromAccount, tokenId);
     expect(
       Number(fromAcctBal.dividedBy(CommonSteps.withPrecision))
     ).greaterThan(Number(transferAmt));
@@ -321,11 +317,7 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
     30000
   )
   public async verifyTokenBalance() {
-    await Helper.delay(15000);
-    const updatedBalance = await Common.fetchTokenBalanceFromMirrorNode(
-      toAccount.toString(),
-      tokenId.toString()
-    );
+    const updatedBalance = await Common.getTokenBalance(toAccount, tokenId);
     expect(updatedBalance).to.eql(balance.plus(tokens));
   }
 
@@ -458,11 +450,12 @@ export class DAOGovernorTokenTransfer extends CommonSteps {
       tokenId,
       allowanceAmt * CommonSteps.withPrecision,
       governorTokenTransfer.contractId,
-      clientsInfo.operatorId,
-      clientsInfo.operatorKey,
-      clientsInfo.operatorClient
+      fromAccount,
+      fromAccountPrivateKey,
+      fromAccountClient
     );
   }
+
   private async updateGovernor(dao: FTDAO) {
     const governorAddresses =
       await dao.getGovernorTokenTransferContractAddresses();

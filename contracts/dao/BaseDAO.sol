@@ -2,9 +2,11 @@
 pragma solidity ^0.8.18;
 
 import "../common/IErrors.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "../common/RoleBasedAccess.sol";
 
-abstract contract BaseDAO is IErrors, OwnableUpgradeable {
+abstract contract BaseDAO is IErrors, RoleBasedAccess {
+    bytes32 public constant DAO_ADMIN = keccak256("DAO_ADMIN");
+
     event DAOInfoUpdated(DAOInfo daoInfo);
 
     struct DAOInfo {
@@ -28,7 +30,7 @@ abstract contract BaseDAO is IErrors, OwnableUpgradeable {
             revert InvalidInput("BaseDAO: admin address is zero");
         }
         daoInfo.admin = _admin;
-        _transferOwnership(_admin);
+        _grantRole(DAO_ADMIN, _admin);
         updateDaoInfoInternally(_name, _logoUrl, _description, _webLinks);
     }
 
@@ -41,7 +43,7 @@ abstract contract BaseDAO is IErrors, OwnableUpgradeable {
         string memory _logoUrl,
         string memory _description,
         string[] memory _webLinks
-    ) public onlyOwner {
+    ) public onlyRole(DAO_ADMIN) {
         updateDaoInfoInternally(_name, _logoUrl, _description, _webLinks);
     }
 

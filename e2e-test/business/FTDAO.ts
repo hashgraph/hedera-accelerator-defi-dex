@@ -8,12 +8,13 @@ import { BigNumber } from "bignumber.js";
 import {
   Client,
   TokenId,
-  ContractId,
+  AccountId,
   ContractFunctionParameters,
   AccountId,
 } from "@hashgraph/sdk";
 import { ContractService } from "../../deployment/service/ContractService";
 import { Helper } from "../../utils/Helper";
+import { AddressHelper } from "../../utils/AddressHelper";
 
 const INITIALIZE = "initialize";
 const CREATE_PROPOSAL = "createTokenTransferProposal";
@@ -49,50 +50,48 @@ export default class FTDAO extends BaseDao {
     holderTokenId: TokenId = GOD_TOKEN_ID
   ) {
     await tokenHolder.initialize(client, holderTokenId.toSolidityAddress());
-    const godHolderContractId = tokenHolder.contractId;
-    const godHolderProxyAddress =
-      ContractId.fromString(godHolderContractId).toSolidityAddress();
+    const godHolderProxyAddress = await AddressHelper.idToEvmAddress(
+      tokenHolder.contractId
+    );
 
     const contractService = new ContractService();
-
-    const inputs = {
-      admin,
-      name,
-      url,
-      tokenAddress: tokenId.toSolidityAddress(),
-      quorumThreshold: defaultQuorumThresholdValue,
-      votingDelay,
-      votingPeriod,
-      isPrivate: false,
-      description: desc,
-      webLinks,
-    };
-
-    const governance = {
-      tokenTransferLogic: contractService.getContract(
-        ContractService.GOVERNOR_TT
-      ).address,
-      textLogic: contractService.getContract(ContractService.GOVERNOR_TEXT)
-        .address,
-      contractUpgradeLogic: contractService.getContract(
-        ContractService.GOVERNOR_UPGRADE
-      ).address,
-      createTokenLogic: contractService.getContract(
-        ContractService.GOVERNOR_TOKEN_CREATE
-      ).address,
-    };
-
-    const common = {
-      hederaService: this.htsAddress,
-      iTokenHolder: godHolderProxyAddress,
-      proxyAdmin: clientsInfo.childProxyAdminId.toSolidityAddress(),
-      systemUser: clientsInfo.operatorId.toSolidityAddress(),
+    const data = {
+      inputs: Object.values({
+        admin,
+        name,
+        url,
+        tokenAddress: tokenId.toSolidityAddress(),
+        quorumThreshold: defaultQuorumThresholdValue,
+        votingDelay,
+        votingPeriod,
+        isPrivate: false,
+        description: desc,
+        webLinks,
+      }),
+      governor: Object.values({
+        tokenTransferLogic: contractService.getContract(
+          ContractService.GOVERNOR_TT
+        ).address,
+        textLogic: contractService.getContract(ContractService.GOVERNOR_TEXT)
+          .address,
+        contractUpgradeLogic: contractService.getContract(
+          ContractService.GOVERNOR_UPGRADE
+        ).address,
+        createTokenLogic: contractService.getContract(
+          ContractService.GOVERNOR_TOKEN_CREATE
+        ).address,
+      }),
+      common: Object.values({
+        hederaService: this.htsAddress,
+        iTokenHolder: godHolderProxyAddress,
+      }),
+      _iSystemRoleBasedAccess: this.getSystemBasedRoleAccessContractAddress(),
     };
 
     const { hex, bytes } = await this.encodeFunctionData(
       ContractService.FT_DAO,
       INITIALIZE,
-      [Object.values(inputs), Object.values(governance), Object.values(common)]
+      Object.values(data)
     );
 
     const { receipt } = await this.execute(
@@ -102,7 +101,9 @@ export default class FTDAO extends BaseDao {
       bytes
     );
 
-    console.log(`- FTDAO#${INITIALIZE}(): ${receipt.status} \n`);
+    console.log(
+      `- FTDAO#${INITIALIZE}(): hex-data = ${hex}, status = ${receipt.status} \n`
+    );
   }
 
   protected getContractName() {
@@ -258,7 +259,7 @@ export default class FTDAO extends BaseDao {
     client: Client = clientsInfo.operatorClient
   ) => {
     const { result } = await this.execute(
-      2000000,
+      2_000_000,
       GET_GOVERNOR_TOKEN_TRANSFER_CONTRACT_ADDRESSES,
       client
     );
@@ -267,16 +268,16 @@ export default class FTDAO extends BaseDao {
       governorTextProposalProxy: result.getAddress(1),
       governorUpgradeProxy: result.getAddress(2),
       governorTokenCreateProxy: result.getAddress(3),
-      governorTokenTransferProxyId: ContractId.fromSolidityAddress(
+      governorTokenTransferProxyId: await AddressHelper.addressToIdObject(
         result.getAddress(0)
       ),
-      governorTextProposalProxyId: ContractId.fromSolidityAddress(
+      governorTextProposalProxyId: await AddressHelper.addressToIdObject(
         result.getAddress(1)
       ),
-      governorUpgradeProxyId: ContractId.fromSolidityAddress(
+      governorUpgradeProxyId: await AddressHelper.addressToIdObject(
         result.getAddress(2)
       ),
-      governorTokenCreateProxyId: ContractId.fromSolidityAddress(
+      governorTokenCreateProxyId: await AddressHelper.addressToIdObject(
         result.getAddress(3)
       ),
     };

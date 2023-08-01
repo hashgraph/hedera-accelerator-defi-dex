@@ -7,33 +7,31 @@ import {
   TokenId,
 } from "@hashgraph/sdk";
 
+const accountId = clientsInfo.operatorId;
+const accountKey = clientsInfo.operatorKey;
+const accountClient = clientsInfo.operatorClient;
+
 async function main() {
-  const tokenDetail = await createNFTToken();
-  const arr = Array.from({ length: 20 }, (_, index) => index + 1);
-  for (let index = 0; index < arr.length; index++) {
-    await mintNFT(tokenDetail.tokenId);
-  }
-  return "executed successfully";
+  await createNFTToken("Lab49NFT", "Lab49NFT");
+  await createNFTToken("Lab49NFT-e2e", "Lab49NFT-e2e");
+  return "Executed successfully";
 }
 
-async function createNFTToken() {
-  const operatorId = clientsInfo.operatorId;
-  const operatorKey = clientsInfo.operatorKey;
-  const operatorClient = clientsInfo.operatorClient;
+async function createNFTToken(tokenName: string, tokenSymbol: string) {
   const tx = new TokenCreateTransaction()
-    .setTokenName("Lab49NFT")
-    .setTokenSymbol("Lab49NFT")
+    .setTokenName(tokenName)
+    .setTokenSymbol(tokenSymbol)
     .setTokenType(TokenType.NonFungibleUnique)
     .setDecimals(0)
     .setInitialSupply(0)
-    .setTreasuryAccountId(operatorId)
+    .setTreasuryAccountId(accountId)
     .setSupplyType(TokenSupplyType.Finite)
     .setMaxSupply(1000)
-    .setSupplyKey(operatorKey)
-    .freezeWith(operatorClient);
+    .setSupplyKey(accountKey)
+    .freezeWith(accountClient);
 
-  const txResponse = await tx.execute(operatorClient);
-  const txReceipt = await txResponse.getReceipt(operatorClient);
+  const txResponse = await tx.execute(accountClient);
+  const txReceipt = await txResponse.getReceipt(accountClient);
   const tokenId = txReceipt.tokenId!;
   const tokenAddressSol = tokenId.toSolidityAddress();
   const item = {
@@ -42,31 +40,22 @@ async function createNFTToken() {
   };
   console.log(`- NFT Token ID: ${item.tokenId}`);
   console.log(`- NFT Token ID in Solidity format: ${item.tokenAddressSol}`);
+  await mintNFT(tokenId);
+  await mintNFT(tokenId);
   return item;
 }
 
 async function mintNFT(tokenId: TokenId) {
   const CID = "ipfs://QmTzWcVfk88JRqjTpVwHzBeULRTNzHY7mnBSG42CpwHmPa";
-  const operatorClient = clientsInfo.operatorClient;
-  // Mint new NFT
-  const mintTx = await new TokenMintTransaction()
+  const CIDs = [...Array(10).keys()].map(() => Buffer.from(CID));
+  const txn = await new TokenMintTransaction()
     .setTokenId(tokenId)
-    .setMetadata([Buffer.from(CID)])
-    .freezeWith(operatorClient);
-
-  // Sign the transaction with the supply key
-  const mintTxSign = await mintTx.sign(clientsInfo.operatorKey);
-
-  // Submit the transaction to a Hedera network
-  const mintTxSubmit = await mintTxSign.execute(operatorClient);
-
-  // Get the transaction receipt
-  const mintRx = await mintTxSubmit.getReceipt(operatorClient);
-
-  // Log the serial number
-  console.log(
-    `- Created NFT ${tokenId} with serial: ${mintRx.serials[0].low} \n`
-  );
+    .setMetadata(CIDs)
+    .freezeWith(accountClient)
+    .sign(accountKey);
+  const txResponse = await txn.execute(accountClient);
+  const txReceipt = await txResponse.getReceipt(accountClient);
+  console.log(`- Created NFT ${tokenId} with serial: ${txReceipt.serials} \n`);
 }
 
 main()

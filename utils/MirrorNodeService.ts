@@ -194,4 +194,32 @@ export class MirrorNodeService {
     }
     return namedArguments;
   }
+
+  public async getTokensAccountBalance(
+    tokenId: string | TokenId
+  ): Promise<any> {
+    const tokensObject: any[] = [];
+    let url = `${BASE_URL}/api/v1/tokens/${tokenId.toString()}/balances?limit=100&order=asc&account.balance=gt%3A0`;
+    while ((url = await this.readRecords(url, tokensObject, "balances")));
+    this.isLogEnabled && console.log("- Records count:", tokensObject.length);
+    this.isLogEnabled && console.table(tokensObject);
+    return tokensObject;
+  }
+
+  public async getContractCreator(contractId: string) {
+    const info: any[] = [];
+    const url = `${BASE_URL}/api/v1/accounts/${contractId.toString()}?order=asc&transactiontype=CONTRACTCREATEINSTANCE`;
+    await this.readRecords(url, info);
+    const timeStamp = info.pop()!.created_timestamp;
+    const url1 = `${BASE_URL}/api/v1/contracts/${contractId.toString()}/results/${timeStamp}`;
+    await this.readRecords(url1, info);
+    return info.pop()!.from;
+  }
+
+  public async getContractInfo(idOrAddress: string): Promise<any> {
+    const info: any[] = [];
+    const url = `${BASE_URL}/api/v1/contracts/${idOrAddress}`;
+    await this.readRecords(url, info);
+    return info[0];
+  }
 }

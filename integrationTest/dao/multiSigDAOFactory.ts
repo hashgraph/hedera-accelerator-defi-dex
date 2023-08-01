@@ -1,18 +1,24 @@
 import MultiSigDao from "../../e2e-test/business/MultiSigDao";
+import MultiSigDAOFactory from "../../e2e-test/business/factories/MultiSigDAOFactory";
+import SystemRoleBasedAccess from "../../e2e-test/business/common/SystemRoleBasedAccess";
 
 import { Helper } from "../../utils/Helper";
-import { ContractId } from "@hashgraph/sdk";
+import { clientsInfo } from "../../utils/ClientManagement";
+import { AddressHelper } from "../../utils/AddressHelper";
 import {
   DAO_LOGO,
   DAO_NAME,
   DAO_DESC,
-  executeDAO,
+  executeDAOTextProposal,
+  executeBatchTransaction,
+  executeDAOUpgradeProposal,
+  executeDAOTokenTransferProposal,
   DAO_WEB_LINKS,
   DAO_OWNERS_ADDRESSES,
 } from "./multiSigDAO";
-import MultiSigDAOFactory from "../../e2e-test/business/factories/MultiSigDAOFactory";
 
 async function main() {
+  const roleBasedAccess = new SystemRoleBasedAccess();
   const daoFactory = new MultiSigDAOFactory();
   await daoFactory.initialize();
   await daoFactory.createDAO(
@@ -27,11 +33,16 @@ async function main() {
   const addresses = await daoFactory.getDAOs();
   if (addresses.length > 0) {
     const dao = addresses.pop()!;
-    const multiSigDAOId = ContractId.fromSolidityAddress(dao);
+    const multiSigDAOId = await AddressHelper.addressToIdObject(dao);
     const multiSigDAOInstance = new MultiSigDao(multiSigDAOId);
-    await executeDAO(multiSigDAOInstance);
+    await executeDAOTextProposal(multiSigDAOInstance);
+    await executeBatchTransaction(multiSigDAOInstance);
+    await executeDAOTokenTransferProposal(multiSigDAOInstance);
+    await executeDAOUpgradeProposal(multiSigDAOInstance);
   }
-  await daoFactory.upgradeHederaService();
+  const hasRole = await roleBasedAccess.checkIfChildProxyAdminRoleGiven();
+  hasRole &&
+    (await daoFactory.upgradeHederaService(clientsInfo.childProxyAdminClient));
 }
 
 main()

@@ -28,8 +28,6 @@ interface ISharedDAOModel {
     struct Common {
         IHederaService hederaService;
         ITokenHolder iTokenHolder;
-        address proxyAdmin;
-        address systemUser;
     }
 
     event GovernorLogicUpdated(
@@ -37,4 +35,15 @@ interface ISharedDAOModel {
         Governor newImplementation,
         string name
     );
+
+    struct MultiSigCreateDAOInputs {
+        address admin;
+        string name;
+        string logoUrl;
+        address[] owners;
+        uint256 threshold;
+        bool isPrivate;
+        string description;
+        string[] webLinks;
+    }
 }

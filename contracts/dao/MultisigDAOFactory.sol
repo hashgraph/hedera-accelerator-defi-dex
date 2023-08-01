@@ -1,6 +1,8 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.18;
 
+import "./ISharedDAOModel.sol";
+
 import "../common/IEvents.sol";
 import "../common/IErrors.sol";
 import "../common/IHederaService.sol";
@@ -11,62 +13,45 @@ import "../gnosis/HederaMultiSend.sol";
 import "../gnosis/HederaGnosisSafe.sol";
 import "../gnosis/HederaGnosisSafeProxyFactory.sol";
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-contract MultisigDAOFactory is IErrors, IEvents, OwnableUpgradeable {
+contract MultisigDAOFactory is
+    IErrors,
+    IEvents,
+    Initializable,
+    ISharedDAOModel
+{
     event DAOCreated(
         address daoAddress,
         address safeAddress,
         address multiSendAddress,
-        CreateDAOInputs inputs
+        MultiSigCreateDAOInputs inputs
     );
-
-    struct CreateDAOInputs {
-        address admin;
-        string name;
-        string logoUrl;
-        address[] owners;
-        uint256 threshold;
-        bool isPrivate;
-        string description;
-        string[] webLinks;
-    }
-
-    error NotAdmin(string message);
 
     bytes private constant NO_DATA = "";
     string private constant DaoLogic = "DaoLogic";
     string private constant SafeLogic = "SafeLogic";
     string private constant SafeFactory = "SafeFactory";
 
-    address private proxyAdmin;
-
     address private daoLogic;
     address private safeLogic;
     address private safeFactory;
     IHederaService private hederaService;
     HederaMultiSend private multiSend;
+    ISystemRoleBasedAccess private iSystemRoleManagment;
 
     address[] private daos;
 
-    modifier ifAdmin() {
-        if (msg.sender != proxyAdmin) {
-            revert NotAdmin("MultisigDAOFactory: auth failed");
-        }
-        _;
-    }
-
     function initialize(
-        address _proxyAdmin,
+        ISystemRoleBasedAccess _iSystemRoleBasedAccess,
         address _daoLogic,
         address _safeLogic,
         address _safeFactory,
         IHederaService _hederaService,
         HederaMultiSend _multiSend
     ) external initializer {
-        __Ownable_init();
-        proxyAdmin = _proxyAdmin;
+        iSystemRoleManagment = _iSystemRoleBasedAccess;
         daoLogic = _daoLogic;
         safeLogic = _safeLogic;
         safeFactory = _safeFactory;
@@ -77,27 +62,48 @@ contract MultisigDAOFactory is IErrors, IEvents, OwnableUpgradeable {
         emit LogicUpdated(address(0), safeFactory, SafeFactory);
     }
 
-    function upgradeSafeFactoryAddress(address _newImpl) external ifAdmin {
+    function upgradeSafeFactoryAddress(address _newImpl) external {
+        iSystemRoleManagment.checkChildProxyAdminRole(msg.sender);
         emit LogicUpdated(safeFactory, _newImpl, SafeFactory);
         safeFactory = _newImpl;
     }
 
-    function upgradeSafeLogicAddress(address _newImpl) external ifAdmin {
+    function upgradeSafeLogicAddress(address _newImpl) external {
+        iSystemRoleManagment.checkChildProxyAdminRole(msg.sender);
         emit LogicUpdated(safeLogic, _newImpl, SafeLogic);
         safeLogic = _newImpl;
     }
 
-    function upgradeDaoLogicAddress(address _newImpl) external ifAdmin {
+    function upgradeDaoLogicAddress(address _newImpl) external {
+        iSystemRoleManagment.checkChildProxyAdminRole(msg.sender);
         emit LogicUpdated(daoLogic, _newImpl, DaoLogic);
         daoLogic = _newImpl;
+    }
+
+    function upgradeHederaService(IHederaService newHederaService) external {
+        iSystemRoleManagment.checkChildProxyAdminRole(msg.sender);
+        hederaService = newHederaService;
+    }
+
+    function upgradeMultiSend(HederaMultiSend _multiSend) external {
+        iSystemRoleManagment.checkChildProxyAdminRole(msg.sender);
+        multiSend = _multiSend;
     }
 
     function getDAOs() external view returns (address[] memory) {
         return daos;
     }
 
+    function getHederaServiceVersion() external view returns (IHederaService) {
+        return hederaService;
+    }
+
+    function getMultiSendContractAddress() external view returns (address) {
+        return address(multiSend);
+    }
+
     function createDAO(
-        CreateDAOInputs memory _createDAOInputs
+        MultiSigCreateDAOInputs memory _createDAOInputs
     ) external returns (address) {
         HederaGnosisSafe hederaGnosisSafe = _createGnosisSafeProxyInstance(
             _createDAOInputs.owners,
@@ -123,32 +129,6 @@ contract MultisigDAOFactory is IErrors, IEvents, OwnableUpgradeable {
         return createdDAOAddress;
     }
 
-    function upgradeHederaService(
-        IHederaService newHederaService
-    ) external onlyOwner {
-        hederaService = newHederaService;
-        for (uint i = 0; i < daos.length; i++) {
-            MultiSigDAO dao = MultiSigDAO(daos[i]);
-            dao.upgradeHederaService(newHederaService);
-        }
-    }
-
-    function upgradeMultiSend(HederaMultiSend _multiSend) external onlyOwner {
-        multiSend = _multiSend;
-        for (uint i = 0; i < daos.length; i++) {
-            MultiSigDAO dao = MultiSigDAO(daos[i]);
-            dao.upgradeMultiSend(multiSend);
-        }
-    }
-
-    function getHederaServiceVersion() external view returns (IHederaService) {
-        return hederaService;
-    }
-
-    function getMultiSendContractAddress() external view returns (address) {
-        return address(multiSend);
-    }
-
     function _createMultiSigDAOInstance(
         address _admin,
         string memory _name,
@@ -157,6 +137,7 @@ contract MultisigDAOFactory is IErrors, IEvents, OwnableUpgradeable {
         string[] memory _webLinks,
         HederaGnosisSafe hederaGnosisSafe
     ) private returns (address) {
+        address proxyAdmin = iSystemRoleManagment.getSystemUsers().proxyAdmin;
         TransparentUpgradeableProxy upgradeableProxy = new TransparentUpgradeableProxy(
                 daoLogic,
                 proxyAdmin,
@@ -171,7 +152,8 @@ contract MultisigDAOFactory is IErrors, IEvents, OwnableUpgradeable {
             _webLinks,
             hederaGnosisSafe,
             hederaService,
-            multiSend
+            multiSend,
+            iSystemRoleManagment
         );
         return address(_mSigDAO);
     }

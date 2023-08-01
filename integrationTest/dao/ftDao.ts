@@ -20,6 +20,7 @@ import TextGovernor from "../../e2e-test/business/TextGovernor";
 import ContractUpgradeGovernor from "../../e2e-test/business/ContractUpgradeGovernor";
 import FTTokenHolderFactory from "../../e2e-test/business/factories/FTTokenHolderFactory";
 import TokenCreateGovernor from "../../e2e-test/business/TokenCreateGovernor";
+import SystemRoleBasedAccess from "../../e2e-test/business/common/SystemRoleBasedAccess";
 
 const TOKEN_QTY = 1 * 1e8;
 const TOKEN_ID = TokenId.fromString(dex.TOKEN_LAB49_1);
@@ -30,7 +31,6 @@ const DAO_WEB_LINKS = ["https://linkedin.com"];
 const PROPOSAL_CREATE_NFT_SERIAL_ID = 1;
 
 const deployment = new Deployment();
-const csDev = new ContractService();
 
 export async function executeGovernorTokenTransferFlow(
   godHolder: GodHolder,
@@ -325,6 +325,7 @@ export async function executeTokenCreateFlow(
 }
 
 async function main() {
+  const roleBasedAccess = new SystemRoleBasedAccess();
   const newCopies = await deployment.deployProxies([ContractService.FT_DAO]);
 
   const ftDaoDeployed = newCopies.get(ContractService.FT_DAO);
@@ -373,7 +374,9 @@ async function main() {
   );
 
   await ftDao.getTokenTransferProposals();
-  await ftDao.upgradeHederaService();
+  const hasRole = await roleBasedAccess.checkIfChildProxyAdminRoleGiven();
+  hasRole &&
+    (await ftDao.upgradeHederaService(clientsInfo.childProxyAdminClient));
   console.log(`\nDone`);
 }
 

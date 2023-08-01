@@ -1,31 +1,20 @@
-import Governor from "../../e2e-test/business/Governor";
-import GodHolder from "../../e2e-test/business/GodHolder";
-import { ContractService } from "../../deployment/service/ContractService";
-import { given, binding, when, then } from "cucumber-tsflow/dist";
-import { clientsInfo } from "../../utils/ClientManagement";
-import { expect } from "chai";
-import Common from "../business/Common";
 import dex from "../../deployment/model/dex";
-import { TokenId, ContractId, AccountId } from "@hashgraph/sdk";
-import { BigNumber } from "bignumber.js";
-import { Helper } from "../../utils/Helper";
-import { CommonSteps } from "./CommonSteps";
+import GodHolder from "../../e2e-test/business/GodHolder";
 import TextGovernor from "../business/TextGovernor";
 
-const csDev = new ContractService();
-const godHolderContract = csDev.getContractWithProxy(csDev.godHolderContract);
-const governorTextContract = csDev.getContractWithProxy(
-  csDev.governorTextContractName
-);
-const governorContractId = governorTextContract.transparentProxyId!;
-const godHolderContractId = godHolderContract.transparentProxyId!;
-const governor = new TextGovernor(ContractId.fromString(governorContractId));
-const godHolder = new GodHolder(ContractId.fromString(godHolderContractId));
-const tokenGOD = dex.GOD_TOKEN_ID;
+import { expect } from "chai";
+import { clientsInfo } from "../../utils/ClientManagement";
+import { CommonSteps } from "./CommonSteps";
+import { given, binding, when, then } from "cucumber-tsflow/dist";
+import { TokenId, ContractId, AccountId } from "@hashgraph/sdk";
+
+const TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
+
+let godHolder: GodHolder;
+let governor: TextGovernor;
 
 let errorMsg: string = "";
 let proposalId: string;
-let godToken: BigNumber;
 
 @binding()
 export class GovernorTextProposal extends CommonSteps {
@@ -38,15 +27,18 @@ export class GovernorTextProposal extends CommonSteps {
     console.log(
       "*******************Starting governor contract text proposal test with following credentials*******************"
     );
-    console.log("governorContractId :", governorContractId);
-    console.log("godHolderContractId :", godHolderContractId);
-    console.log("operatorId :", clientsInfo.operatorId.toString());
+    godHolder = new GodHolder();
+    governor = new TextGovernor();
+    console.log("TextGovernor ID:", governor.contractId);
+    console.log("GodHolder ID :", godHolder.contractId);
+    console.log("Token ID :", TOKEN_ID.toSolidityAddress());
+    console.log("Operator Account ID :", clientsInfo.operatorId.toString());
     await this.initializeGovernorContract(
       governor,
       godHolder,
       clientsInfo.operatorClient,
-      TokenId.fromString(dex.GOD_TOKEN_ID),
-      TokenId.fromString(dex.GOD_TOKEN_ID)
+      TOKEN_ID,
+      TOKEN_ID
     );
   }
 
@@ -113,29 +105,6 @@ export class GovernorTextProposal extends CommonSteps {
     errorMsg = "";
   }
 
-  @when(/User fetches GOD token balance/, undefined, 30000)
-  public async fetchGODTokenBalance() {
-    godToken = await Common.fetchTokenBalanceFromMirrorNode(
-      clientsInfo.operatorId.toString(),
-      tokenGOD
-    );
-  }
-
-  @then(/User verify GOD tokens are returned to user/, undefined, 30000)
-  public async verifyGODTokensAreReturned() {
-    await Helper.delay(10000);
-    const updatedGODToken = await Common.fetchTokenBalanceFromMirrorNode(
-      clientsInfo.operatorId.toString(),
-      tokenGOD
-    );
-    console.log(
-      `GovernorTextProposal#verifyGODTokensAreReturned: Actual = ${Number(
-        updatedGODToken
-      )}, Expected = ${Number(godToken)}`
-    );
-    expect(Number(updatedGODToken)).to.be.greaterThan(Number(godToken));
-  }
-
   @when(
     /User lock (\d+\.?\d*) GOD token before voting to text proposal/,
     undefined,
@@ -151,14 +120,18 @@ export class GovernorTextProposal extends CommonSteps {
     );
   }
 
-  @when(/User fetch GOD token back from GOD holder/, undefined, 30000)
+  @when(
+    /User fetch GOD tokens back from GOD holder for GovernorText/,
+    undefined,
+    30000
+  )
   public async revertGOD() {
     await this.revertTokens(
-      ContractId.fromString(godHolderContractId),
+      ContractId.fromString(godHolder.contractId),
       clientsInfo.operatorId,
-      AccountId.fromString(godHolderContractId),
+      AccountId.fromString(godHolder.contractId),
       clientsInfo.operatorKey,
-      TokenId.fromString(dex.GOD_TOKEN_ID),
+      TOKEN_ID,
       clientsInfo.operatorClient
     );
   }

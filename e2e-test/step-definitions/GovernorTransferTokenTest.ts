@@ -35,7 +35,7 @@ const godHolder = new GodHolder(ContractId.fromString(godHolderProxyId));
 
 let proposalId: string;
 let msg: string;
-let balance: Long;
+let balance: BigNumber;
 let tokens: BigNumber;
 
 const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
@@ -211,7 +211,6 @@ export class GovernorSteps extends CommonSteps {
     30000
   )
   public async verifyTokenBalance() {
-    await Helper.delay(15000);
     const updatedBalance = await Common.getTokenBalance(
       clientsInfo.treasureId,
       TRANSFER_TOKEN_ID,
@@ -259,7 +258,11 @@ export class GovernorSteps extends CommonSteps {
     );
   }
 
-  @when(/User fetches GOD token back from GOD holder/, undefined, 30000)
+  @when(
+    /User fetches GOD token back from GOD holder for GovernorTransferToken/,
+    undefined,
+    30000
+  )
   public async revertGOD() {
     await this.revertTokens(
       ContractId.fromString(godHolderProxyId),

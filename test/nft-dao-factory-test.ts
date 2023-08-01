@@ -63,12 +63,12 @@ describe("NFTDAOFactory contract tests", function () {
       governorTokenCreate.address,
     ];
 
-    const common = [
-      bastHTS.address,
-      godHolder.address,
-      signers[4].address,
-      signers[5].address,
-    ];
+    const common = [bastHTS.address, godHolder.address];
+
+    const systemUsersSigners = await TestHelper.systemUsersSigners();
+    const systemRoleBasedAccess = (
+      await TestHelper.deploySystemRoleBasedAccess()
+    ).address;
 
     const nftTokenDAO = await TestHelper.deployLogic("FTDAO");
 
@@ -86,7 +86,7 @@ describe("NFTDAOFactory contract tests", function () {
 
     const governorDAOFactoryInstance = await TestHelper.deployProxy(
       "NFTDAOFactory",
-      dexOwner.address,
+      systemRoleBasedAccess,
       bastHTS.address,
       nftTokenDAO.address,
       nftHolderFactory.address,
@@ -107,23 +107,24 @@ describe("NFTDAOFactory contract tests", function () {
       inputs,
       governance,
       common,
+      systemRoleBasedAccess,
+      systemUsersSigners,
     };
   }
 
   it("Verify NFTDAOFactory contract revert for multiple initialization", async function () {
     const {
       governorDAOFactoryInstance,
-      dexOwner,
       bastHTS,
       nftTokenDAO,
       nftHolderFactory,
-      governorTransferToken,
       governance,
+      systemRoleBasedAccess,
     } = await loadFixture(deployFixture);
 
     await expect(
       governorDAOFactoryInstance.initialize(
-        dexOwner.address,
+        systemRoleBasedAccess,
         bastHTS.address,
         nftTokenDAO.address,
         nftHolderFactory.address,
@@ -275,40 +276,29 @@ describe("NFTDAOFactory contract tests", function () {
   });
 
   it("Verify upgrade logic call should be reverted for non dex owner", async function () {
-    const { governorDAOFactoryInstance, daoAdminOne, daoAdminTwo, governance } =
-      await loadFixture(deployFixture);
+    const { governorDAOFactoryInstance, governance } = await loadFixture(
+      deployFixture
+    );
 
     await expect(
-      governorDAOFactoryInstance
-        .connect(daoAdminOne)
-        .upgradeFTDAOLogicImplementation(zeroAddress)
-    )
-      .revertedWithCustomError(governorDAOFactoryInstance, "NotAdmin")
-      .withArgs("DAOFactory: auth failed");
+      governorDAOFactoryInstance.upgradeFTDAOLogicImplementation(zeroAddress)
+    ).reverted;
 
     await expect(
-      governorDAOFactoryInstance
-        .connect(daoAdminTwo)
-        .upgradeGovernorsImplementation(governance)
-    )
-      .revertedWithCustomError(governorDAOFactoryInstance, "NotAdmin")
-      .withArgs("DAOFactory: auth failed");
+      governorDAOFactoryInstance.upgradeGovernorsImplementation(governance)
+    ).reverted;
 
     await expect(
-      governorDAOFactoryInstance
-        .connect(daoAdminTwo)
-        .upgradeTokenHolderFactory(zeroAddress)
-    )
-      .revertedWithCustomError(governorDAOFactoryInstance, "NotAdmin")
-      .withArgs("DAOFactory: auth failed");
+      governorDAOFactoryInstance.upgradeTokenHolderFactory(zeroAddress)
+    ).reverted;
   });
 
   it("Verify upgrade logic call should be proceeded for dex owner", async function () {
-    const { governorDAOFactoryInstance, dexOwner, governance } =
+    const { governorDAOFactoryInstance, governance, systemUsersSigners } =
       await loadFixture(deployFixture);
 
     const txn1 = await governorDAOFactoryInstance
-      .connect(dexOwner)
+      .connect(systemUsersSigners.childProxyAdmin)
       .upgradeFTDAOLogicImplementation(oneAddress);
 
     const event1 = (await txn1.wait()).events.pop();
@@ -317,7 +307,7 @@ describe("NFTDAOFactory contract tests", function () {
     expect(event1.args.newImplementation).equal(oneAddress);
 
     const txn2 = await governorDAOFactoryInstance
-      .connect(dexOwner)
+      .connect(systemUsersSigners.childProxyAdmin)
       .upgradeGovernorsImplementation(governance);
 
     const event2 = (await txn2.wait()).events.pop();
@@ -333,7 +323,7 @@ describe("NFTDAOFactory contract tests", function () {
     expect(event2.args.newImplementation.createTokenLogic).equal(governance[3]);
 
     const txn3 = await governorDAOFactoryInstance
-      .connect(dexOwner)
+      .connect(systemUsersSigners.childProxyAdmin)
       .upgradeTokenHolderFactory(oneAddress);
 
     const event3 = (await txn3.wait()).events.pop();
@@ -342,48 +332,32 @@ describe("NFTDAOFactory contract tests", function () {
     expect(event3.args.newImplementation).equal(oneAddress);
   });
 
-  it("Verify getNFTTokenHolderFactoryAddress guard check ", async function () {
-    const {
-      governorDAOFactoryInstance,
-      daoAdminOne,
-      nftHolderFactory,
-      dexOwner,
-    } = await loadFixture(deployFixture);
-
-    await expect(
-      governorDAOFactoryInstance
-        .connect(daoAdminOne)
-        .getTokenHolderFactoryAddress()
-    )
-      .revertedWithCustomError(governorDAOFactoryInstance, "NotAdmin")
-      .withArgs("DAOFactory: auth failed");
-
-    const address = await governorDAOFactoryInstance
-      .connect(dexOwner)
-      .getTokenHolderFactoryAddress();
-
-    expect(address).equals(nftHolderFactory.address);
+  it("Verify getTokenHolderFactoryAddress return correct address", async function () {
+    const { governorDAOFactoryInstance, nftHolderFactory } = await loadFixture(
+      deployFixture
+    );
+    expect(
+      await governorDAOFactoryInstance.getTokenHolderFactoryAddress()
+    ).equals(nftHolderFactory.address);
   });
 
   it("Verify upgradeHederaService should fail when non-owner try to upgrade Hedera service", async function () {
     const { governorDAOFactoryInstance, signers } = await loadFixture(
       deployFixture
     );
-    const nonOwner = signers[3];
     await expect(
-      governorDAOFactoryInstance
-        .connect(nonOwner)
-        .upgradeHederaService(signers[3].address)
-    ).revertedWith("Ownable: caller is not the owner");
+      governorDAOFactoryInstance.upgradeHederaService(signers[3].address)
+    ).reverted;
   });
 
   it("Verify upgrade Hedera service should pass when owner try to upgrade it", async function () {
-    const { governorDAOFactoryInstance, signers } = await loadFixture(
-      deployFixture
-    );
+    const { governorDAOFactoryInstance, signers, systemUsersSigners } =
+      await loadFixture(deployFixture);
 
     await expect(
-      governorDAOFactoryInstance.upgradeHederaService(signers[3].address)
-    ).not.revertedWith("Ownable: caller is not the owner");
+      governorDAOFactoryInstance
+        .connect(systemUsersSigners.childProxyAdmin)
+        .upgradeHederaService(signers[3].address)
+    ).not.reverted;
   });
 });

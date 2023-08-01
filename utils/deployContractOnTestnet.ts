@@ -132,6 +132,7 @@ export class Deployment {
     console.log(`- Deployment#deploy(): ${contractName} logic deploying...\n`);
     const result = await this._deployInternally(
       contractName,
+      "",
       adminKey,
       client,
       params
@@ -175,7 +176,12 @@ export class Deployment {
     console.log(
       `- Deployment#deployProxy(): ${contractName} proxy deploying...\n`
     );
-    const logic = await this._deployInternally(contractName, adminKey, client);
+    const logic = await this._deployInternally(
+      contractName,
+      "",
+      adminKey,
+      client
+    );
     const proxy = await this.deployProxyForGivenLogic(logic, adminKey, client);
     console.log(`- Deployment#deployProxy(): done`);
     console.table(proxy);
@@ -214,6 +220,7 @@ export class Deployment {
   ) => {
     const proxy = await this._deployInternally(
       "TransparentUpgradeableProxy",
+      logic.name,
       adminKey,
       client,
       new ContractFunctionParameters()
@@ -231,14 +238,20 @@ export class Deployment {
 
   private _deployInternally = async (
     contractName: string,
+    additionalInfo: string,
     adminKey: Key = clientsInfo.operatorKey.publicKey,
     client: Client = clientsInfo.operatorClient,
     params: ContractFunctionParameters = new ContractFunctionParameters()
   ) => {
+    let contractMemo = contractName;
+    if (additionalInfo.length > 0) {
+      contractMemo += ` (${additionalInfo})`;
+    }
     const info = await this.contractMetadata.getContractInfo(contractName);
     const txn = new ContractCreateFlow()
       .setConstructorParameters(params)
       .setBytecode(info.artifact.bytecode)
+      .setContractMemo(contractMemo)
       .setGas(2_000_000)
       .setAdminKey(adminKey);
 
