@@ -219,7 +219,7 @@ export class CommonSteps {
   }
 
   public async revertNFTs(
-    fromAccountId: ContractId | AccountId,
+    fromEvmAddress: string,
     fromAccountKey: PrivateKey,
     toAccountId: string | AccountId,
     tokenId: TokenId,
@@ -229,7 +229,7 @@ export class CommonSteps {
     await Common.transferNFTToken(
       tokenId,
       tokenSerialNumber,
-      fromAccountId,
+      fromEvmAddress,
       fromAccountKey,
       toAccountId,
       client

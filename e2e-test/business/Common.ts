@@ -22,6 +22,7 @@ import {
 } from "@hashgraph/sdk";
 import { BigNumber } from "bignumber.js";
 import { clientsInfo } from "../../utils/ClientManagement";
+import { AddressHelper } from "../../utils/AddressHelper";
 import Token from "./Token";
 
 export default class Common extends Base {
@@ -242,7 +243,11 @@ export default class Common extends Base {
     console.log(
       `- Common#getTokenInfo(): TokenId = ${tokenId}, name = ${response.name}, symbol = ${response.symbol},  totalSupply= ${response.totalSupply}\n`
     );
-    return { name: response.name, symbol: response.symbol };
+    return {
+      name: response.name,
+      symbol: response.symbol,
+      treasuryAccountId: response.treasuryAccountId?.toString(),
+    };
   };
 
   static transferTokens = async (
@@ -288,25 +293,20 @@ export default class Common extends Base {
   static transferNFTToken = async (
     tokenId: TokenId,
     serialNo: number,
-    fromAccountId: AccountId | ContractId,
+    fromEvmAddress: string,
     fromAccountPrivateKey: PrivateKey,
     toAccountId: string | AccountId,
     client: Client
   ) => {
     const balance = await Common.getTokenBalance(
-      fromAccountId,
+      fromEvmAddress,
       tokenId,
       client
     );
-
+    const fromAccountId = await AddressHelper.addressToId(fromEvmAddress);
     if (balance.toNumber() > 0) {
       const txn = await new TransferTransaction()
-        .addNftTransfer(
-          tokenId,
-          serialNo,
-          AccountId.fromString(fromAccountId.toString()),
-          toAccountId
-        )
+        .addNftTransfer(tokenId, serialNo, fromAccountId, toAccountId)
         .freezeWith(client)
         .sign(fromAccountPrivateKey);
       const txnResult = await txn.execute(client);
@@ -314,8 +314,7 @@ export default class Common extends Base {
       console.log(
         ` - Common#transferNFTToken(): status = ${
           txnReceipt.status
-        }, tokenId = ${tokenId.toString()},serialNo = ${serialNo},fromAccountId = ${fromAccountId.toString()}, 
-     toAccountId = ${toAccountId.toString()} \n`
+        }, tokenId = ${tokenId.toString()}, serialNo = ${serialNo}, fromAccountId = ${fromAccountId}, toAccountId = ${toAccountId.toString()} \n`
       );
     }
   };
