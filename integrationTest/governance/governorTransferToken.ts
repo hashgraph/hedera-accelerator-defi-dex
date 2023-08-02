@@ -106,7 +106,7 @@ const fungibleTokenFlow = async () => {
   );
 
   // unlock required tokens from token holder
-  await godHolder.checkAndClaimGodTokens(txnFeePayerClient, voterAccountId);
+  await godHolder.checkAndClaimGodTokens(voterClient, voterAccountId);
   await governor.upgradeHederaService();
 };
 
