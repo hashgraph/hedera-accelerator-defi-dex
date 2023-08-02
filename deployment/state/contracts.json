@@ -159,12 +159,12 @@
   },
   {
     "name": "governortransfertoken",
-    "id": "0.0.88534",
-    "hash": "73a1d07306079fb37ed3f23922621f1d",
-    "address": "0x00000000000000000000000000000000000159d6",
-    "timestamp": "2023-07-28T06:14:48.312Z",
-    "transparentProxyId": "0.0.88559",
-    "transparentProxyAddress": "0x00000000000000000000000000000000000159ef"
+    "id": "0.0.443567",
+    "hash": "23080b74d1b2fc43c999c4c65a6ece16",
+    "address": "0x000000000000000000000000000000000006c4af",
+    "timestamp": "2023-08-02T12:58:54.040Z",
+    "transparentProxyId": "0.0.443569",
+    "transparentProxyAddress": "0x000000000000000000000000000000000006c4b1"
   },
   {
     "name": "governorupgrade",

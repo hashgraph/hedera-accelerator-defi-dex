@@ -68,14 +68,15 @@ const fungibleTokenFlow = async () => {
 
   // tokens locking required in token holder if not enough power locked
   if (votingPowerAmount < quorum) {
+    const lockAmount = quorum - votingPowerAmount;
     await godHolder.setupAllowanceForTokenLocking(
-      quorum,
+      lockAmount,
       voterAccountId,
       voterAccountKey,
       txnFeePayerClient
     );
     await godHolder.lock(
-      quorum,
+      lockAmount,
       voterAccountId,
       voterAccountKey,
       txnFeePayerClient

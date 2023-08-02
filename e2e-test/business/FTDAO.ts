@@ -23,6 +23,7 @@ const CREATE_TOKEN_CREATE_PROPOSAL = "createTokenCreateProposal";
 const GET_TOKEN_TRANSFER_PROPOSALS = "getTokenTransferProposals";
 const GET_GOVERNOR_TOKEN_TRANSFER_CONTRACT_ADDRESSES =
   "getGovernorContractAddresses";
+const CREATE_TOKEN_ASSOCIATE_PROPOSAL = "createTokenAssociateProposal";
 
 export const DEFAULT_DESCRIPTION = "description";
 export const DEFAULT_LINK = "https://defi-ui.hedera.com/governance";
@@ -49,60 +50,63 @@ export default class FTDAO extends BaseDao {
     holderTokenId: TokenId = GOD_TOKEN_ID
   ) {
     await tokenHolder.initialize(client, holderTokenId.toSolidityAddress());
-    const godHolderProxyAddress = await AddressHelper.idToEvmAddress(
-      tokenHolder.contractId
-    );
+    if (await this.isInitializationPending()) {
+      const godHolderProxyAddress = await AddressHelper.idToEvmAddress(
+        tokenHolder.contractId
+      );
+      const contractService = new ContractService();
+      const data = {
+        inputs: Object.values({
+          admin,
+          name,
+          url,
+          tokenAddress: tokenId.toSolidityAddress(),
+          quorumThreshold: defaultQuorumThresholdValue,
+          votingDelay,
+          votingPeriod,
+          isPrivate: false,
+          description: desc,
+          webLinks,
+        }),
+        governor: Object.values({
+          tokenTransferLogic: contractService.getContract(
+            ContractService.GOVERNOR_TT
+          ).address,
+          textLogic: contractService.getContract(ContractService.GOVERNOR_TEXT)
+            .address,
+          contractUpgradeLogic: contractService.getContract(
+            ContractService.GOVERNOR_UPGRADE
+          ).address,
+          createTokenLogic: contractService.getContract(
+            ContractService.GOVERNOR_TOKEN_CREATE
+          ).address,
+        }),
+        common: Object.values({
+          hederaService: this.htsAddress,
+          iTokenHolder: godHolderProxyAddress,
+        }),
+        _iSystemRoleBasedAccess: this.getSystemBasedRoleAccessContractAddress(),
+      };
 
-    const contractService = new ContractService();
-    const data = {
-      inputs: Object.values({
-        admin,
-        name,
-        url,
-        tokenAddress: tokenId.toSolidityAddress(),
-        quorumThreshold: defaultQuorumThresholdValue,
-        votingDelay,
-        votingPeriod,
-        isPrivate: false,
-        description: desc,
-        webLinks,
-      }),
-      governor: Object.values({
-        tokenTransferLogic: contractService.getContract(
-          ContractService.GOVERNOR_TT
-        ).address,
-        textLogic: contractService.getContract(ContractService.GOVERNOR_TEXT)
-          .address,
-        contractUpgradeLogic: contractService.getContract(
-          ContractService.GOVERNOR_UPGRADE
-        ).address,
-        createTokenLogic: contractService.getContract(
-          ContractService.GOVERNOR_TOKEN_CREATE
-        ).address,
-      }),
-      common: Object.values({
-        hederaService: this.htsAddress,
-        iTokenHolder: godHolderProxyAddress,
-      }),
-      _iSystemRoleBasedAccess: this.getSystemBasedRoleAccessContractAddress(),
-    };
+      const { hex, bytes } = await this.encodeFunctionData(
+        ContractService.FT_DAO,
+        INITIALIZE,
+        Object.values(data)
+      );
 
-    const { hex, bytes } = await this.encodeFunctionData(
-      ContractService.FT_DAO,
-      INITIALIZE,
-      Object.values(data)
-    );
+      const { receipt } = await this.execute(
+        70_00_000,
+        INITIALIZE,
+        client,
+        bytes
+      );
 
-    const { receipt } = await this.execute(
-      70_00_000,
-      INITIALIZE,
-      client,
-      bytes
-    );
-
-    console.log(
-      `- FTDAO#${INITIALIZE}(): hex-data = ${hex}, status = ${receipt.status} \n`
-    );
+      console.log(
+        `- FTDAO#${INITIALIZE}(): hex-data = ${hex}, status = ${receipt.status}\n`
+      );
+      return;
+    }
+    console.log(`- FTDAO#${INITIALIZE}(): already done\n`);
   }
 
   protected getContractName() {
@@ -111,7 +115,6 @@ export default class FTDAO extends BaseDao {
 
   createTokenTransferProposal = async (
     title: string,
-    fromAddress: string,
     toAddress: string,
     tokenId: string,
     tokenAmount: number,
@@ -124,7 +127,6 @@ export default class FTDAO extends BaseDao {
       .addString(title)
       .addString(description)
       .addString(link)
-      .addAddress(fromAddress) // from
       .addAddress(toAddress) // to
       .addAddress(tokenId) // tokenToTransfer
       .addUint256(BigNumber(tokenAmount)) // amountToTransfer
@@ -139,6 +141,33 @@ export default class FTDAO extends BaseDao {
     );
     const proposalId = result.getUint256(0).toFixed();
     console.log(`- FTDAO#${CREATE_PROPOSAL}(): proposal-id = ${proposalId}\n`);
+    return proposalId;
+  };
+
+  public createTokenAssociateProposal = async (
+    title: string,
+    tokenAddress: string,
+    client: Client = clientsInfo.operatorClient,
+    description: string = DEFAULT_DESCRIPTION,
+    link: string = DEFAULT_LINK,
+    nftTokenSerialId: number = DEFAULT_NFT_TOKEN_SERIAL_ID
+  ) => {
+    const args = new ContractFunctionParameters()
+      .addString(title)
+      .addString(description)
+      .addString(link)
+      .addAddress(tokenAddress)
+      .addUint256(nftTokenSerialId);
+    const { result } = await this.execute(
+      1_000_000,
+      CREATE_TOKEN_ASSOCIATE_PROPOSAL,
+      client,
+      args
+    );
+    const proposalId = result.getUint256(0).toFixed();
+    console.log(
+      `- FTDAO#${CREATE_TOKEN_ASSOCIATE_PROPOSAL}(): proposal-id = ${proposalId}\n`
+    );
     return proposalId;
   };
 
