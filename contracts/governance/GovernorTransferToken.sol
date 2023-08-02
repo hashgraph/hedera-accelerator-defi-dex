@@ -9,45 +9,61 @@ contract GovernorTransferToken is
     IGovernorTransferToken,
     GovernorCountingSimpleInternal
 {
-    struct TokenTransferData {
-        address transferFromAccount;
-        address transferToAccount;
-        address tokenToTransfer;
-        uint256 transferTokenAmount;
-    }
-    mapping(uint256 => TokenTransferData) _proposalData;
+    uint256 private constant TXN_TYPE_TRANSFER = 1;
+    uint256 private constant TXN_TYPE_TOKEN_ASSOCIATE = 2;
 
-    function createProposal(
-        string memory title,
-        string memory description,
-        string memory linkToDiscussion,
-        address _transferFromAccount,
-        address _transferToAccount,
-        address _tokenToTransfer,
-        uint256 _transferTokenAmount,
-        address creator,
-        uint256 nftTokenSerialId
+    mapping(uint256 => bytes) proposalsData;
+
+    function createTokenAssociateProposal(
+        string memory _title,
+        string memory _description,
+        string memory _linkToDiscussion,
+        address _token,
+        address _creator,
+        uint256 _nftTokenSerialId
     ) external returns (uint256) {
-        if (_transferTokenAmount <= 0) {
-            revert InvalidInput(
-                "GovernorTransferToken: Token transfer amount must be a positive number"
-            );
-        }
-        TokenTransferData memory tokenTransferData = TokenTransferData(
-            _transferFromAccount,
-            _transferToAccount,
-            _tokenToTransfer,
-            _transferTokenAmount
+        bytes memory data = abi.encode(
+            TXN_TYPE_TOKEN_ASSOCIATE, // operationType
+            _token // token
         );
         uint256 proposalId = _createProposal(
-            title,
-            description,
-            linkToDiscussion,
-            creator,
-            abi.encode(tokenTransferData),
-            nftTokenSerialId
+            _title,
+            _description,
+            _linkToDiscussion,
+            _creator,
+            data,
+            _nftTokenSerialId
         );
-        _proposalData[proposalId] = tokenTransferData;
+        proposalsData[proposalId] = data;
+        return proposalId;
+    }
+
+    function createProposal(
+        string memory _title,
+        string memory _description,
+        string memory _linkToDiscussion,
+        address _to,
+        address _token,
+        uint256 _amount,
+        address _creator,
+        uint256 _nftTokenSerialId
+    ) external returns (uint256) {
+        require(_amount > 0, "GTT: required positive number");
+        bytes memory data = abi.encode(
+            TXN_TYPE_TRANSFER, // operationType
+            _to, // toAddress
+            _token, // token
+            _amount // amount
+        );
+        uint256 proposalId = _createProposal(
+            _title,
+            _description,
+            _linkToDiscussion,
+            _creator,
+            data,
+            _nftTokenSerialId
+        );
+        proposalsData[proposalId] = data;
         return proposalId;
     }
 
@@ -80,25 +96,33 @@ contract GovernorTransferToken is
         bytes[] memory calldatas,
         bytes32 description
     ) internal virtual override {
-        transferToken(proposalId);
+        _executeOperation(proposalId);
         super._execute(proposalId, targets, values, calldatas, description);
     }
 
-    function transferToken(uint256 proposalId) internal {
-        TokenTransferData storage tokenTransferData = _proposalData[proposalId];
-        _associateToken(
-            hederaService,
-            tokenTransferData.transferToAccount,
-            tokenTransferData.tokenToTransfer
-        );
-        int responseCode = _transferToken(
-            tokenTransferData.tokenToTransfer,
-            tokenTransferData.transferFromAccount,
-            tokenTransferData.transferToAccount,
-            tokenTransferData.transferTokenAmount
-        );
-        if (responseCode != HederaResponseCodes.SUCCESS) {
-            revert("GovernorTransferToken: transfer token failed.");
+    function _executeOperation(uint256 proposalId) private {
+        bytes memory data = proposalsData[proposalId];
+        uint256 operationType = abi.decode(data, (uint256));
+        if (operationType == TXN_TYPE_TOKEN_ASSOCIATE) {
+            _associate(data);
+        } else if (operationType == TXN_TYPE_TRANSFER) {
+            _transfer(data);
+        } else {
+            revert("GTT: unknown operation");
         }
+    }
+
+    function _associate(bytes memory _data) private {
+        (, address token) = abi.decode(_data, (uint256, address));
+        _associateTokenInternally(token);
+    }
+
+    function _transfer(bytes memory _data) private {
+        (, address to, address token, uint256 amount) = abi.decode(
+            _data,
+            (uint256, address, address, uint256)
+        );
+        int256 code = _transferToken(token, address(this), to, amount);
+        require(code == HederaResponseCodes.SUCCESS, "GTT: transfer failed");
     }
 }
