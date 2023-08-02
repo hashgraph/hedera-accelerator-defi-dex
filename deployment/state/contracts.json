@@ -24,12 +24,12 @@
   },
   {
     "name": "nfttokenholderfactory",
-    "id": "0.0.88461",
+    "id": "0.0.443081",
     "hash": "47838b5723ff5cf1e9e43eba9b3c35d6",
-    "address": "0x000000000000000000000000000000000001598d",
-    "timestamp": "2023-07-28T06:14:28.340Z",
-    "transparentProxyId": "0.0.88496",
-    "transparentProxyAddress": "0x00000000000000000000000000000000000159b0"
+    "address": "0x000000000000000000000000000000000006c2c9",
+    "timestamp": "2023-08-02T11:21:29.106Z",
+    "transparentProxyId": "0.0.443083",
+    "transparentProxyAddress": "0x000000000000000000000000000000000006c2cb"
   },
   {
     "name": "lptoken",
@@ -42,12 +42,12 @@
   },
   {
     "name": "godtokenholderfactory",
-    "id": "0.0.88453",
+    "id": "0.0.443085",
     "hash": "4e104460ea61756db76aff40b13f981b",
-    "address": "0x0000000000000000000000000000000000015985",
-    "timestamp": "2023-07-28T06:14:31.529Z",
-    "transparentProxyId": "0.0.88515",
-    "transparentProxyAddress": "0x00000000000000000000000000000000000159c3"
+    "address": "0x000000000000000000000000000000000006c2cd",
+    "timestamp": "2023-08-02T11:22:09.544Z",
+    "transparentProxyId": "0.0.443088",
+    "transparentProxyAddress": "0x000000000000000000000000000000000006c2d0"
   },
   {
     "name": "godholder",

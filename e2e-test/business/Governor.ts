@@ -63,7 +63,9 @@ export default class Governor extends Base {
   protected MINT_TOKEN = "mintToken";
   protected BURN_TOKEN = "burnToken";
   protected TRANSFER_TOKEN = "transferToken";
-  protected DEFAULT_NFT_TOKEN_SERIAL_NO = 19;
+  protected QUORUM = "quorum";
+  DEFAULT_NFT_TOKEN_SERIAL_NO = 19;
+  DEFAULT_NFT_TOKEN_SERIAL_NO_FOR_VOTING = 20;
 
   async initialize(
     tokenHolder: GodHolder | NFTHolder,
@@ -129,6 +131,14 @@ export default class Governor extends Base {
     console.log(
       `- Governor#${this.CAST_VOTE}(): proposal-id = ${proposalId}, support = ${support}\n`
     );
+  };
+
+  public quorum = async (client: Client = clientsInfo.operatorClient) => {
+    const args = new ContractFunctionParameters().addUint256(0);
+    const { result } = await this.execute(80_000, this.QUORUM, client, args);
+    const quorum = result.getUint256(0);
+    console.log(`- Governor#${this.QUORUM}(): quorum = ${quorum}\n`);
+    return quorum.toNumber();
   };
 
   getGODTokenAddress = async (client: Client = clientsInfo.operatorClient) => {
@@ -224,17 +234,17 @@ export default class Governor extends Base {
     client: Client = clientsInfo.operatorClient
   ) => {
     const args = new ContractFunctionParameters().addString(title);
-    const { receipt, result } = await this.execute(
+    const { receipt, result, record } = await this.execute(
       1_000_000,
       this.EXECUTE_PROPOSAL,
       client,
       args,
-      fromPrivateKey,
-      70
+      fromPrivateKey
     );
     const proposalId = result.getUint256(0).toFixed();
+    const txnId = record.transactionId.toString();
     console.log(
-      `- Governor#${this.EXECUTE_PROPOSAL}(): proposal-id = ${proposalId}, status = ${receipt.status}\n`
+      `- Governor#${this.EXECUTE_PROPOSAL}(): proposal-id = ${proposalId}, status = ${receipt.status}, TxnId = ${txnId}\n`
     );
     return receipt.status.toString() === "SUCCESS";
   };
@@ -292,6 +302,7 @@ export default class Governor extends Base {
     };
     console.log(`- Governor#${this.PROPOSAL_DETAILS}():`);
     console.table(info);
+    console.log("");
     return info;
   };
 
