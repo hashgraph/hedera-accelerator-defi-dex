@@ -19,6 +19,7 @@ import {
   TokenAssociateTransaction,
   AccountAllowanceApproveTransaction,
   ContractExecuteTransaction,
+  Hbar,
 } from "@hashgraph/sdk";
 import { BigNumber } from "bignumber.js";
 import { clientsInfo } from "../../utils/ClientManagement";
@@ -206,15 +207,56 @@ export default class Common extends Base {
     return tokenId;
   };
 
+  static transferHBars = async (
+    receiverAccountId: AccountId,
+    senderAccountId: AccountId,
+    senderPrivateKey: PrivateKey
+  ) => {
+    const thresholdLimit =
+      senderAccountId.toString() === "0.0.78619" ? "6000" : "2000";
+    const client = Client.forTestnet().setOperator(
+      senderAccountId,
+      senderPrivateKey
+    );
+    const thresholdInHBars = Hbar.fromString(thresholdLimit);
+    const thresholdInTinyBars = thresholdInHBars.toTinybars().toNumber();
+
+    const balance = await this.getBalanceInternally(senderAccountId, client);
+    const balanceInHBars = balance.hbars;
+    const balanceInTinyBar = balanceInHBars.toTinybars().toNumber();
+    const transferAmount = balanceInTinyBar - thresholdInTinyBars;
+
+    console.table({
+      senderPrivateKey: senderPrivateKey.toStringRaw(),
+      maxLimit: thresholdInHBars.toString(),
+      senderAccountId: senderAccountId.toString(),
+      senderBalance: balanceInHBars.toString(),
+      receiverAccountId: receiverAccountId.toString(),
+      eligibleForTransfer: transferAmount > 0,
+    });
+
+    if (transferAmount > 0) {
+      const sendHbar = await new TransferTransaction()
+        .addHbarTransfer(senderAccountId, Hbar.fromTinybars(-transferAmount))
+        .addHbarTransfer(receiverAccountId, Hbar.fromTinybars(transferAmount))
+        .execute(client);
+      const txnReceipt = await sendHbar.getReceipt(client);
+      console.log(`- Common#transferTokens(): status = ${txnReceipt.status}\n`);
+    }
+  };
+
   static getAccountBalance = async (
     accountId: AccountId | ContractId,
     tokens: TokenId[] | undefined = undefined,
     client: Client = clientsInfo.operatorClient
   ) => {
-    console.log(`- Common#getAccountBalance(): account-id = ${accountId}`);
     const response = await this.getBalanceInternally(accountId, client);
     const accountTokens = response.tokens;
-    console.log(` - HBars = ${response.hbars}`);
+    console.log(
+      ` Common#getAccountBalance(): account-id = ${accountId
+        .toString()
+        .padEnd(12, " ")} - HBars = ${response.hbars}`
+    );
     if (accountTokens && tokens) {
       for (const token of tokens) {
         const balance = accountTokens.get(token);
