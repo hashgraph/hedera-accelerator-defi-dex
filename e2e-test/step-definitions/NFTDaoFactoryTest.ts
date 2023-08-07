@@ -130,14 +130,13 @@ export class NFTDaoFactoryTest extends CommonSteps {
     30000
   )
   public async createTokenAssociateProposal(title: string): Promise<void> {
-    proposalId = await governor.createTokenAssociateProposal(
+    proposalId = await ftDao.createTokenAssociateProposal(
       title,
       TRANSFER_TOKEN_ID.toSolidityAddress(),
-      feePayerClient,
+      DAO_ADMIN_CLIENT,
       governor.DEFAULT_DESCRIPTION,
       governor.DEFAULT_LINK,
-      governor.DEFAULT_NFT_TOKEN_SERIAL_NO,
-      proposalCreatorAccountId.toSolidityAddress()
+      governor.DEFAULT_NFT_TOKEN_SERIAL_NO
     );
   }
 
@@ -156,16 +155,15 @@ export class NFTDaoFactoryTest extends CommonSteps {
       tokenTransferAmount = new BigNumber(
         tokenAmount * CommonSteps.withPrecision
       );
-      proposalId = await governor.createTokenTransferProposal(
+      proposalId = await ftDao.createTokenTransferProposal(
         title,
         receiverAccountId.toSolidityAddress(),
         TRANSFER_TOKEN_ID.toSolidityAddress(),
         tokenTransferAmount,
-        feePayerClient,
-        governor.DEFAULT_NFT_TOKEN_SERIAL_NO,
+        DAO_ADMIN_CLIENT,
         description,
         link,
-        proposalCreatorAccountId.toSolidityAddress()
+        governor.DEFAULT_NFT_TOKEN_SERIAL_NO
       );
     } catch (e: any) {
       errorMessage = e.message;
