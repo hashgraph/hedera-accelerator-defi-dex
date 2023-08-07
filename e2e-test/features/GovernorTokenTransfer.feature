@@ -97,10 +97,12 @@ Feature: GovernorTokenTransfer e2e test
 
         When User treasury transfer amount to GTT contract
         When User fetches token balance from GTT contract
+        When User fetches token balance from receiver account
     
         When User execute the proposal with title "sampletitle"
         Then User verify that proposal state is "Executed"
         Then User verify that token is transferred from GTT contract  
+        Then User verify that token is transferred to receiver account 
 
     Scenario: Verify proposal execution should be failed if GTT don't have enough token balance
         When User setup default allowance for GTT proposals

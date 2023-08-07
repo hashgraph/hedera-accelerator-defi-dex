@@ -40,6 +40,7 @@ const receiverAccountPK = clientsInfo.uiUserKey;
 const feePayerClient = clientsInfo.operatorClient;
 
 let proposalId: string;
+let receiverBalanceBeforeTransfer: BigNumber;
 let contractBalanceBeforeTransfer: BigNumber;
 let tokenTransferAmount: BigNumber;
 let errorMessage: string = "";
@@ -232,6 +233,14 @@ export class FTDaoFactoryTest extends CommonSteps {
     );
   }
 
+  @when(/User fetch token balance from receiver account/, TAG, 30000)
+  public async getTokenBalanceFromReceiverAccount() {
+    receiverBalanceBeforeTransfer = await Common.getTokenBalance(
+      receiverAccountId,
+      TRANSFER_TOKEN_ID
+    );
+  }
+
   @then(/User verify token is transferred from GTT contract/, TAG, 30000)
   public async verifyTokenBalance() {
     const contractBalanceAfterTransfer = await Common.getTokenBalance(
@@ -242,6 +251,19 @@ export class FTDaoFactoryTest extends CommonSteps {
       contractBalanceAfterTransfer
         .plus(tokenTransferAmount)
         .isEqualTo(contractBalanceBeforeTransfer)
+    ).equals(true);
+  }
+
+  @then(/User verify token is transferred to receiver account/, TAG, 30000)
+  public async verifyTokenBalanceInReceiverAccount() {
+    const receiverBalanceAfterTransfer = await Common.getTokenBalance(
+      receiverAccountId,
+      TRANSFER_TOKEN_ID
+    );
+    expect(
+      receiverBalanceBeforeTransfer
+        .plus(tokenTransferAmount)
+        .isEqualTo(receiverBalanceAfterTransfer)
     ).equals(true);
   }
 

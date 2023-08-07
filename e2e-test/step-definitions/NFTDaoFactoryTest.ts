@@ -40,6 +40,7 @@ const receiverAccountPK = clientsInfo.uiUserKey;
 const feePayerClient = clientsInfo.operatorClient;
 
 let proposalId: string;
+let receiverBalanceBeforeTransfer: BigNumber;
 let contractBalanceBeforeTransfer: BigNumber;
 let tokenTransferAmount: BigNumber;
 let errorMessage: string;
@@ -226,6 +227,14 @@ export class NFTDaoFactoryTest extends CommonSteps {
     );
   }
 
+  @when(/User get the token balance from receiver account/, undefined, 30000)
+  public async getTokenBalanceFromReceiverAccount() {
+    receiverBalanceBeforeTransfer = await Common.getTokenBalance(
+      receiverAccountId,
+      TRANSFER_TOKEN_ID
+    );
+  }
+
   @then(
     /User verify proposed token amount is transferred from GTT contract/,
     undefined,
@@ -240,6 +249,23 @@ export class NFTDaoFactoryTest extends CommonSteps {
       contractBalanceAfterTransfer
         .plus(tokenTransferAmount)
         .isEqualTo(contractBalanceBeforeTransfer)
+    ).equals(true);
+  }
+
+  @then(
+    /User verify proposed token amount is transferred to receiver account/,
+    undefined,
+    30000
+  )
+  public async verifyTokenBalanceInReceiverAccount() {
+    const receiverBalanceAfterTransfer = await Common.getTokenBalance(
+      receiverAccountId,
+      TRANSFER_TOKEN_ID
+    );
+    expect(
+      receiverBalanceBeforeTransfer
+        .plus(tokenTransferAmount)
+        .isEqualTo(receiverBalanceAfterTransfer)
     ).equals(true);
   }
 

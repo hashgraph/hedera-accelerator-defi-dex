@@ -50,10 +50,12 @@ Scenario: Verify token association and transfer journey
 
         When User transfer proposed amount to GTT contract
         When User get the token balance from GTT contract
+        When User get the token balance from receiver account
     
         When User executes proposal with title "sampletitle"
         Then User verify nft proposal state is "Executed"
         Then User verify proposed token amount is transferred from GTT contract  
+        Then User verify proposed token amount is transferred to receiver account  
 
 Scenario: Verify nft tokens and allowance reset successfully
         When User get the locked nft-token serial no back from holder

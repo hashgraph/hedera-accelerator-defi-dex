@@ -39,6 +39,7 @@ let ftTokenHolderFactory: FTTokenHolderFactory;
 
 let proposalId: string;
 let errorMessage: string;
+let receiverBalanceBeforeTransfer: BigNumber;
 let contractBalanceBeforeTransfer: BigNumber;
 let tokenTransferAmount: BigNumber;
 let tokenLockedAmount: number;
@@ -228,8 +229,16 @@ export class GovernorTokenTransfer extends CommonSteps {
     );
   }
 
+  @when(/User fetches token balance from receiver account/, TAG, 30000)
+  public async getTokenBalanceFromReceiverAccount() {
+    receiverBalanceBeforeTransfer = await Common.getTokenBalance(
+      receiverAccountId,
+      TRANSFER_TOKEN_ID
+    );
+  }
+
   @then(/User verify that token is transferred from GTT contract/, TAG, 30000)
-  public async verifyTokenBalance() {
+  public async verifyTokenBalanceInContract() {
     const contractBalanceAfterTransfer = await Common.getTokenBalance(
       ContractId.fromString(governor.contractId),
       TRANSFER_TOKEN_ID
@@ -238,6 +247,19 @@ export class GovernorTokenTransfer extends CommonSteps {
       contractBalanceAfterTransfer
         .plus(tokenTransferAmount)
         .isEqualTo(contractBalanceBeforeTransfer)
+    ).equals(true);
+  }
+
+  @then(/User verify that token is transferred to receiver account/, TAG, 30000)
+  public async verifyTokenBalanceInReceiverAccount() {
+    const receiverBalanceAfterTransfer = await Common.getTokenBalance(
+      receiverAccountId,
+      TRANSFER_TOKEN_ID
+    );
+    expect(
+      receiverBalanceBeforeTransfer
+        .plus(tokenTransferAmount)
+        .isEqualTo(receiverBalanceAfterTransfer)
     ).equals(true);
   }
 

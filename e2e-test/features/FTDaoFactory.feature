@@ -50,10 +50,12 @@ Scenario: Verify token association and transfer journey
 
         When User transfer amount to GTT contract
         When User fetch token balance from GTT contract
+        When User fetch token balance from receiver account
     
         When User execute proposal with title "sampletitle"
         Then User verify the proposal state is "Executed"
-        Then User verify token is transferred from GTT contract  
+        Then User verify token is transferred from GTT contract
+        Then User verify token is transferred to receiver account  
 
 Scenario: Verify god tokens and allowance reset successfully
         When User get the locked tokens back from holder for GTT
