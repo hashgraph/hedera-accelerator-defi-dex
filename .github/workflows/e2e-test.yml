@@ -43,6 +43,7 @@ jobs:
         run: npx hardhat run deployment/scripts/createContractsE2E.ts;
       - name: e2e
         run: npm run e2e-test suite-one
+
   suite-2:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
@@ -64,6 +65,7 @@ jobs:
         run: npx hardhat run deployment/scripts/createContractsE2E.ts;
       - name: e2e
         run: npm run e2e-test suite-two
+
   suite-3:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
@@ -85,7 +87,7 @@ jobs:
         id: create-json
         with:
           name: "deployment/scripts/workflow-inputs.json"
-          json: '{"contracts":"GODHolder,GovernorTransferToken,GovernorTokenCreate"}'
+          json: '{"contracts":"GODHolder,GovernorTokenCreate"}'
       - name: Deployment
         run: npx hardhat run deployment/scripts/createContractsE2E.ts;
       - name: e2e
@@ -105,16 +107,8 @@ jobs:
         with:
           node-version: "18.15.0"
       - run: npm ci
-      - name: Save user inputs
-        uses: jsdaniell/create-json@v1.2.2
-        id: create-json
-        with:
-          name: "deployment/scripts/workflow-inputs.json"
-          json: '{"contracts":"GODHolder,FTDAOFactory,FTDAO,GovernorTransferToken,GODTokenHolderFactory"}'
-      - name: Deployment
-        run: npx hardhat run deployment/scripts/createContractsE2E.ts;
       - name: e2e
-        run: npm run e2e-test suite-four
+        run: npx hardhat compile --force && npm run e2e-test suite-four
 
   suite-5:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'

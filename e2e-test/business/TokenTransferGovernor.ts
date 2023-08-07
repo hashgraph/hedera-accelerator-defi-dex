@@ -14,8 +14,8 @@ export default class TokenTransferGovernor extends Governor {
   createTokenTransferProposal = async (
     title: string,
     toAddress: string,
-    tokenId: string,
-    tokenAmount: number,
+    tokenAddress: string,
+    tokenAmount: number | BigNumber,
     client: Client = clientsInfo.operatorClient,
     nftTokenSerialId: number = this.DEFAULT_NFT_TOKEN_SERIAL_NO,
     description: string = this.DEFAULT_DESCRIPTION,
@@ -27,8 +27,8 @@ export default class TokenTransferGovernor extends Governor {
       .addString(description)
       .addString(link)
       .addAddress(toAddress) // to
-      .addAddress(tokenId) // tokenToTransfer
-      .addUint256(BigNumber(tokenAmount)) // amountToTransfer
+      .addAddress(tokenAddress) // tokenToTransfer
+      .addUint256(tokenAmount) // amountToTransfer
       .addAddress(creator) // proposal creator
       .addUint256(nftTokenSerialId);
 

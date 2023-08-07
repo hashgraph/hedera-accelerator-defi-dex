@@ -41,8 +41,8 @@ export default class Governor extends Base {
   protected DEFAULT_VOTING_PERIOD = 100; // blocks means 3 minutes as per test
   protected DEFAULT_MAX_WAITING_TIME = this.DEFAULT_VOTING_PERIOD * 12 * 300;
   protected EACH_ITERATION_DELAY = this.DEFAULT_VOTING_PERIOD * 0.3 * 1000;
-  protected DEFAULT_DESCRIPTION = "description";
-  protected DEFAULT_LINK = "https://defi-ui.hedera.com/governance";
+  DEFAULT_DESCRIPTION = "description";
+  DEFAULT_LINK = "https://defi-ui.hedera.com/governance";
 
   protected INITIALIZE = "initialize";
   protected STATE = "state";
@@ -77,6 +77,7 @@ export default class Governor extends Base {
     holderTokenId: TokenId = this.GOD_TOKEN_ID
   ) {
     await tokenHolder.initialize(client, holderTokenId.toSolidityAddress());
+
     const godHolderProxyAddress = await AddressHelper.idToEvmAddress(
       tokenHolder.contractId
     );
