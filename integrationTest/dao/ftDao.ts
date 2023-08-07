@@ -35,80 +35,119 @@ const deployment = new Deployment();
 export async function executeGovernorTokenTransferFlow(
   godHolder: GodHolder,
   tokenTransferDAO: FTDAO,
-  fromAccount: AccountId = clientsInfo.treasureId,
-  fromAccountPrivateKey: PrivateKey = clientsInfo.treasureKey,
-  toAccount: AccountId = clientsInfo.operatorId,
-  tokenId: TokenId = TOKEN_ID,
-  tokenAmount: number = TOKEN_QTY,
-  proposalCreatorClient: Client = clientsInfo.operatorClient,
-  proposalCreatorAccountId: AccountId = clientsInfo.operatorId,
-  proposalCreatorAccountPrivateKey: PrivateKey = clientsInfo.operatorKey,
-  voterClient: Client = clientsInfo.operatorClient,
-  voterAccountId: AccountId = clientsInfo.operatorId,
-  voterAccountPrivateKey: PrivateKey = clientsInfo.operatorKey
+  transferTokenId: TokenId = TOKEN_ID,
+  transferTokenAmount: number = TOKEN_QTY,
+  receiverAccountId: AccountId = clientsInfo.uiUserId,
+  receiverAccountPK: PrivateKey = clientsInfo.uiUserKey,
+  senderAccountId: AccountId = clientsInfo.treasureId,
+  senderAccountPK: PrivateKey = clientsInfo.treasureKey,
+  daoAdminClient: Client = DAO_ADMIN_CLIENT,
+  daoAdminId: AccountId = clientsInfo.operatorId,
+  daoAdminPK: PrivateKey = clientsInfo.operatorKey,
+  voterClient: Client = clientsInfo.treasureClient,
+  voterAccountId: AccountId = clientsInfo.treasureId,
+  voterAccountKey: PrivateKey = clientsInfo.treasureKey,
+  txnFeePayerClient: Client = clientsInfo.operatorClient
 ) {
-  await Common.associateTokensToAccount(
-    voterAccountId,
-    [dex.GOVERNANCE_DAO_ONE_TOKEN_ID],
-    clientsInfo.treasureClient
-  );
-
-  await godHolder.setupAllowanceForTokenLocking(
-    10005e8,
-    voterAccountId,
-    voterAccountPrivateKey,
-    voterClient
-  );
-
-  await godHolder.lock(
-    10005e8,
-    voterAccountId,
-    voterAccountPrivateKey,
-    voterClient
-  );
-
   const governorAddresses =
     await tokenTransferDAO.getGovernorTokenTransferContractAddresses();
-  const governorTokenTransfer = new TokenTransferGovernor(
+  const governor = new TokenTransferGovernor(
     governorAddresses.governorTokenTransferProxyId
   );
 
-  await governorTokenTransfer.setupAllowanceForProposalCreation(
-    proposalCreatorClient,
-    proposalCreatorAccountId,
-    proposalCreatorAccountPrivateKey
+  const quorum = await governor.quorum(txnFeePayerClient);
+  const votingPowerAmount = await godHolder.balanceOfVoter(
+    voterAccountId,
+    txnFeePayerClient
   );
 
-  const title = Helper.createProposalTitle("Token Transfer Proposal");
-  const proposalId = await tokenTransferDAO.createTokenTransferProposal(
-    title,
-    fromAccount.toSolidityAddress(),
-    toAccount.toSolidityAddress(),
-    tokenId.toSolidityAddress(),
-    tokenAmount,
-    proposalCreatorClient,
-    GovernorTokenMetaData.DEFAULT_DESCRIPTION,
-    GovernorTokenMetaData.DEFAULT_LINK,
-    PROPOSAL_CREATE_NFT_SERIAL_ID
-  );
-  await governorTokenTransfer.getProposalDetails(proposalId);
-  await governorTokenTransfer.forVote(proposalId, 0, voterClient);
-  await governorTokenTransfer.isQuorumReached(proposalId);
-  await governorTokenTransfer.isVoteSucceeded(proposalId);
-  await governorTokenTransfer.proposalVotes(proposalId);
-  if (await governorTokenTransfer.isSucceeded(proposalId)) {
-    await governorTokenTransfer.setAllowanceForTransferTokenProposal(
-      tokenId,
-      tokenAmount,
-      governorTokenTransfer.contractId,
-      fromAccount,
-      fromAccountPrivateKey
+  if (votingPowerAmount < quorum) {
+    const lockAmount = quorum - votingPowerAmount;
+    await godHolder.setupAllowanceForTokenLocking(
+      lockAmount,
+      voterAccountId,
+      voterAccountKey,
+      txnFeePayerClient
     );
-    await governorTokenTransfer.executeProposal(title, fromAccountPrivateKey);
-  } else {
-    await governorTokenTransfer.cancelProposal(title, proposalCreatorClient);
+    await godHolder.lock(
+      lockAmount,
+      voterAccountId,
+      voterAccountKey,
+      txnFeePayerClient
+    );
   }
+
+  // step -1 association proposal
+  await governor.setupAllowanceForProposalCreation(
+    daoAdminClient,
+    daoAdminId,
+    daoAdminPK
+  );
+
+  const title = Helper.createProposalTitle("Token Associate Proposal");
+  const proposalId = await tokenTransferDAO.createTokenAssociateProposal(
+    title,
+    transferTokenId.toSolidityAddress(),
+    daoAdminClient,
+    "DAO Token Association Proposal - Desc",
+    "DAO Token Association Proposal - LINK",
+    governor.DEFAULT_NFT_TOKEN_SERIAL_NO
+  );
+  await governor.getProposalDetails(proposalId, voterClient);
+  await governor.forVote(proposalId, 0, voterClient);
+  await governor.getProposalDetails(proposalId, voterClient);
+  if (await governor.isSucceeded(proposalId)) {
+    await governor.executeProposal(title);
+  } else {
+    await governor.cancelProposal(title, daoAdminClient);
+  }
+
+  // step -2 transfer proposal
+  await governor.setupAllowanceForProposalCreation(
+    daoAdminClient,
+    daoAdminId,
+    daoAdminPK
+  );
+
+  const title1 = Helper.createProposalTitle("Token Transfer Proposal");
+  const proposalId1 = await tokenTransferDAO.createTokenTransferProposal(
+    title1,
+    receiverAccountId.toSolidityAddress(),
+    transferTokenId.toSolidityAddress(),
+    transferTokenAmount,
+    daoAdminClient,
+    "DAO Token Transfer Proposal - Desc",
+    "DAO Token Transfer Proposal - Link",
+    governor.DEFAULT_NFT_TOKEN_SERIAL_NO
+  );
+  await governor.getProposalDetails(proposalId1, voterClient);
+  await governor.forVote(proposalId1, 0, voterClient);
+  await governor.getProposalDetails(proposalId1, voterClient);
+  if (await governor.isSucceeded(proposalId1)) {
+    // step - 1 transfer some amount to governance
+    await Common.transferTokens(
+      AccountId.fromString(governor.contractId),
+      senderAccountId,
+      senderAccountPK,
+      transferTokenId,
+      transferTokenAmount,
+      txnFeePayerClient
+    );
+
+    // step - 2 associate token to receiver
+    await Common.associateTokensToAccount(
+      receiverAccountId,
+      [transferTokenId],
+      txnFeePayerClient,
+      receiverAccountPK
+    );
+    await governor.executeProposal(title1);
+  } else {
+    await governor.cancelProposal(title1, daoAdminClient);
+  }
+
   await godHolder.checkAndClaimGodTokens(voterClient, voterAccountId);
+  await tokenTransferDAO.getTokenTransferProposals();
 }
 
 export async function executeTextProposalFlow(
@@ -344,10 +383,10 @@ async function main() {
     DAO_DESC,
     DAO_WEB_LINKS,
     godHolder,
-    clientsInfo.operatorClient,
-    GovernorTokenMetaData.DEFAULT_QUORUM_THRESHOLD_IN_BSP,
-    GovernorTokenMetaData.DEFAULT_VOTING_DELAY,
-    GovernorTokenMetaData.DEFAULT_VOTING_PERIOD,
+    DAO_ADMIN_CLIENT,
+    1,
+    0,
+    30,
     dex.GOVERNANCE_DAO_ONE_TOKEN_ID,
     dex.GOVERNANCE_DAO_ONE_TOKEN_ID
   );

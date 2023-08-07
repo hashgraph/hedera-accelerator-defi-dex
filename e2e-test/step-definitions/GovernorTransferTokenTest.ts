@@ -94,7 +94,6 @@ export class GovernorSteps extends CommonSteps {
     proposalId = await governor.createTokenTransferProposal(
       title,
       clientsInfo.operatorId.toSolidityAddress(),
-      clientsInfo.treasureId.toSolidityAddress(),
       TRANSFER_TOKEN_ID.toSolidityAddress(),
       tokenQty,
       clientsInfo.operatorClient,
@@ -123,7 +122,6 @@ export class GovernorSteps extends CommonSteps {
       proposalId = await governor.createTokenTransferProposal(
         title,
         clientsInfo.operatorId.toSolidityAddress(),
-        clientsInfo.treasureId.toSolidityAddress(),
         TRANSFER_TOKEN_ID.toSolidityAddress(),
         tokenQty,
         clientsInfo.operatorClient,
@@ -167,7 +165,6 @@ export class GovernorSteps extends CommonSteps {
       await governor.createTokenTransferProposal(
         title,
         idNoGODToken.toSolidityAddress(),
-        clientsInfo.treasureId.toSolidityAddress(),
         TRANSFER_TOKEN_ID.toSolidityAddress(),
         tokenQty,
         clientWithNoGODToken,

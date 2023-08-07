@@ -106,7 +106,6 @@ contract FTDAO is BaseDAO, ISharedDAOModel {
         string memory _title,
         string memory _description,
         string memory _linkToDiscussion,
-        address _transferFromAccount,
         address _transferToAccount,
         address _tokenToTransfer,
         uint256 _transferTokenAmount,
@@ -119,10 +118,31 @@ contract FTDAO is BaseDAO, ISharedDAOModel {
             _title,
             _description,
             _linkToDiscussion,
-            _transferFromAccount,
             _transferToAccount,
             _tokenToTransfer,
             _transferTokenAmount,
+            msg.sender,
+            nftTokenSerialId
+        );
+        tokenTransferProposals.push(proposalId);
+        return proposalId;
+    }
+
+    function createTokenAssociateProposal(
+        string memory _title,
+        string memory _description,
+        string memory _linkToDiscussion,
+        address _token,
+        uint256 nftTokenSerialId
+    ) external onlyRole(DAO_ADMIN) returns (uint256) {
+        GovernorTransferToken governorTransferToken = GovernorTransferToken(
+            governorTokenTransferProxy
+        );
+        uint256 proposalId = governorTransferToken.createTokenAssociateProposal(
+            _title,
+            _description,
+            _linkToDiscussion,
+            _token,
             msg.sender,
             nftTokenSerialId
         );

@@ -97,7 +97,7 @@ abstract contract GovernorCountingSimpleInternal is
             0
         );
         __GovernorCountingSimple_init();
-        _associateToken(hederaService, address(this), address(token));
+        _associateTokenInternally(address(token));
     }
 
     function getGODTokenAddress() external view returns (address) {
@@ -356,6 +356,16 @@ abstract contract GovernorCountingSimpleInternal is
         returns (IHederaService)
     {
         return hederaService;
+    }
+
+    function _associateTokenInternally(address _token) internal {
+        int256 code = _associateToken(hederaService, address(this), _token);
+        if (
+            code != HederaResponseCodes.SUCCESS &&
+            code != HederaResponseCodes.TOKEN_ALREADY_ASSOCIATED_TO_ACCOUNT
+        ) {
+            revert("GCSI: association failed");
+        }
     }
 
     function _mockFunctionCall()

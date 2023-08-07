@@ -109,13 +109,6 @@ export default class NFTHolder extends Base {
     client: Client = clientsInfo.operatorClient
   ) => {
     const tokenId = await this.getToken(client);
-    await Common.setNFTTokenAllowance(
-      tokenId,
-      this.contractId,
-      accountId,
-      accountPrivateKey,
-      client
-    );
     const args = new ContractFunctionParameters()
       .addAddress(accountId.toSolidityAddress())
       .addUint256(nftTokenSerialId);

@@ -20,6 +20,7 @@ import { CommonSteps } from "./CommonSteps";
 import Common from "../business/Common";
 import { BigNumber } from "bignumber.js";
 import TokenTransferGovernor from "../business/TokenTransferGovernor";
+import { AddressHelper } from "../../utils/AddressHelper";
 
 const TOKEN_ID = TokenId.fromString(dex.TOKEN_LAB49_1);
 const adminAddress: string = clientsInfo.operatorId.toSolidityAddress();
@@ -310,8 +311,9 @@ export class DAONFTTokenTest extends CommonSteps {
 
   @when(/User claim NFT token with serial number (\d+\.?\d*)/, undefined, 30000)
   public async claimNFTs(tokenSerialNumber: number) {
+    const evmAddress = await AddressHelper.idToEvmAddress(nftHolder.contractId);
     await this.revertNFTs(
-      ContractId.fromString(nftHolder.contractId),
+      evmAddress,
       clientsInfo.operatorKey,
       clientsInfo.operatorId,
       dex.E2E_NFT_TOKEN_ID,
