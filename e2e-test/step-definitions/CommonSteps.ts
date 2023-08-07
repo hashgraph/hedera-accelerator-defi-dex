@@ -66,9 +66,10 @@ export class CommonSteps {
     governor: Governor,
     title: string,
     fromPrivateKey: PrivateKey,
-    client: Client
+    client: Client,
+    fee: number = 0
   ) {
-    await governor.executeProposal(title, fromPrivateKey, client);
+    await governor.executeProposal(title, fromPrivateKey, client, fee);
   }
 
   public async getProposalState(

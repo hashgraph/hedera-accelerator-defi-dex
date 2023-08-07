@@ -69,11 +69,6 @@ jobs:
   suite-3:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
-    env:
-      OPERATOR_ID: 0.0.78619
-      OPERATOR_KEY: 302e020100300506032b657004220420c8cb72a0addffcbd898689e5b5641c0abff4399ddeb90a04071433e3724e14dd
-      TREASURE_ID: 0.0.405576
-      TREASURE_KEY: 302e020100300506032b6570042204202cc790b009e400a3ed97363980ae27ddfb58102fa8fb7c1a7b69e212f756c084
 
     steps:
       - uses: actions/checkout@v3
@@ -96,9 +91,6 @@ jobs:
   suite-4:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
-    env:
-      UI_USER_ID: 0.0.405652
-      UI_USER_KEY: 302e020100300506032b6570042204208e8fe8f694707f2e578f5ced24304a5190b59ef014a0b978d9db0732eaf6445d
 
     steps:
       - uses: actions/checkout@v3

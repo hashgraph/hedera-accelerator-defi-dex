@@ -35,6 +35,7 @@ enum VoteType {
 }
 
 export default class Governor extends Base {
+  TXN_FEE_FOR_TOKEN_CREATE = 75;
   protected GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
   protected DEFAULT_QUORUM_THRESHOLD_IN_BSP = 500;
   protected DEFAULT_VOTING_DELAY = 0; // blocks
@@ -232,7 +233,8 @@ export default class Governor extends Base {
   executeProposal = async (
     title: string,
     fromPrivateKey: PrivateKey | PrivateKey[] | undefined = undefined,
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
+    fee: number = 0
   ) => {
     const args = new ContractFunctionParameters().addString(title);
     const { receipt, result, record } = await this.execute(
@@ -240,7 +242,8 @@ export default class Governor extends Base {
       this.EXECUTE_PROPOSAL,
       client,
       args,
-      fromPrivateKey
+      fromPrivateKey,
+      fee
     );
     const proposalId = result.getUint256(0).toFixed();
     const txnId = record.transactionId.toString();
