@@ -1,9 +1,9 @@
 name: Transfer HBars
 
 on:
-  # Triggers the workflow at 10:40 AM daily for now
+  # Triggers the workflow at 6:30 AM daily for now
   schedule:
-    - cron: "40 10 * * *"
+    - cron: "30 6 * * *"
 
 env:
   PROXY_ADMIN_ID: 0.0.78567

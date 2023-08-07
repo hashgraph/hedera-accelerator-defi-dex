@@ -212,13 +212,11 @@ export default class Common extends Base {
     senderAccountId: AccountId,
     senderPrivateKey: PrivateKey
   ) => {
-    const thresholdLimit =
-      senderAccountId.toString() === "0.0.78619" ? "6000" : "2000";
     const client = Client.forTestnet().setOperator(
       senderAccountId,
       senderPrivateKey
     );
-    const thresholdInHBars = Hbar.fromString(thresholdLimit);
+    const thresholdInHBars = Hbar.fromString("2000");
     const thresholdInTinyBars = thresholdInHBars.toTinybars().toNumber();
 
     const balance = await this.getBalanceInternally(senderAccountId, client);
