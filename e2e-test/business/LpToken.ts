@@ -80,12 +80,16 @@ export default class LpToken extends Base {
   };
 
   allotLPToken = async (
+    tokenAQtyInPool: number,
+    tokenBQtyInPool: number,
     tokenAQty: BigNumber,
     tokenBQty: BigNumber,
     receiverAccountId: AccountId,
     client: Client = clientsInfo.operatorClient
   ) => {
     const args = new ContractFunctionParameters()
+      .addUint256(tokenAQtyInPool)
+      .addUint256(tokenBQtyInPool)
       .addUint256(tokenAQty)
       .addUint256(tokenBQty)
       .addAddress(receiverAccountId.toSolidityAddress());

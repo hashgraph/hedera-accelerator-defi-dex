@@ -86,6 +86,14 @@ contract Pair is
         _tokenAQty = _tokenQuantity(_tokenA, _tokenAQty);
         _tokenBQty = _tokenQuantity(_tokenB, _tokenBQty);
 
+        lpTokenContract.allotLPTokenFor(
+            pair.tokenA.tokenQty,
+            pair.tokenB.tokenQty,
+            _tokenAQty,
+            _tokenBQty,
+            fromAccount
+        );
+
         if (
             _tokenA == pair.tokenA.tokenAddress &&
             _tokenB == pair.tokenB.tokenAddress
@@ -118,8 +126,6 @@ contract Pair is
             "Add liquidity: Transfering token A to contract failed with status code",
             "Add liquidity: Transfering token B to contract failed with status code"
         );
-
-        lpTokenContract.allotLPTokenFor(_tokenAQty, _tokenBQty, fromAccount);
     }
 
     function removeLiquidity(
@@ -407,7 +413,12 @@ contract Pair is
         lpTokenContract.upgradeHederaService(newHederaService);
     }
 
-    function getHederaServiceVersion() external view override returns (IHederaService) {
+    function getHederaServiceVersion()
+        external
+        view
+        override
+        returns (IHederaService)
+    {
         return hederaService;
     }
 

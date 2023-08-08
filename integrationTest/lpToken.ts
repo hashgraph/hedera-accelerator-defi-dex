@@ -8,6 +8,8 @@ import LpToken from "../e2e-test/business/LpToken";
 const TOKEN_A_QTY = Common.withPrecision(10, 1e8);
 const TOKEN_B_QTY = Common.withPrecision(10, 1e8);
 const TOKEN_LP_QTY = Common.withPrecision(5, 1e8);
+const TOKEN_A_QTY_IN_POOL = Common.withPrecision(10, 1e8);
+const TOKEN_B_QTY_IN_POOL = Common.withPrecision(10, 1e8);
 
 const TOKEN_NAME = "LP-Token-Name";
 const TOKEN_SYMBOL = "LP-Token-Symbol";
@@ -30,6 +32,8 @@ async function main() {
     clientsInfo.treasureKey
   );
   await lpToken.allotLPToken(
+    TOKEN_A_QTY_IN_POOL,
+    TOKEN_B_QTY_IN_POOL,
     TOKEN_A_QTY,
     TOKEN_B_QTY,
     clientsInfo.treasureId,

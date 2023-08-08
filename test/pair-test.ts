@@ -50,7 +50,7 @@ describe("LPToken, Pair and Factory tests", function () {
     const tokenCont = await TokenCont.deploy(
       "tokenName1",
       "tokenSymbol1",
-      10,
+      0,
       10
     );
     return tokenCont;
@@ -1529,7 +1529,8 @@ describe("LPToken, Pair and Factory tests", function () {
       const tokenBeforeQty = await pair.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
       await tokenCont.setTransaferFailed(true);
-      lpToken.setUserBalance(signers[0].address, 10);
+      await lpToken.setUserBalance(signers[0].address, 10);
+      await lpToken.setTotal(10);
       await expect(pair.removeLiquidity(signers[0].address, 5)).to.revertedWith(
         "Remove liquidity: Transferring token A to contract failed with status code"
       );
@@ -1540,7 +1541,8 @@ describe("LPToken, Pair and Factory tests", function () {
         deployFixtureTokenTest
       );
       await tokenCont1.setTransaferFailed(true);
-      lpToken.setUserBalance(signers[0].address, 10);
+      await lpToken.setUserBalance(signers[0].address, 10);
+      await lpToken.setTotal(10);
       const tokenBeforeQty = await pair.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
       await expect(pair.removeLiquidity(signers[0].address, 5)).to.revertedWith(
@@ -1623,14 +1625,14 @@ describe("LPToken, Pair and Factory tests", function () {
     it("Verify allotLPTokenFor should be reverted if initialization is not done", async function () {
       const lpTokenContract = await TestHelper.deployLogic("LPToken");
       await expect(
-        lpTokenContract.allotLPTokenFor(10, 10, TestHelper.ONE_ADDRESS)
+        lpTokenContract.allotLPTokenFor(20, 20, 10, 10, TestHelper.ONE_ADDRESS)
       ).revertedWith("Ownable: caller is not the owner");
     });
 
     it("Verify allotLPTokenFor should be reverted for non-positive amount", async function () {
       const { lpTokenContract, user } = await loadFixture(lpTokenFixture);
       await expect(
-        lpTokenContract.allotLPTokenFor(0, 0, user.address)
+        lpTokenContract.allotLPTokenFor(20, 20, 0, 0, user.address)
       ).revertedWith("Please provide positive token counts");
     });
 
@@ -1640,7 +1642,7 @@ describe("LPToken, Pair and Factory tests", function () {
       );
       await lpToken.setName("FAIL");
       await expect(
-        lpTokenContract.allotLPTokenFor(30, 30, user.address)
+        lpTokenContract.allotLPTokenFor(20, 20, 30, 30, user.address)
       ).revertedWith("LP token minting failed.");
     });
 
@@ -1651,18 +1653,91 @@ describe("LPToken, Pair and Factory tests", function () {
       await lpToken.setUserBalance(lpTokenContract.address, 500);
       await lpToken.setTransaferFailed(true);
       await expect(
-        lpTokenContract.allotLPTokenFor(100, 100, user.address)
+        lpTokenContract.allotLPTokenFor(20, 20, 100, 100, user.address)
       ).revertedWith("LPToken: token transfer failed from contract.");
     });
 
-    it("Verify allotLPTokenFor should increase user balance", async function () {
+    it("Given lpToken token circulation is zero when user try to allot token then squareroot of tokens qty should be transferred", async function () {
       const { lpTokenContract, user, lpToken } = await loadFixture(
         lpTokenFixture
       );
+      await lpToken.setTotal(0);
       await lpToken.setUserBalance(lpTokenContract.address, 500);
-      await lpTokenContract.allotLPTokenFor(100, 100, user.address);
+      await lpTokenContract.allotLPTokenFor(20, 20, 100, 100, user.address);
       const userBalance = await lpTokenContract.lpTokenForUser(user.address);
       expect(userBalance).equals(100);
+    });
+
+    it("Given lpToken token circulation greater than zero when user try to allot greater qty of tokenA then lpToken for tokenB's qty should be transferred", async function () {
+      const { lpTokenContract, user, lpToken } = await loadFixture(
+        lpTokenFixture
+      );
+      const lpTokenTotalSupply = 100;
+      await lpToken.setTotal(lpTokenTotalSupply);
+      await lpToken.setUserBalance(lpTokenContract.address, 500);
+      const tokenAQtyPresentInPool = 100;
+      const tokenBQtyPresentInPool = 100;
+      const newTokenAQtyToAdd = 10;
+      const newTokenBQtyToAdd = 5;
+      await lpTokenContract.allotLPTokenFor(
+        tokenAQtyPresentInPool,
+        tokenBQtyPresentInPool,
+        newTokenAQtyToAdd,
+        newTokenBQtyToAdd,
+        user.address
+      );
+      const userBalance = await lpTokenContract.lpTokenForUser(user.address);
+      expect(userBalance).equals(
+        (newTokenBQtyToAdd * lpTokenTotalSupply) / tokenBQtyPresentInPool
+      );
+    });
+
+    it("Given lpToken token circulation greater than zero when user try to allot greater qty of tokenB then lpToken for tokenA's qty should be transferred", async function () {
+      const { lpTokenContract, user, lpToken } = await loadFixture(
+        lpTokenFixture
+      );
+      const lpTokenTotalSupply = 100;
+      await lpToken.setTotal(lpTokenTotalSupply);
+      await lpToken.setUserBalance(lpTokenContract.address, 500);
+      const tokenAQtyPresentInPool = 100;
+      const tokenBQtyPresentInPool = 100;
+      const newTokenAQtyToAdd = 5;
+      const newTokenBQtyToAdd = 10;
+      await lpTokenContract.allotLPTokenFor(
+        tokenAQtyPresentInPool,
+        tokenBQtyPresentInPool,
+        newTokenAQtyToAdd,
+        newTokenBQtyToAdd,
+        user.address
+      );
+      const userBalance = await lpTokenContract.lpTokenForUser(user.address);
+      expect(userBalance).equals(
+        (newTokenAQtyToAdd * lpTokenTotalSupply) / tokenAQtyPresentInPool
+      );
+    });
+
+    it("Given lpToken token circulation greater than zero when user try to allot token with no existing tokens in the pool then call should fail", async function () {
+      const { lpTokenContract, user, lpToken } = await loadFixture(
+        lpTokenFixture
+      );
+      const lpTokenTotalSupply = 100;
+      await lpToken.setTotal(lpTokenTotalSupply);
+      await lpToken.setUserBalance(lpTokenContract.address, 500);
+      const tokenAQtyPresentInPool = 0;
+      const tokenBQtyPresentInPool = 0;
+      const newTokenAQtyToAdd = 5;
+      const newTokenBQtyToAdd = 10;
+      await expect(
+        lpTokenContract.allotLPTokenFor(
+          tokenAQtyPresentInPool,
+          tokenBQtyPresentInPool,
+          newTokenAQtyToAdd,
+          newTokenBQtyToAdd,
+          user.address
+        )
+      ).revertedWith(
+        "Pool should contain tokenA and tokenB quantities greater than zero."
+      );
     });
 
     it("Verify removeLPTokenFor should be reverted if initialization is not done", async function () {
@@ -1694,7 +1769,7 @@ describe("LPToken, Pair and Factory tests", function () {
         lpTokenFixture
       );
       await lpToken.setUserBalance(lpTokenContract.address, 10);
-      await lpTokenContract.allotLPTokenFor(10, 10, user.address);
+      await lpTokenContract.allotLPTokenFor(20, 20, 10, 10, user.address);
       await lpToken.setName("FAIL");
       await expect(
         lpTokenContract.removeLPTokenFor(5, user.address)
@@ -1706,7 +1781,7 @@ describe("LPToken, Pair and Factory tests", function () {
         lpTokenFixture
       );
       await lpToken.setUserBalance(lpTokenContract.address, 10);
-      await lpTokenContract.allotLPTokenFor(10, 10, user.address);
+      await lpTokenContract.allotLPTokenFor(20, 20, 10, 10, user.address);
       await lpToken.setTransaferFailed(true);
       await expect(
         lpTokenContract.removeLPTokenFor(5, user.address)
