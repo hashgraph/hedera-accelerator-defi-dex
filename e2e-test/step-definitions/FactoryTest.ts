@@ -170,7 +170,7 @@ export class FactorySteps {
   }
 
   @then(
-    /User gets message "([^"]*)" on creating pair with same token/,
+    /User receives fails message "([^"]*)" on creating pair with same token/,
     undefined,
     30000
   )

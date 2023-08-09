@@ -38,7 +38,7 @@ Feature: Factory contract e2e test
 
     Scenario: Verify user can not create pair with same token
         When User create a new token with name "Factory8" 
-        Then User gets message "CONTRACT_REVERT_EXECUTED" on creating pair with same token
+        Then User receives fails message "CONTRACT_REVERT_EXECUTED" on creating pair with same token
 
      Scenario: Verify Factory9 token and HBAR balance before and after adding liquidity
         When User create pair of "Factory9" and HBAR  
