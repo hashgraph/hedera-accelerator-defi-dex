@@ -374,7 +374,7 @@ export class FactorySteps {
   }
 
   @then(
-    /User gets message "([^"]*)" on creating pair with two HBAR tokens/,
+    /User receives message "([^"]*)" on creating pair with two HBAR tokens/,
     undefined,
     30000
   )

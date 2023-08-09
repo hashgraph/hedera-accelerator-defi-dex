@@ -80,7 +80,7 @@ Feature: Factory contract e2e test
         Then User verifies balance of "Factory9" token from contract is 284.17095904 
     
     Scenario: Verify user can not create pair with same token
-        Then User gets message "CONTRACT_REVERT_EXECUTED" on creating pair with two HBAR tokens
+        Then User receives message "CONTRACT_REVERT_EXECUTED" on creating pair with two HBAR tokens
     
      Scenario: Verify Factory9 token quantity for the given HBAR quantity
         Given Factory9 and HBAR are present in pool with quantity 284.17095904 units and 151.72869449 units respectively
