@@ -11,7 +11,6 @@ import { CommonSteps } from "./CommonSteps";
 import { binding, given, then, when } from "cucumber-tsflow";
 import { TokenId, ContractId, AccountId } from "@hashgraph/sdk";
 
-const TAG = "GovernorTokenTransfer";
 const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
 const TRANSFER_TOKEN_ID = TokenId.fromString(dex.TOKEN_LAB49_1);
 
@@ -46,12 +45,12 @@ let tokenLockedAmount: number;
 
 @binding()
 export class GovernorTokenTransfer extends CommonSteps {
-  @given(/User deploy contracts "([^"]*)"/, TAG, 60000)
+  @given(/User deploy contracts "([^"]*)"/, undefined, 60000)
   public async deployContracts(contracts: string): Promise<void> {
     await this.deploy(contracts);
   }
 
-  @given(/User have initialized the contracts/, TAG, 60000)
+  @given(/User have initialized the contracts/, undefined, 60000)
   public async initialize(): Promise<void> {
     ftTokenHolderFactory = new FTTokenHolderFactory();
     await ftTokenHolderFactory.initialize();
@@ -86,7 +85,7 @@ export class GovernorTokenTransfer extends CommonSteps {
 
   @when(
     /User create a token transfer proposal with title "([^"]*)" description "([^"]*)" link "([^"]*)" and token amount (\d*)/,
-    TAG,
+    undefined,
     30000
   )
   public async createProposal(
@@ -144,7 +143,7 @@ export class GovernorTokenTransfer extends CommonSteps {
 
   @when(
     /User create a token association proposal with title "([^"]*)", description "([^"]*)", link "([^"]*)"/,
-    TAG,
+    undefined,
     30000
   )
   public async createTokenAssociateProposal(
@@ -163,7 +162,7 @@ export class GovernorTokenTransfer extends CommonSteps {
     );
   }
 
-  @then(/User verify that proposal state is "([^"]*)"/, TAG, 30000)
+  @then(/User verify that proposal state is "([^"]*)"/, undefined, 30000)
   public async verifyProposalState(proposalState: string): Promise<void> {
     const { currentState, proposalStateNumeric } = await this.getProposalState(
       governor,
@@ -174,12 +173,12 @@ export class GovernorTokenTransfer extends CommonSteps {
     expect(Number(currentState)).to.eql(proposalStateNumeric);
   }
 
-  @then(/User gets message "([^"]*)"/, TAG, 30000)
+  @then(/User gets message "([^"]*)"/, undefined, 30000)
   public async verifyErrorMsg(message: string): Promise<void> {
     expect(errorMessage).contains(message);
   }
 
-  @when(/User execute the proposal with title "([^"]*)"/, TAG, 30000)
+  @when(/User execute the proposal with title "([^"]*)"/, undefined, 30000)
   public async execute(title: string) {
     try {
       await this.executeProposal(
@@ -193,12 +192,16 @@ export class GovernorTokenTransfer extends CommonSteps {
     }
   }
 
-  @when(/User vote "([^"]*)" proposal/, TAG, 30000)
+  @when(/User vote "([^"]*)" proposal/, undefined, 30000)
   public async voteToProposal(vote: string): Promise<void> {
     await this.vote(governor, vote, proposalId, voterClient);
   }
 
-  @when(/User setup default allowance for GTT proposals/, TAG, 30000)
+  @when(
+    /User setup default allowance for GTT proposal creation/,
+    undefined,
+    30000
+  )
   public async setAllowanceForProposalCreation() {
     await this.setupAllowanceForProposalCreation(
       governor,
@@ -208,7 +211,7 @@ export class GovernorTokenTransfer extends CommonSteps {
     );
   }
 
-  @when(/User reset default allowance for GTT proposals/, TAG, 30000)
+  @when(/User reset default allowance for GTT proposals/, undefined, 30000)
   public async resetAllowanceForProposalCreation() {
     await this.setupAllowanceForToken(
       governor,
@@ -221,7 +224,7 @@ export class GovernorTokenTransfer extends CommonSteps {
     );
   }
 
-  @when(/User fetches token balance from GTT contract/, TAG, 30000)
+  @when(/User fetches token balance from GTT contract/, undefined, 30000)
   public async getTokenBalanceFromContract() {
     contractBalanceBeforeTransfer = await Common.getTokenBalance(
       ContractId.fromString(governor.contractId),
@@ -229,7 +232,7 @@ export class GovernorTokenTransfer extends CommonSteps {
     );
   }
 
-  @when(/User fetches token balance from receiver account/, TAG, 30000)
+  @when(/User fetches token balance from receiver account/, undefined, 30000)
   public async getTokenBalanceFromReceiverAccount() {
     receiverBalanceBeforeTransfer = await Common.getTokenBalance(
       receiverAccountId,
@@ -237,7 +240,11 @@ export class GovernorTokenTransfer extends CommonSteps {
     );
   }
 
-  @then(/User verify that token is transferred from GTT contract/, TAG, 30000)
+  @then(
+    /User verify that token is transferred from GTT contract/,
+    undefined,
+    30000
+  )
   public async verifyTokenBalanceInContract() {
     const contractBalanceAfterTransfer = await Common.getTokenBalance(
       ContractId.fromString(governor.contractId),
@@ -250,7 +257,11 @@ export class GovernorTokenTransfer extends CommonSteps {
     ).equals(true);
   }
 
-  @then(/User verify that token is transferred to receiver account/, TAG, 30000)
+  @then(
+    /User verify that token is transferred to receiver account/,
+    undefined,
+    30000
+  )
   public async verifyTokenBalanceInReceiverAccount() {
     const receiverBalanceAfterTransfer = await Common.getTokenBalance(
       receiverAccountId,
@@ -263,7 +274,7 @@ export class GovernorTokenTransfer extends CommonSteps {
     ).equals(true);
   }
 
-  @when(/User get assets back from GTT/, TAG, 30000)
+  @when(/User get assets back from GTT/, undefined, 30000)
   public async getLockedTokensFromGTT() {
     const transferTokenInGTT = await Common.getTokenBalance(
       ContractId.fromString(governor.contractId),
@@ -281,7 +292,7 @@ export class GovernorTokenTransfer extends CommonSteps {
     }
   }
 
-  @when(/User treasury transfer amount to GTT contract/, TAG, 30000)
+  @when(/User treasury transfer amount to GTT contract/, undefined, 30000)
   public async sendTokenToGTTContract() {
     await Common.transferTokens(
       AccountId.fromString(governor.contractId),
@@ -295,14 +306,18 @@ export class GovernorTokenTransfer extends CommonSteps {
 
   @when(
     /User wait for proposal state to be "([^"]*)" for max (\d*) seconds/,
-    TAG,
+    undefined,
     60000
   )
   public async waitForState(state: string, seconds: number) {
     await this.waitForProposalState(governor, state, proposalId, seconds);
   }
 
-  @when(/User Associate the transfer token to receiver account/, TAG, 60000)
+  @when(
+    /User Associate the transfer token to receiver account/,
+    undefined,
+    60000
+  )
   public async associateTokenToReceiver() {
     await Common.associateTokensToAccount(
       receiverAccountId,
@@ -312,7 +327,7 @@ export class GovernorTokenTransfer extends CommonSteps {
     );
   }
 
-  @when(/User setup (\d+\.?\d*) as allowance for voting/, TAG, 30000)
+  @when(/User setup (\d+\.?\d*) as allowance for voting/, undefined, 30000)
   public async setAllowanceForTokenLocking(amount: number) {
     tokenLockedAmount = amount * CommonSteps.withPrecision;
     await this.setupAllowanceForTokenLocking(
@@ -324,7 +339,7 @@ export class GovernorTokenTransfer extends CommonSteps {
     );
   }
 
-  @when(/User lock (\d+\.?\d*) GOD tokens for voting/, TAG, 30000)
+  @when(/User lock (\d+\.?\d*) GOD tokens for voting/, undefined, 30000)
   public async lockGOD(amount: number) {
     tokenLockedAmount = amount * CommonSteps.withPrecision;
     await this.lockTokens(
@@ -336,7 +351,7 @@ export class GovernorTokenTransfer extends CommonSteps {
     );
   }
 
-  @then(/User verify the locked tokens amount in holder/, TAG, 30000)
+  @then(/User verify the locked tokens amount in holder/, undefined, 30000)
   public async verifyLockedTokensAmountInHolderContract() {
     const voterBalance = await ftHolder.balanceOfVoter(
       voterAccountId,
@@ -345,7 +360,7 @@ export class GovernorTokenTransfer extends CommonSteps {
     expect(voterBalance).equals(tokenLockedAmount);
   }
 
-  @when(/User get locked tokens back from holder for GTT/, TAG, 30000)
+  @when(/User get locked tokens back from holder for GTT/, undefined, 30000)
   public async revertGOD() {
     await this.revertTokens(
       ContractId.fromString(ftHolder.contractId),
@@ -357,7 +372,7 @@ export class GovernorTokenTransfer extends CommonSteps {
     );
   }
 
-  @when(/User cancel the proposal with title "([^"]*)"/, TAG, 30000)
+  @when(/User cancel the proposal with title "([^"]*)"/, undefined, 30000)
   public async cancelProposal(title: string) {
     await governor.cancelProposal(title, proposalCreatorClient);
   }

@@ -206,7 +206,7 @@ export class NFTDaoFactoryTest extends CommonSteps {
     await this.vote(governor, vote, proposalId, voterClient);
   }
 
-  @when(/User set nft allowance for GTT proposals/, undefined, 30000)
+  @when(/User set nft allowance for GTT proposal creation/, undefined, 30000)
   public async setAllowanceForProposalCreation() {
     await this.setupNFTAllowanceForProposalCreation(
       governor,
@@ -355,7 +355,7 @@ export class NFTDaoFactoryTest extends CommonSteps {
   @when(/User reset nft allowance from contracts/, undefined, 30000)
   public async userResetNftAllowance() {
     // 1 - reset for governance
-    await Common.deleteTokenNftAllowanceAllSerials(
+    await Common.deleteSpendersNftAllowanceForAllSerials(
       NFT_TOKEN_ID,
       governor.contractId,
       clientsInfo.operatorId,
@@ -364,7 +364,7 @@ export class NFTDaoFactoryTest extends CommonSteps {
     );
 
     // 2 - reset for token-holder
-    await Common.deleteTokenNftAllowanceAllSerials(
+    await Common.deleteSpendersNftAllowanceForAllSerials(
       NFT_TOKEN_ID,
       nftHolder.contractId,
       clientsInfo.operatorId,

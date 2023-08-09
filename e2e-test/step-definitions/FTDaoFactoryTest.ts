@@ -14,7 +14,6 @@ import { clientsInfo } from "../../utils/ClientManagement";
 import { given, binding, when, then } from "cucumber-tsflow/dist";
 import { AccountId, ContractId, TokenId } from "@hashgraph/sdk";
 
-const TAG = "FTDao";
 const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
 const TRANSFER_TOKEN_ID = TokenId.fromString(dex.TOKEN_LAB49_1);
 
@@ -55,12 +54,12 @@ let ftTokenHolderFactory: FTTokenHolderFactory;
 
 @binding()
 export class FTDaoFactoryTest extends CommonSteps {
-  @given(/User deploy the contracts "([^"]*)"/, TAG, 60000)
+  @given(/User deploy the contracts "([^"]*)"/, undefined, 60000)
   public async deployContracts(contracts: string): Promise<void> {
     await this.deploy(contracts);
   }
 
-  @given(/User have to initialized the contracts/, TAG, 60000)
+  @given(/User have to initialized the contracts/, undefined, 60000)
   public async initialize(): Promise<void> {
     ftTokenHolderFactory = new FTTokenHolderFactory();
     await ftTokenHolderFactory.initialize();
@@ -85,7 +84,11 @@ export class FTDaoFactoryTest extends CommonSteps {
     console.log("");
   }
 
-  @when(/User create a DAO with name "([^"]*)" and url "([^"]*)"/, TAG, 70000)
+  @when(
+    /User create a DAO with name "([^"]*)" and url "([^"]*)"/,
+    undefined,
+    70000
+  )
   public async createDAO(daoName: string, daoURL: string) {
     const isDaoNameBlank = daoName.trim().length === 0;
     try {
@@ -112,14 +115,14 @@ export class FTDaoFactoryTest extends CommonSteps {
     }
   }
 
-  @then(/User verify that created dao address is available/, TAG, 30000)
+  @then(/User verify that created dao address is available/, undefined, 30000)
   public async verifyDAOAddressIsAvailable() {
     expect(ethers.utils.isAddress(daoAddress)).equals(true);
   }
 
   @when(
     /User create token association proposal with title "([^"]*)", description "([^"]*)", link "([^"]*)"/,
-    TAG,
+    undefined,
     30000
   )
   public async createTokenAssociateProposal(
@@ -139,7 +142,7 @@ export class FTDaoFactoryTest extends CommonSteps {
 
   @when(
     /User create token transfer proposal with title "([^"]*)" description "([^"]*)" link "([^"]*)" and token amount (\d*)/,
-    TAG,
+    undefined,
     30000
   )
   public async createProposal(
@@ -167,7 +170,7 @@ export class FTDaoFactoryTest extends CommonSteps {
     }
   }
 
-  @then(/User verify the proposal state is "([^"]*)"/, TAG, 30000)
+  @then(/User verify the proposal state is "([^"]*)"/, undefined, 30000)
   public async verifyProposalState(proposalState: string): Promise<void> {
     const { currentState, proposalStateNumeric } = await this.getProposalState(
       governor,
@@ -178,12 +181,12 @@ export class FTDaoFactoryTest extends CommonSteps {
     expect(Number(currentState)).to.eql(proposalStateNumeric);
   }
 
-  @then(/User gets the message "([^"]*)"/, TAG, 30000)
+  @then(/User gets the message "([^"]*)"/, undefined, 30000)
   public async verifyErrorMsg(message: string): Promise<void> {
     expect(errorMessage).contains(message);
   }
 
-  @when(/User execute proposal with title "([^"]*)"/, TAG, 30000)
+  @when(/User execute proposal with title "([^"]*)"/, undefined, 30000)
   public async execute(title: string) {
     try {
       await this.executeProposal(
@@ -197,12 +200,16 @@ export class FTDaoFactoryTest extends CommonSteps {
     }
   }
 
-  @when(/User voted "([^"]*)" proposal/, TAG, 30000)
+  @when(/User voted "([^"]*)" proposal/, undefined, 30000)
   public async voteToProposal(vote: string): Promise<void> {
     await this.vote(governor, vote, proposalId, voterClient);
   }
 
-  @when(/User setup the default allowance for GTT proposals/, TAG, 30000)
+  @when(
+    /User setup the default allowance for GTT proposal creation/,
+    undefined,
+    30000
+  )
   public async setAllowanceForProposalCreation() {
     await this.setupAllowanceForProposalCreation(
       governor,
@@ -212,7 +219,7 @@ export class FTDaoFactoryTest extends CommonSteps {
     );
   }
 
-  @when(/User reset the default allowance for GTT proposals/, TAG, 30000)
+  @when(/User reset the default allowance for GTT proposals/, undefined, 30000)
   public async resetAllowanceForProposalCreation() {
     await this.setupAllowanceForToken(
       governor,
@@ -225,7 +232,7 @@ export class FTDaoFactoryTest extends CommonSteps {
     );
   }
 
-  @when(/User fetch token balance from GTT contract/, TAG, 30000)
+  @when(/User fetch token balance from GTT contract/, undefined, 30000)
   public async getTokenBalanceFromContract() {
     contractBalanceBeforeTransfer = await Common.getTokenBalance(
       ContractId.fromString(governor.contractId),
@@ -233,7 +240,7 @@ export class FTDaoFactoryTest extends CommonSteps {
     );
   }
 
-  @when(/User fetch token balance from receiver account/, TAG, 30000)
+  @when(/User fetch token balance from receiver account/, undefined, 30000)
   public async getTokenBalanceFromReceiverAccount() {
     receiverBalanceBeforeTransfer = await Common.getTokenBalance(
       receiverAccountId,
@@ -241,7 +248,7 @@ export class FTDaoFactoryTest extends CommonSteps {
     );
   }
 
-  @then(/User verify token is transferred from GTT contract/, TAG, 30000)
+  @then(/User verify token is transferred from GTT contract/, undefined, 30000)
   public async verifyTokenBalance() {
     const contractBalanceAfterTransfer = await Common.getTokenBalance(
       ContractId.fromString(governor.contractId),
@@ -254,7 +261,11 @@ export class FTDaoFactoryTest extends CommonSteps {
     ).equals(true);
   }
 
-  @then(/User verify token is transferred to receiver account/, TAG, 30000)
+  @then(
+    /User verify token is transferred to receiver account/,
+    undefined,
+    30000
+  )
   public async verifyTokenBalanceInReceiverAccount() {
     const receiverBalanceAfterTransfer = await Common.getTokenBalance(
       receiverAccountId,
@@ -267,7 +278,7 @@ export class FTDaoFactoryTest extends CommonSteps {
     ).equals(true);
   }
 
-  @when(/User get the assets back from GTT/, TAG, 30000)
+  @when(/User get the assets back from GTT/, undefined, 30000)
   public async getLockedTokensFromGTT() {
     const transferTokenInGTT = await Common.getTokenBalance(
       ContractId.fromString(governor.contractId),
@@ -285,7 +296,7 @@ export class FTDaoFactoryTest extends CommonSteps {
     }
   }
 
-  @when(/User transfer amount to GTT contract/, TAG, 30000)
+  @when(/User transfer amount to GTT contract/, undefined, 30000)
   public async sendTokenToGTTContract() {
     await Common.transferTokens(
       AccountId.fromString(governor.contractId),
@@ -299,14 +310,14 @@ export class FTDaoFactoryTest extends CommonSteps {
 
   @when(
     /User wait for the proposal state to be "([^"]*)" for max (\d*) seconds/,
-    TAG,
+    undefined,
     60000
   )
   public async waitForState(state: string, seconds: number) {
     await this.waitForProposalState(governor, state, proposalId, seconds);
   }
 
-  @when(/User Associate transfer token to receiver account/, TAG, 60000)
+  @when(/User Associate transfer token to receiver account/, undefined, 60000)
   public async associateTokenToReceiver() {
     await Common.associateTokensToAccount(
       receiverAccountId,
@@ -316,7 +327,7 @@ export class FTDaoFactoryTest extends CommonSteps {
     );
   }
 
-  @when(/User setup (\d+\.?\d*) as the allowance for voting/, TAG, 30000)
+  @when(/User setup (\d+\.?\d*) as the allowance for voting/, undefined, 30000)
   public async setAllowanceForTokenLocking(amount: number) {
     tokenLockedAmount = amount * CommonSteps.withPrecision;
     await this.setupAllowanceForTokenLocking(
@@ -328,7 +339,7 @@ export class FTDaoFactoryTest extends CommonSteps {
     );
   }
 
-  @when(/User lock (\d+\.?\d*) GOD tokens for the voting/, TAG, 30000)
+  @when(/User lock (\d+\.?\d*) GOD tokens for the voting/, undefined, 30000)
   public async lockGOD(amount: number) {
     tokenLockedAmount = amount * CommonSteps.withPrecision;
     await this.lockTokens(
@@ -340,7 +351,7 @@ export class FTDaoFactoryTest extends CommonSteps {
     );
   }
 
-  @then(/User verify locked tokens amount in holder/, TAG, 30000)
+  @then(/User verify locked tokens amount in holder/, undefined, 30000)
   public async verifyLockedTokensAmountInHolderContract() {
     const voterBalance = await ftHolder.balanceOfVoter(
       voterAccountId,
@@ -349,7 +360,7 @@ export class FTDaoFactoryTest extends CommonSteps {
     expect(voterBalance).equals(tokenLockedAmount);
   }
 
-  @when(/User get the locked tokens back from holder for GTT/, TAG, 30000)
+  @when(/User get the locked tokens back from holder for GTT/, undefined, 30000)
   public async revertGOD() {
     await this.revertTokens(
       ContractId.fromString(ftHolder.contractId),

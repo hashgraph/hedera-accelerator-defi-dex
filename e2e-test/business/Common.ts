@@ -58,7 +58,7 @@ export default class Common extends Base {
     );
   };
 
-  static deleteTokenNftAllowanceAllSerials = async (
+  static deleteSpendersNftAllowanceForAllSerials = async (
     tokenId: string | TokenId,
     spenderAccountId: string | AccountId,
     ownerAccount: string | AccountId,
@@ -76,7 +76,7 @@ export default class Common extends Base {
     const receipt = await txResponse.getReceipt(client);
     const transactionStatus = receipt.status;
     console.log(
-      `- Common#deleteTokenNftAllowanceAllSerials(): status = ${transactionStatus.toString()}, tokenId = ${tokenId.toString()}\n`
+      `- Common#deleteSpendersNftAllowanceForAllSerials(): status = ${transactionStatus.toString()}, tokenId = ${tokenId.toString()}\n`
     );
   };
 

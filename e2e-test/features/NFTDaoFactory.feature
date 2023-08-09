@@ -21,7 +21,7 @@ Scenario: Verify user can't create DAO with empty name
         Given User create a NFT DAO with name "" and url "https://hedera.com"
         Then User receive the error message "CONTRACT_REVERT_EXECUTED" 
 
-Scenario: Verify user can create DAO with non-empty name, lock nft serial for voting and associate token to receiver
+Scenario: Verify user can create DAO with non-empty name, lock nft serial for voting and associate token to receiver for subsequent scenarios where locking, association etc are required
         When User create a NFT DAO with name "DAO-ONE" and url "https://hedera.com"
         Then User verify that created NFT DAO address is available
         When User setup nft-token allowance for voting
@@ -30,7 +30,7 @@ Scenario: Verify user can create DAO with non-empty name, lock nft serial for vo
         When User associate token to receiver account
 
 Scenario: Verify token association and transfer journey
-        When User set nft allowance for GTT proposals
+        When User set nft allowance for GTT proposal creation
         When User creates the token association proposal with title "TokenAssociation1 - Title"
         When User waits for the proposal state to be "Active" for max 5 seconds 
         Then User verify nft proposal state is "Active"
@@ -40,7 +40,7 @@ Scenario: Verify token association and transfer journey
         When User executes proposal with title "TokenAssociation1 - Title"
         Then User verify nft proposal state is "Executed"
 
-        When User set nft allowance for GTT proposals
+        When User set nft allowance for GTT proposal creation
         When User creates token transfer proposal with title "sampletitle" description "testdescription" link "testlink" and token amount 1
         When User waits for the proposal state to be "Active" for max 5 seconds 
         Then User verify nft proposal state is "Active"

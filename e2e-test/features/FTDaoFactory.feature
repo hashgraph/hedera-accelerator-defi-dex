@@ -21,7 +21,7 @@ Scenario: Verify user can't create DAO with empty name
         When User create a DAO with name "" and url "https://hedera.com"
         Then User gets the message "CONTRACT_REVERT_EXECUTED"
 
-Scenario: Verify user can create DAO with non-empty name, lock tokens for voting and associate token to receiver
+Scenario: Verify user can create DAO with non-empty name, lock tokens for voting and associate token to receiver for subsequent scenarios where locking, association etc are required
         When User create a DAO with name "DAO-ONE" and url "https://hedera.com"
         Then User verify that created dao address is available
         When User setup 10001 as the allowance for voting
@@ -30,7 +30,7 @@ Scenario: Verify user can create DAO with non-empty name, lock tokens for voting
         When User Associate transfer token to receiver account
 
 Scenario: Verify token association and transfer journey
-        When User setup the default allowance for GTT proposals
+        When User setup the default allowance for GTT proposal creation
         When User create token association proposal with title "TokenAssociation1 - Title", description "TokenAssociation - Desc", link "TokenAssociation - Link"
         When User wait for the proposal state to be "Active" for max 5 seconds 
         Then User verify the proposal state is "Active"
@@ -40,7 +40,7 @@ Scenario: Verify token association and transfer journey
         When User execute proposal with title "TokenAssociation1 - Title"
         Then User verify the proposal state is "Executed"
 
-        When User setup the default allowance for GTT proposals
+        When User setup the default allowance for GTT proposal creation
         When User create token transfer proposal with title "sampletitle" description "testdescription" link "testlink" and token amount 1
         When User wait for the proposal state to be "Active" for max 5 seconds 
         Then User verify the proposal state is "Active"
