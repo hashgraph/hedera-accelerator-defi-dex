@@ -32,7 +32,7 @@ export const DEFAULT_VOTING_DELAY = 0; // blocks
 export const DEFAULT_VOTING_PERIOD = 100; // blocks means 3 minutes as per test
 export const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
 export const NFT_TOKEN_ID = dex.NFT_TOKEN_ID;
-export const DEFAULT_NFT_TOKEN_SERIAL_ID = 1;
+export const DEFAULT_NFT_TOKEN_SERIAL_ID = 19;
 
 export default class FTDAO extends BaseDao {
   async initialize(
@@ -117,7 +117,7 @@ export default class FTDAO extends BaseDao {
     title: string,
     toAddress: string,
     tokenId: string,
-    tokenAmount: number,
+    tokenAmount: number | BigNumber,
     client: Client = clientsInfo.operatorClient,
     description: string = DEFAULT_DESCRIPTION,
     link: string = DEFAULT_LINK,
@@ -129,7 +129,7 @@ export default class FTDAO extends BaseDao {
       .addString(link)
       .addAddress(toAddress) // to
       .addAddress(tokenId) // tokenToTransfer
-      .addUint256(BigNumber(tokenAmount)) // amountToTransfer
+      .addUint256(tokenAmount) // amountToTransfer
       .addUint256(nftTokenSerialId);
 
     const { result } = await this.execute(

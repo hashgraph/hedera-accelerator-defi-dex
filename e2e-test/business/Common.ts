@@ -58,6 +58,28 @@ export default class Common extends Base {
     );
   };
 
+  static deleteSpendersNftAllowanceForAllSerials = async (
+    tokenId: string | TokenId,
+    spenderAccountId: string | AccountId,
+    ownerAccount: string | AccountId,
+    ownerAccountPrivateKey: PrivateKey,
+    client: Client
+  ) => {
+    const txn =
+      new AccountAllowanceApproveTransaction().deleteTokenNftAllowanceAllSerials(
+        tokenId,
+        ownerAccount,
+        spenderAccountId
+      );
+    const signTx = await txn.freezeWith(client).sign(ownerAccountPrivateKey);
+    const txResponse = await signTx.execute(client);
+    const receipt = await txResponse.getReceipt(client);
+    const transactionStatus = receipt.status;
+    console.log(
+      `- Common#deleteSpendersNftAllowanceForAllSerials(): status = ${transactionStatus.toString()}, tokenId = ${tokenId.toString()}\n`
+    );
+  };
+
   static setTokenAllowance = async (
     tokenId: TokenId,
     spenderAccountId: string | AccountId,
@@ -229,8 +251,18 @@ export default class Common extends Base {
     tokenId: TokenId,
     client: Client = clientsInfo.operatorClient
   ) => {
+    let address: string = "";
+    if (idOrEvmAddress instanceof ContractId) {
+      address = await AddressHelper.idToEvmAddress(idOrEvmAddress.toString());
+    } else if (idOrEvmAddress instanceof AccountId) {
+      address = idOrEvmAddress.toSolidityAddress();
+    } else if (typeof idOrEvmAddress === "string") {
+      address = idOrEvmAddress;
+    } else {
+      throw Error(`Unsupported id :- ${idOrEvmAddress}`);
+    }
     const token = new Token(ContractId.fromString(tokenId.toString()));
-    return await token.getBalance(idOrEvmAddress);
+    return await token.getBalance(address);
   };
 
   static getTokenInfo = async (

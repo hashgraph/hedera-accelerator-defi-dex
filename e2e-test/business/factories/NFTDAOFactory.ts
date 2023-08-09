@@ -18,7 +18,7 @@ export default class NFTDAOFactory extends DAOFactory {
     return "NFT";
   }
 
-  protected getTokenHolderInstance = async (tokenId: TokenId) => {
+  public getTokenHolderInstance = async (tokenId: TokenId) => {
     const factoryProxyId = await this.getTokenHolderFactoryAddress();
     const nftGodFactory = new NFTTokenHolderFactory(factoryProxyId);
     return new NFTHolder(

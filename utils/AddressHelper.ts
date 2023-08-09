@@ -29,6 +29,7 @@ export class AddressHelper {
     if (cacheResponse) {
       console.log("*** cache hit ***", idOrAddress);
       console.timeEnd("*** Resolved in");
+      console.log("");
       return {
         contract_id: cacheResponse.id,
         evm_address: cacheResponse.address,
@@ -42,6 +43,7 @@ export class AddressHelper {
       };
       console.log("*** api hit ***", idOrAddress);
       console.timeEnd("*** Resolved in");
+      console.log("");
       AddressHelper.cs.addDeployed(item);
       return apiResponse;
     }

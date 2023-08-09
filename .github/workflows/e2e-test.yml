@@ -43,6 +43,7 @@ jobs:
         run: npx hardhat run deployment/scripts/createContractsE2E.ts;
       - name: e2e
         run: npm run e2e-test suite-one
+
   suite-2:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
@@ -64,34 +65,8 @@ jobs:
         run: npx hardhat run deployment/scripts/createContractsE2E.ts;
       - name: e2e
         run: npm run e2e-test suite-two
+
   suite-3:
-    if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    env:
-      OPERATOR_ID: 0.0.78619
-      OPERATOR_KEY: 302e020100300506032b657004220420c8cb72a0addffcbd898689e5b5641c0abff4399ddeb90a04071433e3724e14dd
-      TREASURE_ID: 0.0.405576
-      TREASURE_KEY: 302e020100300506032b6570042204202cc790b009e400a3ed97363980ae27ddfb58102fa8fb7c1a7b69e212f756c084
-
-    steps:
-      - uses: actions/checkout@v3
-      - name: Use Node.js 18.x
-        uses: actions/setup-node@v3
-        with:
-          node-version: "18.15.0"
-      - run: npm ci
-      - name: Save user inputs
-        uses: jsdaniell/create-json@v1.2.2
-        id: create-json
-        with:
-          name: "deployment/scripts/workflow-inputs.json"
-          json: '{"contracts":"GODHolder,GovernorTransferToken,GovernorTokenCreate"}'
-      - name: Deployment
-        run: npx hardhat run deployment/scripts/createContractsE2E.ts;
-      - name: e2e
-        run: npm run e2e-test suite-three
-
-  suite-4:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     env:
@@ -110,11 +85,28 @@ jobs:
         id: create-json
         with:
           name: "deployment/scripts/workflow-inputs.json"
-          json: '{"contracts":"GODHolder,FTDAOFactory,FTDAO,GovernorTransferToken,GODTokenHolderFactory"}'
+          json: '{"contracts":"GODHolder,GovernorTokenCreate"}'
       - name: Deployment
         run: npx hardhat run deployment/scripts/createContractsE2E.ts;
       - name: e2e
-        run: npm run e2e-test suite-four
+        run: npm run e2e-test suite-three
+
+  suite-4:
+    if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    env:
+      UI_USER_ID: 0.0.405576
+      UI_USER_KEY: 302e020100300506032b6570042204202cc790b009e400a3ed97363980ae27ddfb58102fa8fb7c1a7b69e212f756c084
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18.15.0"
+      - run: npm ci
+      - name: e2e
+        run: npx hardhat compile --force && npm run e2e-test suite-four
 
   suite-5:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'

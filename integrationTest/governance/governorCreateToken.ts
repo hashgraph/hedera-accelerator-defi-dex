@@ -62,7 +62,12 @@ async function createTokenViaProposal(name: string, symbol: string) {
   await governor.isVoteSucceeded(proposalId);
   await governor.proposalVotes(proposalId);
   if (await governor.isSucceeded(proposalId)) {
-    await governor.executeProposal(title, clientsInfo.treasureKey);
+    await governor.executeProposal(
+      title,
+      clientsInfo.treasureKey,
+      clientsInfo.operatorClient,
+      governor.TXN_FEE_FOR_TOKEN_CREATE
+    );
     tokenId = await governor.getTokenAddressFromGovernorTokenCreate(proposalId);
   } else {
     await governor.cancelProposal(title, clientsInfo.operatorClient);
