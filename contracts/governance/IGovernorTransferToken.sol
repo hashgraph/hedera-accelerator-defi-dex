@@ -7,7 +7,6 @@ interface IGovernorTransferToken is IGovernorBase {
         string memory title,
         string memory description,
         string memory linkToDiscussion,
-        address transferFromAccount,
         address transferToAccount,
         address tokenToTransfer,
         uint256 transferTokenAmount,

@@ -146,7 +146,8 @@ export class GovernorCreateToken extends CommonSteps {
       governor,
       title,
       clientsInfo.operatorKey,
-      clientsInfo.operatorClient
+      clientsInfo.operatorClient,
+      governor.TXN_FEE_FOR_TOKEN_CREATE
     );
   }
 

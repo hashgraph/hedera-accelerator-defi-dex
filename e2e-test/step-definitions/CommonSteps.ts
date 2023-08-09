@@ -6,10 +6,10 @@ import {
   ContractId,
   TokenId,
 } from "@hashgraph/sdk";
+import { Deployment } from "../../utils/deployContractOnTestnet";
 import GodHolder from "../business/GodHolder";
 import Common from "../business/Common";
 import NFTHolder from "../business/NFTHolder";
-import { main as deployContracts } from "../../deployment/scripts/createContractsE2E";
 
 export class CommonSteps {
   static DEFAULT_QUORUM_THRESHOLD_IN_BSP = 1;
@@ -66,9 +66,10 @@ export class CommonSteps {
     governor: Governor,
     title: string,
     fromPrivateKey: PrivateKey,
-    client: Client
+    client: Client,
+    fee: number = 0
   ) {
-    await governor.executeProposal(title, fromPrivateKey, client);
+    await governor.executeProposal(title, fromPrivateKey, client, fee);
   }
 
   public async getProposalState(
@@ -214,12 +215,8 @@ export class CommonSteps {
     );
   }
 
-  public async deployGivenContract(contracts: string[]) {
-    await deployContracts(contracts);
-  }
-
   public async revertNFTs(
-    fromAccountId: ContractId | AccountId,
+    fromEvmAddress: string,
     fromAccountKey: PrivateKey,
     toAccountId: string | AccountId,
     tokenId: TokenId,
@@ -229,10 +226,24 @@ export class CommonSteps {
     await Common.transferNFTToken(
       tokenId,
       tokenSerialNumber,
-      fromAccountId,
+      fromEvmAddress,
       fromAccountKey,
       toAccountId,
       client
+    );
+  }
+
+  public async deploy(contracts: string) {
+    const items = contracts.split(",");
+    if (items.length === 0) {
+      throw new Error("No contracts given");
+    }
+    console.log(`- Contracts for deployment are :=`, items, "\n");
+    const deployment = new Deployment();
+    await Promise.all(
+      items.map(async (item: string) => {
+        await deployment.deployProxyAndSave(item);
+      })
     );
   }
 

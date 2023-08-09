@@ -17,9 +17,8 @@ import {
 import TokenTransferGovernor from "../../e2e-test/business/TokenTransferGovernor";
 import NFTTokenHolderFactory from "../../e2e-test/business/factories/NFTTokenHolderFactory";
 import SystemRoleBasedAccess from "../../e2e-test/business/common/SystemRoleBasedAccess";
+import Common from "../../e2e-test/business/Common";
 
-const NFT_ID_FOR_VOTING = 12;
-const PROPOSAL_CREATE_NFT_SERIAL_ID = 13;
 const TOKEN_QTY = 1 * 1e8;
 const TOKEN_ID = TokenId.fromString(dex.TOKEN_LAB49_1);
 const adminAddress: string = clientsInfo.operatorId.toSolidityAddress();
@@ -53,9 +52,9 @@ async function main() {
     DAO_WEB_LINKS,
     nftHolder,
     clientsInfo.operatorClient,
-    GovernorTokenMetaData.DEFAULT_QUORUM_THRESHOLD_IN_BSP,
-    GovernorTokenMetaData.DEFAULT_VOTING_DELAY,
-    GovernorTokenMetaData.DEFAULT_VOTING_PERIOD,
+    1,
+    0,
+    30,
     GovernorTokenMetaData.NFT_TOKEN_ID,
     GovernorTokenMetaData.NFT_TOKEN_ID
   );
@@ -87,80 +86,117 @@ if (require.main === module) {
 export async function executeGovernorTokenTransferFlow(
   nftHolder: NFTHolder,
   tokenTransferDAO: FTDAO,
-  fromAccount: AccountId = clientsInfo.treasureId,
-  fromAccountPrivateKey: PrivateKey = clientsInfo.treasureKey,
-  toAccount: AccountId = clientsInfo.operatorId,
-  tokenId: TokenId = TOKEN_ID,
-  tokenAmount: number = TOKEN_QTY,
-  proposalCreatorClient: Client = clientsInfo.operatorClient,
-  proposalCreatorAccountId: AccountId = clientsInfo.operatorId,
-  proposalCreatorAccountPrivateKey: PrivateKey = clientsInfo.operatorKey,
+  transferTokenId: TokenId = TOKEN_ID,
+  transferTokenAmount: number = TOKEN_QTY,
+  receiverAccountId: AccountId = clientsInfo.uiUserId,
+  receiverAccountPK: PrivateKey = clientsInfo.uiUserKey,
+  senderAccountId: AccountId = clientsInfo.treasureId,
+  senderAccountPK: PrivateKey = clientsInfo.treasureKey,
+  daoAdminClient: Client = clientsInfo.operatorClient,
+  daoAdminId: AccountId = clientsInfo.operatorId,
+  daoAdminPK: PrivateKey = clientsInfo.operatorKey,
   voterClient: Client = clientsInfo.operatorClient,
   voterAccountId: AccountId = clientsInfo.operatorId,
-  voterAccountPrivateKey: PrivateKey = clientsInfo.operatorKey
+  voterAccountKey: PrivateKey = clientsInfo.operatorKey,
+  txnFeePayerClient: Client = clientsInfo.operatorClient
 ) {
-  await nftHolder.setupAllowanceForTokenLocking(
-    voterAccountId,
-    voterAccountPrivateKey,
-    voterClient
-  );
-
-  await nftHolder.grabTokensForVoter(
-    NFT_ID_FOR_VOTING,
-    voterAccountId,
-    voterAccountPrivateKey,
-    voterClient
-  );
-
   const governorAddresses =
     await tokenTransferDAO.getGovernorTokenTransferContractAddresses();
 
-  const governorTokenTransfer = new TokenTransferGovernor(
+  const governor = new TokenTransferGovernor(
     governorAddresses.governorTokenTransferProxyId
   );
 
-  await governorTokenTransfer.setupNFTAllowanceForProposalCreation(
-    proposalCreatorClient,
-    proposalCreatorAccountId,
-    proposalCreatorAccountPrivateKey
+  const quorum = await governor.quorum(txnFeePayerClient);
+  const votingPowerAmount = await nftHolder.balanceOfVoter(
+    voterAccountId,
+    txnFeePayerClient
   );
 
-  const title = Helper.createProposalTitle("Token Transfer Proposal");
+  if (votingPowerAmount < quorum) {
+    await nftHolder.setupAllowanceForTokenLocking(
+      voterAccountId,
+      voterAccountKey,
+      txnFeePayerClient
+    );
+    await nftHolder.grabTokensForVoter(
+      governor.DEFAULT_NFT_TOKEN_SERIAL_NO_FOR_VOTING,
+      voterAccountId,
+      voterAccountKey,
+      txnFeePayerClient
+    );
+  }
 
-  const proposalId = await tokenTransferDAO.createTokenTransferProposal(
+  // step -1 association proposal
+  await governor.setupNFTAllowanceForProposalCreation(
+    daoAdminClient,
+    daoAdminId,
+    daoAdminPK
+  );
+
+  const title = Helper.createProposalTitle("Token Associate Proposal");
+  const proposalId = await tokenTransferDAO.createTokenAssociateProposal(
     title,
-    fromAccount.toSolidityAddress(),
-    toAccount.toSolidityAddress(),
-    tokenId.toSolidityAddress(),
-    tokenAmount,
-    proposalCreatorClient,
-    GovernorTokenMetaData.DEFAULT_DESCRIPTION,
-    GovernorTokenMetaData.DEFAULT_LINK,
-    PROPOSAL_CREATE_NFT_SERIAL_ID
+    transferTokenId.toSolidityAddress(),
+    daoAdminClient,
+    "DAO Token Association Proposal - Desc",
+    "DAO Token Association Proposal - LINK",
+    governor.DEFAULT_NFT_TOKEN_SERIAL_NO
   );
 
-  await governorTokenTransfer.getProposalDetails(proposalId);
-  await governorTokenTransfer.forVote(
-    proposalId,
-    NFT_ID_FOR_VOTING,
-    voterClient
+  await governor.getProposalDetails(proposalId, voterClient);
+  await governor.forVote(proposalId, 0, voterClient);
+  await governor.getProposalDetails(proposalId, voterClient);
+  if (await governor.isSucceeded(proposalId)) {
+    await governor.executeProposal(title);
+  } else {
+    await governor.cancelProposal(title, daoAdminClient);
+  }
+
+  // step -2 transfer proposal
+  await governor.setupNFTAllowanceForProposalCreation(
+    daoAdminClient,
+    daoAdminId,
+    daoAdminPK
   );
-  await governorTokenTransfer.isQuorumReached(proposalId);
-  await governorTokenTransfer.isVoteSucceeded(proposalId);
-  await governorTokenTransfer.proposalVotes(proposalId);
-  if (await governorTokenTransfer.isSucceeded(proposalId)) {
-    await governorTokenTransfer.setAllowanceForTransferTokenProposal(
-      tokenId,
-      tokenAmount,
-      governorTokenTransfer.contractId,
-      fromAccount,
-      fromAccountPrivateKey
+
+  const title1 = Helper.createProposalTitle("Token Transfer Proposal");
+  const proposalId1 = await tokenTransferDAO.createTokenTransferProposal(
+    title1,
+    receiverAccountId.toSolidityAddress(),
+    transferTokenId.toSolidityAddress(),
+    transferTokenAmount,
+    daoAdminClient,
+    "DAO Token Transfer Proposal - Desc",
+    "DAO Token Transfer Proposal - Link",
+    governor.DEFAULT_NFT_TOKEN_SERIAL_NO
+  );
+  await governor.getProposalDetails(proposalId1, voterClient);
+  await governor.forVote(proposalId1, 0, voterClient);
+  await governor.getProposalDetails(proposalId1, voterClient);
+  if (await governor.isSucceeded(proposalId1)) {
+    // step - 1 transfer some amount to governance
+    await Common.transferTokens(
+      AccountId.fromString(governor.contractId),
+      senderAccountId,
+      senderAccountPK,
+      transferTokenId,
+      transferTokenAmount,
+      txnFeePayerClient
     );
 
-    await governorTokenTransfer.executeProposal(title, fromAccountPrivateKey);
+    // step - 2 associate token to receiver
+    await Common.associateTokensToAccount(
+      receiverAccountId,
+      [transferTokenId],
+      txnFeePayerClient,
+      receiverAccountPK
+    );
+    await governor.executeProposal(title1);
   } else {
-    await governorTokenTransfer.cancelProposal(title, proposalCreatorClient);
+    await governor.cancelProposal(title1, daoAdminClient);
   }
 
   await nftHolder.checkAndClaimNFTTokens(voterClient, voterAccountId);
+  await tokenTransferDAO.getTokenTransferProposals();
 }
