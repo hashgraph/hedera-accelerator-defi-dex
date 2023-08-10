@@ -24,12 +24,12 @@
   },
   {
     "name": "nfttokenholderfactory",
-    "id": "0.0.443081",
-    "hash": "47838b5723ff5cf1e9e43eba9b3c35d6",
-    "address": "0x000000000000000000000000000000000006c2c9",
-    "timestamp": "2023-08-02T11:21:29.106Z",
-    "transparentProxyId": "0.0.443083",
-    "transparentProxyAddress": "0x000000000000000000000000000000000006c2cb"
+    "id": "0.0.467745",
+    "hash": "e98d5dfe56c35c0fd061ab444492ab1c",
+    "address": "0x0000000000000000000000000000000000072321",
+    "timestamp": "2023-08-10T08:28:56.616Z",
+    "transparentProxyId": "0.0.467747",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000072323"
   },
   {
     "name": "lptoken",
@@ -42,12 +42,12 @@
   },
   {
     "name": "godtokenholderfactory",
-    "id": "0.0.443085",
-    "hash": "4e104460ea61756db76aff40b13f981b",
-    "address": "0x000000000000000000000000000000000006c2cd",
-    "timestamp": "2023-08-02T11:22:09.544Z",
-    "transparentProxyId": "0.0.443088",
-    "transparentProxyAddress": "0x000000000000000000000000000000000006c2d0"
+    "id": "0.0.467740",
+    "hash": "bbdd161c5792ec2c48968ad15dcb1765",
+    "address": "0x000000000000000000000000000000000007231c",
+    "timestamp": "2023-08-10T08:28:21.442Z",
+    "transparentProxyId": "0.0.467742",
+    "transparentProxyAddress": "0x000000000000000000000000000000000007231e"
   },
   {
     "name": "godholder",
@@ -78,12 +78,12 @@
   },
   {
     "name": "nftdaofactory",
-    "id": "0.0.88487",
-    "hash": "ee99c76d1f42e4f70806b40ec7339020",
-    "address": "0x00000000000000000000000000000000000159a7",
-    "timestamp": "2023-07-28T06:14:34.456Z",
-    "transparentProxyId": "0.0.88524",
-    "transparentProxyAddress": "0x00000000000000000000000000000000000159cc"
+    "id": "0.0.467810",
+    "hash": "d59e244be5cd25adbddd3820eeae8a00",
+    "address": "0x0000000000000000000000000000000000072362",
+    "timestamp": "2023-08-10T08:44:12.110Z",
+    "transparentProxyId": "0.0.467812",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000072364"
   },
   {
     "name": "pair",
@@ -96,21 +96,21 @@
   },
   {
     "name": "ftdaofactory",
-    "id": "0.0.88492",
-    "hash": "e392e12b48596352402bbc259151f400",
-    "address": "0x00000000000000000000000000000000000159ac",
-    "timestamp": "2023-07-28T06:14:35.782Z",
-    "transparentProxyId": "0.0.88527",
-    "transparentProxyAddress": "0x00000000000000000000000000000000000159cf"
+    "id": "0.0.467805",
+    "hash": "5bdce1742cdf926a768c15bcb94d50c8",
+    "address": "0x000000000000000000000000000000000007235d",
+    "timestamp": "2023-08-10T08:43:33.609Z",
+    "transparentProxyId": "0.0.467807",
+    "transparentProxyAddress": "0x000000000000000000000000000000000007235f"
   },
   {
     "name": "multisigdaofactory",
-    "id": "0.0.436697",
-    "hash": "e25a14aa1748bfcc44166657d8b29b6b",
-    "address": "0x000000000000000000000000000000000006a9d9",
-    "timestamp": "2023-08-01T13:50:26.517Z",
-    "transparentProxyId": "0.0.436699",
-    "transparentProxyAddress": "0x000000000000000000000000000000000006a9db"
+    "id": "0.0.467801",
+    "hash": "49c1ba3f34bc625f38c0f38a17803739",
+    "address": "0x0000000000000000000000000000000000072359",
+    "timestamp": "2023-08-10T08:42:31.189Z",
+    "transparentProxyId": "0.0.467803",
+    "transparentProxyAddress": "0x000000000000000000000000000000000007235b"
   },
   {
     "name": "vault",
@@ -159,12 +159,12 @@
   },
   {
     "name": "governortransfertoken",
-    "id": "0.0.443567",
-    "hash": "23080b74d1b2fc43c999c4c65a6ece16",
-    "address": "0x000000000000000000000000000000000006c4af",
-    "timestamp": "2023-08-02T12:58:54.040Z",
-    "transparentProxyId": "0.0.443569",
-    "transparentProxyAddress": "0x000000000000000000000000000000000006c4b1"
+    "id": "0.0.467814",
+    "hash": "6eeb281380656c403ffd636c6f146982",
+    "address": "0x0000000000000000000000000000000000072366",
+    "timestamp": "2023-08-10T08:45:03.185Z",
+    "transparentProxyId": "0.0.467816",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000072368"
   },
   {
     "name": "governorupgrade",
