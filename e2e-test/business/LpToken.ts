@@ -82,8 +82,8 @@ export default class LpToken extends Base {
   };
 
   allotLPToken = async (
-    tokenAQtyInPool: number,
-    tokenBQtyInPool: number,
+    tokenAQtyInPool: BigNumber,
+    tokenBQtyInPool: BigNumber,
     tokenAQty: BigNumber,
     tokenBQty: BigNumber,
     receiverAccountId: AccountId,
