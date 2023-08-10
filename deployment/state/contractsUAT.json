@@ -32,15 +32,6 @@
     "transparentProxyAddress": "0x0000000000000000000000000000000000015e77"
   },
   {
-    "name": "lptoken",
-    "id": "0.0.89661",
-    "hash": "504be069b4c3343bb3ead730d1446890",
-    "address": "0x0000000000000000000000000000000000015e3d",
-    "timestamp": "2023-07-28T06:23:28.186Z",
-    "transparentProxyId": "0.0.89723",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000015e7b"
-  },
-  {
     "name": "godtokenholderfactory",
     "id": "0.0.89654",
     "hash": "4e104460ea61756db76aff40b13f981b",
@@ -86,15 +77,6 @@
     "transparentProxyAddress": "0x0000000000000000000000000000000000015e8a"
   },
   {
-    "name": "pair",
-    "id": "0.0.89679",
-    "hash": "89d5f6a2a40b78962011109931d5eb43",
-    "address": "0x0000000000000000000000000000000000015e4f",
-    "timestamp": "2023-07-28T06:23:30.411Z",
-    "transparentProxyId": "0.0.89737",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000015e89"
-  },
-  {
     "name": "ftdaofactory",
     "id": "0.0.89664",
     "hash": "e392e12b48596352402bbc259151f400",
@@ -120,15 +102,6 @@
     "timestamp": "2023-07-28T06:23:25.409Z",
     "transparentProxyId": "0.0.89705",
     "transparentProxyAddress": "0x0000000000000000000000000000000000015e69"
-  },
-  {
-    "name": "factory",
-    "id": "0.0.89674",
-    "hash": "c389f56eed0647b8351962ff246be5d1",
-    "address": "0x0000000000000000000000000000000000015e4a",
-    "timestamp": "2023-07-28T06:23:25.638Z",
-    "transparentProxyId": "0.0.89716",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000015e74"
   },
   {
     "name": "multisigdao",
@@ -192,5 +165,32 @@
     "timestamp": "2023-07-28T06:23:24.481Z",
     "transparentProxyId": "0.0.89702",
     "transparentProxyAddress": "0x0000000000000000000000000000000000015e66"
+  },
+  {
+    "name": "lptoken",
+    "id": "0.0.467667",
+    "hash": "7d97412fcd84e7fb418130b593609f29",
+    "address": "0x00000000000000000000000000000000000722d3",
+    "timestamp": "2023-08-10T07:43:39.188Z",
+    "transparentProxyId": "0.0.467669",
+    "transparentProxyAddress": "0x00000000000000000000000000000000000722d5"
+  },
+  {
+    "name": "pair",
+    "id": "0.0.467608",
+    "hash": "816fdc573ba58441a88c98c7870ebf41",
+    "address": "0x0000000000000000000000000000000000072298",
+    "timestamp": "2023-08-10T07:29:43.066Z",
+    "transparentProxyId": "0.0.467612",
+    "transparentProxyAddress": "0x000000000000000000000000000000000007229c"
+  },
+  {
+    "name": "factory",
+    "id": "0.0.467631",
+    "hash": "4edf48628855e0861e2cb4da7e192638",
+    "address": "0x00000000000000000000000000000000000722af",
+    "timestamp": "2023-08-10T07:36:40.058Z",
+    "transparentProxyId": "0.0.467637",
+    "transparentProxyAddress": "0x00000000000000000000000000000000000722b5"
   }
 ]
