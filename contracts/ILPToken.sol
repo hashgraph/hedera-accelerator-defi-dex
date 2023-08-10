@@ -12,6 +12,8 @@ interface ILPToken {
     ) external payable;
 
     function allotLPTokenFor(
+        uint256 tokenAQtyPresentInPool,
+        uint256 tokenBQtyPresentInPool,
         uint256 amountA,
         uint256 amountB,
         address _toUser
@@ -29,6 +31,8 @@ interface ILPToken {
     function getAllLPTokenCount() external view returns (uint256);
 
     function lpTokenCountForGivenTokensQty(
+        uint256 tokenAQtyPresentInPool,
+        uint256 tokenBQtyPresentInPool,
         uint256 tokenAQuantity,
         uint256 tokenBQuantity
     ) external view returns (uint256);

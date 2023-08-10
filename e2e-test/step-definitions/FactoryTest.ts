@@ -170,7 +170,7 @@ export class FactorySteps {
   }
 
   @then(
-    /User gets message "([^"]*)" on creating pair with same token/,
+    /User receives fails message "([^"]*)" on creating pair with same token/,
     undefined,
     30000
   )
@@ -374,7 +374,7 @@ export class FactorySteps {
   }
 
   @then(
-    /User gets message "([^"]*)" on creating pair with two HBAR tokens/,
+    /User receives message "([^"]*)" on creating pair with two HBAR tokens/,
     undefined,
     30000
   )

@@ -28,10 +28,30 @@ contract LPToken is ILPToken, OwnableUpgradeable, TokenOperations {
     }
 
     function lpTokenCountForGivenTokensQty(
+        uint256 tokenAQtyPresentInPool,
+        uint256 tokenBQtyPresentInPool,
         uint256 tokenAQuantity,
         uint256 tokenBQuantity
-    ) external pure override returns (uint256) {
-        return sqrt(tokenAQuantity * tokenBQuantity);
+    ) external view override returns (uint256) {
+        uint256 _totalSupply = lpToken.totalSupply();
+        uint256 liquidity;
+        if (_totalSupply == 0) {
+            //first time liquidity getting added
+            liquidity = sqrt(tokenAQuantity * tokenBQuantity);
+        } else {
+            require(
+                tokenAQtyPresentInPool > 0 && tokenBQtyPresentInPool > 0,
+                "Pool should contain tokenA and tokenB quantities greater than zero."
+            );
+            uint256 tokenALiquidity = (tokenAQuantity * _totalSupply) /
+                tokenAQtyPresentInPool;
+            uint256 tokenBLiquidity = (tokenBQuantity * _totalSupply) /
+                tokenBQtyPresentInPool;
+            liquidity = tokenALiquidity > tokenBLiquidity
+                ? tokenBLiquidity
+                : tokenALiquidity;
+        }
+        return liquidity;
     }
 
     function initialize(
@@ -58,6 +78,8 @@ contract LPToken is ILPToken, OwnableUpgradeable, TokenOperations {
     }
 
     function allotLPTokenFor(
+        uint256 tokenAQtyPresentInPool,
+        uint256 tokenBQtyPresentInPool,
         uint256 amountA,
         uint256 amountB,
         address _toUser
@@ -67,6 +89,8 @@ contract LPToken is ILPToken, OwnableUpgradeable, TokenOperations {
             "Please provide positive token counts"
         );
         uint256 mintingAmount = this.lpTokenCountForGivenTokensQty(
+            tokenAQtyPresentInPool,
+            tokenBQtyPresentInPool,
             amountA,
             amountB
         );

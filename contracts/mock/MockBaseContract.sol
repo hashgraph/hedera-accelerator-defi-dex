@@ -82,7 +82,7 @@ contract MockHederaService is IHederaService {
             tokenAddress = address(0x0);
         } else {
             tokenAddress = address(
-                new ERC20Mock(tokenToCreate.name, tokenToCreate.symbol, 10, 10)
+                new ERC20Mock(tokenToCreate.name, tokenToCreate.symbol, 0, 10)
             );
             responseCode = 22;
         }

@@ -63,6 +63,8 @@ export default class LpToken extends Base {
   ) => {
     const args = new ContractFunctionParameters()
       .addUint256(tokenAQty)
+      .addUint256(tokenBQty)
+      .addUint256(tokenAQty)
       .addUint256(tokenBQty);
 
     const { result } = await this.execute(
@@ -80,12 +82,16 @@ export default class LpToken extends Base {
   };
 
   allotLPToken = async (
+    tokenAQtyInPool: BigNumber,
+    tokenBQtyInPool: BigNumber,
     tokenAQty: BigNumber,
     tokenBQty: BigNumber,
     receiverAccountId: AccountId,
     client: Client = clientsInfo.operatorClient
   ) => {
     const args = new ContractFunctionParameters()
+      .addUint256(tokenAQtyInPool)
+      .addUint256(tokenBQtyInPool)
       .addUint256(tokenAQty)
       .addUint256(tokenBQty)
       .addAddress(receiverAccountId.toSolidityAddress());
