@@ -35,7 +35,7 @@ describe("NFTHolder Tests", function () {
       { unsafeAllow: ["delegatecall"] }
     );
 
-    const MockNFTHolder = await ethers.getContractFactory("NFTHolderMock");
+    const MockNFTHolder = await ethers.getContractFactory("NFTHolder");
     const mockNFTHolder = await MockNFTHolder.deploy();
 
     const NFTTokenHolderFactory = await ethers.getContractFactory(

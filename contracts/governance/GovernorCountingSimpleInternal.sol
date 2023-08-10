@@ -306,7 +306,7 @@ abstract contract GovernorCountingSimpleInternal is
             _getVotes(voter, 0, "") > 0,
             "GovernorCountingSimpleInternal: token locking is required to cast the vote"
         );
-        tokenHolder.addProposalForVoter(voter, proposalId);
+        tokenHolder.addProposalForVoter(proposalId);
         uint256 weight = _castVote(proposalId, voter, support, "");
         proposalInfo.voters.push(voter);
         getProposalDetails(proposalId);
