@@ -255,17 +255,24 @@ export class Deployment {
       .setGas(2_000_000)
       .setAdminKey(adminKey);
 
-    const txnResponse = await txn.execute(client);
-    const txnReceipt = await txnResponse.getReceipt(client);
-    const id = txnReceipt.contractId!.toString();
-    const address = "0x" + txnReceipt.contractId!.toSolidityAddress();
+    const startTime = new Date().getTime();
+    try {
+      const txnResponse = await txn.execute(client);
+      const txnReceipt = await txnResponse.getReceipt(client);
+      const id = txnReceipt.contractId!.toString();
+      const address = "0x" + txnReceipt.contractId!.toSolidityAddress();
+      console.log(`Execution time ${new Date().getTime() - startTime}`);
 
-    return {
-      name: contractName.toLowerCase(),
-      id,
-      hash: info.hash,
-      address,
-      timestamp: new Date().toISOString(),
-    };
+      return {
+        name: contractName.toLowerCase(),
+        id,
+        hash: info.hash,
+        address,
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      console.log(`Execution time ${new Date().getTime() - startTime}`);
+      throw error;
+    }
   };
 }
