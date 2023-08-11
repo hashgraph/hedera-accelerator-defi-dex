@@ -6,6 +6,7 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 describe("GODHolder tests", function () {
   const TOTAL_AMOUNT = TestHelper.toPrecision(100);
+  const VOTING_AMOUNT = TOTAL_AMOUNT - TestHelper.toPrecision(1);
 
   async function deployFixture() {
     const admin = (await TestHelper.getDexOwner()).address;
@@ -169,16 +170,18 @@ describe("GODHolder tests", function () {
     it("Verify contract should be reverted for invalid inputs during token unlocking", async function () {
       const { godHolder, token, voter, voterAccount, governorMock } =
         await loadFixture(deployFixture);
-      await godHolder.grabTokensFromUser(voter, TOTAL_AMOUNT);
 
       await expect(godHolder.revertTokensForVoter(0)).revertedWith(
         "GODHolder: unlock amount must be a positive number"
       );
 
-      const txn = await governorMock.createProposal();
+      const txn = await governorMock.connect(voterAccount).createProposal();
       const info = await verifyProposalCreatedEvent(txn);
+
+      await godHolder.grabTokensFromUser(voter, VOTING_AMOUNT);
       await governorMock.connect(voterAccount).castVote(info.proposalId);
-      await expect(godHolder.revertTokensForVoter(TOTAL_AMOUNT)).revertedWith(
+
+      await expect(godHolder.revertTokensForVoter(VOTING_AMOUNT)).revertedWith(
         "User's Proposals are active"
       );
       await governorMock.cancel(info.proposalId);
@@ -269,42 +272,68 @@ describe("GODHolder tests", function () {
     it("Verify remove active proposals should be reverted if wrong voters passed", async function () {
       const { voter, voterAccount, godHolder, governorMock, signers } =
         await loadFixture(deployFixture);
-      await godHolder.grabTokensFromUser(voter, TOTAL_AMOUNT);
       const txn = await governorMock.createProposal();
       const info = await verifyProposalCreatedEvent(txn);
+
+      await godHolder.grabTokensFromUser(voter, VOTING_AMOUNT);
       await governorMock.connect(voterAccount).castVote(info.proposalId);
       await expect(
         governorMock.cancelProposal(info.proposalId, [signers[9].address])
       ).revertedWith("TokenHolder: voter info not available");
     });
 
-    it("Verify add and remove active proposals", async function () {
-      const { godHolder, voterAccount, governorMock } = await loadFixture(
+    it("Verify add and remove active proposals should be reverted if governor contract having zero god tokens", async function () {
+      const { token, signers, voterAccount, governorMock } = await loadFixture(
         deployFixture
       );
-      expect((await godHolder.getActiveProposalsForUser()).length).equal(0);
+
+      const creatorAccount = signers[8];
+      // balance of governor before proposal creation
+      expect(await token.balanceOf(governorMock.address)).equals(0);
+
+      const txn = await governorMock.connect(creatorAccount).createProposal();
+      const info = await verifyProposalCreatedEvent(txn);
+      expect(await token.balanceOf(governorMock.address)).equals(0);
+
+      await expect(
+        governorMock.connect(voterAccount).castVote(info.proposalId)
+      ).revertedWith("TokenHolder: insufficient balance");
+
+      await expect(
+        governorMock.connect(voterAccount).cancel(info.proposalId)
+      ).revertedWith("TokenHolder: insufficient balance");
+    });
+
+    it("Verify add and remove active proposals", async function () {
+      const { token, godHolder, voterAccount, governorMock } =
+        await loadFixture(deployFixture);
+
+      // balance of governor before proposal creation
+      expect(await token.balanceOf(governorMock.address)).equals(0);
 
       const txn = await governorMock.connect(voterAccount).createProposal();
       const info = await verifyProposalCreatedEvent(txn);
+      expect(await token.balanceOf(governorMock.address)).equals(1e8);
 
       const txn1 = await governorMock.connect(voterAccount).createProposal();
       const info1 = await verifyProposalCreatedEvent(txn1);
+      expect(await token.balanceOf(governorMock.address)).equals(2e8);
 
-      const txn2 = await governorMock.connect(voterAccount).createProposal();
-      const info2 = await verifyProposalCreatedEvent(txn2);
+      expect((await godHolder.getActiveProposalsForUser()).length).equal(0);
 
       await governorMock.connect(voterAccount).castVote(info.proposalId);
+      expect((await godHolder.getActiveProposalsForUser()).length).equal(1);
+
       await governorMock.connect(voterAccount).castVote(info1.proposalId);
-      await governorMock.connect(voterAccount).castVote(info2.proposalId);
-
-      expect((await godHolder.getActiveProposalsForUser()).length).equal(3);
-
-      await governorMock.connect(voterAccount).cancel(info2.proposalId);
       expect((await godHolder.getActiveProposalsForUser()).length).equal(2);
 
-      await governorMock.connect(voterAccount).cancel(info1.proposalId);
       await governorMock.connect(voterAccount).cancel(info.proposalId);
+      expect((await godHolder.getActiveProposalsForUser()).length).equal(1);
+
+      await governorMock.connect(voterAccount).cancel(info1.proposalId);
       expect((await godHolder.getActiveProposalsForUser()).length).equal(0);
+
+      expect(await token.balanceOf(governorMock.address)).equals(0);
     });
 
     it("Verify claim tokens", async function () {
@@ -312,7 +341,6 @@ describe("GODHolder tests", function () {
         await loadFixture(deployFixture);
       expect((await godHolder.getActiveProposalsForUser()).length).equal(0);
 
-      await godHolder.grabTokensFromUser(voterAccount.address, TOTAL_AMOUNT);
       const txn0 = await governorMock.createProposal();
       const info = await verifyProposalCreatedEvent(txn0);
 
@@ -327,6 +355,8 @@ describe("GODHolder tests", function () {
         }
       );
 
+      await godHolder.grabTokensFromUser(voterAccount.address, VOTING_AMOUNT);
+
       await governorMock.connect(voterAccount).castVote(info.proposalId);
 
       expect((await godHolder.getActiveProposalsForUser()).length).equal(1);
@@ -337,7 +367,7 @@ describe("GODHolder tests", function () {
       expect((await godHolder.getActiveProposalsForUser()).length).equal(0);
       expect(await godHolder.canUserClaimTokens(voter)).equals(true);
 
-      await godHolder.revertTokensForVoter(TOTAL_AMOUNT);
+      await godHolder.revertTokensForVoter(VOTING_AMOUNT);
       expect(await godHolder.canUserClaimTokens(voter)).equals(false);
 
       await Helper.delay(5000);

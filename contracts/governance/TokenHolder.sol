@@ -47,6 +47,10 @@ abstract contract TokenHolder is
         uint256 proposalId
     ) external override returns (int32) {
         require(isContract(msg.sender), "TokenHolder: caller must be contract");
+        require(
+            _balanceOf(_token, msg.sender) > 0,
+            "TokenHolder: insufficient balance"
+        );
         address voter = tx.origin;
         governorVoterProposalDetails[msg.sender][voter][proposalId] = true;
         uint256[] storage proposals = activeProposalsForUsers[voter];
@@ -70,6 +74,10 @@ abstract contract TokenHolder is
         uint256 proposalId
     ) external override returns (int32) {
         require(isContract(msg.sender), "TokenHolder: caller must be contract");
+        require(
+            _balanceOf(_token, msg.sender) > 0,
+            "TokenHolder: insufficient balance"
+        );
         for (uint256 i = 0; i < voters.length; i++) {
             address voter = voters[i];
             require(

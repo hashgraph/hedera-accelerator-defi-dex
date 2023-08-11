@@ -119,32 +119,38 @@ describe("NFTHolder Tests", function () {
   });
 
   it("Verify add and remove active proposals", async function () {
-    const { nftHolder, voterAccount, governorMock } = await loadFixture(
-      deployFixture
-    );
-    expect((await nftHolder.getActiveProposalsForUser()).length).equal(0);
+    const {
+      tokenCont: token,
+      nftHolder,
+      voterAccount,
+      governorMock,
+    } = await loadFixture(deployFixture);
+
+    expect(await token.balanceOf(governorMock.address)).equals(0);
 
     const txn = await governorMock.connect(voterAccount).createProposal();
     const info = await verifyProposalCreatedEvent(txn);
+    expect(await token.balanceOf(governorMock.address)).equals(1);
 
     const txn1 = await governorMock.connect(voterAccount).createProposal();
     const info1 = await verifyProposalCreatedEvent(txn1);
+    expect(await token.balanceOf(governorMock.address)).equals(2);
 
-    const txn2 = await governorMock.connect(voterAccount).createProposal();
-    const info2 = await verifyProposalCreatedEvent(txn2);
+    expect((await nftHolder.getActiveProposalsForUser()).length).equal(0);
 
     await governorMock.connect(voterAccount).castVote(info.proposalId);
+    expect((await nftHolder.getActiveProposalsForUser()).length).equal(1);
+
     await governorMock.connect(voterAccount).castVote(info1.proposalId);
-    await governorMock.connect(voterAccount).castVote(info2.proposalId);
-
-    expect((await nftHolder.getActiveProposalsForUser()).length).equal(3);
-
-    await governorMock.connect(voterAccount).cancel(info2.proposalId);
     expect((await nftHolder.getActiveProposalsForUser()).length).equal(2);
 
     await governorMock.connect(voterAccount).cancel(info1.proposalId);
+    expect((await nftHolder.getActiveProposalsForUser()).length).equal(1);
+
     await governorMock.connect(voterAccount).cancel(info.proposalId);
     expect((await nftHolder.getActiveProposalsForUser()).length).equal(0);
+
+    expect(await token.balanceOf(governorMock.address)).equals(0);
   });
 
   it("Verify NFTHolder revertTokensForVoter revert", async function () {

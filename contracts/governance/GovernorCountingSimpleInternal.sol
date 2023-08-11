@@ -435,8 +435,8 @@ abstract contract GovernorCountingSimpleInternal is
 
     function _cleanup(uint256 proposalId) private {
         ProposalInfo storage proposalInfo = _getProposalInfoIfExist(proposalId);
-        _returnGODToken(proposalInfo.creator, proposalInfo.nftTokenSerialId);
         tokenHolder.removeActiveProposals(proposalInfo.voters, proposalId);
+        _returnGODToken(proposalInfo.creator, proposalInfo.nftTokenSerialId);
         delete (proposalInfo.voters);
     }
 
