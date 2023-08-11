@@ -73,14 +73,6 @@ describe("GODHolder tests", function () {
     return { token: args.token, tokenHolder: args.tokenHolder };
   }
 
-  async function verifyProposalCreatedEvent(txn: any) {
-    const { name, args } = await TestHelper.readLastEvent(txn);
-    expect(name).equals("ProposalCreated");
-    expect(args.length).equals(1);
-    expect(args.pId).greaterThan(0);
-    return { proposalId: args.pId };
-  }
-
   describe("GODHolder contract tests", function () {
     it("Verify contract should be reverted for multiple initialization", async function () {
       const { godHolder, hederaService, token } = await loadFixture(
@@ -282,6 +274,10 @@ describe("GODHolder tests", function () {
       await tokenHolderCallerMock.connect(voterAccount).addProposal(1);
       await expect(
         tokenHolderCallerMock.removeProposals(1, [signers[9].address])
+      ).revertedWith("TokenHolder: voter info not available");
+
+      await expect(
+        tokenHolderCallerMock.removeProposals(2, [voterAccount.address])
       ).revertedWith("TokenHolder: voter info not available");
     });
 

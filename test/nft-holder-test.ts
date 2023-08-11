@@ -21,14 +21,6 @@ describe("NFTHolder Tests", function () {
     return basicDeployments(mockHederaService);
   }
 
-  async function verifyProposalCreatedEvent(txn: any) {
-    const { name, args } = await TestHelper.readLastEvent(txn);
-    expect(name).equals("ProposalCreated");
-    expect(args.length).equals(1);
-    expect(args.pId).greaterThan(0);
-    return { proposalId: args.pId };
-  }
-
   async function verifyTokenHolderCreatedEvent(txn: any, tokenAddress: string) {
     const { name, args } = await TestHelper.readLastEvent(txn);
     expect(name).equals("TokenHolderCreated");
@@ -67,11 +59,11 @@ describe("NFTHolder Tests", function () {
       admin
     );
 
-    const governorMock = await TestHelper.deployLogic(
-      "GovernorMock",
-      tokenCont.address,
+    const tokenHolderCallerMock = await TestHelper.deployLogic(
+      "TokenHolderCallerMock",
       nftHolder.address
     );
+    await tokenCont.setUserBalance(tokenHolderCallerMock.address, 1);
 
     return {
       tokenCont,
@@ -82,7 +74,7 @@ describe("NFTHolder Tests", function () {
       mockNFTHolder,
       nftTokenHolderFactory,
       voterAccount,
-      governorMock,
+      tokenHolderCallerMock,
     };
   }
 
@@ -123,45 +115,44 @@ describe("NFTHolder Tests", function () {
       tokenCont: token,
       nftHolder,
       voterAccount,
-      governorMock,
+      tokenHolderCallerMock,
     } = await loadFixture(deployFixture);
 
-    expect(await token.balanceOf(governorMock.address)).equals(0);
+    expect(await token.balanceOf(tokenHolderCallerMock.address)).equals(1);
 
-    const txn = await governorMock.connect(voterAccount).createProposal();
-    const info = await verifyProposalCreatedEvent(txn);
-    expect(await token.balanceOf(governorMock.address)).equals(1);
+    await tokenHolderCallerMock.connect(voterAccount).addProposal(1);
+    expect(
+      (await nftHolder.connect(voterAccount).getActiveProposalsForUser()).length
+    ).equal(1);
 
-    const txn1 = await governorMock.connect(voterAccount).createProposal();
-    const info1 = await verifyProposalCreatedEvent(txn1);
-    expect(await token.balanceOf(governorMock.address)).equals(2);
+    await tokenHolderCallerMock.connect(voterAccount).addProposal(2);
+    expect(
+      (await nftHolder.connect(voterAccount).getActiveProposalsForUser()).length
+    ).equal(2);
 
-    expect((await nftHolder.getActiveProposalsForUser()).length).equal(0);
+    await tokenHolderCallerMock
+      .connect(voterAccount)
+      .removeProposals(1, [voterAccount.address]);
+    expect(
+      (await nftHolder.connect(voterAccount).getActiveProposalsForUser()).length
+    ).equal(1);
 
-    await governorMock.connect(voterAccount).castVote(info.proposalId);
-    expect((await nftHolder.getActiveProposalsForUser()).length).equal(1);
+    await tokenHolderCallerMock
+      .connect(voterAccount)
+      .removeProposals(2, [voterAccount.address]);
 
-    await governorMock.connect(voterAccount).castVote(info1.proposalId);
-    expect((await nftHolder.getActiveProposalsForUser()).length).equal(2);
-
-    await governorMock.connect(voterAccount).cancel(info1.proposalId);
-    expect((await nftHolder.getActiveProposalsForUser()).length).equal(1);
-
-    await governorMock.connect(voterAccount).cancel(info.proposalId);
-    expect((await nftHolder.getActiveProposalsForUser()).length).equal(0);
-
-    expect(await token.balanceOf(governorMock.address)).equals(0);
+    expect(
+      (await nftHolder.connect(voterAccount).getActiveProposalsForUser()).length
+    ).equal(0);
   });
 
   it("Verify NFTHolder revertTokensForVoter revert", async function () {
-    const { nftHolder, signers, governorMock, voterAccount } =
+    const { nftHolder, tokenHolderCallerMock, voterAccount } =
       await loadFixture(deployFixture);
     await expect(nftHolder.revertTokensForVoter(0)).to.revertedWith(
       "NFTHolder: No amount for the Voter."
     );
-    const txn = await governorMock.createProposal();
-    const info = await verifyProposalCreatedEvent(txn);
-    await governorMock.connect(voterAccount).castVote(info.proposalId);
+    await tokenHolderCallerMock.connect(voterAccount).addProposal(1);
     await expect(nftHolder.revertTokensForVoter(0)).to.revertedWith(
       "User's Proposals are active"
     );
