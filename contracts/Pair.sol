@@ -268,11 +268,6 @@ contract Pair is
         return (slippage <= 0) ? uint256(500000) : slippage;
     }
 
-    function setSlippage(uint256 _slippage) external returns (uint256) {
-        slippage = _slippage;
-        return slippage;
-    }
-
     function slippageOutGivenIn(
         uint256 _tokenAQty
     ) public view returns (uint256) {
@@ -407,7 +402,12 @@ contract Pair is
         lpTokenContract.upgradeHederaService(newHederaService);
     }
 
-    function getHederaServiceVersion() external view override returns (IHederaService) {
+    function getHederaServiceVersion()
+        external
+        view
+        override
+        returns (IHederaService)
+    {
         return hederaService;
     }
 

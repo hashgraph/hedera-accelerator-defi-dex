@@ -34,7 +34,6 @@ Scenario: Verify user can perform swap with newly created pair
     When User sets 150.00 as allowance amount for token "HBAR"  
     When User gives 300 units of "Token-1" and 150 units of "HBAR" token in to the pool 
     Then User verify "Token-1" and "HBAR" balances in the pool are 300 units and 150 units respectively
-    When User sets the slippage value to 200 
     When User sets 100.00 as allowance amount for token "Token-1" 
     When User swaps 100 unit of "Token-1" token with another token in pair with slippage as 200
     Then User verify "Token-1" and "HBAR" quantity in pool is 398 units and 115 units

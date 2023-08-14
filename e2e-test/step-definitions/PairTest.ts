@@ -393,12 +393,6 @@ export class PairTestSteps {
     );
   }
 
-  @when(/User set (\d*) as the slippage value/, undefined, 30000)
-  public async setSlippageVal(slippage: number): Promise<void> {
-    const slippageWithPrecision = Common.withPrecision(slippage, precision);
-    pair.setSlippage(slippageWithPrecision, client);
-  }
-
   @when(
     /User define lptoken name and symbol for newly created tokens/,
     undefined,

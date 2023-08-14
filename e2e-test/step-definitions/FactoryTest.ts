@@ -367,12 +367,6 @@ export class FactorySteps {
     );
   }
 
-  @when(/User update the slippage value to (\d+\.?\d*)/, undefined, 30000)
-  public async setSlippageVal(slippage: number): Promise<void> {
-    const slippageWithPrecision = Common.withPrecision(slippage, precision);
-    pair.setSlippage(slippageWithPrecision, client);
-  }
-
   @then(
     /User gets message "([^"]*)" on creating pair with two HBAR tokens/,
     undefined,
