@@ -19,6 +19,7 @@ import {
   TokenAssociateTransaction,
   AccountAllowanceApproveTransaction,
   ContractExecuteTransaction,
+  Hbar,
 } from "@hashgraph/sdk";
 import { BigNumber } from "bignumber.js";
 import { clientsInfo } from "../../utils/ClientManagement";
@@ -304,7 +305,7 @@ export default class Common extends Base {
   };
 
   static transferHbarsToContract = async (
-    amount: number,
+    amount: Hbar,
     contractId: ContractId,
     senderAccountId: AccountId = clientsInfo.operatorId,
     senderClient: Client = clientsInfo.operatorClient

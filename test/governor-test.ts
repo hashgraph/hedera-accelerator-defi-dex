@@ -11,6 +11,11 @@ interface TokenTransferData {
   transferTokenAmount: number;
 }
 
+interface HBarTransferData {
+  to: string;
+  amount: number;
+}
+
 describe("Governor Tests", function () {
   const QUORUM_THRESHOLD = 5;
   const QUORUM_THRESHOLD_BSP = QUORUM_THRESHOLD * 100;
@@ -43,6 +48,7 @@ describe("Governor Tests", function () {
     const tokenToTransfer = await TestHelper.deployERC20Mock(TOTAL_SUPPLY);
 
     const creator = signers[0];
+    const receiver = signers[7];
     const godHolder = await TestHelper.deployGodHolder(hederaService, token);
 
     const nftToken = await TestHelper.deployERC721Mock();
@@ -104,6 +110,7 @@ describe("Governor Tests", function () {
       governorToken,
       governorUpgrade,
       creator,
+      receiver,
       nftTokenTransferGovernor,
       nftToken,
       nftGodHolder,
@@ -157,6 +164,26 @@ describe("Governor Tests", function () {
     expect(eventData.transferTokenAmount.toNumber()).equals(
       reqData.transferTokenAmount
     );
+    return info;
+  };
+
+  const verifyHBarTransferProposalCreationEvent = async (
+    tx: any,
+    reqData: HBarTransferData,
+    nftTokenSerialId: number
+  ) => {
+    const info =
+      nftTokenSerialId === NFT_TOKEN_SERIAL_ID
+        ? await verifyNFTProposalCreationEvent(tx)
+        : await verifyFTProposalCreationEvent(tx);
+
+    const eventData = ethers.utils.defaultAbiCoder.decode(
+      ["uint256 operationType", "address to", "uint256 amount"],
+      info.data
+    );
+    expect(eventData.operationType).equals(3);
+    expect(eventData.to).equals(reqData.to);
+    expect(eventData.amount).equals(reqData.amount);
     return info;
   };
 
@@ -350,6 +377,36 @@ describe("Governor Tests", function () {
     return await verifyTokenAssociationProposalCreationEvent(
       tx,
       tokenAddress,
+      nftTokenSerialId
+    );
+  }
+
+  async function getHBarTransferProposalId(
+    instance: Contract,
+    creator: SignerWithAddress,
+    to: string,
+    amount: number,
+    nftTokenSerialId: number = 0
+  ) {
+    const requestData: HBarTransferData = {
+      to,
+      amount,
+    };
+    const tx = await instance
+      .connect(creator)
+      .createHBarTransferProposal(
+        TITLE,
+        DESC,
+        LINK,
+        to,
+        amount,
+        creator.address,
+        nftTokenSerialId
+      );
+
+    return await verifyHBarTransferProposalCreationEvent(
+      tx,
+      requestData,
       nftTokenSerialId
     );
   }
@@ -1260,6 +1317,79 @@ describe("Governor Tests", function () {
   });
 
   describe("GovernorTransferToken contract tests", async () => {
+    it("Verify HBar transfer proposal creation should be reverted for zero amount", async function () {
+      const { creator, receiver, governorTT } = await loadFixture(
+        deployFixture
+      );
+      await expect(
+        getHBarTransferProposalId(governorTT, creator, receiver.address, 0)
+      ).revertedWith("GTT: required positive number");
+    });
+
+    it("Verify HBar transfer proposal creation data", async function () {
+      const { creator, receiver, governorTT } = await loadFixture(
+        deployFixture
+      );
+      await getHBarTransferProposalId(
+        governorTT,
+        creator,
+        receiver.address,
+        10
+      );
+    });
+
+    it("Verify HBar transfer should be reverted if contract don't have enough HBar balance", async function () {
+      const { creator, godHolder, receiver, governorTT } = await loadFixture(
+        deployFixture
+      );
+      await godHolder.grabTokensFromUser(LOCKED_TOKEN);
+      const { proposalId } = await getHBarTransferProposalId(
+        governorTT,
+        creator,
+        receiver.address,
+        10
+      );
+      await governorTT.castVotePublic(proposalId, 0, 1);
+      await TestHelper.mineNBlocks(BLOCKS_COUNT);
+
+      expect(await TestHelper.getAccountHBars(governorTT.address)).equals(0);
+      await expect(governorTT.executeProposal(TITLE)).revertedWith(
+        "GTT: Hbar transfer failed"
+      );
+    });
+
+    it("Verify HBar transfer should be succeeded", async function () {
+      const { creator, godHolder, receiver, governorTT } = await loadFixture(
+        deployFixture
+      );
+      const AMOUNT = 10;
+      await godHolder.grabTokensFromUser(LOCKED_TOKEN);
+      const { proposalId } = await getHBarTransferProposalId(
+        governorTT,
+        creator,
+        receiver.address,
+        AMOUNT
+      );
+      await governorTT.castVotePublic(proposalId, 0, 1);
+      await TestHelper.mineNBlocks(BLOCKS_COUNT);
+
+      expect(await TestHelper.getAccountHBars(governorTT.address)).equals(0);
+      await TestHelper.transferBalance(governorTT.address, AMOUNT, creator);
+      expect(await TestHelper.getAccountHBars(governorTT.address)).equals(
+        AMOUNT
+      );
+
+      const receiverBalBeforeTransfer = await TestHelper.getAccountHBars(
+        receiver.address
+      );
+      await governorTT.connect(creator).executeProposal(TITLE);
+      expect(await TestHelper.getAccountHBars(receiver.address)).equals(
+        receiverBalBeforeTransfer.add(AMOUNT)
+      );
+
+      expect(await TestHelper.getAccountHBars(governorTT.address)).equals(0);
+    });
+
     it("Verify transfer token proposal should be failed during creation for zero amount", async function () {
       const { governorTT, token, signers } = await loadFixture(deployFixture);
       await expect(

@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.18;
-import "./GovernorCountingSimpleInternal.sol";
-import "../common/hedera/HederaTokenService.sol";
 import "../common/IErrors.sol";
+import "../common/hedera/HederaTokenService.sol";
+
 import "./IGovernorTransferToken.sol";
+import "./GovernorCountingSimpleInternal.sol";
 
 contract GovernorTransferToken is
     IGovernorTransferToken,
@@ -11,6 +12,7 @@ contract GovernorTransferToken is
 {
     uint256 private constant TXN_TYPE_TRANSFER = 1;
     uint256 private constant TXN_TYPE_TOKEN_ASSOCIATE = 2;
+    uint256 private constant TXN_TYPE_HBAR_TRANSFER = 3;
 
     mapping(uint256 => bytes) proposalsData;
 
@@ -67,6 +69,33 @@ contract GovernorTransferToken is
         return proposalId;
     }
 
+    function createHBarTransferProposal(
+        string memory _title,
+        string memory _description,
+        string memory _linkToDiscussion,
+        address _to,
+        uint256 _amount,
+        address _creator,
+        uint256 _nftTokenSerialId
+    ) external payable returns (uint256) {
+        require(_amount > 0, "GTT: required positive number");
+        bytes memory data = abi.encode(
+            TXN_TYPE_HBAR_TRANSFER, // operationType
+            _to, // toAddress
+            _amount // amount
+        );
+        uint256 proposalId = _createProposal(
+            _title,
+            _description,
+            _linkToDiscussion,
+            _creator,
+            data,
+            _nftTokenSerialId
+        );
+        proposalsData[proposalId] = data;
+        return proposalId;
+    }
+
     function upgradeHederaService(
         IHederaService newHederaService
     )
@@ -108,7 +137,7 @@ contract GovernorTransferToken is
         } else if (operationType == TXN_TYPE_TRANSFER) {
             _transfer(data);
         } else {
-            revert("GTT: unknown operation");
+            _transferHbar(data);
         }
     }
 
@@ -124,5 +153,14 @@ contract GovernorTransferToken is
         );
         int256 code = _transferToken(token, address(this), to, amount);
         require(code == HederaResponseCodes.SUCCESS, "GTT: transfer failed");
+    }
+
+    function _transferHbar(bytes memory _data) private {
+        (, address payable to, uint256 amount) = abi.decode(
+            _data,
+            (uint256, address, uint256)
+        );
+        (bool isTransferred, ) = to.call{value: amount}("");
+        require(isTransferred, "GTT: Hbar transfer failed");
     }
 }
