@@ -18,7 +18,6 @@ const INITIALIZE = "initialize";
 const SWAP_TOKEN = "swapToken";
 const GET_PAIR_QTY = "getPairQty";
 const GET_PAIR_INFO = "getPairInfo";
-const SET_SLIPPAGE = "setSlippage";
 const GET_SPOT_PRICE = "getSpotPrice";
 const GET_OUT_GIVEN_IN = "getOutGivenIn";
 const GET_IN_GIVEN_OUT = "getInGivenOut";
@@ -90,15 +89,6 @@ export default class Pair extends Base {
     const precision = result.getUint256(0);
     console.log(`- Pair#${PRECISION_VALUE}(): precision = ${precision}\n`);
     return precision;
-  };
-
-  public setSlippage = async (
-    slippage: BigNumber,
-    client: Client = clientsInfo.operatorClient
-  ) => {
-    const args = new ContractFunctionParameters().addUint256(slippage);
-    await this.execute(1000000, SET_SLIPPAGE, client, args);
-    console.log(`- Pair#${SET_SLIPPAGE}(): done\n`);
   };
 
   public getSpotPrice = async (

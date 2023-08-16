@@ -206,7 +206,6 @@ async function testForSinglePair(
   );
   await getTreasureBalance(pairContractId, [token0, token1]);
   await removeLiquidity(tokenAddresses.lpTokenAddress);
-  await pair.setSlippage(Common.withPrecision(1, precision));
   await getTreasureBalance(pairContractId, [token0, token1]);
   await swapToken(token0, pairContractIdAsString);
   await getTreasureBalance(pairContractId, [token0, token1]);

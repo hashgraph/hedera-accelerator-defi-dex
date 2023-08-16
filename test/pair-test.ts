@@ -1966,13 +1966,6 @@ describe("LPToken, Pair and Factory tests", function () {
       expect(value).to.be.equals(v);
     });
 
-    it("Verify slippage update", async function () {
-      const { pair } = await loadFixture(deployFixture);
-      await pair.setSlippage(6);
-      const value = await pair.getSlippage();
-      expect(value).to.be.equals(6);
-    });
-
     it("Verify slippageOutGivenIn ", async function () {
       const { pair, token1Address, token2Address } = await loadFixture(
         deployFixture

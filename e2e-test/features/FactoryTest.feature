@@ -62,7 +62,6 @@ Feature: Factory contract e2e test
     
     Scenario: Verify user is able to perform swap of Factory9 token with HBAR
         Given Factory9 and HBAR are present in pool with quantity 292.92893219 units and 146.4644661 units respectively
-        When User update the slippage value to 200.00 
         Then HBAR token quantity is 146.4644661 and Factory9 quantity is 292.92893219 in pool  
         When User sets allowance amount as 10.00 for token "Factory9" 
         When User make swap of 10.00 unit of "Factory9" token with another token in pair with slippage as 200.00
@@ -72,7 +71,6 @@ Feature: Factory contract e2e test
     
     Scenario: Verify user is able to perform swap of HBAR with Factory9 Token
         Given Factory9 and HBAR are present in pool with quantity 302.67893219 units and 141.97869449 units respectively
-        When User update the slippage value to 200.00 
         When User sets allowance amount as 10.00 for token "HBAR" 
         When User make swap of 10.00 unit of "HBAR" token with another token in pair with slippage as 200.00
         Then HBAR token quantity is 151.72869449 and Factory9 quantity is 284.17095904 in pool   
