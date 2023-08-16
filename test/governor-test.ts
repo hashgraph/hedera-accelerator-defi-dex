@@ -312,7 +312,7 @@ describe("Governor Tests", function () {
     governorToken: Contract,
     creator: SignerWithAddress
   ) => {
-    await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
+    await godHolder.grabTokensFromUser(LOCKED_TOKEN);
     const { proposalId } = await getTokenCreateProposalId(
       governorToken,
       "tokenName",
@@ -418,7 +418,7 @@ describe("Governor Tests", function () {
       const { governorText, token, creator, godHolder, signers } =
         await loadFixture(deployFixture);
 
-      await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
+      await godHolder.grabTokensFromUser(LOCKED_TOKEN);
       const { proposalId } = await getTextProposalId(governorText, creator);
 
       const BEFORE = await token.balanceOf(creator.address);
@@ -477,7 +477,7 @@ describe("Governor Tests", function () {
       const { governorText, creator, godHolder } = await loadFixture(
         deployFixture
       );
-      await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
+      await godHolder.grabTokensFromUser(LOCKED_TOKEN);
 
       const { proposalId } = await getTextProposalId(governorText, creator);
       await governorText.castVotePublic(proposalId, 0, 1);
@@ -495,7 +495,7 @@ describe("Governor Tests", function () {
         deployFixture
       );
       const lockedTokens = TestHelper.toPrecision(QUORUM_THRESHOLD - 1);
-      await godHolder.grabTokensFromUser(creator.address, lockedTokens);
+      await godHolder.grabTokensFromUser(lockedTokens);
 
       const { proposalId } = await getTextProposalId(governorText, creator);
       await governorText.castVotePublic(proposalId, 0, 1);
@@ -512,7 +512,7 @@ describe("Governor Tests", function () {
       const { governorText, creator, godHolder } = await loadFixture(
         deployFixture
       );
-      await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
+      await godHolder.grabTokensFromUser(LOCKED_TOKEN);
 
       const { proposalId } = await getTextProposalId(governorText, creator);
       await governorText.castVotePublic(proposalId, 0, 2);
@@ -529,7 +529,7 @@ describe("Governor Tests", function () {
       const { governorText, creator, godHolder } = await loadFixture(
         deployFixture
       );
-      await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
+      await godHolder.grabTokensFromUser(LOCKED_TOKEN);
 
       const { proposalId } = await getTextProposalId(governorText, creator);
       await governorText.castVotePublic(proposalId, 0, 0);
@@ -546,7 +546,7 @@ describe("Governor Tests", function () {
       const { governorText, creator, godHolder } = await loadFixture(
         deployFixture
       );
-      await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
+      await godHolder.grabTokensFromUser(LOCKED_TOKEN);
 
       const { proposalId } = await getTextProposalId(governorText, creator);
 
@@ -592,7 +592,7 @@ describe("Governor Tests", function () {
       const { governorText, creator, godHolder } = await loadFixture(
         deployFixture
       );
-      await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
+      await godHolder.grabTokensFromUser(LOCKED_TOKEN);
       const { proposalId } = await getTextProposalId(governorText, creator);
       await governorText.castVotePublic(proposalId, 0, 1);
       await TestHelper.mineNBlocks(BLOCKS_COUNT);
@@ -603,7 +603,7 @@ describe("Governor Tests", function () {
       const { governorText, creator, godHolder } = await loadFixture(
         deployFixture
       );
-      await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
+      await godHolder.grabTokensFromUser(LOCKED_TOKEN);
       const { proposalId } = await getTextProposalId(governorText, creator);
       await governorText.castVotePublic(proposalId, 0, 1);
       await TestHelper.mineNBlocks(20);
@@ -626,7 +626,7 @@ describe("Governor Tests", function () {
       const { governorText, creator, godHolder, token } = await loadFixture(
         deployFixture
       );
-      await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
+      await godHolder.grabTokensFromUser(LOCKED_TOKEN);
       const { proposalId } = await getTextProposalId(governorText, creator);
       await governorText.castVotePublic(proposalId, 0, 1);
       await TestHelper.mineNBlocks(20);
@@ -653,7 +653,7 @@ describe("Governor Tests", function () {
       const { governorText, creator, godHolder } = await loadFixture(
         deployFixture
       );
-      await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
+      await godHolder.grabTokensFromUser(LOCKED_TOKEN);
 
       const { proposalId } = await getTextProposalId(governorText, creator);
       const result = await governorText.callStatic.getProposalDetails(
@@ -728,7 +728,7 @@ describe("Governor Tests", function () {
       const { governorText, creator, godHolder } = await loadFixture(
         deployFixture
       );
-      await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
+      await godHolder.grabTokensFromUser(LOCKED_TOKEN);
       const { proposalId } = await getTextProposalId(governorText, creator);
       await governorText.castVotePublic(proposalId, 0, 1);
       await TestHelper.mineNBlocks(20);
@@ -741,7 +741,7 @@ describe("Governor Tests", function () {
       const { governorToken, creator, godHolder } = await loadFixture(
         deployFixture
       );
-      await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
+      await godHolder.grabTokensFromUser(LOCKED_TOKEN);
       const { proposalId } = await getTokenCreateProposalId(
         governorToken,
         "tokenName",
@@ -773,10 +773,7 @@ describe("Governor Tests", function () {
         signers[0].address,
         NFT_TOKEN_AMOUNT
       );
-      await nftGodHolder.grabTokensFromUser(
-        creator.address,
-        NFT_TOKEN_SERIAL_ID
-      );
+      await nftGodHolder.grabTokensFromUser(NFT_TOKEN_SERIAL_ID);
 
       const { proposalId } = await getTokenCreateProposalId(
         nftGovernorTokenCreate,
@@ -821,10 +818,7 @@ describe("Governor Tests", function () {
         signers[0].address,
         NFT_TOKEN_AMOUNT
       );
-      await nftGodHolder.grabTokensFromUser(
-        creator.address,
-        NFT_TOKEN_SERIAL_ID
-      );
+      await nftGodHolder.grabTokensFromUser(NFT_TOKEN_SERIAL_ID);
 
       const { proposalId } = await getTokenCreateProposalId(
         nftGovernorTokenCreate,
@@ -854,7 +848,7 @@ describe("Governor Tests", function () {
     it("Verify token creation proposal should be failed during execution", async function () {
       const { governorToken, hederaService, creator, godHolder } =
         await loadFixture(deployFixture);
-      await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
+      await godHolder.grabTokensFromUser(LOCKED_TOKEN);
       const { proposalId } = await getTokenCreateProposalId(
         governorToken,
         "FAIL",
@@ -894,7 +888,7 @@ describe("Governor Tests", function () {
         const { governorToken, creator, godHolder } = await loadFixture(
           deployFixture
         );
-        await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
+        await godHolder.grabTokensFromUser(LOCKED_TOKEN);
         const { proposalId } = await getTokenCreateProposalId(
           governorToken,
           "tokenName",
@@ -977,7 +971,7 @@ describe("Governor Tests", function () {
         const { governorToken, creator, godHolder } = await loadFixture(
           deployFixture
         );
-        await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
+        await godHolder.grabTokensFromUser(LOCKED_TOKEN);
         const { proposalId } = await getTokenCreateProposalId(
           governorToken,
           "tokenName",
@@ -1143,7 +1137,7 @@ describe("Governor Tests", function () {
       it("Given user not executed token create proposal when treasurer try to transfer then transfer should fail", async function () {
         const { governorToken, creator, godHolder, signers } =
           await loadFixture(deployFixture);
-        await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
+        await godHolder.grabTokensFromUser(LOCKED_TOKEN);
         const { proposalId } = await getTokenCreateProposalId(
           governorToken,
           "tokenName",
@@ -1188,7 +1182,7 @@ describe("Governor Tests", function () {
       const { governorToken, creator, godHolder } = await loadFixture(
         deployFixture
       );
-      await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
+      await godHolder.grabTokensFromUser(LOCKED_TOKEN);
       const { proposalId } = await getTokenCreateProposalId(
         governorToken,
         "tokenName",
@@ -1239,7 +1233,7 @@ describe("Governor Tests", function () {
       const { governorUpgrade, creator, godHolder } = await loadFixture(
         deployFixture
       );
-      await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
+      await godHolder.grabTokensFromUser(LOCKED_TOKEN);
       const { proposalId } = await getUpgradeProposalId(
         governorUpgrade,
         creator
@@ -1276,7 +1270,7 @@ describe("Governor Tests", function () {
     it("Verify token association proposal creation data", async function () {
       const { governorTT, godHolder, token, signers, creator } =
         await loadFixture(deployFixture);
-      await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
+      await godHolder.grabTokensFromUser(LOCKED_TOKEN);
       const { proposalId } = await getTokenAssociateProposalId(
         governorTT,
         signers,
@@ -1299,7 +1293,7 @@ describe("Governor Tests", function () {
       const TOKEN_COUNT = TestHelper.toPrecision(3);
       await token.setUserBalance(governorTT.address, TOKEN_COUNT);
 
-      await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
+      await godHolder.grabTokensFromUser(LOCKED_TOKEN);
       const { proposalId } = await getTransferTokenProposalId(
         governorTT,
         signers,
@@ -1318,7 +1312,7 @@ describe("Governor Tests", function () {
     it("Verify transfer token proposal should be failed during execution", async function () {
       const { governorTT, godHolder, token, signers, creator } =
         await loadFixture(deployFixture);
-      await godHolder.grabTokensFromUser(creator.address, LOCKED_TOKEN);
+      await godHolder.grabTokensFromUser(LOCKED_TOKEN);
 
       const TOKEN_COUNT = TestHelper.toPrecision(3);
       const { proposalId } = await getTransferTokenProposalId(
@@ -1354,10 +1348,7 @@ describe("Governor Tests", function () {
         signers[0].address,
         NFT_TOKEN_AMOUNT
       );
-      await nftGodHolder.grabTokensFromUser(
-        creator.address,
-        NFT_TOKEN_SERIAL_ID
-      );
+      await nftGodHolder.grabTokensFromUser(NFT_TOKEN_SERIAL_ID);
 
       const { proposalId } = await getTransferTokenProposalId(
         nftTokenTransferGovernor,
@@ -1407,10 +1398,7 @@ describe("Governor Tests", function () {
         signers[0].address,
         NFT_TOKEN_AMOUNT
       );
-      await nftGodHolder.grabTokensFromUser(
-        creator.address,
-        NFT_TOKEN_SERIAL_ID
-      );
+      await nftGodHolder.grabTokensFromUser(NFT_TOKEN_SERIAL_ID);
 
       const { proposalId } = await getTransferTokenProposalId(
         nftTokenTransferGovernor,

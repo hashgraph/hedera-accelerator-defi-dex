@@ -10,7 +10,7 @@ interface ITokenHolder {
 
     function balanceOfVoter(address voter) external view returns (uint256);
 
-    function grabTokensFromUser(address user, uint256 idOrAmount) external;
+    function grabTokensFromUser(uint256 idOrAmount) external;
 
     function addProposalForVoter(uint256 proposalId) external returns (int32);
 

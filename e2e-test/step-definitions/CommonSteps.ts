@@ -121,11 +121,9 @@ export class CommonSteps {
   public async lockTokens(
     godHolder: GodHolder,
     tokenAmt: number,
-    voterAcctId: AccountId,
-    voterAcctPvtKey: PrivateKey,
     client: Client
   ) {
-    await godHolder.lock(tokenAmt, voterAcctId, voterAcctPvtKey, client);
+    await godHolder.lock(tokenAmt, client);
   }
 
   public async setupAllowanceForTokenLocking(
@@ -203,16 +201,9 @@ export class CommonSteps {
   public async grabNFTTokensForAllowance(
     nftHolder: NFTHolder,
     tokenSerial: number,
-    voterAccountId: AccountId,
-    voterAccountPrivateKey: PrivateKey,
     voterClient: Client
   ) {
-    await nftHolder.grabTokensForVoter(
-      tokenSerial,
-      voterAccountId,
-      voterAccountPrivateKey,
-      voterClient
-    );
+    await nftHolder.grabTokensForVoter(tokenSerial, voterClient);
   }
 
   public async revertNFTs(

@@ -89,7 +89,7 @@ describe("NFTHolder Tests", function () {
     const { nftHolder, signers } = await loadFixture(deployFixture);
     const tokenId = await nftHolder.balanceOfVoter(signers[0].address);
     expect(tokenId).to.be.equal(0);
-    await nftHolder.grabTokensFromUser(signers[0].address, 1);
+    await nftHolder.grabTokensFromUser(1);
     const tokenIdAfterGrab = await nftHolder.balanceOfVoter(signers[0].address);
     expect(tokenIdAfterGrab).to.be.equal(1);
   });
@@ -98,7 +98,7 @@ describe("NFTHolder Tests", function () {
     const { nftHolder, signers, tokenCont } = await loadFixture(deployFixture);
     const userBalanceInitial = await tokenCont.balanceOf(signers[0].address);
     expect(userBalanceInitial).to.be.equal(userTotalToken);
-    await nftHolder.grabTokensFromUser(signers[0].address, tokenSerial);
+    await nftHolder.grabTokensFromUser(tokenSerial);
     const nftHolderBalance = await tokenCont.balanceOf(nftHolder.address);
     expect(nftHolderBalance).to.be.equal(tokenCount);
     const userBalance = await tokenCont.balanceOf(signers[0].address);
@@ -160,7 +160,7 @@ describe("NFTHolder Tests", function () {
 
   it("Verify NFTHolder revertTokensForVoter pass", async function () {
     const { nftHolder, signers, tokenCont } = await loadFixture(deployFixture);
-    nftHolder.grabTokensFromUser(signers[0].address, tokenSerial);
+    nftHolder.grabTokensFromUser(tokenSerial);
     const nftHolderBalance = await tokenCont.balanceOf(nftHolder.address);
     const userBalance = await tokenCont.balanceOf(signers[0].address);
     expect(nftHolderBalance).to.be.equal(tokenCount);
