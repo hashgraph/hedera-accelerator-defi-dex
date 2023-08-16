@@ -306,7 +306,7 @@ abstract contract GovernorCountingSimpleInternal is
             _getVotes(voter, 0, "") > 0,
             "GovernorCountingSimpleInternal: token locking is required to cast the vote"
         );
-        tokenHolder.addProposalForVoter(voter, proposalId);
+        tokenHolder.addProposalForVoter(proposalId);
         uint256 weight = _castVote(proposalId, voter, support, "");
         proposalInfo.voters.push(voter);
         getProposalDetails(proposalId);
@@ -435,8 +435,8 @@ abstract contract GovernorCountingSimpleInternal is
 
     function _cleanup(uint256 proposalId) private {
         ProposalInfo storage proposalInfo = _getProposalInfoIfExist(proposalId);
-        _returnGODToken(proposalInfo.creator, proposalInfo.nftTokenSerialId);
         tokenHolder.removeActiveProposals(proposalInfo.voters, proposalId);
+        _returnGODToken(proposalInfo.creator, proposalInfo.nftTokenSerialId);
         delete (proposalInfo.voters);
     }
 
