@@ -69,12 +69,7 @@ export async function executeGovernorTokenTransferFlow(
       voterAccountKey,
       txnFeePayerClient
     );
-    await godHolder.lock(
-      lockAmount,
-      voterAccountId,
-      voterAccountKey,
-      txnFeePayerClient
-    );
+    await godHolder.lock(lockAmount, voterClient);
   }
 
   // step -1 association proposal
@@ -168,12 +163,7 @@ export async function executeTextProposalFlow(
     voterClient
   );
 
-  await godHolder.lock(
-    10005e8,
-    voterAccountId,
-    voterAccountPrivateKey,
-    voterClient
-  );
+  await godHolder.lock(10005e8, voterClient);
 
   const governorAddresses =
     await tokenTransferDAO.getGovernorTokenTransferContractAddresses();
@@ -234,12 +224,7 @@ export async function executeContractUpgradeFlow(
     voterClient
   );
 
-  await godHolder.lock(
-    10005e8,
-    voterAccountId,
-    voterAccountPrivateKey,
-    voterClient
-  );
+  await godHolder.lock(10005e8, voterClient);
 
   const governorAddresses =
     await dao.getGovernorTokenTransferContractAddresses();
@@ -310,12 +295,7 @@ export async function executeTokenCreateFlow(
     voterClient
   );
 
-  await godHolder.lock(
-    10005e8,
-    voterAccountId,
-    voterAccountPrivateKey,
-    voterClient
-  );
+  await godHolder.lock(10005e8, voterClient);
 
   const governorAddresses =
     await dao.getGovernorTokenTransferContractAddresses();

@@ -1,3 +1,5 @@
+import { ethers } from "ethers";
+import { Helper } from "../utils/Helper";
 import { expect } from "chai";
 import { TestHelper } from "./TestHelper";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
@@ -8,43 +10,67 @@ describe("GODHolder tests", function () {
   async function deployFixture() {
     const admin = (await TestHelper.getDexOwner()).address;
     const signers = await TestHelper.getSigners();
+    const voter = signers[0].address;
+    const voterAccount = signers[0];
 
     const hederaService = await TestHelper.deployMockHederaService();
 
     const token = await TestHelper.deployERC20Mock(TOTAL_AMOUNT);
-    await token.setUserBalance(signers[0].address, TOTAL_AMOUNT);
+    await token.setUserBalance(voter, TOTAL_AMOUNT);
 
     const godHolder = await TestHelper.deployGodHolder(hederaService, token);
 
-    const godTokenHolderFactory = await TestHelper.deployGodTokenHolderFactory(
+    const tokenHolderCallerMock = await TestHelper.deployLogic(
+      "TokenHolderCallerMock",
+      godHolder.address
+    );
+    // addProposalForVoter / removeActiveProposals methods from TokenHolder having balance verification check during call
+    // so adding 1e8 token in advance
+    await token.setUserBalance(
+      tokenHolderCallerMock.address,
+      TestHelper.toPrecision(1)
+    );
+
+    const godHolderFactory = await TestHelper.deployGodTokenHolderFactory(
       hederaService,
       godHolder,
       admin
     );
 
     return {
+      admin,
+      voter,
+      voterAccount,
       token,
-      hederaService,
       signers,
       godHolder,
-      godTokenHolderFactory,
-      admin,
-      voter: signers[0].address,
+      tokenHolderCallerMock,
+      hederaService,
+      godHolderFactory,
     };
   }
 
   async function verifyCanClaimAmountEvent(
-    txn: any,
+    info: any,
     user: string,
     canClaim: boolean,
     operation: number
   ) {
-    const { name, args } = await TestHelper.readLastEvent(txn);
+    const { name, args } = info;
     expect(name).equals("CanClaimAmount");
     expect(args.length).equals(3);
     expect(args.user).equals(user);
     expect(args.canClaim).equals(canClaim);
     expect(args.operation).equals(operation);
+  }
+
+  async function verifyTokenHolderCreatedEvent(txn: any, tokenAddress: string) {
+    const { name, args } = await TestHelper.readLastEvent(txn);
+    expect(name).equals("TokenHolderCreated");
+    expect(args.length).equals(2);
+    expect(args.token).equals(tokenAddress);
+    expect(ethers.utils.isAddress(args.tokenHolder)).equals(true);
+    return { token: args.token, tokenHolder: args.tokenHolder };
   }
 
   describe("GODHolder contract tests", function () {
@@ -58,28 +84,26 @@ describe("GODHolder tests", function () {
     });
 
     it("Verify contract should be reverted for invalid inputs during token locking", async function () {
-      const { godHolder, voter, hederaService, token } = await loadFixture(
-        deployFixture
-      );
-      await expect(godHolder.grabTokensFromUser(voter, 0)).revertedWith(
+      const { godHolder, voter, token } = await loadFixture(deployFixture);
+      await expect(godHolder.grabTokensFromUser(0)).revertedWith(
         "GODHolder: lock amount must be a positive number"
       );
 
       await expect(
-        godHolder.grabTokensFromUser(voter, TestHelper.toPrecision(1000))
+        godHolder.grabTokensFromUser(TestHelper.toPrecision(1000))
       ).revertedWith(
         "GODHolder: lock amount can't be greater to the balance amount"
       );
 
       await token.setUserBalance(voter, 0);
       await expect(
-        godHolder.grabTokensFromUser(voter, TestHelper.toPrecision(10))
+        godHolder.grabTokensFromUser(TestHelper.toPrecision(10))
       ).revertedWith("GODHolder: balance amount must be a positive number");
 
       await token.setUserBalance(voter, TOTAL_AMOUNT);
       await token.setTransaferFailed(true);
       await expect(
-        godHolder.grabTokensFromUser(voter, TestHelper.toPrecision(1))
+        godHolder.grabTokensFromUser(TestHelper.toPrecision(1))
       ).revertedWith("GODHolder: token transfer failed to contract.");
     });
 
@@ -92,7 +116,7 @@ describe("GODHolder tests", function () {
         godHolder.address
       );
 
-      await godHolder.grabTokensFromUser(voter, TOTAL_AMOUNT);
+      await godHolder.grabTokensFromUser(TOTAL_AMOUNT);
 
       const voterBalanceFromContractAfterLocking =
         await godHolder.balanceOfVoter(voter);
@@ -121,7 +145,7 @@ describe("GODHolder tests", function () {
 
       const LOCKED_AMOUNT = TOTAL_AMOUNT - TestHelper.toPrecision(5);
       const BALANCE_AMOUNT = TOTAL_AMOUNT - LOCKED_AMOUNT;
-      await godHolder.grabTokensFromUser(voter, LOCKED_AMOUNT);
+      await godHolder.grabTokensFromUser(LOCKED_AMOUNT);
 
       const voterBalanceFromContractAfterLocking =
         await godHolder.balanceOfVoter(voter);
@@ -140,12 +164,23 @@ describe("GODHolder tests", function () {
     });
 
     it("Verify contract should be reverted for invalid inputs during token unlocking", async function () {
-      const { godHolder, token, voter } = await loadFixture(deployFixture);
-      await godHolder.grabTokensFromUser(voter, TOTAL_AMOUNT);
+      const { godHolder, token, voterAccount, tokenHolderCallerMock } =
+        await loadFixture(deployFixture);
 
-      await expect(godHolder.revertTokensForVoter(0)).revertedWith(
-        "GODHolder: unlock amount must be a positive number"
+      await godHolder.connect(voterAccount).grabTokensFromUser(TOTAL_AMOUNT);
+
+      await expect(
+        godHolder.connect(voterAccount).revertTokensForVoter(0)
+      ).revertedWith("GODHolder: unlock amount must be a positive number");
+
+      await tokenHolderCallerMock.connect(voterAccount).addProposal(1);
+      await expect(godHolder.revertTokensForVoter(TOTAL_AMOUNT)).revertedWith(
+        "User's Proposals are active"
       );
+
+      await tokenHolderCallerMock
+        .connect(voterAccount)
+        .removeProposals(1, [voterAccount.address]);
 
       await expect(
         godHolder.revertTokensForVoter(TestHelper.toPrecision(1000))
@@ -154,21 +189,15 @@ describe("GODHolder tests", function () {
       );
 
       await token.setTransaferFailed(true);
-      await expect(
-        godHolder.revertTokensForVoter(TestHelper.toPrecision(10))
-      ).revertedWith("GODHolder: token transfer failed from contract.");
-      await token.setTransaferFailed(false);
-
-      await godHolder.addProposalForVoter(voter, 1);
       await expect(godHolder.revertTokensForVoter(TOTAL_AMOUNT)).revertedWith(
-        "User's Proposals are active"
+        "GODHolder: token transfer failed from contract."
       );
-      await godHolder.removeActiveProposals([voter], 1);
+      await token.setTransaferFailed(false);
     });
 
     it("Verify contract calls for fully token unlocking", async function () {
       const { godHolder, token, voter } = await loadFixture(deployFixture);
-      await godHolder.grabTokensFromUser(voter, TOTAL_AMOUNT);
+      await godHolder.grabTokensFromUser(TOTAL_AMOUNT);
 
       const voterBalanceFromContractBeforeUnLocking =
         await godHolder.balanceOfVoter(voter);
@@ -197,7 +226,7 @@ describe("GODHolder tests", function () {
 
     it("Verify contract calls for partial token unlocking", async function () {
       const { godHolder, token, voter } = await loadFixture(deployFixture);
-      await godHolder.grabTokensFromUser(voter, TOTAL_AMOUNT);
+      await godHolder.grabTokensFromUser(TOTAL_AMOUNT);
 
       const voterBalanceFromContractBeforeUnLocking =
         await godHolder.balanceOfVoter(voter);
@@ -226,47 +255,121 @@ describe("GODHolder tests", function () {
       expect(voterBalanceFromTokenAfterUnLocking).equals(UNLOCK_AMOUNT);
     });
 
+    it("Verify add and remove active proposals should be reverted if called from outside contract", async function () {
+      const { godHolder } = await loadFixture(deployFixture);
+      await expect(godHolder.addProposalForVoter(1)).revertedWith(
+        "TokenHolder: caller must be contract"
+      );
+      await expect(godHolder.removeActiveProposals([], 1)).revertedWith(
+        "TokenHolder: caller must be contract"
+      );
+    });
+
+    it("Verify remove active proposals should be reverted if wrong voters passed", async function () {
+      const { signers, voterAccount, tokenHolderCallerMock } =
+        await loadFixture(deployFixture);
+
+      await tokenHolderCallerMock.connect(voterAccount).addProposal(1);
+      await expect(
+        tokenHolderCallerMock.removeProposals(1, [signers[9].address])
+      ).revertedWith("TokenHolder: voter info not available");
+
+      await expect(
+        tokenHolderCallerMock.removeProposals(2, [voterAccount.address])
+      ).revertedWith("TokenHolder: voter info not available");
+    });
+
+    it("Verify add and remove active proposals should be reverted if caller contract having zero god tokens", async function () {
+      const { token, voterAccount, tokenHolderCallerMock } = await loadFixture(
+        deployFixture
+      );
+
+      // reset balance of caller contract before proposal creation
+      await token.setUserBalance(tokenHolderCallerMock.address, 0);
+      expect(await token.balanceOf(tokenHolderCallerMock.address)).equals(0);
+
+      await expect(
+        tokenHolderCallerMock.connect(voterAccount).addProposal(1)
+      ).revertedWith("TokenHolder: insufficient balance");
+
+      await expect(
+        tokenHolderCallerMock
+          .connect(voterAccount)
+          .removeProposals(1, [voterAccount.address])
+      ).revertedWith("TokenHolder: insufficient balance");
+    });
+
     it("Verify add and remove active proposals", async function () {
-      const { godHolder, voter } = await loadFixture(deployFixture);
-      expect((await godHolder.getActiveProposalsForUser()).length).equal(0);
-      await godHolder.addProposalForVoter(voter, 1);
-      await godHolder.addProposalForVoter(voter, 2);
-      await godHolder.addProposalForVoter(voter, 3);
-      expect((await godHolder.getActiveProposalsForUser()).length).equal(3);
-      await godHolder.removeActiveProposals([voter], 3);
+      const { token, godHolder, voterAccount, tokenHolderCallerMock } =
+        await loadFixture(deployFixture);
+
+      // balance of governor before proposal creation
+      expect(await token.balanceOf(tokenHolderCallerMock.address)).greaterThan(
+        0
+      );
+
+      await tokenHolderCallerMock.connect(voterAccount).addProposal(1);
+      expect((await godHolder.getActiveProposalsForUser()).length).equal(1);
+
+      await tokenHolderCallerMock.connect(voterAccount).addProposal(2);
       expect((await godHolder.getActiveProposalsForUser()).length).equal(2);
-      await godHolder.removeActiveProposals([voter], 2);
-      await godHolder.removeActiveProposals([voter], 1);
+
+      await tokenHolderCallerMock
+        .connect(voterAccount)
+        .removeProposals(1, [voterAccount.address]);
+      expect((await godHolder.getActiveProposalsForUser()).length).equal(1);
+
+      await tokenHolderCallerMock
+        .connect(voterAccount)
+        .removeProposals(2, [voterAccount.address]);
       expect((await godHolder.getActiveProposalsForUser()).length).equal(0);
     });
 
     it("Verify claim tokens", async function () {
-      const { godHolder, voter } = await loadFixture(deployFixture);
+      const { godHolder, voter, voterAccount, tokenHolderCallerMock } =
+        await loadFixture(deployFixture);
       expect((await godHolder.getActiveProposalsForUser()).length).equal(0);
 
-      await godHolder.grabTokensFromUser(voter, TOTAL_AMOUNT);
-      const txn = await godHolder.addProposalForVoter(voter, 1);
-      await verifyCanClaimAmountEvent(txn, voter, false, 1);
+      await tokenHolderCallerMock.connect(voterAccount).addProposal(1);
+
+      const events: any = [];
+      godHolder.on(
+        "CanClaimAmount",
+        (user: string, canClaim: boolean, operation: number) => {
+          events.push({
+            name: "CanClaimAmount",
+            args: { user, canClaim, operation, length: 3 },
+          });
+        }
+      );
+
+      await godHolder.connect(voterAccount).grabTokensFromUser(TOTAL_AMOUNT);
 
       expect((await godHolder.getActiveProposalsForUser()).length).equal(1);
       expect(await godHolder.canUserClaimTokens(voter)).equals(false);
 
-      const txn1 = await godHolder.removeActiveProposals([voter], 1);
-      await verifyCanClaimAmountEvent(txn1, voter, true, 2);
+      await tokenHolderCallerMock
+        .connect(voterAccount)
+        .removeProposals(1, [voterAccount.address]);
+
       expect((await godHolder.getActiveProposalsForUser()).length).equal(0);
       expect(await godHolder.canUserClaimTokens(voter)).equals(true);
 
       await godHolder.revertTokensForVoter(TOTAL_AMOUNT);
       expect(await godHolder.canUserClaimTokens(voter)).equals(false);
+
+      await Helper.delay(5000);
+      await verifyCanClaimAmountEvent(events[0], voter, false, 1);
+      await verifyCanClaimAmountEvent(events[1], voter, true, 2);
     });
   });
 
   describe("GODTokenHolderFactory contract tests", function () {
     it("Verify contract should be reverted for multiple initialization", async function () {
-      const { godTokenHolderFactory, godHolder, hederaService, admin } =
+      const { godHolderFactory, godHolder, hederaService, admin } =
         await loadFixture(deployFixture);
       await expect(
-        godTokenHolderFactory.initialize(
+        godHolderFactory.initialize(
           hederaService.address,
           godHolder.address,
           admin
@@ -275,79 +378,50 @@ describe("GODHolder tests", function () {
     });
 
     it("Given a GODHolder when factory is asked to create holder then address should be populated", async () => {
-      const { godTokenHolderFactory, token } = await loadFixture(deployFixture);
-
-      const tx = await godTokenHolderFactory.getTokenHolder(token.address);
-      const { name, args } = await TestHelper.readLastEvent(tx);
-      const tokenAddress = args[0];
-      const godHolderAddress = args[1];
-
-      expect(name).equals("TokenHolderCreated");
-      expect(tokenAddress).equals(token.address);
-      expect(godHolderAddress).not.equals(TestHelper.ZERO_ADDRESS);
+      const { godHolderFactory, token } = await loadFixture(deployFixture);
+      const tx = await godHolderFactory.getTokenHolder(token.address);
+      await verifyTokenHolderCreatedEvent(tx, token.address);
     });
 
     it("Given a GODHolder exist in factory when factory is asked to create another one with different token then address should be populated", async () => {
-      const { godTokenHolderFactory, token } = await loadFixture(deployFixture);
+      const { godHolderFactory, token } = await loadFixture(deployFixture);
 
-      const tx = await godTokenHolderFactory.getTokenHolder(token.address);
-      const { name, args } = await TestHelper.readLastEvent(tx);
-      const tokenAddress = args[0];
-      const godHolderAddress = args[1];
-
-      expect(name).equals("TokenHolderCreated");
-      expect(tokenAddress).equals(token.address);
-      expect(godHolderAddress).not.equals(TestHelper.ZERO_ADDRESS);
+      const tx = await godHolderFactory.getTokenHolder(token.address);
+      const info = await verifyTokenHolderCreatedEvent(tx, token.address);
 
       const token1 = await TestHelper.deployERC20Mock(TOTAL_AMOUNT);
-      const tx1 = await godTokenHolderFactory.getTokenHolder(token1.address);
-      const { name: name1, args: args1 } = await TestHelper.readLastEvent(tx1);
-      const tokenAddress1 = args1[0];
-      const godHolderAddress1 = args1[1];
+      const tx1 = await godHolderFactory.getTokenHolder(token1.address);
+      const info1 = await verifyTokenHolderCreatedEvent(tx1, token1.address);
 
-      expect(name1).equals("TokenHolderCreated");
-      expect(tokenAddress1).equals(token1.address);
-      expect(godHolderAddress1).not.equals(TestHelper.ZERO_ADDRESS);
-      expect(godHolderAddress1).not.equals(godHolderAddress);
+      expect(info.token).not.equals(info1.token);
+      expect(info.tokenHolder).not.equals(info1.tokenHolder);
     });
 
     it("Given a GODHolder exist in factory when factory is asked to create another one with same token then existing address should return", async () => {
-      const { godTokenHolderFactory, token } = await loadFixture(deployFixture);
+      const { godHolderFactory, token } = await loadFixture(deployFixture);
 
-      const tx = await godTokenHolderFactory.getTokenHolder(token.address);
-      const { name, args } = await TestHelper.readLastEvent(tx);
-      const tokenAddress = args[0];
-      const godHolderAddress = args[1];
-
-      expect(name).equals("TokenHolderCreated");
-      expect(tokenAddress).equals(token.address);
-      expect(godHolderAddress).not.equals(TestHelper.ZERO_ADDRESS);
+      const tx = await godHolderFactory.getTokenHolder(token.address);
+      const info = await verifyTokenHolderCreatedEvent(tx, token.address);
 
       // Use callStatic as we are reading the existing state not modifying it.
       const existingHolderAddress =
-        await godTokenHolderFactory.callStatic.getTokenHolder(token.address);
+        await godHolderFactory.callStatic.getTokenHolder(token.address);
 
-      expect(godHolderAddress).equal(existingHolderAddress);
+      expect(info.tokenHolder).equal(existingHolderAddress);
     });
 
     it("Verify upgrade Hedera service should pass when owner try to upgrade it ", async () => {
-      const { godTokenHolderFactory, token, signers, hederaService } =
+      const { godHolderFactory, token, signers, hederaService } =
         await loadFixture(deployFixture);
 
-      const tx = await godTokenHolderFactory.getTokenHolder(token.address);
-      const { name, args } = await TestHelper.readLastEvent(tx);
-      const tokenAddress = args[0];
-      const godHolderAddress = args[1];
-
-      expect(name).equals("TokenHolderCreated");
-      expect(tokenAddress).equals(token.address);
-      expect(godHolderAddress).not.equals(TestHelper.ZERO_ADDRESS);
+      const tx = await godHolderFactory.getTokenHolder(token.address);
+      const info = await verifyTokenHolderCreatedEvent(tx, token.address);
 
       const godHolderContract = await TestHelper.getContract(
         "GODHolder",
-        godHolderAddress
+        info.tokenHolder
       );
-      expect(await godTokenHolderFactory.getHederaServiceVersion()).equals(
+      expect(await godHolderFactory.getHederaServiceVersion()).equals(
         hederaService.address
       );
 
@@ -356,10 +430,10 @@ describe("GODHolder tests", function () {
 
       const owner = signers[0];
       const newHederaServiceAddress = signers[3].address;
-      await godTokenHolderFactory
+      await godHolderFactory
         .connect(owner)
         .upgradeHederaService(newHederaServiceAddress);
-      expect(await godTokenHolderFactory.getHederaServiceVersion()).equals(
+      expect(await godHolderFactory.getHederaServiceVersion()).equals(
         newHederaServiceAddress
       );
 
@@ -367,23 +441,11 @@ describe("GODHolder tests", function () {
       expect(updatedAddress).equals(newHederaServiceAddress);
     });
 
-    it("Verify upgrade Hedera service should fail when owner try to upgrade it ", async () => {
-      const { godTokenHolderFactory, token, signers } = await loadFixture(
-        deployFixture
-      );
-
-      const tx = await godTokenHolderFactory.getTokenHolder(token.address);
-      const { name, args } = await TestHelper.readLastEvent(tx);
-      const tokenAddress = args[0];
-      const godHolderAddress = args[1];
-
-      expect(name).equals("TokenHolderCreated");
-      expect(tokenAddress).equals(token.address);
-      expect(godHolderAddress).not.equals(TestHelper.ZERO_ADDRESS);
+    it("Verify upgrade Hedera service should fail when non-owner try to upgrade it ", async () => {
+      const { godHolderFactory, signers } = await loadFixture(deployFixture);
       const nonOwner = signers[1];
-
       await expect(
-        godTokenHolderFactory
+        godHolderFactory
           .connect(nonOwner)
           .upgradeHederaService(signers[3].address)
       ).revertedWith("Ownable: caller is not the owner");

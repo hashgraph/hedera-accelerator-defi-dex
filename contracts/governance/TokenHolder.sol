@@ -24,6 +24,7 @@ abstract contract TokenHolder is
         uint8 operation
     );
     event CanClaimAmount(address indexed user, bool canClaim, uint8 operation);
+    mapping(address => mapping(address => mapping(uint => bool))) governorVoterProposalDetails;
     mapping(address => uint256[]) activeProposalsForUsers;
     IHederaService internal hederaService;
     address internal _token;
@@ -43,9 +44,15 @@ abstract contract TokenHolder is
     }
 
     function addProposalForVoter(
-        address voter,
         uint256 proposalId
     ) external override returns (int32) {
+        require(isContract(msg.sender), "TokenHolder: caller must be contract");
+        require(
+            _balanceOf(_token, msg.sender) > 0,
+            "TokenHolder: insufficient balance"
+        );
+        address voter = tx.origin;
+        governorVoterProposalDetails[msg.sender][voter][proposalId] = true;
         uint256[] storage proposals = activeProposalsForUsers[voter];
         proposals.push(proposalId);
         if (proposals.length == 1) {
@@ -66,8 +73,18 @@ abstract contract TokenHolder is
         address[] memory voters,
         uint256 proposalId
     ) external override returns (int32) {
+        require(isContract(msg.sender), "TokenHolder: caller must be contract");
+        require(
+            _balanceOf(_token, msg.sender) > 0,
+            "TokenHolder: insufficient balance"
+        );
         for (uint256 i = 0; i < voters.length; i++) {
             address voter = voters[i];
+            require(
+                governorVoterProposalDetails[msg.sender][voter][proposalId],
+                "TokenHolder: voter info not available"
+            );
+            governorVoterProposalDetails[msg.sender][voter][proposalId] = false;
             uint256[] storage proposals = activeProposalsForUsers[voter];
             _removeAnArrayElement(proposalId, proposals);
             if (proposals.length == 0) {

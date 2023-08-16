@@ -307,13 +307,7 @@ export class NFTDaoFactoryTest extends CommonSteps {
   )
   public async lockNFTTokenForVoting(serialNo: number) {
     tokenLockedAmount = serialNo;
-    await this.grabNFTTokensForAllowance(
-      nftHolder,
-      serialNo,
-      voterAccountId,
-      voterAccountPK,
-      voterClient
-    );
+    await this.grabNFTTokensForAllowance(nftHolder, serialNo, voterClient);
   }
 
   @then(/User verify locked nft-token count in holder/, undefined, 30000)

@@ -128,19 +128,14 @@ export default class GodHolder extends Base {
 
   lock = async (
     lockedAmount: number = 50001e8, // 50001 tokens
-    accountId: AccountId = clientsInfo.uiUserId,
-    accountPrivateKey: PrivateKey = clientsInfo.uiUserKey,
-    client: Client = clientsInfo.uiUserClient
+    client: Client
   ) => {
-    const args = new ContractFunctionParameters()
-      .addAddress(accountId.toSolidityAddress())
-      .addUint256(lockedAmount);
+    const args = new ContractFunctionParameters().addUint256(lockedAmount);
     const { result } = await this.execute(
       5_00_000,
       GRAB_TOKEN_FROM_USER,
       client,
-      args,
-      accountPrivateKey
+      args
     );
     const code = result.getUint256(0);
     console.log(

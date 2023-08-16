@@ -297,12 +297,6 @@ export class GovernorCreateToken extends CommonSteps {
     expect(tokensAfter[0]).to.eql(BigNumber.sum(tokensBefore[1], tokenBQty));
   }
 
-  @when(/User sets the slippage value to (\d*)/, undefined, 30000)
-  public async setSlippageVal(slippage: number): Promise<void> {
-    const slippageWithPrecision = Common.withPrecision(slippage, precision);
-    pair.setSlippage(slippageWithPrecision, clientsInfo.operatorClient);
-  }
-
   @when(
     /User swaps (\d*) unit of "([^"]*)" token with another token in pair with slippage as (\d+\.?\d*)/,
     undefined,
@@ -381,8 +375,6 @@ export class GovernorCreateToken extends CommonSteps {
     await this.lockTokens(
       godHolder,
       tokenAmt * CommonSteps.withPrecision,
-      clientsInfo.operatorId,
-      clientsInfo.operatorKey,
       clientsInfo.operatorClient
     );
   }

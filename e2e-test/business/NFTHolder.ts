@@ -104,20 +104,15 @@ export default class NFTHolder extends Base {
 
   grabTokensForVoter = async (
     nftTokenSerialId: number,
-    accountId: AccountId = clientsInfo.operatorId,
-    accountPrivateKey: PrivateKey = clientsInfo.operatorKey,
     client: Client = clientsInfo.operatorClient
   ) => {
     const tokenId = await this.getToken(client);
-    const args = new ContractFunctionParameters()
-      .addAddress(accountId.toSolidityAddress())
-      .addUint256(nftTokenSerialId);
+    const args = new ContractFunctionParameters().addUint256(nftTokenSerialId);
     const { result } = await this.execute(
       5_00_000,
       GRAB_TOKENS_FOR_VOTER,
       client,
-      args,
-      accountPrivateKey
+      args
     );
     const code = result.getUint256(0);
     console.log(

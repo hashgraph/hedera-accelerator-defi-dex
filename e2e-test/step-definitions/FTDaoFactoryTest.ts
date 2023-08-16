@@ -342,13 +342,7 @@ export class FTDaoFactoryTest extends CommonSteps {
   @when(/User lock (\d+\.?\d*) GOD tokens for the voting/, undefined, 30000)
   public async lockGOD(amount: number) {
     tokenLockedAmount = amount * CommonSteps.withPrecision;
-    await this.lockTokens(
-      ftHolder,
-      tokenLockedAmount,
-      voterAccountId,
-      voterAccountPK,
-      voterClient
-    );
+    await this.lockTokens(ftHolder, tokenLockedAmount, voterClient);
   }
 
   @then(/User verify locked tokens amount in holder/, undefined, 30000)

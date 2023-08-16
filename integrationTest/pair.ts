@@ -82,10 +82,6 @@ const getPrecisionValue = async () => {
   precision = await pair.getPrecisionValue();
 };
 
-const setSlippage = async (slippage: BigNumber) => {
-  await pair.setSlippage(slippage);
-};
-
 const spotPrice = async () => {
   await pair.getSpotPrice(tokenA);
 };
@@ -234,7 +230,6 @@ async function testForSinglePair(
   await getAccountTokensBalance();
   await removeLiquidity(lpTokenAddress);
   await getAccountTokensBalance();
-  await setSlippage(new BigNumber(50000000));
   await swapTokenA();
   await spotPrice();
   await getVariantValue();

@@ -52,7 +52,7 @@ contract TokenOperations {
         IERC721(_token).transferFrom(_sender, _receiver, _amount);
     }
 
-    function isContract(address _account) private view returns (bool) {
+    function isContract(address _account) internal view returns (bool) {
         return _account.code.length > 0;
     }
 

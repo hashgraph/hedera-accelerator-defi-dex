@@ -170,7 +170,7 @@ export class FactorySteps {
   }
 
   @then(
-    /User gets message "([^"]*)" on creating pair with same token/,
+    /User receives fails message "([^"]*)" on creating pair with same token/,
     undefined,
     30000
   )
@@ -367,14 +367,8 @@ export class FactorySteps {
     );
   }
 
-  @when(/User update the slippage value to (\d+\.?\d*)/, undefined, 30000)
-  public async setSlippageVal(slippage: number): Promise<void> {
-    const slippageWithPrecision = Common.withPrecision(slippage, precision);
-    pair.setSlippage(slippageWithPrecision, client);
-  }
-
   @then(
-    /User gets message "([^"]*)" on creating pair with two HBAR tokens/,
+    /User receives message "([^"]*)" on creating pair with two HBAR tokens/,
     undefined,
     30000
   )
