@@ -375,8 +375,6 @@ export class GovernorCreateToken extends CommonSteps {
     await this.lockTokens(
       godHolder,
       tokenAmt * CommonSteps.withPrecision,
-      clientsInfo.operatorId,
-      clientsInfo.operatorKey,
       clientsInfo.operatorClient
     );
   }

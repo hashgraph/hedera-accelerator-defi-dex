@@ -47,10 +47,8 @@ contract GODHolder is TokenHolder {
         return HederaResponseCodes.SUCCESS;
     }
 
-    function grabTokensFromUser(
-        address user,
-        uint256 _amount
-    ) external override {
+    function grabTokensFromUser(uint256 _amount) external override {
+        address user = msg.sender;
         require(
             _amount > 0,
             "GODHolder: lock amount must be a positive number"

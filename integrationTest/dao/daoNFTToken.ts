@@ -117,13 +117,11 @@ export async function executeGovernorTokenTransferFlow(
     await nftHolder.setupAllowanceForTokenLocking(
       voterAccountId,
       voterAccountKey,
-      txnFeePayerClient
+      voterClient
     );
     await nftHolder.grabTokensForVoter(
       governor.DEFAULT_NFT_TOKEN_SERIAL_NO_FOR_VOTING,
-      voterAccountId,
-      voterAccountKey,
-      txnFeePayerClient
+      voterClient
     );
   }
 

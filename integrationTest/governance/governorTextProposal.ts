@@ -20,8 +20,8 @@ async function main() {
 
   await governor.initialize(godHolder);
 
-  await godHolder.setupAllowanceForTokenLocking();
-  await godHolder.lock();
+  await godHolder.setupAllowanceForTokenLocking(50001e8);
+  await godHolder.lock(50001e8, clientsInfo.uiUserClient);
 
   await governor.setupAllowanceForProposalCreation(
     clientsInfo.operatorClient,

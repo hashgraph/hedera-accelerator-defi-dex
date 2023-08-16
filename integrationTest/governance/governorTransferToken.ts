@@ -75,12 +75,7 @@ const fungibleTokenFlow = async () => {
       voterAccountKey,
       txnFeePayerClient
     );
-    await godHolder.lock(
-      lockAmount,
-      voterAccountId,
-      voterAccountKey,
-      txnFeePayerClient
-    );
+    await godHolder.lock(lockAmount, voterClient);
   }
 
   // step - 1
@@ -154,8 +149,6 @@ const nonFungibleTokenFlow = async () => {
     );
     await nftHolder.grabTokensForVoter(
       governor.DEFAULT_NFT_TOKEN_SERIAL_NO_FOR_VOTING,
-      voterAccountId,
-      voterAccountKey,
       voterClient
     );
   }

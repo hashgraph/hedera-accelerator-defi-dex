@@ -27,10 +27,8 @@ contract NFTHolder is TokenHolder {
         return HederaResponseCodes.SUCCESS;
     }
 
-    function grabTokensFromUser(
-        address user,
-        uint256 tokenId
-    ) external override {
+    function grabTokensFromUser(uint256 tokenId) external override {
+        address user = msg.sender;
         if (nftTokenForUsers[user] > 0) {
             return;
         }
