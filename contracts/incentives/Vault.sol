@@ -106,6 +106,7 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
         require(_from != address(0), "Vault: from address should not be zero");
         require(_amount > 0, "Vault: reward amount must be a positive number");
         require(stakingTokenTotalSupply > 0, "Vault: no token staked yet");
+        require(_token != address(stakingToken), "Vault: Reward and Staking tokens cannot be same.");
         uint256 perShareAmount = _amount.div(stakingTokenTotalSupply);
         RewardInfo storage rewardInfo = tokensRewardInfo[_token];
         if (!rewardInfo.exist) {
