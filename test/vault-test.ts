@@ -442,6 +442,22 @@ describe("Vault Tests", function () {
       ).revertedWith("Vault: Add reward failed");
     });
 
+    it("Verify reward and staked token cannot be same", async function () {
+      const { vaultContract, owner, stakingTokenContract } = await loadFixture(
+        deployFixture
+      );
+
+      await vaultContract.stake(STAKED_AMOUNT);
+
+      await expect(
+        vaultContract.addReward(
+          stakingTokenContract.address,
+          REWARD_AMOUNT,
+          owner.address
+        )
+      ).revertedWith("Vault: Reward and Staking tokens cannot be same.");
+    });
+
     it("Verify reward operation should emit 'RewardAdded' event", async function () {
       const {
         vaultContract,

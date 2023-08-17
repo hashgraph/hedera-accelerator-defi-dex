@@ -95,15 +95,6 @@
     "transparentProxyAddress": "0x000000000000000000000000000000000006a9e9"
   },
   {
-    "name": "vault",
-    "id": "0.0.89652",
-    "hash": "e3c02b659c056d4d8c870271367d5e12",
-    "address": "0x0000000000000000000000000000000000015e34",
-    "timestamp": "2023-07-28T06:23:25.409Z",
-    "transparentProxyId": "0.0.89705",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000015e69"
-  },
-  {
     "name": "multisigdao",
     "id": "0.0.89706",
     "hash": "6eb128408396fb59881d6a0db1e29ee3",
@@ -192,5 +183,14 @@
     "timestamp": "2023-08-10T07:36:40.058Z",
     "transparentProxyId": "0.0.467637",
     "transparentProxyAddress": "0x00000000000000000000000000000000000722b5"
+  },
+  {
+    "name": "vault",
+    "id": "0.0.505816",
+    "hash": "528350f32abb2c9b890b18676629e159",
+    "address": "0x000000000000000000000000000000000007b7d8",
+    "timestamp": "2023-08-17T10:02:12.316Z",
+    "transparentProxyId": "0.0.88500",
+    "transparentProxyAddress": "0x00000000000000000000000000000000000159b4"
   }
 ]
