@@ -1,11 +1,27 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { Contract } from "ethers";
+import { BigNumber, Contract } from "ethers";
 import { ethers, upgrades } from "hardhat";
 
 export class TestHelper {
   static ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
   static ONE_ADDRESS = "0x0000000000000000000000000000000000000001";
   static TWO_ADDRESS = "0x0000000000000000000000000000000000000002";
+
+  static async getAccountHBars(address: string): Promise<BigNumber> {
+    return await ethers.provider.getBalance(address);
+  }
+
+  static async transferBalance(
+    address: string,
+    amount: number,
+    sender: SignerWithAddress
+  ) {
+    const tx = {
+      to: address,
+      value: amount,
+    };
+    await sender.sendTransaction(tx);
+  }
 
   static async mineNBlocks(n: number) {
     for (let index = 0; index < n; index++) {

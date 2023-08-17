@@ -9,8 +9,10 @@ import { Helper } from "../../utils/Helper";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { AddressHelper } from "../../utils/AddressHelper";
 import {
+  Hbar,
   Client,
   TokenId,
+  HbarUnit,
   AccountId,
   ContractId,
   PrivateKey,
@@ -19,6 +21,7 @@ import {
 const TOKEN = TokenId.fromString(dex.TOKEN_LAB49_1);
 const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
 const TOKEN_QTY = 1;
+const HBAR_AMOUNT = Hbar.from(1, HbarUnit.Hbar);
 const TXN_DETAILS_FOR_BATCH = {
   TOKEN: GOD_TOKEN_ID,
   FROM_CLIENT: clientsInfo.treasureClient,
@@ -232,7 +235,7 @@ export async function executeBatchTransaction(
 export async function executeHbarTransfer(
   multiSigDAO: MultiSigDao,
   ownersInfo: any[] = DAO_OWNERS_INFO,
-  tokenQty: number = TOKEN_QTY,
+  hBarAmount: Hbar = HBAR_AMOUNT,
   tokenReceiver: AccountId | ContractId = clientsInfo.uiUserId,
   tokenSenderClient: Client = clientsInfo.treasureClient,
   tokenSenderAccountId: AccountId = clientsInfo.treasureId,
@@ -243,7 +246,7 @@ export async function executeHbarTransfer(
   const gnosisSafe = await getGnosisSafeInstance(multiSigDAO);
 
   await Common.transferHbarsToContract(
-    tokenQty,
+    hBarAmount,
     ContractId.fromString(gnosisSafe.contractId),
     tokenSenderAccountId,
     tokenSenderClient
@@ -253,7 +256,7 @@ export async function executeHbarTransfer(
     tokenReceiver.toSolidityAddress(),
     getHbarTransferCalldata(),
     40001,
-    tokenQty
+    hBarAmount.to(HbarUnit.Tinybar).toNumber()
   );
 
   const transferTxnInfo = await multiSigDAO.getTransactionInfo(
