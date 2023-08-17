@@ -1,70 +1,143 @@
 import dex from "../../deployment/model/dex";
 import Common from "../../e2e-test/business/Common";
+import GodHolder from "../../e2e-test/business/GodHolder";
+import FTTokenHolderFactory from "../../e2e-test/business/factories/FTTokenHolderFactory";
+import ContractUpgradeGovernor from "../../e2e-test/business/ContractUpgradeGovernor";
 
 import { Helper } from "../../utils/Helper";
-import { Deployment } from "../../utils/deployContractOnTestnet";
 import { clientsInfo } from "../../utils/ClientManagement";
+import { AddressHelper } from "../../utils/AddressHelper";
 import { ContractService } from "../../deployment/service/ContractService";
-import { TokenId, ContractId } from "@hashgraph/sdk";
-import ContractUpgradeGovernor from "../../e2e-test/business/ContractUpgradeGovernor";
-import FTTokenHolderFactory from "../../e2e-test/business/factories/FTTokenHolderFactory";
-import GodHolder from "../../e2e-test/business/GodHolder";
-import Factory from "../../e2e-test/business/Factory";
+import { Client, TokenId, AccountId, PrivateKey } from "@hashgraph/sdk";
 
-const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
+const FT_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
+
+const txnFeePayerClient = clientsInfo.operatorClient;
+
+const creatorAccountId = clientsInfo.operatorId;
+const creatorAccountPK = clientsInfo.operatorKey;
+const creatorClient = clientsInfo.operatorClient;
 
 async function main() {
-  const { id } = await new Deployment().deploy(ContractService.FACTORY);
+  const voterAccountId = clientsInfo.treasureId;
+  const voterAccountKey = clientsInfo.treasureKey;
+  const voterClient = clientsInfo.treasureClient;
+
+  const ftTokenHolderFactory = new FTTokenHolderFactory();
+  const ftHolderContractId = await ftTokenHolderFactory.getTokenHolder(
+    FT_TOKEN_ID.toSolidityAddress()
+  );
+  const godHolder = new GodHolder(ftHolderContractId);
 
   const governor = new ContractUpgradeGovernor();
-  const godHolderFactory = new FTTokenHolderFactory();
-  const godHolderContractId = await godHolderFactory.getTokenHolder(
-    GOD_TOKEN_ID.toSolidityAddress()
+  await governor.cancelProposal(
+    "Contract Upgrade Proposal 0x9a2c87ff9df73139e25ae643e1e0702c294fac29",
+    creatorClient
   );
-  const godHolder = new GodHolder(godHolderContractId);
-
-  await governor.initialize(godHolder);
-
-  await godHolder.setupAllowanceForTokenLocking(50001e8);
-  await godHolder.lock(50001e8, clientsInfo.uiUserClient);
-
-  await governor.setupAllowanceForProposalCreation(
-    clientsInfo.operatorClient,
-    clientsInfo.operatorId,
-    clientsInfo.operatorKey
+  await governor.initialize(
+    godHolder,
+    txnFeePayerClient,
+    1,
+    0,
+    20,
+    FT_TOKEN_ID,
+    FT_TOKEN_ID
   );
 
-  const title = Helper.createProposalTitle("Upgrade Proposal");
-  const { proposalId } = await governor.createContractUpgradeProposal(
-    ContractId.fromString(new Factory().contractId),
-    ContractId.fromString(id),
-    title,
-    clientsInfo.operatorClient
+  const quorum = await governor.quorum(txnFeePayerClient);
+  const votingPowerAmount = await godHolder.balanceOfVoter(
+    voterAccountId,
+    txnFeePayerClient
   );
 
-  await governor.getProposalDetails(proposalId);
-  await governor.forVote(proposalId, 0, clientsInfo.uiUserClient);
-  await governor.isQuorumReached(proposalId);
-  await governor.isVoteSucceeded(proposalId);
-  await governor.proposalVotes(proposalId);
-  if (await governor.isSucceeded(proposalId)) {
-    await governor.executeProposal(title);
-    const { proxyAddress, logicAddress } =
-      await governor.getContractAddressesFromGovernorUpgradeContract(
-        proposalId
-      );
-    await new Common(ContractId.fromSolidityAddress(proxyAddress)).upgradeTo(
-      proxyAddress,
-      logicAddress
+  // tokens locking required in token holder if not enough power locked
+  if (votingPowerAmount < quorum) {
+    const lockAmount = quorum - votingPowerAmount;
+    await godHolder.setupAllowanceForTokenLocking(
+      lockAmount,
+      voterAccountId,
+      voterAccountKey,
+      voterClient
     );
-  } else {
-    await governor.cancelProposal(title, clientsInfo.operatorClient);
+    await godHolder.lock(lockAmount, voterClient);
   }
-  await godHolder.checkAndClaimGodTokens(
-    clientsInfo.uiUserClient,
-    clientsInfo.uiUserId
+
+  const contractToUpgradeInfo = new ContractService().getContract(
+    ContractService.MULTI_SIG
   );
+  await createAndExecuteContractUpgradeProposal(
+    contractToUpgradeInfo.transparentProxyAddress!,
+    contractToUpgradeInfo.address,
+    governor,
+    voterClient,
+    txnFeePayerClient,
+    creatorAccountId,
+    creatorAccountPK,
+    creatorClient,
+    0
+  );
+
+  await godHolder.checkAndClaimGodTokens(voterClient, voterAccountId);
   await governor.upgradeHederaService();
+}
+
+async function createAndExecuteContractUpgradeProposal(
+  proxyAddress: string,
+  proxyLogicAddress: string,
+  governor: ContractUpgradeGovernor,
+  voterClient: Client,
+  txnFeePayerClient: Client,
+  creatorId: AccountId,
+  creatorPK: PrivateKey,
+  creatorClient: Client,
+  txnFee: number
+) {
+  await governor.setupAllowanceForProposalCreation(
+    creatorClient,
+    creatorId,
+    creatorPK
+  );
+
+  const title = Helper.createProposalTitle("Contract Upgrade Proposal");
+  const { proposalId } = await governor.createContractUpgradeProposal(
+    proxyAddress,
+    proxyLogicAddress,
+    title,
+    txnFeePayerClient,
+    governor.DEFAULT_DESCRIPTION,
+    governor.DEFAULT_LINK,
+    governor.DEFAULT_NFT_TOKEN_SERIAL_NO,
+    creatorId
+  );
+
+  await governor.getProposalDetails(proposalId, voterClient);
+  await governor.forVote(proposalId, 0, voterClient);
+  await governor.getProposalDetails(proposalId, voterClient);
+
+  if (await governor.isSucceeded(proposalId)) {
+    await transferOwnershipToGovernance(proposalId, governor);
+    await governor.executeProposal(title, undefined, txnFeePayerClient, txnFee);
+  } else {
+    await governor.cancelProposal(title, creatorClient);
+  }
+}
+
+async function transferOwnershipToGovernance(
+  proposalId: string,
+  contractUpgradeGovernor: ContractUpgradeGovernor
+) {
+  const governorEvmAddress = await AddressHelper.idToEvmAddress(
+    contractUpgradeGovernor.contractId
+  );
+  const { proxyId } =
+    await contractUpgradeGovernor.getContractAddressesFromGovernorUpgradeContract(
+      proposalId
+    );
+  await new Common(proxyId).changeAdmin(
+    governorEvmAddress,
+    clientsInfo.proxyAdminKey,
+    clientsInfo.proxyAdminClient
+  );
 }
 
 main()

@@ -59,6 +59,10 @@ describe("Governor Tests", function () {
       nftToken
     );
 
+    const systemRoleBasedAccess = (
+      await TestHelper.deploySystemRoleBasedAccess()
+    ).address;
+
     const FT_ARGS = [
       token.address,
       VOTING_DELAY,
@@ -66,6 +70,7 @@ describe("Governor Tests", function () {
       hederaService.address,
       godHolder.address,
       QUORUM_THRESHOLD_BSP,
+      systemRoleBasedAccess,
     ];
 
     const NFT_ARGS = [
@@ -75,6 +80,7 @@ describe("Governor Tests", function () {
       hederaService.address,
       nftGodHolder.address,
       QUORUM_THRESHOLD_BSP,
+      systemRoleBasedAccess,
     ];
 
     const governorToken = await TestHelper.deployLogic("GovernorTokenCreate");
@@ -99,6 +105,13 @@ describe("Governor Tests", function () {
     );
     await nftGovernorTokenCreate.initialize(...NFT_ARGS);
 
+    const systemUsersSigners = await TestHelper.systemUsersSigners();
+    const governorTestProxy = await TestHelper.deployLogic(
+      "ProxyPatternMock",
+      governorToken.address,
+      systemUsersSigners.proxyAdmin.address
+    );
+
     return {
       FT_ARGS,
       token,
@@ -116,6 +129,9 @@ describe("Governor Tests", function () {
       nftGodHolder,
       nftGovernorTokenCreate,
       tokenToTransfer,
+      governorTestProxy,
+      systemUsersSigners,
+      systemRoleBasedAccess,
     };
   }
 
@@ -260,18 +276,20 @@ describe("Governor Tests", function () {
 
   async function getUpgradeProposalId(
     instance: Contract,
-    account: SignerWithAddress,
+    creator: SignerWithAddress,
+    proxyAddress: string,
+    logicAddress: string,
     nftTokenSerialId: number = 0
   ) {
     const tx = await instance
-      .connect(account)
+      .connect(creator)
       .createProposal(
         TITLE,
         DESC,
         LINK,
-        TestHelper.ONE_ADDRESS,
-        TestHelper.TWO_ADDRESS,
-        account.address,
+        proxyAddress,
+        logicAddress,
+        creator.address,
         nftTokenSerialId
       );
     return nftTokenSerialId === NFT_TOKEN_SERIAL_ID
@@ -1267,9 +1285,8 @@ describe("Governor Tests", function () {
     });
 
     it("Verify contract should initialize quorum threshold value with 500 when user passed 0 as threshold", async function () {
-      const { godHolder, hederaService, token } = await loadFixture(
-        deployFixture
-      );
+      const { godHolder, hederaService, token, systemRoleBasedAccess } =
+        await loadFixture(deployFixture);
       const ARGS = [
         token.address,
         VOTING_DELAY,
@@ -1277,6 +1294,7 @@ describe("Governor Tests", function () {
         hederaService.address,
         godHolder.address,
         0,
+        systemRoleBasedAccess,
       ];
       const governorText = await TestHelper.deployLogic("GovernorTextProposal");
       await governorText.initialize(...ARGS);
@@ -1286,33 +1304,69 @@ describe("Governor Tests", function () {
   });
 
   describe("GovernorUpgrade contract tests", async () => {
-    it("Verify upgrade proposal should be executed", async function () {
-      const { governorUpgrade, creator, godHolder } = await loadFixture(
-        deployFixture
-      );
+    it("Verify upgrade proposal should be reverted if no rights transfer to governance before execution", async function () {
+      const { creator, godHolder, governorUpgrade, governorTestProxy } =
+        await loadFixture(deployFixture);
+
       await godHolder.grabTokensFromUser(LOCKED_TOKEN);
       const { proposalId } = await getUpgradeProposalId(
         governorUpgrade,
-        creator
+        creator,
+        governorTestProxy.address,
+        TestHelper.ONE_ADDRESS
       );
       await governorUpgrade.castVotePublic(proposalId, 0, 1);
       await TestHelper.mineNBlocks(BLOCKS_COUNT);
-      await governorUpgrade.executeProposal(TITLE);
-      const addresses = await governorUpgrade.getContractAddresses(proposalId);
-      expect(addresses.length).equals(2);
-      expect(addresses[0]).equals(TestHelper.ONE_ADDRESS);
-      expect(addresses[1]).equals(TestHelper.TWO_ADDRESS);
+
+      await expect(governorUpgrade.executeProposal(TITLE)).revertedWith(
+        "GU: failed to upgrade proxy"
+      );
     });
 
-    it("Verify upgrade proposal should be reverted if user tried to access contract addresses without proposal execution", async function () {
-      const { governorUpgrade, creator } = await loadFixture(deployFixture);
+    it("Verify upgrade proposal should be executed", async function () {
+      const {
+        creator,
+        godHolder,
+        governorUpgrade,
+        governorTestProxy,
+        systemUsersSigners,
+      } = await loadFixture(deployFixture);
+
+      const proxyAdmin = systemUsersSigners.proxyAdmin;
+      const newLogicAddress = TestHelper.ONE_ADDRESS;
+
+      await godHolder.grabTokensFromUser(LOCKED_TOKEN);
       const { proposalId } = await getUpgradeProposalId(
         governorUpgrade,
-        creator
+        creator,
+        governorTestProxy.address,
+        newLogicAddress
       );
+      await governorUpgrade.castVotePublic(proposalId, 0, 1);
+      await TestHelper.mineNBlocks(BLOCKS_COUNT);
+
+      // step : 1
+      await governorTestProxy
+        .connect(proxyAdmin)
+        .changeAdmin(governorUpgrade.address);
+
+      // verification if we changed the rights
       await expect(
-        governorUpgrade.getContractAddresses(proposalId)
-      ).revertedWith("Contract not executed yet!");
+        governorTestProxy
+          .connect(proxyAdmin)
+          .changeAdmin(governorUpgrade.address)
+      ).reverted;
+
+      // step : 2
+      await governorUpgrade.executeProposal(TITLE);
+
+      expect(
+        await governorTestProxy.connect(proxyAdmin).implementation()
+      ).equals(newLogicAddress);
+
+      expect(await governorTestProxy.connect(proxyAdmin).admin()).equals(
+        proxyAdmin.address
+      );
     });
   });
 

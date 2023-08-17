@@ -90,7 +90,8 @@ export default class Governor extends Base {
         .addUint256(votingPeriod)
         .addAddress(this.htsAddress)
         .addAddress(godHolderProxyAddress)
-        .addUint256(defaultQuorumThresholdValue);
+        .addUint256(defaultQuorumThresholdValue)
+        .addAddress(this.getSystemBasedRoleAccessContractAddress());
       await this.execute(1_500_000, this.INITIALIZE, client, args);
       console.log(`- Governor#${this.INITIALIZE}(): done\n`);
       return;

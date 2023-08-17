@@ -78,12 +78,12 @@
   },
   {
     "name": "nftdaofactory",
-    "id": "0.0.502115",
-    "hash": "fc6a330a7b0139b7f72e35c1fec5b8a5",
-    "address": "0x000000000000000000000000000000000007a963",
-    "timestamp": "2023-08-17T06:50:13.462Z",
-    "transparentProxyId": "0.0.502118",
-    "transparentProxyAddress": "0x000000000000000000000000000000000007a966"
+    "id": "0.0.507176",
+    "hash": "36343f373c119d16cfd8cadabb00dc38",
+    "address": "0x000000000000000000000000000000000007bd28",
+    "timestamp": "2023-08-17T11:04:40.184Z",
+    "transparentProxyId": "0.0.507181",
+    "transparentProxyAddress": "0x000000000000000000000000000000000007bd2d"
   },
   {
     "name": "pair",
@@ -96,12 +96,12 @@
   },
   {
     "name": "ftdaofactory",
-    "id": "0.0.502102",
-    "hash": "8aa4baa318512adbe44cbece93157e70",
-    "address": "0x000000000000000000000000000000000007a956",
-    "timestamp": "2023-08-17T06:49:32.751Z",
-    "transparentProxyId": "0.0.502104",
-    "transparentProxyAddress": "0x000000000000000000000000000000000007a958"
+    "id": "0.0.507160",
+    "hash": "9aca37d9c867903bbd9ffbfd03b3d38a",
+    "address": "0x000000000000000000000000000000000007bd18",
+    "timestamp": "2023-08-17T11:04:04.822Z",
+    "transparentProxyId": "0.0.507165",
+    "transparentProxyAddress": "0x000000000000000000000000000000000007bd1d"
   },
   {
     "name": "multisigdaofactory",
@@ -159,12 +159,12 @@
   },
   {
     "name": "governorupgrade",
-    "id": "0.0.88517",
-    "hash": "06f45e0235a710663b6a8ae18829f07d",
-    "address": "0x00000000000000000000000000000000000159c5",
-    "timestamp": "2023-07-28T06:14:43.016Z",
-    "transparentProxyId": "0.0.88544",
-    "transparentProxyAddress": "0x00000000000000000000000000000000000159e0"
+    "id": "0.0.506242",
+    "hash": "adb2d7decbc5e5d663059ed176ae06bf",
+    "address": "0x000000000000000000000000000000000007b982",
+    "timestamp": "2023-08-17T10:17:18.910Z",
+    "transparentProxyId": "0.0.506251",
+    "transparentProxyAddress": "0x000000000000000000000000000000000007b98b"
   },
   {
     "name": "governortokencreate",

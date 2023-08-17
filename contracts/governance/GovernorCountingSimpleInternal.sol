@@ -75,13 +75,16 @@ abstract contract GovernorCountingSimpleInternal is
 
     mapping(uint256 => ProposalInfo) proposals;
 
+    ISystemRoleBasedAccess internal iSystemRoleBasedAccess;
+
     function initialize(
         address _token,
         uint256 _votingDelayValue,
         uint256 _votingPeriodValue,
         IHederaService _hederaService,
         ITokenHolder _tokenHolder,
-        uint256 _quorumThresholdInBsp
+        uint256 _quorumThresholdInBsp,
+        ISystemRoleBasedAccess _iSystemRoleBasedAccess
     ) public initializer {
         __Ownable_init();
         hederaService = _hederaService;
@@ -90,6 +93,7 @@ abstract contract GovernorCountingSimpleInternal is
         quorumThresholdInBsp = _quorumThresholdInBsp == 0
             ? 500
             : _quorumThresholdInBsp;
+        iSystemRoleBasedAccess = _iSystemRoleBasedAccess;
         __Governor_init("HederaTokenCreateGovernor");
         __GovernorSettings_init(
             _votingDelayValue /* 1 block */,
