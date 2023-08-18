@@ -12,6 +12,7 @@ describe("MultiSig tests", function () {
 
   const TXN_TYPE_TEXT = 1005;
   const TXN_TYPE_TRANSFER = 1006;
+  const TXN_TYPE_HBAR_TRANSFER = 1007;
 
   const INVALID_TXN_HASH = ethers.utils.formatBytes32String("INVALID_TXN_HASH");
   const TOTAL = 100 * 1e8;
@@ -104,15 +105,14 @@ describe("MultiSig tests", function () {
     gnosis: Contract,
     receiver: string,
     token: string,
+    type: number,
     amount: number = TRANSFER_AMOUNT,
     title: string = TITLE,
     description: string = DESCRIPTION
   ) {
-    const ABI = [
-      "function transferTokenViaSafe(address,address,uint256) external",
-    ];
+    const ABI = ["function transferAssets(address,address,uint256) external"];
     const iface = new ethers.utils.Interface(ABI);
-    const data = iface.encodeFunctionData("transferTokenViaSafe", [
+    const data = iface.encodeFunctionData("transferAssets", [
       token,
       receiver,
       amount,
@@ -120,12 +120,12 @@ describe("MultiSig tests", function () {
     const txn = await multiSigDAOInstance.proposeTransaction(
       gnosis.address,
       ethers.utils.arrayify(data),
-      TXN_TYPE_TRANSFER,
+      type,
       title,
       description,
       LINK_TO_DISCUSSION
     );
-    return await verifyTransactionCreatedEvent(txn, TXN_TYPE_TRANSFER);
+    return await verifyTransactionCreatedEvent(txn, type);
   }
 
   function createTransferTransactionABIData(
@@ -330,7 +330,7 @@ describe("MultiSig tests", function () {
       const { hederaGnosisSafeProxyContract, tokenInstance, signers } =
         await loadFixture(deployFixture);
       await expect(
-        hederaGnosisSafeProxyContract.transferTokenViaSafe(
+        hederaGnosisSafeProxyContract.transferAssets(
           tokenInstance.address,
           signers[1].address,
           1e8
@@ -739,7 +739,8 @@ describe("MultiSig tests", function () {
         multiSigDAOInstance,
         hederaGnosisSafeProxyContract,
         signers[1].address,
-        tokenInstance.address
+        tokenInstance.address,
+        TXN_TYPE_TRANSFER
       );
       for (const signer of daoSigners) {
         await hederaGnosisSafeProxyContract
@@ -836,6 +837,97 @@ describe("MultiSig tests", function () {
           LINK_TO_DISCUSSION
         )
       ).rejectedWith("MultiSigDAO: invalid transaction length");
+    });
+
+    it("Verify HBar transfer should be reverted if contract don't have enough HBar balance", async function () {
+      const {
+        signers,
+        daoSigners,
+        multiSigDAOInstance,
+        hederaGnosisSafeProxyContract,
+      } = await loadFixture(deployFixture);
+      const { txnHash, info } = await proposeTransferTransaction(
+        multiSigDAOInstance,
+        hederaGnosisSafeProxyContract,
+        signers[1].address,
+        TestHelper.ZERO_ADDRESS,
+        TXN_TYPE_HBAR_TRANSFER
+      );
+      for (const signer of daoSigners) {
+        await hederaGnosisSafeProxyContract
+          .connect(signer)
+          .approveHash(txnHash);
+      }
+
+      expect(
+        await TestHelper.getAccountHBars(hederaGnosisSafeProxyContract.address)
+      ).equals(0);
+
+      await expect(
+        hederaGnosisSafeProxyContract.executeTransaction(
+          info.to,
+          info.value,
+          info.data,
+          info.operation,
+          info.nonce
+        )
+      ).revertedWith("GS013");
+    });
+
+    it("Verify HBar transfer should be succeeded", async function () {
+      const {
+        signers,
+        daoSigners,
+        multiSigDAOInstance,
+        hederaGnosisSafeProxyContract,
+      } = await loadFixture(deployFixture);
+      const receiver = signers[1];
+
+      const { txnHash, info } = await proposeTransferTransaction(
+        multiSigDAOInstance,
+        hederaGnosisSafeProxyContract,
+        receiver.address,
+        TestHelper.ZERO_ADDRESS,
+        TXN_TYPE_HBAR_TRANSFER
+      );
+      for (const signer of daoSigners) {
+        await hederaGnosisSafeProxyContract
+          .connect(signer)
+          .approveHash(txnHash);
+      }
+
+      const receiverBalBeforeTransfer = await TestHelper.getAccountHBars(
+        receiver.address
+      );
+
+      expect(
+        await TestHelper.getAccountHBars(hederaGnosisSafeProxyContract.address)
+      ).equals(0);
+
+      await TestHelper.transferBalance(
+        hederaGnosisSafeProxyContract.address,
+        TRANSFER_AMOUNT,
+        signers[0]
+      );
+      expect(
+        await TestHelper.getAccountHBars(hederaGnosisSafeProxyContract.address)
+      ).equals(TRANSFER_AMOUNT);
+
+      await hederaGnosisSafeProxyContract.executeTransaction(
+        info.to,
+        info.value,
+        info.data,
+        info.operation,
+        info.nonce
+      );
+
+      expect(await TestHelper.getAccountHBars(receiver.address)).equals(
+        receiverBalBeforeTransfer.add(TRANSFER_AMOUNT)
+      );
+
+      expect(
+        await TestHelper.getAccountHBars(hederaGnosisSafeProxyContract.address)
+      ).equals(0);
     });
 
     it("Verify propose batch transaction should be succeeded", async function () {
