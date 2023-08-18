@@ -4,7 +4,6 @@ import ContractUpgradeGovernor from "../e2e-test/business/ContractUpgradeGoverno
 
 import { Helper } from "../utils/Helper";
 import { Deployment } from "../utils/deployContractOnTestnet";
-import { ContractId } from "@hashgraph/sdk";
 import { clientsInfo } from "../utils/ClientManagement";
 import { ContractService } from "./service/ContractService";
 import { DeployedContract } from "./model/contract";
@@ -23,18 +22,18 @@ async function main() {
   for (const contractName of contractsToDeploy) {
     const oldVersion = csUAT.getContractWithProxy(contractName);
     const newVersion = await deployment.deploy(contractName);
-    await createProposal(oldVersion, newVersion.id);
+    await createProposal(oldVersion, newVersion.address);
   }
 }
 
 async function createProposal(
   oldVersion: DeployedContract,
-  newVersionContractId: string
+  newVersionAddress: string
 ) {
   const uniqueId = web3.utils.randomHex(20);
   const desc = `Contract Name - ${
     oldVersion.name
-  }, New Logic Id =  ${newVersionContractId}, Old Logic Id = ${oldVersion.id!}, Proxy Id = ${oldVersion.transparentProxyId!}`;
+  }, New Logic Address =  ${newVersionAddress}, Old Logic Id = ${oldVersion.id!}, Proxy Id = ${oldVersion.transparentProxyId!}`;
 
   const governor = new ContractUpgradeGovernor();
   await governor.setupAllowanceForProposalCreation(
@@ -44,8 +43,8 @@ async function createProposal(
   );
 
   const result = await governor.createContractUpgradeProposal(
-    ContractId.fromString(oldVersion.transparentProxyId!),
-    ContractId.fromString(newVersionContractId!),
+    oldVersion.transparentProxyAddress!,
+    newVersionAddress,
     `${gitLastCommitMessage} (${uniqueId})`,
     clientsInfo.operatorClient,
     desc

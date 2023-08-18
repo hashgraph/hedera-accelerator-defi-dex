@@ -3,48 +3,78 @@ pragma solidity ^0.8.18;
 import "./GovernorCountingSimpleInternal.sol";
 
 contract GovernorUpgrade is GovernorCountingSimpleInternal {
-    struct TokenUpgradeData {
-        address payable proxyContract;
-        address contractToUpgrade;
-    }
-
-    mapping(uint256 => TokenUpgradeData) _proposalData;
-
     function createProposal(
-        string memory title,
-        string memory description,
-        string memory linkToDiscussion,
-        address payable proxyContract,
-        address contractToUpgrade,
-        address creator,
-        uint256 nftTokenSerialId
+        string memory _title,
+        string memory _description,
+        string memory _linkToDiscussion,
+        address _proxy,
+        address _proxyLogic,
+        address _creator,
+        uint256 _nftTokenSerialId
     ) public returns (uint256) {
-        uint256 proposalId = _createProposal(
-            title,
-            description,
-            linkToDiscussion,
-            creator,
-            bytes(""),
-            nftTokenSerialId
-        );
-        _proposalData[proposalId] = TokenUpgradeData(
-            proxyContract,
-            contractToUpgrade
-        );
-        return proposalId;
+        address proxyAdmin = iSystemRoleBasedAccess.getSystemUsers().proxyAdmin;
+        return
+            _createProposal(
+                _title,
+                _description,
+                _linkToDiscussion,
+                _creator,
+                abi.encode(_proxy, _proxyLogic, proxyAdmin),
+                _nftTokenSerialId
+            );
     }
 
     function getContractAddresses(
         uint256 proposalId
-    ) public view returns (address, address) {
+    ) public view returns (address proxy, address proxyLogic) {
+        (proxy, proxyLogic, ) = _decode(proposalId);
+    }
+
+    /**
+     * @dev Internal execution mechanism. Can be overridden to implement different execution mechanism
+     */
+    function _execute(
+        uint256 proposalId,
+        address[] memory targets,
+        uint256[] memory values,
+        bytes[] memory calldatas,
+        bytes32 description
+    ) internal virtual override {
+        (address proxy, address proxyLogic, address proxyAdmin) = _decode(
+            proposalId
+        );
+        _upgradeProxy(proxy, proxyLogic, proxyAdmin);
+        super._execute(proposalId, targets, values, calldatas, description);
+    }
+
+    function _decode(
+        uint256 proposalId
+    )
+        private
+        view
+        returns (address proxy, address proxyLogic, address proxyAdmin)
+    {
+        (proxy, proxyLogic, proxyAdmin) = abi.decode(
+            proposals[proposalId].data,
+            (address, address, address)
+        );
+    }
+
+    function _upgradeProxy(
+        address _proxy,
+        address _proxyLogic,
+        address _proxyAdmin
+    ) private {
+        (bool success, ) = _proxy.call(
+            abi.encodeWithSignature("upgradeTo(address)", _proxyLogic)
+        );
         require(
-            state(proposalId) == ProposalState.Executed,
-            "Contract not executed yet!"
+            success,
+            "GU: failed to upgrade proxy, verify governor is owner"
         );
-        TokenUpgradeData memory tokenUpgradeData = _proposalData[proposalId];
-        return (
-            tokenUpgradeData.proxyContract,
-            tokenUpgradeData.contractToUpgrade
+        (success, ) = _proxy.call(
+            abi.encodeWithSignature("changeAdmin(address)", _proxyAdmin)
         );
+        require(success, "GU: failed to change admin");
     }
 }

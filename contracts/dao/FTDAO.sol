@@ -274,7 +274,8 @@ contract FTDAO is BaseDAO, ISharedDAOModel {
             inputs.votingPeriod,
             common.hederaService,
             common.iTokenHolder,
-            inputs.quorumThreshold
+            inputs.quorumThreshold,
+            iSystemRoleBasedAccess
         );
         return payable(address(iGovernorBase)); //All governors are payable so its safe
     }

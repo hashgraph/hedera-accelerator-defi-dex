@@ -8,6 +8,7 @@ import { expect } from "chai";
 import { Deployment } from "../../utils/deployContractOnTestnet";
 import { CommonSteps } from "./CommonSteps";
 import { clientsInfo } from "../../utils/ClientManagement";
+import { AddressHelper } from "../../utils/AddressHelper";
 import { given, binding, when, then } from "cucumber-tsflow/dist";
 import { ContractId, AccountId, TokenId } from "@hashgraph/sdk";
 
@@ -62,8 +63,8 @@ export class GovernorUpgradeSteps extends CommonSteps {
   public async createContractUpgradeProposal(title: string) {
     const proposalDetails: { proposalId: string; success: boolean } =
       await governor.createContractUpgradeProposal(
-        ContractId.fromString(factory.contractId),
-        ContractId.fromSolidityAddress(proposedLogicAddressForFactory), // new contract id
+        await AddressHelper.idToEvmAddress(factory.contractId),
+        proposedLogicAddressForFactory,
         title,
         clientsInfo.operatorClient
       );
@@ -126,14 +127,13 @@ export class GovernorUpgradeSteps extends CommonSteps {
       );
   }
 
-  @when(/User upgrade the contract/, undefined, 30000)
-  public async upgradeContract() {
-    const targetContractId = ContractId.fromSolidityAddress(
-      upgradeResponse.proxyAddress
+  @when(/User transfer ownership to governor contract/, undefined, 30000)
+  public async transferOwnershipToGovernorContract() {
+    const governorEvmAddress = await AddressHelper.idToEvmAddress(
+      governor.contractId
     );
-    await new Common(targetContractId).upgradeTo(
-      upgradeResponse.proxyAddress,
-      upgradeResponse.logicAddress,
+    await new Common(upgradeResponse.proxyId).changeAdmin(
+      governorEvmAddress,
       clientsInfo.proxyAdminKey,
       clientsInfo.proxyAdminClient
     );

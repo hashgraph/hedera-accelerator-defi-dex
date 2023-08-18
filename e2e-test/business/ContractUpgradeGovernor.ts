@@ -1,14 +1,9 @@
-import {
-  Client,
-  AccountId,
-  ContractFunctionParameters,
-  TokenId,
-  ContractId,
-} from "@hashgraph/sdk";
-import { ContractService } from "../../deployment/service/ContractService";
-import { clientsInfo } from "../../utils/ClientManagement";
 import Governor from "./Governor";
-import { BigNumber } from "bignumber.js";
+
+import { clientsInfo } from "../../utils/ClientManagement";
+import { AddressHelper } from "../../utils/AddressHelper";
+import { ContractService } from "../../deployment/service/ContractService";
+import { AccountId, Client, ContractFunctionParameters } from "@hashgraph/sdk";
 
 export default class ContractUpgradeGovernor extends Governor {
   protected getContractName() {
@@ -16,21 +11,22 @@ export default class ContractUpgradeGovernor extends Governor {
   }
 
   createContractUpgradeProposal = async (
-    targetProxyId: ContractId,
-    targetLogicId: ContractId,
+    targetProxyAddress: string,
+    targetLogicAddress: string,
     title: string,
     client: Client = clientsInfo.operatorClient,
     description: string = this.DEFAULT_DESCRIPTION,
     link: string = this.DEFAULT_LINK,
-    nftTokenSerialId: number = this.DEFAULT_NFT_TOKEN_SERIAL_NO
+    nftTokenSerialId: number = this.DEFAULT_NFT_TOKEN_SERIAL_NO,
+    creator: AccountId = clientsInfo.operatorId
   ) => {
     const args = new ContractFunctionParameters()
       .addString(title)
       .addString(description)
       .addString(link)
-      .addAddress(targetProxyId.toSolidityAddress())
-      .addAddress(targetLogicId.toSolidityAddress())
-      .addAddress(clientsInfo.operatorId.toSolidityAddress())
+      .addAddress(targetProxyAddress)
+      .addAddress(targetLogicAddress)
+      .addAddress(creator.toSolidityAddress())
       .addUint256(nftTokenSerialId);
 
     const { result, receipt } = await this.execute(
@@ -63,8 +59,8 @@ export default class ContractUpgradeGovernor extends Governor {
     );
     const proxyAddress = "0x" + result.getAddress(0);
     const logicAddress = "0x" + result.getAddress(1);
-    const proxyId = ContractId.fromSolidityAddress(proxyAddress);
-    const logicId = ContractId.fromSolidityAddress(logicAddress);
+    const proxyId = await AddressHelper.addressToIdObject(proxyAddress);
+    const logicId = await AddressHelper.addressToIdObject(logicAddress);
     const proxyIdString = proxyId.toString();
     const logicIdString = logicId.toString();
     const response = {

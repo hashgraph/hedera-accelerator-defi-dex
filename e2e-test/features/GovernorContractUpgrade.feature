@@ -17,11 +17,11 @@ Feature: Governor Contract Upgrade E2E Test
         When User setup 10001 as allowance amount for token locking for contract upgrade proposal
         When User lock 10001 GOD token before voting to contract upgrade proposal
         When User vote "For" contract upgrade proposal
-        When User wait for upgrade proposal state to be "Succeeded" for max 15 seconds    
-        When User execute the upgrade proposal with title "proposalforcontractupgrade1xy"
-        When User wait for upgrade proposal state to be "Executed" for max 5 seconds  
+        When User wait for upgrade proposal state to be "Succeeded" for max 15 seconds 
         When User get the address of target contract from governor upgrade contract
-        When User upgrade the contract    
+        When User transfer ownership to governor contract    
+        When User execute the upgrade proposal with title "proposalforcontractupgrade1xy"
+        When User wait for upgrade proposal state to be "Executed" for max 5 seconds     
         Then User verify logic address of target factory contract is updated
 
     Scenario: Verify proposal is executed even if user gives same contract to upgrade
@@ -31,11 +31,11 @@ Feature: Governor Contract Upgrade E2E Test
         When User wait for upgrade proposal state to be "Active" for max 5 seconds
         Then User verify that proposal current state is "Active"
         When User vote "For" contract upgrade proposal
-        When User wait for upgrade proposal state to be "Succeeded" for max 15 seconds    
-        When User execute the upgrade proposal with title "proposalforcontractupgrade2xy"
-        When User wait for upgrade proposal state to be "Executed" for max 5 seconds  
+        When User wait for upgrade proposal state to be "Succeeded" for max 15 seconds 
         When User get the address of target contract from governor upgrade contract
-        When User upgrade the contract    
+        When User transfer ownership to governor contract    
+        When User execute the upgrade proposal with title "proposalforcontractupgrade2xy"
+        When User wait for upgrade proposal state to be "Executed" for max 5 seconds     
         Then User verify logic address of target contract is not changed
 
     Scenario: Verify contract is not upgraded if required votes are not in favour
