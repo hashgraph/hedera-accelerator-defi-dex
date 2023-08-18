@@ -388,7 +388,7 @@ describe("Vault Tests", function () {
   });
 
   describe("Add rewards tests", function () {
-    it.only("When non-reward-user try to add reward then should fail", async function () {
+    it("When non-reward-user try to add reward then should fail", async function () {
       const { vaultContract, owner, signers, vaultAddRewardUser } =
         await loadFixture(deployFixture);
       const anyUser = signers[0];

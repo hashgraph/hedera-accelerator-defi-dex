@@ -48,15 +48,7 @@ const stake = async (vault: Vault) => {
 
 async function main() {
   const vault = new Vault();
-  const systemRoleBasedAccess = new SystemRoleBasedAccess();
-  const systemRoleBasedAccessAddress = await AddressHelper.idToEvmAddress(
-    systemRoleBasedAccess.contractId
-  );
-  await vault.initialize(
-    STAKING_TOKEN,
-    LOCKING_PERIOD_IN_SECONDS,
-    systemRoleBasedAccessAddress
-  );
+  await vault.initialize(STAKING_TOKEN, LOCKING_PERIOD_IN_SECONDS);
   await vault.getStakingTokenAddress();
   await vault.getStakingTokenLockingPeriod();
 
