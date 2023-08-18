@@ -9,6 +9,7 @@ import {
   TokenId,
   AccountId,
   ContractFunctionParameters,
+  ContractId,
 } from "@hashgraph/sdk";
 import { ContractService } from "../../deployment/service/ContractService";
 
@@ -32,13 +33,15 @@ export default class Vault extends Base {
   initialize = async (
     stakingToken: TokenId,
     lockingPeriod: BigNumber | number,
+    systemRoleBasedAccessAddress: string,
     client: Client = clientsInfo.operatorClient
   ) => {
     if (await this.isInitializationPending()) {
       const args = new ContractFunctionParameters()
         .addAddress(this.htsAddress)
         .addAddress(stakingToken.toSolidityAddress())
-        .addUint256(lockingPeriod);
+        .addUint256(lockingPeriod)
+        .addAddress(systemRoleBasedAccessAddress);
       await this.execute(1_000_000, INITIALIZE, client, args);
       console.log(
         `- Vault#${INITIALIZE}(): done, contract-id = ${this.contractId}\n`

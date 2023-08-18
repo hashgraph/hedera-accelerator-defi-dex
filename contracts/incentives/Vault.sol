@@ -49,10 +49,13 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
     address[] private rewardTokens;
     mapping(address => RewardInfo) public tokensRewardInfo;
 
+    ISystemRoleBasedAccess private iSystemRoleBasedAccess;
+
     function initialize(
         IHederaService _hederaService,
         address _stakingToken,
-        uint256 _lockingPeriod
+        uint256 _lockingPeriod,
+        ISystemRoleBasedAccess _iSystemRoleBasedAccess
     ) public initializer {
         __Ownable_init();
         require(
@@ -66,6 +69,7 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
         hederaService = _hederaService;
         stakingTokenLockingPeriod = _lockingPeriod;
         stakingToken = IERC20(_stakingToken);
+        iSystemRoleBasedAccess = _iSystemRoleBasedAccess;
         _associateToken(_hederaService, address(this), _stakingToken);
     }
 
@@ -102,11 +106,15 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
         uint256 _amount,
         address _from
     ) external override {
+        iSystemRoleBasedAccess.checkVaultAddRewardUser(msg.sender);
         require(_token != address(0), "Vault: reward token should not be zero");
         require(_from != address(0), "Vault: from address should not be zero");
         require(_amount > 0, "Vault: reward amount must be a positive number");
         require(stakingTokenTotalSupply > 0, "Vault: no token staked yet");
-        require(_token != address(stakingToken), "Vault: Reward and Staking tokens cannot be same.");
+        require(
+            _token != address(stakingToken),
+            "Vault: Reward and Staking tokens cannot be same."
+        );
         uint256 perShareAmount = _amount.div(stakingTokenTotalSupply);
         RewardInfo storage rewardInfo = tokensRewardInfo[_token];
         if (!rewardInfo.exist) {

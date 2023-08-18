@@ -16,6 +16,10 @@ describe("Vault Tests", function () {
     const signers = await TestHelper.getSigners();
     const owner = signers[0];
 
+    const systemRoleBasedAccess =
+      await TestHelper.deploySystemRoleBasedAccess();
+    const vaultAddRewardUser = await TestHelper.vaultAddRewardUser();
+
     const hederaService = await TestHelper.deployMockHederaService();
 
     const stakingTokenContract = await TestHelper.deployERC20Mock();
@@ -40,6 +44,7 @@ describe("Vault Tests", function () {
       hederaService.address,
       stakingTokenContract.address,
       LOCKING_PERIOD,
+      systemRoleBasedAccess.address,
     ];
     const vaultContract = await TestHelper.deployProxy("Vault", ...ARGS);
     const nonInitVaultContract = await TestHelper.deployLogic("Vault");
@@ -55,6 +60,8 @@ describe("Vault Tests", function () {
       nonInitVaultContract,
       rewardsContract,
       owner,
+      systemRoleBasedAccess,
+      vaultAddRewardUser,
     };
   }
 
@@ -381,6 +388,18 @@ describe("Vault Tests", function () {
   });
 
   describe("Add rewards tests", function () {
+    it.only("When non-reward-user try to add reward then should fail", async function () {
+      const { vaultContract, owner, signers, vaultAddRewardUser } =
+        await loadFixture(deployFixture);
+      const anyUser = signers[0];
+      expect(anyUser.address).not.equals(vaultAddRewardUser.address);
+      await expect(
+        vaultContract
+          .connect(anyUser)
+          .addReward(TestHelper.ZERO_ADDRESS, REWARD_AMOUNT, owner.address)
+      ).reverted;
+    });
+
     it("Verify reward operation should be reverted for zero token address", async function () {
       const { vaultContract, owner } = await loadFixture(deployFixture);
       await expect(

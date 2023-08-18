@@ -5,6 +5,8 @@ import Common from "../../e2e-test/business/Common";
 import { Helper } from "../../utils/Helper";
 import { TokenId } from "@hashgraph/sdk";
 import { clientsInfo } from "../../utils/ClientManagement";
+import SystemRoleBasedAccess from "../../e2e-test/business/common/SystemRoleBasedAccess";
+import { AddressHelper } from "../../utils/AddressHelper";
 
 const LOCKING_PERIOD_IN_SECONDS = 15; // 15 second locking period
 
@@ -20,15 +22,15 @@ const addRewards = async (vault: Vault, rToken: TokenId) => {
     rToken,
     vault.contractId,
     REWARD_TOKEN_QTY,
-    clientsInfo.operatorId,
-    clientsInfo.operatorKey,
-    clientsInfo.operatorClient
+    clientsInfo.treasureId,
+    clientsInfo.treasureKey,
+    clientsInfo.treasureClient
   );
   await vault.addReward(
     rToken,
     REWARD_TOKEN_QTY,
-    clientsInfo.operatorId,
-    clientsInfo.operatorClient
+    clientsInfo.treasureId,
+    clientsInfo.treasureClient
   );
 };
 
@@ -46,7 +48,15 @@ const stake = async (vault: Vault) => {
 
 async function main() {
   const vault = new Vault();
-  await vault.initialize(STAKING_TOKEN, LOCKING_PERIOD_IN_SECONDS);
+  const systemRoleBasedAccess = new SystemRoleBasedAccess();
+  const systemRoleBasedAccessAddress = await AddressHelper.idToEvmAddress(
+    systemRoleBasedAccess.contractId
+  );
+  await vault.initialize(
+    STAKING_TOKEN,
+    LOCKING_PERIOD_IN_SECONDS,
+    systemRoleBasedAccessAddress
+  );
   await vault.getStakingTokenAddress();
   await vault.getStakingTokenLockingPeriod();
 
