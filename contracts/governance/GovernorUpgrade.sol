@@ -68,7 +68,10 @@ contract GovernorUpgrade is GovernorCountingSimpleInternal {
         (bool success, ) = _proxy.call(
             abi.encodeWithSignature("upgradeTo(address)", _proxyLogic)
         );
-        require(success, "GU: failed to upgrade proxy");
+        require(
+            success,
+            "GU: failed to upgrade proxy, verify governor is owner"
+        );
         (success, ) = _proxy.call(
             abi.encodeWithSignature("changeAdmin(address)", _proxyAdmin)
         );

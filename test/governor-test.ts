@@ -1319,7 +1319,7 @@ describe("Governor Tests", function () {
       await TestHelper.mineNBlocks(BLOCKS_COUNT);
 
       await expect(governorUpgrade.executeProposal(TITLE)).revertedWith(
-        "GU: failed to upgrade proxy"
+        "GU: failed to upgrade proxy, verify governor is owner"
       );
     });
 
