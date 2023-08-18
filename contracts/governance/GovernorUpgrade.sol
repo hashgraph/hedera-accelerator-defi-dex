@@ -3,13 +3,6 @@ pragma solidity ^0.8.18;
 import "./GovernorCountingSimpleInternal.sol";
 
 contract GovernorUpgrade is GovernorCountingSimpleInternal {
-    struct UpgradeData {
-        address proxy;
-        address proxyLogic;
-    }
-
-    mapping(uint256 => UpgradeData) _proposalData;
-
     function createProposal(
         string memory _title,
         string memory _description,
@@ -20,23 +13,21 @@ contract GovernorUpgrade is GovernorCountingSimpleInternal {
         uint256 _nftTokenSerialId
     ) public returns (uint256) {
         address proxyAdmin = iSystemRoleBasedAccess.getSystemUsers().proxyAdmin;
-        uint256 proposalId = _createProposal(
-            _title,
-            _description,
-            _linkToDiscussion,
-            _creator,
-            abi.encode(_proxy, _proxyLogic, proxyAdmin),
-            _nftTokenSerialId
-        );
-        _proposalData[proposalId] = UpgradeData(_proxy, _proxyLogic);
-        return proposalId;
+        return
+            _createProposal(
+                _title,
+                _description,
+                _linkToDiscussion,
+                _creator,
+                abi.encode(_proxy, _proxyLogic, proxyAdmin),
+                _nftTokenSerialId
+            );
     }
 
     function getContractAddresses(
         uint256 proposalId
-    ) public view returns (address, address) {
-        UpgradeData memory upgradeData = _proposalData[proposalId];
-        return (upgradeData.proxy, upgradeData.proxyLogic);
+    ) public view returns (address proxy, address proxyLogic) {
+        (proxy, proxyLogic, ) = _decode(proposalId);
     }
 
     /**
@@ -49,10 +40,24 @@ contract GovernorUpgrade is GovernorCountingSimpleInternal {
         bytes[] memory calldatas,
         bytes32 description
     ) internal virtual override {
-        (address proxy, address proxyLogic) = getContractAddresses(proposalId);
-        address proxyAdmin = iSystemRoleBasedAccess.getSystemUsers().proxyAdmin;
+        (address proxy, address proxyLogic, address proxyAdmin) = _decode(
+            proposalId
+        );
         _upgradeProxy(proxy, proxyLogic, proxyAdmin);
         super._execute(proposalId, targets, values, calldatas, description);
+    }
+
+    function _decode(
+        uint256 proposalId
+    )
+        private
+        view
+        returns (address proxy, address proxyLogic, address proxyAdmin)
+    {
+        (proxy, proxyLogic, proxyAdmin) = abi.decode(
+            proposals[proposalId].data,
+            (address, address, address)
+        );
     }
 
     function _upgradeProxy(

@@ -30,10 +30,6 @@ async function main() {
   const godHolder = new GodHolder(ftHolderContractId);
 
   const governor = new ContractUpgradeGovernor();
-  await governor.cancelProposal(
-    "Contract Upgrade Proposal 0x9a2c87ff9df73139e25ae643e1e0702c294fac29",
-    creatorClient
-  );
   await governor.initialize(
     godHolder,
     txnFeePayerClient,
