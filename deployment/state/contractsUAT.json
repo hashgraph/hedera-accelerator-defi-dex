@@ -59,15 +59,6 @@
     "transparentProxyAddress": "0x0000000000000000000000000000000000015e67"
   },
   {
-    "name": "splitter",
-    "id": "0.0.89644",
-    "hash": "f39a100a180aeb5779aaae9e331dcd5d",
-    "address": "0x0000000000000000000000000000000000015e2c",
-    "timestamp": "2023-07-28T06:23:23.317Z",
-    "transparentProxyId": "0.0.89701",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000015e65"
-  },
-  {
     "name": "nftdaofactory",
     "id": "0.0.611512",
     "hash": "1a20021d5824d10e2205db4d74dfcbe6",
@@ -186,11 +177,20 @@
   },
   {
     "name": "vault",
-    "id": "0.0.617869",
-    "hash": "897d512c88500a55997713ec473c4383",
-    "address": "0x0000000000000000000000000000000000096d8d",
-    "timestamp": "2023-08-18T13:28:33.055Z",
+    "id": "0.0.628236",
+    "hash": "09fc5faea7ac3ef4becd51328e2f8372",
+    "address": "0x000000000000000000000000000000000009960c",
+    "timestamp": "2023-08-21T10:42:30.797Z",
     "transparentProxyId": "0.0.617877",
     "transparentProxyAddress": "0x0000000000000000000000000000000000096d95"
+  },
+  {
+    "name": "splitter",
+    "id": "0.0.628281",
+    "hash": "4fa47490e89577fa908a3dc9fd37c8e2",
+    "address": "0x0000000000000000000000000000000000099639",
+    "timestamp": "2023-08-21T10:52:16.593Z",
+    "transparentProxyId": "0.0.628285",
+    "transparentProxyAddress": "0x000000000000000000000000000000000009963d"
   }
 ]
