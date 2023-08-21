@@ -45,8 +45,8 @@ const setupVaultAllowances = async (
       REWARD_TOKEN,
       vaultsId[index].toString(),
       amount.toNumber(),
-      clientsInfo.operatorId,
-      clientsInfo.operatorKey,
+      clientsInfo.treasureId,
+      clientsInfo.treasureKey,
       clientsInfo.operatorClient
     );
   return await Promise.all(amounts.map(allowance));
@@ -93,8 +93,9 @@ async function main() {
   await setupVaultAllowances(amounts, vaultsId);
   await splitter.splitTokens(
     REWARD_TOKEN,
-    clientsInfo.operatorId,
-    REWARD_TOKEN_QTY
+    clientsInfo.treasureId,
+    REWARD_TOKEN_QTY,
+    clientsInfo.treasureClient
   );
 }
 

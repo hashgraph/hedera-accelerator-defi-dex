@@ -3,6 +3,7 @@
 pragma solidity ^0.8.18;
 
 import "../common/IHederaService.sol";
+import "../common/ISystemRoleBasedAccess.sol";
 
 interface IVault {
     struct ClaimCallResponse {
@@ -16,7 +17,8 @@ interface IVault {
     function initialize(
         IHederaService _hederaService,
         address _stakingToken,
-        uint256 _lockingPeriod
+        uint256 _lockingPeriod,
+        ISystemRoleBasedAccess _iSystemRoleBasedAccess
     ) external;
 
     function addReward(address _token, uint256 _amount, address _from) external;

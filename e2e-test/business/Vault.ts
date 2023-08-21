@@ -38,7 +38,8 @@ export default class Vault extends Base {
       const args = new ContractFunctionParameters()
         .addAddress(this.htsAddress)
         .addAddress(stakingToken.toSolidityAddress())
-        .addUint256(lockingPeriod);
+        .addUint256(lockingPeriod)
+        .addAddress(this.getSystemBasedRoleAccessContractAddress());
       await this.execute(1_000_000, INITIALIZE, client, args);
       console.log(
         `- Vault#${INITIALIZE}(): done, contract-id = ${this.contractId}\n`

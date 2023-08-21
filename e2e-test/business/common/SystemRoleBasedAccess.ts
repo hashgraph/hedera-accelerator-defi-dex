@@ -22,7 +22,7 @@ export default class SystemRoleBasedAccess extends Base {
         INITIALIZE,
         Object.values(data)
       );
-      await this.execute(2_00_000, INITIALIZE, client, bytes);
+      await this.execute(5_00_000, INITIALIZE, client, bytes);
       console.log(
         `- SystemRoleBasedAccess#${INITIALIZE}(): done with hex-data = ${hex}\n`
       );
@@ -43,6 +43,7 @@ export default class SystemRoleBasedAccess extends Base {
       superAdmin: clientsInfo.operatorId.toSolidityAddress(),
       proxyAdmin: clientsInfo.proxyAdminId.toSolidityAddress(),
       childProxyAdmin: clientsInfo.childProxyAdminId.toSolidityAddress(),
+      vaultAddRewardUser: clientsInfo.treasureId.toSolidityAddress(),
     });
   }
 }

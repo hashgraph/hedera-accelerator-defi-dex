@@ -101,7 +101,16 @@ export class TestHelper {
       superAdmin: signers[5],
       proxyAdmin: signers[6],
       childProxyAdmin: signers[7],
+      vaultAddRewardUser: signers[8],
     };
+  }
+
+  static async vaultAddRewardUser() {
+    return (await TestHelper.systemUsersSigners()).vaultAddRewardUser;
+  }
+
+  static regularExpressionForMissingRole() {
+    return /AccessControl: account .* is missing role .*/;
   }
 
   static async deploySystemRoleBasedAccess() {
