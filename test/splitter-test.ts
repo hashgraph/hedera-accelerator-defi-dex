@@ -26,6 +26,11 @@ describe("Splitter tests", function () {
     const signers = await TestHelper.getSigners();
     const owner = signers[0];
 
+    const systemRoleBasedAccess =
+      await TestHelper.deploySystemRoleBasedAccess();
+
+    const vaultAddRewardUser = await TestHelper.vaultAddRewardUser();
+
     const hederaService = await TestHelper.deployMockHederaService();
     const stakingTokenContract = await TestHelper.deployERC20Mock();
     await stakingTokenContract.setUserBalance(
@@ -40,6 +45,7 @@ describe("Splitter tests", function () {
       hederaService.address,
       stakingTokenContract.address,
       LOCKING_PERIOD,
+      systemRoleBasedAccess.address,
     ];
     const vaultContract1 = await TestHelper.deployProxy("Vault", ...ARGS);
     await vaultContract1.stake(STAKED_AMOUNT_1);
@@ -86,6 +92,7 @@ describe("Splitter tests", function () {
       nonUsedVaultContract,
       stakingTokenContract,
       nonInitSplitterContract,
+      vaultAddRewardUser,
     };
   }
 
@@ -122,13 +129,17 @@ describe("Splitter tests", function () {
     });
 
     it("Verify split token method call", async function () {
-      const { owner, splitterContract, rewardTokenContract, vaults, rewards } =
-        await loadFixture(deployFixture);
-      const txn = await splitterContract.splitTokens(
-        rewardTokenContract.address,
-        owner.address,
-        REWARD_AMOUNT
-      );
+      const {
+        owner,
+        splitterContract,
+        rewardTokenContract,
+        vaults,
+        rewards,
+        vaultAddRewardUser,
+      } = await loadFixture(deployFixture);
+      const txn = await splitterContract
+        .connect(vaultAddRewardUser)
+        .splitTokens(rewardTokenContract.address, owner.address, REWARD_AMOUNT);
       const events = await TestHelper.readEvents(txn, ["TokenTransferred"]);
       for (let i = 0; i < events.length; i++) {
         const eventData = events[i];
@@ -141,8 +152,23 @@ describe("Splitter tests", function () {
         );
       }
     });
-  });
 
+    it("Verify split token method call fail if non-vault-add-reward-user calls it", async function () {
+      const { owner, splitterContract, rewardTokenContract, signers } =
+        await loadFixture(deployFixture);
+      const anyUser = signers[4];
+      const missingRoleRegEx = TestHelper.regularExperissonForMissingRole();
+      await expect(
+        splitterContract
+          .connect(anyUser)
+          .splitTokens(
+            rewardTokenContract.address,
+            owner.address,
+            REWARD_AMOUNT
+          )
+      ).revertedWith(missingRoleRegEx);
+    });
+  });
   describe("Register vault tests", function () {
     it("Check register operation should be reverted for non owner user", async function () {
       const { splitterContract, nonUsedVaultContract, signers } =

@@ -106,7 +106,7 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
         uint256 _amount,
         address _from
     ) external override {
-        iSystemRoleBasedAccess.checkVaultAddRewardUser(msg.sender);
+        iSystemRoleBasedAccess.checkVaultAddRewardUser(tx.origin);
         require(_token != address(0), "Vault: reward token should not be zero");
         require(_from != address(0), "Vault: from address should not be zero");
         require(_amount > 0, "Vault: reward amount must be a positive number");

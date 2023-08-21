@@ -109,6 +109,10 @@ export class TestHelper {
     return (await TestHelper.systemUsersSigners()).vaultAddRewardUser;
   }
 
+  static regularExperissonForMissingRole() {
+    return /AccessControl: account .* is missing role .*/;
+  }
+
   static async deploySystemRoleBasedAccess() {
     const systemUsersSigners = await TestHelper.systemUsersSigners();
     const systemUsersAddresses = Object.values(systemUsersSigners).map(
