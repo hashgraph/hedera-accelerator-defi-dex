@@ -157,7 +157,7 @@ describe("Splitter tests", function () {
       const { owner, splitterContract, rewardTokenContract, signers } =
         await loadFixture(deployFixture);
       const anyUser = signers[4];
-      const missingRoleRegEx = TestHelper.regularExperissonForMissingRole();
+      const missingRoleRegEx = TestHelper.regularExpressionForMissingRole();
       await expect(
         splitterContract
           .connect(anyUser)

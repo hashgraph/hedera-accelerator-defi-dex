@@ -109,7 +109,7 @@ export class TestHelper {
     return (await TestHelper.systemUsersSigners()).vaultAddRewardUser;
   }
 
-  static regularExperissonForMissingRole() {
+  static regularExpressionForMissingRole() {
     return /AccessControl: account .* is missing role .*/;
   }
 
