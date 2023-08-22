@@ -36,9 +36,6 @@ export async function executeDAOFlow(
   await executeGovernorTokenTransferFlow(
     godHolder as GodHolder,
     ftDao,
-    clientsInfo.treasureId,
-    clientsInfo.treasureKey,
-    clientsInfo.operatorId,
     tokenId
   );
 
