@@ -33,21 +33,16 @@ export async function executeDAOFlow(
 
   const godHolder = genericHolder as GodHolder;
 
-  await executeGovernorTokenTransferFlow(
-    godHolder as GodHolder,
-    ftDao,
-    tokenId
-  );
+  await executeGovernorTokenTransferFlow(godHolder as GodHolder, ftDao);
 
-  await executeTextProposalFlow(godHolder, ftDao, tokenId);
+  await executeTextProposalFlow(godHolder, ftDao);
 
   await executeContractUpgradeFlow(
     godHolder,
     ftDao,
     csDev.getContractWithProxy(csDev.factoryContractName)
       .transparentProxyAddress!,
-    csDev.getContract(csDev.factoryContractName).address,
-    tokenId
+    csDev.getContract(csDev.factoryContractName).address
   );
 
   await executeTokenCreateFlow(
