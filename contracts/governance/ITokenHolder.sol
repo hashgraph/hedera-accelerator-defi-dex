@@ -12,12 +12,12 @@ interface ITokenHolder {
 
     function grabTokensFromUser(uint256 idOrAmount) external;
 
-    function addProposalForVoter(uint256 proposalId) external returns (int32);
+    function addProposalForVoter(uint256 proposalId) external;
 
     function removeActiveProposals(
         address[] memory voters,
         uint256 proposalId
-    ) external returns (int32);
+    ) external;
 
     function getToken() external view returns (address);
 
