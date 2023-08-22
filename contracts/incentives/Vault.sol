@@ -281,9 +281,7 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
         cInfo.stakingTokenTotal -= _amount;
         if (cInfo.stakingTokenTotal == 0) {
             for (uint256 i = 0; i < rewardTokens.length; i++) {
-                delete usersStakingTokenContribution[_user].rewardClaimed[
-                    rewardTokens[i]
-                ];
+                delete cInfo.rewardClaimed[rewardTokens[i]];
             }
             delete usersStakingTokenContribution[_user];
         }
