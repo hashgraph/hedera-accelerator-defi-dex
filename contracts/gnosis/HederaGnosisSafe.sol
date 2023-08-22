@@ -78,17 +78,21 @@ contract HederaGnosisSafe is
         }
     }
 
-    function transferTokenViaSafe(
+    function transferAssets(
         address token,
         address receiver,
         uint256 amount
     ) external {
         require(msg.sender == address(this), "GS031"); // only via safe txn
-        int256 rCode = _transferToken(token, address(this), receiver, amount);
-        require(
-            rCode == HederaResponseCodes.SUCCESS,
-            "HederaGnosisSafe: transfer failed from safe"
-        );
+        bool sent;
+        if (token == address(0)) {
+            (sent, ) = payable(receiver).call{value: amount}("");
+        } else {
+            sent =
+                _transferToken(token, address(this), receiver, amount) ==
+                HederaResponseCodes.SUCCESS;
+        }
+        require(sent, "HederaGnosisSafe: transfer failed from safe");
     }
 
     function getTxnHash(

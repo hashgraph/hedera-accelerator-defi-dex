@@ -1,6 +1,6 @@
 import Common from "./Common";
 import BaseDao from "./BaseDao";
-import HederaGnosisSafe, { TRANSFER_TOKEN_VAI_SAFE } from "./HederaGnosisSafe";
+import HederaGnosisSafe, { TRANSFER_ASSETS } from "./HederaGnosisSafe";
 
 import { ethers } from "ethers";
 import { Helper } from "../../utils/Helper";
@@ -9,8 +9,10 @@ import { clientsInfo } from "../../utils/ClientManagement";
 import { AddressHelper } from "../../utils/AddressHelper";
 import { ContractService } from "../../deployment/service/ContractService";
 import {
+  Hbar,
   Client,
   TokenId,
+  HbarUnit,
   AccountId,
   ContractId,
   ContractFunctionParameters,
@@ -46,6 +48,7 @@ const REPLACE_MEMBER = 1003;
 const CHANGE_THRESHOLD = 1004;
 const TYPE_SET_TEXT = 1005;
 const TOKEN_TRANSFER = 1006;
+const HBAR_TRANSFER = 1007;
 
 const deployment = new Deployment();
 
@@ -210,8 +213,7 @@ export default class MultiSigDao extends BaseDao {
   proposeTransaction = async (
     to: string,
     data: Uint8Array,
-    transactionType: number = 10,
-    value: number = 0,
+    transactionType: number,
     client: Client = clientsInfo.operatorClient,
     title: string = TITLE,
     description: string = DESCRIPTION,
@@ -229,8 +231,7 @@ export default class MultiSigDao extends BaseDao {
       PROPOSE_TRANSACTION,
       client,
       args,
-      clientsInfo.operatorKey,
-      value
+      clientsInfo.operatorKey
     );
     const txnHash = result.getBytes32(0);
     const hash = ethers.utils.hexlify(txnHash);
@@ -271,7 +272,6 @@ export default class MultiSigDao extends BaseDao {
       await AddressHelper.idToEvmAddress(gnosisSafe.contractId),
       data.bytes,
       ADD_MEMBER,
-      0,
       client
     );
   };
@@ -290,7 +290,6 @@ export default class MultiSigDao extends BaseDao {
       await AddressHelper.idToEvmAddress(gnosisSafe.contractId),
       data.bytes,
       CHANGE_THRESHOLD,
-      0,
       client
     );
   };
@@ -315,7 +314,6 @@ export default class MultiSigDao extends BaseDao {
       await AddressHelper.idToEvmAddress(gnosisSafe.contractId),
       data.bytes,
       REMOVE_MEMBER,
-      0,
       client
     );
   };
@@ -340,7 +338,6 @@ export default class MultiSigDao extends BaseDao {
       await AddressHelper.idToEvmAddress(gnosisSafe.contractId),
       data.bytes,
       REPLACE_MEMBER,
-      0,
       client
     );
   };
@@ -389,14 +386,13 @@ export default class MultiSigDao extends BaseDao {
   ) => {
     const data = await this.encodeFunctionData(
       ContractService.SAFE,
-      TRANSFER_TOKEN_VAI_SAFE,
+      TRANSFER_ASSETS,
       [token.toSolidityAddress(), receiver.toSolidityAddress(), amount]
     );
     return await this.proposeTransaction(
       await AddressHelper.idToEvmAddress(gnosisSafe.contractId),
       data.bytes,
       TOKEN_TRANSFER,
-      0,
       client,
       title,
       description,
@@ -431,6 +427,35 @@ export default class MultiSigDao extends BaseDao {
     );
     return txnHash;
   }
+
+  public proposeHBarTransferTransaction = async (
+    receiverAddress: string,
+    amount: Hbar,
+    gnosisSafe: HederaGnosisSafe,
+    client: Client = clientsInfo.operatorClient,
+    title: string = TITLE,
+    description: string = DESCRIPTION,
+    linkToDiscussion: string = LINK_TO_DISCUSSION
+  ) => {
+    const data = await this.encodeFunctionData(
+      ContractService.SAFE,
+      TRANSFER_ASSETS,
+      [
+        ethers.constants.AddressZero,
+        receiverAddress,
+        amount.to(HbarUnit.Tinybar).toNumber(),
+      ]
+    );
+    return await this.proposeTransaction(
+      await AddressHelper.idToEvmAddress(gnosisSafe.contractId),
+      data.bytes,
+      HBAR_TRANSFER,
+      client,
+      title,
+      description,
+      linkToDiscussion
+    );
+  };
 
   public proposeTokenAssociateTransaction = async (
     token: TokenId,
@@ -475,7 +500,6 @@ export default class MultiSigDao extends BaseDao {
       await AddressHelper.idToEvmAddress(this.contractId),
       textTxData.bytes,
       TYPE_SET_TEXT,
-      0,
       client,
       title,
       description,
