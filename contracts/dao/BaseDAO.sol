@@ -19,6 +19,8 @@ abstract contract BaseDAO is IErrors, RoleBasedAccess {
 
     DAOInfo private daoInfo;
 
+    uint256[20] __baseDaoGap;//For future use
+
     function __BaseDAO_init(
         address _admin,
         string memory _name,
