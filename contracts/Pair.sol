@@ -204,6 +204,7 @@ contract Pair is
             uint256 tokenAQ = pair.tokenA.tokenQty;
             uint256 tokenBQ = pair.tokenB.tokenQty +
                 _deltaBQtyAfterAdjustingFee;
+            require(tokenBQ > 0, "Pair: invalid quantity");
             uint256 adjustedValue = (invariantValue * precision) / (tokenBQ);
             uint256 newValue = adjustedValue / precision;
             amountTokenA = getAbsoluteDifference(newValue, tokenAQ);
@@ -240,6 +241,7 @@ contract Pair is
             uint256 tokenAQ = pair.tokenA.tokenQty +
                 _deltaAQtyAfterAdjustingFee;
             uint256 tokenBQ = pair.tokenB.tokenQty;
+            require(tokenAQ > 0, "Pair: invalid quantity");
             uint256 adjustedValue = (invariantValue * precision) / (tokenAQ);
             uint256 newValue = adjustedValue / precision;
             amountTokenB = getAbsoluteDifference(tokenBQ, newValue);
@@ -280,6 +282,7 @@ contract Pair is
         uint256 precision = getPrecisionValue();
         uint256 tokenAQ = pair.tokenA.tokenQty;
         uint256 tokenBQ = pair.tokenB.tokenQty;
+        require(tokenAQ > 0, "Pair: invalid quantity");
         uint256 unitPriceForA = (tokenBQ * precision) / tokenAQ;
         uint256 spotValueExpected = (_tokenAQty * unitPriceForA) / precision;
 
@@ -309,6 +312,7 @@ contract Pair is
         uint256 precision = getPrecisionValue();
         uint256 tokenAQ = pair.tokenA.tokenQty;
         uint256 tokenBQ = pair.tokenB.tokenQty;
+        require(tokenBQ > 0, "Pair: invalid quantity");
         uint256 unitPriceForB = (tokenAQ * precision) / tokenBQ;
         uint256 spotValueExpected = (_tokenBQty * unitPriceForB) / precision;
 
