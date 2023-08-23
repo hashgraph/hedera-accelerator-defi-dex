@@ -563,7 +563,10 @@ describe("Vault Tests", function () {
       await verifyClaimRewardsCallResponseEvent(txn3, owner, 100, 1, 0, 101);
 
       const txn4 = await vaultContract.claimRewards(owner.address);
-      await verifyClaimRewardsCallResponseEvent(txn4, owner, 101, 0, 0, 101);
+      const claimRewardsCallResponseEvents = await TestHelper.readEvents(txn4, [
+        "ClaimRewardsCallResponse",
+      ]);
+      expect(claimRewardsCallResponseEvents.length).equals(0);
     });
 
     it("Verify claim rewards call when no reward tokens are available", async function () {
@@ -571,7 +574,10 @@ describe("Vault Tests", function () {
       await vaultContract.stake(STAKED_AMOUNT);
 
       const txn = await vaultContract.claimRewards(owner.address);
-      await verifyClaimRewardsCallResponseEvent(txn, owner, 0, 0, 0, 0);
+      const claimRewardsCallResponseEvents = await TestHelper.readEvents(txn, [
+        "ClaimRewardsCallResponse",
+      ]);
+      expect(claimRewardsCallResponseEvents.length).equals(0);
     });
 
     it("Verify one people, one stake, add reward, claim reward, one unstake", async function () {
