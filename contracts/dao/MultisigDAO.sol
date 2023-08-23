@@ -2,13 +2,14 @@
 pragma solidity ^0.8.18;
 
 import "./BaseDAO.sol";
+import "../common/IEvents.sol";
 import "../common/IHederaService.sol";
 import "../common/ISystemRoleBasedAccess.sol";
 import "../gnosis/HederaMultiSend.sol";
 import "../gnosis/HederaGnosisSafe.sol";
 import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
-contract MultiSigDAO is BaseDAO {
+contract MultiSigDAO is IEvents, BaseDAO {
     event TransactionCreated(bytes32 txnHash, TransactionInfo info);
     enum TransactionState {
         Pending,
@@ -27,6 +28,9 @@ contract MultiSigDAO is BaseDAO {
         string linkToDiscussion;
         address creator;
     }
+    string private constant HederaService = "HederaService";
+    string private constant MultiSend = "HederaMultiSend";
+    string private constant HederaSafe = "HederaGnosisSafe";
 
     uint256 private constant TXN_TYPE_BATCH = 1;
     uint256 private constant TXN_TYPE_TOKEN_ASSOCIATE = 2;
@@ -54,14 +58,9 @@ contract MultiSigDAO is BaseDAO {
         multiSend = _multiSend;
         iSystemRoleBasedAccess = _iSystemRoleBasedAccess;
         __BaseDAO_init(_admin, _name, _logoUrl, _description, _webLinks);
-    }
-
-    function getHederaGnosisSafeContractAddress()
-        external
-        view
-        returns (address)
-    {
-        return address(hederaGnosisSafe);
+        emit LogicUpdated(address(0), address(hederaService), HederaService);
+        emit LogicUpdated(address(0), address(multiSend), MultiSend);
+        emit LogicUpdated(address(0), address(hederaGnosisSafe), HederaSafe);
     }
 
     function state(bytes32 _txnHash) external view returns (TransactionState) {
@@ -212,12 +211,38 @@ contract MultiSigDAO is BaseDAO {
 
     function upgradeHederaService(IHederaService newHederaService) external {
         iSystemRoleBasedAccess.checkChildProxyAdminRole(msg.sender);
+        emit LogicUpdated(
+            address(hederaService),
+            address(newHederaService),
+            HederaService
+        );
         hederaService = newHederaService;
     }
 
     function upgradeMultiSend(HederaMultiSend _multiSend) external {
         iSystemRoleBasedAccess.checkChildProxyAdminRole(msg.sender);
+        emit LogicUpdated(address(multiSend), address(_multiSend), MultiSend);
         multiSend = _multiSend;
+    }
+
+    function upgradeHederaGnosisSafe(
+        HederaGnosisSafe _hederaGnosisSafe
+    ) external {
+        iSystemRoleBasedAccess.checkChildProxyAdminRole(msg.sender);
+        emit LogicUpdated(
+            address(hederaGnosisSafe),
+            address(_hederaGnosisSafe),
+            HederaSafe
+        );
+        hederaGnosisSafe = _hederaGnosisSafe;
+    }
+
+    function getHederaGnosisSafeContractAddress()
+        external
+        view
+        returns (address)
+    {
+        return address(hederaGnosisSafe);
     }
 
     function getHederaServiceVersion() external view returns (IHederaService) {

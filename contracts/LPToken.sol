@@ -5,11 +5,14 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./common/hedera/HederaResponseCodes.sol";
 import "./common/IHederaService.sol";
 import "./common/IERC20.sol";
+import "./common/IEvents.sol";
 import "./common/TokenOperations.sol";
 import "./common/hedera/HederaTokenService.sol";
 import "./ILPToken.sol";
 
-contract LPToken is ILPToken, OwnableUpgradeable, TokenOperations {
+contract LPToken is IEvents, ILPToken, OwnableUpgradeable, TokenOperations {
+    string private constant HederaService = "HederaService";
+
     IHederaService hederaService;
     IERC20 lpToken;
 
@@ -62,6 +65,7 @@ contract LPToken is ILPToken, OwnableUpgradeable, TokenOperations {
     ) external payable override initializer {
         _transferOwnership(_owner);
         hederaService = _hederaService;
+        emit LogicUpdated(address(0), address(hederaService), HederaService);
         (int256 responseCode, address newToken) = super
             .createTokenWithContractAsOwner(
                 _hederaService,
@@ -152,6 +156,11 @@ contract LPToken is ILPToken, OwnableUpgradeable, TokenOperations {
     function upgradeHederaService(
         IHederaService newHederaService
     ) external onlyOwner {
+        emit LogicUpdated(
+            address(hederaService),
+            address(newHederaService),
+            HederaService
+        );
         hederaService = newHederaService;
     }
 

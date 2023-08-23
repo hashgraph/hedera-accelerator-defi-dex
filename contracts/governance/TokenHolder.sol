@@ -2,6 +2,7 @@
 pragma solidity ^0.8.18;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "../common/IEvents.sol";
 import "../common/IHederaService.sol";
 import "../common/TokenOperations.sol";
 import "../common/hedera/HederaResponseCodes.sol";
@@ -9,6 +10,7 @@ import "../common/hedera/HederaResponseCodes.sol";
 import "./ITokenHolder.sol";
 
 abstract contract TokenHolder is
+    IEvents,
     ITokenHolder,
     Initializable,
     TokenOperations,
@@ -24,6 +26,9 @@ abstract contract TokenHolder is
         uint8 operation
     );
     event CanClaimAmount(address indexed user, bool canClaim, uint8 operation);
+
+    string private constant HederaService = "HederaService";
+
     mapping(address => mapping(address => mapping(uint => bool))) governorVoterProposalDetails;
     mapping(address => uint256[]) activeProposalsForUsers;
     IHederaService internal hederaService;
@@ -37,6 +42,7 @@ abstract contract TokenHolder is
         hederaService = _hederaService;
         _token = token;
         _associateToken(hederaService, address(this), address(_token));
+        emit LogicUpdated(address(0), address(_hederaService), HederaService);
     }
 
     function getToken() public view override returns (address) {
@@ -99,6 +105,11 @@ abstract contract TokenHolder is
     function upgradeHederaService(
         IHederaService newHederaService
     ) external onlyOwner {
+        emit LogicUpdated(
+            address(hederaService),
+            address(newHederaService),
+            HederaService
+        );
         hederaService = newHederaService;
     }
 

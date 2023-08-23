@@ -25,6 +25,7 @@ contract Factory is IEvents, OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     string private constant PAIR = "PairContract";
     string private constant LP_TOKEN = "LpTokenContract";
+    string private constant HederaService = "HederaService";
 
     IHederaService private hederaService;
     address private proxyAdmin;
@@ -54,6 +55,7 @@ contract Factory is IEvents, OwnableUpgradeable, ReentrancyGuardUpgradeable {
         configuration = _configuration;
         emit LogicUpdated(address(0), pairLogic, PAIR);
         emit LogicUpdated(address(0), lpLogic, LP_TOKEN);
+        emit LogicUpdated(address(0), address(hederaService), HederaService);
     }
 
     function getPair(
@@ -101,6 +103,25 @@ contract Factory is IEvents, OwnableUpgradeable, ReentrancyGuardUpgradeable {
         lpLogic = _newImpl;
     }
 
+    function upgradeHederaService(
+        IHederaService newHederaService
+    ) external onlyOwner {
+        emit LogicUpdated(
+            address(hederaService),
+            address(newHederaService),
+            HederaService
+        );
+        hederaService = newHederaService;
+        for (uint i = 0; i < allPairs.length; i++) {
+            IPair pair = IPair(allPairs[i]);
+            pair.upgradeHederaService(newHederaService);
+        }
+    }
+
+    function getHederaServiceVersion() external view returns (IHederaService) {
+        return hederaService;
+    }
+
     function recommendedPairToSwap(
         address _tokenToSwap,
         address _otherTokenOfPair,
@@ -127,20 +148,6 @@ contract Factory is IEvents, OwnableUpgradeable, ReentrancyGuardUpgradeable {
             maxQtyPair.fee,
             maxQtyPair.slippage
         );
-    }
-
-    function upgradeHederaService(
-        IHederaService newHederaService
-    ) external onlyOwner {
-        hederaService = newHederaService;
-        for (uint i = 0; i < allPairs.length; i++) {
-            IPair pair = IPair(allPairs[i]);
-            pair.upgradeHederaService(newHederaService);
-        }
-    }
-
-    function getHederaServiceVersion() external view returns (IHederaService) {
-        return hederaService;
     }
 
     function findMaxQtyPool(
