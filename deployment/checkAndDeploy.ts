@@ -23,7 +23,8 @@ async function main() {
 
   await Promise.all(
     response.nonProxies.map(async (name: string) => {
-      await deployment.deploy(name, true);
+      const item = await deployment.deploy(name, false);
+      service.addDeployed(item);
     })
   );
 
