@@ -193,10 +193,8 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
 
     function claimRewards(
         address _user
-    ) external override returns (ClaimCallResponse memory response) {
-        response = _claimRewardsAndGetResponse(_user, MAX_REWARDS_PER_TXN);
-        emit ClaimRewardsCallResponse(_user, response);
-        return response;
+    ) external override returns (ClaimCallResponse memory) {
+        return claimRewardsInternally(_user);
     }
 
     function claimRewardsInternally(

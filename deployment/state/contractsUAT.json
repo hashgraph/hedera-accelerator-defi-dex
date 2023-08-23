@@ -159,12 +159,12 @@
   },
   {
     "name": "vault",
-    "id": "0.0.628236",
-    "hash": "09fc5faea7ac3ef4becd51328e2f8372",
-    "address": "0x000000000000000000000000000000000009960c",
-    "timestamp": "2023-08-21T10:42:30.797Z",
-    "transparentProxyId": "0.0.617877",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000096d95"
+    "id": "0.0.647558",
+    "hash": "1d6c65ebb33d6efc0cf3f426c11423b3",
+    "address": "0x000000000000000000000000000000000009e186",
+    "timestamp": "2023-08-23T09:32:56.471Z",
+    "transparentProxyId": "0.0.634566",
+    "transparentProxyAddress": "0x000000000000000000000000000000000009aec6"
   },
   {
     "name": "splitter",
