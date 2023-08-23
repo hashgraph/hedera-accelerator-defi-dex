@@ -3,6 +3,7 @@ pragma solidity ^0.8.18;
 
 import "../common/IERC20.sol";
 import "../common/IHederaService.sol";
+import "../common/ISystemRoleBasedAccess.sol";
 import "../governance/ITokenHolder.sol";
 
 interface IGovernorBase {
@@ -12,8 +13,11 @@ interface IGovernorBase {
         uint256 _votingPeriodValue,
         IHederaService _hederaService,
         ITokenHolder _tokenHolder,
-        uint256 _quorumThresholdInBsp
+        uint256 _quorumThresholdInBsp,
+        ISystemRoleBasedAccess _iSystemRoleBasedAccess
     ) external;
 
     function upgradeHederaService(IHederaService newHederaService) external;
+
+    function getHederaServiceVersion() external view returns (IHederaService);
 }

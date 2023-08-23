@@ -150,6 +150,30 @@ contract FTDAO is BaseDAO, ISharedDAOModel {
         return proposalId;
     }
 
+    function createHBarTransferProposal(
+        string memory _title,
+        string memory _description,
+        string memory _linkToDiscussion,
+        address _to,
+        uint256 _amount,
+        uint256 _nftTokenSerialId
+    ) external onlyRole(DAO_ADMIN) returns (uint256) {
+        GovernorTransferToken governorTransferToken = GovernorTransferToken(
+            governorTokenTransferProxy
+        );
+        uint256 proposalId = governorTransferToken.createHBarTransferProposal(
+            _title,
+            _description,
+            _linkToDiscussion,
+            _to,
+            _amount,
+            msg.sender,
+            _nftTokenSerialId
+        );
+        tokenTransferProposals.push(proposalId);
+        return proposalId;
+    }
+
     function createContractUpgradeProposal(
         string memory _title,
         string memory _description,
@@ -250,7 +274,8 @@ contract FTDAO is BaseDAO, ISharedDAOModel {
             inputs.votingPeriod,
             common.hederaService,
             common.iTokenHolder,
-            inputs.quorumThreshold
+            inputs.quorumThreshold,
+            iSystemRoleBasedAccess
         );
         return payable(address(iGovernorBase)); //All governors are payable so its safe
     }

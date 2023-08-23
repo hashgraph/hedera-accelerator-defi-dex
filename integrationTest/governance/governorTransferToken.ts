@@ -11,8 +11,10 @@ import { Deployment } from "../../utils/deployContractOnTestnet";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { ContractService } from "../../deployment/service/ContractService";
 import {
+  Hbar,
   Client,
   TokenId,
+  HbarUnit,
   AccountId,
   ContractId,
   PrivateKey,
@@ -22,6 +24,7 @@ const deployment = new Deployment();
 
 const TRANSFER_TOKEN_ID = TokenId.fromString(dex.TOKEN_LAB49_1);
 const TRANSFER_TOKEN_QTY = 1e8;
+const TRANSFER_AMOUNT = Hbar.from(8, HbarUnit.Hbar);
 
 const FT_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
 const NFT_TOKEN_ID = dex.NFT_TOKEN_ID;
@@ -101,6 +104,16 @@ const fungibleTokenFlow = async () => {
     txnFeePayerClient
   );
 
+  // transfer HBar flow
+  await createHBarTransferProposal(
+    governor,
+    godHolder,
+    TRANSFER_AMOUNT,
+    receiverAccountId,
+    voterClient,
+    txnFeePayerClient
+  );
+
   // unlock required tokens from token holder
   await godHolder.checkAndClaimGodTokens(voterClient, voterAccountId);
   await governor.upgradeHederaService();
@@ -172,6 +185,16 @@ const nonFungibleTokenFlow = async () => {
     receiverAccountPK,
     voterAccountId,
     voterAccountKey,
+    voterClient,
+    txnFeePayerClient
+  );
+
+  // transfer HBar flow
+  await createHBarTransferProposal(
+    governor,
+    nftHolder,
+    TRANSFER_AMOUNT,
+    receiverAccountId,
     voterClient,
     txnFeePayerClient
   );
@@ -285,6 +308,60 @@ async function createTokenTransferProposal(
       [TRANSFER_TOKEN_ID],
       txnFeePayerClient,
       receiverAccountPK
+    );
+    await governor.executeProposal(title);
+  } else {
+    await governor.cancelProposal(title, creatorClient);
+  }
+}
+
+async function createHBarTransferProposal(
+  governor: TokenTransferGovernor,
+  tokenHolder: GodHolder | NFTHolder,
+  amount: Hbar,
+  receiverAccountId: AccountId,
+  voterClient: Client,
+  txnFeePayerClient: Client,
+  senderAccountId: AccountId = clientsInfo.operatorId,
+  senderAccountClient: Client = clientsInfo.operatorClient,
+  creatorId: AccountId = clientsInfo.operatorId,
+  creatorPK: PrivateKey = clientsInfo.operatorKey,
+  creatorClient: Client = clientsInfo.operatorClient
+) {
+  if (tokenHolder instanceof GodHolder) {
+    await governor.setupAllowanceForProposalCreation(
+      creatorClient,
+      creatorId,
+      creatorPK
+    );
+  } else {
+    await governor.setupNFTAllowanceForProposalCreation(
+      creatorClient,
+      creatorId,
+      creatorPK
+    );
+  }
+  const title = Helper.createProposalTitle("HBar Transfer Proposal");
+  const proposalId = await governor.createHBarTransferProposal(
+    title,
+    receiverAccountId.toSolidityAddress(),
+    amount.to(HbarUnit.Tinybar),
+    txnFeePayerClient,
+    governor.DEFAULT_NFT_TOKEN_SERIAL_NO,
+    "HBar Transfer Proposal - Desc",
+    "HBar Transfer Proposal - Link",
+    creatorId.toSolidityAddress()
+  );
+  await governor.getProposalDetails(proposalId, voterClient);
+  await governor.forVote(proposalId, 0, voterClient);
+  await governor.getProposalDetails(proposalId, voterClient);
+  if (await governor.isSucceeded(proposalId)) {
+    // transfer amount to governance
+    await Common.transferHbarsToContract(
+      amount,
+      ContractId.fromString(governor.contractId),
+      senderAccountId,
+      senderAccountClient
     );
     await governor.executeProposal(title);
   } else {

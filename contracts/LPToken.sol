@@ -5,11 +5,14 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./common/hedera/HederaResponseCodes.sol";
 import "./common/IHederaService.sol";
 import "./common/IERC20.sol";
+import "./common/IEvents.sol";
 import "./common/TokenOperations.sol";
 import "./common/hedera/HederaTokenService.sol";
 import "./ILPToken.sol";
 
-contract LPToken is ILPToken, OwnableUpgradeable, TokenOperations {
+contract LPToken is IEvents, ILPToken, OwnableUpgradeable, TokenOperations {
+    string private constant HederaService = "HederaService";
+
     IHederaService hederaService;
     IERC20 lpToken;
 
@@ -62,6 +65,7 @@ contract LPToken is ILPToken, OwnableUpgradeable, TokenOperations {
     ) external payable override initializer {
         _transferOwnership(_owner);
         hederaService = _hederaService;
+        emit LogicUpdated(address(0), address(hederaService), HederaService);
         (int256 responseCode, address newToken) = super
             .createTokenWithContractAsOwner(
                 _hederaService,
@@ -83,7 +87,7 @@ contract LPToken is ILPToken, OwnableUpgradeable, TokenOperations {
         uint256 amountA,
         uint256 amountB,
         address _toUser
-    ) external override onlyOwner returns (int256 responseCode) {
+    ) external override onlyOwner {
         require(
             (amountA > 0 && amountB > 0),
             "Please provide positive token counts"
@@ -94,7 +98,7 @@ contract LPToken is ILPToken, OwnableUpgradeable, TokenOperations {
             amountA,
             amountB
         );
-        (responseCode, ) = super.mintToken(
+        (int256 responseCode, ) = super.mintToken(
             hederaService,
             address(lpToken),
             mintingAmount
@@ -113,20 +117,19 @@ contract LPToken is ILPToken, OwnableUpgradeable, TokenOperations {
             responseCode == HederaResponseCodes.SUCCESS,
             "LPToken: token transfer failed from contract."
         );
-        return HederaResponseCodes.SUCCESS;
     }
 
     function removeLPTokenFor(
         uint256 lpAmount,
         address fromUser
-    ) external override onlyOwner returns (int256 responseCode) {
+    ) external override onlyOwner {
         require((lpAmount > 0), "Please provide token counts");
         require(
             this.lpTokenForUser(fromUser) >= lpAmount,
             "User Does not have lp amount"
         );
 
-        responseCode = _transferToken(
+        int256 responseCode = _transferToken(
             address(lpToken),
             fromUser,
             address(this),
@@ -148,12 +151,16 @@ contract LPToken is ILPToken, OwnableUpgradeable, TokenOperations {
             responseCode == HederaResponseCodes.SUCCESS,
             "LP token burn failed."
         );
-        return HederaResponseCodes.SUCCESS;
     }
 
     function upgradeHederaService(
         IHederaService newHederaService
     ) external onlyOwner {
+        emit LogicUpdated(
+            address(hederaService),
+            address(newHederaService),
+            HederaService
+        );
         hederaService = newHederaService;
     }
 

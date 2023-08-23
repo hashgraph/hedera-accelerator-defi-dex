@@ -33,6 +33,8 @@ contract MultisigDAOFactory is
     string private constant DaoLogic = "DaoLogic";
     string private constant SafeLogic = "SafeLogic";
     string private constant SafeFactory = "SafeFactory";
+    string private constant HederaService = "HederaService";
+    string private constant MultiSend = "MultiSend";
 
     address private daoLogic;
     address private safeLogic;
@@ -60,6 +62,8 @@ contract MultisigDAOFactory is
         emit LogicUpdated(address(0), daoLogic, DaoLogic);
         emit LogicUpdated(address(0), safeLogic, SafeLogic);
         emit LogicUpdated(address(0), safeFactory, SafeFactory);
+        emit LogicUpdated(address(0), address(hederaService), HederaService);
+        emit LogicUpdated(address(0), address(multiSend), MultiSend);
     }
 
     function upgradeSafeFactoryAddress(address _newImpl) external {
@@ -82,11 +86,17 @@ contract MultisigDAOFactory is
 
     function upgradeHederaService(IHederaService newHederaService) external {
         iSystemRoleManagment.checkChildProxyAdminRole(msg.sender);
+        emit LogicUpdated(
+            address(hederaService),
+            address(newHederaService),
+            HederaService
+        );
         hederaService = newHederaService;
     }
 
     function upgradeMultiSend(HederaMultiSend _multiSend) external {
         iSystemRoleManagment.checkChildProxyAdminRole(msg.sender);
+        emit LogicUpdated(address(multiSend), address(_multiSend), MultiSend);
         multiSend = _multiSend;
     }
 

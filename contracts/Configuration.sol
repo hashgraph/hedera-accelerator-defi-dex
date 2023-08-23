@@ -1,10 +1,14 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.18;
 
+import "./common/IEvents.sol";
+
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableMapUpgradeable.sol";
 
-contract Configuration is OwnableUpgradeable {
+contract Configuration is IEvents, OwnableUpgradeable {
+    string private constant HBARX_ADDRESS = "HBARX_ADDRESS";
+
     using EnumerableMapUpgradeable for EnumerableMapUpgradeable.UintToUintMap;
     EnumerableMapUpgradeable.UintToUintMap private feeMap;
     address private hbarxAddress;
@@ -13,6 +17,7 @@ contract Configuration is OwnableUpgradeable {
         __Ownable_init();
         _populateFeeMap();
         hbarxAddress = address(0x0000000000000000000000000000000000013925);
+        emit LogicUpdated(address(0), hbarxAddress, HBARX_ADDRESS);
     }
 
     function setTransactionFee(
@@ -27,6 +32,7 @@ contract Configuration is OwnableUpgradeable {
     }
 
     function setHbarxAddress(address newAddress) external onlyOwner {
+        emit LogicUpdated(hbarxAddress, newAddress, HBARX_ADDRESS);
         hbarxAddress = newAddress;
     }
 
@@ -45,8 +51,8 @@ contract Configuration is OwnableUpgradeable {
     }
 
     function _populateFeeMap() private {
-        feeMap.set(1, 5);
-        feeMap.set(2, 30);
-        feeMap.set(3, 10);
+        require(feeMap.set(1, 5), "Configuration: failed to set fee 5");
+        require(feeMap.set(2, 30), "Configuration: failed to set fee 30");
+        require(feeMap.set(3, 10), "Configuration: failed to set fee 10");
     }
 }

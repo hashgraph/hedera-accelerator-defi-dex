@@ -3,13 +3,14 @@ pragma solidity ^0.8.18;
 
 import "./IVault.sol";
 import "../common/IERC20.sol";
+import "../common/IEvents.sol";
 import "../common/IErrors.sol";
 import "../common/TokenOperations.sol";
 import "../common/hedera/HederaResponseCodes.sol";
 import "prb-math/contracts/PRBMathUD60x18.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-contract Vault is IVault, OwnableUpgradeable, TokenOperations {
+contract Vault is IEvents, IVault, OwnableUpgradeable, TokenOperations {
     using PRBMathUD60x18 for uint256;
 
     event Staked(address indexed user, uint256 amount);
@@ -36,7 +37,9 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
         uint256 perShareAmount;
     }
 
+    string private constant HederaService = "HederaService";
     uint256 private constant MAX_REWARDS_PER_TXN = 40;
+
     IHederaService private hederaService;
 
     IERC20 private stakingToken;
@@ -49,10 +52,13 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
     address[] private rewardTokens;
     mapping(address => RewardInfo) public tokensRewardInfo;
 
+    ISystemRoleBasedAccess private iSystemRoleBasedAccess;
+
     function initialize(
         IHederaService _hederaService,
         address _stakingToken,
-        uint256 _lockingPeriod
+        uint256 _lockingPeriod,
+        ISystemRoleBasedAccess _iSystemRoleBasedAccess
     ) public initializer {
         __Ownable_init();
         require(
@@ -66,7 +72,9 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
         hederaService = _hederaService;
         stakingTokenLockingPeriod = _lockingPeriod;
         stakingToken = IERC20(_stakingToken);
+        iSystemRoleBasedAccess = _iSystemRoleBasedAccess;
         _associateToken(_hederaService, address(this), _stakingToken);
+        emit LogicUpdated(address(0), address(_hederaService), HederaService);
     }
 
     function stake(uint256 _amount) external override returns (bool staked) {
@@ -102,10 +110,15 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
         uint256 _amount,
         address _from
     ) external override {
+        iSystemRoleBasedAccess.checkVaultAddRewardUser(tx.origin);
         require(_token != address(0), "Vault: reward token should not be zero");
         require(_from != address(0), "Vault: from address should not be zero");
         require(_amount > 0, "Vault: reward amount must be a positive number");
         require(stakingTokenTotalSupply > 0, "Vault: no token staked yet");
+        require(
+            _token != address(stakingToken),
+            "Vault: Reward and Staking tokens cannot be same."
+        );
         uint256 perShareAmount = _amount.div(stakingTokenTotalSupply);
         RewardInfo storage rewardInfo = tokensRewardInfo[_token];
         if (!rewardInfo.exist) {
@@ -184,10 +197,8 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
 
     function claimRewards(
         address _user
-    ) external override returns (ClaimCallResponse memory response) {
-        response = _claimRewardsAndGetResponse(_user, MAX_REWARDS_PER_TXN);
-        emit ClaimRewardsCallResponse(_user, response);
-        return response;
+    ) external override returns (ClaimCallResponse memory) {
+        return claimRewardsInternally(_user);
     }
 
     function claimRewardsInternally(
@@ -240,6 +251,11 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
     function upgradeHederaService(
         IHederaService newHederaService
     ) external onlyOwner {
+        emit LogicUpdated(
+            address(hederaService),
+            address(newHederaService),
+            HederaService
+        );
         hederaService = newHederaService;
     }
 
@@ -271,6 +287,9 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
             storage cInfo = usersStakingTokenContribution[_user];
         cInfo.stakingTokenTotal -= _amount;
         if (cInfo.stakingTokenTotal == 0) {
+            for (uint256 i = 0; i < rewardTokens.length; i++) {
+                delete cInfo.rewardClaimed[rewardTokens[i]];
+            }
             delete usersStakingTokenContribution[_user];
         }
         stakingTokenTotalSupply -= _amount;

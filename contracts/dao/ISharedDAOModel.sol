@@ -1,6 +1,5 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.18;
-import "../governance/IGovernorTransferToken.sol";
 import "../common/IHederaService.sol";
 import "../governance/ITokenHolderFactory.sol";
 

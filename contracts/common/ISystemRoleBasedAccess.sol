@@ -6,6 +6,7 @@ interface ISystemRoleBasedAccess {
         address superAdmin;
         address proxyAdmin;
         address childProxyAdmin;
+        address vaultAddRewardUser;
     }
 
     function initialize(SystemUsers memory _systemUsers) external;
@@ -15,4 +16,6 @@ interface ISystemRoleBasedAccess {
     function updateSystemUsers(SystemUsers memory _systemUsers) external;
 
     function checkChildProxyAdminRole(address account) external view;
+
+    function checkVaultAddRewardUser(address account) external view;
 }

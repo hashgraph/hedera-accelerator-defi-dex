@@ -21,6 +21,7 @@ import ContractUpgradeGovernor from "../../e2e-test/business/ContractUpgradeGove
 import FTTokenHolderFactory from "../../e2e-test/business/factories/FTTokenHolderFactory";
 import TokenCreateGovernor from "../../e2e-test/business/TokenCreateGovernor";
 import SystemRoleBasedAccess from "../../e2e-test/business/common/SystemRoleBasedAccess";
+import { AddressHelper } from "../../utils/AddressHelper";
 
 const TOKEN_QTY = 1 * 1e8;
 const TOKEN_ID = TokenId.fromString(dex.TOKEN_LAB49_1);
@@ -256,18 +257,11 @@ export async function executeContractUpgradeFlow(
   await governorContractUpgrade.isVoteSucceeded(proposalId);
   await governorContractUpgrade.proposalVotes(proposalId);
   if (await governorContractUpgrade.isSucceeded(proposalId)) {
+    await transferOwnershipToGovernance(proposalId, governorContractUpgrade);
     await governorContractUpgrade.executeProposal(
       title,
       clientsInfo.operatorKey,
       clientsInfo.operatorClient
-    );
-    const { proxyAddress, logicAddress } =
-      await governorContractUpgrade.getContractAddressesFromGovernorUpgradeContract(
-        proposalId
-      );
-    await new Common(ContractId.fromSolidityAddress(proxyAddress)).upgradeTo(
-      proxyAddress,
-      logicAddress
     );
   } else {
     await governorContractUpgrade.cancelProposal(title, proposalCreatorClient);
@@ -332,7 +326,8 @@ export async function executeTokenCreateFlow(
     await governorTokenCreate.executeProposal(
       title,
       clientsInfo.operatorKey,
-      clientsInfo.operatorClient
+      clientsInfo.operatorClient,
+      75
     );
     await governorTokenCreate.getTokenAddressFromGovernorTokenCreate(
       proposalId
@@ -341,6 +336,24 @@ export async function executeTokenCreateFlow(
     await governorTokenCreate.cancelProposal(title, proposalCreatorClient);
   }
   await godHolder.checkAndClaimGodTokens(voterClient, voterAccountId);
+}
+
+async function transferOwnershipToGovernance(
+  proposalId: string,
+  contractUpgradeGovernor: ContractUpgradeGovernor
+) {
+  const governorEvmAddress = await AddressHelper.idToEvmAddress(
+    contractUpgradeGovernor.contractId
+  );
+  const { proxyId } =
+    await contractUpgradeGovernor.getContractAddressesFromGovernorUpgradeContract(
+      proposalId
+    );
+  await new Common(proxyId).changeAdmin(
+    governorEvmAddress,
+    clientsInfo.proxyAdminKey,
+    clientsInfo.proxyAdminClient
+  );
 }
 
 async function main() {
