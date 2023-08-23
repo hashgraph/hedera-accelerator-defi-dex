@@ -45,8 +45,8 @@ contract Configuration is OwnableUpgradeable {
     }
 
     function _populateFeeMap() private {
-        feeMap.set(1, 5);
-        feeMap.set(2, 30);
-        feeMap.set(3, 10);
+        require(feeMap.set(1, 5), "Configuration: failed to set fee 5");
+        require(feeMap.set(2, 30), "Configuration: failed to set fee 30");
+        require(feeMap.set(3, 10), "Configuration: failed to set fee 10");
     }
 }

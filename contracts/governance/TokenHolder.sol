@@ -43,9 +43,7 @@ abstract contract TokenHolder is
         return address(_token);
     }
 
-    function addProposalForVoter(
-        uint256 proposalId
-    ) external override returns (int32) {
+    function addProposalForVoter(uint256 proposalId) external override {
         require(isContract(msg.sender), "TokenHolder: caller must be contract");
         require(
             _balanceOf(_token, msg.sender) > 0,
@@ -58,7 +56,6 @@ abstract contract TokenHolder is
         if (proposals.length == 1) {
             emit CanClaimAmount(voter, canUserClaimTokens(voter), ADD);
         }
-        return HederaResponseCodes.SUCCESS;
     }
 
     function getActiveProposalsForUser()
@@ -72,7 +69,7 @@ abstract contract TokenHolder is
     function removeActiveProposals(
         address[] memory voters,
         uint256 proposalId
-    ) external override returns (int32) {
+    ) external override {
         require(isContract(msg.sender), "TokenHolder: caller must be contract");
         require(
             _balanceOf(_token, msg.sender) > 0,
@@ -91,7 +88,6 @@ abstract contract TokenHolder is
                 emit CanClaimAmount(voter, canUserClaimTokens(voter), REMOVE);
             }
         }
-        return HederaResponseCodes.SUCCESS;
     }
 
     function canUserClaimTokens(

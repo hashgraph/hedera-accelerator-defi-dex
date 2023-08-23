@@ -17,12 +17,9 @@ interface ILPToken {
         uint256 amountA,
         uint256 amountB,
         address _toUser
-    ) external returns (int256 responseCode);
+    ) external;
 
-    function removeLPTokenFor(
-        uint256 lpAmount,
-        address fromUser
-    ) external returns (int256 responseCode);
+    function removeLPTokenFor(uint256 lpAmount, address fromUser) external;
 
     function lpTokenForUser(address _user) external view returns (uint256);
 

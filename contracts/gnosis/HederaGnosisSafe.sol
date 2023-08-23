@@ -15,8 +15,6 @@ contract HederaGnosisSafe is
 {
     using GnosisSafeMath for uint256;
 
-    event TokenAssociated(address token);
-
     bytes private constant BYTES_ZERO = "";
     uint256 private constant UINT_ZERO = 0;
     address payable private constant ADDRESS_ZERO = payable(address(0));
@@ -69,9 +67,8 @@ contract HederaGnosisSafe is
     ) external {
         require(msg.sender == address(this), "GS031"); // only via safe txn
         int256 code = _associateToken(_hederaService, address(this), _token);
-        if (code == HederaResponseCodes.SUCCESS) {
-            emit TokenAssociated(_token);
-        } else if (
+        if (
+            code != HederaResponseCodes.SUCCESS &&
             code != HederaResponseCodes.TOKEN_ALREADY_ASSOCIATED_TO_ACCOUNT
         ) {
             revert("HederaGnosisSafe: association failed to safe");
@@ -123,26 +120,20 @@ contract HederaGnosisSafe is
         Enum.Operation operation,
         uint256 nonce
     ) external payable nonReentrant returns (bool success) {
-        bytes32 txHash;
-        // Use scope here to limit variable lifetime and prevent `stack too deep` errors
-        {
-            bytes memory txHashData = encodeTransactionData(
-                // Transaction info
+        bytes32 txHash = keccak256(
+            encodeTransactionData(
                 to,
                 value,
                 data,
                 operation,
                 UINT_ZERO,
-                // Payment info
                 UINT_ZERO,
                 UINT_ZERO,
                 ADDRESS_ZERO,
                 ADDRESS_ZERO,
-                // Signature info
                 nonce
-            );
-            txHash = keccak256(txHashData);
-        }
+            )
+        );
         // The cost of on-chain approval is really cheap for hashgraph hence there is no need of off-chain approval.
         // Also, Hashpack or equivalents wallets do not support ECDSA keys.
         // Note, on-chain signature verifaction is not available for ED25519 keys.
@@ -152,91 +143,9 @@ contract HederaGnosisSafe is
             "HederaGnosisSafe: txn already executed"
         );
         executedHash[txHash] = true;
-        address guard = getGuard();
-        {
-            if (guard != address(0)) {
-                Guard(guard).checkTransaction(
-                    // Transaction info
-                    to,
-                    value,
-                    data,
-                    operation,
-                    UINT_ZERO,
-                    // Payment info
-                    UINT_ZERO,
-                    UINT_ZERO,
-                    ADDRESS_ZERO,
-                    ADDRESS_ZERO,
-                    // Signature info
-                    BYTES_ZERO,
-                    msg.sender
-                );
-            }
-        }
-        // We require some gas to emit the events (at least 2500) after the execution and some to perform code until the execution (500)
-        // We also include the 1/64 in the check that is not send along with a call to counteract potential shortings because of EIP-150
-        require(
-            gasleft() >= ((UINT_ZERO * 64) / 63).max(UINT_ZERO + 2500) + 500,
-            "GS010"
-        );
-        // Use scope here to limit variable lifetime and prevent `stack too deep` errors
-        {
-            uint256 gasUsed = gasleft();
-            // If the gasPrice is 0 we assume that nearly all available gas can be used (it is always more than safeTxGas)
-            // We only substract 2500 (compared to the 3000 before) to ensure that the amount passed is still higher than safeTxGas
-            success = execute(
-                to,
-                value,
-                data,
-                operation,
-                UINT_ZERO == 0 ? (gasleft() - 2500) : UINT_ZERO
-            );
-            gasUsed = gasUsed.sub(gasleft());
-            // If no safeTxGas and no gasPrice was set (e.g. both are 0), then the internal tx is required to be successful
-            // This makes it possible to use `estimateGas` without issues, as it searches for the minimum gas where the tx doesn't revert
-            require(success || UINT_ZERO != 0 || UINT_ZERO != 0, "GS013");
-            // We transfer the calculated tx costs to the tx.origin to avoid sending it to intermediate contracts that have made calls
-            uint256 payment = 0;
-            if (UINT_ZERO > 0) {
-                payment = _handlePayment(
-                    gasUsed,
-                    UINT_ZERO,
-                    UINT_ZERO,
-                    ADDRESS_ZERO,
-                    ADDRESS_ZERO
-                );
-            }
-            if (success) emit ExecutionSuccess(txHash, payment);
-            else emit ExecutionFailure(txHash, payment);
-        }
-        {
-            if (guard != address(0)) {
-                Guard(guard).checkAfterExecution(txHash, success);
-            }
-        }
-    }
-
-    function _handlePayment(
-        uint256 gasUsed,
-        uint256 baseGas,
-        uint256 gasPrice,
-        address gasToken,
-        address payable refundReceiver
-    ) private returns (uint256 payment) {
-        // solhint-disable-next-line avoid-tx-origin
-        address payable receiver = refundReceiver == address(0)
-            ? payable(tx.origin)
-            : refundReceiver;
-        if (gasToken == address(0)) {
-            // For ETH we will only adjust the gas price to not be higher than the actual used gas price
-            payment = gasUsed.add(baseGas).mul(
-                gasPrice < tx.gasprice ? gasPrice : tx.gasprice
-            );
-            require(receiver.send(payment), "GS011");
-        } else {
-            payment = gasUsed.add(baseGas).mul(gasPrice);
-            require(transferToken(gasToken, receiver, payment), "GS012");
-        }
+        success = execute(to, value, data, operation, gasleft() - 2500);
+        require(success, "GS013");
+        emit ExecutionSuccess(txHash, UINT_ZERO);
     }
 
     function execTransaction(

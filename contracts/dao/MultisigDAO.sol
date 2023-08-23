@@ -96,19 +96,19 @@ contract MultiSigDAO is BaseDAO {
         string memory title,
         string memory desc,
         string memory linkToDiscussion
-    ) public payable returns (bytes32) {
+    ) public returns (bytes32) {
         require(bytes(title).length != 0, "MultiSigDAO: title can't be blank");
         require(bytes(desc).length != 0, "MultiSigDAO: desc can't be blank");
         Enum.Operation _operation = Enum.Operation.Call;
         (bytes32 txnHash, uint256 txnNonce) = hederaGnosisSafe.getTxnHash(
             _to,
-            msg.value,
+            0,
             _data,
             _operation
         );
         TransactionInfo storage transactionInfo = transactions[txnHash];
         transactionInfo.to = _to;
-        transactionInfo.value = msg.value;
+        transactionInfo.value = 0;
         transactionInfo.data = _data;
         transactionInfo.operation = _operation;
         transactionInfo.nonce = txnNonce;
@@ -127,7 +127,7 @@ contract MultiSigDAO is BaseDAO {
         string memory _title,
         string memory _desc,
         string memory _linkToDiscussion
-    ) external payable returns (bytes32) {
+    ) external returns (bytes32) {
         bytes memory data = abi.encodeWithSelector(
             HederaGnosisSafe.associateToken.selector,
             hederaService,
@@ -151,7 +151,7 @@ contract MultiSigDAO is BaseDAO {
         string memory title,
         string memory desc,
         string memory linkToDiscussion
-    ) public payable returns (bytes32) {
+    ) public returns (bytes32) {
         require(
             _targets.length > 0 &&
                 _targets.length == _values.length &&
@@ -190,7 +190,7 @@ contract MultiSigDAO is BaseDAO {
         string memory _title,
         string memory _desc,
         string memory _linkToDiscussion
-    ) external payable returns (bytes32) {
+    ) external returns (bytes32) {
         require(_proxy != address(0), "MultiSigDAO: proxy can't be zero");
         require(_proxyLogic != address(0), "MultiSigDAO: logic can't be zero");
         bytes memory data = abi.encodeWithSelector(
