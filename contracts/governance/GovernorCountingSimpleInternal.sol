@@ -13,6 +13,7 @@ import "../common/IHederaService.sol";
 import "../common/hedera/HederaResponseCodes.sol";
 import "./TokenHolder.sol";
 import "./IGovernorBase.sol";
+import "../common/IEvents.sol";
 import "../common/IErrors.sol";
 import "../common/TokenOperations.sol";
 
@@ -24,7 +25,8 @@ abstract contract GovernorCountingSimpleInternal is
     GovernorCountingSimpleUpgradeable,
     TokenOperations,
     OwnableUpgradeable,
-    IErrors
+    IErrors,
+    IEvents
 {
     struct ProposalInfo {
         address creator;
@@ -64,7 +66,9 @@ abstract contract GovernorCountingSimpleInternal is
         uint256 nftTokenSerialId
     );
 
+    string private constant HederaService = "HederaService";
     uint256 private constant PROPOSAL_CREATION_AMOUNT = 1e8;
+
     address[] private EMPTY_VOTERS_LIST;
 
     address private token;
@@ -102,6 +106,7 @@ abstract contract GovernorCountingSimpleInternal is
         );
         __GovernorCountingSimple_init();
         _associateTokenInternally(address(token));
+        emit LogicUpdated(address(0), address(hederaService), HederaService);
     }
 
     function getGODTokenAddress() external view returns (address) {
@@ -350,6 +355,11 @@ abstract contract GovernorCountingSimpleInternal is
     function upgradeHederaService(
         IHederaService newHederaService
     ) external virtual onlyOwner {
+        emit LogicUpdated(
+            address(hederaService),
+            address(newHederaService),
+            HederaService
+        );
         hederaService = newHederaService;
     }
 

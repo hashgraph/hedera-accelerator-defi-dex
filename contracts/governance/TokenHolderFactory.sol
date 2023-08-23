@@ -14,6 +14,8 @@ contract TokenHolderFactory is
     OwnableUpgradeable
 {
     string private constant TokenHolder = "ITokenHolder";
+    string private constant HederaService = "HederaService";
+
     ITokenHolder private tokenHolderLogic;
     IHederaService hederaService;
     address private admin;
@@ -38,6 +40,7 @@ contract TokenHolderFactory is
         hederaService = _hederaService;
         admin = _admin;
         emit LogicUpdated(address(0), address(_tokenHolderLogic), TokenHolder);
+        emit LogicUpdated(address(0), address(_hederaService), HederaService);
     }
 
     function getTokenHolder(address _token) public returns (ITokenHolder) {
@@ -65,6 +68,11 @@ contract TokenHolderFactory is
     function upgradeHederaService(
         IHederaService newHederaService
     ) external onlyOwner {
+        emit LogicUpdated(
+            address(hederaService),
+            address(newHederaService),
+            HederaService
+        );
         hederaService = newHederaService;
         for (uint i = 0; i < tokenHolders.length; i++) {
             ITokenHolder holder = tokenHolders[i];

@@ -999,7 +999,7 @@ describe("Governor Tests", function () {
           governorToken
             .connect(creator)
             .callStatic.mintToken(proposalId, qtyToMint)
-        ).revertedWith("GTC: Minting token failed");
+        ).revertedWith("GTC: Minting failed");
       });
 
       it("Given user executed token create proposal when non-treasurer user try to mint then minting should fail", async function () {
@@ -1016,7 +1016,7 @@ describe("Governor Tests", function () {
           governorToken
             .connect(nonOwnerSigner)
             .callStatic.mintToken(proposalId, qtyToMint)
-        ).revertedWith("GTC: Only treasurer can mint");
+        ).revertedWith("GTC: treasurer can mint");
       });
     });
 
@@ -1082,7 +1082,7 @@ describe("Governor Tests", function () {
           governorToken
             .connect(creator)
             .callStatic.burnToken(proposalId, qtyToBurn)
-        ).revertedWith("GTC: Burn token failed");
+        ).revertedWith("GTC: Burn failed");
       });
 
       it("Given user executed token create proposal when non-treasurer user try to burn then burning should fail", async function () {
@@ -1099,7 +1099,7 @@ describe("Governor Tests", function () {
           governorToken
             .connect(nonOwnerSigner)
             .callStatic.burnToken(proposalId, qtyToBurn)
-        ).revertedWith("GTC: Only treasurer can burn");
+        ).revertedWith("GTC: treasurer can burn");
       });
     });
 
@@ -1118,7 +1118,7 @@ describe("Governor Tests", function () {
           governorToken
             .connect(creator)
             .transferToken(proposalId, signers[1].address, qtyToTransfer)
-        ).revertedWith("GTC: Token qty to transfer should be > 0");
+        ).revertedWith("GTC: qty should be > 0");
       });
 
       it("Given user executed token create proposal when user try to transfer only treasurer is allowed", async function () {
@@ -1206,7 +1206,7 @@ describe("Governor Tests", function () {
           governorToken
             .connect(nonTreasurer)
             .transferToken(proposalId, signers[1].address, qtyToTransfer)
-        ).revertedWith("GTC: Only treasurer can transfer tokens.");
+        ).revertedWith("GTC: treasurer can transfer tokens.");
       });
 
       it("Given user not executed token create proposal when treasurer try to transfer then transfer should fail", async function () {
@@ -1226,7 +1226,7 @@ describe("Governor Tests", function () {
             .connect(creator)
             .transferToken(proposalId, signers[1].address, qtyToTransfer)
         ).revertedWith(
-          "GTC: Token transfer not allowed as no token for this proposal."
+          "GTC: transfer not allowed as no token for this proposal"
         );
       });
 

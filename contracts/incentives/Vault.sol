@@ -3,13 +3,14 @@ pragma solidity ^0.8.18;
 
 import "./IVault.sol";
 import "../common/IERC20.sol";
+import "../common/IEvents.sol";
 import "../common/IErrors.sol";
 import "../common/TokenOperations.sol";
 import "../common/hedera/HederaResponseCodes.sol";
 import "prb-math/contracts/PRBMathUD60x18.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-contract Vault is IVault, OwnableUpgradeable, TokenOperations {
+contract Vault is IEvents, IVault, OwnableUpgradeable, TokenOperations {
     using PRBMathUD60x18 for uint256;
 
     event Staked(address indexed user, uint256 amount);
@@ -36,7 +37,9 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
         uint256 perShareAmount;
     }
 
+    string private constant HederaService = "HederaService";
     uint256 private constant MAX_REWARDS_PER_TXN = 40;
+
     IHederaService private hederaService;
 
     IERC20 private stakingToken;
@@ -71,6 +74,7 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
         stakingToken = IERC20(_stakingToken);
         iSystemRoleBasedAccess = _iSystemRoleBasedAccess;
         _associateToken(_hederaService, address(this), _stakingToken);
+        emit LogicUpdated(address(0), address(_hederaService), HederaService);
     }
 
     function stake(uint256 _amount) external override returns (bool staked) {
@@ -247,6 +251,11 @@ contract Vault is IVault, OwnableUpgradeable, TokenOperations {
     function upgradeHederaService(
         IHederaService newHederaService
     ) external onlyOwner {
+        emit LogicUpdated(
+            address(hederaService),
+            address(newHederaService),
+            HederaService
+        );
         hederaService = newHederaService;
     }
 

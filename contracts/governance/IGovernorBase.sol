@@ -18,4 +18,6 @@ interface IGovernorBase {
     ) external;
 
     function upgradeHederaService(IHederaService newHederaService) external;
+
+    function getHederaServiceVersion() external view returns (IHederaService);
 }

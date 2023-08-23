@@ -95,7 +95,7 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
 
         require(
             tokenCreateData.treasurer == msg.sender,
-            "GTC: Only treasurer can mint"
+            "GTC: treasurer can mint"
         );
 
         (int256 responseCode, int64 newTotalSupply) = super.mintToken(
@@ -106,7 +106,7 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
 
         require(
             responseCode == HederaResponseCodes.SUCCESS,
-            "GTC: Minting token failed"
+            "GTC: Minting failed"
         );
         return newTotalSupply;
     }
@@ -123,7 +123,7 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
 
         require(
             tokenCreateData.treasurer == msg.sender,
-            "GTC: Only treasurer can burn"
+            "GTC: treasurer can burn"
         );
 
         (int256 responseCode, int64 newTotalSupply) = super.burnToken(
@@ -134,7 +134,7 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
 
         require(
             responseCode == HederaResponseCodes.SUCCESS,
-            "GTC: Burn token failed"
+            "GTC: Burn failed"
         );
 
         return newTotalSupply;
@@ -145,15 +145,15 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
         address to,
         uint256 amount
     ) external {
-        require(amount > 0, "GTC: Token qty to transfer should be > 0");
+        require(amount > 0, "GTC: qty should be > 0");
         TokenCreateData storage tokenCreateData = _proposalData[proposalId];
         require(
             tokenCreateData.newTokenAddress != address(0x0),
-            "GTC: Token transfer not allowed as no token for this proposal."
+            "GTC: transfer not allowed as no token for this proposal"
         );
         require(
             tokenCreateData.treasurer == msg.sender,
-            "GTC: Only treasurer can transfer tokens."
+            "GTC: treasurer can transfer tokens."
         );
         uint256 contractBalance = _balanceOf(
             tokenCreateData.newTokenAddress,

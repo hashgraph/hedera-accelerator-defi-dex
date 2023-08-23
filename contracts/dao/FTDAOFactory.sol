@@ -8,7 +8,6 @@ import "../common/IHederaService.sol";
 
 import "../dao/FTDAO.sol";
 import "../governance/ITokenHolderFactory.sol";
-import "../governance/IGovernorTransferToken.sol";
 import "./ISharedDAOModel.sol";
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
@@ -25,6 +24,7 @@ contract FTDAOFactory is IErrors, IEvents, Initializable, ISharedDAOModel {
     string private constant FungibleTokenDAO = "FTDAO";
     string private constant TokenHolderFactory = "TokenHolderFactory";
     string private constant Governors = "Governors";
+    string private constant HederaService = "HederaService";
 
     address[] private daos;
     FTDAO private daoLogic;
@@ -52,7 +52,7 @@ contract FTDAOFactory is IErrors, IEvents, Initializable, ISharedDAOModel {
             address(tokenHolderFactory),
             TokenHolderFactory
         );
-
+        emit LogicUpdated(address(0), address(hederaService), HederaService);
         Governor memory oldGovernors;
         emit GovernorLogicUpdated(oldGovernors, _governors, Governors);
     }
@@ -87,6 +87,11 @@ contract FTDAOFactory is IErrors, IEvents, Initializable, ISharedDAOModel {
 
     function upgradeHederaService(IHederaService newHederaService) external {
         iSystemRoleBasedAccess.checkChildProxyAdminRole(msg.sender);
+        emit LogicUpdated(
+            address(hederaService),
+            address(newHederaService),
+            HederaService
+        );
         hederaService = newHederaService;
     }
 

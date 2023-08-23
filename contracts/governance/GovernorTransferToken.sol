@@ -3,13 +3,9 @@ pragma solidity ^0.8.18;
 import "../common/IErrors.sol";
 import "../common/hedera/HederaTokenService.sol";
 
-import "./IGovernorTransferToken.sol";
 import "./GovernorCountingSimpleInternal.sol";
 
-contract GovernorTransferToken is
-    IGovernorTransferToken,
-    GovernorCountingSimpleInternal
-{
+contract GovernorTransferToken is GovernorCountingSimpleInternal {
     uint256 private constant TRANSFER = 1;
     uint256 private constant ASSOCIATE = 2;
     uint256 private constant HBAR_TRANSFER = 3;
@@ -85,28 +81,6 @@ contract GovernorTransferToken is
             );
     }
 
-    function upgradeHederaService(
-        IHederaService newHederaService
-    )
-        external
-        override(GovernorCountingSimpleInternal, IGovernorTransferToken)
-        onlyOwner
-    {
-        hederaService = newHederaService;
-    }
-
-    function getHederaServiceVersion()
-        external
-        view
-        override(GovernorCountingSimpleInternal, IGovernorTransferToken)
-        returns (IHederaService)
-    {
-        return hederaService;
-    }
-
-    /**
-     * @dev Internal execution mechanism. Can be overridden to implement different execution mechanism
-     */
     function _execute(
         uint256 proposalId,
         address[] memory targets,

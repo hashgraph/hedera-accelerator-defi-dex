@@ -8,6 +8,7 @@ import "./common/hedera/HederaResponseCodes.sol";
 import "./common/IHederaService.sol";
 import "./common/TokenOperations.sol";
 import "./common/IERC20.sol";
+import "./common/IEvents.sol";
 import "./ILPToken.sol";
 import "./IPair.sol";
 import "./Configuration.sol";
@@ -32,11 +33,13 @@ error WrongPairPassed(
 
 contract Pair is
     IPair,
+    IEvents,
     Initializable,
     TokenOperations,
     ReentrancyGuardUpgradeable,
     OwnableUpgradeable
 {
+    string private constant HederaService = "HederaService";
     string private constant INVALID_DENOMINATOR =
         "Pair: trying to divide by zero token quantity";
 
@@ -73,6 +76,7 @@ contract Pair is
         pair = Pair(Token(_tokenA, uint256(0)), Token(_tokenB, uint256(0)));
         _associateToken(address(this), _tokenA);
         _associateToken(address(this), _tokenB);
+        emit LogicUpdated(address(0), address(hederaService), HederaService);
     }
 
     function getPair() external view override returns (Pair memory) {
@@ -411,6 +415,11 @@ contract Pair is
     function upgradeHederaService(
         IHederaService newHederaService
     ) external override onlyOwner {
+        emit LogicUpdated(
+            address(hederaService),
+            address(newHederaService),
+            HederaService
+        );
         hederaService = newHederaService;
         lpTokenContract.upgradeHederaService(newHederaService);
     }
