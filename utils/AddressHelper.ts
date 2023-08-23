@@ -25,7 +25,8 @@ export class AddressHelper {
 
   private static async getContractInfo(idOrAddress: string): Promise<any> {
     console.time("*** Resolved in");
-    const cacheResponse = AddressHelper.cs.getContractInfo(idOrAddress);
+    const cacheResponse =
+      AddressHelper.cs.getContractByIdOrAddress(idOrAddress);
     if (cacheResponse) {
       console.log("*** cache hit ***", idOrAddress);
       console.timeEnd("*** Resolved in");

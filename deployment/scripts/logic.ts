@@ -8,7 +8,7 @@ export async function main(_contractName: string) {
   if (_contractName === undefined || _contractName === "") {
     _contractName = process.env.CONTRACT_NAME!;
   }
-  return new Deployment().deployAndSave(_contractName.toLowerCase());
+  return new Deployment().deploy(_contractName.toLowerCase(), true);
 }
 
 if (require.main === module) {

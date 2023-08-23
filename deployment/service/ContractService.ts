@@ -24,6 +24,7 @@ export class ContractService {
   public static NFT_HOLDER = "nftholder";
   public static MULTI_SEND = "hederamultisend";
   public static SYSTEM_ROLE_BASED_ACCESS = "systemrolebasedaccess";
+  public static PROXY = "TransparentUpgradeableProxy";
 
   public factoryContractName = "factory";
   public pairContractName = "pair";
@@ -64,6 +65,14 @@ export class ContractService {
 
   public static getLogicPathContractService() {
     return new ContractService(ContractService.LOGIC_CONTRACTS_PATH);
+  }
+
+  public static getUATPathContractService() {
+    return new ContractService(ContractService.UAT_CONTRACTS_PATH);
+  }
+
+  public static getDevPathContractService() {
+    return new ContractService(ContractService.DEV_CONTRACTS_PATH);
   }
 
   private readFileContent = () => {
@@ -250,7 +259,7 @@ export class ContractService {
     fs.writeFileSync(this.contractRecordFile, newContents);
   };
 
-  public getContractInfo = (
+  public getContractByIdOrAddress = (
     idOrAddress: string
   ): DeployedContract | undefined => {
     const contracts: Array<DeployedContract> = this.getAllContracts();
@@ -262,10 +271,13 @@ export class ContractService {
     return matchingContracts.length > 0 ? matchingContracts.at(0) : undefined;
   };
 
-  public findLogicContract = (name: string, hash: string) => {
+  public getContractByNameAndHash = (name: string, hash: string) => {
     const contracts: DeployedContract[] = this.readFileContent();
     return contracts.find(
-      (item) => item && item.name === name.toLowerCase() && item.hash === hash
+      (item) =>
+        item &&
+        item.name.toLowerCase() === name.toLowerCase() &&
+        item.hash === hash
     );
   };
 }

@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as hethers from "@hashgraph/hethers";
-import ContractMetadata from "../utils/ContractMetadata";
+import ContractMetadata, { ContractInfo } from "../utils/ContractMetadata";
 
 import { clientsInfo } from "../utils/ClientManagement";
 import { ContractService } from "../deployment/service/ContractService";
@@ -120,40 +120,48 @@ export class EtherDeployment {
 }
 
 export class Deployment {
-  private contractService = new ContractService();
-  private contractMetadata = new ContractMetadata();
-  private csLogic = ContractService.getLogicPathContractService();
+  private cs: ContractService;
+  private csLogic: ContractService;
+  private contractMetadata: ContractMetadata;
+
+  constructor(_cs: ContractService | null = null) {
+    this.cs = _cs ?? ContractService.getDevPathContractService();
+    this.csLogic = ContractService.getLogicPathContractService();
+    this.contractMetadata = new ContractMetadata();
+  }
 
   public deploy = async (
     contractName: string,
+    save: boolean = false,
     adminKey: Key = clientsInfo.operatorKey.publicKey,
     client: Client = clientsInfo.operatorClient,
     params: ContractFunctionParameters = new ContractFunctionParameters(),
     enableLogs: boolean = true
   ) => {
-    const copy = await this.getLogicCopyIfExist(contractName);
+    const info = await this.contractMetadata.getContractInfo(contractName);
+    const copy = this.csLogic.getContractByNameAndHash(contractName, info.hash);
     if (copy) {
       if (enableLogs) {
-        console.log(`- Deployment#deploy(): done where copy already exist :-`);
+        console.log(
+          `- Deployment#deploy(): done where ${copy.name} already exist :-`
+        );
         console.table(copy);
         console.log("");
       }
       return copy;
     }
-    if (enableLogs) {
-      console.log(
-        `- Deployment#deploy(): ${contractName} logic deploying...\n`
-      );
-    }
     const result = await this._deployInternally(
-      contractName,
-      "",
+      info,
+      info.artifact.contractName,
       adminKey,
       client,
       params
     );
+
     this.csLogic.addDeployed(result);
     this.csLogic.makeLatestDeploymentAsDefault(false);
+
+    save && this.cs.addDeployed(result);
     if (enableLogs) {
       console.log(`- Deployment#deploy(): done`);
       console.table(result);
@@ -162,71 +170,15 @@ export class Deployment {
     return result;
   };
 
-  public deployAndSave = async (
-    contractName: string,
-    adminKey: Key = clientsInfo.operatorKey.publicKey,
-    client: Client = clientsInfo.operatorClient,
-    params: ContractFunctionParameters = new ContractFunctionParameters()
-  ) => {
-    const result = await this.deploy(contractName, adminKey, client, params);
-    this.contractService.addDeployed(result);
-    return result;
-  };
-
   public deployContracts = async (
     names: string[],
+    save: boolean = false,
     adminKey: Key = clientsInfo.operatorKey.publicKey,
     client: Client = clientsInfo.operatorClient
   ) => {
     const deployedItems = new Map<String, any>();
     const pendingItems = names.map(async (name: string) => {
-      const item = await this.deploy(name, adminKey, client);
-      deployedItems.set(name, item);
-    });
-    await Promise.all(pendingItems);
-    return deployedItems;
-  };
-
-  public deployProxy = async (
-    contractName: string,
-    adminKey: Key = clientsInfo.operatorKey.publicKey,
-    client: Client = clientsInfo.operatorClient
-  ) => {
-    console.log(
-      `- Deployment#deployProxy(): ${contractName} proxy deploying...\n`
-    );
-    const logic = await this.deploy(
-      contractName,
-      adminKey,
-      client,
-      new ContractFunctionParameters(),
-      false
-    );
-    const proxy = await this.deployProxyForGivenLogic(logic, adminKey, client);
-    console.log(`- Deployment#deployProxy(): done`);
-    console.table(proxy);
-    console.log("");
-    return proxy;
-  };
-
-  public deployProxyAndSave = async (
-    contractName: string,
-    adminKey: Key = clientsInfo.operatorKey.publicKey,
-    client: Client = clientsInfo.operatorClient
-  ) => {
-    const result = await this.deployProxy(contractName, adminKey, client);
-    this.contractService.addDeployed(result);
-    return result;
-  };
-
-  public deployProxies = async (
-    names: string[],
-    adminKey: Key = clientsInfo.operatorKey.publicKey,
-    client: Client = clientsInfo.operatorClient
-  ) => {
-    const deployedItems = new Map<String, any>();
-    const pendingItems = names.map(async (name: string) => {
-      const item = await this.deployProxy(name, adminKey, client);
+      const item = await this.deploy(name, save, adminKey, client);
       deployedItems.set(name, item);
     });
     await Promise.all(pendingItems);
@@ -238,9 +190,12 @@ export class Deployment {
     adminKey: Key = clientsInfo.operatorKey.publicKey,
     client: Client = clientsInfo.operatorClient
   ) => {
+    const proxyName = ContractService.PROXY;
+    const contractInfo = await this.contractMetadata.getContractInfo(proxyName);
+    const contractMemo = proxyName + ` (${logic.name})`;
     const proxy = await this._deployInternally(
-      "TransparentUpgradeableProxy",
-      logic.name,
+      contractInfo,
+      contractMemo,
       adminKey,
       client,
       new ContractFunctionParameters()
@@ -256,24 +211,56 @@ export class Deployment {
     };
   };
 
-  private _deployInternally = async (
+  public deployProxy = async (
     contractName: string,
-    additionalInfo: string,
+    save: boolean = false,
     adminKey: Key = clientsInfo.operatorKey.publicKey,
-    client: Client = clientsInfo.operatorClient,
-    params: ContractFunctionParameters = new ContractFunctionParameters()
+    client: Client = clientsInfo.operatorClient
   ) => {
-    let contractMemo = contractName;
-    if (additionalInfo.length > 0) {
-      contractMemo += ` (${additionalInfo})`;
-    }
-    const info = await this.contractMetadata.getContractInfo(contractName);
+    const logic = await this.deploy(
+      contractName,
+      false,
+      adminKey,
+      client,
+      new ContractFunctionParameters(),
+      false
+    );
+    const proxy = await this.deployProxyForGivenLogic(logic, adminKey, client);
+    save && this.cs.addDeployed(proxy);
+    console.log(`- Deployment#deployProxy(): done`);
+    console.table(proxy);
+    console.log("");
+    return proxy;
+  };
+
+  public deployProxies = async (
+    names: string[],
+    save: boolean = false,
+    adminKey: Key = clientsInfo.operatorKey.publicKey,
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    const deployedItems = new Map<String, any>();
+    const pendingItems = names.map(async (name: string) => {
+      const item = await this.deployProxy(name, save, adminKey, client);
+      deployedItems.set(name, item);
+    });
+    await Promise.all(pendingItems);
+    return deployedItems;
+  };
+
+  private _deployInternally = async (
+    info: ContractInfo,
+    memo: string,
+    key: Key,
+    client: Client,
+    params: ContractFunctionParameters
+  ) => {
     const txn = new ContractCreateFlow()
       .setConstructorParameters(params)
       .setBytecode(info.artifact.bytecode)
-      .setContractMemo(contractMemo)
+      .setContractMemo(memo)
       .setGas(2_000_000)
-      .setAdminKey(adminKey);
+      .setAdminKey(key);
 
     const txnResponse = await txn.execute(client);
     const txnReceipt = await txnResponse.getReceipt(client);
@@ -281,16 +268,11 @@ export class Deployment {
     const address = "0x" + txnReceipt.contractId!.toSolidityAddress();
 
     return {
-      name: contractName.toLowerCase(),
+      name: info.artifact.contractName.toLowerCase(),
       id,
-      hash: info.hash,
       address,
+      hash: info.hash,
       timestamp: new Date().toISOString(),
     };
-  };
-
-  private getLogicCopyIfExist = async (contractName: string) => {
-    const info = await this.contractMetadata.getContractInfo(contractName);
-    return this.csLogic.findLogicContract(contractName, info.hash);
   };
 }

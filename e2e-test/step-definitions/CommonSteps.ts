@@ -233,7 +233,7 @@ export class CommonSteps {
     const deployment = new Deployment();
     await Promise.all(
       items.map(async (item: string) => {
-        await deployment.deployProxyAndSave(item);
+        await deployment.deployProxy(item, true);
       })
     );
   }

@@ -54,6 +54,8 @@ export async function main(cs: ContractService) {
 
   const factory = new Factory(null, cs);
   await factory.setupFactory();
+  await factory.getPairs();
+
   try {
     await createPair(factory, tokenB, tokenHBARX, fees[1]);
   } catch (error) {
@@ -85,18 +87,18 @@ export async function main(cs: ContractService) {
   await factory.getPairs();
 
   // ft-token holder factories
-  const godTokenHolderFactory = new FTTokenHolderFactory(null, cs);
-  await godTokenHolderFactory.initialize();
+  const ftTokenHolderFactory = new FTTokenHolderFactory(null, cs);
+  await ftTokenHolderFactory.initialize();
 
-  const godHolderContractId = await godTokenHolderFactory.getTokenHolder(
+  const ftHolderContractId = await ftTokenHolderFactory.getTokenHolder(
     tokenGOD.toSolidityAddress()
   );
-  const godHolder = new GodHolder(godHolderContractId);
+  const godHolder = new GodHolder(ftHolderContractId);
 
-  await godTokenHolderFactory.getTokenHolder(
+  await ftTokenHolderFactory.getTokenHolder(
     dex.TOKEN_LAB49_1_ID.toSolidityAddress()
   );
-  await godTokenHolderFactory.getTokenHolder(
+  await ftTokenHolderFactory.getTokenHolder(
     dex.GOVERNANCE_DAO_ONE_TOKEN_ID.toSolidityAddress()
   );
 
@@ -109,7 +111,7 @@ export async function main(cs: ContractService) {
 
   await new FTDAOFactory(null, cs).initialize(
     clientsInfo.operatorClient,
-    godTokenHolderFactory
+    ftTokenHolderFactory
   );
 
   await new NFTDAOFactory(null, cs).initialize(
@@ -124,7 +126,7 @@ export async function main(cs: ContractService) {
 }
 
 if (require.main === module) {
-  main(new ContractService(ContractService.UAT_CONTRACTS_PATH))
+  main(ContractService.getUATPathContractService())
     .then(() => process.exit(0))
     .catch(Helper.processError);
 }

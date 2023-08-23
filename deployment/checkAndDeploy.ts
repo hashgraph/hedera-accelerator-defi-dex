@@ -5,29 +5,31 @@ import { Deployment } from "../utils/deployContractOnTestnet";
 import { ContractService } from "./service/ContractService";
 import { main as initializeContracts } from "./scripts/initializeContracts";
 
-const deployment = new Deployment();
-const contractMetadata = new ContractMetadata();
-
 async function main() {
   const service = getContractService();
+  const deployment = new Deployment(service);
+  const contractMetadata = new ContractMetadata();
   const response = await contractMetadata.getAllChangedContractNames(service);
   if (response.all.length === 0) {
-    console.log(`No contract for auto upgrade available`);
+    console.log(`\n- No contract for auto upgrade available \n`);
     return;
   }
-  console.log(`Eligible contracts for auto upgrade:`, response.all);
+  console.log(
+    `\n- Eligible contracts for auto upgrade:`,
+    `{${response.all.length}}`,
+    response.all,
+    "\n"
+  );
 
   await Promise.all(
     response.nonProxies.map(async (name: string) => {
-      const item = await deployment.deploy(name);
-      service.addDeployed(item);
+      await deployment.deploy(name, true);
     })
   );
 
   await Promise.all(
     response.proxies.map(async (name: string) => {
-      const item = await deployment.deployProxy(name);
-      service.addDeployed(item);
+      await deployment.deployProxy(name, true);
     })
   );
 
@@ -36,9 +38,9 @@ async function main() {
 }
 
 function getContractService() {
-  const path =
-    process.env.CONTRACT_SERVICE_PATH ?? ContractService.UAT_CONTRACTS_PATH;
-  return new ContractService(path);
+  return (process.env.CHECK_UAT_CONTRACTS ?? "true") === "true"
+    ? ContractService.getUATPathContractService()
+    : ContractService.getDevPathContractService();
 }
 
 main()

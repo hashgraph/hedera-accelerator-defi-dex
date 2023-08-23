@@ -6,7 +6,7 @@ import { ethers } from "ethers";
 import { Artifact } from "hardhat/types";
 import { ContractService } from "../deployment/service/ContractService";
 
-interface ContractInfo {
+export interface ContractInfo {
   artifact: Artifact;
   path: string;
   hash: string;
@@ -95,7 +95,10 @@ export default class ContractMetadata {
     );
     for (const contractInfo of contractsInfo) {
       const name = contractInfo.artifact.contractName.toLowerCase();
-      const contract = targetCs.findLogicContract(name, contractInfo.hash);
+      const contract = targetCs.getContractByNameAndHash(
+        name,
+        contractInfo.hash
+      );
       if (!contract) {
         if (ContractMetadata.NON_PROXY_CONTRACTS_LOWER_CASE.includes(name)) {
           nonProxyContractsForDeployments.push(name);
