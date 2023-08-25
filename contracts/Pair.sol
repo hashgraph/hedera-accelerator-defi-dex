@@ -93,26 +93,23 @@ contract Pair is
         _tokenAQty = _tokenQuantity(_tokenA, _tokenAQty);
         _tokenBQty = _tokenQuantity(_tokenB, _tokenBQty);
 
-        lpTokenContract.allotLPTokenFor(
-            pair.tokenA.tokenQty,
-            pair.tokenB.tokenQty,
-            _tokenAQty,
-            _tokenBQty,
-            fromAccount
-        );
+        uint256 _tokenAQtyBeforeAdding = pair.tokenA.tokenQty;
+        uint256 _tokenBQtyBeforeAdding = pair.tokenB.tokenQty;
+        uint256 _incomingTokenAQty;
+        uint256 _incomingTokenBQty;
 
         if (
             _tokenA == pair.tokenA.tokenAddress &&
             _tokenB == pair.tokenB.tokenAddress
         ) {
-            pair.tokenA.tokenQty += _tokenAQty;
-            pair.tokenB.tokenQty += _tokenBQty;
+            _incomingTokenAQty = _tokenAQty;
+            _incomingTokenBQty = _tokenBQty;
         } else if (
             _tokenA == pair.tokenB.tokenAddress &&
             _tokenB == pair.tokenA.tokenAddress
         ) {
-            pair.tokenB.tokenQty += _tokenAQty;
-            pair.tokenA.tokenQty += _tokenBQty;
+            _incomingTokenBQty = _tokenAQty;
+            _incomingTokenAQty += _tokenBQty;
         } else {
             revert WrongPairPassed({
                 message: "Wrong token pair passed",
@@ -123,15 +120,26 @@ contract Pair is
             });
         }
 
+        pair.tokenA.tokenQty = _incomingTokenAQty;
+        pair.tokenB.tokenQty = _incomingTokenBQty;
+
         transferTokensInternally(
             fromAccount,
             address(this),
             _tokenA,
             _tokenB,
-            _tokenAQty,
-            _tokenBQty,
+            _incomingTokenAQty,
+            _incomingTokenBQty,
             "Add liquidity: Transfering token A to contract failed with status code",
             "Add liquidity: Transfering token B to contract failed with status code"
+        );
+
+        lpTokenContract.allotLPTokenFor(
+            _tokenAQtyBeforeAdding,
+            _tokenBQtyBeforeAdding,
+            _incomingTokenAQty,
+            _incomingTokenBQty,
+            fromAccount
         );
     }
 
