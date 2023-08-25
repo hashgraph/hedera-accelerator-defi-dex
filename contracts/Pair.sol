@@ -120,16 +120,16 @@ contract Pair is
             });
         }
 
-        pair.tokenA.tokenQty = _incomingTokenAQty;
-        pair.tokenB.tokenQty = _incomingTokenBQty;
+        pair.tokenA.tokenQty += _incomingTokenAQty;
+        pair.tokenB.tokenQty += _incomingTokenBQty;
 
         transferTokensInternally(
             fromAccount,
             address(this),
             _tokenA,
             _tokenB,
-            _incomingTokenAQty,
-            _incomingTokenBQty,
+            _tokenAQty,
+            _tokenBQty,
             "Add liquidity: Transfering token A to contract failed with status code",
             "Add liquidity: Transfering token B to contract failed with status code"
         );
