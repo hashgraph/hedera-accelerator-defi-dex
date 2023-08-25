@@ -109,7 +109,7 @@ contract Pair is
             _tokenB == pair.tokenA.tokenAddress
         ) {
             _incomingTokenBQty = _tokenAQty;
-            _incomingTokenAQty += _tokenBQty;
+            _incomingTokenAQty = _tokenBQty;
         } else {
             revert WrongPairPassed({
                 message: "Wrong token pair passed",
