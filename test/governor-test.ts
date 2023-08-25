@@ -143,6 +143,28 @@ describe("Governor Tests", function () {
     };
   }
 
+  const readLastGovernorBalanceEvent = async (txn: any) => {
+    const events = await TestHelper.readEvents(txn, "GovernorBalance");
+    const lastEvent = events.pop();
+    return {
+      activeProposalsCount: lastEvent.args.activeProposalsCount,
+      blockedGodTokenBalance: lastEvent.args.blockedGodTokenBalance,
+    };
+  };
+
+  const verifyBlockedIdEvent = async (
+    txn: any,
+    nftTokenSerialId: number,
+    isBlocked: boolean
+  ) => {
+    const events = await TestHelper.readEvents(txn, ["NFTBlocked"]);
+    const nftBlockEvent = events.pop();
+    expect(nftBlockEvent.args.length).equals(3);
+    expect(nftBlockEvent.args.proposalId).not.equals("0");
+    expect(nftBlockEvent.args.nftSerialId).equals(nftTokenSerialId);
+    expect(nftBlockEvent.args.isBlocked).equals(isBlocked);
+  };
+
   const verifyProposalVotes = async (
     instance: Contract,
     proposalId: any,
@@ -170,7 +192,7 @@ describe("Governor Tests", function () {
   ) => {
     const info =
       nftTokenSerialId === TestHelper.NFT_FOR_PROPOSAL_CREATION
-        ? await verifyNFTProposalCreationEvent(tx)
+        ? await verifyNFTProposalCreationEvent(tx, nftTokenSerialId)
         : await verifyFTProposalCreationEvent(tx);
 
     const eventData = ethers.utils.defaultAbiCoder.decode(
@@ -189,8 +211,12 @@ describe("Governor Tests", function () {
     nftTokenSerialId: number
   ) => {
     const info =
-      nftTokenSerialId === TestHelper.NFT_FOR_PROPOSAL_CREATION
-        ? await verifyNFTProposalCreationEvent(tx)
+      nftTokenSerialId === TestHelper.NFT_FOR_PROPOSAL_CREATION ||
+      nftTokenSerialId === TestHelper.NFT_FOR_PROPOSAL_CREATION2
+        ? await verifyNFTProposalCreationEventForTokenTransfer(
+            tx,
+            nftTokenSerialId
+          )
         : await verifyFTProposalCreationEvent(tx);
 
     const eventData = ethers.utils.defaultAbiCoder.decode(
@@ -216,7 +242,7 @@ describe("Governor Tests", function () {
   ) => {
     const info =
       nftTokenSerialId === TestHelper.NFT_FOR_PROPOSAL_CREATION
-        ? await verifyNFTProposalCreationEvent(tx)
+        ? await verifyNFTProposalCreationEvent(tx, nftTokenSerialId)
         : await verifyFTProposalCreationEvent(tx);
 
     const eventData = ethers.utils.defaultAbiCoder.decode(
@@ -228,7 +254,11 @@ describe("Governor Tests", function () {
     return info;
   };
 
-  const verifyCommonProposalCreationEvent = async (name: any, args: any) => {
+  const verifyCommonProposalCreationEvent = async (
+    tx: any,
+    name: any,
+    args: any
+  ) => {
     expect(name).equals("ProposalDetails");
     expect(args.proposalId).not.equals("0");
     expect(args.description).equals(DESC);
@@ -244,12 +274,16 @@ describe("Governor Tests", function () {
     expect(args.votingInformation.againstVotes).equals(0);
     expect(args.votingInformation.forVotes).equals(0);
     expect(args.votingInformation.abstainVotes).equals(0);
+    const result = await readLastGovernorBalanceEvent(tx);
+    expect(result.activeProposalsCount).equals(1);
+    expect(result.blockedGodTokenBalance).equals(TestHelper.toPrecision(1));
   };
 
   const verifyFTProposalCreationEvent = async (tx: any) => {
-    const { name, args } = await TestHelper.readLastEvent(tx);
+    const events = await TestHelper.readEvents(tx, ["ProposalDetails"]);
+    const { name, args } = events[0];
     expect(args.length).equals(9);
-    verifyCommonProposalCreationEvent(name, args);
+    verifyCommonProposalCreationEvent(tx, name, args);
     expect(args.votingInformation.quorumValue).equals(
       TestHelper.toPrecision(500) / 100
     );
@@ -257,12 +291,30 @@ describe("Governor Tests", function () {
     return { proposalId: args.proposalId, data: args.data };
   };
 
-  const verifyNFTProposalCreationEvent = async (tx: any) => {
-    const { name, args } = await TestHelper.readLastEvent(tx);
+  const verifyNFTProposalCreationEvent = async (
+    tx: any,
+    nftTokenSerialId: number
+  ) => {
+    const events = await TestHelper.readEvents(tx, ["ProposalDetails"]);
+    const { name, args } = events[0];
     expect(args.length).equals(9);
     expect(args.votingInformation.quorumValue).equals(1);
-    expect(args.amountOrId).equals(TestHelper.NFT_FOR_PROPOSAL_CREATION);
-    verifyCommonProposalCreationEvent(name, args);
+    expect(args.amountOrId).equals(nftTokenSerialId);
+    verifyCommonProposalCreationEvent(tx, name, args);
+    return { proposalId: args.proposalId, data: args.data };
+  };
+
+  const verifyNFTProposalCreationEventForTokenTransfer = async (
+    tx: any,
+    nftTokenSerialId: number
+  ) => {
+    const events = await TestHelper.readEvents(tx, ["ProposalDetails"]);
+    const { name, args } = events[0];
+    expect(args.length).equals(9);
+    expect(args.votingInformation.quorumValue).equals(1);
+    expect(args.amountOrId).equals(nftTokenSerialId);
+    await verifyBlockedIdEvent(tx, nftTokenSerialId, true);
+    verifyCommonProposalCreationEvent(tx, name, args);
     return { proposalId: args.proposalId, data: args.data };
   };
 
@@ -276,7 +328,7 @@ describe("Governor Tests", function () {
       .connect(account)
       .createProposal(title, DESC, LINK, nftTokenSerialId);
     return nftTokenSerialId === TestHelper.NFT_FOR_PROPOSAL_CREATION
-      ? await verifyNFTProposalCreationEvent(tx)
+      ? await verifyNFTProposalCreationEvent(tx, nftTokenSerialId)
       : await verifyFTProposalCreationEvent(tx);
   }
 
@@ -298,11 +350,12 @@ describe("Governor Tests", function () {
         nftTokenSerialId
       );
     return nftTokenSerialId === TestHelper.NFT_FOR_PROPOSAL_CREATION
-      ? await verifyNFTProposalCreationEvent(tx)
+      ? await verifyNFTProposalCreationEvent(tx, nftTokenSerialId)
       : await verifyFTProposalCreationEvent(tx);
   }
 
   async function getTransferTokenProposalId(
+    title: string,
     instance: Contract,
     signers: SignerWithAddress[],
     tokenAddress: string,
@@ -317,7 +370,7 @@ describe("Governor Tests", function () {
     const tx = await instance
       .connect(signers[0])
       .createProposal(
-        TITLE,
+        title,
         DESC,
         LINK,
         data.to,
@@ -351,7 +404,7 @@ describe("Governor Tests", function () {
         nftTokenSerialId
       );
     return nftTokenSerialId === TestHelper.NFT_FOR_PROPOSAL_CREATION
-      ? await verifyNFTProposalCreationEvent(tx)
+      ? await verifyNFTProposalCreationEvent(tx, nftTokenSerialId)
       : await verifyFTProposalCreationEvent(tx);
   }
 
@@ -444,30 +497,28 @@ describe("Governor Tests", function () {
       const { governorText, creator } = await loadFixture(deployFixture);
       await expect(getTextProposalId(governorText, creator, ""))
         .revertedWithCustomError(governorText, "InvalidInput")
-        .withArgs(
-          "GovernorCountingSimpleInternal: proposal title can not be blank"
-        );
+        .withArgs("GCSI: title blank");
     });
 
     it("Verify cancelling proposal should be reverted for non-existing title", async function () {
       const { governorText, creator } = await loadFixture(deployFixture);
       await getTextProposalId(governorText, creator);
       await expect(governorText.cancelProposal("not-found")).revertedWith(
-        "GovernorCountingSimpleInternal: Proposal not found"
+        "GCSI: Proposal not found"
       );
     });
 
     it("Verify vote casting should be reverted for non-existing proposal id", async function () {
       const { governorText } = await loadFixture(deployFixture);
       await expect(governorText.castVotePublic(1, 0, 1)).revertedWith(
-        "GovernorCountingSimpleInternal: Proposal not found"
+        "GCSI: Proposal not found"
       );
     });
 
     it("Verify get proposal details should be reverted for non-existing proposal id", async function () {
       const { governorText } = await loadFixture(deployFixture);
       await expect(governorText.getProposalDetails(1)).revertedWith(
-        "GovernorCountingSimpleInternal: Proposal not found"
+        "GCSI: Proposal not found"
       );
     });
 
@@ -505,7 +556,11 @@ describe("Governor Tests", function () {
       const AFTER = BEFORE.add(TestHelper.toPrecision(1)).toNumber();
 
       await verifyAccountBalance(token, creator.address, BEFORE);
-      await governorText.cancelProposal(TITLE);
+      const tx = await governorText.cancelProposal(TITLE);
+      const { activeProposalsCount, blockedGodTokenBalance } =
+        await readLastGovernorBalanceEvent(tx);
+      expect(activeProposalsCount).equals(0);
+      expect(blockedGodTokenBalance).equals(0);
       await verifyAccountBalance(token, creator.address, AFTER);
     });
 
@@ -554,7 +609,11 @@ describe("Governor Tests", function () {
       await TestHelper.mineNBlocks(BLOCKS_COUNT);
 
       await verifyAccountBalance(token, creator.address, BEFORE);
-      await governorText.executeProposal(TITLE);
+      const txn = await governorText.executeProposal(TITLE);
+      const { activeProposalsCount, blockedGodTokenBalance } =
+        await readLastGovernorBalanceEvent(txn);
+      expect(activeProposalsCount).equals(0);
+      expect(blockedGodTokenBalance).equals(0);
       await verifyAccountBalance(token, creator.address, AFTER);
     });
 
@@ -598,7 +657,7 @@ describe("Governor Tests", function () {
       const { governorText, creator } = await loadFixture(deployFixture);
       const { proposalId } = await getTextProposalId(governorText, creator);
       await expect(governorText.castVotePublic(proposalId, 0, 1)).revertedWith(
-        "GovernorCountingSimpleInternal: token locking is required to cast the vote"
+        "GCSI: lock token to vote"
       );
     });
 
@@ -769,7 +828,7 @@ describe("Governor Tests", function () {
 
       await token.setTransaferFailed(true);
       await expect(getTextProposalId(governorText, creator)).revertedWith(
-        "GovernorCountingSimpleInternal: token transfer failed to contract."
+        "GCSI: transfer failed to contract"
       );
     });
 
@@ -784,7 +843,7 @@ describe("Governor Tests", function () {
 
       await token.setTransaferFailed(true);
       await expect(governorText.executeProposal(TITLE)).rejectedWith(
-        "GovernorCountingSimpleInternal: token transfer failed from contract."
+        "GCSI: transfer failed from contract."
       );
     });
 
@@ -795,9 +854,7 @@ describe("Governor Tests", function () {
       await getTextProposalId(governorText, creator);
       await expect(
         governorText.connect(signers[1]).cancelProposal(TITLE)
-      ).revertedWith(
-        "GovernorCountingSimpleInternal: Only proposer can cancel the proposal"
-      );
+      ).revertedWith("GCSI: Only proposer can cancel");
     });
 
     it("Verify proposal details call should return data for valid proposal id", async function () {
@@ -869,8 +926,60 @@ describe("Governor Tests", function () {
       const correctQuorumNumber = (QUORUM_THRESHOLD / 100) * newTotal;
       expect(Math.floor(correctQuorumNumber)).equals(0);
       await expect(governorText.quorum(123)).revertedWith(
-        "GovernorCountingSimpleInternal: GOD token total supply multiple by quorum threshold in BSP cannot be less than 10,000"
+        "GCSI: (GOD token * quorum) < 10,000"
       );
+    });
+    describe("Governor balance and active proposal count tests.", async () => {
+      const createTextProposalAndConsumeEvent = async (
+        title: string,
+        governorText: any,
+        creator: SignerWithAddress
+      ) => {
+        const tx = await governorText
+          .connect(creator)
+          .createProposal(title, DESC, LINK, creator.address, 0);
+        const result = await readLastGovernorBalanceEvent(tx);
+
+        return result;
+      };
+
+      it("Verify active proposal count when user creates a proposal", async () => {
+        const { governorText, creator } = await loadFixture(deployFixture);
+        const { activeProposalsCount, blockedGodTokenBalance } =
+          await createTextProposalAndConsumeEvent(
+            "anyTitle",
+            governorText,
+            creator
+          );
+        const expectedCount = 1;
+        expect(activeProposalsCount).equals(expectedCount);
+        expect(blockedGodTokenBalance).equals(
+          TestHelper.toPrecision(expectedCount)
+        );
+      });
+      it("Verify active proposal count when user creates two proposals", async () => {
+        const { governorText, creator } = await loadFixture(deployFixture);
+        const result = await createTextProposalAndConsumeEvent(
+          "anyTitle1",
+          governorText,
+          creator
+        );
+        const expectedCount = 1;
+        expect(result.activeProposalsCount).equals(expectedCount);
+        expect(result.blockedGodTokenBalance).equals(
+          TestHelper.toPrecision(expectedCount)
+        );
+
+        const result1 = await createTextProposalAndConsumeEvent(
+          "anyTitle2",
+          governorText,
+          creator
+        );
+        expect(result1.activeProposalsCount).equals(expectedCount + 1);
+        expect(result1.blockedGodTokenBalance).equals(
+          TestHelper.toPrecision(expectedCount + 1)
+        );
+      });
     });
   });
 
@@ -1456,7 +1565,7 @@ describe("Governor Tests", function () {
     it("Verify transfer token proposal should be failed during creation for zero amount", async function () {
       const { governorTT, token, signers } = await loadFixture(deployFixture);
       await expect(
-        getTransferTokenProposalId(governorTT, signers, token.address, 0)
+        getTransferTokenProposalId(TITLE, governorTT, signers, token.address, 0)
       ).revertedWith("GTT: required positive number");
     });
 
@@ -1488,6 +1597,7 @@ describe("Governor Tests", function () {
 
       await godHolder.grabTokensFromUser(LOCKED_TOKEN);
       const { proposalId } = await getTransferTokenProposalId(
+        TITLE,
         governorTT,
         signers,
         token.address,
@@ -1503,25 +1613,380 @@ describe("Governor Tests", function () {
     });
 
     it("Verify transfer token proposal should be failed during execution", async function () {
-      const { governorTT, godHolder, token, signers } = await loadFixture(
-        deployFixture
-      );
+      const { governorTT, godHolder, tokenToTransfer, signers } =
+        await loadFixture(deployFixture);
       await godHolder.grabTokensFromUser(LOCKED_TOKEN);
 
       const TOKEN_COUNT = TestHelper.toPrecision(3);
       const { proposalId } = await getTransferTokenProposalId(
+        TITLE,
         governorTT,
         signers,
-        token.address,
+        tokenToTransfer.address,
         TOKEN_COUNT
       );
 
       await governorTT.castVotePublic(proposalId, 0, 1);
       await TestHelper.mineNBlocks(BLOCKS_COUNT);
-      await token.setTransaferFailed(true);
+      await tokenToTransfer.setTransaferFailed(true);
       await expect(governorTT.executeProposal(TITLE)).revertedWith(
         "GTT: transfer failed"
       );
+    });
+
+    it.only("Verify cancel proposal should emit unblock event", async function () {
+      const { nftGovernorTT, nftGodHolder, nftToken, signers, creator } =
+        await loadFixture(deployFixture);
+      await nftGodHolder
+        .connect(creator)
+        .grabTokensFromUser(TestHelper.NFT_FOR_VOTING);
+
+      expect(
+        await nftToken.ownerOf(TestHelper.NFT_FOR_PROPOSAL_CREATION)
+      ).equals(creator.address);
+
+      const { proposalId } = await getTransferTokenProposalId(
+        TITLE,
+        nftGovernorTT,
+        signers,
+        nftToken.address,
+        TestHelper.NFT_FOR_TRANSFER,
+        TestHelper.NFT_FOR_PROPOSAL_CREATION
+      );
+
+      const tx = await nftGovernorTT.cancelProposal(TITLE);
+      await verifyBlockedIdEvent(
+        tx,
+        TestHelper.NFT_FOR_PROPOSAL_CREATION,
+        false
+      );
+    });
+
+    describe("Transfer blocked token", async () => {
+      describe("Fungible token", async () => {
+        it("Given governor has zero GOD token when user try to transfer GOD token via proposal and qty is same as required to create token then token transfer should fail  ", async () => {
+          const {
+            governorTT,
+            godHolder,
+            token: godTokenAsTokenToTransfer,
+            signers,
+          } = await loadFixture(deployFixture);
+
+          await godHolder.grabTokensFromUser(LOCKED_TOKEN);
+
+          const GOVERNOR_TOKEN_BALANCE = TestHelper.toPrecision(0);
+          await godTokenAsTokenToTransfer.setUserBalance(
+            governorTT.address,
+            GOVERNOR_TOKEN_BALANCE
+          );
+
+          const TOKEN_AMOUNT_TO_TRANSFER = TestHelper.toPrecision(1); //Equal to proposal creation amount
+
+          const { proposalId } = await getTransferTokenProposalId(
+            TITLE,
+            governorTT,
+            signers,
+            godTokenAsTokenToTransfer.address,
+            TOKEN_AMOUNT_TO_TRANSFER
+          );
+
+          await governorTT.castVotePublic(proposalId, 0, 1);
+          await TestHelper.mineNBlocks(BLOCKS_COUNT);
+
+          const currentBalance = await godTokenAsTokenToTransfer.balanceOf(
+            governorTT.address
+          );
+          expect(Number(currentBalance)).equals(TOKEN_AMOUNT_TO_TRANSFER);
+
+          await expect(governorTT.executeProposal(TITLE)).revertedWith(
+            "GTT: Overdraft"
+          );
+        });
+
+        it("Given governor has zero GOD token and one proposal exists when user try to transfer GOD token via proposal and qty is same as required to create token then token transfer should fail  ", async () => {
+          const {
+            governorTT,
+            godHolder,
+            token: godTokenAsTokenToTransfer,
+            signers,
+          } = await loadFixture(deployFixture);
+
+          await godHolder.grabTokensFromUser(LOCKED_TOKEN);
+
+          const GOVERNOR_TOKEN_BALANCE = TestHelper.toPrecision(0);
+          await godTokenAsTokenToTransfer.setUserBalance(
+            governorTT.address,
+            GOVERNOR_TOKEN_BALANCE
+          );
+
+          const TOKEN_AMOUNT_TO_TRANSFER = TestHelper.toPrecision(1); //Equal to proposal creation amount
+
+          const { proposalId: proposalId1 } = await getTransferTokenProposalId(
+            TITLE + 1,
+            governorTT,
+            signers,
+            godTokenAsTokenToTransfer.address,
+            TOKEN_AMOUNT_TO_TRANSFER
+          );
+
+          const { proposalId: proposalId2 } = await getTransferTokenProposalId(
+            TITLE + 2,
+            governorTT,
+            signers,
+            godTokenAsTokenToTransfer.address,
+            TOKEN_AMOUNT_TO_TRANSFER
+          );
+
+          const totalCreatedProposals = 2;
+          const addedGodTokenAfterProposalCreation =
+            totalCreatedProposals * TestHelper.toPrecision(1);
+          const totalGovernorBalance =
+            GOVERNOR_TOKEN_BALANCE + addedGodTokenAfterProposalCreation;
+          await verifyAccountBalance(
+            godTokenAsTokenToTransfer,
+            governorTT.address,
+            totalGovernorBalance
+          );
+
+          await governorTT.castVotePublic(proposalId1, 0, 1);
+          await TestHelper.mineNBlocks(BLOCKS_COUNT);
+
+          const currentBalance = await godTokenAsTokenToTransfer.balanceOf(
+            governorTT.address
+          );
+          expect(Number(currentBalance)).equals(TestHelper.toPrecision(2));
+
+          const zero = 0;
+          await godTokenAsTokenToTransfer.setUserBalance(
+            signers[2].address,
+            zero
+          ); //reset token balance
+          await verifyAccountBalance(
+            godTokenAsTokenToTransfer,
+            signers[2].address,
+            zero
+          );
+
+          await expect(governorTT.executeProposal(TITLE + 1)).revertedWith(
+            "GTT: Overdraft"
+          );
+        });
+
+        it("Given governor has one GOD token and one proposal exists when user try to transfer GOD token via proposal and qty is same as required to create token then token transfer should pass  ", async () => {
+          const {
+            governorTT,
+            godHolder,
+            token: godTokenAsTokenToTransfer,
+            signers,
+          } = await loadFixture(deployFixture);
+
+          await godHolder.grabTokensFromUser(LOCKED_TOKEN);
+
+          const TOKEN_AMOUNT_TO_TRANSFER = TestHelper.toPrecision(1);
+          const GOVERNOR_TOKEN_BALANCE = TOKEN_AMOUNT_TO_TRANSFER;
+          await godTokenAsTokenToTransfer.setUserBalance(
+            governorTT.address,
+            GOVERNOR_TOKEN_BALANCE
+          );
+
+          const { proposalId: proposalId1 } = await getTransferTokenProposalId(
+            TITLE + 1,
+            governorTT,
+            signers,
+            godTokenAsTokenToTransfer.address,
+            TOKEN_AMOUNT_TO_TRANSFER
+          );
+
+          const { proposalId: proposalId2 } = await getTransferTokenProposalId(
+            TITLE + 2,
+            governorTT,
+            signers,
+            godTokenAsTokenToTransfer.address,
+            TOKEN_AMOUNT_TO_TRANSFER
+          );
+          const totalCreatedProposals = 2;
+          const addedGodTokenAfterProposalCreation =
+            totalCreatedProposals * TestHelper.toPrecision(1);
+          const totalGovernorBalance =
+            GOVERNOR_TOKEN_BALANCE + addedGodTokenAfterProposalCreation;
+          await verifyAccountBalance(
+            godTokenAsTokenToTransfer,
+            governorTT.address,
+            totalGovernorBalance
+          );
+
+          await governorTT.castVotePublic(proposalId1, 0, 1);
+          await TestHelper.mineNBlocks(BLOCKS_COUNT);
+
+          const zero = 0;
+          await godTokenAsTokenToTransfer.setUserBalance(
+            signers[2].address,
+            zero
+          ); //reset token balance
+          await verifyAccountBalance(
+            godTokenAsTokenToTransfer,
+            signers[2].address,
+            zero
+          );
+
+          await governorTT.executeProposal(TITLE + 1);
+          const executedProposalCount = 1;
+          const unblockedGodTokens =
+            executedProposalCount * TestHelper.toPrecision(1);
+          const remainingGovernorBalance =
+            totalGovernorBalance -
+            unblockedGodTokens -
+            TOKEN_AMOUNT_TO_TRANSFER;
+          await verifyAccountBalance(
+            godTokenAsTokenToTransfer,
+            governorTT.address,
+            remainingGovernorBalance
+          );
+          await verifyAccountBalance(
+            godTokenAsTokenToTransfer,
+            signers[2].address,
+            TOKEN_AMOUNT_TO_TRANSFER
+          );
+        });
+      });
+      describe("Non Fungible token", async () => {
+        it("NFT GOD token(token to block at the time of proposal creation) and NFT token to transfer can't be same.", async () => {
+          const { nftGovernorTT, nftToken, signers } = await loadFixture(
+            deployFixture
+          );
+          const data: TokenTransferData = {
+            transferToAccount: signers[2].address,
+            tokenToTransfer: nftToken.address,
+            transferTokenAmount: TestHelper.NFT_FOR_PROPOSAL_CREATION,
+          };
+          await expect(
+            nftGovernorTT
+              .connect(signers[0])
+              .createProposal(
+                TITLE,
+                DESC,
+                LINK,
+                data.transferToAccount,
+                data.tokenToTransfer,
+                data.transferTokenAmount,
+                signers[0].address,
+                TestHelper.NFT_FOR_PROPOSAL_CREATION
+              )
+          ).revertedWith(
+            "GTT: NFT GOD token and token to transfer can't be same."
+          );
+        });
+
+        it("Proposal creation allowed with different serial ids for NFT GOD token and NFT token to transfer even if token is same", async () => {
+          const { nftGovernorTT, nftGodHolder, nftToken, signers, creator } =
+            await loadFixture(deployFixture);
+
+          await nftToken.transferFrom(
+            creator.address,
+            nftGovernorTT.address,
+            TestHelper.NFT_FOR_TRANSFER
+          );
+
+          await nftGodHolder
+            .connect(creator)
+            .grabTokensFromUser(TestHelper.NFT_FOR_VOTING);
+
+          expect(
+            await nftToken.ownerOf(TestHelper.NFT_FOR_PROPOSAL_CREATION)
+          ).equals(creator.address);
+          expect(await nftToken.ownerOf(TestHelper.NFT_FOR_TRANSFER)).equals(
+            nftGovernorTT.address
+          );
+          expect(await nftToken.ownerOf(TestHelper.NFT_FOR_VOTING)).equals(
+            nftGodHolder.address
+          );
+
+          const { proposalId } = await getTransferTokenProposalId(
+            TITLE,
+            nftGovernorTT,
+            signers,
+            nftToken.address,
+            TestHelper.NFT_FOR_TRANSFER,
+            TestHelper.NFT_FOR_PROPOSAL_CREATION
+          );
+
+          await nftGovernorTT.castVotePublic(proposalId, 0, 1);
+          await TestHelper.mineNBlocks(BLOCKS_COUNT);
+          const tx = await nftGovernorTT.executeProposal(TITLE);
+
+          expect(
+            await nftToken.ownerOf(TestHelper.NFT_FOR_PROPOSAL_CREATION)
+          ).equals(creator.address);
+          expect(await nftToken.ownerOf(TestHelper.NFT_FOR_TRANSFER)).equals(
+            signers[2].address
+          );
+          expect(await nftToken.ownerOf(TestHelper.NFT_FOR_VOTING)).equals(
+            nftGodHolder.address
+          );
+
+          const blockedEvents = await TestHelper.readEvents(tx, "NFTBlocked");
+          const blockedEvent = blockedEvents.pop();
+        });
+        it("Given serial id is blocked by a proposal when user try to transfer that id using another proposal then it should fail", async () => {
+          const { nftGovernorTT, nftGodHolder, nftToken, signers, creator } =
+            await loadFixture(deployFixture);
+
+          await nftGodHolder
+            .connect(creator)
+            .grabTokensFromUser(TestHelper.NFT_FOR_VOTING);
+
+          expect(
+            await nftToken.ownerOf(TestHelper.NFT_FOR_PROPOSAL_CREATION)
+          ).equals(creator.address);
+
+          expect(await nftToken.ownerOf(TestHelper.NFT_FOR_VOTING)).equals(
+            nftGodHolder.address
+          );
+
+          const { proposalId } = await getTransferTokenProposalId(
+            TITLE,
+            nftGovernorTT,
+            signers,
+            nftToken.address,
+            TestHelper.NFT_FOR_TRANSFER,
+            TestHelper.NFT_FOR_PROPOSAL_CREATION
+          );
+
+          expect(
+            await nftToken.ownerOf(TestHelper.NFT_FOR_PROPOSAL_CREATION)
+          ).equals(nftGovernorTT.address);
+
+          expect(await nftToken.ownerOf(TestHelper.NFT_FOR_TRANSFER)).equals(
+            creator.address
+          );
+
+          const proposal2Title = TITLE + 2;
+
+          const { proposalId: proposalId2 } = await getTransferTokenProposalId(
+            proposal2Title,
+            nftGovernorTT,
+            signers,
+            nftToken.address,
+            TestHelper.NFT_FOR_PROPOSAL_CREATION, //token to transfer
+            TestHelper.NFT_FOR_PROPOSAL_CREATION2 //GOD token
+          );
+
+          expect(
+            await nftToken.ownerOf(TestHelper.NFT_FOR_PROPOSAL_CREATION2)
+          ).equals(nftGovernorTT.address);
+
+          await nftGovernorTT.castVotePublic(proposalId2, 0, 1);
+          await TestHelper.mineNBlocks(BLOCKS_COUNT);
+
+          await expect(nftGovernorTT.executeProposal(proposal2Title))
+            .revertedWithCustomError(nftGovernorTT, "BlockedSerialId")
+            .withArgs(
+              "NFT ID locked by proposal",
+              proposalId,
+              TestHelper.NFT_FOR_PROPOSAL_CREATION
+            );
+        });
+      });
     });
   });
 });
