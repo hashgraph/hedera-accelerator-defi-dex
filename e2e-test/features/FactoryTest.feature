@@ -40,7 +40,7 @@ Feature: Factory contract e2e test
         When User create a new token with name "Factory8" 
         Then User receives fails message "CONTRACT_REVERT_EXECUTED" on creating pair with same token
 
-     Scenario: Verify Factory9 token and HBAR balance before and after adding liquidity
+    Scenario: Verify Factory9 token and HBAR balance before and after adding liquidity
         When User create pair of "Factory9" and HBAR  
         When User associate LPToken with account  
         When User associate token "Factory9" to account   
@@ -49,10 +49,10 @@ Feature: Factory contract e2e test
         When User adds 300 units of "Factory9" and 150 units of "HBAR" token      
         Then HBAR and Factory9 balances in the pool are 150.00 units and 300.00 units respectively    
         Then User verifies balance of "HBAR" token from contract is 150.00    
-        Then User verifies balance of "Factory9" token from contract is 300.00   
-        
+        Then User verifies balance of "Factory9" token from contract is 300.00
+        Then User verifies the order of addresses for created pair "HBAR" and "Factory9"     
 
-     Scenario: Verify token balance after removing liquidity for HBAR and some other token
+    Scenario: Verify token balance after removing liquidity for HBAR and some other token
         Given User fetches the count of lptokens from pool
         When User sets allowance amount as 5.00 for token "lptoken" 
         When User gives 5.00 units of lptoken to pool
@@ -98,6 +98,18 @@ Feature: Factory contract e2e test
     Scenario: Verify spot price for HBAR 
         When User get spot price for "HBAR"
         Then Expected spot price should be 53393455
+
+    Scenario: Verify HABR token and Factory9 balance before and after adding liquidity
+        When User create pair of HBAR and "Factory9"  
+        When User associate LPToken with account  
+        When User associate token "Factory9" to account   
+        When User sets allowance amount as 300.00 for token "Factory9" 
+        When User sets allowance amount as 150.00 for token "HBAR"       
+        When User adds 300 units of "Factory9" and 150 units of "HBAR" token      
+        Then HBAR and Factory9 balances in the pool are 150.00 units and 300.00 units respectively    
+        Then User verifies balance of "HBAR" token from contract is 150.00    
+        Then User verifies balance of "Factory9" token from contract is 300.00
+        Then User verifies the order of addresses for created pair "HBAR" and "Factory9"    
     
     Scenario: User reset allowance
         When User sets allowance amount as 0.00 for token "Factory9" 
