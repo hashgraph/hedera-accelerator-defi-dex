@@ -46,16 +46,16 @@ contract TokenOperations {
         address _token,
         address _sender,
         address _receiver,
-        uint256 _amount
+        uint256 _amountOrId
     ) internal returns (int256 responseCode) {
         bool sent;
         if (_tokenType(_hederaService, _token) == 0) {
             sent = isContractSendingTokens(_sender)
-                ? IERC20(_token).transfer(_receiver, _amount)
-                : IERC20(_token).transferFrom(_sender, _receiver, _amount);
+                ? IERC20(_token).transfer(_receiver, _amountOrId)
+                : IERC20(_token).transferFrom(_sender, _receiver, _amountOrId);
         } else {
-            IERC721(_token).transferFrom(_sender, _receiver, _amount);
-            sent = (IERC721(_token).ownerOf(_amount) == _receiver);
+            IERC721(_token).transferFrom(_sender, _receiver, _amountOrId);
+            sent = (IERC721(_token).ownerOf(_amountOrId) == _receiver);
         }
         return sent ? HederaResponseCodes.SUCCESS : HederaResponseCodes.UNKNOWN;
     }

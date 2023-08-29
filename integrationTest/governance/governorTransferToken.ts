@@ -34,7 +34,7 @@ const txnFeePayerClient = clientsInfo.operatorClient;
 const receiverAccountId = clientsInfo.uiUserId;
 const receiverAccountPK = clientsInfo.uiUserKey;
 
-const fungibleTokenFlow = async () => {
+const tokenTransferWithFungibleTokenAsGODToken = async () => {
   const voterAccountId = clientsInfo.treasureId;
   const voterAccountKey = clientsInfo.treasureKey;
   const voterClient = clientsInfo.treasureClient;
@@ -145,7 +145,7 @@ const fungibleTokenFlow = async () => {
   await governor.upgradeHederaService();
 };
 
-const nonFungibleTokenFlow = async () => {
+const tokenTransferWithNonFungibleTokenAsGODToken = async () => {
   const voterAccountId = clientsInfo.operatorId;
   const voterAccountKey = clientsInfo.operatorKey;
   const voterClient = clientsInfo.operatorClient;
@@ -491,9 +491,9 @@ async function createHBarTransferProposal(
 
 async function main() {
   console.log("************************ FT Test ******************");
-  await fungibleTokenFlow();
+  await tokenTransferWithFungibleTokenAsGODToken();
   console.log(`\n************************ NFT Test ******************\n`);
-  await nonFungibleTokenFlow();
+  await tokenTransferWithNonFungibleTokenAsGODToken();
 }
 
 main()
