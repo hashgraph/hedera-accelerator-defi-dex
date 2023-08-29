@@ -58,7 +58,7 @@ const fungibleTokenFlow = async () => {
     txnFeePayerClient,
     1,
     0,
-    30,
+    20,
     FT_TOKEN_ID,
     FT_TOKEN_ID
   );
@@ -81,7 +81,7 @@ const fungibleTokenFlow = async () => {
     await godHolder.lock(lockAmount, voterClient);
   }
 
-  // step - 1
+  // step - 1 (A) ft token association
   await createTokenAssociateProposal(
     governor,
     godHolder,
@@ -90,8 +90,8 @@ const fungibleTokenFlow = async () => {
     txnFeePayerClient
   );
 
-  // step - 2
-  await createTokenTransferProposal(
+  // step - 1 (B) ft transfer flow
+  await createFTTokenTransferProposal(
     governor,
     godHolder,
     TRANSFER_TOKEN_ID,
@@ -104,7 +104,33 @@ const fungibleTokenFlow = async () => {
     txnFeePayerClient
   );
 
-  // transfer HBar flow
+  // step - 2 (A) nft token association
+  await createTokenAssociateProposal(
+    governor,
+    godHolder,
+    NFT_TOKEN_ID,
+    voterClient,
+    txnFeePayerClient
+  );
+
+  // step - 2 (B) nft transfer flow
+  await createNFTTokenTransferProposal(
+    governor,
+    godHolder,
+    NFT_TOKEN_ID,
+    governor.DEFAULT_NFT_TOKEN_FOR_TRANSFER,
+    clientsInfo.operatorId,
+    clientsInfo.operatorKey,
+    clientsInfo.operatorId,
+    clientsInfo.operatorKey,
+    voterClient,
+    txnFeePayerClient,
+    clientsInfo.operatorId,
+    clientsInfo.operatorKey,
+    clientsInfo.operatorClient
+  );
+
+  // step - 3 transfer HBar flow
   await createHBarTransferProposal(
     governor,
     godHolder,
@@ -140,9 +166,9 @@ const nonFungibleTokenFlow = async () => {
   await governor.initialize(
     nftHolder,
     txnFeePayerClient,
-    500,
+    1,
     0,
-    30,
+    20,
     NFT_TOKEN_ID,
     NFT_TOKEN_ID
   );
@@ -166,7 +192,7 @@ const nonFungibleTokenFlow = async () => {
     );
   }
 
-  // step - 1
+  // step - 1 (A) ft token association
   await createTokenAssociateProposal(
     governor,
     nftHolder,
@@ -175,8 +201,8 @@ const nonFungibleTokenFlow = async () => {
     txnFeePayerClient
   );
 
-  // step - 2
-  await createTokenTransferProposal(
+  // step - 1 (B) ft token transfer
+  await createFTTokenTransferProposal(
     governor,
     nftHolder,
     TRANSFER_TOKEN_ID,
@@ -189,7 +215,33 @@ const nonFungibleTokenFlow = async () => {
     txnFeePayerClient
   );
 
-  // transfer HBar flow
+  // step - 2 (A) nft token association
+  await createTokenAssociateProposal(
+    governor,
+    nftHolder,
+    NFT_TOKEN_ID,
+    voterClient,
+    txnFeePayerClient
+  );
+
+  // step - 2 (B) nft transfer flow
+  await createNFTTokenTransferProposal(
+    governor,
+    nftHolder,
+    NFT_TOKEN_ID,
+    governor.DEFAULT_NFT_TOKEN_FOR_TRANSFER,
+    clientsInfo.operatorId,
+    clientsInfo.operatorKey,
+    clientsInfo.operatorId,
+    clientsInfo.operatorKey,
+    voterClient,
+    txnFeePayerClient,
+    clientsInfo.operatorId,
+    clientsInfo.operatorKey,
+    clientsInfo.operatorClient
+  );
+
+  // step -3 transfer HBar flow
   await createHBarTransferProposal(
     governor,
     nftHolder,
@@ -247,7 +299,7 @@ async function createTokenAssociateProposal(
   }
 }
 
-async function createTokenTransferProposal(
+async function createFTTokenTransferProposal(
   governor: TokenTransferGovernor,
   tokenHolder: GodHolder | NFTHolder,
   tokenId: TokenId,
@@ -306,6 +358,74 @@ async function createTokenTransferProposal(
     await Common.associateTokensToAccount(
       receiverAccountId,
       [TRANSFER_TOKEN_ID],
+      txnFeePayerClient,
+      receiverAccountPK
+    );
+    await governor.executeProposal(title);
+  } else {
+    await governor.cancelProposal(title, creatorClient);
+  }
+}
+
+async function createNFTTokenTransferProposal(
+  governor: TokenTransferGovernor,
+  tokenHolder: GodHolder | NFTHolder,
+  nftToken: TokenId,
+  nftTokenSerialId: number,
+  receiverAccountId: AccountId,
+  receiverAccountPK: PrivateKey,
+  senderAccountId: AccountId,
+  senderAccountPK: PrivateKey,
+  voterClient: Client,
+  txnFeePayerClient: Client,
+  creatorId: AccountId = clientsInfo.operatorId,
+  creatorPK: PrivateKey = clientsInfo.operatorKey,
+  creatorClient: Client = clientsInfo.operatorClient
+) {
+  if (tokenHolder instanceof GodHolder) {
+    await governor.setupAllowanceForProposalCreation(
+      creatorClient,
+      creatorId,
+      creatorPK
+    );
+  } else {
+    await governor.setupNFTAllowanceForProposalCreation(
+      creatorClient,
+      creatorId,
+      creatorPK
+    );
+  }
+
+  const title = Helper.createProposalTitle("NFT Token Transfer Proposal");
+  const proposalId = await governor.createTokenTransferProposal(
+    title,
+    receiverAccountId.toSolidityAddress(),
+    nftToken.toSolidityAddress(),
+    nftTokenSerialId,
+    txnFeePayerClient,
+    governor.DEFAULT_NFT_TOKEN_SERIAL_NO,
+    "NFT Token Transfer Proposal - Desc",
+    "NFT Token Transfer Proposal - Link",
+    creatorId.toSolidityAddress()
+  );
+  await governor.getProposalDetails(proposalId, voterClient);
+  await governor.forVote(proposalId, 0, voterClient);
+  await governor.getProposalDetails(proposalId, voterClient);
+  if (await governor.isSucceeded(proposalId)) {
+    // step - 1 transfer some amount to governance
+    await Common.transferNFTTokenFromUser(
+      nftToken,
+      nftTokenSerialId,
+      senderAccountId,
+      senderAccountPK,
+      governor.contractId,
+      txnFeePayerClient
+    );
+
+    // step - 2 associate token to receiver
+    await Common.associateTokensToAccount(
+      receiverAccountId,
+      [nftToken],
       txnFeePayerClient,
       receiverAccountPK
     );

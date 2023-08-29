@@ -96,4 +96,10 @@ contract HederaService is HederaTokenService, IHederaService {
         (bool sent, ) = toAccount.call{value: uint256(msg.value)}("");
         return sent;
     }
+
+    function getTokenTypePublic(
+        address token
+    ) external returns (int64 responseCode, int32 tokenType) {
+        return HederaTokenService.getTokenType(token);
+    }
 }

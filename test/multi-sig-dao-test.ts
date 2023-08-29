@@ -9,10 +9,9 @@ describe("MultiSig tests", function () {
   const TXN_TYPE_BATCH = 1;
   const TXN_TYPE_TOKEN_ASSOCIATE = 2;
   const TXN_TYPE_UPGRADE_PROXY = 3;
+  const TXN_TYPE_TRANSFER = 4;
 
   const TXN_TYPE_TEXT = 1005;
-  const TXN_TYPE_TRANSFER = 1006;
-  const TXN_TYPE_HBAR_TRANSFER = 1007;
 
   const INVALID_TXN_HASH = ethers.utils.formatBytes32String("INVALID_TXN_HASH");
   const TOTAL = 100 * 1e8;
@@ -102,7 +101,6 @@ describe("MultiSig tests", function () {
 
   async function proposeTransferTransaction(
     multiSigDAOInstance: Contract,
-    gnosis: Contract,
     receiver: string,
     token: string,
     type: number,
@@ -110,17 +108,10 @@ describe("MultiSig tests", function () {
     title: string = TITLE,
     description: string = DESCRIPTION
   ) {
-    const ABI = ["function transferAssets(address,address,uint256) external"];
-    const iface = new ethers.utils.Interface(ABI);
-    const data = iface.encodeFunctionData("transferAssets", [
-      token,
+    const txn = await multiSigDAOInstance.proposeTransferTransaction(
       receiver,
+      token,
       amount,
-    ]);
-    const txn = await multiSigDAOInstance.proposeTransaction(
-      gnosis.address,
-      ethers.utils.arrayify(data),
-      type,
       title,
       description,
       LINK_TO_DISCUSSION
@@ -159,6 +150,7 @@ describe("MultiSig tests", function () {
 
     const daoAdminOne = await TestHelper.getDAOAdminOne();
     const tokenInstance = await TestHelper.deployERC20Mock();
+    const nftTokenInstance = await TestHelper.deployERC721Mock(signers[0]);
 
     const systemUsersSigners = await TestHelper.systemUsersSigners();
     const systemRoleBasedAccess = (
@@ -259,6 +251,7 @@ describe("MultiSig tests", function () {
       hederaGnosisSafeProxyContract,
       hederaGnosisSafeProxyFactoryInstance,
       tokenInstance,
+      nftTokenInstance,
       signers,
       daoSigners,
       doaSignersAddresses,
@@ -327,10 +320,15 @@ describe("MultiSig tests", function () {
     });
 
     it("Verify transfer token from safe should be reverted if called without safe txn", async function () {
-      const { hederaGnosisSafeProxyContract, tokenInstance, signers } =
-        await loadFixture(deployFixture);
+      const {
+        hederaGnosisSafeProxyContract,
+        tokenInstance,
+        signers,
+        hederaService,
+      } = await loadFixture(deployFixture);
       await expect(
         hederaGnosisSafeProxyContract.transferAssets(
+          hederaService.address,
           tokenInstance.address,
           signers[1].address,
           1e8
@@ -737,7 +735,6 @@ describe("MultiSig tests", function () {
       } = await loadFixture(deployFixture);
       const { txnHash, info } = await proposeTransferTransaction(
         multiSigDAOInstance,
-        hederaGnosisSafeProxyContract,
         signers[1].address,
         tokenInstance.address,
         TXN_TYPE_TRANSFER
@@ -848,10 +845,9 @@ describe("MultiSig tests", function () {
       } = await loadFixture(deployFixture);
       const { txnHash, info } = await proposeTransferTransaction(
         multiSigDAOInstance,
-        hederaGnosisSafeProxyContract,
         signers[1].address,
         TestHelper.ZERO_ADDRESS,
-        TXN_TYPE_HBAR_TRANSFER
+        TXN_TYPE_TRANSFER
       );
       for (const signer of daoSigners) {
         await hederaGnosisSafeProxyContract
@@ -885,10 +881,9 @@ describe("MultiSig tests", function () {
 
       const { txnHash, info } = await proposeTransferTransaction(
         multiSigDAOInstance,
-        hederaGnosisSafeProxyContract,
         receiver.address,
         TestHelper.ZERO_ADDRESS,
-        TXN_TYPE_HBAR_TRANSFER
+        TXN_TYPE_TRANSFER
       );
       for (const signer of daoSigners) {
         await hederaGnosisSafeProxyContract

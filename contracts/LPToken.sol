@@ -108,6 +108,7 @@ contract LPToken is IEvents, ILPToken, OwnableUpgradeable, TokenOperations {
             "LP token minting failed."
         );
         responseCode = super._transferToken(
+            hederaService,
             address(lpToken),
             address(this),
             _toUser,
@@ -130,6 +131,7 @@ contract LPToken is IEvents, ILPToken, OwnableUpgradeable, TokenOperations {
         );
 
         int256 responseCode = _transferToken(
+            hederaService,
             address(lpToken),
             fromUser,
             address(this),

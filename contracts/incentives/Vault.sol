@@ -128,8 +128,13 @@ contract Vault is IEvents, IVault, OwnableUpgradeable, TokenOperations {
         }
         rewardInfo.perShareAmount += perShareAmount;
         require(
-            _transferToken(_token, _from, address(this), _amount) ==
-                HederaResponseCodes.SUCCESS,
+            _transferToken(
+                hederaService,
+                _token,
+                _from,
+                address(this),
+                _amount
+            ) == HederaResponseCodes.SUCCESS,
             "Vault: Add reward failed"
         );
         emit RewardAdded(_from, _token, _amount);
@@ -272,6 +277,7 @@ contract Vault is IEvents, IVault, OwnableUpgradeable, TokenOperations {
         stakingTokenTotalSupply += _amount;
         require(
             _transferToken(
+                hederaService,
                 address(stakingToken),
                 _user,
                 address(this),
@@ -295,6 +301,7 @@ contract Vault is IEvents, IVault, OwnableUpgradeable, TokenOperations {
         stakingTokenTotalSupply -= _amount;
         require(
             _transferToken(
+                hederaService,
                 address(stakingToken),
                 address(this),
                 _user,
@@ -345,6 +352,7 @@ contract Vault is IEvents, IVault, OwnableUpgradeable, TokenOperations {
         cInfo.rewardClaimed[_rewardToken] += _perShareUnclaimedAmount;
         require(
             _transferToken(
+                hederaService,
                 _rewardToken,
                 address(this),
                 _user,

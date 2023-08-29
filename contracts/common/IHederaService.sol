@@ -29,4 +29,8 @@ interface IHederaService {
     function transferHBAR(
         address payable toAccount
     ) external payable returns (bool);
+
+    function getTokenTypePublic(
+        address token
+    ) external returns (int64 responseCode, int32 tokenType);
 }

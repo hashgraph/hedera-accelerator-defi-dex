@@ -35,7 +35,7 @@ abstract contract GovernorCountingSimpleInternal is
         string link;
         bytes data;
         address[] voters;
-        uint256 nftTokenSerialId;
+        uint256 amountOrId;
     }
 
     struct VotingInformation {
@@ -63,7 +63,7 @@ abstract contract GovernorCountingSimpleInternal is
         bytes data,
         Duration duration,
         VotingInformation votingInformation,
-        uint256 nftTokenSerialId
+        uint256 amountOrId
     );
 
     string private constant HederaService = "HederaService";
@@ -139,6 +139,9 @@ abstract contract GovernorCountingSimpleInternal is
             uint256[] memory values,
             bytes[] memory calldatas
         ) = _mockFunctionCall();
+        uint256 amountOrId = tokenHolder.isNFTType()
+            ? nftTokenSerialId
+            : PROPOSAL_CREATION_AMOUNT;
         uint256 proposalId = super.propose(targets, values, calldatas, title);
         proposals[proposalId] = ProposalInfo(
             creator,
@@ -147,10 +150,10 @@ abstract contract GovernorCountingSimpleInternal is
             link,
             data,
             EMPTY_VOTERS_LIST,
-            nftTokenSerialId
+            amountOrId
         );
 
-        _getGODToken(creator, nftTokenSerialId);
+        _getGODToken(creator, amountOrId);
 
         Duration memory duration;
         duration.startBlock = proposalSnapshot(proposalId);
@@ -165,9 +168,8 @@ abstract contract GovernorCountingSimpleInternal is
             data,
             duration,
             getVotingInformation(proposalId),
-            nftTokenSerialId
+            amountOrId
         );
-
         return proposalId;
     }
 
@@ -239,7 +241,7 @@ abstract contract GovernorCountingSimpleInternal is
             proposalInfo.data,
             duration,
             votingInfo,
-            proposalInfo.nftTokenSerialId
+            proposalInfo.amountOrId
         );
     }
 
@@ -400,57 +402,38 @@ abstract contract GovernorCountingSimpleInternal is
         calldatas[0] = (b);
     }
 
-    function _getGODToken(address creator, uint256 nftTokenSerialId) private {
-        if (!tokenHolder.isNFTType()) {
-            int256 code = _transferToken(
-                address(token),
-                creator,
-                address(this),
-                PROPOSAL_CREATION_AMOUNT
-            );
-            require(
-                code == HederaResponseCodes.SUCCESS,
-                "GovernorCountingSimpleInternal: token transfer failed to contract."
-            );
-        } else {
-            _transferNFTToken(
-                address(token),
-                creator,
-                address(this),
-                nftTokenSerialId
-            );
-        }
+    function _getGODToken(address creator, uint256 amountOrId) private {
+        int256 code = _transferToken(
+            hederaService,
+            address(token),
+            creator,
+            address(this),
+            amountOrId
+        );
+        require(
+            code == HederaResponseCodes.SUCCESS,
+            "GovernorCountingSimpleInternal: token transfer failed to contract."
+        );
     }
 
-    function _returnGODToken(
-        address creator,
-        uint256 nftTokenSerialId
-    ) private {
-        if (!tokenHolder.isNFTType()) {
-            int256 code = _transferToken(
-                address(token),
-                address(this),
-                creator,
-                PROPOSAL_CREATION_AMOUNT
-            );
-            require(
-                code == HederaResponseCodes.SUCCESS,
-                "GovernorCountingSimpleInternal: token transfer failed from contract."
-            );
-        } else {
-            _transferNFTToken(
-                address(token),
-                address(this),
-                creator,
-                nftTokenSerialId
-            );
-        }
+    function _returnGODToken(address creator, uint256 amountOrId) private {
+        int256 code = _transferToken(
+            hederaService,
+            address(token),
+            address(this),
+            creator,
+            amountOrId
+        );
+        require(
+            code == HederaResponseCodes.SUCCESS,
+            "GovernorCountingSimpleInternal: token transfer failed from contract."
+        );
     }
 
     function _cleanup(uint256 proposalId) private {
         ProposalInfo storage proposalInfo = _getProposalInfoIfExist(proposalId);
         tokenHolder.removeActiveProposals(proposalInfo.voters, proposalId);
-        _returnGODToken(proposalInfo.creator, proposalInfo.nftTokenSerialId);
+        _returnGODToken(proposalInfo.creator, proposalInfo.amountOrId);
         delete (proposalInfo.voters);
     }
 

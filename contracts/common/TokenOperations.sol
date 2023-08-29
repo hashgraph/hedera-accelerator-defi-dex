@@ -8,6 +8,20 @@ import "./IHederaService.sol";
 contract TokenOperations {
     using Bits for uint256;
 
+    function _tokenType(
+        IHederaService _hederaService,
+        address _token
+    ) internal returns (int32) {
+        (int64 code, int32 tokenType) = _hederaService.getTokenTypePublic(
+            _token
+        );
+        require(
+            code == HederaResponseCodes.SUCCESS,
+            "TokenOperations: invalid token"
+        );
+        return tokenType;
+    }
+
     function _balanceOf(
         address token,
         address account
@@ -28,28 +42,22 @@ contract TokenOperations {
     }
 
     function _transferToken(
+        IHederaService _hederaService,
         address _token,
         address _sender,
         address _receiver,
         uint256 _amount
     ) internal returns (int256 responseCode) {
-        bool isTransferSuccessful = isContractSendingTokens(_sender)
-            ? IERC20(_token).transfer(_receiver, _amount)
-            : IERC20(_token).transferFrom(_sender, _receiver, _amount);
-
-        return
-            isTransferSuccessful
-                ? HederaResponseCodes.SUCCESS
-                : HederaResponseCodes.UNKNOWN;
-    }
-
-    function _transferNFTToken(
-        address _token,
-        address _sender,
-        address _receiver,
-        uint256 _amount
-    ) internal {
-        IERC721(_token).transferFrom(_sender, _receiver, _amount);
+        bool sent;
+        if (_tokenType(_hederaService, _token) == 0) {
+            sent = isContractSendingTokens(_sender)
+                ? IERC20(_token).transfer(_receiver, _amount)
+                : IERC20(_token).transferFrom(_sender, _receiver, _amount);
+        } else {
+            IERC721(_token).transferFrom(_sender, _receiver, _amount);
+            sent = (IERC721(_token).ownerOf(_amount) == _receiver);
+        }
+        return sent ? HederaResponseCodes.SUCCESS : HederaResponseCodes.UNKNOWN;
     }
 
     function isContract(address _account) internal view returns (bool) {
