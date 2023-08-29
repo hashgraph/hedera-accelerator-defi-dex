@@ -401,6 +401,228 @@ describe("LPToken, Pair and Factory tests", function () {
       ).to.be.revertedWith("Pair: Fee should be greater than zero.");
     });
 
+    describe("Order of tokens matter while creating pair via Factory ", () => {
+      it("Given token2 address is greater than token1 address when user try to createPair then created pair's first token should be token1", async function () {
+        const {
+          factory,
+          mockHederaService,
+          signers,
+          token1Address,
+          token2Address,
+          configuration,
+          pair,
+          lpTokenCont,
+        } = await loadFixture(deployFixture);
+        // Given
+        await factory.setUpFactory(
+          mockHederaService.address,
+          signers[0].address,
+          pair.address,
+          lpTokenCont.address,
+          configuration.address
+        );
+
+        expect(token2Address.localeCompare(token1Address)).equals(
+          1,
+          "token2Address is less than token1Address"
+        );
+        const tx = await factory.createPair(
+          token1Address,
+          token2Address,
+          treasury,
+          fee
+        );
+        const pairCreatedEvents = await TestHelper.readEvents(
+          tx,
+          "PairCreated"
+        );
+
+        const pairContract = await TestHelper.getContract(
+          "Pair",
+          pairCreatedEvents[0].args.pairAddress
+        );
+        const pairAddresses = await pairContract
+          .connect(signers[5])
+          .getTokenPairAddress();
+        expect(pairAddresses[0]).equals(token1Address);
+        expect(pairAddresses[1]).equals(token2Address);
+      });
+
+      it("Given token2 address is greater than token1 address when user try to createPair then created pair's first token should be token1", async function () {
+        const {
+          factory,
+          mockHederaService,
+          signers,
+          token1Address,
+          token2Address,
+          configuration,
+          pair,
+          lpTokenCont,
+        } = await loadFixture(deployFixture);
+        // Given
+        await factory.setUpFactory(
+          mockHederaService.address,
+          signers[0].address,
+          pair.address,
+          lpTokenCont.address,
+          configuration.address
+        );
+
+        expect(token2Address.localeCompare(token1Address)).equals(
+          1,
+          "token2Address is less than token1Address"
+        );
+        const tx = await factory.createPair(
+          token2Address,
+          token1Address,
+          treasury,
+          fee
+        );
+        const pairCreatedEvents = await TestHelper.readEvents(
+          tx,
+          "PairCreated"
+        );
+
+        const pairContract = await TestHelper.getContract(
+          "Pair",
+          pairCreatedEvents[0].args.pairAddress
+        );
+        const pairAddresses = await pairContract
+          .connect(signers[5])
+          .getTokenPairAddress();
+        expect(pairAddresses[0]).equals(token1Address);
+        expect(pairAddresses[1]).equals(token2Address);
+      });
+
+      it("Given token2 address is greater than token1 address when user try to createPair then created pair's first token should be token1 and when add liquidity happens then pair automatically adjust the passed token addresses", async function () {
+        const {
+          factory,
+          mockHederaService,
+          signers,
+          token1Address,
+          token2Address,
+          configuration,
+          pair,
+          lpTokenCont,
+        } = await loadFixture(deployFixture);
+        // Given
+        await factory.setUpFactory(
+          mockHederaService.address,
+          signers[0].address,
+          pair.address,
+          lpTokenCont.address,
+          configuration.address
+        );
+
+        expect(token2Address.localeCompare(token1Address)).equals(
+          1,
+          "token2Address is less than token1Address"
+        );
+        const tx = await factory.createPair(
+          token1Address,
+          token2Address,
+          treasury,
+          fee
+        );
+        const pairCreatedEvents = await TestHelper.readEvents(
+          tx,
+          "PairCreated"
+        );
+
+        const pairContract = await TestHelper.getContract(
+          "Pair",
+          pairCreatedEvents[0].args.pairAddress
+        );
+        const pairAddresses = await pairContract
+          .connect(signers[5])
+          .getTokenPairAddress();
+        expect(pairAddresses[0]).equals(token1Address);
+        expect(pairAddresses[1]).equals(token2Address);
+
+        const tokenAQty = 10;
+        const tokenBQty = 20;
+        await pairContract
+          .connect(signers[5])
+          .addLiquidity(
+            signers[1].address,
+            token1Address,
+            token2Address,
+            tokenAQty,
+            tokenBQty
+          );
+
+        const pairQuantities = await pairContract
+          .connect(signers[5])
+          .getPairQty();
+        expect(pairQuantities[0]).equals(tokenAQty);
+        expect(pairQuantities[1]).equals(tokenBQty);
+      });
+
+      it("Given token2 address is greater than token1 address when user try to createPair then created pair's first token should be token1 and when add liquidity(with reverse token order) happens then pair automatically adjust the passed token addresses", async function () {
+        const {
+          factory,
+          mockHederaService,
+          signers,
+          token1Address,
+          token2Address,
+          configuration,
+          pair,
+          lpTokenCont,
+        } = await loadFixture(deployFixture);
+        // Given
+        await factory.setUpFactory(
+          mockHederaService.address,
+          signers[0].address,
+          pair.address,
+          lpTokenCont.address,
+          configuration.address
+        );
+
+        expect(token2Address.localeCompare(token1Address)).equals(
+          1,
+          "token2Address is less than token1Address"
+        );
+        const tx = await factory.createPair(
+          token1Address,
+          token2Address,
+          treasury,
+          fee
+        );
+        const pairCreatedEvents = await TestHelper.readEvents(
+          tx,
+          "PairCreated"
+        );
+
+        const pairContract = await TestHelper.getContract(
+          "Pair",
+          pairCreatedEvents[0].args.pairAddress
+        );
+        const pairAddresses = await pairContract
+          .connect(signers[5])
+          .getTokenPairAddress();
+        expect(pairAddresses[0]).equals(token1Address);
+        expect(pairAddresses[1]).equals(token2Address);
+
+        const tokenAQty = 10;
+        const tokenBQty = 20;
+        await pairContract
+          .connect(signers[5])
+          .addLiquidity(
+            signers[1].address,
+            token2Address,
+            token1Address,
+            tokenBQty,
+            tokenAQty
+          );
+
+        const pairQuantities = await pairContract
+          .connect(signers[5])
+          .getPairQty();
+        expect(pairQuantities[0]).equals(tokenAQty);
+        expect(pairQuantities[1]).equals(tokenBQty);
+      });
+    });
+
     describe("Recommended pool for swap tests ", () => {
       it("Given no pool of pair exists when user asks for swap recommendation then no pair should be returned ", async function () {
         const {
