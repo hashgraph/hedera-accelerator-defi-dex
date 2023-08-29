@@ -35,6 +35,7 @@ contract MultiSigDAO is IEvents, BaseDAO {
     uint256 private constant TXN_TYPE_BATCH = 1;
     uint256 private constant TXN_TYPE_TOKEN_ASSOCIATE = 2;
     uint256 private constant TXN_TYPE_UPGRADE_PROXY = 3;
+    uint256 private constant TXN_TYPE_TRANSFER = 4;
 
     HederaMultiSend private multiSend;
     IHederaService private hederaService;
@@ -203,6 +204,32 @@ contract MultiSigDAO is IEvents, BaseDAO {
                 address(hederaGnosisSafe),
                 data,
                 TXN_TYPE_UPGRADE_PROXY,
+                _title,
+                _desc,
+                _linkToDiscussion
+            );
+    }
+
+    function proposeTransferTransaction(
+        address _to,
+        address _token,
+        uint256 _amount,
+        string memory _title,
+        string memory _desc,
+        string memory _linkToDiscussion
+    ) external returns (bytes32) {
+        bytes memory data = abi.encodeWithSelector(
+            HederaGnosisSafe.transferAssets.selector,
+            hederaService,
+            _token,
+            _to,
+            _amount
+        );
+        return
+            proposeTransaction(
+                address(hederaGnosisSafe),
+                data,
+                TXN_TYPE_TRANSFER,
                 _title,
                 _desc,
                 _linkToDiscussion

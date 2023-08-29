@@ -65,6 +65,7 @@ export default class Governor extends Base {
   protected BURN_TOKEN = "burnToken";
   protected TRANSFER_TOKEN = "transferToken";
   protected QUORUM = "quorum";
+  DEFAULT_NFT_TOKEN_FOR_TRANSFER = 18;
   DEFAULT_NFT_TOKEN_SERIAL_NO = 19;
   DEFAULT_NFT_TOKEN_SERIAL_NO_FOR_VOTING = 20;
 

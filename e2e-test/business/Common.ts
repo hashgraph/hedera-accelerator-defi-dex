@@ -352,6 +352,34 @@ export default class Common extends Base {
     }
   };
 
+  static transferNFTTokenFromUser = async (
+    tokenId: TokenId,
+    serialNo: number,
+    fromAccountId: AccountId,
+    fromAccountPrivateKey: PrivateKey,
+    toAccountId: string | AccountId,
+    client: Client
+  ) => {
+    const balance = await Common.getTokenBalance(
+      fromAccountId,
+      tokenId,
+      client
+    );
+    if (balance.toNumber() > 0) {
+      const txn = await new TransferTransaction()
+        .addNftTransfer(tokenId, serialNo, fromAccountId, toAccountId)
+        .freezeWith(client)
+        .sign(fromAccountPrivateKey);
+      const txnResult = await txn.execute(client);
+      const txnReceipt = await txnResult.getReceipt(client);
+      console.log(
+        ` - Common#transferNFTTokenFromUser(): status = ${
+          txnReceipt.status
+        }, tokenId = ${tokenId.toString()}, serialNo = ${serialNo}, fromAccountId = ${fromAccountId}, toAccountId = ${toAccountId.toString()} \n`
+      );
+    }
+  };
+
   private static getBalanceInternally = async (
     id: AccountId | ContractId,
     client: Client

@@ -10,8 +10,6 @@ contract GovernorTransferToken is GovernorCountingSimpleInternal {
     uint256 private constant ASSOCIATE = 2;
     uint256 private constant HBAR_TRANSFER = 3;
 
-    mapping(uint256 => bytes) proposalsData;
-
     function createTokenAssociateProposal(
         string memory _title,
         string memory _description,
@@ -46,7 +44,8 @@ contract GovernorTransferToken is GovernorCountingSimpleInternal {
         if (_token == address(0)) {
             _data = abi.encode(HBAR_TRANSFER, _to, _amount);
         } else {
-            _data = abi.encode(TRANSFER, _to, _token, _amount);
+            int32 tokenType = _tokenType(hederaService, _token);
+            _data = abi.encode(TRANSFER, _to, _token, _amount, tokenType);
         }
         return
             _createProposalInternally(
@@ -93,7 +92,7 @@ contract GovernorTransferToken is GovernorCountingSimpleInternal {
     }
 
     function _executeOperation(uint256 proposalId) private {
-        bytes memory data = proposalsData[proposalId];
+        bytes memory data = proposals[proposalId].data;
         uint256 operationType = abi.decode(data, (uint256));
         if (operationType == ASSOCIATE) {
             _associate(data);
@@ -114,7 +113,13 @@ contract GovernorTransferToken is GovernorCountingSimpleInternal {
             _data,
             (uint256, address, address, uint256)
         );
-        int256 code = _transferToken(token, address(this), to, amount);
+        int256 code = _transferToken(
+            hederaService,
+            token,
+            address(this),
+            to,
+            amount
+        );
         require(code == HederaResponseCodes.SUCCESS, "GTT: transfer failed");
     }
 
@@ -143,7 +148,7 @@ contract GovernorTransferToken is GovernorCountingSimpleInternal {
             _data,
             _nftTokenSerialId
         );
-        proposalsData[proposalId] = _data;
+        proposals[proposalId].data = _data;
         return proposalId;
     }
 }
