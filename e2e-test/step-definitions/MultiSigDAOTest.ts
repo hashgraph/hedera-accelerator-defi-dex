@@ -110,10 +110,9 @@ export class MultiSigDAOSteps {
     try {
       proposedAmtFromSafe = tokenAmount * PRECISION;
       txnHash = await multiSigDao.proposeTransferTransaction(
-        TOKEN_ID,
-        clientsInfo.treasureId,
-        proposedAmtFromSafe,
-        gnosisSafe
+        clientsInfo.treasureId.toSolidityAddress(),
+        TOKEN_ID.toSolidityAddress(),
+        proposedAmtFromSafe
       );
     } catch (e: any) {
       errorMsg = e.message;
@@ -220,10 +219,9 @@ export class MultiSigDAOSteps {
   )
   public async proposeTransferTransfer(amount: number) {
     txnHash = await multiSigDao.proposeTransferTransaction(
-      TOKEN_ID,
-      clientsInfo.treasureId,
-      amount * PRECISION,
-      gnosisSafe
+      clientsInfo.treasureId.toSolidityAddress(),
+      TOKEN_ID.toSolidityAddress(),
+      amount * PRECISION
     );
   }
 
@@ -234,10 +232,9 @@ export class MultiSigDAOSteps {
   )
   public async proposeTransferTransferWithGreaterAmount() {
     txnHash = await multiSigDao.proposeTransferTransaction(
-      TOKEN_ID,
-      clientsInfo.treasureId,
-      balanceInSafe.plus(PRECISION).toNumber(),
-      gnosisSafe
+      clientsInfo.treasureId.toSolidityAddress(),
+      TOKEN_ID.toSolidityAddress(),
+      balanceInSafe.plus(PRECISION).toNumber()
     );
   }
 
