@@ -4,26 +4,13 @@ import GodHolder from "./GodHolder";
 import NFTHolder from "./NFTHolder";
 
 import { clientsInfo } from "../../utils/ClientManagement";
-import { BigNumber } from "bignumber.js";
-import {
-  Client,
-  TokenId,
-  ContractFunctionParameters,
-  AccountId,
-} from "@hashgraph/sdk";
 import { ContractService } from "../../deployment/service/ContractService";
-import { Helper } from "../../utils/Helper";
 import { AddressHelper } from "../../utils/AddressHelper";
+import { Client, TokenId } from "@hashgraph/sdk";
 
 const INITIALIZE = "initialize";
-const CREATE_PROPOSAL = "createTokenTransferProposal";
-const CREATE_TEXT_PROPOSAL = "createTextProposal";
-const CREATE_CONTRACT_UPGRADE_PROPOSAL = "createContractUpgradeProposal";
-const CREATE_TOKEN_CREATE_PROPOSAL = "createTokenCreateProposal";
-const GET_TOKEN_TRANSFER_PROPOSALS = "getTokenTransferProposals";
 const GET_GOVERNOR_TOKEN_TRANSFER_CONTRACT_ADDRESSES =
   "getGovernorContractAddresses";
-const CREATE_TOKEN_ASSOCIATE_PROPOSAL = "createTokenAssociateProposal";
 
 export const DEFAULT_DESCRIPTION = "description";
 export const DEFAULT_LINK = "https://defi-ui.hedera.com/governance";
@@ -35,7 +22,7 @@ export const NFT_TOKEN_ID = dex.NFT_TOKEN_ID;
 export const DEFAULT_NFT_TOKEN_SERIAL_ID = 19;
 
 export default class FTDAO extends BaseDao {
-  async initialize(
+  public async initialize(
     admin: string,
     name: string,
     url: string,
@@ -113,177 +100,7 @@ export default class FTDAO extends BaseDao {
     return ContractService.FT_DAO;
   }
 
-  createTokenTransferProposal = async (
-    title: string,
-    toAddress: string,
-    tokenId: string,
-    tokenAmount: number | BigNumber,
-    client: Client = clientsInfo.operatorClient,
-    description: string = DEFAULT_DESCRIPTION,
-    link: string = DEFAULT_LINK,
-    nftTokenSerialId: number = DEFAULT_NFT_TOKEN_SERIAL_ID
-  ) => {
-    const args = new ContractFunctionParameters()
-      .addString(title)
-      .addString(description)
-      .addString(link)
-      .addAddress(toAddress) // to
-      .addAddress(tokenId) // tokenToTransfer
-      .addUint256(tokenAmount) // amountToTransfer
-      .addUint256(nftTokenSerialId);
-
-    const { result } = await this.execute(
-      1_000_000,
-      CREATE_PROPOSAL,
-      client,
-      args,
-      clientsInfo.operatorKey
-    );
-    const proposalId = result.getUint256(0).toFixed();
-    console.log(`- FTDAO#${CREATE_PROPOSAL}(): proposal-id = ${proposalId}\n`);
-    return proposalId;
-  };
-
-  public createTokenAssociateProposal = async (
-    title: string,
-    tokenAddress: string,
-    client: Client = clientsInfo.operatorClient,
-    description: string = DEFAULT_DESCRIPTION,
-    link: string = DEFAULT_LINK,
-    nftTokenSerialId: number = DEFAULT_NFT_TOKEN_SERIAL_ID
-  ) => {
-    const args = new ContractFunctionParameters()
-      .addString(title)
-      .addString(description)
-      .addString(link)
-      .addAddress(tokenAddress)
-      .addUint256(nftTokenSerialId);
-    const { result } = await this.execute(
-      1_000_000,
-      CREATE_TOKEN_ASSOCIATE_PROPOSAL,
-      client,
-      args
-    );
-    const proposalId = result.getUint256(0).toFixed();
-    console.log(
-      `- FTDAO#${CREATE_TOKEN_ASSOCIATE_PROPOSAL}(): proposal-id = ${proposalId}\n`
-    );
-    return proposalId;
-  };
-
-  createTextProposal = async (
-    title: string,
-    client: Client = clientsInfo.operatorClient,
-    description: string = DEFAULT_DESCRIPTION,
-    link: string = DEFAULT_LINK,
-    nftTokenSerialId: number = DEFAULT_NFT_TOKEN_SERIAL_ID
-  ) => {
-    const args = new ContractFunctionParameters()
-      .addString(title)
-      .addString(description)
-      .addString(link)
-      .addUint256(nftTokenSerialId);
-
-    const { result } = await this.execute(
-      1_000_000,
-      CREATE_TEXT_PROPOSAL,
-      client,
-      args,
-      clientsInfo.operatorKey
-    );
-
-    const proposalId = result.getUint256(0).toFixed();
-
-    console.log(
-      `- TextDao#${CREATE_PROPOSAL}(): proposal-id = ${proposalId}\n`
-    );
-
-    return proposalId;
-  };
-
-  createContractUpgradeProposal = async (
-    title: string,
-    proxyContract: string,
-    contractToUpgrade: string,
-    client: Client = clientsInfo.operatorClient,
-    description: string = DEFAULT_DESCRIPTION,
-    link: string = DEFAULT_LINK,
-    nftTokenSerialId: number = DEFAULT_NFT_TOKEN_SERIAL_ID
-  ) => {
-    const args = new ContractFunctionParameters()
-      .addString(title)
-      .addString(description)
-      .addString(link)
-      .addAddress(proxyContract)
-      .addAddress(contractToUpgrade)
-      .addUint256(nftTokenSerialId);
-
-    const { result } = await this.execute(
-      1_000_000,
-      CREATE_CONTRACT_UPGRADE_PROPOSAL,
-      client,
-      args,
-      clientsInfo.operatorKey
-    );
-
-    const proposalId = result.getUint256(0).toFixed();
-
-    console.log(
-      `- ContractUpgradeDao#${CREATE_PROPOSAL}(): proposal-id = ${proposalId}\n`
-    );
-
-    return proposalId;
-  };
-
-  createTokenProposal = async (
-    title: string,
-    tokenName: string,
-    tokenSymbol: string,
-    tokenTreasureId: AccountId,
-    client: Client = clientsInfo.operatorClient,
-    description: string = DEFAULT_DESCRIPTION,
-    link: string = DEFAULT_LINK,
-    nftTokenSerialId: number = DEFAULT_NFT_TOKEN_SERIAL_ID
-  ) => {
-    const args = new ContractFunctionParameters()
-      .addString(title)
-      .addString(description)
-      .addString(link)
-      .addAddress(tokenTreasureId.toSolidityAddress())
-      .addString(tokenName)
-      .addString(tokenSymbol)
-      .addUint256(nftTokenSerialId);
-
-    const { result } = await this.execute(
-      1_000_000,
-      CREATE_TOKEN_CREATE_PROPOSAL,
-      client,
-      args
-    );
-    const proposalId = result.getUint256(0).toFixed();
-    console.log(
-      `- FTDAO#${CREATE_TOKEN_CREATE_PROPOSAL}(): proposal-id = ${proposalId}\n`
-    );
-    return proposalId;
-  };
-
-  getTokenTransferProposals = async (
-    client: Client = clientsInfo.operatorClient
-  ) => {
-    const args = new ContractFunctionParameters();
-    const { result } = await this.execute(
-      9000000,
-      GET_TOKEN_TRANSFER_PROPOSALS,
-      client,
-      args
-    );
-    const proposalIds = Helper.getUint256Array(result);
-    console.log(
-      `- FTDAO#${GET_TOKEN_TRANSFER_PROPOSALS}(): proposal-id = ${proposalIds} length = ${proposalIds.length}}\n`
-    );
-  };
-
-  getGovernorTokenTransferContractAddresses = async (
+  public getGovernorTokenTransferContractAddresses = async (
     client: Client = clientsInfo.operatorClient
   ) => {
     const { result } = await this.execute(

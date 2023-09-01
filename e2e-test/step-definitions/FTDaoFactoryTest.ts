@@ -46,7 +46,6 @@ let errorMessage: string = "";
 let daoAddress: any;
 let tokenLockedAmount: number;
 
-let ftDao: FTDAO;
 let ftHolder: GodHolder;
 let governor: TokenTransferGovernor;
 let ftDaoFactory: FTDAOFactory;
@@ -130,7 +129,7 @@ export class FTDaoFactoryTest extends CommonSteps {
     description: string,
     link: string
   ): Promise<void> {
-    proposalId = await ftDao.createTokenAssociateProposal(
+    proposalId = await governor.createTokenAssociateProposal(
       title,
       TRANSFER_TOKEN_ID.toSolidityAddress(),
       DAO_ADMIN_CLIENT,
@@ -155,15 +154,15 @@ export class FTDaoFactoryTest extends CommonSteps {
       tokenTransferAmount = new BigNumber(
         tokenAmount * CommonSteps.withPrecision
       );
-      proposalId = await ftDao.createTokenTransferProposal(
+      proposalId = await governor.createTokenTransferProposal(
         title,
         receiverAccountId.toSolidityAddress(),
         TRANSFER_TOKEN_ID.toSolidityAddress(),
         tokenTransferAmount,
         DAO_ADMIN_CLIENT,
+        governor.DEFAULT_NFT_TOKEN_SERIAL_NO,
         description,
-        link,
-        governor.DEFAULT_NFT_TOKEN_SERIAL_NO
+        link
       );
     } catch (e: any) {
       errorMessage = e.message;
@@ -367,7 +366,7 @@ export class FTDaoFactoryTest extends CommonSteps {
   }
 
   private async initDAOContext() {
-    ftDao = await ftDaoFactory.getGovernorTokenDaoInstance(daoAddress);
+    const ftDao = await ftDaoFactory.getGovernorTokenDaoInstance(daoAddress);
     const items = await ftDao.getGovernorTokenTransferContractAddresses();
     governor = new TokenTransferGovernor(items.governorTokenTransferProxyId);
     ftHolder = await ftDaoFactory.getTokenHolderInstance(GOD_TOKEN_ID);
