@@ -281,7 +281,7 @@ describe("Governor Tests", function () {
   ) {
     const tx = await governance
       .connect(account)
-      .createProposal(title, DESC, LINK, account.address, nftTokenSerialId);
+      .createProposal(title, DESC, LINK, nftTokenSerialId);
     return nftTokenSerialId === TestHelper.NFT_FOR_PROPOSAL_CREATION
       ? await verifyNFTProposalCreationEvent(tx)
       : await verifyFTProposalCreationEvent(tx);
@@ -302,7 +302,6 @@ describe("Governor Tests", function () {
         LINK,
         proxyAddress,
         logicAddress,
-        creator.address,
         nftTokenSerialId
       );
     return nftTokenSerialId === TestHelper.NFT_FOR_PROPOSAL_CREATION
@@ -331,7 +330,6 @@ describe("Governor Tests", function () {
         data.transferToAccount,
         data.tokenToTransfer,
         data.transferTokenAmount,
-        signers[0].address,
         nftTokenSerialId
       );
 
@@ -357,36 +355,12 @@ describe("Governor Tests", function () {
         account.address,
         tokenName,
         "Symbol",
-        account.address,
         nftTokenSerialId
       );
     return nftTokenSerialId === TestHelper.NFT_FOR_PROPOSAL_CREATION
       ? await verifyNFTProposalCreationEvent(tx)
       : await verifyFTProposalCreationEvent(tx);
   }
-
-  const createTokenCreateProposalAndExecute = async (
-    godHolder: Contract,
-    governorToken: Contract,
-    creator: SignerWithAddress
-  ) => {
-    await godHolder.grabTokensFromUser(LOCKED_TOKEN);
-    const { proposalId } = await getTokenCreateProposalId(
-      governorToken,
-      "tokenName",
-      creator
-    );
-    await governorToken.castVotePublic(proposalId, 0, 1);
-    await TestHelper.mineNBlocks(BLOCKS_COUNT);
-    await expect(governorToken.getTokenAddress(proposalId)).revertedWith(
-      "Contract not executed yet!"
-    );
-    await governorToken.executeProposal(TITLE);
-    expect(await governorToken.getTokenAddress(proposalId)).not.equals(
-      TestHelper.ZERO_ADDRESS
-    );
-    return proposalId;
-  };
 
   async function getTokenAssociateProposalId(
     instance: Contract,
@@ -401,7 +375,6 @@ describe("Governor Tests", function () {
         DESC,
         LINK,
         tokenAddress,
-        signers[0].address,
         nftTokenSerialId
       );
 
@@ -431,7 +404,6 @@ describe("Governor Tests", function () {
         LINK,
         to,
         amount,
-        creator.address,
         nftTokenSerialId
       );
 
@@ -441,6 +413,29 @@ describe("Governor Tests", function () {
       nftTokenSerialId
     );
   }
+
+  const createTokenCreateProposalAndExecute = async (
+    godHolder: Contract,
+    governorToken: Contract,
+    creator: SignerWithAddress
+  ) => {
+    await godHolder.grabTokensFromUser(LOCKED_TOKEN);
+    const { proposalId } = await getTokenCreateProposalId(
+      governorToken,
+      "tokenName",
+      creator
+    );
+    await governorToken.castVotePublic(proposalId, 0, 1);
+    await TestHelper.mineNBlocks(BLOCKS_COUNT);
+    await expect(governorToken.getTokenAddress(proposalId)).revertedWith(
+      "Contract not executed yet!"
+    );
+    await governorToken.executeProposal(TITLE);
+    expect(await governorToken.getTokenAddress(proposalId)).not.equals(
+      TestHelper.ZERO_ADDRESS
+    );
+    return proposalId;
+  };
 
   describe("Common tests", async () => {
     it("Verify contract should be reverted for multiple initialization", async function () {
