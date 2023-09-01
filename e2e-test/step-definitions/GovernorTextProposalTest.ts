@@ -44,16 +44,13 @@ export class GovernorTextProposal extends CommonSteps {
 
   @when(/User create a text proposal with title "([^"]*)"/, undefined, 30000)
   public async createTextProposal(title: string) {
-    proposalId = await governor.createTextProposal(
-      title,
-      clientsInfo.operatorId
-    );
+    proposalId = await governor.createTextProposal(title);
   }
 
   @when(/User create a text proposal with blank title/, undefined, 30000)
   public async createTextProposalWithBlankTitle() {
     try {
-      await governor.createTextProposal("", clientsInfo.operatorId);
+      await governor.createTextProposal("");
     } catch (e: any) {
       errorMsg = e.message;
     }

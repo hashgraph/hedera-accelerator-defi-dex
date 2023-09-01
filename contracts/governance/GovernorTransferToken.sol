@@ -15,7 +15,6 @@ contract GovernorTransferToken is GovernorCountingSimpleInternal {
         string memory _description,
         string memory _linkToDiscussion,
         address _token,
-        address _creator,
         uint256 _nftTokenSerialId
     ) external returns (uint256) {
         return
@@ -23,7 +22,6 @@ contract GovernorTransferToken is GovernorCountingSimpleInternal {
                 _title,
                 _description,
                 _linkToDiscussion,
-                _creator,
                 _nftTokenSerialId,
                 abi.encode(ASSOCIATE, _token)
             );
@@ -36,7 +34,6 @@ contract GovernorTransferToken is GovernorCountingSimpleInternal {
         address _to,
         address _token,
         uint256 _amount,
-        address _creator,
         uint256 _nftTokenSerialId
     ) public returns (uint256) {
         require(_amount > 0, "GTT: required positive number");
@@ -52,7 +49,6 @@ contract GovernorTransferToken is GovernorCountingSimpleInternal {
                 _title,
                 _description,
                 _linkToDiscussion,
-                _creator,
                 _nftTokenSerialId,
                 _data
             );
@@ -64,7 +60,6 @@ contract GovernorTransferToken is GovernorCountingSimpleInternal {
         string memory _linkToDiscussion,
         address _to,
         uint256 _amount,
-        address _creator,
         uint256 _nftTokenSerialId
     ) external payable returns (uint256) {
         return
@@ -75,7 +70,6 @@ contract GovernorTransferToken is GovernorCountingSimpleInternal {
                 _to,
                 address(0),
                 _amount,
-                _creator,
                 _nftTokenSerialId
             );
     }
@@ -136,7 +130,6 @@ contract GovernorTransferToken is GovernorCountingSimpleInternal {
         string memory _title,
         string memory _description,
         string memory _linkToDiscussion,
-        address _creator,
         uint256 _nftTokenSerialId,
         bytes memory _data
     ) private returns (uint256) {
@@ -144,7 +137,6 @@ contract GovernorTransferToken is GovernorCountingSimpleInternal {
             _title,
             _description,
             _linkToDiscussion,
-            _creator,
             _data,
             _nftTokenSerialId
         );

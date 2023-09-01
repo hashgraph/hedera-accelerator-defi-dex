@@ -17,8 +17,7 @@ export default class ContractUpgradeGovernor extends Governor {
     client: Client = clientsInfo.operatorClient,
     description: string = this.DEFAULT_DESCRIPTION,
     link: string = this.DEFAULT_LINK,
-    nftTokenSerialId: number = this.DEFAULT_NFT_TOKEN_SERIAL_NO,
-    creator: AccountId = clientsInfo.operatorId
+    nftTokenSerialId: number = this.DEFAULT_NFT_TOKEN_SERIAL_NO
   ) => {
     const args = new ContractFunctionParameters()
       .addString(title)
@@ -26,7 +25,6 @@ export default class ContractUpgradeGovernor extends Governor {
       .addString(link)
       .addAddress(targetProxyAddress)
       .addAddress(targetLogicAddress)
-      .addAddress(creator.toSolidityAddress())
       .addUint256(nftTokenSerialId);
 
     const { result, receipt } = await this.execute(

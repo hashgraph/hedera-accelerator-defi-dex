@@ -1,6 +1,8 @@
 import { Helper } from "../../utils/Helper";
 import { TokenId } from "@hashgraph/sdk";
 
+const ZERO_TOKEN_ID = TokenId.fromString("0.0.0");
+
 const GOD_TOKEN_ID = "0.0.80158";
 const GOD_TOKEN_ADDRESS = "0x000000000000000000000000000000000001391e";
 
@@ -99,4 +101,5 @@ export default {
   TOKEN_LAB49_1_ID,
   ROLES,
   ACCOUNTS,
+  ZERO_TOKEN_ID,
 };

@@ -1,93 +1,232 @@
-import { Helper } from "../../utils/Helper";
-import { TokenId } from "@hashgraph/sdk";
-import { Deployment } from "../../utils/deployContractOnTestnet";
-import { clientsInfo } from "../../utils/ClientManagement";
-import { ContractService } from "../../deployment/service/ContractService";
-import {
-  executeTextProposalFlow,
-  executeContractUpgradeFlow,
-  executeGovernorTokenTransferFlow,
-  executeTokenCreateFlow,
-} from "./ftDao";
-
 import dex from "../../deployment/model/dex";
-import GodHolder from "../../e2e-test/business/GodHolder";
 import FTDAOFactory from "../../e2e-test/business/factories/FTDAOFactory";
 import FTTokenHolderFactory from "../../e2e-test/business/factories/FTTokenHolderFactory";
 import SystemRoleBasedAccess from "../../e2e-test/business/common/SystemRoleBasedAccess";
 
-const DAO_WEB_LINKS = ["LINKEDIN", "https://linkedin.com"];
+import { Helper } from "../../utils/Helper";
+import { Deployment } from "../../utils/deployContractOnTestnet";
+import { clientsInfo } from "../../utils/ClientManagement";
+import { ContractService } from "../../deployment/service/ContractService";
+import { Hbar, HbarUnit, TokenId } from "@hashgraph/sdk";
+import {
+  lockTokenForVotingIfNeeded,
+  createAndExecuteTextProposal,
+  createAndExecuteTokenCreateProposal,
+  createAndExecuteAssetTransferProposal,
+  createAndExecuteContractUpgradeProposal,
+  createAndExecuteTokenAssociationProposal,
+} from "../governance/governance";
+import TextGovernor from "../../e2e-test/business/TextGovernor";
+import TokenCreateGovernor from "../../e2e-test/business/TokenCreateGovernor";
+import TokenTransferGovernor from "../../e2e-test/business/TokenTransferGovernor";
+import ContractUpgradeGovernor from "../../e2e-test/business/ContractUpgradeGovernor";
+
 const DAO_DESC = "Lorem Ipsum is simply dummy text";
-const csDev = new ContractService();
+const DAO_ADMIN = clientsInfo.uiUserId.toSolidityAddress();
+const DAO_LOGO_URL = "https://defi-ui.hedera.com/";
+const DAO_TOKEN_ID = dex.GOVERNANCE_DAO_TWO_TOKEN_ID;
+const DAO_WEB_LINKS = ["LINKEDIN", "https://linkedin.com"];
 
-export async function executeDAOFlow(
+const FT_TRANSFER_TOKEN_ID = TokenId.fromString(dex.TOKEN_LAB49_1);
+const FT_TRANSFER_TOKEN_AMOUNT = 1e8;
+
+const NFT_TRANSFER_TOKEN_ID = dex.NFT_TOKEN_ID;
+
+const HBAR_TRANSFER_AMOUNT = Hbar.from(1, HbarUnit.Hbar)
+  .toTinybars()
+  .toNumber();
+
+async function main() {
+  const daoFactory = new FTDAOFactory();
+  await daoFactory.initialize(
+    clientsInfo.operatorClient,
+    new FTTokenHolderFactory()
+  );
+  await daoFactory.createDAO(
+    dex.GOVERNANCE_DAO_TWO,
+    DAO_LOGO_URL,
+    DAO_DESC,
+    DAO_WEB_LINKS,
+    DAO_TOKEN_ID.toSolidityAddress(),
+    1,
+    0,
+    20,
+    false,
+    DAO_ADMIN,
+    clientsInfo.operatorClient
+  );
+  const daoAddresses = await daoFactory.getDAOs();
+  const daoAddress = daoAddresses.pop()!;
+  await executeGovernanceProposals(daoFactory, daoAddress, DAO_TOKEN_ID);
+  await checkAndUpdateGovernanceLogics(daoFactory);
+}
+
+export async function executeGovernanceProposals(
   daoFactory: FTDAOFactory,
-  daoProxyAddress: string,
-  tokenId: TokenId
+  daoEvmAddress: string,
+  daoTokenId: TokenId
 ) {
-  console.log(`- executing TokenTransferDAO i.e ${daoProxyAddress}\n`);
+  console.log(
+    `- executing Governance proposals for given DAO i.e ${daoEvmAddress}, ${daoTokenId}\n`
+  );
+  const dao = await daoFactory.getGovernorTokenDaoInstance(daoEvmAddress);
+  const tokenHolder = await daoFactory.getTokenHolderInstance(daoTokenId);
+  const governanceAddresses =
+    await dao.getGovernorTokenTransferContractAddresses();
 
-  const ftDao = await daoFactory.getGovernorTokenDaoInstance(daoProxyAddress);
-
-  const genericHolder = await daoFactory.getTokenHolderInstance(tokenId);
-
-  const godHolder = genericHolder as GodHolder;
-
-  await executeGovernorTokenTransferFlow(godHolder as GodHolder, ftDao);
-
-  await executeTextProposalFlow(godHolder, ftDao);
-
-  await executeContractUpgradeFlow(
-    godHolder,
-    ftDao,
-    csDev.getContractWithProxy(csDev.factoryContractName)
-      .transparentProxyAddress!,
-    csDev.getContract(csDev.factoryContractName).address
+  const textGovernor = new TextGovernor(
+    governanceAddresses.governorTextProposalProxyId
   );
 
-  await executeTokenCreateFlow(
-    godHolder,
-    ftDao,
-    "tokenName",
-    "tokenSymbol",
+  const upgradeGovernor = new ContractUpgradeGovernor(
+    governanceAddresses.governorUpgradeProxyId
+  );
+
+  const transferGovernor = new TokenTransferGovernor(
+    governanceAddresses.governorTokenTransferProxyId
+  );
+
+  const tokenCreateGovernor = new TokenCreateGovernor(
+    governanceAddresses.governorTokenCreateProxyId
+  );
+
+  // step - 0 lock required tokens to token holder
+  await lockTokenForVotingIfNeeded(
+    textGovernor,
+    tokenHolder,
+    clientsInfo.operatorClient,
+    clientsInfo.treasureId,
+    clientsInfo.treasureKey,
+    clientsInfo.treasureClient,
+    0
+  );
+
+  // step - 1 text proposal flow
+  await createAndExecuteTextProposal(
+    textGovernor,
+    tokenHolder,
+    clientsInfo.treasureClient,
+    clientsInfo.operatorId,
+    clientsInfo.operatorKey,
+    clientsInfo.operatorClient,
+    0
+  );
+
+  // step - 2 contract upgrade proposal
+  const contractToUpgradeInfo = new ContractService().getContract(
+    ContractService.MULTI_SIG
+  );
+  await createAndExecuteContractUpgradeProposal(
+    contractToUpgradeInfo.transparentProxyAddress!,
+    contractToUpgradeInfo.address,
+    upgradeGovernor,
+    tokenHolder,
+    clientsInfo.treasureClient,
+    clientsInfo.operatorId,
+    clientsInfo.operatorKey,
+    clientsInfo.operatorClient,
+    0
+  );
+
+  // step - 3 (A) ft token association
+  await createAndExecuteTokenAssociationProposal(
+    transferGovernor,
+    tokenHolder,
+    FT_TRANSFER_TOKEN_ID,
+    clientsInfo.treasureClient,
+    clientsInfo.operatorId,
+    clientsInfo.operatorKey,
+    clientsInfo.operatorClient,
+    0
+  );
+
+  // step - 3 (B) ft transfer flow
+  await createAndExecuteAssetTransferProposal(
+    transferGovernor,
+    tokenHolder,
+    FT_TRANSFER_TOKEN_ID,
+    FT_TRANSFER_TOKEN_AMOUNT,
+    clientsInfo.operatorId,
+    clientsInfo.operatorKey,
+    clientsInfo.operatorId,
+    clientsInfo.operatorKey,
+    clientsInfo.treasureClient,
+    clientsInfo.operatorId,
+    clientsInfo.operatorKey,
+    clientsInfo.operatorClient,
+    0
+  );
+
+  // step - 4 (A) nft token association
+  await createAndExecuteTokenAssociationProposal(
+    transferGovernor,
+    tokenHolder,
+    NFT_TRANSFER_TOKEN_ID,
+    clientsInfo.treasureClient,
+    clientsInfo.operatorId,
+    clientsInfo.operatorKey,
+    clientsInfo.operatorClient,
+    0
+  );
+
+  // step - 4 (B) nft transfer flow
+  await createAndExecuteAssetTransferProposal(
+    transferGovernor,
+    tokenHolder,
+    NFT_TRANSFER_TOKEN_ID,
+    transferGovernor.DEFAULT_NFT_TOKEN_FOR_TRANSFER,
+    clientsInfo.operatorId,
+    clientsInfo.operatorKey,
+    clientsInfo.operatorId,
+    clientsInfo.operatorKey,
+    clientsInfo.treasureClient,
+    clientsInfo.operatorId,
+    clientsInfo.operatorKey,
+    clientsInfo.operatorClient,
+    0
+  );
+
+  // step - 5 HBar transfer flow
+  await createAndExecuteAssetTransferProposal(
+    transferGovernor,
+    tokenHolder,
+    dex.ZERO_TOKEN_ID,
+    HBAR_TRANSFER_AMOUNT,
+    clientsInfo.operatorId,
+    clientsInfo.operatorKey,
+    clientsInfo.operatorId,
+    clientsInfo.operatorKey,
+    clientsInfo.treasureClient,
+    clientsInfo.operatorId,
+    clientsInfo.operatorKey,
+    clientsInfo.operatorClient,
+    0
+  );
+
+  // step - 6 Token create flow
+  await createAndExecuteTokenCreateProposal(
+    Helper.createProposalTitle("Test-A", 5),
+    Helper.createProposalTitle("Test-A", 5),
+    tokenCreateGovernor,
+    tokenHolder,
+    clientsInfo.treasureClient,
+    clientsInfo.treasureId,
+    clientsInfo.treasureClient,
+    clientsInfo.operatorId,
+    clientsInfo.operatorKey,
+    clientsInfo.operatorClient,
+    tokenCreateGovernor.TXN_FEE_FOR_TOKEN_CREATE
+  );
+
+  // step - 7 unlock required tokens from token holder
+  await tokenHolder.checkAndClaimGodTokens(
+    clientsInfo.treasureClient,
     clientsInfo.treasureId
   );
 }
 
-async function createDAO(
-  daoFactory: FTDAOFactory,
-  name: string,
-  tokenId: TokenId,
-  isPrivate: boolean
-) {
-  await daoFactory.createDAO(
-    name,
-    "https://defi-ui.hedera.com/",
-    DAO_DESC,
-    DAO_WEB_LINKS,
-    tokenId.toSolidityAddress(),
-    500,
-    0,
-    20,
-    isPrivate
-  );
-}
-
-async function main() {
+async function checkAndUpdateGovernanceLogics(daoFactory: FTDAOFactory) {
   const roleBasedAccess = new SystemRoleBasedAccess();
-  const daoFactory = new FTDAOFactory();
-  const ftTokenHolderFactory = new FTTokenHolderFactory();
-  await daoFactory.initialize(clientsInfo.operatorClient, ftTokenHolderFactory);
-  await daoFactory.getTokenHolderFactoryAddress();
-  await createDAO(
-    daoFactory,
-    dex.GOVERNANCE_DAO_TWO,
-    dex.GOVERNANCE_DAO_TWO_TOKEN_ID,
-    false
-  );
-  const daoAddresses = await daoFactory.getDAOs();
-  const daoAddress = daoAddresses.pop()!;
-  await executeDAOFlow(daoFactory, daoAddress, dex.GOVERNANCE_DAO_TWO_TOKEN_ID);
   const hasRole = await roleBasedAccess.checkIfChildProxyAdminRoleGiven();
   hasRole &&
     (await daoFactory.upgradeHederaService(clientsInfo.childProxyAdminClient));
@@ -103,7 +242,6 @@ async function main() {
     deployedItems.get(ContractService.GOVERNOR_TEXT).address,
     deployedItems.get(ContractService.GOVERNOR_UPGRADE).address
   );
-  console.log(`\nDone`);
 }
 
 if (require.main === module) {

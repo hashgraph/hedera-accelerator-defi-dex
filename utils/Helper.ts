@@ -145,8 +145,8 @@ export class Helper {
     return execSync("git log -1 HEAD --pretty=format:%s").toString().trim();
   }
 
-  static createProposalTitle(titlePrefix: string) {
-    return `${titlePrefix} ${web3.utils.randomHex(20)}`;
+  static createProposalTitle(titlePrefix: string, count: number = 20) {
+    return `${titlePrefix} ${web3.utils.randomHex(count)}`;
   }
 
   static readWorkflowInputs() {

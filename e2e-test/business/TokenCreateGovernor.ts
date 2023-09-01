@@ -31,7 +31,6 @@ export default class TokenCreateGovernor extends Governor {
       .addAddress(tokenTreasureId.toSolidityAddress())
       .addString(tokenName)
       .addString(tokenSymbol)
-      .addAddress(clientsInfo.operatorId.toSolidityAddress())
       .addUint256(nftTokenSerialId);
 
     const { result } = await this.execute(

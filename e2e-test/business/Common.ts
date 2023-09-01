@@ -273,13 +273,15 @@ export default class Common extends Base {
     const response = await new TokenInfoQuery()
       .setTokenId(tokenId)
       .execute(client);
+    const isNFT = response.tokenType! === TokenType.NonFungibleUnique;
     console.log(
-      `- Common#getTokenInfo(): TokenId = ${tokenId}, name = ${response.name}, symbol = ${response.symbol},  totalSupply= ${response.totalSupply}\n`
+      `- Common#getTokenInfo(): TokenId = ${tokenId}, name = ${response.name}, symbol = ${response.symbol}, totalSupply = ${response.totalSupply}, isNFT = ${isNFT}\n`
     );
     return {
       name: response.name,
       symbol: response.symbol,
       treasuryAccountId: response.treasuryAccountId?.toString(),
+      isNFT,
     };
   };
 
@@ -378,6 +380,43 @@ export default class Common extends Base {
         }, tokenId = ${tokenId.toString()}, serialNo = ${serialNo}, fromAccountId = ${fromAccountId}, toAccountId = ${toAccountId.toString()} \n`
       );
     }
+  };
+
+  static transferAssets = async (
+    tokenId: string | TokenId,
+    amountOrId: number,
+    toAccountId: string | AccountId,
+    fromAccountId: string | AccountId,
+    fromPrivateKey: PrivateKey,
+    client: Client = clientsInfo.operatorClient
+  ) => {
+    const txn = new TransferTransaction();
+    if (
+      tokenId.toString() === dex.ZERO_TOKEN_ID.toString() ||
+      tokenId.toString() === dex.HBARX_TOKEN_ID
+    ) {
+      txn
+        .addHbarTransfer(fromAccountId, Hbar.fromTinybars(-amountOrId))
+        .addHbarTransfer(toAccountId, Hbar.fromTinybars(amountOrId));
+    } else if ((await Common.getTokenInfo(tokenId, client)).isNFT) {
+      txn.addNftTransfer(tokenId, amountOrId, fromAccountId, toAccountId);
+    } else {
+      txn
+        .addTokenTransfer(tokenId, fromAccountId, -amountOrId)
+        .addTokenTransfer(tokenId, toAccountId, amountOrId);
+    }
+    const signedTxn = await txn.freezeWith(client).sign(fromPrivateKey);
+    const txnResponse = await signedTxn.execute(client);
+    const txnReceipt = await txnResponse.getReceipt(client);
+    console.log("- Common#transferAssets():");
+    console.table({
+      tokenId: tokenId.toString(),
+      amountOrId,
+      toAccountId: toAccountId.toString(),
+      fromAccountId: fromAccountId.toString(),
+      status: txnReceipt.status.toString(),
+    });
+    console.log("");
   };
 
   private static getBalanceInternally = async (
