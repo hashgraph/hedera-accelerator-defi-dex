@@ -144,7 +144,7 @@ describe("Governor Tests", function () {
   }
 
   const readLastGovernorBalanceEvent = async (txn: any) => {
-    const events = await TestHelper.readEvents(txn, "GovernorBalance");
+    const events = await TestHelper.readEvents(txn, ["GovernorBalance"]);
     const lastEvent = events.pop();
     return {
       activeProposalsCount: lastEvent.args.activeProposalsCount,
@@ -1634,7 +1634,7 @@ describe("Governor Tests", function () {
       );
     });
 
-    it.only("Verify cancel proposal should emit unblock event", async function () {
+    it("Verify cancel proposal should emit unblock event", async function () {
       const { nftGovernorTT, nftGodHolder, nftToken, signers, creator } =
         await loadFixture(deployFixture);
       await nftGodHolder

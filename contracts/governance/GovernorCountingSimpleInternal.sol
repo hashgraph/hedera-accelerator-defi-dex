@@ -175,7 +175,7 @@ abstract contract GovernorCountingSimpleInternal is
             amountOrId
         );
 
-        activeProposalsCount = activeProposalsCount + 1;
+        activeProposalsCount += 1;
         emit GovernorBalance(activeProposalsCount, getBlockedTokenBalance());
 
         return proposalId;
@@ -321,10 +321,7 @@ abstract contract GovernorCountingSimpleInternal is
     ) public returns (uint256) {
         address voter = _msgSender();
         ProposalInfo storage proposalInfo = _getProposalInfoIfExist(proposalId);
-        require(
-            _getVotes(voter, 0, "") > 0,
-            "GCSI: lock token to vote"
-        );
+        require(_getVotes(voter, 0, "") > 0, "GCSI: lock token to vote");
         tokenHolder.addProposalForVoter(proposalId);
         uint256 weight = _castVote(proposalId, voter, support, "");
         proposalInfo.voters.push(voter);
@@ -352,10 +349,7 @@ abstract contract GovernorCountingSimpleInternal is
         if (!tokenHolder.isNFTType()) {
             uint256 totalSupply = IERC20(token).totalSupply();
             uint256 value = totalSupply * quorumThresholdInBsp;
-            require(
-                value >= 10_000,
-                "GCSI: (GOD token * quorum) < 10,000"
-            );
+            require(value >= 10_000, "GCSI: (GOD token * quorum) < 10,000");
             return value / 10_000;
         } else {
             return 1;
