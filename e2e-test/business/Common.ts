@@ -273,7 +273,7 @@ export default class Common extends Base {
     const response = await new TokenInfoQuery()
       .setTokenId(tokenId)
       .execute(client);
-    const isNFT = response.tokenType! === TokenType.NonFungibleUnique;
+    const isNFT = response.tokenType === TokenType.NonFungibleUnique;
     console.log(
       `- Common#getTokenInfo(): TokenId = ${tokenId}, name = ${response.name}, symbol = ${response.symbol}, totalSupply = ${response.totalSupply}, isNFT = ${isNFT}\n`
     );

@@ -54,26 +54,6 @@ contract GovernorTransferToken is GovernorCountingSimpleInternal {
             );
     }
 
-    function createHBarTransferProposal(
-        string memory _title,
-        string memory _description,
-        string memory _linkToDiscussion,
-        address _to,
-        uint256 _amount,
-        uint256 _nftTokenSerialId
-    ) external payable returns (uint256) {
-        return
-            createProposal(
-                _title,
-                _description,
-                _linkToDiscussion,
-                _to,
-                address(0),
-                _amount,
-                _nftTokenSerialId
-            );
-    }
-
     function _execute(
         uint256 proposalId,
         address[] memory targets,

@@ -1,5 +1,4 @@
 import dex from "../../deployment/model/dex";
-import FTDAO from "../business/FTDAO";
 import Common from "../business/Common";
 import GodHolder from "../business/GodHolder";
 import FTDAOFactory from "../business/factories/FTDAOFactory";
