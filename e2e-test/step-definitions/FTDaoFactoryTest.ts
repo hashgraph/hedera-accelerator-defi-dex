@@ -283,12 +283,12 @@ export class FTDaoFactoryTest extends CommonSteps {
       TRANSFER_TOKEN_ID
     );
     if (transferTokenInGTT.isGreaterThan(0)) {
-      await Common.transferTokens(
+      await Common.transferAssets(
+        TRANSFER_TOKEN_ID,
+        transferTokenInGTT.toNumber(),
         senderAccountId,
         AccountId.fromString(governor.contractId),
         clientsInfo.operatorKey,
-        TRANSFER_TOKEN_ID,
-        transferTokenInGTT.toNumber(),
         feePayerClient
       );
     }
@@ -296,12 +296,12 @@ export class FTDaoFactoryTest extends CommonSteps {
 
   @when(/User transfer amount to GTT contract/, undefined, 30000)
   public async sendTokenToGTTContract() {
-    await Common.transferTokens(
+    await Common.transferAssets(
+      TRANSFER_TOKEN_ID,
+      tokenTransferAmount.toNumber(),
       AccountId.fromString(governor.contractId),
       senderAccountId,
       senderAccountPK,
-      TRANSFER_TOKEN_ID,
-      tokenTransferAmount.toNumber(),
       feePayerClient
     );
   }

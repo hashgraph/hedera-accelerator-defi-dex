@@ -174,12 +174,12 @@ export async function executeGovernorTokenTransferFlow(
   await governor.getProposalDetails(proposalId1, voterClient);
   if (await governor.isSucceeded(proposalId1)) {
     // step - 1 transfer some amount to governance
-    await Common.transferTokens(
-      AccountId.fromString(governor.contractId),
-      senderAccountId,
-      senderAccountPK,
+    await Common.transferAssets(
       transferTokenId,
       transferTokenAmount,
+      governor.contractId,
+      senderAccountId,
+      senderAccountPK,
       txnFeePayerClient
     );
 

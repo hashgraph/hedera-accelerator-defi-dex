@@ -43,12 +43,12 @@ async function transfer() {
           if (creatorKey === undefined) {
             throw Error(`No account exist : ${creatorId}`);
           }
-          await Common.transferTokens(
+          await Common.transferAssets(
+            TOKEN_ID.toString(),
+            item.balance,
             clientsInfo.treasureId,
             AccountId.fromString(item.account),
             PrivateKey.fromString(creatorKey),
-            TOKEN_ID.toString(),
-            item.balance,
             clientsInfo.operatorClient
           );
         } catch (error: any) {

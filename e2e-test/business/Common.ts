@@ -18,7 +18,6 @@ import {
   TokenMintTransaction,
   TokenAssociateTransaction,
   AccountAllowanceApproveTransaction,
-  ContractExecuteTransaction,
   Hbar,
 } from "@hashgraph/sdk";
 import { BigNumber } from "bignumber.js";
@@ -267,7 +266,7 @@ export default class Common extends Base {
   };
 
   static getTokenInfo = async (
-    tokenId: TokenId | string,
+    tokenId: string | TokenId,
     client: Client = clientsInfo.operatorClient
   ) => {
     const response = await new TokenInfoQuery()
@@ -285,103 +284,6 @@ export default class Common extends Base {
     };
   };
 
-  static transferTokens = async (
-    receiverAccountId: AccountId,
-    senderAccountId: AccountId = clientsInfo.operatorId,
-    senderPrivateKey: PrivateKey = clientsInfo.operatorKey,
-    tokenId: string | TokenId = dex.GOD_TOKEN_ID,
-    tokenQty: number = 9000000 * 1e8,
-    client: Client = clientsInfo.operatorClient
-  ) => {
-    const txn = await new TransferTransaction()
-      .addTokenTransfer(tokenId, senderAccountId, -tokenQty)
-      .addTokenTransfer(tokenId, receiverAccountId, tokenQty)
-      .freezeWith(client)
-      .sign(senderPrivateKey);
-    const txnResponse = await txn.execute(client);
-    const txnReceipt = await txnResponse.getReceipt(client);
-    const status = txnReceipt.status;
-    console.log(
-      `- Common#transferTokens(): TokenId = ${tokenId}, TokenQty = ${tokenQty}, sender = ${senderAccountId}, receiver = ${receiverAccountId}, status = ${status}\n`
-    );
-  };
-
-  static transferHbarsToContract = async (
-    amount: Hbar,
-    contractId: ContractId,
-    senderAccountId: AccountId = clientsInfo.operatorId,
-    senderClient: Client = clientsInfo.operatorClient
-  ) => {
-    const contractExecuteTx = new ContractExecuteTransaction()
-      .setContractId(contractId)
-      .setGas(500_000)
-      .setPayableAmount(amount);
-    const contractExecuteSubmit = await contractExecuteTx.execute(senderClient);
-    const contractExecuteRx = await contractExecuteSubmit.getReceipt(
-      senderClient
-    );
-    console.log(
-      `- Common#transferHbarsToContract(): sender = ${senderAccountId}, receiver = ${contractId}, amount = ${amount} status = ${contractExecuteRx.status} \n`
-    );
-  };
-
-  static transferNFTToken = async (
-    tokenId: TokenId,
-    serialNo: number,
-    fromEvmAddress: string,
-    fromAccountPrivateKey: PrivateKey,
-    toAccountId: string | AccountId,
-    client: Client
-  ) => {
-    const balance = await Common.getTokenBalance(
-      fromEvmAddress,
-      tokenId,
-      client
-    );
-    const fromAccountId = await AddressHelper.addressToId(fromEvmAddress);
-    if (balance.toNumber() > 0) {
-      const txn = await new TransferTransaction()
-        .addNftTransfer(tokenId, serialNo, fromAccountId, toAccountId)
-        .freezeWith(client)
-        .sign(fromAccountPrivateKey);
-      const txnResult = await txn.execute(client);
-      const txnReceipt = await txnResult.getReceipt(client);
-      console.log(
-        ` - Common#transferNFTToken(): status = ${
-          txnReceipt.status
-        }, tokenId = ${tokenId.toString()}, serialNo = ${serialNo}, fromAccountId = ${fromAccountId}, toAccountId = ${toAccountId.toString()} \n`
-      );
-    }
-  };
-
-  static transferNFTTokenFromUser = async (
-    tokenId: TokenId,
-    serialNo: number,
-    fromAccountId: AccountId,
-    fromAccountPrivateKey: PrivateKey,
-    toAccountId: string | AccountId,
-    client: Client
-  ) => {
-    const balance = await Common.getTokenBalance(
-      fromAccountId,
-      tokenId,
-      client
-    );
-    if (balance.toNumber() > 0) {
-      const txn = await new TransferTransaction()
-        .addNftTransfer(tokenId, serialNo, fromAccountId, toAccountId)
-        .freezeWith(client)
-        .sign(fromAccountPrivateKey);
-      const txnResult = await txn.execute(client);
-      const txnReceipt = await txnResult.getReceipt(client);
-      console.log(
-        ` - Common#transferNFTTokenFromUser(): status = ${
-          txnReceipt.status
-        }, tokenId = ${tokenId.toString()}, serialNo = ${serialNo}, fromAccountId = ${fromAccountId}, toAccountId = ${toAccountId.toString()} \n`
-      );
-    }
-  };
-
   static transferAssets = async (
     tokenId: string | TokenId,
     amountOrId: number,
@@ -391,19 +293,21 @@ export default class Common extends Base {
     client: Client = clientsInfo.operatorClient
   ) => {
     const txn = new TransferTransaction();
-    if (
-      tokenId.toString() === dex.ZERO_TOKEN_ID.toString() ||
-      tokenId.toString() === dex.HBARX_TOKEN_ID
-    ) {
-      txn
-        .addHbarTransfer(fromAccountId, Hbar.fromTinybars(-amountOrId))
-        .addHbarTransfer(toAccountId, Hbar.fromTinybars(amountOrId));
-    } else if ((await Common.getTokenInfo(tokenId, client)).isNFT) {
-      txn.addNftTransfer(tokenId, amountOrId, fromAccountId, toAccountId);
-    } else {
-      txn
-        .addTokenTransfer(tokenId, fromAccountId, -amountOrId)
-        .addTokenTransfer(tokenId, toAccountId, amountOrId);
+    switch (true) {
+      case tokenId.toString() === dex.HBARX_TOKEN_ID:
+      case tokenId.toString() === dex.ZERO_TOKEN_ID.toString():
+        txn
+          .addHbarTransfer(fromAccountId, Hbar.fromTinybars(-amountOrId))
+          .addHbarTransfer(toAccountId, Hbar.fromTinybars(amountOrId));
+        break;
+      case (await Common.getTokenInfo(tokenId, clientsInfo.operatorClient))
+        .isNFT:
+        txn.addNftTransfer(tokenId, amountOrId, fromAccountId, toAccountId);
+        break;
+      default:
+        txn
+          .addTokenTransfer(tokenId, fromAccountId, -amountOrId)
+          .addTokenTransfer(tokenId, toAccountId, amountOrId);
     }
     const signedTxn = await txn.freezeWith(client).sign(fromPrivateKey);
     const txnResponse = await signedTxn.execute(client);
@@ -417,19 +321,6 @@ export default class Common extends Base {
       status: txnReceipt.status.toString(),
     });
     console.log("");
-  };
-
-  private static getBalanceInternally = async (
-    id: AccountId | ContractId,
-    client: Client
-  ) => {
-    const balanceQuery = new AccountBalanceQuery();
-    if (id instanceof AccountId) {
-      balanceQuery.setAccountId(id);
-    } else {
-      balanceQuery.setContractId(id);
-    }
-    return await balanceQuery.execute(client);
   };
 
   static deleteToken = async (
@@ -491,5 +382,18 @@ export default class Common extends Base {
         `Common#associateTokensToAccount(): TokenIds = ${tokenIds},  accountId = ${accountId}, transaction status is: ${error.toString()} \n`
       );
     }
+  };
+
+  private static getBalanceInternally = async (
+    id: AccountId | ContractId,
+    client: Client
+  ) => {
+    const balanceQuery = new AccountBalanceQuery();
+    if (id instanceof AccountId) {
+      balanceQuery.setAccountId(id);
+    } else {
+      balanceQuery.setContractId(id);
+    }
+    return await balanceQuery.execute(client);
   };
 }
