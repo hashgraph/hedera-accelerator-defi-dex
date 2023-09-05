@@ -125,7 +125,6 @@ abstract contract GovernorCountingSimpleInternal is
         string memory title,
         string memory description,
         string memory link,
-        address creator,
         bytes memory data,
         uint256 nftTokenSerialId
     ) internal returns (uint256) {
@@ -144,7 +143,7 @@ abstract contract GovernorCountingSimpleInternal is
             : PROPOSAL_CREATION_AMOUNT;
         uint256 proposalId = super.propose(targets, values, calldatas, title);
         proposals[proposalId] = ProposalInfo(
-            creator,
+            msg.sender,
             title,
             description,
             link,
@@ -153,7 +152,7 @@ abstract contract GovernorCountingSimpleInternal is
             amountOrId
         );
 
-        _getGODToken(creator, amountOrId);
+        _getGODToken(msg.sender, amountOrId);
 
         Duration memory duration;
         duration.startBlock = proposalSnapshot(proposalId);
@@ -161,7 +160,7 @@ abstract contract GovernorCountingSimpleInternal is
 
         emit ProposalDetails(
             proposalId,
-            creator,
+            msg.sender,
             title,
             description,
             link,

@@ -127,12 +127,12 @@ export async function executeNFTTokenTransferProposal(
   );
 
   // Step - 2 transfer nft token from wallet to safe
-  await Common.transferNFTTokenFromUser(
+  await Common.transferAssets(
     nftToken,
     nftTokenSerialId,
+    gnosisSafe.contractId,
     tokenSenderAccountId,
     tokenSenderPrivateKey,
-    gnosisSafe.contractId,
     safeTxnExecutionClient
   );
 
@@ -202,12 +202,12 @@ export async function executeFTTokenTransferProposal(
   );
 
   // Step - 2 transfer ft token from wallet to safe
-  await Common.transferTokens(
-    AccountId.fromString(gnosisSafe.contractId),
-    tokenSenderAccountId,
-    tokenSenderPrivateKey,
+  await Common.transferAssets(
     ftToken,
-    ftTokenAmount
+    ftTokenAmount,
+    gnosisSafe.contractId,
+    tokenSenderAccountId,
+    tokenSenderPrivateKey
   );
 
   // Step - 3 associate ft token to receiver account
@@ -310,9 +310,9 @@ export async function executeHbarTransfer(
   multiSigDAO: MultiSigDao,
   ownersInfo: any[] = DAO_OWNERS_INFO,
   hBarAmount: Hbar = HBAR_AMOUNT,
-  tokenReceiver: AccountId | ContractId = clientsInfo.treasureId,
-  tokenSenderClient: Client = clientsInfo.treasureClient,
-  tokenSenderAccountId: AccountId = clientsInfo.treasureId,
+  toAccountId: AccountId | ContractId = clientsInfo.treasureId,
+  fromAccountId: AccountId = clientsInfo.treasureId,
+  fromPrivateKey: PrivateKey = clientsInfo.treasureKey,
   safeTxnExecutionClient: Client = clientsInfo.treasureClient
 ) {
   console.log(`- executing Multi-sig DAO = ${multiSigDAO.contractId}\n`);
@@ -321,7 +321,7 @@ export async function executeHbarTransfer(
 
   // step 1 - create hBar proposal
   const hBarTransferTxnHash = await multiSigDAO.proposeTransferTransaction(
-    tokenReceiver.toSolidityAddress(),
+    toAccountId.toSolidityAddress(),
     ethers.constants.AddressZero,
     hBarAmount.to(HbarUnit.Tinybar),
     safeTxnExecutionClient
@@ -333,11 +333,13 @@ export async function executeHbarTransfer(
     await gnosisSafe.approveHash(hBarTransferTxnHash, daoOwner.client);
   }
   // step 2 - transfer hBar from sender account to safe
-  await Common.transferHbarsToContract(
-    hBarAmount,
-    ContractId.fromString(gnosisSafe.contractId),
-    tokenSenderAccountId,
-    tokenSenderClient
+  await Common.transferAssets(
+    dex.ZERO_TOKEN_ID,
+    hBarAmount.to(HbarUnit.Tinybar).toNumber(),
+    gnosisSafe.contractId,
+    fromAccountId,
+    fromPrivateKey,
+    safeTxnExecutionClient
   );
   // step 3 - transfer hBar from safe to receiver
   await gnosisSafe.executeTransaction(

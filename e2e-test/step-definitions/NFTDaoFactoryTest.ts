@@ -1,5 +1,4 @@
 import dex from "../../deployment/model/dex";
-import FTDAO from "../business/FTDAO";
 import Common from "../business/Common";
 import NFTHolder from "../business/NFTHolder";
 import NFTDAOFactory from "../business/factories/NFTDAOFactory";
@@ -47,7 +46,6 @@ let errorMessage: string;
 let daoAddress: string;
 let tokenLockedAmount: number;
 
-let ftDao: FTDAO;
 let nftHolder: NFTHolder;
 let governor: TokenTransferGovernor;
 let nftDaoFactory: NFTDAOFactory;
@@ -131,7 +129,7 @@ export class NFTDaoFactoryTest extends CommonSteps {
     30000
   )
   public async createTokenAssociateProposal(title: string): Promise<void> {
-    proposalId = await ftDao.createTokenAssociateProposal(
+    proposalId = await governor.createTokenAssociateProposal(
       title,
       TRANSFER_TOKEN_ID.toSolidityAddress(),
       DAO_ADMIN_CLIENT,
@@ -156,15 +154,15 @@ export class NFTDaoFactoryTest extends CommonSteps {
       tokenTransferAmount = new BigNumber(
         tokenAmount * CommonSteps.withPrecision
       );
-      proposalId = await ftDao.createTokenTransferProposal(
+      proposalId = await governor.createTokenTransferProposal(
         title,
         receiverAccountId.toSolidityAddress(),
         TRANSFER_TOKEN_ID.toSolidityAddress(),
         tokenTransferAmount,
         DAO_ADMIN_CLIENT,
+        governor.DEFAULT_NFT_TOKEN_SERIAL_NO,
         description,
-        link,
-        governor.DEFAULT_NFT_TOKEN_SERIAL_NO
+        link
       );
     } catch (e: any) {
       errorMessage = e.message;
@@ -271,12 +269,12 @@ export class NFTDaoFactoryTest extends CommonSteps {
 
   @when(/User transfer proposed amount to GTT contract/, undefined, 30000)
   public async sendTokenToGTTContract() {
-    await Common.transferTokens(
+    await Common.transferAssets(
+      TRANSFER_TOKEN_ID,
+      tokenTransferAmount.toNumber(),
       AccountId.fromString(governor.contractId),
       senderAccountId,
       senderAccountPK,
-      TRANSFER_TOKEN_ID,
-      tokenTransferAmount.toNumber(),
       feePayerClient
     );
   }
@@ -374,19 +372,19 @@ export class NFTDaoFactoryTest extends CommonSteps {
       TRANSFER_TOKEN_ID
     );
     if (transferTokenInGTT.isGreaterThan(0)) {
-      await Common.transferTokens(
+      await Common.transferAssets(
+        TRANSFER_TOKEN_ID,
+        transferTokenInGTT.toNumber(),
         senderAccountId,
         AccountId.fromString(governor.contractId),
         clientsInfo.operatorKey,
-        TRANSFER_TOKEN_ID,
-        transferTokenInGTT.toNumber(),
         feePayerClient
       );
     }
   }
 
   private async initDAOContext() {
-    ftDao = await nftDaoFactory.getGovernorTokenDaoInstance(daoAddress);
+    const ftDao = await nftDaoFactory.getGovernorTokenDaoInstance(daoAddress);
     const items = await ftDao.getGovernorTokenTransferContractAddresses();
     governor = new TokenTransferGovernor(items.governorTokenTransferProxyId);
     nftHolder = await nftDaoFactory.getTokenHolderInstance(NFT_TOKEN_ID);

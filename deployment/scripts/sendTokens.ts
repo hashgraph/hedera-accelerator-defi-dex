@@ -5,12 +5,12 @@ import dex from "../model/dex";
 import Common from "../../e2e-test/business/Common";
 
 async function main() {
-  await Common.transferTokens(
+  await Common.transferAssets(
+    dex.GOD_TOKEN_ID,
+    100000 * 1e8,
     AccountId.fromString("0.0.78391"),
     clientsInfo.uiUserId,
-    clientsInfo.uiUserKey,
-    dex.GOD_TOKEN_ID,
-    100000 * 1e8
+    clientsInfo.uiUserKey
   );
   await Common.getTokenBalance(
     AccountId.fromString("0.0.78391"),

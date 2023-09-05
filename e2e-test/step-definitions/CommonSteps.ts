@@ -7,6 +7,7 @@ import {
   TokenId,
 } from "@hashgraph/sdk";
 import { Deployment } from "../../utils/deployContractOnTestnet";
+import { AddressHelper } from "../../utils/AddressHelper";
 import GodHolder from "../business/GodHolder";
 import Common from "../business/Common";
 import NFTHolder from "../business/NFTHolder";
@@ -99,12 +100,12 @@ export class CommonSteps {
   ) {
     const qty = await this.getTokenBal(id, tokenId, client);
     if (qty.isGreaterThan(0.0)) {
-      await this.transferTokens(
+      await Common.transferAssets(
+        tokenId,
+        Number(qty),
         receiverAccountId,
         senderAccountId,
         senderPrivateKey,
-        tokenId,
-        Number(qty),
         client
       );
     }
@@ -214,14 +215,22 @@ export class CommonSteps {
     tokenSerialNumber: number,
     client: Client
   ) {
-    await Common.transferNFTToken(
-      tokenId,
-      tokenSerialNumber,
+    const balance = await Common.getTokenBalance(
       fromEvmAddress,
-      fromAccountKey,
-      toAccountId,
+      tokenId,
       client
     );
+    const fromAccountId = await AddressHelper.addressToId(fromEvmAddress);
+    if (balance.toNumber() > 0) {
+      await Common.transferAssets(
+        tokenId,
+        tokenSerialNumber,
+        toAccountId,
+        fromAccountId,
+        fromAccountKey,
+        client
+      );
+    }
   }
 
   public async deploy(contracts: string) {
@@ -235,24 +244,6 @@ export class CommonSteps {
       items.map(async (item: string) => {
         await deployment.deployProxyAndSave(item);
       })
-    );
-  }
-
-  private async transferTokens(
-    receiverAccountId: AccountId,
-    senderAccountId: AccountId,
-    senderPrivateKey: PrivateKey,
-    tokenId: string | TokenId,
-    tokenQty: number,
-    client: Client
-  ) {
-    await Common.transferTokens(
-      receiverAccountId,
-      senderAccountId,
-      senderPrivateKey,
-      tokenId,
-      tokenQty,
-      client
     );
   }
 }

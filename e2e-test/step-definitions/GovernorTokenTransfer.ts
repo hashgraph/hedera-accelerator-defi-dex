@@ -14,7 +14,7 @@ import { TokenId, ContractId, AccountId } from "@hashgraph/sdk";
 const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
 const TRANSFER_TOKEN_ID = TokenId.fromString(dex.TOKEN_LAB49_1);
 
-const noGodTokenUserAccountId = clientsInfo.operatorIdNoGODToken;
+const noGodTokenUserClient = clientsInfo.operatorIdNoGODTokenClient;
 
 const senderAccountId = clientsInfo.treasureId;
 const senderAccountPK = clientsInfo.treasureKey;
@@ -103,11 +103,10 @@ export class GovernorTokenTransfer extends CommonSteps {
         receiverAccountId.toSolidityAddress(),
         TRANSFER_TOKEN_ID.toSolidityAddress(),
         tokenTransferAmount,
-        feePayerClient,
+        proposalCreatorClient,
         governor.DEFAULT_NFT_TOKEN_SERIAL_NO,
         description,
-        link,
-        proposalCreatorAccountId.toSolidityAddress()
+        link
       );
     } catch (e: any) {
       errorMessage = e.message;
@@ -130,11 +129,10 @@ export class GovernorTokenTransfer extends CommonSteps {
         receiverAccountId.toSolidityAddress(),
         TRANSFER_TOKEN_ID.toSolidityAddress(),
         tokenQty,
-        feePayerClient,
+        noGodTokenUserClient,
         governor.DEFAULT_NFT_TOKEN_SERIAL_NO,
         description,
-        link,
-        noGodTokenUserAccountId.toSolidityAddress()
+        link
       );
     } catch (e: any) {
       errorMessage = e.message;
@@ -154,11 +152,10 @@ export class GovernorTokenTransfer extends CommonSteps {
     proposalId = await governor.createTokenAssociateProposal(
       title,
       TRANSFER_TOKEN_ID.toSolidityAddress(),
-      feePayerClient,
+      proposalCreatorClient,
       description,
       link,
-      governor.DEFAULT_NFT_TOKEN_SERIAL_NO,
-      proposalCreatorAccountId.toSolidityAddress()
+      governor.DEFAULT_NFT_TOKEN_SERIAL_NO
     );
   }
 
@@ -281,12 +278,12 @@ export class GovernorTokenTransfer extends CommonSteps {
       TRANSFER_TOKEN_ID
     );
     if (transferTokenInGTT.isGreaterThan(0)) {
-      await Common.transferTokens(
+      await Common.transferAssets(
+        TRANSFER_TOKEN_ID,
+        transferTokenInGTT.toNumber(),
         senderAccountId,
         AccountId.fromString(governor.contractId),
         clientsInfo.operatorKey,
-        TRANSFER_TOKEN_ID,
-        transferTokenInGTT.toNumber(),
         feePayerClient
       );
     }
@@ -294,12 +291,12 @@ export class GovernorTokenTransfer extends CommonSteps {
 
   @when(/User treasury transfer amount to GTT contract/, undefined, 30000)
   public async sendTokenToGTTContract() {
-    await Common.transferTokens(
+    await Common.transferAssets(
+      TRANSFER_TOKEN_ID,
+      tokenTransferAmount.toNumber(),
       AccountId.fromString(governor.contractId),
       senderAccountId,
       senderAccountPK,
-      TRANSFER_TOKEN_ID,
-      tokenTransferAmount.toNumber(),
       feePayerClient
     );
   }

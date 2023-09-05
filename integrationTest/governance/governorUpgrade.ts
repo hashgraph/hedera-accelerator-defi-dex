@@ -1,22 +1,20 @@
 import dex from "../../deployment/model/dex";
-import Common from "../../e2e-test/business/Common";
 import GodHolder from "../../e2e-test/business/GodHolder";
 import FTTokenHolderFactory from "../../e2e-test/business/factories/FTTokenHolderFactory";
 import ContractUpgradeGovernor from "../../e2e-test/business/ContractUpgradeGovernor";
 
 import { Helper } from "../../utils/Helper";
+import { Deployment } from "../../utils/deployContractOnTestnet";
 import { clientsInfo } from "../../utils/ClientManagement";
-import { AddressHelper } from "../../utils/AddressHelper";
+import { ContractId, TokenId } from "@hashgraph/sdk";
 import { ContractService } from "../../deployment/service/ContractService";
-import { Client, TokenId, AccountId, PrivateKey } from "@hashgraph/sdk";
+
+import {
+  lockTokenForVotingIfNeeded,
+  createAndExecuteContractUpgradeProposal,
+} from "./governance";
 
 const FT_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
-
-const txnFeePayerClient = clientsInfo.operatorClient;
-
-const creatorAccountId = clientsInfo.operatorId;
-const creatorAccountPK = clientsInfo.operatorKey;
-const creatorClient = clientsInfo.operatorClient;
 
 async function main() {
   const voterAccountId = clientsInfo.treasureId;
@@ -27,12 +25,18 @@ async function main() {
   const ftHolderContractId = await ftTokenHolderFactory.getTokenHolder(
     FT_TOKEN_ID.toSolidityAddress()
   );
-  const godHolder = new GodHolder(ftHolderContractId);
+  const tokenHolder = new GodHolder(ftHolderContractId);
 
-  const governor = new ContractUpgradeGovernor();
+  const deploymentDetails = await new Deployment().deployProxy(
+    ContractService.GOVERNOR_UPGRADE
+  );
+
+  const governor = new ContractUpgradeGovernor(
+    ContractId.fromString(deploymentDetails.transparentProxyId)
+  );
   await governor.initialize(
-    godHolder,
-    txnFeePayerClient,
+    tokenHolder,
+    clientsInfo.operatorClient,
     1,
     0,
     20,
@@ -40,24 +44,18 @@ async function main() {
     FT_TOKEN_ID
   );
 
-  const quorum = await governor.quorum(txnFeePayerClient);
-  const votingPowerAmount = await godHolder.balanceOfVoter(
+  // step - 0 lock required tokens to token holder
+  await lockTokenForVotingIfNeeded(
+    governor,
+    tokenHolder,
+    clientsInfo.operatorClient,
     voterAccountId,
-    txnFeePayerClient
+    voterAccountKey,
+    voterClient,
+    0
   );
 
-  // tokens locking required in token holder if not enough power locked
-  if (votingPowerAmount < quorum) {
-    const lockAmount = quorum - votingPowerAmount;
-    await godHolder.setupAllowanceForTokenLocking(
-      lockAmount,
-      voterAccountId,
-      voterAccountKey,
-      voterClient
-    );
-    await godHolder.lock(lockAmount, voterClient);
-  }
-
+  // step - 1 contract upgrade proposal
   const contractToUpgradeInfo = new ContractService().getContract(
     ContractService.MULTI_SIG
   );
@@ -65,75 +63,17 @@ async function main() {
     contractToUpgradeInfo.transparentProxyAddress!,
     contractToUpgradeInfo.address,
     governor,
+    tokenHolder,
     voterClient,
-    txnFeePayerClient,
-    creatorAccountId,
-    creatorAccountPK,
-    creatorClient,
+    clientsInfo.operatorId,
+    clientsInfo.operatorKey,
+    clientsInfo.operatorClient,
     0
   );
 
-  await godHolder.checkAndClaimGodTokens(voterClient, voterAccountId);
+  // step - 3 unlock required tokens from token holder
+  await tokenHolder.checkAndClaimGodTokens(voterClient, voterAccountId);
   await governor.upgradeHederaService();
-}
-
-async function createAndExecuteContractUpgradeProposal(
-  proxyAddress: string,
-  proxyLogicAddress: string,
-  governor: ContractUpgradeGovernor,
-  voterClient: Client,
-  txnFeePayerClient: Client,
-  creatorId: AccountId,
-  creatorPK: PrivateKey,
-  creatorClient: Client,
-  txnFee: number
-) {
-  await governor.setupAllowanceForProposalCreation(
-    creatorClient,
-    creatorId,
-    creatorPK
-  );
-
-  const title = Helper.createProposalTitle("Contract Upgrade Proposal");
-  const { proposalId } = await governor.createContractUpgradeProposal(
-    proxyAddress,
-    proxyLogicAddress,
-    title,
-    txnFeePayerClient,
-    governor.DEFAULT_DESCRIPTION,
-    governor.DEFAULT_LINK,
-    governor.DEFAULT_NFT_TOKEN_SERIAL_NO,
-    creatorId
-  );
-
-  await governor.getProposalDetails(proposalId, voterClient);
-  await governor.forVote(proposalId, 0, voterClient);
-  await governor.getProposalDetails(proposalId, voterClient);
-
-  if (await governor.isSucceeded(proposalId)) {
-    await transferOwnershipToGovernance(proposalId, governor);
-    await governor.executeProposal(title, undefined, txnFeePayerClient, txnFee);
-  } else {
-    await governor.cancelProposal(title, creatorClient);
-  }
-}
-
-async function transferOwnershipToGovernance(
-  proposalId: string,
-  contractUpgradeGovernor: ContractUpgradeGovernor
-) {
-  const governorEvmAddress = await AddressHelper.idToEvmAddress(
-    contractUpgradeGovernor.contractId
-  );
-  const { proxyId } =
-    await contractUpgradeGovernor.getContractAddressesFromGovernorUpgradeContract(
-      proposalId
-    );
-  await new Common(proxyId).changeAdmin(
-    governorEvmAddress,
-    clientsInfo.proxyAdminKey,
-    clientsInfo.proxyAdminClient
-  );
 }
 
 main()

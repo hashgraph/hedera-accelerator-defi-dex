@@ -5,14 +5,9 @@ import { TestHelper } from "./TestHelper";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
-interface TokenTransferData {
-  transferToAccount: string;
-  tokenToTransfer: string;
-  transferTokenAmount: number;
-}
-
-interface HBarTransferData {
+interface AssetTransferData {
   to: string;
+  token: string;
   amount: number;
 }
 
@@ -168,9 +163,29 @@ describe("Governor Tests", function () {
     expect(balance).equals(targetBalance);
   };
 
-  const verifyTokenTransferProposalCreationEvent = async (
+  const verifyHBarTransferProposalCreationEvent = async (
     tx: any,
-    reqData: TokenTransferData,
+    reqData: AssetTransferData,
+    nftTokenSerialId: number
+  ) => {
+    const info =
+      nftTokenSerialId === TestHelper.NFT_FOR_PROPOSAL_CREATION
+        ? await verifyNFTProposalCreationEvent(tx)
+        : await verifyFTProposalCreationEvent(tx);
+
+    const eventData = ethers.utils.defaultAbiCoder.decode(
+      ["uint256 operationType", "address to", "uint256 amount"],
+      info.data
+    );
+    expect(eventData.operationType).equals(3);
+    expect(eventData.to).equals(reqData.to);
+    expect(eventData.amount).equals(reqData.amount);
+    return info;
+  };
+
+  const verifyAssetTransferProposalCreationEvent = async (
+    tx: any,
+    reqData: AssetTransferData,
     nftTokenSerialId: number
   ) => {
     const info =
@@ -188,31 +203,9 @@ describe("Governor Tests", function () {
       info.data
     );
     expect(eventData.operationType).equals(1);
-    expect(eventData.transferToAccount).equals(reqData.transferToAccount);
-    expect(eventData.tokenToTransfer).equals(reqData.tokenToTransfer);
-    expect(eventData.transferTokenAmount.toNumber()).equals(
-      reqData.transferTokenAmount
-    );
-    return info;
-  };
-
-  const verifyHBarTransferProposalCreationEvent = async (
-    tx: any,
-    reqData: HBarTransferData,
-    nftTokenSerialId: number
-  ) => {
-    const info =
-      nftTokenSerialId === TestHelper.NFT_FOR_PROPOSAL_CREATION
-        ? await verifyNFTProposalCreationEvent(tx)
-        : await verifyFTProposalCreationEvent(tx);
-
-    const eventData = ethers.utils.defaultAbiCoder.decode(
-      ["uint256 operationType", "address to", "uint256 amount"],
-      info.data
-    );
-    expect(eventData.operationType).equals(3);
-    expect(eventData.to).equals(reqData.to);
-    expect(eventData.amount).equals(reqData.amount);
+    expect(eventData.transferToAccount).equals(reqData.to);
+    expect(eventData.tokenToTransfer).equals(reqData.token);
+    expect(eventData.transferTokenAmount.toNumber()).equals(reqData.amount);
     return info;
   };
 
@@ -281,7 +274,7 @@ describe("Governor Tests", function () {
   ) {
     const tx = await governance
       .connect(account)
-      .createProposal(title, DESC, LINK, account.address, nftTokenSerialId);
+      .createProposal(title, DESC, LINK, nftTokenSerialId);
     return nftTokenSerialId === TestHelper.NFT_FOR_PROPOSAL_CREATION
       ? await verifyNFTProposalCreationEvent(tx)
       : await verifyFTProposalCreationEvent(tx);
@@ -302,7 +295,6 @@ describe("Governor Tests", function () {
         LINK,
         proxyAddress,
         logicAddress,
-        creator.address,
         nftTokenSerialId
       );
     return nftTokenSerialId === TestHelper.NFT_FOR_PROPOSAL_CREATION
@@ -317,10 +309,10 @@ describe("Governor Tests", function () {
     amount: number,
     nftTokenSerialId: number = 0
   ) {
-    const data: TokenTransferData = {
-      transferToAccount: signers[2].address,
-      tokenToTransfer: tokenAddress,
-      transferTokenAmount: amount,
+    const data: AssetTransferData = {
+      to: signers[2].address,
+      token: tokenAddress,
+      amount,
     };
     const tx = await instance
       .connect(signers[0])
@@ -328,14 +320,13 @@ describe("Governor Tests", function () {
         TITLE,
         DESC,
         LINK,
-        data.transferToAccount,
-        data.tokenToTransfer,
-        data.transferTokenAmount,
-        signers[0].address,
+        data.to,
+        data.token,
+        data.amount,
         nftTokenSerialId
       );
 
-    return await verifyTokenTransferProposalCreationEvent(
+    return await verifyAssetTransferProposalCreationEvent(
       tx,
       data,
       nftTokenSerialId
@@ -357,12 +348,65 @@ describe("Governor Tests", function () {
         account.address,
         tokenName,
         "Symbol",
-        account.address,
         nftTokenSerialId
       );
     return nftTokenSerialId === TestHelper.NFT_FOR_PROPOSAL_CREATION
       ? await verifyNFTProposalCreationEvent(tx)
       : await verifyFTProposalCreationEvent(tx);
+  }
+
+  async function getTokenAssociateProposalId(
+    instance: Contract,
+    signers: SignerWithAddress[],
+    tokenAddress: string,
+    nftTokenSerialId: number = 0
+  ) {
+    const tx = await instance
+      .connect(signers[0])
+      .createTokenAssociateProposal(
+        TITLE,
+        DESC,
+        LINK,
+        tokenAddress,
+        nftTokenSerialId
+      );
+
+    return await verifyTokenAssociationProposalCreationEvent(
+      tx,
+      tokenAddress,
+      nftTokenSerialId
+    );
+  }
+
+  async function getHBarTransferProposalId(
+    instance: Contract,
+    creator: SignerWithAddress,
+    to: string,
+    amount: number,
+    nftTokenSerialId: number = 0
+  ) {
+    const data: AssetTransferData = {
+      to,
+      amount,
+      token: ethers.constants.AddressZero,
+    };
+    const tx = await instance
+      .connect(creator)
+      .createProposal(
+        TITLE,
+        DESC,
+        LINK,
+        data.to,
+        data.token,
+        data.amount,
+        nftTokenSerialId
+      );
+
+    return await verifyHBarTransferProposalCreationEvent(
+      tx,
+      data,
+      nftTokenSerialId
+    );
   }
 
   const createTokenCreateProposalAndExecute = async (
@@ -387,60 +431,6 @@ describe("Governor Tests", function () {
     );
     return proposalId;
   };
-
-  async function getTokenAssociateProposalId(
-    instance: Contract,
-    signers: SignerWithAddress[],
-    tokenAddress: string,
-    nftTokenSerialId: number = 0
-  ) {
-    const tx = await instance
-      .connect(signers[0])
-      .createTokenAssociateProposal(
-        TITLE,
-        DESC,
-        LINK,
-        tokenAddress,
-        signers[0].address,
-        nftTokenSerialId
-      );
-
-    return await verifyTokenAssociationProposalCreationEvent(
-      tx,
-      tokenAddress,
-      nftTokenSerialId
-    );
-  }
-
-  async function getHBarTransferProposalId(
-    instance: Contract,
-    creator: SignerWithAddress,
-    to: string,
-    amount: number,
-    nftTokenSerialId: number = 0
-  ) {
-    const requestData: HBarTransferData = {
-      to,
-      amount,
-    };
-    const tx = await instance
-      .connect(creator)
-      .createHBarTransferProposal(
-        TITLE,
-        DESC,
-        LINK,
-        to,
-        amount,
-        creator.address,
-        nftTokenSerialId
-      );
-
-    return await verifyHBarTransferProposalCreationEvent(
-      tx,
-      requestData,
-      nftTokenSerialId
-    );
-  }
 
   describe("Common tests", async () => {
     it("Verify contract should be reverted for multiple initialization", async function () {

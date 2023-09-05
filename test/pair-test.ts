@@ -402,6 +402,24 @@ describe("LPToken, Pair and Factory tests", function () {
     });
 
     describe("Order of tokens matter while creating pair via Factory ", () => {
+      const orderTokenAddresses = (
+        token2Address: string,
+        token1Address: string
+      ) => {
+        return token2Address.localeCompare(token1Address)
+          ? {
+              localToken1Address: token1Address,
+              tokenAQty: 10,
+              localToken2Address: token2Address,
+              tokenBQty: 20,
+            }
+          : {
+              localToken1Address: token2Address,
+              tokenBQty: 20,
+              localToken2Address: token1Address,
+              tokenAQty: 10,
+            };
+      };
       it("Given token2 address is greater than token1 address when user try to createPair then created pair's first token should be token1", async function () {
         const {
           factory,
@@ -422,13 +440,14 @@ describe("LPToken, Pair and Factory tests", function () {
           configuration.address
         );
 
-        expect(token2Address.localeCompare(token1Address)).equals(
-          1,
-          "token2Address is less than token1Address"
-        );
-        const tx = await factory.createPair(
+        const { localToken1Address, localToken2Address } = orderTokenAddresses(
           token1Address,
-          token2Address,
+          token2Address
+        );
+
+        const tx = await factory.createPair(
+          localToken1Address,
+          localToken2Address,
           treasury,
           fee
         );
@@ -444,8 +463,8 @@ describe("LPToken, Pair and Factory tests", function () {
         const pairAddresses = await pairContract
           .connect(signers[5])
           .getTokenPairAddress();
-        expect(pairAddresses[0]).equals(token1Address);
-        expect(pairAddresses[1]).equals(token2Address);
+        expect(pairAddresses[0]).equals(localToken1Address);
+        expect(pairAddresses[1]).equals(localToken2Address);
       });
 
       it("Given token2 address is greater than token1 address when user try to createPair then created pair's first token should be token1", async function () {
@@ -468,13 +487,14 @@ describe("LPToken, Pair and Factory tests", function () {
           configuration.address
         );
 
-        expect(token2Address.localeCompare(token1Address)).equals(
-          1,
-          "token2Address is less than token1Address"
-        );
-        const tx = await factory.createPair(
-          token2Address,
+        const { localToken1Address, localToken2Address } = orderTokenAddresses(
           token1Address,
+          token2Address
+        );
+
+        const tx = await factory.createPair(
+          localToken2Address,
+          localToken1Address,
           treasury,
           fee
         );
@@ -490,8 +510,8 @@ describe("LPToken, Pair and Factory tests", function () {
         const pairAddresses = await pairContract
           .connect(signers[5])
           .getTokenPairAddress();
-        expect(pairAddresses[0]).equals(token1Address);
-        expect(pairAddresses[1]).equals(token2Address);
+        expect(pairAddresses[0]).equals(localToken1Address);
+        expect(pairAddresses[1]).equals(localToken2Address);
       });
 
       it("Given token2 address is greater than token1 address when user try to createPair then created pair's first token should be token1 and when add liquidity happens then pair automatically adjust the passed token addresses", async function () {
@@ -514,13 +534,12 @@ describe("LPToken, Pair and Factory tests", function () {
           configuration.address
         );
 
-        expect(token2Address.localeCompare(token1Address)).equals(
-          1,
-          "token2Address is less than token1Address"
-        );
+        const { localToken1Address, tokenAQty, localToken2Address, tokenBQty } =
+          orderTokenAddresses(token1Address, token2Address);
+
         const tx = await factory.createPair(
-          token1Address,
-          token2Address,
+          localToken1Address,
+          localToken2Address,
           treasury,
           fee
         );
@@ -536,17 +555,15 @@ describe("LPToken, Pair and Factory tests", function () {
         const pairAddresses = await pairContract
           .connect(signers[5])
           .getTokenPairAddress();
-        expect(pairAddresses[0]).equals(token1Address);
-        expect(pairAddresses[1]).equals(token2Address);
+        expect(pairAddresses[0]).equals(localToken1Address);
+        expect(pairAddresses[1]).equals(localToken2Address);
 
-        const tokenAQty = 10;
-        const tokenBQty = 20;
         await pairContract
           .connect(signers[5])
           .addLiquidity(
             signers[1].address,
-            token1Address,
-            token2Address,
+            localToken1Address,
+            localToken2Address,
             tokenAQty,
             tokenBQty
           );
@@ -578,13 +595,12 @@ describe("LPToken, Pair and Factory tests", function () {
           configuration.address
         );
 
-        expect(token2Address.localeCompare(token1Address)).equals(
-          1,
-          "token2Address is less than token1Address"
-        );
+        const { localToken1Address, tokenAQty, localToken2Address, tokenBQty } =
+          orderTokenAddresses(token1Address, token2Address);
+
         const tx = await factory.createPair(
-          token1Address,
-          token2Address,
+          localToken1Address,
+          localToken2Address,
           treasury,
           fee
         );
@@ -600,17 +616,15 @@ describe("LPToken, Pair and Factory tests", function () {
         const pairAddresses = await pairContract
           .connect(signers[5])
           .getTokenPairAddress();
-        expect(pairAddresses[0]).equals(token1Address);
-        expect(pairAddresses[1]).equals(token2Address);
+        expect(pairAddresses[0]).equals(localToken1Address);
+        expect(pairAddresses[1]).equals(localToken2Address);
 
-        const tokenAQty = 10;
-        const tokenBQty = 20;
         await pairContract
           .connect(signers[5])
           .addLiquidity(
             signers[1].address,
-            token2Address,
-            token1Address,
+            localToken2Address,
+            localToken1Address,
             tokenBQty,
             tokenAQty
           );

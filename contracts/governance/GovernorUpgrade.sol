@@ -9,7 +9,6 @@ contract GovernorUpgrade is GovernorCountingSimpleInternal {
         string memory _linkToDiscussion,
         address _proxy,
         address _proxyLogic,
-        address _creator,
         uint256 _nftTokenSerialId
     ) public returns (uint256) {
         address proxyAdmin = iSystemRoleBasedAccess.getSystemUsers().proxyAdmin;
@@ -18,7 +17,6 @@ contract GovernorUpgrade is GovernorCountingSimpleInternal {
                 _title,
                 _description,
                 _linkToDiscussion,
-                _creator,
                 abi.encode(_proxy, _proxyLogic, proxyAdmin),
                 _nftTokenSerialId
             );

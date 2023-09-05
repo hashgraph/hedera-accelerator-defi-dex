@@ -1,56 +1,78 @@
 import dex from "../../deployment/model/dex";
-
-import { Helper } from "../../utils/Helper";
-import { TokenId } from "@hashgraph/sdk";
-import { clientsInfo } from "../../utils/ClientManagement";
+import GodHolder from "../../e2e-test/business/GodHolder";
 import TextGovernor from "../../e2e-test/business/TextGovernor";
 import FTTokenHolderFactory from "../../e2e-test/business/factories/FTTokenHolderFactory";
-import GodHolder from "../../e2e-test/business/GodHolder";
 
-const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
+import { Helper } from "../../utils/Helper";
+import { Deployment } from "../../utils/deployContractOnTestnet";
+import { clientsInfo } from "../../utils/ClientManagement";
+import { ContractService } from "../../deployment/service/ContractService";
+import { ContractId, TokenId } from "@hashgraph/sdk";
+import {
+  lockTokenForVotingIfNeeded,
+  createAndExecuteTextProposal,
+} from "./governance";
+
+const deployment = new Deployment();
+
+const FT_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
+
+const txnFeePayerClient = clientsInfo.operatorClient;
 
 async function main() {
-  const governor = new TextGovernor();
-  const godHolderFactory = new FTTokenHolderFactory(); //GOD token factory
-  await godHolderFactory.initialize();
-  const godHolderContractId = await godHolderFactory.getTokenHolder(
-    GOD_TOKEN_ID.toSolidityAddress()
+  const voterAccountId = clientsInfo.treasureId;
+  const voterAccountKey = clientsInfo.treasureKey;
+  const voterClient = clientsInfo.treasureClient;
+
+  const ftHolderFactory = new FTTokenHolderFactory();
+  await ftHolderFactory.initialize();
+
+  const ftHolderContractId = await ftHolderFactory.getTokenHolder(
+    FT_TOKEN_ID.toSolidityAddress()
   );
-  const godHolder = new GodHolder(godHolderContractId);
+  const tokenHolder = new GodHolder(ftHolderContractId);
 
-  await governor.initialize(godHolder);
+  const deploymentDetails = await deployment.deployProxy(
+    ContractService.GOVERNOR_TEXT
+  );
+  const governor = new TextGovernor(
+    ContractId.fromString(deploymentDetails.transparentProxyId)
+  );
+  await governor.initialize(
+    tokenHolder,
+    txnFeePayerClient,
+    1,
+    0,
+    20,
+    FT_TOKEN_ID,
+    FT_TOKEN_ID
+  );
 
-  await godHolder.setupAllowanceForTokenLocking(50001e8);
-  await godHolder.lock(50001e8, clientsInfo.uiUserClient);
+  // step - 0 lock required tokens to token holder
+  await lockTokenForVotingIfNeeded(
+    governor,
+    tokenHolder,
+    txnFeePayerClient,
+    voterAccountId,
+    voterAccountKey,
+    voterClient,
+    0
+  );
 
-  await governor.setupAllowanceForProposalCreation(
+  // step - 1 text proposal flow
+  await createAndExecuteTextProposal(
+    governor,
+    tokenHolder,
+    voterClient,
+    clientsInfo.operatorId,
+    clientsInfo.operatorKey,
     clientsInfo.operatorClient,
-    clientsInfo.operatorId,
-    clientsInfo.operatorKey
+    0
   );
 
-  const title = Helper.createProposalTitle("Text Proposal");
-  const proposalId = await governor.createTextProposal(
-    title,
-    clientsInfo.operatorId,
-    clientsInfo.operatorClient
-  );
-  await governor.getProposalDetails(proposalId);
-  await governor.forVote(proposalId, 0, clientsInfo.uiUserClient);
-  await governor.isQuorumReached(proposalId);
-  await governor.isVoteSucceeded(proposalId);
-  await governor.proposalVotes(proposalId);
-  if (await governor.isSucceeded(proposalId)) {
-    await governor.executeProposal(title);
-  } else {
-    await governor.cancelProposal(title, clientsInfo.operatorClient);
-  }
-  await godHolder.checkAndClaimGodTokens(
-    clientsInfo.uiUserClient,
-    clientsInfo.uiUserId
-  );
+  // step - 3 unlock required tokens from token holder
+  await tokenHolder.checkAndClaimGodTokens(voterClient, voterAccountId);
   await governor.upgradeHederaService();
-  console.log(`\nDone`);
 }
 
 main()
