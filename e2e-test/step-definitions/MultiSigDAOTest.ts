@@ -110,10 +110,9 @@ export class MultiSigDAOSteps {
     try {
       proposedAmtFromSafe = tokenAmount * PRECISION;
       txnHash = await multiSigDao.proposeTransferTransaction(
-        TOKEN_ID,
-        clientsInfo.treasureId,
-        proposedAmtFromSafe,
-        gnosisSafe
+        clientsInfo.treasureId.toSolidityAddress(),
+        TOKEN_ID.toSolidityAddress(),
+        proposedAmtFromSafe
       );
     } catch (e: any) {
       errorMsg = e.message;
@@ -220,10 +219,9 @@ export class MultiSigDAOSteps {
   )
   public async proposeTransferTransfer(amount: number) {
     txnHash = await multiSigDao.proposeTransferTransaction(
-      TOKEN_ID,
-      clientsInfo.treasureId,
-      amount * PRECISION,
-      gnosisSafe
+      clientsInfo.treasureId.toSolidityAddress(),
+      TOKEN_ID.toSolidityAddress(),
+      amount * PRECISION
     );
   }
 
@@ -234,10 +232,9 @@ export class MultiSigDAOSteps {
   )
   public async proposeTransferTransferWithGreaterAmount() {
     txnHash = await multiSigDao.proposeTransferTransaction(
-      TOKEN_ID,
-      clientsInfo.treasureId,
-      balanceInSafe.plus(PRECISION).toNumber(),
-      gnosisSafe
+      clientsInfo.treasureId.toSolidityAddress(),
+      TOKEN_ID.toSolidityAddress(),
+      balanceInSafe.plus(PRECISION).toNumber()
     );
   }
 
@@ -416,12 +413,12 @@ export class MultiSigDAOSteps {
   @then(/User transfer balance from safe to eoa account/, undefined, 30000)
   public async transferBalanceFromSafeToEOA() {
     if (balanceInSafe.isGreaterThan(0)) {
-      await Common.transferTokens(
+      await Common.transferAssets(
+        TOKEN_ID,
+        balanceInSafe.toNumber(),
         clientsInfo.treasureId,
         AccountId.fromString(gnosisSafe.contractId),
-        clientsInfo.operatorKey,
-        TOKEN_ID,
-        balanceInSafe.toNumber()
+        clientsInfo.operatorKey
       );
     }
   }
@@ -457,12 +454,12 @@ export class MultiSigDAOSteps {
 
   @when(/User transfer (\d+\.?\d*) uint of tokens to safe/, undefined, 60000)
   public async transferAmountToSafe(amount: number) {
-    await Common.transferTokens(
+    await Common.transferAssets(
+      TOKEN_ID,
+      amount * PRECISION,
       AccountId.fromString(gnosisSafe.contractId),
       clientsInfo.treasureId,
-      clientsInfo.treasureKey,
-      TOKEN_ID,
-      amount * PRECISION
+      clientsInfo.treasureKey
     );
   }
 }

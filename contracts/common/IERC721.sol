@@ -11,21 +11,21 @@ interface IERC721 {
         address _to,
         uint256 _tokenId,
         bytes memory data
-    ) external payable;
+    ) external;
 
     function safeTransferFrom(
         address _from,
         address _to,
         uint256 _tokenId
-    ) external payable;
+    ) external;
 
     function transferFrom(
         address _from,
         address _to,
         uint256 _tokenId
-    ) external payable;
+    ) external;
 
-    function approve(address _approved, uint256 _tokenId) external payable;
+    function approve(address _approved, uint256 _tokenId) external;
 
     function setApprovalForAll(address _operator, bool _approved) external;
 

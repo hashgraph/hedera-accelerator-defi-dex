@@ -1,12 +1,13 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.18;
 
+import "./ITokenType.sol";
+import "./ERC20Mock.sol";
+import "./IERC20Mock.sol";
+
+import "../common/IERC721.sol";
 import "../common/IHederaService.sol";
 import "../common/hedera/HederaResponseCodes.sol";
-import "./IERC20Mock.sol";
-import "../common/IERC721.sol";
-import "./ERC20Mock.sol";
-import "hardhat/console.sol";
 
 contract MockHederaService is IHederaService {
     uint256 private constant PASS_TXN_COUNT = 100;
@@ -116,6 +117,15 @@ contract MockHederaService is IHederaService {
         address payable
     ) external payable override returns (bool) {
         return getResponseCode() == int(22) ? true : false;
+    }
+
+    function getTokenTypePublic(
+        address _token
+    ) external override returns (int64 responseCode, int32 tokenType) {
+        return
+            getResponseCode() == int(22)
+                ? (int64(22), ITokenType(_token).tokenType())
+                : (int64(23), int32(-1));
     }
 }
 

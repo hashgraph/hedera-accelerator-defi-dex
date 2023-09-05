@@ -202,6 +202,55 @@ export class FactorySteps {
     precision = await pair.getPrecisionValue(client);
   }
 
+  @when(/User create pair of HBAR and "([^"]*)"/, undefined, 70000)
+  public async createPairOfHbarAndTokenA(tokenName: string): Promise<void> {
+    tokenOne = await Common.createToken(tokenName, tokenName, id, key, client);
+    tokenAHBARPairAddress = await factory.createPair(
+      tokenHBARX,
+      tokenOne,
+      treasureId,
+      treasureKey,
+      client
+    );
+    tokenNameIdMap.set(tokenName, tokenOne);
+    tokenNameIdMap.set("HBAR", tokenHBARX);
+    pairEvmAddress = await factory.getPair(tokenOne, tokenHBARX);
+    pairContractId = await AddressHelper.addressToIdObject(pairEvmAddress);
+    pair = new Pair(pairContractId);
+    const lpTokenAdd = await pair.getLpContractAddress();
+    lpTokenContractIdAsString = await AddressHelper.addressToId(lpTokenAdd);
+    precision = await pair.getPrecisionValue(client);
+  }
+
+  @when(
+    /User verifies the order of addresses for created pair "([^"]*)" and "([^"]*)"/,
+    undefined,
+    70000
+  )
+  public async verifyPairOrderOfHbarAndTokenA(
+    tokenAName: string,
+    tokenBName: string
+  ): Promise<void> {
+    if (tokenAName === "HBAR") {
+      tokenNameIdMap.set("HBAR", tokenHBARX);
+    } else {
+      tokenNameIdMap.set(tokenAName, tokenOne);
+    }
+
+    if (tokenBName === "HBAR") {
+      tokenNameIdMap.set("HBAR", tokenHBARX);
+    } else {
+      tokenNameIdMap.set(tokenBName, tokenOne);
+    }
+
+    pairEvmAddress = await factory.getPair(tokenOne, tokenHBARX);
+    pairContractId = await AddressHelper.addressToIdObject(pairEvmAddress);
+    pair = new Pair(pairContractId);
+    const { tokenAAddress, tokenBAddress } = await pair.getTokenPairAddress();
+    expect(tokenAAddress).equals(tokenHBARX.toSolidityAddress());
+    expect(tokenBAddress).equals(tokenOne.toSolidityAddress());
+  }
+
   @when(/User associate token "([^"]*)" to account/)
   public async associateToken(tokenName: string) {
     const tokenId = tokenNameIdMap.get(tokenName);

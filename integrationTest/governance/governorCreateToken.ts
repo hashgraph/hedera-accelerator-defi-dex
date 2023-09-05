@@ -1,110 +1,25 @@
 import dex from "../../deployment/model/dex";
-import Common from "../../e2e-test/business/Common";
 import Factory from "../../e2e-test/business/Factory";
 import GodHolder from "../../e2e-test/business/GodHolder";
-
-import { Helper } from "../../utils/Helper";
-import { TokenId } from "@hashgraph/sdk";
-import { BigNumber } from "bignumber.js";
-import { clientsInfo } from "../../utils/ClientManagement";
 import TokenCreateGovernor from "../../e2e-test/business/TokenCreateGovernor";
 import FTTokenHolderFactory from "../../e2e-test/business/factories/FTTokenHolderFactory";
 
-const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
+import { Helper } from "../../utils/Helper";
+import { Deployment } from "../../utils/deployContractOnTestnet";
+import { clientsInfo } from "../../utils/ClientManagement";
+import { ContractService } from "../../deployment/service/ContractService";
+import { ContractId, TokenId } from "@hashgraph/sdk";
+import {
+  lockTokenForVotingIfNeeded,
+  createAndExecuteTokenCreateProposal,
+} from "./governance";
 
-let factory: Factory;
-let governor: TokenCreateGovernor;
-let godHolder: GodHolder;
-
-async function main() {
-  factory = new Factory();
-  governor = new TokenCreateGovernor();
-
-  const godHolderFactory = new FTTokenHolderFactory(); //GOD token factory
-  const godHolderContractId = await godHolderFactory.getTokenHolder(
-    GOD_TOKEN_ID.toSolidityAddress()
-  );
-  godHolder = new GodHolder(godHolderContractId);
-
-  await governor.initialize(godHolder);
-  const token1 = await createTokenViaProposal("TEST-A", "TEST-A");
-  const token2 = await createTokenViaProposal("TEST-B", "TEST-B");
-  await governor.upgradeHederaService();
-
-  await runFactoryTest(token1, token2);
-  console.log(`Done`);
-}
-
-async function createTokenViaProposal(name: string, symbol: string) {
-  let tokenId: TokenId | null = null;
-
-  await godHolder.setupAllowanceForTokenLocking(50001e8);
-  await godHolder.lock(50001e8, clientsInfo.uiUserClient);
-
-  await governor.setupAllowanceForProposalCreation(
-    clientsInfo.operatorClient,
-    clientsInfo.operatorId,
-    clientsInfo.operatorKey
-  );
-
-  const title = Helper.createProposalTitle("Create Token Proposal");
-  const proposalId = await governor.createTokenProposal(
-    title,
-    name,
-    symbol,
-    clientsInfo.treasureId,
-    clientsInfo.operatorClient
-  );
-
-  await governor.getProposalDetails(proposalId);
-  await governor.forVote(proposalId, 0, clientsInfo.uiUserClient);
-  await governor.isQuorumReached(proposalId);
-  await governor.isVoteSucceeded(proposalId);
-  await governor.proposalVotes(proposalId);
-  if (await governor.isSucceeded(proposalId)) {
-    await governor.executeProposal(
-      title,
-      clientsInfo.treasureKey,
-      clientsInfo.operatorClient,
-      governor.TXN_FEE_FOR_TOKEN_CREATE
-    );
-    tokenId = await governor.getTokenAddressFromGovernorTokenCreate(proposalId);
-  } else {
-    await governor.cancelProposal(title, clientsInfo.operatorClient);
-  }
-  await godHolder.checkAndClaimGodTokens(
-    clientsInfo.uiUserClient,
-    clientsInfo.uiUserId
-  );
-  if (!tokenId) {
-    throw Error("failed to created token inside integration test");
-  }
-  await governor.mintToken(
-    proposalId,
-    new BigNumber(10),
-    clientsInfo.treasureClient
-  );
-  await governor.burnToken(
-    proposalId,
-    new BigNumber(9),
-    clientsInfo.treasureClient
-  );
-  await Common.associateTokensToAccount(
-    clientsInfo.treasureId,
-    [tokenId!],
-    clientsInfo.treasureClient
-  );
-  await governor.transferToken(
-    proposalId,
-    clientsInfo.treasureId.toSolidityAddress(),
-    new BigNumber(1),
-    clientsInfo.treasureClient
-  );
-  return tokenId;
-}
+const FT_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
 
 async function runFactoryTest(token1: TokenId, token2: TokenId) {
+  const factory = new Factory();
   await factory.setupFactory();
+  await factory.getPairs();
   await factory.createPair(
     token1,
     token2,
@@ -112,6 +27,85 @@ async function runFactoryTest(token1: TokenId, token2: TokenId) {
     clientsInfo.treasureKey
   );
   await factory.getPair(token1, token2);
+  await factory.getPairs();
+}
+
+async function main() {
+  const voterAccountId = clientsInfo.treasureId;
+  const voterAccountKey = clientsInfo.treasureKey;
+  const voterClient = clientsInfo.treasureClient;
+
+  const ftHolderFactory = new FTTokenHolderFactory();
+  await ftHolderFactory.initialize();
+
+  const ftHolderContractId = await ftHolderFactory.getTokenHolder(
+    FT_TOKEN_ID.toSolidityAddress()
+  );
+  const tokenHolder = new GodHolder(ftHolderContractId);
+
+  const deploymentDetails = await new Deployment().deployProxy(
+    ContractService.GOVERNOR_TOKEN_CREATE
+  );
+  const governor = new TokenCreateGovernor(
+    ContractId.fromString(deploymentDetails.transparentProxyId)
+  );
+  await governor.initialize(
+    tokenHolder,
+    clientsInfo.operatorClient,
+    1,
+    0,
+    20,
+    FT_TOKEN_ID,
+    FT_TOKEN_ID
+  );
+
+  // step - 0 lock required tokens to token holder
+  await lockTokenForVotingIfNeeded(
+    governor,
+    tokenHolder,
+    clientsInfo.operatorClient,
+    voterAccountId,
+    voterAccountKey,
+    voterClient,
+    0
+  );
+
+  // step - 1 token a created
+  const token1 = await createAndExecuteTokenCreateProposal(
+    "TEST-A",
+    "TEST-A",
+    governor,
+    tokenHolder,
+    clientsInfo.treasureClient,
+    clientsInfo.treasureId,
+    clientsInfo.treasureClient,
+    clientsInfo.operatorId,
+    clientsInfo.operatorKey,
+    clientsInfo.operatorClient,
+    governor.TXN_FEE_FOR_TOKEN_CREATE
+  );
+
+  // step - 2 token b created
+  const token2 = await createAndExecuteTokenCreateProposal(
+    "TEST-B",
+    "TEST-B",
+    governor,
+    tokenHolder,
+    clientsInfo.treasureClient,
+    clientsInfo.treasureId,
+    clientsInfo.treasureClient,
+    clientsInfo.operatorId,
+    clientsInfo.operatorKey,
+    clientsInfo.operatorClient,
+    governor.TXN_FEE_FOR_TOKEN_CREATE
+  );
+
+  // step - 3 unlock required tokens from token holder
+  await tokenHolder.checkAndClaimGodTokens(voterClient, voterAccountId);
+  await governor.upgradeHederaService();
+
+  // step - 4 pair test
+  await runFactoryTest(token1, token2);
 }
 
 main()

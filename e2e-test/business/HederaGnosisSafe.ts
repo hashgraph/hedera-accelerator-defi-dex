@@ -12,7 +12,6 @@ const APPROVE_HASH = "approveHash";
 const GET_THRESHOLD = "getThreshold";
 const EXEC_TRANSACTION = "executeTransaction";
 const GET_TRANSACTION_HASH = "getTransactionHash";
-export const TRANSFER_ASSETS = "transferAssets";
 
 export default class HederaGnosisSafe extends Base {
   protected getContractName() {

@@ -9,10 +9,12 @@ import {
   DAO_LOGO,
   DAO_NAME,
   DAO_DESC,
+  executeHbarTransfer,
   executeDAOTextProposal,
   executeBatchTransaction,
   executeDAOUpgradeProposal,
-  executeDAOTokenTransferProposal,
+  executeFTTokenTransferProposal,
+  executeNFTTokenTransferProposal,
   DAO_WEB_LINKS,
   DAO_OWNERS_ADDRESSES,
 } from "./multiSigDAO";
@@ -34,11 +36,13 @@ async function main() {
   if (addresses.length > 0) {
     const dao = addresses.pop()!;
     const multiSigDAOId = await AddressHelper.addressToIdObject(dao);
-    const multiSigDAOInstance = new MultiSigDao(multiSigDAOId);
-    await executeDAOTextProposal(multiSigDAOInstance);
-    await executeBatchTransaction(multiSigDAOInstance);
-    await executeDAOTokenTransferProposal(multiSigDAOInstance);
-    await executeDAOUpgradeProposal(multiSigDAOInstance);
+    const multiSigDAO = new MultiSigDao(multiSigDAOId);
+    await executeHbarTransfer(multiSigDAO);
+    await executeDAOTextProposal(multiSigDAO);
+    await executeBatchTransaction(multiSigDAO);
+    await executeDAOUpgradeProposal(multiSigDAO);
+    await executeFTTokenTransferProposal(multiSigDAO);
+    await executeNFTTokenTransferProposal(multiSigDAO);
   }
   const hasRole = await roleBasedAccess.checkIfChildProxyAdminRoleGiven();
   hasRole &&

@@ -7,6 +7,16 @@ export class TestHelper {
   static ONE_ADDRESS = "0x0000000000000000000000000000000000000001";
   static TWO_ADDRESS = "0x0000000000000000000000000000000000000002";
 
+  static NFT_FOR_VOTING = 1;
+  static NFT_FOR_TRANSFER = 2;
+  static NFT_FOR_PROPOSAL_CREATION = 3;
+
+  static NFT_IDS = [
+    TestHelper.NFT_FOR_VOTING,
+    TestHelper.NFT_FOR_TRANSFER,
+    TestHelper.NFT_FOR_PROPOSAL_CREATION,
+  ];
+
   static async getAccountHBars(address: string): Promise<BigNumber> {
     return await ethers.provider.getBalance(address);
   }
@@ -131,8 +141,15 @@ export class TestHelper {
     return await this.deployLogic("ERC20Mock", name, symbol, total, 0);
   }
 
-  static async deployERC721Mock() {
-    return await this.deployLogic("ERC721Mock");
+  static async deployERC721Mock(
+    treasure: SignerWithAddress,
+    nftIds: number[] = TestHelper.NFT_IDS
+  ) {
+    const erc721 = await this.deployLogic("ERC721Mock");
+    for (const nftId of nftIds) {
+      await erc721.setUserBalance(treasure.address, nftId);
+    }
+    return erc721;
   }
 
   static async deployMockHederaService(tokenTesting: boolean = true) {

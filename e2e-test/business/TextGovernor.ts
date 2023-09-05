@@ -1,8 +1,8 @@
-import { clientsInfo } from "../../utils/ClientManagement";
-
-import { Client, AccountId, ContractFunctionParameters } from "@hashgraph/sdk";
-import { ContractService } from "../../deployment/service/ContractService";
 import Governor from "./Governor";
+
+import { clientsInfo } from "../../utils/ClientManagement";
+import { ContractService } from "../../deployment/service/ContractService";
+import { Client, ContractFunctionParameters } from "@hashgraph/sdk";
 
 export default class TextGovernor extends Governor {
   protected getContractName() {
@@ -11,7 +11,6 @@ export default class TextGovernor extends Governor {
 
   createTextProposal = async (
     title: string,
-    creator: AccountId,
     client: Client = clientsInfo.operatorClient,
     description: string = this.DEFAULT_DESCRIPTION,
     link: string = this.DEFAULT_LINK,
@@ -21,7 +20,6 @@ export default class TextGovernor extends Governor {
       .addString(title)
       .addString(description)
       .addString(link)
-      .addAddress(creator.toSolidityAddress())
       .addUint256(nftTokenSerialId);
 
     const { result } = await this.execute(

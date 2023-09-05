@@ -1,29 +1,39 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.18;
+
+import "./ITokenType.sol";
 import "../common/IERC721.sol";
 
-import "hardhat/console.sol";
+contract ERC721Mock is IERC721, ITokenType {
+    mapping(uint256 => address) private _owners;
+    mapping(address => uint256) private _balances;
 
-contract ERC721Mock is IERC721 {
-    bool private transferFailed;
-    mapping(address => uint256) userBalances;
-    mapping(uint256 => address) userTokenIds;
-    int failTransferAfterCount;
-
-    function setTransaferFailed(bool _transferFailed) public {
-        transferFailed = _transferFailed;
+    function setUserBalance(address to, uint256 tokenId) external {
+        require(_owners[tokenId] == address(0), "ERC721: token already minted");
+        _owners[tokenId] = to;
+        _balances[to] += 1;
     }
 
-    function balanceOf(address _owner) external view returns (uint256) {
-        return userBalances[_owner];
+    function balanceOf(
+        address owner
+    ) public view virtual override returns (uint256) {
+        return _balances[owner];
     }
 
-    function setUserBalance(address _user, uint256 _userBalance) external {
-        userBalances[_user] = _userBalance;
+    function ownerOf(
+        uint256 tokenId
+    ) public view virtual override returns (address) {
+        address owner = _owners[tokenId];
+        require(owner != address(0), "ERC721: invalid token ID");
+        return owner;
     }
 
-    function ownerOf(uint256 _tokenId) external view returns (address) {
-        return userTokenIds[_tokenId];
+    function safeTransferFrom(
+        address _from,
+        address _to,
+        uint256 _tokenId
+    ) external {
+        safeTransferFrom(_from, _to, _tokenId, "");
     }
 
     function safeTransferFrom(
@@ -31,33 +41,17 @@ contract ERC721Mock is IERC721 {
         address _to,
         uint256 _tokenId,
         bytes memory
-    ) external payable {
-        userTokenIds[_tokenId] = _from;
-        userBalances[_from] -= (userBalances[_from] > 0 ? 1 : 0);
-        userBalances[_to] += 1;
+    ) public {
+        transferFrom(_from, _to, _tokenId);
     }
 
-    function safeTransferFrom(
-        address _from,
-        address _to,
-        uint256 _tokenId
-    ) external payable {
-        userTokenIds[_tokenId] = _from;
-        userBalances[_from] -= (userBalances[_from] > 0 ? 1 : 0);
-        userBalances[_to] += 1;
+    function transferFrom(address from, address to, uint256 tokenId) public {
+        _balances[from] -= 1;
+        _balances[to] += 1;
+        _owners[tokenId] = to;
     }
 
-    function transferFrom(
-        address _from,
-        address _to,
-        uint256 _tokenId
-    ) external payable {
-        userTokenIds[_tokenId] = _from;
-        userBalances[_from] -= (userBalances[_from] > 0 ? 1 : 0);
-        userBalances[_to] += 1;
-    }
-
-    function approve(address _approved, uint256 _tokenId) external payable {}
+    function approve(address _approved, uint256 _tokenId) external {}
 
     function setApprovalForAll(address _operator, bool _approved) external {}
 
@@ -67,4 +61,8 @@ contract ERC721Mock is IERC721 {
         address _owner,
         address _operator
     ) external view returns (bool) {}
+
+    function tokenType() external pure override returns (int32) {
+        return 1;
+    }
 }

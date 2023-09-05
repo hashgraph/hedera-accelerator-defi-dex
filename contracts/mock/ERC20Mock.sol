@@ -2,9 +2,9 @@
 pragma solidity ^0.8.18;
 import "../common/IERC20.sol";
 
-import "hardhat/console.sol";
+import "./ITokenType.sol";
 
-contract ERC20Mock is IERC20 {
+contract ERC20Mock is IERC20, ITokenType {
     string tokeName;
     string tokenSymbol;
     uint256 total;
@@ -106,5 +106,9 @@ contract ERC20Mock is IERC20 {
             }
             return true;
         }
+    }
+
+    function tokenType() external pure override returns (int32) {
+        return 0;
     }
 }

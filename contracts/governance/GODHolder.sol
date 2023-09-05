@@ -34,6 +34,7 @@ contract GODHolder is TokenHolder {
             delete (godTokenForUsers[msg.sender]);
         }
         int256 code = _transferToken(
+            hederaService,
             address(_token),
             address(this),
             msg.sender,
@@ -64,6 +65,7 @@ contract GODHolder is TokenHolder {
         );
         godTokenForUsers[user] += _amount;
         int256 code = _transferToken(
+            hederaService,
             address(_token),
             address(user),
             address(this),

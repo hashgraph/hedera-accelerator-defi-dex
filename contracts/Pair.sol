@@ -93,13 +93,8 @@ contract Pair is
         _tokenAQty = _tokenQuantity(_tokenA, _tokenAQty);
         _tokenBQty = _tokenQuantity(_tokenB, _tokenBQty);
 
-        lpTokenContract.allotLPTokenFor(
-            pair.tokenA.tokenQty,
-            pair.tokenB.tokenQty,
-            _tokenAQty,
-            _tokenBQty,
-            fromAccount
-        );
+        uint256 _tokenAQtyBeforeAdding = pair.tokenA.tokenQty;
+        uint256 _tokenBQtyBeforeAdding = pair.tokenB.tokenQty;
 
         if (
             _tokenA == pair.tokenA.tokenAddress &&
@@ -107,12 +102,50 @@ contract Pair is
         ) {
             pair.tokenA.tokenQty += _tokenAQty;
             pair.tokenB.tokenQty += _tokenBQty;
+
+            transferTokensInternally(
+                fromAccount,
+                address(this),
+                _tokenA,
+                _tokenB,
+                _tokenAQty,
+                _tokenBQty,
+                "Add liquidity: Transfering token A to contract failed with status code",
+                "Add liquidity: Transfering token B to contract failed with status code"
+            );
+
+            lpTokenContract.allotLPTokenFor(
+                _tokenAQtyBeforeAdding,
+                _tokenBQtyBeforeAdding,
+                _tokenAQty,
+                _tokenBQty,
+                fromAccount
+            );
         } else if (
             _tokenA == pair.tokenB.tokenAddress &&
             _tokenB == pair.tokenA.tokenAddress
         ) {
-            pair.tokenB.tokenQty += _tokenAQty;
             pair.tokenA.tokenQty += _tokenBQty;
+            pair.tokenB.tokenQty += _tokenAQty;
+
+            transferTokensInternally(
+                fromAccount,
+                address(this),
+                _tokenB,
+                _tokenA,
+                _tokenBQty,
+                _tokenAQty,
+                "Add liquidity: Transfering token A to contract failed with status code",
+                "Add liquidity: Transfering token B to contract failed with status code"
+            );
+
+            lpTokenContract.allotLPTokenFor(
+                _tokenAQtyBeforeAdding,
+                _tokenBQtyBeforeAdding,
+                _tokenBQty,
+                _tokenAQty,
+                fromAccount
+            );
         } else {
             revert WrongPairPassed({
                 message: "Wrong token pair passed",
@@ -122,17 +155,6 @@ contract Pair is
                 expectedTokenB: pair.tokenB.tokenAddress
             });
         }
-
-        transferTokensInternally(
-            fromAccount,
-            address(this),
-            _tokenA,
-            _tokenB,
-            _tokenAQty,
-            _tokenBQty,
-            "Add liquidity: Transfering token A to contract failed with status code",
-            "Add liquidity: Transfering token B to contract failed with status code"
-        );
     }
 
     function removeLiquidity(
@@ -636,6 +658,7 @@ contract Pair is
             }
         } else {
             int256 responseCode = _transferToken(
+                hederaService,
                 token,
                 sender,
                 receiver,
