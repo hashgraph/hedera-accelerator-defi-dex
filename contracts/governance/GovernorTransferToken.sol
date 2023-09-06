@@ -2,7 +2,6 @@
 pragma solidity ^0.8.18;
 import "../common/IErrors.sol";
 import "../common/hedera/HederaTokenService.sol";
-
 import "./GovernorCountingSimpleInternal.sol";
 
 contract GovernorTransferToken is GovernorCountingSimpleInternal {
@@ -10,9 +9,13 @@ contract GovernorTransferToken is GovernorCountingSimpleInternal {
     uint256 private constant ASSOCIATE = 2;
     uint256 private constant HBAR_TRANSFER = 3;
 
-    event NFTBlocked(uint256 proposalId, uint256 nftSerialId, bool isBlocked);
+    event NFTSerialIdBlockStatus(
+        uint256 proposalId,
+        uint256 nftSerialId,
+        bool isBlocked
+    );
 
-    error BlockedSerialId(
+    error NFTSerialIdAlreadyBlockedByProposal(
         string message,
         uint256 proposalId,
         uint256 nftSerialId
@@ -72,7 +75,7 @@ contract GovernorTransferToken is GovernorCountingSimpleInternal {
         string memory title
     ) public override returns (uint256 proposalId) {
         proposalId = super.cancelProposal(title);
-        _deleteBlockedNFTMapping(proposalId);
+        _untrackNFTSerialId(proposalId);
     }
 
     function _execute(
@@ -84,7 +87,7 @@ contract GovernorTransferToken is GovernorCountingSimpleInternal {
     ) internal virtual override {
         _executeOperation(proposalId);
         super._execute(proposalId, targets, values, calldatas, description);
-        _deleteBlockedNFTMapping(proposalId);
+        _untrackNFTSerialId(proposalId);
     }
 
     function _executeOperation(uint256 proposalId) private {
@@ -144,11 +147,18 @@ contract GovernorTransferToken is GovernorCountingSimpleInternal {
             _nftTokenSerialId
         );
         proposals[proposalId].data = _data;
+        _trackNFTSerialId(_nftTokenSerialId, proposalId);
+        return proposalId;
+    }
+
+    function _trackNFTSerialId(
+        uint256 _nftTokenSerialId,
+        uint256 proposalId
+    ) private {
         if (_nftTokenSerialId != 0) {
             proposalBlockedNFTSerialIds[_nftTokenSerialId] = proposalId;
-            emit NFTBlocked(proposalId, _nftTokenSerialId, true);
+            emit NFTSerialIdBlockStatus(proposalId, _nftTokenSerialId, true);
         }
-        return proposalId;
     }
 
     function _validateTransfer(
@@ -156,58 +166,41 @@ contract GovernorTransferToken is GovernorCountingSimpleInternal {
         int32 _tokenType,
         uint256 amountOrSerialId
     ) private {
-        if (_tokenType == 0) {
-            require(
-                _isFTTransferAllowed(_token, amountOrSerialId),
-                "GTT: Overdraft"
-            );
-        } else {
-            _isNFTTranferAllowed(_token, amountOrSerialId);
+        if (token == _token) {
+            _tokenType == 0
+                ? _isFTTransferAllowed(_token, amountOrSerialId)
+                : _isNFTTranferAllowed(amountOrSerialId);
         }
     }
 
     function _isFTTransferAllowed(
         address tokenToTransfer,
         uint256 amountOrIdToTransfer
-    ) private returns (bool) {
-        bool isAllowed = true;
-        if (token == tokenToTransfer) {
-            uint256 _blockedTokenBalance = getBlockedTokenBalance();
-            uint256 contractBalance = _balanceOf(
-                tokenToTransfer,
-                address(this)
-            );
-            uint unblockedAmount = contractBalance - _blockedTokenBalance;
-            if (unblockedAmount < amountOrIdToTransfer) {
-                isAllowed = false;
-            }
-        }
-        return isAllowed;
+    ) private {
+        uint256 _blockedTokenBalance = getBlockedTokenBalance();
+        uint256 contractBalance = _balanceOf(tokenToTransfer, address(this));
+        uint unblockedAmount = contractBalance - _blockedTokenBalance;
+        require(unblockedAmount >= amountOrIdToTransfer, "GTT: Overdraft");
     }
 
-    function _isNFTTranferAllowed(
-        address _token,
-        uint256 amountOrSerialId
-    ) private view {
-        if (_token == token) {
-            uint256 mappedProposalId = proposalBlockedNFTSerialIds[
-                amountOrSerialId
-            ];
-            if (mappedProposalId != 0) {
-                revert BlockedSerialId({
-                    message: "NFT ID locked by proposal",
-                    proposalId: mappedProposalId,
-                    nftSerialId: amountOrSerialId
-                });
-            }
+    function _isNFTTranferAllowed(uint256 amountOrSerialId) private view {
+        uint256 mappedProposalId = proposalBlockedNFTSerialIds[
+            amountOrSerialId
+        ];
+        if (mappedProposalId != 0) {
+            revert NFTSerialIdAlreadyBlockedByProposal({
+                message: "NFT ID locked by proposal",
+                proposalId: mappedProposalId,
+                nftSerialId: amountOrSerialId
+            });
         }
     }
 
-    function _deleteBlockedNFTMapping(uint256 proposalId) private {
+    function _untrackNFTSerialId(uint256 proposalId) private {
         uint256 amountOrId = proposals[proposalId].amountOrId;
         if (proposalBlockedNFTSerialIds[amountOrId] != 0) {
             delete (proposalBlockedNFTSerialIds[amountOrId]);
-            emit NFTBlocked(proposalId, amountOrId, false);
+            emit NFTSerialIdBlockStatus(proposalId, amountOrId, false);
         }
     }
 }

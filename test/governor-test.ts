@@ -152,12 +152,12 @@ describe("Governor Tests", function () {
     };
   };
 
-  const verifyBlockedIdEvent = async (
+  const verifyBlockedNFTSerialIdStatusEvent = async (
     txn: any,
     nftTokenSerialId: number,
     isBlocked: boolean
   ) => {
-    const events = await TestHelper.readEvents(txn, ["NFTBlocked"]);
+    const events = await TestHelper.readEvents(txn, ["NFTSerialIdBlockStatus"]);
     const nftBlockEvent = events.pop();
     expect(nftBlockEvent.args.length).equals(3);
     expect(nftBlockEvent.args.proposalId).not.equals("0");
@@ -313,7 +313,7 @@ describe("Governor Tests", function () {
     expect(args.length).equals(9);
     expect(args.votingInformation.quorumValue).equals(1);
     expect(args.amountOrId).equals(nftTokenSerialId);
-    await verifyBlockedIdEvent(tx, nftTokenSerialId, true);
+    await verifyBlockedNFTSerialIdStatusEvent(tx, nftTokenSerialId, true);
     verifyCommonProposalCreationEvent(tx, name, args);
     return { proposalId: args.proposalId, data: args.data };
   };
@@ -937,7 +937,7 @@ describe("Governor Tests", function () {
       ) => {
         const tx = await governorText
           .connect(creator)
-          .createProposal(title, DESC, LINK, creator.address, 0);
+          .createProposal(title, DESC, LINK, 0);
         const result = await readLastGovernorBalanceEvent(tx);
 
         return result;
@@ -1655,15 +1655,15 @@ describe("Governor Tests", function () {
       );
 
       const tx = await nftGovernorTT.cancelProposal(TITLE);
-      await verifyBlockedIdEvent(
+      await verifyBlockedNFTSerialIdStatusEvent(
         tx,
         TestHelper.NFT_FOR_PROPOSAL_CREATION,
         false
       );
     });
 
-    describe("Transfer blocked token", async () => {
-      describe("Fungible token", async () => {
+    describe("Scenarios for trying to transfer blocked token", async () => {
+      describe("Fungible token where GOD and token to transfer are same", async () => {
         it("Given governor has zero GOD token when user try to transfer GOD token via proposal and qty is same as required to create token then token transfer should fail  ", async () => {
           const {
             governorTT,
@@ -1703,7 +1703,7 @@ describe("Governor Tests", function () {
           );
         });
 
-        it("Given governor has zero GOD token and one proposal exists when user try to transfer GOD token via proposal and qty is same as required to create token then token transfer should fail  ", async () => {
+        it("Given governor one proposal exists in active state(GOD token locked 1) when user try to transfer GOD token via 2nd proposal and qty is same as required to create token then token transfer should fail  ", async () => {
           const {
             governorTT,
             godHolder,
@@ -1772,7 +1772,7 @@ describe("Governor Tests", function () {
           );
         });
 
-        it("Given governor has one GOD token and one proposal exists when user try to transfer GOD token via proposal and qty is same as required to create token then token transfer should pass  ", async () => {
+        it("Given governor has one GOD token and one proposal exists when user try to transfer GOD token via 2nd proposal and qty is same as required to create token then token transfer should pass  ", async () => {
           const {
             governorTT,
             godHolder,
@@ -1849,12 +1849,12 @@ describe("Governor Tests", function () {
           );
         });
       });
-      describe("Non Fungible token", async () => {
+      describe("Non Fungible token where GOD and token serial id to transfer are same", async () => {
         it("NFT GOD token(token to block at the time of proposal creation) and NFT token to transfer can't be same.", async () => {
           const { nftGovernorTT, nftToken, signers } = await loadFixture(
             deployFixture
           );
-          const data: TokenTransferData = {
+          const data = {
             transferToAccount: signers[2].address,
             tokenToTransfer: nftToken.address,
             transferTokenAmount: TestHelper.NFT_FOR_PROPOSAL_CREATION,
@@ -1869,7 +1869,6 @@ describe("Governor Tests", function () {
                 data.transferToAccount,
                 data.tokenToTransfer,
                 data.transferTokenAmount,
-                signers[0].address,
                 TestHelper.NFT_FOR_PROPOSAL_CREATION
               )
           ).revertedWith(
@@ -1924,8 +1923,11 @@ describe("Governor Tests", function () {
             nftGodHolder.address
           );
 
-          const blockedEvents = await TestHelper.readEvents(tx, "NFTBlocked");
-          const blockedEvent = blockedEvents.pop();
+          await verifyBlockedNFTSerialIdStatusEvent(
+            tx,
+            TestHelper.NFT_FOR_PROPOSAL_CREATION,
+            false
+          );
         });
         it("Given serial id is blocked by a proposal when user try to transfer that id using another proposal then it should fail", async () => {
           const { nftGovernorTT, nftGodHolder, nftToken, signers, creator } =
@@ -1979,7 +1981,10 @@ describe("Governor Tests", function () {
           await TestHelper.mineNBlocks(BLOCKS_COUNT);
 
           await expect(nftGovernorTT.executeProposal(proposal2Title))
-            .revertedWithCustomError(nftGovernorTT, "BlockedSerialId")
+            .revertedWithCustomError(
+              nftGovernorTT,
+              "NFTSerialIdAlreadyBlockedByProposal"
+            )
             .withArgs(
               "NFT ID locked by proposal",
               proposalId,
