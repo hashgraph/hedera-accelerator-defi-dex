@@ -66,12 +66,17 @@ abstract contract GovernorCountingSimpleInternal is
         uint256 amountOrId
     );
 
+    event GovernorBalance(
+        uint256 activeProposalsCount,
+        uint256 blockedGodTokenBalance
+    );
+
     string private constant HederaService = "HederaService";
     uint256 private constant PROPOSAL_CREATION_AMOUNT = 1e8;
 
     address[] private EMPTY_VOTERS_LIST;
 
-    address private token;
+    address token;
     IHederaService internal hederaService;
     ITokenHolder tokenHolder;
 
@@ -80,6 +85,8 @@ abstract contract GovernorCountingSimpleInternal is
     mapping(uint256 => ProposalInfo) proposals;
 
     ISystemRoleBasedAccess internal iSystemRoleBasedAccess;
+
+    uint256 private activeProposalsCount;
 
     function initialize(
         address _token,
@@ -129,9 +136,7 @@ abstract contract GovernorCountingSimpleInternal is
         uint256 nftTokenSerialId
     ) internal returns (uint256) {
         if (bytes(title).length == 0) {
-            revert InvalidInput(
-                "GovernorCountingSimpleInternal: proposal title can not be blank"
-            );
+            revert InvalidInput("GCSI: title blank");
         }
         (
             address[] memory targets,
@@ -169,6 +174,10 @@ abstract contract GovernorCountingSimpleInternal is
             getVotingInformation(proposalId),
             amountOrId
         );
+
+        activeProposalsCount += 1;
+        emit GovernorBalance(activeProposalsCount, getBlockedTokenBalance());
+
         return proposalId;
     }
 
@@ -255,7 +264,7 @@ abstract contract GovernorCountingSimpleInternal is
 
     function cancelProposal(
         string memory title
-    ) public returns (uint256 proposalId) {
+    ) public virtual returns (uint256 proposalId) {
         (
             address[] memory targets,
             uint256[] memory values,
@@ -266,7 +275,7 @@ abstract contract GovernorCountingSimpleInternal is
         ProposalInfo memory proposalInfo = _getProposalInfoIfExist(proposalId);
         require(
             msg.sender == proposalInfo.creator,
-            "GovernorCountingSimpleInternal: Only proposer can cancel the proposal"
+            "GCSI: Only proposer can cancel"
         );
         proposalId = super._cancel(targets, values, calldatas, descriptionHash);
         _cleanup(proposalId);
@@ -312,10 +321,7 @@ abstract contract GovernorCountingSimpleInternal is
     ) public returns (uint256) {
         address voter = _msgSender();
         ProposalInfo storage proposalInfo = _getProposalInfoIfExist(proposalId);
-        require(
-            _getVotes(voter, 0, "") > 0,
-            "GovernorCountingSimpleInternal: token locking is required to cast the vote"
-        );
+        require(_getVotes(voter, 0, "") > 0, "GCSI: lock token to vote");
         tokenHolder.addProposalForVoter(proposalId);
         uint256 weight = _castVote(proposalId, voter, support, "");
         proposalInfo.voters.push(voter);
@@ -343,10 +349,7 @@ abstract contract GovernorCountingSimpleInternal is
         if (!tokenHolder.isNFTType()) {
             uint256 totalSupply = IERC20(token).totalSupply();
             uint256 value = totalSupply * quorumThresholdInBsp;
-            require(
-                value >= 10_000,
-                "GovernorCountingSimpleInternal: GOD token total supply multiple by quorum threshold in BSP cannot be less than 10,000"
-            );
+            require(value >= 10_000, "GCSI: (GOD token * quorum) < 10,000");
             return value / 10_000;
         } else {
             return 1;
@@ -411,7 +414,7 @@ abstract contract GovernorCountingSimpleInternal is
         );
         require(
             code == HederaResponseCodes.SUCCESS,
-            "GovernorCountingSimpleInternal: token transfer failed to contract."
+            "GCSI: transfer failed to contract"
         );
     }
 
@@ -425,7 +428,7 @@ abstract contract GovernorCountingSimpleInternal is
         );
         require(
             code == HederaResponseCodes.SUCCESS,
-            "GovernorCountingSimpleInternal: token transfer failed from contract."
+            "GCSI: transfer failed from contract."
         );
     }
 
@@ -434,16 +437,27 @@ abstract contract GovernorCountingSimpleInternal is
         tokenHolder.removeActiveProposals(proposalInfo.voters, proposalId);
         _returnGODToken(proposalInfo.creator, proposalInfo.amountOrId);
         delete (proposalInfo.voters);
+        if (activeProposalsCount > 0) {
+            activeProposalsCount -= 1;
+            emit GovernorBalance(
+                activeProposalsCount,
+                getBlockedTokenBalance()
+            );
+        }
     }
 
     function _getProposalInfoIfExist(
         uint256 proposalId
     ) private view returns (ProposalInfo storage info) {
         info = proposals[proposalId];
-        require(
-            info.creator != address(0),
-            "GovernorCountingSimpleInternal: Proposal not found"
-        );
+        require(info.creator != address(0), "GCSI: Proposal not found");
+    }
+
+    function getBlockedTokenBalance() internal view returns (uint256) {
+        return
+            tokenHolder.isNFTType()
+                ? uint256(1)
+                : activeProposalsCount * PROPOSAL_CREATION_AMOUNT;
     }
 
     /**
