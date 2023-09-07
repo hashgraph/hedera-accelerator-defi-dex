@@ -77,6 +77,7 @@ export async function createAndExecuteTextProposal(
     creatorClient,
     "Text Proposal - Desc",
     "Text Proposal - LINK",
+    "Text Proposal - Metadata",
     governor.DEFAULT_NFT_TOKEN_SERIAL_NO
   );
   await governor.getProposalDetails(proposalId, voterClient);
@@ -121,7 +122,8 @@ export async function createAndExecuteAssetTransferProposal(
     creatorClient,
     governor.DEFAULT_NFT_TOKEN_SERIAL_NO,
     "Asset Transfer Proposal - Desc",
-    "Asset Transfer Proposal - Link"
+    "Asset Transfer Proposal - Link",
+    "Asset Transfer Proposal - Metadata"
   );
   await governor.getProposalDetails(proposalId, voterClient);
   await governor.forVote(proposalId, 0, voterClient);
@@ -194,6 +196,7 @@ export async function createAndExecuteContractUpgradeProposal(
     creatorClient,
     governor.DEFAULT_DESCRIPTION,
     governor.DEFAULT_LINK,
+    governor.DEFAULT_META_DATA,
     governor.DEFAULT_NFT_TOKEN_SERIAL_NO
   );
 
@@ -234,6 +237,7 @@ export async function createAndExecuteTokenAssociationProposal(
     creatorClient,
     "Token Association Proposal - Desc",
     "Token Association Proposal - LINK",
+    "Token Association Proposal - Metadata",
     governor.DEFAULT_NFT_TOKEN_SERIAL_NO
   );
   await governor.getProposalDetails(proposalId, voterClient);
@@ -274,7 +278,11 @@ export async function createAndExecuteTokenCreateProposal(
     name,
     symbol,
     treasureId,
-    creatorClient
+    creatorClient,
+    governor.DEFAULT_DESCRIPTION,
+    governor.DEFAULT_LINK,
+    governor.DEFAULT_META_DATA,
+    governor.DEFAULT_NFT_TOKEN_SERIAL_NO
   );
 
   await governor.getProposalDetails(proposalId, voterClient);
@@ -290,7 +298,7 @@ export async function createAndExecuteTokenCreateProposal(
     throw Error("failed to created token inside integration test");
   }
   await governor.mintToken(proposalId, BigNumber(10), treasureClient);
-  await governor.burnToken(proposalId, BigNumber(9), treasureClient);
+  // await governor.burnToken(proposalId, BigNumber(9), treasureClient);
   await Common.associateTokensToAccount(treasureId, [tokenId!], treasureClient);
   await governor.transferToken(
     proposalId,

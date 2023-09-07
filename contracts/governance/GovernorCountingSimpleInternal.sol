@@ -33,6 +33,7 @@ abstract contract GovernorCountingSimpleInternal is
         string title;
         string description;
         string link;
+        string metadata;
         bytes data;
         address[] voters;
         uint256 amountOrId;
@@ -60,6 +61,7 @@ abstract contract GovernorCountingSimpleInternal is
         string title,
         string description,
         string link,
+        string metadata,
         bytes data,
         Duration duration,
         VotingInformation votingInformation,
@@ -132,6 +134,7 @@ abstract contract GovernorCountingSimpleInternal is
         string memory title,
         string memory description,
         string memory link,
+        string memory metadata,
         bytes memory data,
         uint256 nftTokenSerialId
     ) internal returns (uint256) {
@@ -152,6 +155,7 @@ abstract contract GovernorCountingSimpleInternal is
             title,
             description,
             link,
+            metadata,
             data,
             EMPTY_VOTERS_LIST,
             amountOrId
@@ -169,6 +173,7 @@ abstract contract GovernorCountingSimpleInternal is
             title,
             description,
             link,
+            metadata,
             data,
             duration,
             getVotingInformation(proposalId),
@@ -246,6 +251,7 @@ abstract contract GovernorCountingSimpleInternal is
             title,
             descripition,
             link,
+            proposalInfo.metadata,
             proposalInfo.data,
             duration,
             votingInfo,

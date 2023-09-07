@@ -17,12 +17,14 @@ export default class ContractUpgradeGovernor extends Governor {
     client: Client = clientsInfo.operatorClient,
     description: string = this.DEFAULT_DESCRIPTION,
     link: string = this.DEFAULT_LINK,
+    metadata: string = this.DEFAULT_META_DATA,
     nftTokenSerialId: number = this.DEFAULT_NFT_TOKEN_SERIAL_NO
   ) => {
     const args = new ContractFunctionParameters()
       .addString(title)
       .addString(description)
       .addString(link)
+      .addString(metadata)
       .addAddress(targetProxyAddress)
       .addAddress(targetLogicAddress)
       .addUint256(nftTokenSerialId);

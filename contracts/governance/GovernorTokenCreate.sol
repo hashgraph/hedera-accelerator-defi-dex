@@ -16,6 +16,7 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
         string memory title,
         string memory description,
         string memory linkToDiscussion,
+        string memory _metadata,
         address _treasurer,
         string memory _tokenName,
         string memory _tokenSymbol,
@@ -25,6 +26,7 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
             title,
             description,
             linkToDiscussion,
+            _metadata,
             bytes(""),
             nftTokenSerialId
         );
@@ -108,31 +110,31 @@ contract GovernorTokenCreate is GovernorCountingSimpleInternal {
         return newTotalSupply;
     }
 
-    function burnToken(
-        uint256 proposalId,
-        uint256 amount
-    ) external returns (int64) {
-        TokenCreateData storage tokenCreateData = _proposalData[proposalId];
-        require(
-            tokenCreateData.newTokenAddress != address(0x0),
-            "GTC: burn, no proposal."
-        );
+    // function burnToken(
+    //     uint256 proposalId,
+    //     uint256 amount
+    // ) external returns (int64) {
+    //     TokenCreateData storage tokenCreateData = _proposalData[proposalId];
+    //     require(
+    //         tokenCreateData.newTokenAddress != address(0x0),
+    //         "GTC: burn, no proposal."
+    //     );
 
-        require(tokenCreateData.treasurer == msg.sender, "GTC: only treasurer");
+    //     require(tokenCreateData.treasurer == msg.sender, "GTC: only treasurer");
 
-        (int256 responseCode, int64 newTotalSupply) = super.burnToken(
-            hederaService,
-            tokenCreateData.newTokenAddress,
-            amount
-        );
+    //     (int256 responseCode, int64 newTotalSupply) = super.burnToken(
+    //         hederaService,
+    //         tokenCreateData.newTokenAddress,
+    //         amount
+    //     );
 
-        require(
-            responseCode == HederaResponseCodes.SUCCESS,
-            "GTC: Burn failed"
-        );
+    //     require(
+    //         responseCode == HederaResponseCodes.SUCCESS,
+    //         "GTC: Burn failed"
+    //     );
 
-        return newTotalSupply;
-    }
+    //     return newTotalSupply;
+    // }
 
     function transferToken(
         uint256 proposalId,

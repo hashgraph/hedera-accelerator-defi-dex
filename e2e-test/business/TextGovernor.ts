@@ -13,6 +13,7 @@ export default class TextGovernor extends Governor {
     title: string,
     client: Client = clientsInfo.operatorClient,
     description: string = this.DEFAULT_DESCRIPTION,
+    metadata: string = this.DEFAULT_META_DATA,
     link: string = this.DEFAULT_LINK,
     nftTokenSerialId: number = this.DEFAULT_NFT_TOKEN_SERIAL_NO
   ) => {
@@ -20,6 +21,7 @@ export default class TextGovernor extends Governor {
       .addString(title)
       .addString(description)
       .addString(link)
+      .addString(metadata)
       .addUint256(nftTokenSerialId);
 
     const { result } = await this.execute(

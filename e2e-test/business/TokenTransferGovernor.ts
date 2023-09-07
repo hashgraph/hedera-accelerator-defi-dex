@@ -19,12 +19,14 @@ export default class TokenTransferGovernor extends Governor {
     client: Client = clientsInfo.operatorClient,
     nftTokenSerialId: number = this.DEFAULT_NFT_TOKEN_SERIAL_NO,
     description: string = this.DEFAULT_DESCRIPTION,
-    link: string = this.DEFAULT_LINK
+    link: string = this.DEFAULT_LINK,
+    metadata: string = this.DEFAULT_META_DATA
   ) => {
     const args = new ContractFunctionParameters()
       .addString(title)
       .addString(description)
       .addString(link)
+      .addString(metadata)
       .addAddress(toAddress) // to
       .addAddress(tokenAddress) // tokenToTransfer
       .addUint256(tokenAmount) // amountToTransfer
@@ -49,12 +51,14 @@ export default class TokenTransferGovernor extends Governor {
     client: Client = clientsInfo.operatorClient,
     description: string = this.DEFAULT_DESCRIPTION,
     link: string = this.DEFAULT_LINK,
+    metadata: string = this.DEFAULT_META_DATA,
     nftTokenSerialId: number = this.DEFAULT_NFT_TOKEN_SERIAL_NO
   ) => {
     const args = new ContractFunctionParameters()
       .addString(title)
       .addString(description)
       .addString(link)
+      .addString(metadata)
       .addAddress(tokenAddress)
       .addUint256(nftTokenSerialId);
     const { result } = await this.execute(
