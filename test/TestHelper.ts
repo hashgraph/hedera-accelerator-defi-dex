@@ -10,11 +10,13 @@ export class TestHelper {
   static NFT_FOR_VOTING = 1;
   static NFT_FOR_TRANSFER = 2;
   static NFT_FOR_PROPOSAL_CREATION = 3;
+  static NFT_FOR_PROPOSAL_CREATION2 = 4;
 
   static NFT_IDS = [
     TestHelper.NFT_FOR_VOTING,
     TestHelper.NFT_FOR_TRANSFER,
     TestHelper.NFT_FOR_PROPOSAL_CREATION,
+    TestHelper.NFT_FOR_PROPOSAL_CREATION2,
   ];
 
   static async getAccountHBars(address: string): Promise<BigNumber> {
