@@ -453,12 +453,11 @@ abstract contract GovernorCountingSimpleInternal is
         require(info.creator != address(0), "GCSI: Proposal not found");
     }
 
-    function getBlockedTokenBalance() internal returns (uint256) {
-        int32 tokenType = _tokenType(hederaService, token);
+    function getBlockedTokenBalance() internal view returns (uint256) {
         return
-            tokenType == 0
-                ? activeProposalsCount * PROPOSAL_CREATION_AMOUNT
-                : uint256(1);
+            tokenHolder.isNFTType()
+                ? uint256(1)
+                : activeProposalsCount * PROPOSAL_CREATION_AMOUNT;
     }
 
     /**

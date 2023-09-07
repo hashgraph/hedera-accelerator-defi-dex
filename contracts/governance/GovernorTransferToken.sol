@@ -165,7 +165,7 @@ contract GovernorTransferToken is GovernorCountingSimpleInternal {
         address _token,
         int32 _tokenType,
         uint256 amountOrSerialId
-    ) private {
+    ) private view {
         if (token == _token) {
             _tokenType == 0
                 ? _isFTTransferAllowed(_token, amountOrSerialId)
@@ -176,7 +176,7 @@ contract GovernorTransferToken is GovernorCountingSimpleInternal {
     function _isFTTransferAllowed(
         address tokenToTransfer,
         uint256 amountOrIdToTransfer
-    ) private {
+    ) private view {
         uint256 _blockedTokenBalance = getBlockedTokenBalance();
         uint256 contractBalance = _balanceOf(tokenToTransfer, address(this));
         uint unblockedAmount = contractBalance - _blockedTokenBalance;
