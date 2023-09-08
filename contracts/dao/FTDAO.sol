@@ -51,9 +51,18 @@ contract FTDAO is BaseDAO, ISharedDAOModel {
             inputs.admin,
             inputs.name,
             inputs.logoUrl,
+            inputs.infoUrl,
             inputs.description,
             inputs.webLinks
         );
+    }
+
+    function _beforeUpdateDaoInfo(
+        string memory _infoUrl
+    ) internal pure override {
+        if (bytes(_infoUrl).length == 0) {
+            revert InvalidInput("FTDAO: info url is empty");
+        }
     }
 
     function getGovernorContractAddresses()

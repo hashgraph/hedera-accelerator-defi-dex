@@ -1,8 +1,8 @@
-import Base from "../Base";
 import GodHolder from "../GodHolder";
-import { ContractService } from "../../../deployment/service/ContractService";
-import { ContractId } from "@hashgraph/sdk";
 import TokenHolderFactory from "./TokenHolderFactory";
+
+import { ContractId } from "@hashgraph/sdk";
+import { ContractService } from "../../../deployment/service/ContractService";
 
 export default class FTTokenHolderFactory extends TokenHolderFactory {
   protected getContractName() {

@@ -17,6 +17,7 @@ import { TokenId, ContractId, AccountId } from "@hashgraph/sdk";
 const NFT_TOKEN_ID = dex.E2E_NFT_TOKEN_ID;
 const TRANSFER_TOKEN_ID = TokenId.fromString(dex.TOKEN_LAB49_1);
 
+const DAO_INFO_URL = "https://linkedin.com";
 const DAO_DESC = "Lorem Ipsum is simply dummy text";
 const DAO_WEB_LINKS = ["LINKEDIN", "https://linkedin.com"];
 const DAO_ADMIN_CLIENT = clientsInfo.operatorClient;
@@ -94,6 +95,7 @@ export class NFTDaoFactoryTest extends CommonSteps {
       daoAddress = await nftDaoFactory.createDAO(
         daoName,
         daoURL,
+        DAO_INFO_URL,
         DAO_DESC,
         DAO_WEB_LINKS,
         NFT_TOKEN_ID.toSolidityAddress(),

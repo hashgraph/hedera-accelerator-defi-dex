@@ -58,7 +58,7 @@ contract MultiSigDAO is IEvents, BaseDAO {
         hederaGnosisSafe = _hederaGnosisSafe;
         multiSend = _multiSend;
         iSystemRoleBasedAccess = _iSystemRoleBasedAccess;
-        __BaseDAO_init(_admin, _name, _logoUrl, _description, _webLinks);
+        __BaseDAO_init(_admin, _name, _logoUrl, "", _description, _webLinks);
         emit LogicUpdated(address(0), address(hederaService), HederaService);
         emit LogicUpdated(address(0), address(multiSend), MultiSend);
         emit LogicUpdated(address(0), address(hederaGnosisSafe), HederaSafe);
@@ -294,5 +294,13 @@ contract MultiSigDAO is IEvents, BaseDAO {
             "Only HederaGnosisSafe can execute it."
         );
         return (creator, text);
+    }
+
+    function _beforeUpdateDaoInfo(
+        string memory _infoUrl
+    ) internal pure override {
+        if (bytes(_infoUrl).length > 0) {
+            revert InvalidInput("MultiSigDAO: info url should empty");
+        }
     }
 }

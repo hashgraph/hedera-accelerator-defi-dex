@@ -1,7 +1,12 @@
 import dex from "../../deployment/model/dex";
-import FTDAOFactory from "../../e2e-test/business/factories/FTDAOFactory";
-import FTTokenHolderFactory from "../../e2e-test/business/factories/FTTokenHolderFactory";
+import NFTDAOFactory from "../../e2e-test/business/factories/NFTDAOFactory";
+import NFTTokenHolderFactory from "../../e2e-test/business/factories/NFTTokenHolderFactory";
 import SystemRoleBasedAccess from "../../e2e-test/business/common/SystemRoleBasedAccess";
+
+import TextGovernor from "../../e2e-test/business/TextGovernor";
+import TokenCreateGovernor from "../../e2e-test/business/TokenCreateGovernor";
+import TokenTransferGovernor from "../../e2e-test/business/TokenTransferGovernor";
+import ContractUpgradeGovernor from "../../e2e-test/business/ContractUpgradeGovernor";
 
 import { Helper } from "../../utils/Helper";
 import { Deployment } from "../../utils/deployContractOnTestnet";
@@ -16,16 +21,12 @@ import {
   createAndExecuteContractUpgradeProposal,
   createAndExecuteTokenAssociationProposal,
 } from "../governance/governance";
-import TextGovernor from "../../e2e-test/business/TextGovernor";
-import TokenCreateGovernor from "../../e2e-test/business/TokenCreateGovernor";
-import TokenTransferGovernor from "../../e2e-test/business/TokenTransferGovernor";
-import ContractUpgradeGovernor from "../../e2e-test/business/ContractUpgradeGovernor";
 
 const DAO_DESC = "Lorem Ipsum is simply dummy text";
 const DAO_ADMIN = clientsInfo.uiUserId.toSolidityAddress();
 const DAO_ADMIN_CLIENT = clientsInfo.uiUserClient;
 const DAO_LOGO_URL = "https://defi-ui.hedera.com/";
-const DAO_TOKEN_ID = dex.GOVERNANCE_DAO_TWO_TOKEN_ID;
+const DAO_TOKEN_ID = dex.NFT_TOKEN_ID;
 const DAO_WEB_LINKS = ["LINKEDIN", "https://linkedin.com"];
 const DAO_INFO_URL = "https://daoinfo.com";
 
@@ -41,16 +42,16 @@ const HBAR_TRANSFER_AMOUNT = Hbar.from(1, HbarUnit.Hbar)
 async function main() {
   // only for dev testing
   // await createNewCopies();
-  const tokenHolderFactory = new FTTokenHolderFactory();
+  const tokenHolderFactory = new NFTTokenHolderFactory();
   await tokenHolderFactory.initialize();
 
-  const daoFactory = new FTDAOFactory();
+  const daoFactory = new NFTDAOFactory();
   await daoFactory.initialize(clientsInfo.operatorClient, tokenHolderFactory);
   await daoFactory.createDAO(
     dex.GOVERNANCE_DAO_TWO,
     DAO_LOGO_URL,
-    DAO_INFO_URL,
     DAO_DESC,
+    DAO_INFO_URL,
     DAO_WEB_LINKS,
     DAO_TOKEN_ID.toSolidityAddress(),
     1,
@@ -67,8 +68,8 @@ async function main() {
   await checkAndUpdateGovernanceLogics(daoFactory);
 }
 
-export async function executeGovernanceProposals(
-  daoFactory: FTDAOFactory,
+async function executeGovernanceProposals(
+  daoFactory: NFTDAOFactory,
   daoEvmAddress: string,
   daoTokenId: TokenId
 ) {
@@ -101,17 +102,17 @@ export async function executeGovernanceProposals(
     textGovernor,
     tokenHolder,
     clientsInfo.operatorClient,
-    clientsInfo.treasureId,
-    clientsInfo.treasureKey,
-    clientsInfo.treasureClient,
-    0
+    clientsInfo.operatorId,
+    clientsInfo.operatorKey,
+    clientsInfo.operatorClient,
+    textGovernor.DEFAULT_NFT_TOKEN_SERIAL_NO_FOR_VOTING
   );
 
   // step - 1 text proposal flow
   await createAndExecuteTextProposal(
     textGovernor,
     tokenHolder,
-    clientsInfo.treasureClient,
+    clientsInfo.operatorClient,
     clientsInfo.operatorId,
     clientsInfo.operatorKey,
     clientsInfo.operatorClient,
@@ -127,7 +128,7 @@ export async function executeGovernanceProposals(
     contractToUpgradeInfo.address,
     upgradeGovernor,
     tokenHolder,
-    clientsInfo.treasureClient,
+    clientsInfo.operatorClient,
     clientsInfo.operatorId,
     clientsInfo.operatorKey,
     clientsInfo.operatorClient,
@@ -139,7 +140,7 @@ export async function executeGovernanceProposals(
     transferGovernor,
     tokenHolder,
     FT_TRANSFER_TOKEN_ID,
-    clientsInfo.treasureClient,
+    clientsInfo.operatorClient,
     clientsInfo.operatorId,
     clientsInfo.operatorKey,
     clientsInfo.operatorClient,
@@ -156,7 +157,7 @@ export async function executeGovernanceProposals(
     clientsInfo.operatorKey,
     clientsInfo.operatorId,
     clientsInfo.operatorKey,
-    clientsInfo.treasureClient,
+    clientsInfo.operatorClient,
     clientsInfo.operatorId,
     clientsInfo.operatorKey,
     clientsInfo.operatorClient,
@@ -168,7 +169,7 @@ export async function executeGovernanceProposals(
     transferGovernor,
     tokenHolder,
     NFT_TRANSFER_TOKEN_ID,
-    clientsInfo.treasureClient,
+    clientsInfo.operatorClient,
     clientsInfo.operatorId,
     clientsInfo.operatorKey,
     clientsInfo.operatorClient,
@@ -185,7 +186,7 @@ export async function executeGovernanceProposals(
     clientsInfo.operatorKey,
     clientsInfo.operatorId,
     clientsInfo.operatorKey,
-    clientsInfo.treasureClient,
+    clientsInfo.operatorClient,
     clientsInfo.operatorId,
     clientsInfo.operatorKey,
     clientsInfo.operatorClient,
@@ -202,7 +203,7 @@ export async function executeGovernanceProposals(
     clientsInfo.operatorKey,
     clientsInfo.operatorId,
     clientsInfo.operatorKey,
-    clientsInfo.treasureClient,
+    clientsInfo.operatorClient,
     clientsInfo.operatorId,
     clientsInfo.operatorKey,
     clientsInfo.operatorClient,
@@ -215,7 +216,7 @@ export async function executeGovernanceProposals(
     Helper.createProposalTitle("Test-A", 5),
     tokenCreateGovernor,
     tokenHolder,
-    clientsInfo.treasureClient,
+    clientsInfo.operatorClient,
     clientsInfo.treasureId,
     clientsInfo.treasureClient,
     clientsInfo.operatorId,
@@ -226,12 +227,12 @@ export async function executeGovernanceProposals(
 
   // step - 7 unlock required tokens from token holder
   await tokenHolder.checkAndClaimGodTokens(
-    clientsInfo.treasureClient,
-    clientsInfo.treasureId
+    clientsInfo.operatorClient,
+    clientsInfo.operatorId
   );
 }
 
-async function updateDaoInfo(daoFactory: FTDAOFactory, daoEvmAddress: string) {
+async function updateDaoInfo(daoFactory: NFTDAOFactory, daoEvmAddress: string) {
   const dao = await daoFactory.getGovernorTokenDaoInstance(daoEvmAddress);
   await dao.updateDaoInfo(
     "Governor Token Dao - New",
@@ -243,7 +244,7 @@ async function updateDaoInfo(daoFactory: FTDAOFactory, daoEvmAddress: string) {
   );
 }
 
-async function checkAndUpdateGovernanceLogics(daoFactory: FTDAOFactory) {
+async function checkAndUpdateGovernanceLogics(daoFactory: NFTDAOFactory) {
   const roleBasedAccess = new SystemRoleBasedAccess();
   const hasRole = await roleBasedAccess.checkIfChildProxyAdminRoleGiven();
   hasRole &&
@@ -264,8 +265,8 @@ async function checkAndUpdateGovernanceLogics(daoFactory: FTDAOFactory) {
 
 async function createNewCopies() {
   const deployment = new Deployment();
-  await deployment.deployProxyAndSave(ContractService.FT_DAO_FACTORY);
-  await deployment.deployProxyAndSave(ContractService.FT_TOKEN_HOLDER_FACTORY);
+  await deployment.deployProxyAndSave(ContractService.NFT_DAO_FACTORY);
+  await deployment.deployProxyAndSave(ContractService.NFT_TOKEN_HOLDER_FACTORY);
   new ContractService().makeLatestDeploymentAsDefault();
 }
 

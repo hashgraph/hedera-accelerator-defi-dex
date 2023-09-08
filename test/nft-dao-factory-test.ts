@@ -14,6 +14,7 @@ describe("NFTDAOFactory contract tests", function () {
   const total = 100 * 1e8;
   const DAO_NAME = "DAO_NAME";
   const LOGO_URL = "LOGO_URL";
+  const INFO_URL = "https://twitter.com";
   const DESCRIPTION = "DESCRIPTION";
   const WEB_LINKS = [
     "TWITTER",
@@ -141,6 +142,7 @@ describe("NFTDAOFactory contract tests", function () {
       TestHelper.ZERO_ADDRESS,
       DAO_NAME,
       LOGO_URL,
+      INFO_URL,
       token.address,
       BigNumber.from(500),
       BigNumber.from(0),
@@ -161,6 +163,7 @@ describe("NFTDAOFactory contract tests", function () {
       daoAdminOne.address,
       "",
       LOGO_URL,
+      INFO_URL,
       token.address,
       BigNumber.from(500),
       BigNumber.from(0),
@@ -182,6 +185,7 @@ describe("NFTDAOFactory contract tests", function () {
       daoAdminOne.address,
       DAO_NAME,
       LOGO_URL,
+      INFO_URL,
       TestHelper.ZERO_ADDRESS,
       BigNumber.from(500),
       BigNumber.from(0),
@@ -202,6 +206,7 @@ describe("NFTDAOFactory contract tests", function () {
       daoAdminOne.address,
       DAO_NAME,
       LOGO_URL,
+      INFO_URL,
       token.address,
       BigNumber.from(500),
       BigNumber.from(0),
@@ -215,6 +220,27 @@ describe("NFTDAOFactory contract tests", function () {
       .withArgs("DAOFactory: voting period is zero");
   });
 
+  it("Verify createDAO should be reverted when info url is empty", async function () {
+    const { governorDAOFactoryInstance, daoAdminOne, token } =
+      await loadFixture(deployFixture);
+    const CREATE_DAO_ARGS = [
+      daoAdminOne.address,
+      DAO_NAME,
+      LOGO_URL,
+      "",
+      token.address,
+      BigNumber.from(500),
+      BigNumber.from(0),
+      BigNumber.from(100),
+      true,
+      DESCRIPTION,
+      WEB_LINKS,
+    ];
+    await expect(governorDAOFactoryInstance.createDAO(CREATE_DAO_ARGS))
+      .revertedWithCustomError(governorDAOFactoryInstance, "InvalidInput")
+      .withArgs("FTDAO: info url is empty");
+  });
+
   it("Verify createDAO should add new dao into list when the dao is public", async function () {
     const { governorDAOFactoryInstance, daoAdminOne, token } =
       await loadFixture(deployFixture);
@@ -226,6 +252,7 @@ describe("NFTDAOFactory contract tests", function () {
       daoAdminOne.address,
       DAO_NAME,
       LOGO_URL,
+      INFO_URL,
       token.address,
       BigNumber.from(500),
       BigNumber.from(0),
@@ -256,6 +283,7 @@ describe("NFTDAOFactory contract tests", function () {
       daoAdminOne.address,
       DAO_NAME,
       LOGO_URL,
+      INFO_URL,
       token.address,
       BigNumber.from(500),
       BigNumber.from(0),

@@ -204,7 +204,7 @@ export class Deployment {
     adminKey: Key = clientsInfo.operatorKey.publicKey,
     client: Client = clientsInfo.operatorClient
   ) => {
-    const deployedItems = new Map<String, any>();
+    const deployedItems = new Map<String, DeployedContract>();
     const pendingItems = names.map(async (name: string) => {
       const item = await this.deployProxy(name, adminKey, client);
       deployedItems.set(name, item);

@@ -17,6 +17,7 @@ const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
 const TRANSFER_TOKEN_ID = TokenId.fromString(dex.TOKEN_LAB49_1);
 
 const DAO_DESC = "Lorem Ipsum is simply dummy text";
+const DAO_INFO_URL = "https://linkedin.com";
 const DAO_WEB_LINKS = ["https://linkedin.com"];
 const DAO_ADMIN_CLIENT = clientsInfo.operatorClient;
 const DAO_ADMIN_ADDRESS = clientsInfo.operatorId.toSolidityAddress();
@@ -93,6 +94,7 @@ export class FTDaoFactoryTest extends CommonSteps {
       daoAddress = await ftDaoFactory.createDAO(
         daoName,
         daoURL,
+        DAO_INFO_URL,
         DAO_DESC,
         DAO_WEB_LINKS,
         GOD_TOKEN_ID.toSolidityAddress(),

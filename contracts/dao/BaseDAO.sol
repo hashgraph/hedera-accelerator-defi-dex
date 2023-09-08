@@ -13,18 +13,20 @@ abstract contract BaseDAO is IErrors, RoleBasedAccess {
         string name;
         address admin;
         string logoUrl;
+        string infoUrl;
         string description;
         string[] webLinks;
     }
 
     DAOInfo private daoInfo;
 
-    uint256[45] __baseDaoGap;//For future use
+    uint256[45] __baseDaoGap; //For future use
 
     function __BaseDAO_init(
         address _admin,
         string memory _name,
         string memory _logoUrl,
+        string memory _infoUrl,
         string memory _description,
         string[] memory _webLinks
     ) public onlyInitializing {
@@ -33,7 +35,13 @@ abstract contract BaseDAO is IErrors, RoleBasedAccess {
         }
         daoInfo.admin = _admin;
         _grantRole(DAO_ADMIN, _admin);
-        updateDaoInfoInternally(_name, _logoUrl, _description, _webLinks);
+        updateDaoInfoInternally(
+            _name,
+            _logoUrl,
+            _infoUrl,
+            _description,
+            _webLinks
+        );
     }
 
     function getDaoInfo() external view returns (DAOInfo memory) {
@@ -43,18 +51,31 @@ abstract contract BaseDAO is IErrors, RoleBasedAccess {
     function updateDaoInfo(
         string memory _name,
         string memory _logoUrl,
+        string memory _infoUrl,
         string memory _description,
         string[] memory _webLinks
     ) public onlyRole(DAO_ADMIN) {
-        updateDaoInfoInternally(_name, _logoUrl, _description, _webLinks);
+        updateDaoInfoInternally(
+            _name,
+            _logoUrl,
+            _infoUrl,
+            _description,
+            _webLinks
+        );
     }
+
+    function _beforeUpdateDaoInfo(string memory _infoUrl) internal virtual {}
 
     function updateDaoInfoInternally(
         string memory _name,
         string memory _logoUrl,
+        string memory _infoUrl,
         string memory _description,
         string[] memory _webLinks
     ) private {
+        _beforeUpdateDaoInfo(_infoUrl);
+        daoInfo.infoUrl = _infoUrl;
+
         if (bytes(_name).length == 0) {
             revert InvalidInput("BaseDAO: name is empty");
         }

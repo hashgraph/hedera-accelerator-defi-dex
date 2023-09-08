@@ -3,8 +3,10 @@ import MultiSigDAOFactory from "../../e2e-test/business/factories/MultiSigDAOFac
 import SystemRoleBasedAccess from "../../e2e-test/business/common/SystemRoleBasedAccess";
 
 import { Helper } from "../../utils/Helper";
+import { Deployment } from "../../utils/deployContractOnTestnet";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { AddressHelper } from "../../utils/AddressHelper";
+import { ContractService } from "../../deployment/service/ContractService";
 import {
   DAO_LOGO,
   DAO_NAME,
@@ -20,7 +22,12 @@ import {
 } from "./multiSigDAO";
 
 async function main() {
+  // only for dev testing
+  // await createNewCopies();
+
   const roleBasedAccess = new SystemRoleBasedAccess();
+  await roleBasedAccess.initialize();
+
   const daoFactory = new MultiSigDAOFactory();
   await daoFactory.initialize();
   await daoFactory.createDAO(
@@ -47,6 +54,12 @@ async function main() {
   const hasRole = await roleBasedAccess.checkIfChildProxyAdminRoleGiven();
   hasRole &&
     (await daoFactory.upgradeHederaService(clientsInfo.childProxyAdminClient));
+}
+
+async function createNewCopies() {
+  const deployment = new Deployment();
+  await deployment.deployProxyAndSave(ContractService.MULTI_SIG_FACTORY);
+  new ContractService().makeLatestDeploymentAsDefault();
 }
 
 main()
