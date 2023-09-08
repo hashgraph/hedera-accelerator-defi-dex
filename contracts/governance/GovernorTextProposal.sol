@@ -7,12 +7,14 @@ contract GovernorTextProposal is GovernorCountingSimpleInternal {
         string memory title,
         string memory description,
         string memory linkToDiscussion,
+        string memory _metadata,
         uint256 nftTokenSerialId
     ) public returns (uint256) {
         uint256 proposalId = _createProposal(
             title,
             description,
             linkToDiscussion,
+            _metadata,
             bytes(""),
             nftTokenSerialId
         );

@@ -42,6 +42,7 @@ export default class Governor extends Base {
   protected DEFAULT_VOTING_PERIOD = 100; // blocks means 3 minutes as per test
   protected DEFAULT_MAX_WAITING_TIME = this.DEFAULT_VOTING_PERIOD * 12 * 300;
   protected EACH_ITERATION_DELAY = this.DEFAULT_VOTING_PERIOD * 0.3 * 1000;
+  DEFAULT_META_DATA = "metadata";
   DEFAULT_DESCRIPTION = "description";
   DEFAULT_LINK = "https://defi-ui.hedera.com/governance";
 

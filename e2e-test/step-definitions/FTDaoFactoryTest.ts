@@ -134,6 +134,7 @@ export class FTDaoFactoryTest extends CommonSteps {
       DAO_ADMIN_CLIENT,
       description,
       link,
+      governor.DEFAULT_META_DATA,
       governor.DEFAULT_NFT_TOKEN_SERIAL_NO
     );
   }

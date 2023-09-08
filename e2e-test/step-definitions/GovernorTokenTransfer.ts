@@ -155,6 +155,7 @@ export class GovernorTokenTransfer extends CommonSteps {
       proposalCreatorClient,
       description,
       link,
+      governor.DEFAULT_META_DATA,
       governor.DEFAULT_NFT_TOKEN_SERIAL_NO
     );
   }

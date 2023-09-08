@@ -7,6 +7,7 @@ contract GovernorUpgrade is GovernorCountingSimpleInternal {
         string memory _title,
         string memory _description,
         string memory _linkToDiscussion,
+        string memory _metadata,
         address _proxy,
         address _proxyLogic,
         uint256 _nftTokenSerialId
@@ -17,6 +18,7 @@ contract GovernorUpgrade is GovernorCountingSimpleInternal {
                 _title,
                 _description,
                 _linkToDiscussion,
+                _metadata,
                 abi.encode(_proxy, _proxyLogic, proxyAdmin),
                 _nftTokenSerialId
             );
