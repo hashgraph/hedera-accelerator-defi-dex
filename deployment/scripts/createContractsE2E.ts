@@ -14,10 +14,10 @@ export async function main(contracts: string[]) {
     contracts.map(async (contractName: string) => {
       await deployContract(contractName);
       await createProxy(contractName);
-    })
+    }),
   );
   console.log(
-    `- Deployment took: ${Helper.currentTimeInMills() - startTime} ms`
+    `- Deployment took: ${Helper.currentTimeInMills() - startTime} ms`,
   );
 }
 

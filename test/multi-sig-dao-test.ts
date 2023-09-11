@@ -69,7 +69,7 @@ describe("MultiSig tests", function () {
     token: string,
     amount: number = TRANSFER_AMOUNT,
     title: string = TITLE,
-    description: string = DESCRIPTION
+    description: string = DESCRIPTION,
   ) {
     const txn = await multiSigDAOInstance.proposeTransaction(
       token,
@@ -77,7 +77,7 @@ describe("MultiSig tests", function () {
       TXN_TYPE_TRANSFER,
       title,
       description,
-      LINK_TO_DISCUSSION
+      LINK_TO_DISCUSSION,
     );
     return await verifyTransactionCreatedEvent(txn, TXN_TYPE_TRANSFER);
   }
@@ -86,7 +86,7 @@ describe("MultiSig tests", function () {
     multiSigDAOInstance: Contract,
     text: string,
     creator: string,
-    title: string = TITLE
+    title: string = TITLE,
   ) {
     const txn = await multiSigDAOInstance.proposeTransaction(
       multiSigDAOInstance.address,
@@ -94,7 +94,7 @@ describe("MultiSig tests", function () {
       TXN_TYPE_TEXT,
       title,
       text,
-      LINK_TO_DISCUSSION
+      LINK_TO_DISCUSSION,
     );
     return await verifyTransactionCreatedEvent(txn, TXN_TYPE_TEXT);
   }
@@ -106,7 +106,7 @@ describe("MultiSig tests", function () {
     type: number,
     amount: number = TRANSFER_AMOUNT,
     title: string = TITLE,
-    description: string = DESCRIPTION
+    description: string = DESCRIPTION,
   ) {
     const txn = await multiSigDAOInstance.proposeTransferTransaction(
       receiver,
@@ -114,14 +114,14 @@ describe("MultiSig tests", function () {
       amount,
       title,
       description,
-      LINK_TO_DISCUSSION
+      LINK_TO_DISCUSSION,
     );
     return await verifyTransactionCreatedEvent(txn, type);
   }
 
   function createTransferTransactionABIData(
     receiver: string,
-    amount: number
+    amount: number,
   ): Uint8Array {
     const ABI = ["function transfer(address to, uint amount) returns (bool)"];
     const iface = new ethers.utils.Interface(ABI);
@@ -131,7 +131,7 @@ describe("MultiSig tests", function () {
 
   function createTextTransaction(
     creator: string,
-    textAsHash: string
+    textAsHash: string,
   ): Uint8Array {
     const ABI = [
       "function setText(address,string) external returns (address,string)",
@@ -157,34 +157,32 @@ describe("MultiSig tests", function () {
       await TestHelper.deploySystemRoleBasedAccess()
     ).address;
 
-    const multiSigDAOLogicInstance = await TestHelper.deployLogic(
-      "MultiSigDAO"
-    );
+    const multiSigDAOLogicInstance =
+      await TestHelper.deployLogic("MultiSigDAO");
 
     const hederaGnosisSafeProxyFactoryInstance = await TestHelper.deployLogic(
-      "HederaGnosisSafeProxyFactory"
+      "HederaGnosisSafeProxyFactory",
     );
 
-    const hederaGnosisSafeLogicInstance = await TestHelper.deployLogic(
-      "HederaGnosisSafe"
-    );
+    const hederaGnosisSafeLogicInstance =
+      await TestHelper.deployLogic("HederaGnosisSafe");
 
     const transaction = await hederaGnosisSafeProxyFactoryInstance.createProxy(
       hederaGnosisSafeLogicInstance.address,
-      new Uint8Array()
+      new Uint8Array(),
     );
     const args = await gnosisProxyCreationVerification(transaction);
 
     const hederaGnosisSafeProxyInstance = args.proxy;
     const hederaGnosisSafeProxyContract = await TestHelper.getContract(
       "HederaGnosisSafe",
-      hederaGnosisSafeProxyInstance
+      hederaGnosisSafeProxyInstance,
     );
 
     const multiSend = await TestHelper.deployLogic("HederaMultiSend");
 
     const doaSignersAddresses = daoSigners.map(
-      (signer: SignerWithAddress) => signer.address
+      (signer: SignerWithAddress) => signer.address,
     );
 
     await hederaGnosisSafeProxyContract.setup(
@@ -195,7 +193,7 @@ describe("MultiSig tests", function () {
       TestHelper.ZERO_ADDRESS,
       TestHelper.ZERO_ADDRESS,
       0,
-      TestHelper.ZERO_ADDRESS
+      TestHelper.ZERO_ADDRESS,
     );
 
     const MULTISIG_ARGS = [
@@ -216,16 +214,15 @@ describe("MultiSig tests", function () {
     expect(events.length).equals(1);
 
     // factory setup
-    const multiSigDAOFactoryInstance = await TestHelper.deployLogic(
-      "MultisigDAOFactory"
-    );
+    const multiSigDAOFactoryInstance =
+      await TestHelper.deployLogic("MultisigDAOFactory");
     await multiSigDAOFactoryInstance.initialize(
       systemRoleBasedAccess,
       multiSigDAOLogicInstance.address,
       hederaGnosisSafeLogicInstance.address,
       hederaGnosisSafeProxyFactoryInstance.address,
       hederaService.address,
-      multiSend.address
+      multiSend.address,
     );
 
     // token association to gnosis contract not possible in unit test as of now
@@ -234,13 +231,13 @@ describe("MultiSig tests", function () {
     await tokenInstance.setUserBalance(multiSend.address, TOTAL);
     await tokenInstance.setUserBalance(
       hederaGnosisSafeProxyContract.address,
-      TOTAL
+      TOTAL,
     );
 
     const multiSendProxy = await TestHelper.deployLogic(
       "ProxyPatternMock",
       multiSend.address,
-      systemUsersSigners.proxyAdmin.address
+      systemUsersSigners.proxyAdmin.address,
     );
 
     return {
@@ -277,7 +274,7 @@ describe("MultiSig tests", function () {
       const { txnHash } = await proposeTransaction(
         multiSigDAOInstance,
         signers[1].address,
-        tokenInstance.address
+        tokenInstance.address,
       );
       const approvalStatus1 =
         await hederaGnosisSafeProxyContract.checkApprovals(txnHash);
@@ -314,8 +311,8 @@ describe("MultiSig tests", function () {
       await expect(
         hederaGnosisSafeProxyContract.associateToken(
           hederaService.address,
-          tokenInstance.address
-        )
+          tokenInstance.address,
+        ),
       ).revertedWith("GS031");
     });
 
@@ -331,8 +328,8 @@ describe("MultiSig tests", function () {
           hederaService.address,
           tokenInstance.address,
           signers[1].address,
-          1e8
-        )
+          1e8,
+        ),
       ).revertedWith("GS031");
     });
 
@@ -346,7 +343,7 @@ describe("MultiSig tests", function () {
       const { info } = await proposeTransaction(
         multiSigDAOInstance,
         signers[1].address,
-        tokenInstance.address
+        tokenInstance.address,
       );
       await expect(
         hederaGnosisSafeProxyContract.execTransaction(
@@ -359,8 +356,8 @@ describe("MultiSig tests", function () {
           info.nonce,
           info.to,
           info.to,
-          info.data
-        )
+          info.data,
+        ),
       ).revertedWith("HederaGnosisSafe: API not available");
     });
 
@@ -375,7 +372,7 @@ describe("MultiSig tests", function () {
       const { txnHash, info } = await proposeTransaction(
         multiSigDAOInstance,
         signers[1].address,
-        tokenInstance.address
+        tokenInstance.address,
       );
       for (const signer of daoSigners) {
         await hederaGnosisSafeProxyContract
@@ -387,7 +384,7 @@ describe("MultiSig tests", function () {
         info.value,
         info.data,
         info.operation,
-        info.nonce
+        info.nonce,
       );
       await expect(
         hederaGnosisSafeProxyContract.executeTransaction(
@@ -395,8 +392,8 @@ describe("MultiSig tests", function () {
           info.value,
           info.data,
           info.operation,
-          info.nonce
-        )
+          info.nonce,
+        ),
       ).revertedWith("HederaGnosisSafe: txn already executed");
     });
   });
@@ -419,8 +416,8 @@ describe("MultiSig tests", function () {
           hederaGnosisSafeLogicInstance.address,
           hederaGnosisSafeProxyFactoryInstance.address,
           hederaService.address,
-          multiSend.address
-        )
+          multiSend.address,
+        ),
       ).revertedWith("Initializable: contract is already initialized");
     });
 
@@ -517,26 +514,25 @@ describe("MultiSig tests", function () {
     });
 
     it("Verify upgrade logic call should be reverted for non dex owner", async function () {
-      const { multiSigDAOFactoryInstance, daoAdminOne } = await loadFixture(
-        deployFixture
-      );
+      const { multiSigDAOFactoryInstance, daoAdminOne } =
+        await loadFixture(deployFixture);
 
       await expect(
         multiSigDAOFactoryInstance
           .connect(daoAdminOne)
-          .upgradeSafeFactoryAddress(TestHelper.ZERO_ADDRESS)
+          .upgradeSafeFactoryAddress(TestHelper.ZERO_ADDRESS),
       ).reverted;
 
       await expect(
         multiSigDAOFactoryInstance
           .connect(daoAdminOne)
-          .upgradeSafeLogicAddress(TestHelper.ZERO_ADDRESS)
+          .upgradeSafeLogicAddress(TestHelper.ZERO_ADDRESS),
       ).reverted;
 
       await expect(
         multiSigDAOFactoryInstance
           .connect(daoAdminOne)
-          .upgradeDaoLogicAddress(TestHelper.ZERO_ADDRESS)
+          .upgradeDaoLogicAddress(TestHelper.ZERO_ADDRESS),
       ).reverted;
     });
 
@@ -547,13 +543,12 @@ describe("MultiSig tests", function () {
       const safeFactoryTxn = await multiSigDAOFactoryInstance
         .connect(systemUsersSigners.childProxyAdmin)
         .upgradeSafeFactoryAddress(TestHelper.ONE_ADDRESS);
-      const safeFactoryTxnEvent = await TestHelper.readLastEvent(
-        safeFactoryTxn
-      );
+      const safeFactoryTxnEvent =
+        await TestHelper.readLastEvent(safeFactoryTxn);
       expect(safeFactoryTxnEvent.name).equal("LogicUpdated");
       expect(safeFactoryTxnEvent.args.name).equal("SafeFactory");
       expect(safeFactoryTxnEvent.args.newImplementation).equal(
-        TestHelper.ONE_ADDRESS
+        TestHelper.ONE_ADDRESS,
       );
 
       const safeLogicTxn = await multiSigDAOFactoryInstance
@@ -563,7 +558,7 @@ describe("MultiSig tests", function () {
       expect(safeLogicTxnEvent.name).equal("LogicUpdated");
       expect(safeLogicTxnEvent.args.name).equal("SafeLogic");
       expect(safeLogicTxnEvent.args.newImplementation).equal(
-        TestHelper.ONE_ADDRESS
+        TestHelper.ONE_ADDRESS,
       );
 
       const daoLogicTxn = await multiSigDAOFactoryInstance
@@ -573,19 +568,18 @@ describe("MultiSig tests", function () {
       expect(daoLogicTxnEvent.name).equal("LogicUpdated");
       expect(daoLogicTxnEvent.args.name).equal("DaoLogic");
       expect(daoLogicTxnEvent.args.newImplementation).equal(
-        TestHelper.ONE_ADDRESS
+        TestHelper.ONE_ADDRESS,
       );
     });
 
     it("Verify upgradeHederaService should fail when non-owner try to upgrade Hedera service", async function () {
-      const { multiSigDAOFactoryInstance, signers } = await loadFixture(
-        deployFixture
-      );
+      const { multiSigDAOFactoryInstance, signers } =
+        await loadFixture(deployFixture);
       const nonOwner = signers[3];
       await expect(
         multiSigDAOFactoryInstance
           .connect(nonOwner)
-          .upgradeHederaService(signers[3].address)
+          .upgradeHederaService(signers[3].address),
       ).reverted;
     });
 
@@ -598,7 +592,7 @@ describe("MultiSig tests", function () {
       } = await loadFixture(deployFixture);
 
       expect(await multiSigDAOFactoryInstance.getHederaServiceVersion()).equals(
-        hederaService.address
+        hederaService.address,
       );
 
       const newAddress = signers[3].address;
@@ -607,19 +601,18 @@ describe("MultiSig tests", function () {
         .upgradeHederaService(newAddress);
 
       expect(await multiSigDAOFactoryInstance.getHederaServiceVersion()).equals(
-        newAddress
+        newAddress,
       );
     });
 
     it("Verify upgradeMultiSend for factory should fail when non-owner try to upgrade MultiSend service", async function () {
-      const { multiSigDAOFactoryInstance, signers } = await loadFixture(
-        deployFixture
-      );
+      const { multiSigDAOFactoryInstance, signers } =
+        await loadFixture(deployFixture);
       const nonOwner = signers[3];
       await expect(
         multiSigDAOFactoryInstance
           .connect(nonOwner)
-          .upgradeMultiSend(signers[3].address)
+          .upgradeMultiSend(signers[3].address),
       ).reverted;
     });
 
@@ -628,7 +621,7 @@ describe("MultiSig tests", function () {
         await loadFixture(deployFixture);
 
       expect(
-        await multiSigDAOFactoryInstance.getMultiSendContractAddress()
+        await multiSigDAOFactoryInstance.getMultiSendContractAddress(),
       ).equals(multiSend.address);
 
       const newHederaService = await TestHelper.deployMockHederaService();
@@ -637,18 +630,17 @@ describe("MultiSig tests", function () {
         .upgradeMultiSend(newHederaService.address);
 
       expect(
-        await multiSigDAOFactoryInstance.getMultiSendContractAddress()
+        await multiSigDAOFactoryInstance.getMultiSendContractAddress(),
       ).equals(newHederaService.address);
     });
   });
 
   describe("MultiSigDAO contract tests", function () {
     it("Verify MultiSigDAO contract should be reverted for multiple initialization", async function () {
-      const { multiSigDAOInstance, MULTISIG_ARGS } = await loadFixture(
-        deployFixture
-      );
+      const { multiSigDAOInstance, MULTISIG_ARGS } =
+        await loadFixture(deployFixture);
       await expect(
-        multiSigDAOInstance.initialize(...MULTISIG_ARGS)
+        multiSigDAOInstance.initialize(...MULTISIG_ARGS),
       ).revertedWith("Initializable: contract is already initialized");
     });
 
@@ -663,38 +655,36 @@ describe("MultiSig tests", function () {
     it("Verify transaction info should be reverted for non-existing hash", async function () {
       const { multiSigDAOInstance } = await loadFixture(deployFixture);
       await expect(
-        multiSigDAOInstance.getTransactionInfo(INVALID_TXN_HASH)
+        multiSigDAOInstance.getTransactionInfo(INVALID_TXN_HASH),
       ).revertedWith("MultiSigDAO: no txn exist");
     });
 
     it("Verify transaction state should be reverted for non-existing hash", async function () {
       const { multiSigDAOInstance } = await loadFixture(deployFixture);
       await expect(multiSigDAOInstance.state(INVALID_TXN_HASH)).revertedWith(
-        "MultiSigDAO: no txn exist"
+        "MultiSigDAO: no txn exist",
       );
     });
 
     it("Verify propose transaction should return a valid hash", async function () {
-      const { multiSigDAOInstance, signers, tokenInstance } = await loadFixture(
-        deployFixture
-      );
+      const { multiSigDAOInstance, signers, tokenInstance } =
+        await loadFixture(deployFixture);
       const { txnHash } = await proposeTransaction(
         multiSigDAOInstance,
         signers[1].address,
-        tokenInstance.address
+        tokenInstance.address,
       );
       await expect(multiSigDAOInstance.getTransactionInfo(txnHash)).not
         .reverted;
     });
 
     it("Verify propose transaction should be in pending state", async function () {
-      const { multiSigDAOInstance, signers, tokenInstance } = await loadFixture(
-        deployFixture
-      );
+      const { multiSigDAOInstance, signers, tokenInstance } =
+        await loadFixture(deployFixture);
       const { txnHash } = await proposeTransaction(
         multiSigDAOInstance,
         signers[1].address,
-        tokenInstance.address
+        tokenInstance.address,
       );
       expect(await multiSigDAOInstance.getApprovalCounts(txnHash)).equals(0);
       expect(await multiSigDAOInstance.state(txnHash)).equals(0); // Pending
@@ -711,7 +701,7 @@ describe("MultiSig tests", function () {
       const { txnHash } = await proposeTransaction(
         multiSigDAOInstance,
         signers[1].address,
-        tokenInstance.address
+        tokenInstance.address,
       );
       expect(await multiSigDAOInstance.getApprovalCounts(txnHash)).equals(0);
       for (const signer of daoSigners) {
@@ -720,7 +710,7 @@ describe("MultiSig tests", function () {
           .approveHash(txnHash);
       }
       expect(await multiSigDAOInstance.getApprovalCounts(txnHash)).equals(
-        daoSigners.length
+        daoSigners.length,
       );
       expect(await multiSigDAOInstance.state(txnHash)).equals(1); // Approved
     });
@@ -737,7 +727,7 @@ describe("MultiSig tests", function () {
         multiSigDAOInstance,
         signers[1].address,
         tokenInstance.address,
-        TXN_TYPE_TRANSFER
+        TXN_TYPE_TRANSFER,
       );
       for (const signer of daoSigners) {
         await hederaGnosisSafeProxyContract
@@ -753,7 +743,7 @@ describe("MultiSig tests", function () {
           info.value,
           info.data,
           info.operation,
-          info.nonce
+          info.nonce,
         );
       const { name, args } = await TestHelper.readLastEvent(transaction);
       expect(name).equals("ExecutionSuccess");
@@ -769,23 +759,22 @@ describe("MultiSig tests", function () {
       const contractBalanceAfterTransactionExecution =
         await TestHelper.getAccountBalance(
           tokenInstance,
-          hederaGnosisSafeProxyContract.address
+          hederaGnosisSafeProxyContract.address,
         );
 
       expect(contractBalanceAfterTransactionExecution).equals(
-        TOTAL - TRANSFER_AMOUNT
+        TOTAL - TRANSFER_AMOUNT,
       );
       expect(userBalanceAfterTransactionExecution).equals(TRANSFER_AMOUNT);
     });
 
     it("Verify propose batch transaction should be reverted with invalid inputs", async function () {
-      const { multiSigDAOInstance, signers, tokenInstance } = await loadFixture(
-        deployFixture
-      );
+      const { multiSigDAOInstance, signers, tokenInstance } =
+        await loadFixture(deployFixture);
       const receiver = signers[0].address;
       const callData = createTransferTransactionABIData(
         receiver,
-        TRANSFER_AMOUNT
+        TRANSFER_AMOUNT,
       );
       const VALUES = [0, 0];
       const TARGETS = [tokenInstance.address, tokenInstance.address];
@@ -798,8 +787,8 @@ describe("MultiSig tests", function () {
           CALL_DATA_ARRAY.slice(0, 1),
           TITLE,
           DESCRIPTION,
-          LINK_TO_DISCUSSION
-        )
+          LINK_TO_DISCUSSION,
+        ),
       ).rejectedWith("MultiSigDAO: invalid transaction length");
       // 2- when targets is less
       await expect(
@@ -809,8 +798,8 @@ describe("MultiSig tests", function () {
           CALL_DATA_ARRAY,
           TITLE,
           DESCRIPTION,
-          LINK_TO_DISCUSSION
-        )
+          LINK_TO_DISCUSSION,
+        ),
       ).rejectedWith("MultiSigDAO: invalid transaction length");
       // 3- when values is less
       await expect(
@@ -820,8 +809,8 @@ describe("MultiSig tests", function () {
           CALL_DATA_ARRAY,
           TITLE,
           DESCRIPTION,
-          LINK_TO_DISCUSSION
-        )
+          LINK_TO_DISCUSSION,
+        ),
       ).rejectedWith("MultiSigDAO: invalid transaction length");
       // 4- when call-data-array is less
       await expect(
@@ -831,8 +820,8 @@ describe("MultiSig tests", function () {
           CALL_DATA_ARRAY.slice(0, 1),
           TITLE,
           DESCRIPTION,
-          LINK_TO_DISCUSSION
-        )
+          LINK_TO_DISCUSSION,
+        ),
       ).rejectedWith("MultiSigDAO: invalid transaction length");
     });
 
@@ -847,7 +836,7 @@ describe("MultiSig tests", function () {
         multiSigDAOInstance,
         signers[1].address,
         TestHelper.ZERO_ADDRESS,
-        TXN_TYPE_TRANSFER
+        TXN_TYPE_TRANSFER,
       );
       for (const signer of daoSigners) {
         await hederaGnosisSafeProxyContract
@@ -856,7 +845,7 @@ describe("MultiSig tests", function () {
       }
 
       expect(
-        await TestHelper.getAccountHBars(hederaGnosisSafeProxyContract.address)
+        await TestHelper.getAccountHBars(hederaGnosisSafeProxyContract.address),
       ).equals(0);
 
       await expect(
@@ -865,8 +854,8 @@ describe("MultiSig tests", function () {
           info.value,
           info.data,
           info.operation,
-          info.nonce
-        )
+          info.nonce,
+        ),
       ).revertedWith("GS013");
     });
 
@@ -883,7 +872,7 @@ describe("MultiSig tests", function () {
         multiSigDAOInstance,
         receiver.address,
         TestHelper.ZERO_ADDRESS,
-        TXN_TYPE_TRANSFER
+        TXN_TYPE_TRANSFER,
       );
       for (const signer of daoSigners) {
         await hederaGnosisSafeProxyContract
@@ -892,20 +881,20 @@ describe("MultiSig tests", function () {
       }
 
       const receiverBalBeforeTransfer = await TestHelper.getAccountHBars(
-        receiver.address
+        receiver.address,
       );
 
       expect(
-        await TestHelper.getAccountHBars(hederaGnosisSafeProxyContract.address)
+        await TestHelper.getAccountHBars(hederaGnosisSafeProxyContract.address),
       ).equals(0);
 
       await TestHelper.transferBalance(
         hederaGnosisSafeProxyContract.address,
         TRANSFER_AMOUNT,
-        signers[0]
+        signers[0],
       );
       expect(
-        await TestHelper.getAccountHBars(hederaGnosisSafeProxyContract.address)
+        await TestHelper.getAccountHBars(hederaGnosisSafeProxyContract.address),
       ).equals(TRANSFER_AMOUNT);
 
       await hederaGnosisSafeProxyContract.executeTransaction(
@@ -913,15 +902,15 @@ describe("MultiSig tests", function () {
         info.value,
         info.data,
         info.operation,
-        info.nonce
+        info.nonce,
       );
 
       expect(await TestHelper.getAccountHBars(receiver.address)).equals(
-        receiverBalBeforeTransfer.add(TRANSFER_AMOUNT)
+        receiverBalBeforeTransfer.add(TRANSFER_AMOUNT),
       );
 
       expect(
-        await TestHelper.getAccountHBars(hederaGnosisSafeProxyContract.address)
+        await TestHelper.getAccountHBars(hederaGnosisSafeProxyContract.address),
       ).equals(0);
     });
 
@@ -937,7 +926,7 @@ describe("MultiSig tests", function () {
       const receiverAccount = signers[1];
       const callData = createTransferTransactionABIData(
         receiverAccount.address,
-        TRANSFER_AMOUNT
+        TRANSFER_AMOUNT,
       );
       const VALUES = [0, 0];
       const TARGETS = [tokenInstance.address, tokenInstance.address];
@@ -948,11 +937,11 @@ describe("MultiSig tests", function () {
         CALL_DATA_ARRAY,
         TITLE,
         DESCRIPTION,
-        LINK_TO_DISCUSSION
+        LINK_TO_DISCUSSION,
       );
       const { txnHash, info } = await verifyTransactionCreatedEvent(
         pTxn,
-        TXN_TYPE_BATCH
+        TXN_TYPE_BATCH,
       );
       for (const signer of daoSigners) {
         await hederaGnosisSafeProxyContract
@@ -965,11 +954,11 @@ describe("MultiSig tests", function () {
         info.value,
         info.data,
         info.operation,
-        info.nonce
+        info.nonce,
       );
       await verifyExecutionSuccessEvent(eTxn, txnHash);
       expect(await tokenInstance.balanceOf(receiverAccount.address)).equals(
-        TRANSFER_AMOUNT * 2
+        TRANSFER_AMOUNT * 2,
       );
     });
 
@@ -983,7 +972,7 @@ describe("MultiSig tests", function () {
       const { info } = await proposeTransaction(
         multiSigDAOInstance,
         signers[1].address,
-        tokenInstance.address
+        tokenInstance.address,
       );
       await expect(
         hederaGnosisSafeProxyContract.executeTransaction(
@@ -991,8 +980,8 @@ describe("MultiSig tests", function () {
           info.value,
           info.data,
           info.operation,
-          info.nonce
-        )
+          info.nonce,
+        ),
       ).revertedWith("Owner has not approved yet");
     });
 
@@ -1001,7 +990,7 @@ describe("MultiSig tests", function () {
         await loadFixture(deployFixture);
 
       expect(await multiSigDAOInstance.getHederaServiceVersion()).equals(
-        hederaService.address
+        hederaService.address,
       );
 
       const newHederaService = await TestHelper.deployMockHederaService();
@@ -1010,7 +999,7 @@ describe("MultiSig tests", function () {
         .upgradeHederaService(newHederaService.address);
 
       expect(await multiSigDAOInstance.getHederaServiceVersion()).equals(
-        newHederaService.address
+        newHederaService.address,
       );
     });
 
@@ -1021,7 +1010,7 @@ describe("MultiSig tests", function () {
       await expect(
         multiSigDAOInstance
           .connect(nonSystemUser)
-          .upgradeHederaService(newHederaService.address)
+          .upgradeHederaService(newHederaService.address),
       ).reverted;
     });
 
@@ -1031,7 +1020,7 @@ describe("MultiSig tests", function () {
       await expect(
         multiSigDAOInstance
           .connect(signers[3])
-          .upgradeMultiSend(signers[3].address)
+          .upgradeMultiSend(signers[3].address),
       ).reverted;
     });
 
@@ -1070,7 +1059,7 @@ describe("MultiSig tests", function () {
         await loadFixture(deployFixture);
 
       expect(await multiSigDAOInstance.getMultiSendContractAddress()).equals(
-        multiSend.address
+        multiSend.address,
       );
 
       const newMultiSend = await TestHelper.deployLogic("HederaMultiSend");
@@ -1079,22 +1068,21 @@ describe("MultiSig tests", function () {
         .upgradeMultiSend(newMultiSend.address);
 
       expect(await multiSigDAOInstance.getMultiSendContractAddress()).equals(
-        newMultiSend.address
+        newMultiSend.address,
       );
     });
 
     it("Verify propose transaction should be reverted when title / description empty", async function () {
-      const { signers, tokenInstance, multiSigDAOInstance } = await loadFixture(
-        deployFixture
-      );
+      const { signers, tokenInstance, multiSigDAOInstance } =
+        await loadFixture(deployFixture);
       await expect(
         proposeTransaction(
           multiSigDAOInstance,
           signers[1].address,
           tokenInstance.address,
           TRANSFER_AMOUNT,
-          ""
-        )
+          "",
+        ),
       ).revertedWith("MultiSigDAO: title can't be blank");
       await expect(
         proposeTransaction(
@@ -1103,21 +1091,20 @@ describe("MultiSig tests", function () {
           tokenInstance.address,
           TRANSFER_AMOUNT,
           TITLE,
-          ""
-        )
+          "",
+        ),
       ).revertedWith("MultiSigDAO: desc can't be blank");
     });
 
     it("Verify token association propose transaction should be created successfully ", async function () {
-      const { tokenInstance, multiSigDAOInstance } = await loadFixture(
-        deployFixture
-      );
+      const { tokenInstance, multiSigDAOInstance } =
+        await loadFixture(deployFixture);
 
       const txn = await multiSigDAOInstance.proposeTokenAssociateTransaction(
         tokenInstance.address,
         TITLE,
         DESCRIPTION,
-        LINK_TO_DISCUSSION
+        LINK_TO_DISCUSSION,
       );
       await verifyTransactionCreatedEvent(txn, TXN_TYPE_TOKEN_ASSOCIATE);
     });
@@ -1149,12 +1136,12 @@ describe("MultiSig tests", function () {
           await proposeTextTransaction(
             multiSigDAOInstance,
             TEXT_PROPOSAL_TEXT,
-            signers[0].address
+            signers[0].address,
           );
 
         const approvalStatus1 =
           await hederaGnosisSafeProxyContract.checkApprovals(
-            textProposalTxnHash
+            textProposalTxnHash,
           );
         expect(approvalStatus1).equals(false);
 
@@ -1167,7 +1154,7 @@ describe("MultiSig tests", function () {
 
         const approvalStatus2 =
           await hederaGnosisSafeProxyContract.checkApprovals(
-            textProposalTxnHash
+            textProposalTxnHash,
           );
         expect(approvalStatus2).equals(false);
 
@@ -1178,7 +1165,7 @@ describe("MultiSig tests", function () {
 
         const approvalStatus3 =
           await hederaGnosisSafeProxyContract.checkApprovals(
-            textProposalTxnHash
+            textProposalTxnHash,
           );
         expect(approvalStatus3).equals(true);
 
@@ -1189,7 +1176,7 @@ describe("MultiSig tests", function () {
           info.value,
           info.data,
           info.operation,
-          info.nonce
+          info.nonce,
         );
       });
 
@@ -1197,7 +1184,7 @@ describe("MultiSig tests", function () {
         const { multiSigDAOInstance } = await loadFixture(deployFixture);
 
         await expect(
-          multiSigDAOInstance.setText(TestHelper.ONE_ADDRESS, "Anything")
+          multiSigDAOInstance.setText(TestHelper.ONE_ADDRESS, "Anything"),
         ).revertedWith("Only HederaGnosisSafe can execute it.");
       });
     });
@@ -1211,8 +1198,8 @@ describe("MultiSig tests", function () {
             multiSigDAOInstance.address,
             TITLE,
             DESCRIPTION,
-            LINK_TO_DISCUSSION
-          )
+            LINK_TO_DISCUSSION,
+          ),
         ).revertedWith("MultiSigDAO: proxy can't be zero");
       });
 
@@ -1224,21 +1211,20 @@ describe("MultiSig tests", function () {
             TestHelper.ZERO_ADDRESS,
             TITLE,
             DESCRIPTION,
-            LINK_TO_DISCUSSION
-          )
+            LINK_TO_DISCUSSION,
+          ),
         ).revertedWith("MultiSigDAO: logic can't be zero");
       });
 
       it("Verify calling safe's upgradeProxy directly should be reverted", async function () {
-        const { hederaGnosisSafeLogicInstance } = await loadFixture(
-          deployFixture
-        );
+        const { hederaGnosisSafeLogicInstance } =
+          await loadFixture(deployFixture);
         await expect(
           hederaGnosisSafeLogicInstance.upgradeProxy(
             TestHelper.ZERO_ADDRESS,
             TestHelper.ZERO_ADDRESS,
-            TestHelper.ZERO_ADDRESS
-          )
+            TestHelper.ZERO_ADDRESS,
+          ),
         ).revertedWith("GS031");
       });
 
@@ -1255,11 +1241,11 @@ describe("MultiSig tests", function () {
           newMultiSend.address,
           TITLE,
           DESCRIPTION,
-          LINK_TO_DISCUSSION
+          LINK_TO_DISCUSSION,
         );
         const { txnHash, info } = await verifyTransactionCreatedEvent(
           txn,
-          TXN_TYPE_UPGRADE_PROXY
+          TXN_TYPE_UPGRADE_PROXY,
         );
         for (const signer of daoSigners) {
           await hederaGnosisSafeProxyContract
@@ -1272,8 +1258,8 @@ describe("MultiSig tests", function () {
             info.value,
             info.data,
             info.operation,
-            info.nonce
-          )
+            info.nonce,
+          ),
         ).revertedWith("GS013");
       });
 
@@ -1295,12 +1281,12 @@ describe("MultiSig tests", function () {
           newMultiSend.address,
           TITLE,
           DESCRIPTION,
-          LINK_TO_DISCUSSION
+          LINK_TO_DISCUSSION,
         );
 
         const { txnHash, info } = await verifyTransactionCreatedEvent(
           txn,
-          TXN_TYPE_UPGRADE_PROXY
+          TXN_TYPE_UPGRADE_PROXY,
         );
 
         for (const signer of daoSigners) {
@@ -1310,11 +1296,11 @@ describe("MultiSig tests", function () {
         }
 
         expect(
-          await multiSendProxy.connect(proxyAdmin).implementation()
+          await multiSendProxy.connect(proxyAdmin).implementation(),
         ).equals(multiSend.address);
 
         expect(await multiSendProxy.connect(proxyAdmin).admin()).equals(
-          proxyAdmin.address
+          proxyAdmin.address,
         );
 
         // step : 1
@@ -1326,7 +1312,7 @@ describe("MultiSig tests", function () {
         await expect(
           multiSendProxy
             .connect(proxyAdmin)
-            .changeAdmin(hederaGnosisSafeProxyContract.address)
+            .changeAdmin(hederaGnosisSafeProxyContract.address),
         ).reverted;
 
         // step : 2
@@ -1335,15 +1321,15 @@ describe("MultiSig tests", function () {
           info.value,
           info.data,
           info.operation,
-          info.nonce
+          info.nonce,
         );
 
         expect(
-          await multiSendProxy.connect(proxyAdmin).implementation()
+          await multiSendProxy.connect(proxyAdmin).implementation(),
         ).equals(newMultiSend.address);
 
         expect(await multiSendProxy.connect(proxyAdmin).admin()).equals(
-          proxyAdmin.address
+          proxyAdmin.address,
         );
       });
     });

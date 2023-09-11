@@ -22,7 +22,7 @@ async function main() {
     Number(input.votingDelay),
     Number(input.votingPeriod),
     input.isPrivate.toLowerCase() === "true",
-    input.daoAdmin
+    input.daoAdmin,
   );
 }
 

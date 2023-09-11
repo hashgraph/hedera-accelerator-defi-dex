@@ -21,12 +21,12 @@ export async function lockTokenForVotingIfNeeded(
   voterAccountId: AccountId,
   voterAccountKey: PrivateKey,
   voterClient: Client,
-  nftTokenSerialIdForVoting: number
+  nftTokenSerialIdForVoting: number,
 ) {
   const quorum = await governor.quorum(txnFeePayerClient);
   const votingPowerAmount = await tokenHolder.balanceOfVoter(
     voterAccountId,
-    txnFeePayerClient
+    txnFeePayerClient,
   );
 
   // tokens locking required in token holder if not enough power locked
@@ -37,18 +37,18 @@ export async function lockTokenForVotingIfNeeded(
         lockAmount,
         voterAccountId,
         voterAccountKey,
-        voterClient
+        voterClient,
       );
       await tokenHolder.lock(lockAmount, voterClient);
     } else {
       await tokenHolder.setupAllowanceForTokenLocking(
         voterAccountId,
         voterAccountKey,
-        voterClient
+        voterClient,
       );
       await tokenHolder.grabTokensForVoter(
         nftTokenSerialIdForVoting,
-        voterClient
+        voterClient,
       );
     }
   }
@@ -61,14 +61,14 @@ export async function createAndExecuteTextProposal(
   creatorId: AccountId,
   creatorPK: PrivateKey,
   creatorClient: Client,
-  txnFee: number
+  txnFee: number,
 ) {
   await setupProposalCreationAllowance(
     governor,
     tokenHolder,
     creatorId,
     creatorPK,
-    creatorClient
+    creatorClient,
   );
 
   const title = Helper.createProposalTitle("Text Proposal");
@@ -108,14 +108,14 @@ export async function createAndExecuteAssetTransferProposal(
   creatorId: AccountId,
   creatorPK: PrivateKey,
   creatorClient: Client,
-  txnFee: number
+  txnFee: number,
 ) {
   await setupProposalCreationAllowance(
     governor,
     tokenHolder,
     creatorId,
     creatorPK,
-    creatorClient
+    creatorClient,
   );
 
   const title = Helper.createProposalTitle("Asset Transfer Proposal");
@@ -170,23 +170,23 @@ export async function createAndExecuteContractUpgradeProposal(
   creatorId: AccountId,
   creatorPK: PrivateKey,
   creatorClient: Client,
-  txnFee: number
+  txnFee: number,
 ) {
   async function transferOwnershipToGovernance(
     proposalId: string,
-    contractUpgradeGovernor: ContractUpgradeGovernor
+    contractUpgradeGovernor: ContractUpgradeGovernor,
   ) {
     const governorEvmAddress = await AddressHelper.idToEvmAddress(
-      contractUpgradeGovernor.contractId
+      contractUpgradeGovernor.contractId,
     );
     const { proxyId } =
       await contractUpgradeGovernor.getContractAddressesFromGovernorUpgradeContract(
-        proposalId
+        proposalId,
       );
     await new Common(proxyId).changeAdmin(
       governorEvmAddress,
       clientsInfo.proxyAdminKey,
-      clientsInfo.proxyAdminClient
+      clientsInfo.proxyAdminClient,
     );
   }
 
@@ -195,7 +195,7 @@ export async function createAndExecuteContractUpgradeProposal(
     tokenHolder,
     creatorId,
     creatorPK,
-    creatorClient
+    creatorClient,
   );
 
   const title = Helper.createProposalTitle("Contract Upgrade Proposal");
@@ -235,14 +235,14 @@ export async function createAndExecuteTokenAssociationProposal(
   creatorId: AccountId,
   creatorPK: PrivateKey,
   creatorClient: Client,
-  txnFee: number
+  txnFee: number,
 ) {
   await setupProposalCreationAllowance(
     governor,
     tokenHolder,
     creatorId,
     creatorPK,
-    creatorClient
+    creatorClient,
   );
 
   const title = Helper.createProposalTitle("Token Associate Proposal");
@@ -281,14 +281,14 @@ export async function createAndExecuteTokenCreateProposal(
   creatorId: AccountId,
   creatorPK: PrivateKey,
   creatorClient: Client,
-  txnFee: number
+  txnFee: number,
 ) {
   await setupProposalCreationAllowance(
     governor,
     tokenHolder,
     creatorId,
     creatorPK,
-    creatorClient
+    creatorClient,
   );
 
   let tokenId: TokenId | null = null;
@@ -332,7 +332,7 @@ export async function createAndExecuteTokenCreateProposal(
     proposalId,
     treasureId.toSolidityAddress(),
     BigNumber(1),
-    treasureClient
+    treasureClient,
   );
   return tokenId;
 }
@@ -342,19 +342,19 @@ async function setupProposalCreationAllowance(
   tokenHolder: GodHolder | NFTHolder,
   creatorId: AccountId,
   creatorPK: PrivateKey,
-  creatorClient: Client
+  creatorClient: Client,
 ) {
   if (tokenHolder instanceof GodHolder) {
     await governor.setupAllowanceForProposalCreation(
       creatorClient,
       creatorId,
-      creatorPK
+      creatorPK,
     );
   } else {
     await governor.setupNFTAllowanceForProposalCreation(
       creatorClient,
       creatorId,
-      creatorPK
+      creatorPK,
     );
   }
 }

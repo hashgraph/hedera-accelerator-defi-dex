@@ -28,7 +28,7 @@ async function main() {
 
 async function createProposal(
   oldVersion: DeployedContract,
-  newVersionAddress: string
+  newVersionAddress: string,
 ) {
   const uniqueId = web3.utils.randomHex(20);
   const desc = `Contract Name - ${
@@ -39,7 +39,7 @@ async function createProposal(
   await governor.setupAllowanceForProposalCreation(
     clientsInfo.operatorClient,
     clientsInfo.operatorId,
-    clientsInfo.operatorKey
+    clientsInfo.operatorKey,
   );
 
   const result = await governor.createContractUpgradeProposal(
@@ -47,7 +47,7 @@ async function createProposal(
     newVersionAddress,
     `${gitLastCommitMessage} (${uniqueId})`,
     clientsInfo.operatorClient,
-    desc
+    desc,
   );
   console.log("Proposal creation status :", result.success, result.proposalId);
   return result.success;

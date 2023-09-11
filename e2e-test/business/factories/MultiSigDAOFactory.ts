@@ -42,16 +42,16 @@ export default class MultiSigDAOFactory extends Base {
       const { bytes, hex } = await this.encodeFunctionData(
         ContractService.MULTI_SIG_FACTORY,
         INITIALIZE,
-        Object.values(data)
+        Object.values(data),
       );
       await this.execute(9_00_000, INITIALIZE, client, bytes);
       console.log(
-        `- MultiSigDAOFactory#${INITIALIZE}(): ${this.contractId} done with data = ${hex}\n`
+        `- MultiSigDAOFactory#${INITIALIZE}(): ${this.contractId} done with data = ${hex}\n`,
       );
       return;
     }
     console.log(
-      `- MultiSigDAOFactory#${INITIALIZE}(): ${this.contractId} already done\n`
+      `- MultiSigDAOFactory#${INITIALIZE}(): ${this.contractId} already done\n`,
     );
   };
 
@@ -68,7 +68,7 @@ export default class MultiSigDAOFactory extends Base {
     threshold: number,
     isPrivate: boolean,
     admin: string = clientsInfo.uiUserId.toSolidityAddress(),
-    client: Client = clientsInfo.uiUserClient
+    client: Client = clientsInfo.uiUserClient,
   ) => {
     const createDAOInputs = {
       admin,
@@ -83,17 +83,17 @@ export default class MultiSigDAOFactory extends Base {
     const { hex, bytes } = await this.encodeFunctionData(
       ContractService.MULTI_SIG_FACTORY,
       CREATE_DAO,
-      [Object.values(createDAOInputs)]
+      [Object.values(createDAOInputs)],
     );
     const { result, record } = await this.execute(
       70_00_000,
       CREATE_DAO,
       client,
-      bytes
+      bytes,
     );
     const address = result.getAddress(0);
     console.log(
-      `- MultiSigDAOFactory#${CREATE_DAO}(): where input data = ${hex}`
+      `- MultiSigDAOFactory#${CREATE_DAO}(): where input data = ${hex}`,
     );
     console.table({
       ...createDAOInputs,
@@ -111,21 +111,21 @@ export default class MultiSigDAOFactory extends Base {
     const { result } = await this.execute(2_00_000, GET_DAOS, client);
     const addresses = Helper.getAddressArray(result);
     console.log(
-      `- MultiSigDAOFactory#${GET_DAOS}(): count = ${addresses.length}, dao's = [${addresses}]\n`
+      `- MultiSigDAOFactory#${GET_DAOS}(): count = ${addresses.length}, dao's = [${addresses}]\n`,
     );
     return addresses;
   };
 
   upgradeSafeLogicAddress = async (
     newImpl: string,
-    client: Client = clientsInfo.childProxyAdminClient
+    client: Client = clientsInfo.childProxyAdminClient,
   ) => {
     const args = new ContractFunctionParameters().addAddress(newImpl);
     const { result } = await this.execute(
       90_000,
       UPGRADE_SAFE_LOGIC_IMPL,
       client,
-      args
+      args,
     );
     console.log(`- MultiSigDAOFactory#${UPGRADE_SAFE_LOGIC_IMPL}(): done\n`);
     return this.readEventData(result);
@@ -133,31 +133,31 @@ export default class MultiSigDAOFactory extends Base {
 
   upgradeSafeFactoryAddress = async (
     newImpl: string,
-    client: Client = clientsInfo.childProxyAdminClient
+    client: Client = clientsInfo.childProxyAdminClient,
   ) => {
     const args = new ContractFunctionParameters().addAddress(newImpl);
     const { result } = await this.execute(
       90_000,
       UPGRADE_SAFE_FACTORY_LOGIC_IMPL,
       client,
-      args
+      args,
     );
     console.log(
-      `- MultiSigDAOFactory#${UPGRADE_SAFE_FACTORY_LOGIC_IMPL}(): done\n`
+      `- MultiSigDAOFactory#${UPGRADE_SAFE_FACTORY_LOGIC_IMPL}(): done\n`,
     );
     return this.readEventData(result);
   };
 
   upgradeDaoLogicAddress = async (
     newImpl: string,
-    client: Client = clientsInfo.childProxyAdminClient
+    client: Client = clientsInfo.childProxyAdminClient,
   ) => {
     const args = new ContractFunctionParameters().addAddress(newImpl);
     const { result } = await this.execute(
       90_000,
       UPGRADE_DAO_LOGIC_IMPL,
       client,
-      args
+      args,
     );
     console.log(`- MultiSigDAOFactory#${UPGRADE_DAO_LOGIC_IMPL}(): done\n`);
     return this.readEventData(result);

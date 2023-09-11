@@ -46,8 +46,8 @@ const changeAdmin = async (newAdmin: string) => {
     .setFunction(
       "changeAdmin",
       new ContractFunctionParameters().addAddress(
-        AccountId.fromString(newAdmin).toSolidityAddress()
-      )
+        AccountId.fromString(newAdmin).toSolidityAddress(),
+      ),
     )
     .freezeWith(client)
     .sign(adminKey);
@@ -62,7 +62,7 @@ const upgradeTo = async (newImplementation: string) => {
     .setGas(2000000)
     .setFunction(
       "upgradeTo",
-      new ContractFunctionParameters().addAddress(newImplementation)
+      new ContractFunctionParameters().addAddress(newImplementation),
     )
     .freezeWith(client)
     .sign(adminKey);
@@ -91,7 +91,7 @@ export async function main(_contractName: string) {
   };
   contractService.updateContractRecord(
     updatedContract,
-    contractGettingUpgraded
+    contractGettingUpgraded,
   );
   await getAdmin();
 }

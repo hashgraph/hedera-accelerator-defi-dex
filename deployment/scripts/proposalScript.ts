@@ -41,7 +41,7 @@ export async function main() {
 function removeSubset(superset: any[], subset: any[]) {
   return superset.filter((supersetItem) => {
     const item = subset.find(
-      (subsetItem) => subsetItem.proposalId === supersetItem.proposalId
+      (subsetItem) => subsetItem.proposalId === supersetItem.proposalId,
     );
     return item === undefined;
   });

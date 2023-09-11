@@ -53,7 +53,7 @@ export class Helper {
   static async readContractIdFromPrompt() {
     const name: string = await Helper.prompt(
       ContractMetadata.SUPPORTED_CONTRACTS_FOR_DEPLOYMENT,
-      "Please select which contract events you want to read?"
+      "Please select which contract events you want to read?",
     );
     if (name === "exit") {
       throw Error("nothing to execute");
@@ -75,7 +75,7 @@ export class Helper {
   static getAddressArray = (
     contractFunctionResult: ContractFunctionResult,
     topLevelOffset: number = 0,
-    arrayItemsLengthIndexOffset: number = 0
+    arrayItemsLengthIndexOffset: number = 0,
   ) => {
     const arrayItemsLengthIndex = contractFunctionResult
       .getUint256(arrayItemsLengthIndexOffset)
@@ -152,7 +152,7 @@ export class Helper {
   static readWorkflowInputs() {
     try {
       const rawData: any = fs.readFileSync(
-        "./deployment/scripts/workflow-inputs.json"
+        "./deployment/scripts/workflow-inputs.json",
       );
       const inputs = JSON.parse(rawData);
       console.log("- Inputs from workflow:");
@@ -170,7 +170,7 @@ export class Helper {
   static signTxnIfNeeded = async (
     txn: Transaction,
     keys: PrivateKey | PrivateKey[] | undefined = undefined,
-    client: Client
+    client: Client,
   ) => {
     if (!keys) return txn;
 

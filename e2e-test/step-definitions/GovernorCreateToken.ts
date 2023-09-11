@@ -21,7 +21,7 @@ const factoryContractId = csDev.getContractWithProxy(csDev.factoryContractName)
   .transparentProxyId!;
 
 const tokenCreateContractId = csDev.getContractWithProxy(
-  csDev.governorContractName
+  csDev.governorContractName,
 ).transparentProxyId!;
 
 const godHolderContractId = csDev.getContractWithProxy(csDev.godHolderContract)
@@ -29,11 +29,11 @@ const godHolderContractId = csDev.getContractWithProxy(csDev.godHolderContract)
 
 const factory = new Factory(ContractId.fromString(factoryContractId));
 const governor = new TokenCreateGovernor(
-  ContractId.fromString(tokenCreateContractId)
+  ContractId.fromString(tokenCreateContractId),
 );
 const godHolder = new GodHolder(ContractId.fromString(godHolderContractId));
 const hederaService = new HederaService(
-  ContractId.fromString(csDev.getContract(csDev.hederaServiceContractName).id)
+  ContractId.fromString(csDev.getContract(csDev.hederaServiceContractName).id),
 );
 const tokenHBARX = TokenId.fromString(dex.HBARX_TOKEN_ID);
 
@@ -52,11 +52,11 @@ export class GovernorCreateToken extends CommonSteps {
   @given(
     /User have initialized the governor token create contract/,
     undefined,
-    30000
+    30000,
   )
   public async initialize() {
     console.log(
-      "*******************Starting governor token create test with following credentials*******************"
+      "*******************Starting governor token create test with following credentials*******************",
     );
     console.log("governorContractId :", tokenCreateContractId);
     console.log("godHolderContractId :", godHolderContractId);
@@ -68,31 +68,31 @@ export class GovernorCreateToken extends CommonSteps {
       godHolder,
       clientsInfo.operatorClient,
       TokenId.fromString(dex.GOD_TOKEN_ID),
-      TokenId.fromString(dex.GOD_TOKEN_ID)
+      TokenId.fromString(dex.GOD_TOKEN_ID),
     );
   }
 
   @when(
     /User create a proposal with title "([^"]*)" to create a new token with name "([^"]*)" and symbol "([^"]*)"/,
     undefined,
-    30000
+    30000,
   )
   public async createNewTokenProposal(
     proposalTitle: string,
     tokenName: string,
-    tokenSymbol: string
+    tokenSymbol: string,
   ) {
     try {
       proposalId = await governor.createTokenProposal(
         proposalTitle,
         tokenName,
         tokenSymbol,
-        clientsInfo.operatorId
+        clientsInfo.operatorId,
       );
     } catch (e: any) {
       await godHolder.checkAndClaimGodTokens(
         clientsInfo.operatorClient,
-        clientsInfo.operatorId
+        clientsInfo.operatorId,
       );
       throw e;
     }
@@ -101,7 +101,7 @@ export class GovernorCreateToken extends CommonSteps {
   @when(
     /User wait for create token proposal state to be "([^"]*)" for max (\d*) seconds/,
     undefined,
-    30000
+    30000,
   )
   public async waitForState(state: string, seconds: number) {
     await this.waitForProposalState(governor, state, proposalId, seconds);
@@ -110,7 +110,7 @@ export class GovernorCreateToken extends CommonSteps {
   @when(
     /User cancel the create token proposal with title "([^"]*)"/,
     undefined,
-    30000
+    30000,
   )
   public async cancelProposal(title: string) {
     await governor.cancelProposal(title, clientsInfo.operatorClient);
@@ -119,14 +119,14 @@ export class GovernorCreateToken extends CommonSteps {
   @then(
     /User verify create token proposal state is "([^"]*)"/,
     undefined,
-    30000
+    30000,
   )
   public async verifyProposalState(proposalState: string): Promise<void> {
     const { currentState, proposalStateNumeric } = await this.getProposalState(
       governor,
       proposalId,
       clientsInfo.operatorClient,
-      proposalState
+      proposalState,
     );
     expect(Number(currentState)).to.eql(proposalStateNumeric);
   }
@@ -139,7 +139,7 @@ export class GovernorCreateToken extends CommonSteps {
   @when(
     /User execute the create token proposal with title "([^"]*)"/,
     undefined,
-    30000
+    30000,
   )
   public async execute(title: string) {
     await this.executeProposal(
@@ -147,19 +147,18 @@ export class GovernorCreateToken extends CommonSteps {
       title,
       clientsInfo.operatorKey,
       clientsInfo.operatorClient,
-      governor.TXN_FEE_FOR_TOKEN_CREATE
+      governor.TXN_FEE_FOR_TOKEN_CREATE,
     );
   }
 
   @then(
     /User verify that token is created with name "([^"]*)" and symbol "([^"]*)"/,
     undefined,
-    30000
+    30000,
   )
   public async verifyTokenIsCreated(tokenName: string, tokenSymbol: string) {
-    const createdToken = await governor.getTokenAddressFromGovernorTokenCreate(
-      proposalId
-    );
+    const createdToken =
+      await governor.getTokenAddressFromGovernorTokenCreate(proposalId);
     tokenIDNameMap.set(tokenName, createdToken);
     const tokenInfo = await Common.getTokenInfo(createdToken);
     expect(tokenInfo.name).to.eql(tokenName);
@@ -169,7 +168,7 @@ export class GovernorCreateToken extends CommonSteps {
   @then(
     /User verify that token is not created and user receives "([^"]*)" message/,
     undefined,
-    30000
+    30000,
   )
   public async verifyTokenIsNotCreated(msg: string) {
     try {
@@ -185,7 +184,7 @@ export class GovernorCreateToken extends CommonSteps {
     await Common.deleteToken(
       tokenId,
       clientsInfo.operatorClient,
-      clientsInfo.operatorKey
+      clientsInfo.operatorKey,
     );
     tokenIDNameMap.delete(tokenName);
   }
@@ -197,14 +196,14 @@ export class GovernorCreateToken extends CommonSteps {
     await hederaService.associateTokenPublic(
       firstTokenId,
       clientsInfo.operatorId,
-      clientsInfo.operatorKey
+      clientsInfo.operatorKey,
     );
     pairAddress = await factory.createPair(
       firstTokenId,
       secondTokenId,
       clientsInfo.operatorId,
       clientsInfo.operatorKey,
-      clientsInfo.operatorClient
+      clientsInfo.operatorClient,
     );
   }
 
@@ -216,7 +215,7 @@ export class GovernorCreateToken extends CommonSteps {
   @then(
     /User verify that pair exists for token "([^"]*)" and "([^"]*)"/,
     undefined,
-    30000
+    30000,
   )
   public async verifyPair(firstTokenName: string, secondTokenName: string) {
     const firstTokenId = await this.getTokenId(firstTokenName);
@@ -238,17 +237,17 @@ export class GovernorCreateToken extends CommonSteps {
   @when(
     /User gives (\d*) units of "([^"]*)" and (\d*) units of "([^"]*)" token in to the pool/,
     undefined,
-    30000
+    30000,
   )
   public async addTokensToPool(
     tokenACount: number,
     firstTokenName: string,
     tokenBCount: number,
-    secondTokenName: string
+    secondTokenName: string,
   ) {
     const tokenOne = tokenIDNameMap.get(firstTokenName);
     const tokensBeforeFetched = await pair.getPairQty(
-      clientsInfo.operatorClient
+      clientsInfo.operatorClient,
     );
     pairAdd = await pair.getTokenPairAddress();
     tokensBefore =
@@ -264,7 +263,7 @@ export class GovernorCreateToken extends CommonSteps {
       tokenHBARX,
       tokenBCount,
       precision,
-      clientsInfo.operatorClient
+      clientsInfo.operatorClient,
     );
   }
 
@@ -275,19 +274,19 @@ export class GovernorCreateToken extends CommonSteps {
       clientsInfo.operatorId,
       [TokenId.fromSolidityAddress(pairAdd.lpTokenAddress)],
       clientsInfo.operatorClient,
-      clientsInfo.operatorKey
+      clientsInfo.operatorKey,
     );
   }
   @then(
     /User verify "([^"]*)" and "([^"]*)" balances in the pool are (\d*) units and (\d*) units respectively/,
     undefined,
-    30000
+    30000,
   )
   public async verifyTokensInPool(
     firstTokenName: string,
     secondTokenName: string,
     tokenACount: number,
-    tokenBCount: number
+    tokenBCount: number,
   ): Promise<void> {
     const tokenAQty = Common.withPrecision(tokenACount, precision);
     const tokenBQty = Common.withPrecision(tokenBCount, precision);
@@ -300,17 +299,17 @@ export class GovernorCreateToken extends CommonSteps {
   @when(
     /User swaps (\d*) unit of "([^"]*)" token with another token in pair with slippage as (\d+\.?\d*)/,
     undefined,
-    30000
+    30000,
   )
   public async swapToken(
     tokenCount: number,
     tokenName: string,
-    slippage: number
+    slippage: number,
   ): Promise<void> {
     tokensBefore = await pair.getPairQty(clientsInfo.operatorClient);
     const tokenToSwap = tokenIDNameMap.get(tokenName);
     const slippageVal = new BigNumber(slippage).multipliedBy(
-      precision.div(100)
+      precision.div(100),
     );
     await pair.swapToken(
       tokenToSwap,
@@ -319,7 +318,7 @@ export class GovernorCreateToken extends CommonSteps {
       clientsInfo.operatorKey,
       precision,
       slippageVal,
-      clientsInfo.treasureClient
+      clientsInfo.treasureClient,
     );
   }
 
@@ -333,56 +332,56 @@ export class GovernorCreateToken extends CommonSteps {
   @when(
     /User transfer (\d*) units of Token-1 to user account/,
     undefined,
-    30000
+    30000,
   )
   public async TransferToken(units: number) {
     await governor.transferToken(
       proposalId,
       clientsInfo.operatorId.toSolidityAddress(),
       new BigNumber(units * CommonSteps.withPrecision),
-      clientsInfo.operatorClient
+      clientsInfo.operatorClient,
     );
   }
 
   @when(
     /User verify "([^"]*)" and "([^"]*)" quantity in pool is (\d*) units and (\d*) units/,
     undefined,
-    30000
+    30000,
   )
   public async verifyTokenAQtyIncreasedAndTokenBQtyDecreased(
     firstTokenName: string,
     secondTokenName: string,
     tokenAQuantity: BigNumber,
-    tokenBQuantity: BigNumber
+    tokenBQuantity: BigNumber,
   ): Promise<void> {
     tokensAfter = await pair.getPairQty(clientsInfo.operatorClient);
 
     const withPrecision = Common.withPrecision(1, precision);
     expect(
-      Number(Number(tokensAfter[1].dividedBy(withPrecision)).toFixed())
+      Number(Number(tokensAfter[1].dividedBy(withPrecision)).toFixed()),
     ).to.eql(Number(tokenAQuantity));
     expect(
-      Number(Number(tokensAfter[0].dividedBy(withPrecision)).toFixed())
+      Number(Number(tokensAfter[0].dividedBy(withPrecision)).toFixed()),
     ).to.eql(Number(tokenBQuantity));
   }
 
   @when(
     /User lock (\d+\.?\d*) GOD token before voting to create token proposal/,
     undefined,
-    30000
+    30000,
   )
   public async lockGOD(tokenAmt: number) {
     await this.lockTokens(
       godHolder,
       tokenAmt * CommonSteps.withPrecision,
-      clientsInfo.operatorClient
+      clientsInfo.operatorClient,
     );
   }
 
   @when(
     /User fetch GOD tokens back from GOD holder for GovernorCreateToken/,
     undefined,
-    30000
+    30000,
   )
   public async revertGOD() {
     await this.revertTokens(
@@ -391,14 +390,14 @@ export class GovernorCreateToken extends CommonSteps {
       AccountId.fromString(godHolderContractId),
       clientsInfo.operatorKey,
       TokenId.fromString(dex.GOD_TOKEN_ID),
-      clientsInfo.operatorClient
+      clientsInfo.operatorClient,
     );
   }
 
   @when(
     /User setup (\d+\.?\d*) as allowance amount for token locking for token create proposal/,
     undefined,
-    30000
+    30000,
   )
   public async setAllowanceForTokenLocking(allowanceAmt: number) {
     await this.setupAllowanceForTokenLocking(
@@ -406,28 +405,28 @@ export class GovernorCreateToken extends CommonSteps {
       allowanceAmt * CommonSteps.withPrecision,
       clientsInfo.operatorId,
       clientsInfo.operatorKey,
-      clientsInfo.operatorClient
+      clientsInfo.operatorClient,
     );
   }
 
   @when(
     /User set default allowance for token create proposal/,
     undefined,
-    30000
+    30000,
   )
   public async setAllowanceForProposalCreation() {
     await this.setupAllowanceForProposalCreation(
       governor,
       clientsInfo.operatorClient,
       clientsInfo.operatorId,
-      clientsInfo.operatorKey
+      clientsInfo.operatorKey,
     );
   }
 
   @when(
     /User sets (\d+\.?\d*) as allowance amount for token "([^"]*)"/,
     undefined,
-    30000
+    30000,
   )
   public async setAllowanceForToken(allowanceAmt: number, tokenName: string) {
     const tokenId = this.getTokenId(tokenName);
@@ -437,7 +436,7 @@ export class GovernorCreateToken extends CommonSteps {
       allowanceAmt * CommonSteps.withPrecision,
       clientsInfo.operatorId,
       clientsInfo.operatorKey,
-      clientsInfo.operatorClient
+      clientsInfo.operatorClient,
     );
   }
 
@@ -448,7 +447,7 @@ export class GovernorCreateToken extends CommonSteps {
       clientsInfo.operatorId,
       [tokenId],
       clientsInfo.operatorClient,
-      clientsInfo.operatorKey
+      clientsInfo.operatorKey,
     );
   }
 }

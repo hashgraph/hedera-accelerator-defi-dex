@@ -77,12 +77,12 @@ export default class Governor extends Base {
     votingDelay: number = this.DEFAULT_VOTING_DELAY,
     votingPeriod: number = this.DEFAULT_VOTING_PERIOD,
     governorTokenId: TokenId = this.GOD_TOKEN_ID,
-    holderTokenId: TokenId = this.GOD_TOKEN_ID
+    holderTokenId: TokenId = this.GOD_TOKEN_ID,
   ) {
     await tokenHolder.initialize(client, holderTokenId.toSolidityAddress());
 
     const godHolderProxyAddress = await AddressHelper.idToEvmAddress(
-      tokenHolder.contractId
+      tokenHolder.contractId,
     );
 
     if (await this.isInitializationPending()) {
@@ -108,33 +108,33 @@ export default class Governor extends Base {
   againstVote = async (
     proposalId: string,
     tokenId: number,
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
   ) => await this.vote(proposalId, 0, tokenId, client);
 
   forVote = async (
     proposalId: string,
     tokenId: number,
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
   ) => await this.vote(proposalId, 1, tokenId, client);
 
   abstainVote = async (
     proposalId: string,
     tokenId: number,
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
   ) => await this.vote(proposalId, 2, tokenId, client);
 
   vote = async (
     proposalId: string,
     support: number,
     tokenId: number,
-    client: Client
+    client: Client,
   ) => {
     const args = this.createParams(proposalId)
       .addUint256(BigNumber(tokenId))
       .addUint8(support);
     await this.execute(5_00_000, this.CAST_VOTE, client, args);
     console.log(
-      `- Governor#${this.CAST_VOTE}(): proposal-id = ${proposalId}, support = ${support}\n`
+      `- Governor#${this.CAST_VOTE}(): proposal-id = ${proposalId}, support = ${support}\n`,
     );
   };
 
@@ -150,80 +150,80 @@ export default class Governor extends Base {
     const { result } = await this.execute(
       2_00_000,
       this.GET_GOD_TOKEN_ADDRESSES,
-      client
+      client,
     );
     const address = result.getAddress(0);
     console.log(
-      `- Governor#${this.GET_GOD_TOKEN_ADDRESSES}(): GOD token address = ${address}\n`
+      `- Governor#${this.GET_GOD_TOKEN_ADDRESSES}(): GOD token address = ${address}\n`,
     );
     return TokenId.fromSolidityAddress(address);
   };
 
   isQuorumReached = async (
     proposalId: string,
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
   ) => {
     const args = this.createParams(proposalId);
     const { result } = await this.execute(
       5_00_000,
       this.QUORUM_REACHED,
       client,
-      args
+      args,
     );
     const isQuorumReached = result.getBool(0);
     console.log(
-      `- Governor#${this.QUORUM_REACHED}(): proposal-id = ${proposalId}, isQuorumReached = ${isQuorumReached}\n`
+      `- Governor#${this.QUORUM_REACHED}(): proposal-id = ${proposalId}, isQuorumReached = ${isQuorumReached}\n`,
     );
     return isQuorumReached;
   };
 
   isVoteSucceeded = async (
     proposalId: string,
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
   ) => {
     const args = this.createParams(proposalId);
     const { result } = await this.execute(
       5_00_000,
       this.VOTE_SUCCEEDED,
       client,
-      args
+      args,
     );
     const isVoteSucceeded = result.getBool(0);
     console.log(
-      `- Governor#${this.VOTE_SUCCEEDED}(): proposal-id = ${proposalId}, isVoteSucceeded = ${isVoteSucceeded}\n`
+      `- Governor#${this.VOTE_SUCCEEDED}(): proposal-id = ${proposalId}, isVoteSucceeded = ${isVoteSucceeded}\n`,
     );
     return isVoteSucceeded;
   };
 
   proposalVotes = async (
     proposalId: string,
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
   ) => {
     const args = this.createParams(proposalId);
     const { result } = await this.execute(
       5_00_000,
       this.PROPOSAL_VOTES,
       client,
-      args
+      args,
     );
     const against = result.getInt256(0);
     const forVote = result.getInt256(1);
     const abstain = result.getInt256(2);
     console.log(
-      `- Governor#${this.PROPOSAL_VOTES}(): proposal-id = ${proposalId}, against = ${against}, forVote = ${forVote}, abstain = ${abstain}\n`
+      `- Governor#${this.PROPOSAL_VOTES}(): proposal-id = ${proposalId}, against = ${against}, forVote = ${forVote}, abstain = ${abstain}\n`,
     );
     return { against, forVote, abstain };
   };
 
   state = async (
     proposalId: string,
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
   ) => {
     const args = this.createParams(proposalId);
     const { result } = await this.execute(5_00_000, this.STATE, client, args);
     const state = result.getInt256(0);
     console.log(
-      `- Governor#${this.STATE}(): proposal-id = ${proposalId}, state = ${state}\n`
+      `- Governor#${this.STATE}(): proposal-id = ${proposalId}, state = ${state}\n`,
     );
     return state;
   };
@@ -237,7 +237,7 @@ export default class Governor extends Base {
     title: string,
     fromPrivateKey: PrivateKey | PrivateKey[] | undefined = undefined,
     client: Client = clientsInfo.operatorClient,
-    fee: number = 0
+    fee: number = 0,
   ) => {
     const args = new ContractFunctionParameters().addString(title);
     const { receipt, result, record } = await this.execute(
@@ -246,12 +246,12 @@ export default class Governor extends Base {
       client,
       args,
       fromPrivateKey,
-      fee
+      fee,
     );
     const proposalId = result.getUint256(0).toFixed();
     const txnId = record.transactionId.toString();
     console.log(
-      `- Governor#${this.EXECUTE_PROPOSAL}(): proposal-id = ${proposalId}, status = ${receipt.status}, TxnId = ${txnId}\n`
+      `- Governor#${this.EXECUTE_PROPOSAL}(): proposal-id = ${proposalId}, status = ${receipt.status}, TxnId = ${txnId}\n`,
     );
     return receipt.status.toString() === "SUCCESS";
   };
@@ -262,24 +262,24 @@ export default class Governor extends Base {
       9_00_000,
       this.CANCEL_PROPOSAL,
       client,
-      args
+      args,
     );
     const proposalId = result.getUint256(0).toFixed();
     console.log(
-      `- Governor#${this.CANCEL_PROPOSAL}(): proposal-id = ${proposalId}\n`
+      `- Governor#${this.CANCEL_PROPOSAL}(): proposal-id = ${proposalId}\n`,
     );
   };
 
   getProposalDetails = async (
     proposalId: string,
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
   ) => {
     const args = this.createParams(proposalId);
     const { result } = await this.execute(
       5_00_000,
       this.PROPOSAL_DETAILS,
       client,
-      args
+      args,
     );
     const quorumValue = result.getUint256(0).toFixed();
     const isQuorumReached = result.getBool(1);
@@ -321,7 +321,7 @@ export default class Governor extends Base {
     const { result } = await this.execute(5_00_000, "getVotes", client, args);
     const votingPower = result.getUint256(0);
     console.log(
-      `- GovernorTokenCreate#${this.GET_TOKEN_ADDRESSES}(): votingPower = ${votingPower}\n`
+      `- GovernorTokenCreate#${this.GET_TOKEN_ADDRESSES}(): votingPower = ${votingPower}\n`,
     );
     return votingPower;
   };
@@ -333,7 +333,7 @@ export default class Governor extends Base {
   async setupAllowanceForProposalCreation(
     creatorClient: Client,
     creatorAccountId: AccountId,
-    creatorPrivateKey: PrivateKey
+    creatorPrivateKey: PrivateKey,
   ) {
     const godTokenId = await this.getGODTokenAddress();
     await Common.setTokenAllowance(
@@ -342,14 +342,14 @@ export default class Governor extends Base {
       1e8,
       creatorAccountId,
       creatorPrivateKey,
-      creatorClient
+      creatorClient,
     );
   }
 
   async setupNFTAllowanceForProposalCreation(
     creatorClient: Client,
     creatorAccountId: AccountId,
-    creatorPrivateKey: PrivateKey
+    creatorPrivateKey: PrivateKey,
   ) {
     const godTokenId = await this.getGODTokenAddress();
     await Common.setNFTTokenAllowance(
@@ -357,7 +357,7 @@ export default class Governor extends Base {
       this.contractId,
       creatorAccountId,
       creatorPrivateKey,
-      creatorClient
+      creatorClient,
     );
   }
 
@@ -367,7 +367,7 @@ export default class Governor extends Base {
     spenderAccountId: string | AccountId,
     tokenSenderAccountId: string | AccountId,
     tokenSenderPrivateKey: PrivateKey,
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
   ) {
     await Common.setTokenAllowance(
       tokenId,
@@ -375,7 +375,7 @@ export default class Governor extends Base {
       tokenAmount,
       tokenSenderAccountId,
       tokenSenderPrivateKey,
-      client
+      client,
     );
   }
 
@@ -384,10 +384,10 @@ export default class Governor extends Base {
     requiredState: number,
     maxWaitInMs: number = this.DEFAULT_MAX_WAITING_TIME,
     eachIterationDelayInMS: number = this.EACH_ITERATION_DELAY,
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
   ): Promise<number> => {
     console.log(
-      `- Governor#getStateWithTimeout(): called with maxWaitInMs = ${maxWaitInMs}, eachIterationDelayInMS = ${eachIterationDelayInMS}, requiredState = ${requiredState}, proposal-id = ${proposalId}\n`
+      `- Governor#getStateWithTimeout(): called with maxWaitInMs = ${maxWaitInMs}, eachIterationDelayInMS = ${eachIterationDelayInMS}, requiredState = ${requiredState}, proposal-id = ${proposalId}\n`,
     );
     let currentState = -1;
     const maxWaitInMsInternally = maxWaitInMs;
@@ -398,7 +398,7 @@ export default class Governor extends Base {
           console.log(
             `- Governor#getStateWithTimeout(): succeeded where total waiting time = ${
               maxWaitInMsInternally - maxWaitInMs
-            } ms\n`
+            } ms\n`,
           );
           break;
         }
@@ -406,14 +406,14 @@ export default class Governor extends Base {
           console.log(
             `- Governor#getStateWithTimeout(): defeated where total waiting time = ${
               maxWaitInMsInternally - maxWaitInMs
-            } ms\n`
+            } ms\n`,
           );
           break;
         }
       } catch (e: any) {
         console.log(
           `- Governor#getStateWithTimeout(): failed and ms left = ${maxWaitInMs}`,
-          e
+          e,
         );
       }
       await Helper.delay(eachIterationDelayInMS);

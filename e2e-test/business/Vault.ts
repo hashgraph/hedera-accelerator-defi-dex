@@ -32,7 +32,7 @@ export default class Vault extends Base {
   initialize = async (
     stakingToken: TokenId,
     lockingPeriod: BigNumber | number,
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
   ) => {
     if (await this.isInitializationPending()) {
       const args = new ContractFunctionParameters()
@@ -42,12 +42,12 @@ export default class Vault extends Base {
         .addAddress(this.getSystemBasedRoleAccessContractAddress());
       await this.execute(1_000_000, INITIALIZE, client, args);
       console.log(
-        `- Vault#${INITIALIZE}(): done, contract-id = ${this.contractId}\n`
+        `- Vault#${INITIALIZE}(): done, contract-id = ${this.contractId}\n`,
       );
       return;
     }
     console.log(
-      `- Vault#${INITIALIZE}(): already done, contract-id = ${this.contractId}\n`
+      `- Vault#${INITIALIZE}(): already done, contract-id = ${this.contractId}\n`,
     );
   };
 
@@ -61,12 +61,12 @@ export default class Vault extends Base {
       5_00_000,
       STAKE,
       client,
-      args
+      args,
     );
     const hex = ethers.utils.hexlify(result.asBytes());
     const isStaked = result.getBool(0);
     console.log(
-      `- Vault#${STAKE}(): amount = ${amount.toString()}, txnId = ${record.transactionId.toString()}, hex = ${hex}, staked = ${isStaked}\n`
+      `- Vault#${STAKE}(): amount = ${amount.toString()}, txnId = ${record.transactionId.toString()}, hex = ${hex}, staked = ${isStaked}\n`,
     );
     return isStaked;
   };
@@ -77,12 +77,12 @@ export default class Vault extends Base {
       9_00_000,
       UNSTAKE,
       client,
-      args
+      args,
     );
     const hex = ethers.utils.hexlify(result.asBytes());
     const wasUnStakeSuccessful = result.getBool(0);
     console.log(
-      `- Vault#${UNSTAKE}(): amount = ${amount.toString()}, txnId = ${record.transactionId.toString()}, hex = ${hex}, wasUnStakeSuccessful = ${wasUnStakeSuccessful}\n`
+      `- Vault#${UNSTAKE}(): amount = ${amount.toString()}, txnId = ${record.transactionId.toString()}, hex = ${hex}, wasUnStakeSuccessful = ${wasUnStakeSuccessful}\n`,
     );
     return wasUnStakeSuccessful;
   };
@@ -91,7 +91,7 @@ export default class Vault extends Base {
     token: TokenId,
     amount: BigNumber | number,
     senderAccount: AccountId,
-    client: Client
+    client: Client,
   ) => {
     const args = new ContractFunctionParameters()
       .addAddress(token.toSolidityAddress())
@@ -99,14 +99,14 @@ export default class Vault extends Base {
       .addAddress(senderAccount.toSolidityAddress());
     const { record } = await this.execute(1_000_000, ADD_REWARD, client, args);
     console.log(
-      `- Vault#${ADD_REWARD}(): done, TokenId = ${token.toString()}, Amount = ${amount.toString()}, sender account = ${senderAccount.toString()}, TxnId = ${record.transactionId.toString()}\n`
+      `- Vault#${ADD_REWARD}(): done, TokenId = ${token.toString()}, Amount = ${amount.toString()}, sender account = ${senderAccount.toString()}, TxnId = ${record.transactionId.toString()}\n`,
     );
   };
 
   canUserUnStakeTokens = async (
     userAccount: AccountId,
     amount: BigNumber | number,
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
   ) => {
     const args = new ContractFunctionParameters()
       .addAddress(userAccount.toSolidityAddress())
@@ -115,73 +115,73 @@ export default class Vault extends Base {
       1_00_000,
       CAN_USER_UNSTAKE_TOKENS,
       client,
-      args
+      args,
     );
     const hex = ethers.utils.hexlify(result.bytes);
     const canUserWithdrawTokens = result.getBool(0);
     console.log(
-      `- Vault#${CAN_USER_UNSTAKE_TOKENS}(): userAccount = ${userAccount.toString()}, Amount = ${amount.toString()}, canUserWithdrawTokens = ${canUserWithdrawTokens}, hex = ${hex}\n`
+      `- Vault#${CAN_USER_UNSTAKE_TOKENS}(): userAccount = ${userAccount.toString()}, Amount = ${amount.toString()}, canUserWithdrawTokens = ${canUserWithdrawTokens}, hex = ${hex}\n`,
     );
     return canUserWithdrawTokens;
   };
 
   stakedTokenByUser = async (
     userAccount: AccountId,
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
   ) => {
     const args = new ContractFunctionParameters().addAddress(
-      userAccount.toSolidityAddress()
+      userAccount.toSolidityAddress(),
     );
     const { result } = await this.execute(
       50_000,
       STAKED_TOKEN_BY_USER,
       client,
-      args
+      args,
     );
     const amount = result.getInt256(0);
     console.log(
-      `- Vault#${STAKED_TOKEN_BY_USER}(): userAccount = ${userAccount.toString()}, Amount = ${amount.toString()}\n`
+      `- Vault#${STAKED_TOKEN_BY_USER}(): userAccount = ${userAccount.toString()}, Amount = ${amount.toString()}\n`,
     );
     return amount;
   };
 
   getStakingTokenTotalSupply = async (
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
   ) => {
     const { result } = await this.execute(
       50_000,
       GET_STAKING_TOKEN_TOTAL_SUPPLY,
-      client
+      client,
     );
     const totalSupply = result.getInt256(0);
     console.log(
-      `- Vault#${GET_STAKING_TOKEN_TOTAL_SUPPLY}(): amount = ${totalSupply}\n`
+      `- Vault#${GET_STAKING_TOKEN_TOTAL_SUPPLY}(): amount = ${totalSupply}\n`,
     );
     return totalSupply;
   };
 
   getStakingTokenLockingPeriod = async (
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
   ) => {
     const { result } = await this.execute(
       50_000,
       GET_STAKING_TOKEN_LOCKING_PERIOD,
-      client
+      client,
     );
     const lockingPeriod = result.getInt256(0);
     console.log(
-      `- Vault#${GET_STAKING_TOKEN_LOCKING_PERIOD}(): period = ${lockingPeriod} sec\n`
+      `- Vault#${GET_STAKING_TOKEN_LOCKING_PERIOD}(): period = ${lockingPeriod} sec\n`,
     );
     return lockingPeriod;
   };
 
   getStakingTokenAddress = async (
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
   ) => {
     const { result } = await this.execute(
       50_000,
       GET_STAKING_TOKEN_ADDRESS,
-      client
+      client,
     );
     const address = "0x" + result.getAddress(0);
     console.log(`- Vault#${GET_STAKING_TOKEN_ADDRESS}(): token = ${address}\n`);
@@ -190,16 +190,16 @@ export default class Vault extends Base {
 
   claimRewards = async (
     userAccount: AccountId,
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
   ) => {
     const args = new ContractFunctionParameters().addAddress(
-      userAccount.toSolidityAddress()
+      userAccount.toSolidityAddress(),
     );
     const { record, result } = await this.execute(
       1_000_000,
       CLAIM_REWARDS,
       client,
-      args
+      args,
     );
     const offSet = result.getUint256(0).div(32).toNumber();
     const tokens = Helper.getAddressArray(result, offSet, offSet + 4)
@@ -219,21 +219,21 @@ export default class Vault extends Base {
 
   canUserClaimRewards = async (
     userAccount: AccountId,
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
   ) => {
     const args = new ContractFunctionParameters().addAddress(
-      userAccount.toSolidityAddress()
+      userAccount.toSolidityAddress(),
     );
     const { result } = await this.execute(
       3_00_000,
       CAN_USER_CLAIM_REWARDS,
       client,
-      args
+      args,
     );
     const hex = ethers.utils.hexlify(result.bytes);
     const canUserClaimRewards = result.getBool(0);
     console.log(
-      `- Vault#${CAN_USER_CLAIM_REWARDS}(): userAccount = ${userAccount.toString()}, canUserClaimRewards = ${canUserClaimRewards}, hex = ${hex}\n`
+      `- Vault#${CAN_USER_CLAIM_REWARDS}(): userAccount = ${userAccount.toString()}, canUserClaimRewards = ${canUserClaimRewards}, hex = ${hex}\n`,
     );
     return canUserClaimRewards;
   };

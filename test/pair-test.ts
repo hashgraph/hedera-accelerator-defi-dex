@@ -33,7 +33,7 @@ describe("LPToken, Pair and Factory tests", function () {
     await lpTokenContract.initialize(...LP_TOKEN_ARGS);
     const lpToken = await TestHelper.getContract(
       "ERC20Mock",
-      await lpTokenContract.getLpTokenAddress()
+      await lpTokenContract.getLpTokenAddress(),
     );
     return {
       hederaService,
@@ -51,7 +51,7 @@ describe("LPToken, Pair and Factory tests", function () {
       "tokenName1",
       "tokenSymbol1",
       0,
-      10
+      10,
     );
     return tokenCont;
   }
@@ -60,7 +60,7 @@ describe("LPToken, Pair and Factory tests", function () {
     mockHederaService: any,
     tokenCont: any,
     isLpTokenRequired: boolean,
-    configuration: Contract
+    configuration: Contract,
   ) {
     const signers = await ethers.getSigners();
 
@@ -78,7 +78,7 @@ describe("LPToken, Pair and Factory tests", function () {
       mockHederaService.address,
       pair.address,
       "tokenName",
-      "tokenSymbol"
+      "tokenSymbol",
     );
 
     await lpTokenCont.deployed();
@@ -95,7 +95,7 @@ describe("LPToken, Pair and Factory tests", function () {
       token2Address,
       treasury,
       fee,
-      configuration.address
+      configuration.address,
     );
 
     precision = await pair.getPrecisionValue();
@@ -144,7 +144,7 @@ describe("LPToken, Pair and Factory tests", function () {
           fee,
           configuration.address,
         ],
-        { unsafeAllow: ["delegatecall"] }
+        { unsafeAllow: ["delegatecall"] },
       );
       await instance.deployed();
     });
@@ -174,9 +174,8 @@ describe("LPToken, Pair and Factory tests", function () {
 
   describe("HBAR pool test cases", async function () {
     it("Add liquidity for HBAR", async function () {
-      const { pair, token1Address, token2Address } = await loadFixture(
-        deployFixtureHBARX
-      );
+      const { pair, token1Address, token2Address } =
+        await loadFixture(deployFixtureHBARX);
       const tx = await pair.addLiquidity(
         zeroAddress,
         token2Address,
@@ -185,7 +184,7 @@ describe("LPToken, Pair and Factory tests", function () {
         0,
         {
           value: ethers.utils.parseEther("0.0000000050"),
-        }
+        },
       );
       await tx.wait();
       const tokenQty = await pair.getPairQty();
@@ -212,7 +211,7 @@ describe("LPToken, Pair and Factory tests", function () {
         tokenBPoolQty,
         {
           value: hbars,
-        }
+        },
       );
 
       const tokenBeforeQty = await pair.getPairQty();
@@ -220,7 +219,7 @@ describe("LPToken, Pair and Factory tests", function () {
       expect(Number(tokenBeforeQty[0])).to.be.equals(hbars);
 
       const pairAccountBalance = await tokenBMockContract.balanceOf(
-        pair.address
+        pair.address,
       );
       expect(pairAccountBalance).to.be.equals(tokenBeforeQty[1]);
 
@@ -236,7 +235,7 @@ describe("LPToken, Pair and Factory tests", function () {
         1200000,
         {
           value: addTokenAQty,
-        }
+        },
       );
       await tx.wait();
 
@@ -250,9 +249,8 @@ describe("LPToken, Pair and Factory tests", function () {
     });
 
     it("Swap 1 units of token HBAR fail ", async function () {
-      const { pair, signers, token1Address, token2Address } = await loadFixture(
-        deployFixtureHBARX
-      );
+      const { pair, signers, token1Address, token2Address } =
+        await loadFixture(deployFixtureHBARX);
       const tokenAPoolQty = BigNumber.from(200).mul(precision);
       await pair.addLiquidity(
         signers[0].address,
@@ -262,7 +260,7 @@ describe("LPToken, Pair and Factory tests", function () {
         0,
         {
           value: ethers.utils.parseEther("0.0000000220"),
-        }
+        },
       );
       const addTokenAQty = BigNumber.from(1).mul(precision);
       await expect(
@@ -273,15 +271,15 @@ describe("LPToken, Pair and Factory tests", function () {
           defaultSlippageInput,
           {
             value: ethers.utils.parseEther("0.0000000001"),
-          }
-        )
+          },
+        ),
       ).to.revertedWith("HBARs should be passed as payble");
     });
   });
 
   const quantitiesAfterSwappingTokenA = async (
     pair: any,
-    addTokenAQty: BigNumber
+    addTokenAQty: BigNumber,
   ) => {
     const result = await pair.getOutGivenIn(addTokenAQty);
     return {
@@ -292,7 +290,7 @@ describe("LPToken, Pair and Factory tests", function () {
 
   const quantitiesAfterSwappingTokenB = async (
     pair: any,
-    addTokenBQty: BigNumber
+    addTokenBQty: BigNumber,
   ) => {
     const result = await pair.getInGivenOut(addTokenBQty);
     return {
@@ -319,7 +317,7 @@ describe("LPToken, Pair and Factory tests", function () {
         signers[0].address,
         pair.address,
         lpTokenCont.address,
-        configuration.address
+        configuration.address,
       );
 
       // When
@@ -356,7 +354,7 @@ describe("LPToken, Pair and Factory tests", function () {
         signers[0].address,
         pair.address,
         lpTokenCont.address,
-        configuration.address
+        configuration.address,
       );
 
       // When
@@ -392,19 +390,19 @@ describe("LPToken, Pair and Factory tests", function () {
         signers[0].address,
         pair.address,
         lpTokenCont.address,
-        configuration.address
+        configuration.address,
       );
 
       const zeroFee = 0;
       await expect(
-        factory.createPair(token1Address, token2Address, treasury, zeroFee)
+        factory.createPair(token1Address, token2Address, treasury, zeroFee),
       ).to.be.revertedWith("Pair: Fee should be greater than zero.");
     });
 
     describe("Order of tokens matter while creating pair via Factory ", () => {
       const orderTokenAddresses = (
         token2Address: string,
-        token1Address: string
+        token1Address: string,
       ) => {
         return token2Address.localeCompare(token1Address)
           ? {
@@ -437,28 +435,28 @@ describe("LPToken, Pair and Factory tests", function () {
           signers[0].address,
           pair.address,
           lpTokenCont.address,
-          configuration.address
+          configuration.address,
         );
 
         const { localToken1Address, localToken2Address } = orderTokenAddresses(
           token1Address,
-          token2Address
+          token2Address,
         );
 
         const tx = await factory.createPair(
           localToken1Address,
           localToken2Address,
           treasury,
-          fee
+          fee,
         );
         const pairCreatedEvents = await TestHelper.readEvents(
           tx,
-          "PairCreated"
+          "PairCreated",
         );
 
         const pairContract = await TestHelper.getContract(
           "Pair",
-          pairCreatedEvents[0].args.pairAddress
+          pairCreatedEvents[0].args.pairAddress,
         );
         const pairAddresses = await pairContract
           .connect(signers[5])
@@ -484,28 +482,28 @@ describe("LPToken, Pair and Factory tests", function () {
           signers[0].address,
           pair.address,
           lpTokenCont.address,
-          configuration.address
+          configuration.address,
         );
 
         const { localToken1Address, localToken2Address } = orderTokenAddresses(
           token1Address,
-          token2Address
+          token2Address,
         );
 
         const tx = await factory.createPair(
           localToken2Address,
           localToken1Address,
           treasury,
-          fee
+          fee,
         );
         const pairCreatedEvents = await TestHelper.readEvents(
           tx,
-          "PairCreated"
+          "PairCreated",
         );
 
         const pairContract = await TestHelper.getContract(
           "Pair",
-          pairCreatedEvents[0].args.pairAddress
+          pairCreatedEvents[0].args.pairAddress,
         );
         const pairAddresses = await pairContract
           .connect(signers[5])
@@ -531,7 +529,7 @@ describe("LPToken, Pair and Factory tests", function () {
           signers[0].address,
           pair.address,
           lpTokenCont.address,
-          configuration.address
+          configuration.address,
         );
 
         const { localToken1Address, tokenAQty, localToken2Address, tokenBQty } =
@@ -541,16 +539,16 @@ describe("LPToken, Pair and Factory tests", function () {
           localToken1Address,
           localToken2Address,
           treasury,
-          fee
+          fee,
         );
         const pairCreatedEvents = await TestHelper.readEvents(
           tx,
-          "PairCreated"
+          "PairCreated",
         );
 
         const pairContract = await TestHelper.getContract(
           "Pair",
-          pairCreatedEvents[0].args.pairAddress
+          pairCreatedEvents[0].args.pairAddress,
         );
         const pairAddresses = await pairContract
           .connect(signers[5])
@@ -565,7 +563,7 @@ describe("LPToken, Pair and Factory tests", function () {
             localToken1Address,
             localToken2Address,
             tokenAQty,
-            tokenBQty
+            tokenBQty,
           );
 
         const pairQuantities = await pairContract
@@ -592,7 +590,7 @@ describe("LPToken, Pair and Factory tests", function () {
           signers[0].address,
           pair.address,
           lpTokenCont.address,
-          configuration.address
+          configuration.address,
         );
 
         const { localToken1Address, tokenAQty, localToken2Address, tokenBQty } =
@@ -602,16 +600,16 @@ describe("LPToken, Pair and Factory tests", function () {
           localToken1Address,
           localToken2Address,
           treasury,
-          fee
+          fee,
         );
         const pairCreatedEvents = await TestHelper.readEvents(
           tx,
-          "PairCreated"
+          "PairCreated",
         );
 
         const pairContract = await TestHelper.getContract(
           "Pair",
-          pairCreatedEvents[0].args.pairAddress
+          pairCreatedEvents[0].args.pairAddress,
         );
         const pairAddresses = await pairContract
           .connect(signers[5])
@@ -626,7 +624,7 @@ describe("LPToken, Pair and Factory tests", function () {
             localToken2Address,
             localToken1Address,
             tokenBQty,
-            tokenAQty
+            tokenAQty,
           );
 
         const pairQuantities = await pairContract
@@ -655,16 +653,16 @@ describe("LPToken, Pair and Factory tests", function () {
           signers[0].address,
           pair.address,
           lpTokenCont.address,
-          configuration.address
+          configuration.address,
         );
 
         const tokenSwapResult = await factory.recommendedPairToSwap(
           token1Address,
           token2Address,
-          BigNumber.from(10).mul(precision)
+          BigNumber.from(10).mul(precision),
         );
         expect(tokenSwapResult[0]).to.be.equals(
-          "0x0000000000000000000000000000000000000000"
+          "0x0000000000000000000000000000000000000000",
         );
       });
 
@@ -684,11 +682,11 @@ describe("LPToken, Pair and Factory tests", function () {
           signers[0].address,
           pair.address,
           lpTokenCont.address,
-          configuration.address
+          configuration.address,
         );
 
         const initialFees = Helper.convertToFeeObjectArray(
-          await configuration.getTransactionsFee()
+          await configuration.getTransactionsFee(),
         );
 
         const poolFee = initialFees[0].value;
@@ -697,12 +695,12 @@ describe("LPToken, Pair and Factory tests", function () {
           token1Address,
           token2Address,
           treasury,
-          poolFee
+          poolFee,
         );
         const pair1 = await factory.getPair(
           token1Address,
           token2Address,
-          poolFee
+          poolFee,
         );
 
         const pool1 = await pair.attach(pair1);
@@ -715,17 +713,17 @@ describe("LPToken, Pair and Factory tests", function () {
             token1Address,
             token2Address,
             tokenAPoolQty,
-            tokenBPoolQty
+            tokenBPoolQty,
           );
 
         const token1SwapResult = await factory.recommendedPairToSwap(
           token1Address,
           token2Address,
-          BigNumber.from(1).mul(precision)
+          BigNumber.from(1).mul(precision),
         );
 
         expect(token1SwapResult[0]).not.to.be.equals(
-          "0x0000000000000000000000000000000000000000"
+          "0x0000000000000000000000000000000000000000",
         );
         expect(token1SwapResult[1]).to.be.equals(token2Address);
         expect(token1SwapResult[2]).to.be.equals(228721806);
@@ -748,11 +746,11 @@ describe("LPToken, Pair and Factory tests", function () {
           signers[0].address,
           pair.address,
           lpTokenCont.address,
-          configuration.address
+          configuration.address,
         );
 
         const initialFees = Helper.convertToFeeObjectArray(
-          await configuration.getTransactionsFee()
+          await configuration.getTransactionsFee(),
         );
 
         const poolFee = initialFees[0].value;
@@ -761,12 +759,12 @@ describe("LPToken, Pair and Factory tests", function () {
           token1Address,
           token2Address,
           treasury,
-          poolFee
+          poolFee,
         );
         const pair1 = await factory.getPair(
           token1Address,
           token2Address,
-          poolFee
+          poolFee,
         );
 
         const pool1 = await pair.attach(pair1);
@@ -779,17 +777,17 @@ describe("LPToken, Pair and Factory tests", function () {
             token1Address,
             token2Address,
             tokenAPoolQty,
-            tokenBPoolQty
+            tokenBPoolQty,
           );
 
         const token2SwapResult = await factory.recommendedPairToSwap(
           token2Address,
           token1Address,
-          BigNumber.from(1).mul(precision)
+          BigNumber.from(1).mul(precision),
         );
 
         expect(token2SwapResult[0]).not.to.be.equals(
-          "0x0000000000000000000000000000000000000000"
+          "0x0000000000000000000000000000000000000000",
         );
         expect(token2SwapResult[1]).to.be.equals(token1Address);
         expect(token2SwapResult[2]).to.be.equals(34256758);
@@ -812,11 +810,11 @@ describe("LPToken, Pair and Factory tests", function () {
           signers[0].address,
           pair.address,
           lpTokenCont.address,
-          configuration.address
+          configuration.address,
         );
 
         const initialFees = Helper.convertToFeeObjectArray(
-          await configuration.getTransactionsFee()
+          await configuration.getTransactionsFee(),
         );
 
         const poolFee1With5PerFee = initialFees[0].value;
@@ -826,23 +824,23 @@ describe("LPToken, Pair and Factory tests", function () {
           token1Address,
           token2Address,
           treasury,
-          poolFee1With5PerFee
+          poolFee1With5PerFee,
         );
         const pair1 = await factory.getPair(
           token1Address,
           token2Address,
-          poolFee1With5PerFee
+          poolFee1With5PerFee,
         );
         await factory.createPair(
           token1Address,
           token2Address,
           treasury,
-          poolFee2With30PerFee
+          poolFee2With30PerFee,
         );
         const pair2 = await factory.getPair(
           token1Address,
           token2Address,
-          poolFee2With30PerFee
+          poolFee2With30PerFee,
         );
 
         const pool1 = await pair.attach(pair1);
@@ -855,7 +853,7 @@ describe("LPToken, Pair and Factory tests", function () {
             token1Address,
             token2Address,
             tokenAPoolQty,
-            tokenBPoolQty
+            tokenBPoolQty,
           );
 
         const pool2 = await pair.attach(pair2);
@@ -866,17 +864,17 @@ describe("LPToken, Pair and Factory tests", function () {
             token1Address,
             token2Address,
             tokenAPoolQty,
-            tokenBPoolQty
+            tokenBPoolQty,
           );
 
         const tokenSwapResult = await factory.recommendedPairToSwap(
           token1Address,
           token2Address,
-          BigNumber.from(100).mul(precision)
+          BigNumber.from(100).mul(precision),
         );
 
         expect(tokenSwapResult[0]).not.to.be.equals(
-          "0x0000000000000000000000000000000000000000"
+          "0x0000000000000000000000000000000000000000",
         );
         expect(tokenSwapResult[1]).to.be.equals(token2Address);
         expect(tokenSwapResult[3]).to.be.equals(poolFee1With5PerFee);
@@ -898,11 +896,11 @@ describe("LPToken, Pair and Factory tests", function () {
           signers[0].address,
           pair.address,
           lpTokenCont.address,
-          configuration.address
+          configuration.address,
         );
 
         const initialFees = Helper.convertToFeeObjectArray(
-          await configuration.getTransactionsFee()
+          await configuration.getTransactionsFee(),
         );
 
         const poolFee1With30PerFee = initialFees[1].value;
@@ -912,23 +910,23 @@ describe("LPToken, Pair and Factory tests", function () {
           token1Address,
           token2Address,
           treasury,
-          poolFee1With30PerFee
+          poolFee1With30PerFee,
         );
         const pair1 = await factory.getPair(
           token1Address,
           token2Address,
-          poolFee1With30PerFee
+          poolFee1With30PerFee,
         );
         await factory.createPair(
           token1Address,
           token2Address,
           treasury,
-          poolFee2With10PerFee
+          poolFee2With10PerFee,
         );
         const pair2 = await factory.getPair(
           token1Address,
           token2Address,
-          poolFee2With10PerFee
+          poolFee2With10PerFee,
         );
 
         const pool1 = await pair.attach(pair1);
@@ -941,7 +939,7 @@ describe("LPToken, Pair and Factory tests", function () {
             token1Address,
             token2Address,
             tokenAPoolQty,
-            tokenBPoolQty
+            tokenBPoolQty,
           );
 
         const pool2 = await pair.attach(pair2);
@@ -952,17 +950,17 @@ describe("LPToken, Pair and Factory tests", function () {
             token1Address,
             token2Address,
             tokenAPoolQty,
-            tokenBPoolQty
+            tokenBPoolQty,
           );
 
         const tokenSwapResult = await factory.recommendedPairToSwap(
           token1Address,
           token2Address,
-          BigNumber.from(100).mul(precision)
+          BigNumber.from(100).mul(precision),
         );
 
         expect(tokenSwapResult[0]).not.to.be.equals(
-          "0x0000000000000000000000000000000000000000"
+          "0x0000000000000000000000000000000000000000",
         );
         expect(tokenSwapResult[1]).to.be.equals(token2Address);
         expect(tokenSwapResult[3]).to.be.equals(poolFee2With10PerFee);
@@ -984,11 +982,11 @@ describe("LPToken, Pair and Factory tests", function () {
           signers[0].address,
           pair.address,
           lpTokenCont.address,
-          configuration.address
+          configuration.address,
         );
 
         const initialFees = Helper.convertToFeeObjectArray(
-          await configuration.getTransactionsFee()
+          await configuration.getTransactionsFee(),
         );
 
         const poolFee1 = initialFees[0].value;
@@ -999,34 +997,34 @@ describe("LPToken, Pair and Factory tests", function () {
           token1Address,
           token2Address,
           treasury,
-          poolFee1
+          poolFee1,
         );
         const pair1 = await factory.getPair(
           token1Address,
           token2Address,
-          poolFee1
+          poolFee1,
         );
         await factory.createPair(
           token1Address,
           token2Address,
           treasury,
-          poolFee2
+          poolFee2,
         );
         const pair2 = await factory.getPair(
           token1Address,
           token2Address,
-          poolFee2
+          poolFee2,
         );
         await factory.createPair(
           token1Address,
           token2Address,
           treasury,
-          poolFee3
+          poolFee3,
         );
         const pair3 = await factory.getPair(
           token1Address,
           token2Address,
-          poolFee3
+          poolFee3,
         );
 
         const pool1 = await pair.attach(pair1);
@@ -1040,7 +1038,7 @@ describe("LPToken, Pair and Factory tests", function () {
             token1Address,
             token2Address,
             tokenAPoolQty,
-            tokenBPoolQty
+            tokenBPoolQty,
           );
 
         const pool2 = await pair.attach(pair2);
@@ -1051,7 +1049,7 @@ describe("LPToken, Pair and Factory tests", function () {
             token1Address,
             token2Address,
             tokenAPoolQty,
-            tokenBPoolQty
+            tokenBPoolQty,
           );
 
         const pool3 = await pair.attach(pair3);
@@ -1062,17 +1060,17 @@ describe("LPToken, Pair and Factory tests", function () {
             token1Address,
             token2Address,
             tokenAPoolQty,
-            tokenBPoolQty
+            tokenBPoolQty,
           );
 
         const tokenSwapResult = await factory.recommendedPairToSwap(
           token2Address,
           token1Address,
-          BigNumber.from(100).mul(precision)
+          BigNumber.from(100).mul(precision),
         );
 
         expect(tokenSwapResult[0]).not.to.be.equals(
-          "0x0000000000000000000000000000000000000000"
+          "0x0000000000000000000000000000000000000000",
         );
         expect(tokenSwapResult[1]).to.be.equals(token1Address);
         expect(tokenSwapResult[3]).to.be.equals(poolFee1);
@@ -1093,7 +1091,7 @@ describe("LPToken, Pair and Factory tests", function () {
         signers[0].address,
         pair.address,
         lpTokenCont.address,
-        configuration.address
+        configuration.address,
       );
       await expect(
         factory.setUpFactory(
@@ -1101,8 +1099,8 @@ describe("LPToken, Pair and Factory tests", function () {
           signers[0].address,
           pair.address,
           lpTokenCont.address,
-          configuration.address
-        )
+          configuration.address,
+        ),
       ).to.revertedWith("Initializable: contract is already initialized");
     });
 
@@ -1123,7 +1121,7 @@ describe("LPToken, Pair and Factory tests", function () {
         signers[0].address,
         pair.address,
         lpTokenCont.address,
-        configuration.address
+        configuration.address,
       );
       await factory.createPair(token1Address, token2Address, treasury, fee);
       const pairs = await factory.getPairs();
@@ -1147,10 +1145,10 @@ describe("LPToken, Pair and Factory tests", function () {
         signers[0].address,
         pair.address,
         lpTokenCont.address,
-        configuration.address
+        configuration.address,
       );
       await expect(
-        factory.createPair(tokenAAddress, tokenAAddress, treasury, fee)
+        factory.createPair(tokenAAddress, tokenAAddress, treasury, fee),
       ).to.revertedWith("IDENTICAL_ADDRESSES");
     });
 
@@ -1168,10 +1166,10 @@ describe("LPToken, Pair and Factory tests", function () {
         signers[0].address,
         pair.address,
         lpTokenCont.address,
-        configuration.address
+        configuration.address,
       );
       await expect(
-        factory.createPair(newZeroAddress, tokenAAddress, treasury, fee)
+        factory.createPair(newZeroAddress, tokenAAddress, treasury, fee),
       ).to.revertedWith("ZERO_ADDRESS");
     });
 
@@ -1191,13 +1189,13 @@ describe("LPToken, Pair and Factory tests", function () {
         signers[0].address,
         pair.address,
         lpTokenCont.address,
-        configuration.address
+        configuration.address,
       );
       await factory.createPair(token1Address, token2Address, treasury, fee);
       const pairFromFactory = await factory.getPair(
         token1Address,
         token2Address,
-        fee
+        fee,
       );
       expect(pairFromFactory).to.be.not.equal(zeroAddress);
     });
@@ -1219,7 +1217,7 @@ describe("LPToken, Pair and Factory tests", function () {
         signers[0].address,
         pair.address,
         lpTokenCont.address,
-        configuration.address
+        configuration.address,
       );
 
       await factory.createPair(token1Address, token2Address, treasury, fee);
@@ -1227,19 +1225,19 @@ describe("LPToken, Pair and Factory tests", function () {
       const pairFromFactory = await factory.getPair(
         token1Address,
         token2Address,
-        fee
+        fee,
       );
 
       const pairContract = await TestHelper.getContract(
         "Pair",
-        pairFromFactory
+        pairFromFactory,
       );
       const lpTokenContractAddress = await pairContract
         .connect(signers[4])
         .getLpTokenContractAddress();
       const lpTokenContract = await TestHelper.getContract(
         "LPToken",
-        lpTokenContractAddress
+        lpTokenContractAddress,
       );
 
       let updatedAddress = await factory.getHederaServiceVersion();
@@ -1290,7 +1288,7 @@ describe("LPToken, Pair and Factory tests", function () {
         signers[0].address,
         pair.address,
         lpTokenCont.address,
-        configuration.address
+        configuration.address,
       );
 
       await factory.createPair(token1Address, token2Address, treasury, fee);
@@ -1298,15 +1296,14 @@ describe("LPToken, Pair and Factory tests", function () {
       const nonOwner = signers[3];
 
       await expect(
-        factory.connect(nonOwner).upgradeHederaService(signers[3].address)
+        factory.connect(nonOwner).upgradeHederaService(signers[3].address),
       ).revertedWith("Ownable: caller is not the owner");
     });
   });
 
   it("verify pair initization should be failed for subsequent initization call", async function () {
-    const { pair, mockHederaService, lpTokenCont } = await loadFixture(
-      deployFixture
-    );
+    const { pair, mockHederaService, lpTokenCont } =
+      await loadFixture(deployFixture);
     await expect(
       pair.initialize(
         mockHederaService.address,
@@ -1315,8 +1312,8 @@ describe("LPToken, Pair and Factory tests", function () {
         tokenBAddress,
         treasury,
         fee,
-        zeroAddress
-      )
+        zeroAddress,
+      ),
     ).to.revertedWith("Initializable: contract is already initialized");
   });
 
@@ -1357,7 +1354,7 @@ describe("LPToken, Pair and Factory tests", function () {
       token1Address,
       token2Address,
       tokenAPoolQty,
-      tokenBPoolQty
+      tokenBPoolQty,
     );
 
     const tokenBeforeQty = await pair.getPairQty();
@@ -1372,7 +1369,7 @@ describe("LPToken, Pair and Factory tests", function () {
       signers[0].address,
       token1Address,
       addTokenAQty,
-      slippageInput
+      slippageInput,
     );
 
     await tx.wait();
@@ -1381,7 +1378,7 @@ describe("LPToken, Pair and Factory tests", function () {
     const pairAccountBalance = await tokenCont.balanceOf(pair.address);
     expect(pairAccountBalance).to.be.equals(tokenQty[0]);
     expect(tokenQty[0]).to.be.equals(
-      tokenAPoolQty.add(tokenAQtyAfterSubtractingFee)
+      tokenAPoolQty.add(tokenAQtyAfterSubtractingFee),
     );
 
     expect(tokenQty[1]).to.be.equals(tokenBPoolQty.sub(tokenBResultantQty));
@@ -1407,7 +1404,7 @@ describe("LPToken, Pair and Factory tests", function () {
       token1Address,
       token2Address,
       tokenAPoolQty,
-      tokenBPoolQty
+      tokenBPoolQty,
     );
 
     const tokenBeforeQty = await pair.getPairQty();
@@ -1422,7 +1419,7 @@ describe("LPToken, Pair and Factory tests", function () {
       signers[0].address,
       token2Address,
       addTokenBQty,
-      slippageInput
+      slippageInput,
     );
     await tx.wait();
 
@@ -1432,7 +1429,7 @@ describe("LPToken, Pair and Factory tests", function () {
     expect(tokenQty[0]).to.be.equals(tokenAPoolQty.sub(tokenAResultantQty));
 
     expect(tokenQty[1]).to.be.equals(
-      tokenBPoolQty.add(tokenBQtyAfterSubtractingFee)
+      tokenBPoolQty.add(tokenBQtyAfterSubtractingFee),
     );
 
     const pairAccountBalance1 = await tokenCont1.balanceOf(pair.address);
@@ -1440,9 +1437,8 @@ describe("LPToken, Pair and Factory tests", function () {
   });
 
   it("Swap 100 units of token A - default breaching slippage  ", async function () {
-    const { pair, token1Address, token2Address } = await loadFixture(
-      deployFixture
-    );
+    const { pair, token1Address, token2Address } =
+      await loadFixture(deployFixture);
     const tokenAPoolQty = BigNumber.from(200).mul(precision);
     const tokenBPoolQty = BigNumber.from(220).mul(precision);
     await pair.addLiquidity(
@@ -1450,7 +1446,7 @@ describe("LPToken, Pair and Factory tests", function () {
       token1Address,
       token2Address,
       tokenAPoolQty,
-      tokenBPoolQty
+      tokenBPoolQty,
     );
     const tokenBeforeQty = await pair.getPairQty();
     expect(Number(tokenBeforeQty[0])).to.be.equals(tokenAPoolQty);
@@ -1460,21 +1456,20 @@ describe("LPToken, Pair and Factory tests", function () {
         zeroAddress,
         token1Address,
         addTokenAQty,
-        defaultSlippageInput
-      )
+        defaultSlippageInput,
+      ),
     )
       .to.be.revertedWithCustomError(pair, "SlippageBreached")
       .withArgs(
         "The calculated slippage is over the slippage threshold.",
         33941496,
-        500000
+        500000,
       );
   });
 
   it("Swap 100 units of token B - default breaching slippage  ", async function () {
-    const { pair, token1Address, token2Address } = await loadFixture(
-      deployFixture
-    );
+    const { pair, token1Address, token2Address } =
+      await loadFixture(deployFixture);
     const tokenAPoolQty = BigNumber.from(2222200).mul(precision);
     const tokenBPoolQty = BigNumber.from(2222200).mul(precision);
     await pair.addLiquidity(
@@ -1482,7 +1477,7 @@ describe("LPToken, Pair and Factory tests", function () {
       token1Address,
       token2Address,
       tokenAPoolQty,
-      tokenBPoolQty
+      tokenBPoolQty,
     );
     const tokenBeforeQty = await pair.getPairQty();
     expect(Number(tokenBeforeQty[1])).to.be.equals(tokenBPoolQty);
@@ -1492,14 +1487,14 @@ describe("LPToken, Pair and Factory tests", function () {
         zeroAddress,
         token2Address,
         addTokenBQty,
-        defaultSlippageInput
-      )
+        defaultSlippageInput,
+      ),
     )
       .to.be.revertedWithCustomError(pair, "SlippageBreached")
       .withArgs(
         "The calculated slippage is over the slippage threshold.",
         753193,
-        500000
+        500000,
       );
   });
 
@@ -1519,7 +1514,7 @@ describe("LPToken, Pair and Factory tests", function () {
       token1Address,
       token2Address,
       tokenAPoolQty,
-      tokenBPoolQty
+      tokenBPoolQty,
     );
     const tokenBeforeQty = await pair.getPairQty();
     expect(tokenBeforeQty[0]).to.be.equals(precision.mul(100));
@@ -1541,15 +1536,14 @@ describe("LPToken, Pair and Factory tests", function () {
   });
 
   it("Add liquidity to the pool by adding 50 units of token and 50 units of token B  ", async function () {
-    const { pair, token1Address, token2Address } = await loadFixture(
-      deployFixture
-    );
+    const { pair, token1Address, token2Address } =
+      await loadFixture(deployFixture);
     const tx = await pair.addLiquidity(
       zeroAddress,
       token1Address,
       token2Address,
       precision.mul(50),
-      precision.mul(50)
+      precision.mul(50),
     );
     await tx.wait();
     const tokenQty = await pair.getPairQty();
@@ -1559,15 +1553,14 @@ describe("LPToken, Pair and Factory tests", function () {
 
   describe("When HTS gives failure response", async () => {
     it("Contract gives 100 as qty for tokens ", async function () {
-      const { pair, token2Address, token1Address } = await loadFixture(
-        deployFixture
-      );
+      const { pair, token2Address, token1Address } =
+        await loadFixture(deployFixture);
       await pair.addLiquidity(
         zeroAddress,
         token2Address,
         token1Address,
         precision.mul(100),
-        precision.mul(100)
+        precision.mul(100),
       );
       const qtys = await pair.getPairQty();
       expect(qtys[0]).to.be.equals(precision.mul(100));
@@ -1579,30 +1572,29 @@ describe("LPToken, Pair and Factory tests", function () {
       const tokenBeforeQty = await pair.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
       await expect(
-        pair.swapToken(zeroAddress, zeroAddress, 30, defaultSlippageInput)
+        pair.swapToken(zeroAddress, zeroAddress, 30, defaultSlippageInput),
       ).to.revertedWith("Pls pass correct token to swap.");
     });
 
     it("Verify pair info call should return data", async function () {
-      const { pair, token1Address, token2Address } = await loadFixture(
-        deployFixture
-      );
+      const { pair, token1Address, token2Address } =
+        await loadFixture(deployFixture);
       await pair.addLiquidity(
         zeroAddress,
         token1Address,
         token2Address,
         precision.mul(100),
-        precision.mul(120)
+        precision.mul(120),
       );
       const info = await pair.getPairInfo();
       const pairObject = info[0];
       const amountObject = info[1];
       expect(info.length).to.be.equals(2);
       expect(
-        ethers.utils.arrayify(pairObject.tokenA.tokenAddress).length
+        ethers.utils.arrayify(pairObject.tokenA.tokenAddress).length,
       ).greaterThan(0);
       expect(
-        ethers.utils.arrayify(pairObject.tokenB.tokenAddress).length
+        ethers.utils.arrayify(pairObject.tokenB.tokenAddress).length,
       ).greaterThan(0);
       expect(amountObject.tokenASpotPrice).equals(83333333);
       expect(amountObject.tokenBSpotPrice).equals(120000000);
@@ -1616,28 +1608,27 @@ describe("LPToken, Pair and Factory tests", function () {
       const tokenBeforeQty = await pair.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
       await expect(
-        pair.swapToken(zeroAddress, zeroAddress, 30, defaultSlippageInput)
+        pair.swapToken(zeroAddress, zeroAddress, 30, defaultSlippageInput),
       ).to.revertedWith("Pls pass correct token to swap.");
     });
 
     // ----------------------------------------------------------------------
     it("Swap Token A with Fail A transfer", async function () {
-      const { pair, token1Address, token2Address } = await loadFixture(
-        deployFixture
-      );
+      const { pair, token1Address, token2Address } =
+        await loadFixture(deployFixture);
       await pair.addLiquidity(
         zeroAddress,
         token1Address,
         token2Address,
         precision.mul(100),
-        precision.mul(100)
+        precision.mul(100),
       );
       const tokenA = await ethers.getContractAt("ERC20Mock", token1Address);
       await tokenA.setTransaferFailed(true);
       await expect(
-        pair.swapToken(zeroAddress, token1Address, 30, defaultSlippageInput)
+        pair.swapToken(zeroAddress, token1Address, 30, defaultSlippageInput),
       ).to.revertedWith(
-        "swapTokenA: Transferring token A to contract failed with status code"
+        "swapTokenA: Transferring token A to contract failed with status code",
       );
     });
 
@@ -1652,40 +1643,39 @@ describe("LPToken, Pair and Factory tests", function () {
         token1Address,
         token2Address,
         totalQtyA,
-        precision.mul(50)
+        precision.mul(50),
       );
       const tokenBeforeQty = await pair.getPairQty();
 
       expect(tokenBeforeQty[0]).to.be.equals(totalQtyA);
       await tokenCont1.setTransaferFailed(true);
       await expect(
-        pair.swapToken(zeroAddress, token1Address, precision.mul(1), 1200000)
+        pair.swapToken(zeroAddress, token1Address, precision.mul(1), 1200000),
       ).to.revertedWith(
-        "swapTokenA: Transferring token B to user failed with status code"
+        "swapTokenA: Transferring token B to user failed with status code",
       );
     });
 
     // ----------------------------------------------------------------------
     it("Swap Token B with Fail B transfer", async function () {
-      const { pair, token1Address, token2Address } = await loadFixture(
-        deployFixture
-      );
+      const { pair, token1Address, token2Address } =
+        await loadFixture(deployFixture);
       const totalQtyA = precision.mul(1000);
       await pair.addLiquidity(
         zeroAddress,
         token1Address,
         token2Address,
         totalQtyA,
-        precision.mul(1000)
+        precision.mul(1000),
       );
       const tokenBeforeQty = await pair.getPairQty();
       expect(Number(tokenBeforeQty[0])).to.be.equals(precision.mul(1000));
       const tokenB = await ethers.getContractAt("ERC20Mock", token2Address);
       await tokenB.setTransaferFailed(true); //Forcing transfer to fail
       await expect(
-        pair.swapToken(zeroAddress, token2Address, precision.mul(1), 1200000)
+        pair.swapToken(zeroAddress, token2Address, precision.mul(1), 1200000),
       ).to.revertedWith(
-        "swapTokenB: Transferring token B to contract failed with status code"
+        "swapTokenB: Transferring token B to contract failed with status code",
       );
     });
 
@@ -1698,69 +1688,66 @@ describe("LPToken, Pair and Factory tests", function () {
         token1Address,
         token2Address,
         totalQtyA,
-        precision.mul(1000)
+        precision.mul(1000),
       );
       const tokenBeforeQty = await pair.getPairQty();
       expect(Number(tokenBeforeQty[0])).to.be.equals(precision.mul(1000));
       await tokenCont.setTransaferFailed(true);
       await expect(
-        pair.swapToken(zeroAddress, token2Address, precision.mul(1), 1200000)
+        pair.swapToken(zeroAddress, token2Address, precision.mul(1), 1200000),
       ).to.revertedWith(
-        "swapTokenB: Transferring token A to user failed with status code"
+        "swapTokenB: Transferring token A to user failed with status code",
       );
     });
 
     // ----------------------------------------------------------------------
     it("Add liquidity Fail A Transfer", async function () {
-      const { pair, token1Address, token2Address } = await loadFixture(
-        deployFixture
-      );
+      const { pair, token1Address, token2Address } =
+        await loadFixture(deployFixture);
       const tokenA = await ethers.getContractAt("ERC20Mock", token1Address);
       await tokenA.setTransaferFailed(true);
       const tokenBeforeQty = await pair.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
       await expect(
-        pair.addLiquidity(zeroAddress, token1Address, token2Address, 30, 30)
+        pair.addLiquidity(zeroAddress, token1Address, token2Address, 30, 30),
       ).to.revertedWith(
-        "Add liquidity: Transfering token A to contract failed with status code"
+        "Add liquidity: Transfering token A to contract failed with status code",
       );
     });
 
     it("Add liquidity Fail B Transfer", async function () {
-      const { pair, token1Address, token2Address } = await loadFixture(
-        deployFixture
-      );
+      const { pair, token1Address, token2Address } =
+        await loadFixture(deployFixture);
       const tokenB = await ethers.getContractAt("ERC20Mock", token2Address);
       await tokenB.setTransaferFailed(true);
       const tokenBeforeQty = await pair.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
       await expect(
-        pair.addLiquidity(zeroAddress, token1Address, token2Address, 30, 30)
+        pair.addLiquidity(zeroAddress, token1Address, token2Address, 30, 30),
       ).to.revertedWith(
-        "Add liquidity: Transfering token B to contract failed with status code"
+        "Add liquidity: Transfering token B to contract failed with status code",
       );
     });
 
     // ----------------------------------------------------------------------
     it("verify remove liquidity should failed when user don't have enough balance ", async function () {
-      const { pair, token2Address, token1Address } = await loadFixture(
-        deployFixture
-      );
+      const { pair, token2Address, token1Address } =
+        await loadFixture(deployFixture);
       await pair.addLiquidity(
         zeroAddress,
         token2Address,
         token1Address,
         10,
-        10
+        10,
       );
       await expect(pair.removeLiquidity(zeroAddress, 11)).to.revertedWith(
-        "user does not have sufficient lpTokens"
+        "user does not have sufficient lpTokens",
       );
     });
 
     it("Remove liquidity Fail A Transfer", async function () {
       const { pair, lpToken, signers, tokenCont } = await loadFixture(
-        deployFixtureTokenTest
+        deployFixtureTokenTest,
       );
       const tokenBeforeQty = await pair.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
@@ -1768,13 +1755,13 @@ describe("LPToken, Pair and Factory tests", function () {
       await lpToken.setUserBalance(signers[0].address, 10);
       await lpToken.setTotal(10);
       await expect(pair.removeLiquidity(signers[0].address, 5)).to.revertedWith(
-        "Remove liquidity: Transferring token A to contract failed with status code"
+        "Remove liquidity: Transferring token A to contract failed with status code",
       );
     });
 
     it("Remove liquidity Fail B Transfer", async function () {
       const { pair, tokenCont1, lpToken, signers } = await loadFixture(
-        deployFixtureTokenTest
+        deployFixtureTokenTest,
       );
       await tokenCont1.setTransaferFailed(true);
       await lpToken.setUserBalance(signers[0].address, 10);
@@ -1782,7 +1769,7 @@ describe("LPToken, Pair and Factory tests", function () {
       const tokenBeforeQty = await pair.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
       await expect(pair.removeLiquidity(signers[0].address, 5)).to.revertedWith(
-        "Remove liquidity: Transferring token B to contract failed with status code"
+        "Remove liquidity: Transferring token B to contract failed with status code",
       );
     });
 
@@ -1791,7 +1778,7 @@ describe("LPToken, Pair and Factory tests", function () {
       const tokenBeforeQty = await pair.getPairQty();
       expect(tokenBeforeQty[0]).to.be.equals(precision.mul(0));
       await expect(pair.removeLiquidity(zeroAddress, 110)).to.revertedWith(
-        "user does not have sufficient lpTokens"
+        "user does not have sufficient lpTokens",
       );
     });
 
@@ -1804,7 +1791,7 @@ describe("LPToken, Pair and Factory tests", function () {
       const lpToken = await ethers.getContractAt("ERC20Mock", lpTokenAddress);
       await lpToken.setName("FAIL"); //Forcing transfer to fail
       await expect(
-        pair.addLiquidity(zeroAddress, token1Address, token2Address, 30, 30)
+        pair.addLiquidity(zeroAddress, token1Address, token2Address, 30, 30),
       ).to.revertedWith("LP token minting failed.");
     });
 
@@ -1823,25 +1810,24 @@ describe("LPToken, Pair and Factory tests", function () {
       const lpToken = await ethers.getContractAt("ERC20Mock", lpTokenAddress);
       await lpToken.setTransaferFailed(true); //Forcing transfer to fail
       await expect(
-        pair.addLiquidity(zeroAddress, token1Address, token2Address, 30, 30)
+        pair.addLiquidity(zeroAddress, token1Address, token2Address, 30, 30),
       ).to.revertedWith("LPToken: token transfer failed from contract.");
     });
   });
 
   describe("LpToken Contract tests", async () => {
     it("Verify contract should be reverted for multiple initialization", async function () {
-      const { lpTokenContract, LP_TOKEN_ARGS } = await loadFixture(
-        lpTokenFixture
-      );
+      const { lpTokenContract, LP_TOKEN_ARGS } =
+        await loadFixture(lpTokenFixture);
       await expect(lpTokenContract.initialize(...LP_TOKEN_ARGS)).revertedWith(
-        "Initializable: contract is already initialized"
+        "Initializable: contract is already initialized",
       );
     });
 
     it("Verify that lp-token address exist", async function () {
       const { lpTokenContract } = await loadFixture(lpTokenFixture);
       expect(await lpTokenContract.getLpTokenAddress()).not.equals(
-        TestHelper.ZERO_ADDRESS
+        TestHelper.ZERO_ADDRESS,
       );
     });
 
@@ -1853,50 +1839,47 @@ describe("LPToken, Pair and Factory tests", function () {
           hederaService.address,
           signers[0].address,
           "FAIL",
-          "FAIL"
-        )
+          "FAIL",
+        ),
       ).revertedWith("LPToken: Token creation failed.");
     });
 
     it("Verify allotLPTokenFor should be reverted if initialization is not done", async function () {
       const lpTokenContract = await TestHelper.deployLogic("LPToken");
       await expect(
-        lpTokenContract.allotLPTokenFor(20, 20, 10, 10, TestHelper.ONE_ADDRESS)
+        lpTokenContract.allotLPTokenFor(20, 20, 10, 10, TestHelper.ONE_ADDRESS),
       ).revertedWith("Ownable: caller is not the owner");
     });
 
     it("Verify allotLPTokenFor should be reverted for non-positive amount", async function () {
       const { lpTokenContract, user } = await loadFixture(lpTokenFixture);
       await expect(
-        lpTokenContract.allotLPTokenFor(20, 20, 0, 0, user.address)
+        lpTokenContract.allotLPTokenFor(20, 20, 0, 0, user.address),
       ).revertedWith("Please provide positive token counts");
     });
 
     it("Verify allotLPTokenFor should be reverted during mint", async function () {
-      const { lpTokenContract, user, lpToken } = await loadFixture(
-        lpTokenFixture
-      );
+      const { lpTokenContract, user, lpToken } =
+        await loadFixture(lpTokenFixture);
       await lpToken.setName("FAIL");
       await expect(
-        lpTokenContract.allotLPTokenFor(20, 20, 30, 30, user.address)
+        lpTokenContract.allotLPTokenFor(20, 20, 30, 30, user.address),
       ).revertedWith("LP token minting failed.");
     });
 
     it("Verify allotLPTokenFor should be reverted during transfer-token call", async function () {
-      const { lpTokenContract, user, lpToken } = await loadFixture(
-        lpTokenFixture
-      );
+      const { lpTokenContract, user, lpToken } =
+        await loadFixture(lpTokenFixture);
       await lpToken.setUserBalance(lpTokenContract.address, 500);
       await lpToken.setTransaferFailed(true);
       await expect(
-        lpTokenContract.allotLPTokenFor(20, 20, 100, 100, user.address)
+        lpTokenContract.allotLPTokenFor(20, 20, 100, 100, user.address),
       ).revertedWith("LPToken: token transfer failed from contract.");
     });
 
     it("Given lpToken token circulation is zero when user try to allot token then squareroot of tokens qty should be transferred", async function () {
-      const { lpTokenContract, user, lpToken } = await loadFixture(
-        lpTokenFixture
-      );
+      const { lpTokenContract, user, lpToken } =
+        await loadFixture(lpTokenFixture);
       await lpToken.setTotal(0);
       await lpToken.setUserBalance(lpTokenContract.address, 500);
       await lpTokenContract.allotLPTokenFor(20, 20, 100, 100, user.address);
@@ -1905,9 +1888,8 @@ describe("LPToken, Pair and Factory tests", function () {
     });
 
     it("Given lpToken token circulation greater than zero when user try to allot greater qty of tokenA then lpToken for tokenB's qty should be transferred", async function () {
-      const { lpTokenContract, user, lpToken } = await loadFixture(
-        lpTokenFixture
-      );
+      const { lpTokenContract, user, lpToken } =
+        await loadFixture(lpTokenFixture);
       const lpTokenTotalSupply = 100;
       await lpToken.setTotal(lpTokenTotalSupply);
       await lpToken.setUserBalance(lpTokenContract.address, 500);
@@ -1920,18 +1902,17 @@ describe("LPToken, Pair and Factory tests", function () {
         tokenBQtyPresentInPool,
         newTokenAQtyToAdd,
         newTokenBQtyToAdd,
-        user.address
+        user.address,
       );
       const userBalance = await lpTokenContract.lpTokenForUser(user.address);
       expect(userBalance).equals(
-        (newTokenBQtyToAdd * lpTokenTotalSupply) / tokenBQtyPresentInPool
+        (newTokenBQtyToAdd * lpTokenTotalSupply) / tokenBQtyPresentInPool,
       );
     });
 
     it("Given lpToken token circulation greater than zero when user try to allot greater qty of tokenB then lpToken for tokenA's qty should be transferred", async function () {
-      const { lpTokenContract, user, lpToken } = await loadFixture(
-        lpTokenFixture
-      );
+      const { lpTokenContract, user, lpToken } =
+        await loadFixture(lpTokenFixture);
       const lpTokenTotalSupply = 100;
       await lpToken.setTotal(lpTokenTotalSupply);
       await lpToken.setUserBalance(lpTokenContract.address, 500);
@@ -1944,18 +1925,17 @@ describe("LPToken, Pair and Factory tests", function () {
         tokenBQtyPresentInPool,
         newTokenAQtyToAdd,
         newTokenBQtyToAdd,
-        user.address
+        user.address,
       );
       const userBalance = await lpTokenContract.lpTokenForUser(user.address);
       expect(userBalance).equals(
-        (newTokenAQtyToAdd * lpTokenTotalSupply) / tokenAQtyPresentInPool
+        (newTokenAQtyToAdd * lpTokenTotalSupply) / tokenAQtyPresentInPool,
       );
     });
 
     it("Given lpToken token circulation greater than zero when user try to allot token with no existing tokens in the pool then call should fail", async function () {
-      const { lpTokenContract, user, lpToken } = await loadFixture(
-        lpTokenFixture
-      );
+      const { lpTokenContract, user, lpToken } =
+        await loadFixture(lpTokenFixture);
       const lpTokenTotalSupply = 100;
       await lpToken.setTotal(lpTokenTotalSupply);
       await lpToken.setUserBalance(lpTokenContract.address, 500);
@@ -1969,73 +1949,69 @@ describe("LPToken, Pair and Factory tests", function () {
           tokenBQtyPresentInPool,
           newTokenAQtyToAdd,
           newTokenBQtyToAdd,
-          user.address
-        )
+          user.address,
+        ),
       ).revertedWith(
-        "Pool should contain tokenA and tokenB quantities greater than zero."
+        "Pool should contain tokenA and tokenB quantities greater than zero.",
       );
     });
 
     it("Verify removeLPTokenFor should be reverted if initialization is not done", async function () {
       const lpTokenContract = await TestHelper.deployLogic("LPToken");
       await expect(
-        lpTokenContract.removeLPTokenFor(101, TestHelper.ONE_ADDRESS)
+        lpTokenContract.removeLPTokenFor(101, TestHelper.ONE_ADDRESS),
       ).revertedWith("Ownable: caller is not the owner");
     });
 
     it("Verify removeLPTokenFor should be reverted for non-positive amount", async function () {
       const { lpTokenContract, user } = await loadFixture(lpTokenFixture);
       await expect(
-        lpTokenContract.removeLPTokenFor(0, user.address)
+        lpTokenContract.removeLPTokenFor(0, user.address),
       ).revertedWith("Please provide token counts");
     });
 
     it("Verify removeLPTokenFor should be reverted if user don't have enough balance", async function () {
-      const { lpTokenContract, user, lpToken } = await loadFixture(
-        lpTokenFixture
-      );
+      const { lpTokenContract, user, lpToken } =
+        await loadFixture(lpTokenFixture);
       await lpToken.setUserBalance(user.address, 100);
       await expect(
-        lpTokenContract.removeLPTokenFor(101, user.address)
+        lpTokenContract.removeLPTokenFor(101, user.address),
       ).revertedWith("User Does not have lp amount");
     });
 
     it("verify removeLPTokenFor should be reverted during burn", async function () {
-      const { lpTokenContract, user, lpToken } = await loadFixture(
-        lpTokenFixture
-      );
+      const { lpTokenContract, user, lpToken } =
+        await loadFixture(lpTokenFixture);
       await lpToken.setUserBalance(lpTokenContract.address, 10);
       await lpTokenContract.allotLPTokenFor(20, 20, 10, 10, user.address);
       await lpToken.setName("FAIL");
       await expect(
-        lpTokenContract.removeLPTokenFor(5, user.address)
+        lpTokenContract.removeLPTokenFor(5, user.address),
       ).to.revertedWith("LP token burn failed.");
     });
 
     it("Verify removeLPTokenFor should be reverted during transfer-token call", async function () {
-      const { lpTokenContract, user, lpToken } = await loadFixture(
-        lpTokenFixture
-      );
+      const { lpTokenContract, user, lpToken } =
+        await loadFixture(lpTokenFixture);
       await lpToken.setUserBalance(lpTokenContract.address, 10);
       await lpTokenContract.allotLPTokenFor(20, 20, 10, 10, user.address);
       await lpToken.setTransaferFailed(true);
       await expect(
-        lpTokenContract.removeLPTokenFor(5, user.address)
+        lpTokenContract.removeLPTokenFor(5, user.address),
       ).revertedWith("LPToken: token transfer failed to contract.");
     });
   });
 
   describe("Pair Base Constant Product Algorithm Tests", async () => {
     it("Check spot price for tokens", async function () {
-      const { pair, token1Address, token2Address } = await loadFixture(
-        deployFixture
-      );
+      const { pair, token1Address, token2Address } =
+        await loadFixture(deployFixture);
       await pair.addLiquidity(
         zeroAddress,
         token1Address,
         token2Address,
         50,
-        100
+        100,
       );
       const token2SpotPrice = await pair.getSpotPrice(token2Address);
       expect(token2SpotPrice).to.be.equals(200000000);
@@ -2044,30 +2020,28 @@ describe("LPToken, Pair and Factory tests", function () {
     });
 
     it("check get out given in price value without precision", async function () {
-      const { pair, token2Address, token1Address } = await loadFixture(
-        deployFixture
-      );
+      const { pair, token2Address, token1Address } =
+        await loadFixture(deployFixture);
       await pair.addLiquidity(
         zeroAddress,
         token1Address,
         token2Address,
         24,
-        16
+        16,
       );
       const value = await pair.getOutGivenIn(10);
       expect(Number(value[2]) + Number(value[3])).to.be.equals(5);
     });
 
     it("check get in given out price value without precision", async function () {
-      const { pair, token1Address, token2Address } = await loadFixture(
-        deployFixture
-      );
+      const { pair, token1Address, token2Address } =
+        await loadFixture(deployFixture);
       await pair.addLiquidity(
         zeroAddress,
         token1Address,
         token2Address,
         100,
-        50
+        50,
       );
       const value = await pair.getInGivenOut(5);
 
@@ -2075,9 +2049,8 @@ describe("LPToken, Pair and Factory tests", function () {
     });
 
     it("check spot price by multiplying with precision value", async function () {
-      const { pair, token1Address, token2Address } = await loadFixture(
-        deployFixture
-      );
+      const { pair, token1Address, token2Address } =
+        await loadFixture(deployFixture);
       const precisionValue = await pair.getPrecisionValue();
       const tokenAQ = 134.0293628 * Number(precisionValue);
       const tokenBQ = 187.5599813 * Number(precisionValue);
@@ -2087,7 +2060,7 @@ describe("LPToken, Pair and Factory tests", function () {
         token1Address,
         token2Address,
         tokenAQ,
-        tokenBQ
+        tokenBQ,
       );
       const token2SpotPrice = await pair.getSpotPrice(token2Address);
       expect(token2SpotPrice).to.be.equals(139939471);
@@ -2096,9 +2069,8 @@ describe("LPToken, Pair and Factory tests", function () {
     });
 
     it("check spot price for front end", async function () {
-      const { pair, token1Address, token2Address } = await loadFixture(
-        deployFixture
-      );
+      const { pair, token1Address, token2Address } =
+        await loadFixture(deployFixture);
       const precisionValue = await pair.getPrecisionValue();
       const tokenAQ = 134.0293628 * Number(precisionValue);
       const tokenBQ = 187.5599813 * Number(precisionValue);
@@ -2108,7 +2080,7 @@ describe("LPToken, Pair and Factory tests", function () {
         token1Address,
         token2Address,
         tokenAQ,
-        tokenBQ
+        tokenBQ,
       );
       const token2SpotPrice = await pair.getSpotPrice(token2Address);
       const token2SpotPriceOutput =
@@ -2121,9 +2093,8 @@ describe("LPToken, Pair and Factory tests", function () {
     });
 
     it("check spot price for big number", async function () {
-      const { pair, token1Address, token2Address } = await loadFixture(
-        deployFixture
-      );
+      const { pair, token1Address, token2Address } =
+        await loadFixture(deployFixture);
       const tokenAQ = BigNumber.from("29362813400293628");
       const tokenBQ = BigNumber.from("55998131875599813");
       await pair.addLiquidity(
@@ -2131,7 +2102,7 @@ describe("LPToken, Pair and Factory tests", function () {
         token1Address,
         token2Address,
         tokenAQ,
-        tokenBQ
+        tokenBQ,
       );
 
       const token2SpotPrice = await pair.getSpotPrice(token2Address);
@@ -2147,9 +2118,8 @@ describe("LPToken, Pair and Factory tests", function () {
     });
 
     it("check getOutGivenIn for big number with precision", async function () {
-      const { pair, token1Address, token2Address } = await loadFixture(
-        deployFixture
-      );
+      const { pair, token1Address, token2Address } =
+        await loadFixture(deployFixture);
       const precision = await pair.getPrecisionValue();
       const tokenAQ = BigNumber.from(220).mul(precision);
       const tokenBQ = BigNumber.from(220).mul(precision);
@@ -2161,20 +2131,19 @@ describe("LPToken, Pair and Factory tests", function () {
         tokenBQ,
         {
           value: ethers.utils.parseEther("10"),
-        }
+        },
       );
       const deltaAQty = BigNumber.from(10).mul(precision);
       const value = await pair.getOutGivenIn(deltaAQty);
 
       expect(Number(value[2]) + Number(value[3])).to.be.equals(
-        Number(949566211)
+        Number(949566211),
       );
     });
 
     it("check getInGivenOut for big number with precision", async function () {
-      const { pair, token1Address, token2Address } = await loadFixture(
-        deployFixture
-      );
+      const { pair, token1Address, token2Address } =
+        await loadFixture(deployFixture);
       const tokenAQ = BigNumber.from("220").mul(precision);
       const tokenBQ = BigNumber.from("220").mul(precision);
       await pair.addLiquidity(
@@ -2182,10 +2151,10 @@ describe("LPToken, Pair and Factory tests", function () {
         token1Address,
         token2Address,
         tokenAQ,
-        tokenBQ
+        tokenBQ,
       );
       const value = await pair.getInGivenOut(
-        BigNumber.from("10").mul(precision)
+        BigNumber.from("10").mul(precision),
       );
       const valueWithoutPrecision =
         (Number(value[2]) + Number(value[3])) / Number(precision);
@@ -2203,9 +2172,8 @@ describe("LPToken, Pair and Factory tests", function () {
     });
 
     it("Verify slippageOutGivenIn ", async function () {
-      const { pair, token1Address, token2Address } = await loadFixture(
-        deployFixture
-      );
+      const { pair, token1Address, token2Address } =
+        await loadFixture(deployFixture);
       const tokenAPoolQty = BigNumber.from(114).mul(precision);
       const tokenBPoolQty = BigNumber.from(220).mul(precision);
       await pair.addLiquidity(
@@ -2213,7 +2181,7 @@ describe("LPToken, Pair and Factory tests", function () {
         token1Address,
         token2Address,
         tokenAPoolQty,
-        tokenBPoolQty
+        tokenBPoolQty,
       );
       const deltaAQty = BigNumber.from(1).mul(precision);
       const slippage = await pair.slippageOutGivenIn(deltaAQty);
@@ -2222,9 +2190,8 @@ describe("LPToken, Pair and Factory tests", function () {
     });
 
     it("Verify slippageInGivenOut ", async function () {
-      const { pair, token1Address, token2Address } = await loadFixture(
-        deployFixture
-      );
+      const { pair, token1Address, token2Address } =
+        await loadFixture(deployFixture);
       const tokenAPoolQty = BigNumber.from(114).mul(precision);
       const tokenBPoolQty = BigNumber.from(220).mul(precision);
       await pair.addLiquidity(
@@ -2232,7 +2199,7 @@ describe("LPToken, Pair and Factory tests", function () {
         token1Address,
         token2Address,
         tokenAPoolQty,
-        tokenBPoolQty
+        tokenBPoolQty,
       );
       const deltaBQty = BigNumber.from(1).mul(precision);
       const slippage = await pair.slippageInGivenOut(deltaBQty);
@@ -2243,9 +2210,8 @@ describe("LPToken, Pair and Factory tests", function () {
 
   describe("Mirror Node API requirement test cases", async () => {
     it("Get Token Pair address", async function () {
-      const { pair, token1Address, token2Address } = await loadFixture(
-        deployFixture
-      );
+      const { pair, token1Address, token2Address } =
+        await loadFixture(deployFixture);
       const value = await pair.getTokenPairAddress();
       expect(value[0]).to.be.equals(token1Address);
       expect(value[1]).to.be.equals(token2Address);
@@ -2263,16 +2229,15 @@ describe("LPToken, Pair and Factory tests", function () {
     });
 
     it("get token quantity from fee", async function () {
-      const { pair, token1Address, token2Address } = await loadFixture(
-        deployFixture
-      );
+      const { pair, token1Address, token2Address } =
+        await loadFixture(deployFixture);
       const tokenAPoolQty = BigNumber.from(10).mul(precision);
       await pair.addLiquidity(
         zeroAddress,
         token1Address,
         token2Address,
         tokenAPoolQty,
-        10
+        10,
       );
       const value = await pair.feeForToken(tokenAPoolQty);
       expect(value).to.be.equals(Number(5000000));
