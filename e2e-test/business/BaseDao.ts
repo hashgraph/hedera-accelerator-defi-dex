@@ -13,7 +13,7 @@ export default abstract class BaseDAO extends Base {
     logoUrl: string,
     description: string,
     webLinks: string[],
-    client: Client
+    client: Client,
   ) => {
     const inputs = {
       _name: name,
@@ -24,7 +24,7 @@ export default abstract class BaseDAO extends Base {
     const data = await this.encodeFunctionData(
       ContractService.BASE_DAO,
       UPDATE_DAO_INFO,
-      Object.values(inputs)
+      Object.values(inputs),
     );
     await this.execute(8_00_000, UPDATE_DAO_INFO, client, data.bytes);
     console.log(`- BaseDAO#${UPDATE_DAO_INFO}():`);
@@ -38,7 +38,7 @@ export default abstract class BaseDAO extends Base {
       await this.decodeFunctionResult(
         ContractService.BASE_DAO,
         GET_DAO_INFO,
-        result.asBytes()
+        result.asBytes(),
       )
     )[0];
     const info = {

@@ -14,7 +14,7 @@ import ContractUpgradeGovernor from "../../e2e-test/business/ContractUpgradeGove
 const contractService = new ContractService();
 const contractMetadata = new ContractMetadata();
 const contractUATService = new ContractService(
-  ContractService.UAT_CONTRACTS_PATH
+  ContractService.UAT_CONTRACTS_PATH,
 );
 
 const factory = new Factory(getFactoryProxyId()!);
@@ -27,14 +27,14 @@ function getFactoryProxyId() {
 
 async function updateProxy(contractId: string, proposalId: string) {
   const governor = new ContractUpgradeGovernor(
-    ContractId.fromString(contractId)
+    ContractId.fromString(contractId),
   );
   const response =
     await governor.getContractAddressesFromGovernorUpgradeContract(proposalId);
   const proxyId = response.proxyId;
   const logicId = response.logicId;
   const proxyUATContract = contractUATService.getContractWithProxyById(
-    response.proxyIdString
+    response.proxyIdString,
   );
   switch (proxyUATContract.name) {
     case contractService.configuration:
@@ -72,7 +72,7 @@ async function upgradeProxy(
   proxyId: ContractId,
   logicId: ContractId,
   oldVersionContract: DeployedContract,
-  functionName: string
+  functionName: string,
 ) {
   console.log("Running upgrade for : " + functionName);
   const logicAddress = logicId.toSolidityAddress();
@@ -83,7 +83,7 @@ async function upgradeProxy(
     await new Common(ContractId.fromSolidityAddress(proxyAddress)).upgradeTo(
       proxyAddress,
       logicAddress,
-      ownerKey
+      ownerKey,
     );
   }
   await factory.upgradeLogic(logicAddress, functionName);
@@ -99,11 +99,11 @@ async function upgradeProxy(
 async function updateDirectProxy(
   proxyId: ContractId,
   logicId: ContractId,
-  oldVersionContract: DeployedContract
+  oldVersionContract: DeployedContract,
 ) {
   new Common(proxyId).upgradeTo(
     proxyId.toSolidityAddress(),
-    logicId.toSolidityAddress()
+    logicId.toSolidityAddress(),
   );
   const newContract: DeployedContract = {
     ...oldVersionContract,

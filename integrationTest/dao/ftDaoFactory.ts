@@ -40,7 +40,7 @@ async function main() {
   const daoFactory = new FTDAOFactory();
   await daoFactory.initialize(
     clientsInfo.operatorClient,
-    new FTTokenHolderFactory()
+    new FTTokenHolderFactory(),
   );
   await daoFactory.createDAO(
     dex.GOVERNANCE_DAO_TWO,
@@ -53,7 +53,7 @@ async function main() {
     20,
     false,
     DAO_ADMIN,
-    clientsInfo.operatorClient
+    clientsInfo.operatorClient,
   );
   const daoAddresses = await daoFactory.getDAOs();
   const daoAddress = daoAddresses.pop()!;
@@ -64,10 +64,10 @@ async function main() {
 export async function executeGovernanceProposals(
   daoFactory: FTDAOFactory,
   daoEvmAddress: string,
-  daoTokenId: TokenId
+  daoTokenId: TokenId,
 ) {
   console.log(
-    `- executing Governance proposals for given DAO i.e ${daoEvmAddress}, ${daoTokenId}\n`
+    `- executing Governance proposals for given DAO i.e ${daoEvmAddress}, ${daoTokenId}\n`,
   );
   const dao = await daoFactory.getGovernorTokenDaoInstance(daoEvmAddress);
   const tokenHolder = await daoFactory.getTokenHolderInstance(daoTokenId);
@@ -75,19 +75,19 @@ export async function executeGovernanceProposals(
     await dao.getGovernorTokenTransferContractAddresses();
 
   const textGovernor = new TextGovernor(
-    governanceAddresses.governorTextProposalProxyId
+    governanceAddresses.governorTextProposalProxyId,
   );
 
   const upgradeGovernor = new ContractUpgradeGovernor(
-    governanceAddresses.governorUpgradeProxyId
+    governanceAddresses.governorUpgradeProxyId,
   );
 
   const transferGovernor = new TokenTransferGovernor(
-    governanceAddresses.governorTokenTransferProxyId
+    governanceAddresses.governorTokenTransferProxyId,
   );
 
   const tokenCreateGovernor = new TokenCreateGovernor(
-    governanceAddresses.governorTokenCreateProxyId
+    governanceAddresses.governorTokenCreateProxyId,
   );
 
   // step - 0 lock required tokens to token holder
@@ -98,7 +98,7 @@ export async function executeGovernanceProposals(
     clientsInfo.treasureId,
     clientsInfo.treasureKey,
     clientsInfo.treasureClient,
-    0
+    0,
   );
 
   // step - 1 text proposal flow
@@ -109,12 +109,12 @@ export async function executeGovernanceProposals(
     clientsInfo.operatorId,
     clientsInfo.operatorKey,
     clientsInfo.operatorClient,
-    0
+    0,
   );
 
   // step - 2 contract upgrade proposal
   const contractToUpgradeInfo = new ContractService().getContract(
-    ContractService.MULTI_SIG
+    ContractService.MULTI_SIG,
   );
   await createAndExecuteContractUpgradeProposal(
     contractToUpgradeInfo.transparentProxyAddress!,
@@ -125,7 +125,7 @@ export async function executeGovernanceProposals(
     clientsInfo.operatorId,
     clientsInfo.operatorKey,
     clientsInfo.operatorClient,
-    0
+    0,
   );
 
   // step - 3 (A) ft token association
@@ -137,7 +137,7 @@ export async function executeGovernanceProposals(
     clientsInfo.operatorId,
     clientsInfo.operatorKey,
     clientsInfo.operatorClient,
-    0
+    0,
   );
 
   // step - 3 (B) ft transfer flow
@@ -154,7 +154,7 @@ export async function executeGovernanceProposals(
     clientsInfo.operatorId,
     clientsInfo.operatorKey,
     clientsInfo.operatorClient,
-    0
+    0,
   );
 
   // step - 4 (A) nft token association
@@ -166,7 +166,7 @@ export async function executeGovernanceProposals(
     clientsInfo.operatorId,
     clientsInfo.operatorKey,
     clientsInfo.operatorClient,
-    0
+    0,
   );
 
   // step - 4 (B) nft transfer flow
@@ -183,7 +183,7 @@ export async function executeGovernanceProposals(
     clientsInfo.operatorId,
     clientsInfo.operatorKey,
     clientsInfo.operatorClient,
-    0
+    0,
   );
 
   // step - 5 HBar transfer flow
@@ -200,7 +200,7 @@ export async function executeGovernanceProposals(
     clientsInfo.operatorId,
     clientsInfo.operatorKey,
     clientsInfo.operatorClient,
-    0
+    0,
   );
 
   // step - 6 Token create flow
@@ -215,13 +215,13 @@ export async function executeGovernanceProposals(
     clientsInfo.operatorId,
     clientsInfo.operatorKey,
     clientsInfo.operatorClient,
-    tokenCreateGovernor.TXN_FEE_FOR_TOKEN_CREATE
+    tokenCreateGovernor.TXN_FEE_FOR_TOKEN_CREATE,
   );
 
   // step - 7 unlock required tokens from token holder
   await tokenHolder.checkAndClaimGodTokens(
     clientsInfo.treasureClient,
-    clientsInfo.treasureId
+    clientsInfo.treasureId,
   );
 }
 
@@ -240,7 +240,7 @@ async function checkAndUpdateGovernanceLogics(daoFactory: FTDAOFactory) {
     deployedItems.get(ContractService.GOVERNOR_TT).address,
     deployedItems.get(ContractService.GOVERNOR_TOKEN_CREATE).address,
     deployedItems.get(ContractService.GOVERNOR_TEXT).address,
-    deployedItems.get(ContractService.GOVERNOR_UPGRADE).address
+    deployedItems.get(ContractService.GOVERNOR_UPGRADE).address,
   );
 }
 

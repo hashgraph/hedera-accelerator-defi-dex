@@ -76,7 +76,7 @@ export class ContractService {
     contractId: string,
     contractAddress: string,
     contractName: string,
-    calculatedHash: string
+    calculatedHash: string,
   ) => {
     const contractNameLowerCase = contractName.toLowerCase();
 
@@ -105,7 +105,7 @@ export class ContractService {
 
   public recordDeployedContract = async (
     contractAddress: string,
-    contractName: string
+    contractName: string,
   ) => {
     const contractNameLowerCase = contractName.toLowerCase();
 
@@ -140,12 +140,12 @@ export class ContractService {
 
   public updateContractRecord = (
     updatedContract: DeployedContract,
-    contractBeingDeployed: DeployedContract
+    contractBeingDeployed: DeployedContract,
   ) => {
     const contracts: Array<DeployedContract> = this.getAllContracts();
     const allOtherContracts = contracts.filter(
       (contract: DeployedContract) =>
-        contract.address !== contractBeingDeployed.address
+        contract.address !== contractBeingDeployed.address,
     );
     const updatedContracts = [...allOtherContracts, updatedContract];
     const data = JSON.stringify(updatedContracts, null, 2);
@@ -155,7 +155,7 @@ export class ContractService {
   public getContract = (contractName: string): DeployedContract => {
     const contracts: Array<DeployedContract> = this.getAllContracts();
     const matchingContracts = contracts.filter(
-      (contract: DeployedContract) => contract.name === contractName
+      (contract: DeployedContract) => contract.name === contractName,
     );
     const latestContract = matchingContracts[matchingContracts.length - 1];
     return latestContract;
@@ -167,35 +167,35 @@ export class ContractService {
       (contract: DeployedContract) =>
         contract.name === contractName &&
         contract.transparentProxyAddress != null &&
-        contract.transparentProxyId != null
+        contract.transparentProxyId != null,
     );
     return matchingProxyContracts[matchingProxyContracts.length - 1];
   };
 
   public getContractWithProxyAtIndex = (
     contractName: string,
-    index: number
+    index: number,
   ): DeployedContract => {
     const contracts: Array<DeployedContract> = this.getAllContracts();
     const matchingProxyContracts = contracts.filter(
       (contract: DeployedContract) =>
         contract.name === contractName &&
         contract.transparentProxyAddress != null &&
-        contract.transparentProxyId != null
+        contract.transparentProxyId != null,
     );
     return matchingProxyContracts[matchingProxyContracts.length - (1 + index)];
   };
 
   public getContractsWithProxy = (
     contractName: string,
-    count: number
+    count: number,
   ): DeployedContract[] => {
     const contracts: Array<DeployedContract> = this.getAllContracts();
     const matchingProxyContracts = contracts.filter(
       (contract: DeployedContract) =>
         contract.name === contractName &&
         contract.transparentProxyAddress != null &&
-        contract.transparentProxyId != null
+        contract.transparentProxyId != null,
     );
     return matchingProxyContracts.slice(-count);
   };
@@ -206,7 +206,7 @@ export class ContractService {
       (contract: DeployedContract) =>
         contract.transparentProxyAddress != null &&
         contract.transparentProxyId != null &&
-        contract.transparentProxyId === contractId
+        contract.transparentProxyId === contractId,
     );
     return matchingProxyContracts[matchingProxyContracts.length - 1];
   };
@@ -246,13 +246,13 @@ export class ContractService {
   };
 
   public getContractInfo = (
-    idOrAddress: string
+    idOrAddress: string,
   ): DeployedContract | undefined => {
     const contracts: Array<DeployedContract> = this.getAllContracts();
     const matchingContracts = contracts.filter(
       (contract: DeployedContract) =>
         contract.id.includes(idOrAddress) ||
-        contract.address.includes(idOrAddress)
+        contract.address.includes(idOrAddress),
     );
     return matchingContracts.length > 0 ? matchingContracts.at(0) : undefined;
   };

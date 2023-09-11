@@ -31,11 +31,11 @@ export default abstract class DAOFactory extends Base {
 
   initialize = async (
     client: Client = clientsInfo.operatorClient,
-    tokenHolderFactory: TokenHolderFactory
+    tokenHolderFactory: TokenHolderFactory,
   ) => {
     if (await this.isInitializationPending()) {
       const tokenHolderFactoryContractId = ContractId.fromString(
-        tokenHolderFactory.contractId
+        tokenHolderFactory.contractId,
       ).toSolidityAddress();
       const tokenHolderFactoryAddress = tokenHolderFactoryContractId;
       const deployedItems = await deployment.deployContracts([
@@ -59,7 +59,7 @@ export default abstract class DAOFactory extends Base {
           upgradeLogic: deployedItems.get(ContractService.GOVERNOR_UPGRADE)
             .address,
           createTokenLogic: deployedItems.get(
-            ContractService.GOVERNOR_TOKEN_CREATE
+            ContractService.GOVERNOR_TOKEN_CREATE,
           ).address,
         }),
       };
@@ -67,17 +67,17 @@ export default abstract class DAOFactory extends Base {
       const { bytes, hex } = await this.encodeFunctionData(
         ContractService.FT_DAO_FACTORY,
         INITIALIZE,
-        Object.values(data)
+        Object.values(data),
       );
 
       await this.execute(800000, INITIALIZE, client, bytes);
       console.log(
-        `- ${this.getPrefix()}DAOFactory#${INITIALIZE}(): done with hex-data = ${hex}\n`
+        `- ${this.getPrefix()}DAOFactory#${INITIALIZE}(): done with hex-data = ${hex}\n`,
       );
       return;
     }
     console.log(
-      `- ${this.getPrefix()}DAOFactory#${INITIALIZE}(): already done\n`
+      `- ${this.getPrefix()}DAOFactory#${INITIALIZE}(): already done\n`,
     );
   };
 
@@ -92,7 +92,7 @@ export default abstract class DAOFactory extends Base {
     votingPeriod: number,
     isPrivate: boolean,
     admin: string = clientsInfo.operatorId.toSolidityAddress(),
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
   ) => {
     const params = {
       admin,
@@ -109,17 +109,17 @@ export default abstract class DAOFactory extends Base {
     const { bytes, hex } = await this.encodeFunctionData(
       ContractService.FT_DAO_FACTORY,
       CREATE_DAO,
-      [Object.values(params)]
+      [Object.values(params)],
     );
     const { result, record } = await this.execute(
       8_500_000,
       CREATE_DAO,
       client,
-      bytes
+      bytes,
     );
     const address = result.getAddress(0);
     console.log(
-      `- ${this.getPrefix()}DAOFactory#${CREATE_DAO}(): with input data = ${hex}`
+      `- ${this.getPrefix()}DAOFactory#${CREATE_DAO}(): with input data = ${hex}`,
     );
     console.table({
       ...params,
@@ -137,7 +137,7 @@ export default abstract class DAOFactory extends Base {
     console.log(
       `- ${this.getPrefix()}DAOFactory#${GET_DAOS}(): count = ${
         addresses.length
-      }, dao's = [${addresses}]\n`
+      }, dao's = [${addresses}]\n`,
     );
     return addresses;
   };
@@ -146,7 +146,7 @@ export default abstract class DAOFactory extends Base {
     tokenTransferLogic: string,
     tokenCreateLogic: string,
     textProposalLogic: string,
-    contractUpgrade: string
+    contractUpgrade: string,
   ) => {
     const args = {
       tokenTransferLogic,
@@ -158,20 +158,20 @@ export default abstract class DAOFactory extends Base {
     const { bytes } = await this.encodeFunctionData(
       ContractService.FT_DAO_FACTORY,
       UPGRADE_GOVERNORS_IMPLEMENTATION,
-      [Object.values(args)]
+      [Object.values(args)],
     );
 
     const { receipt } = await this.execute(
       2_00_000,
       UPGRADE_GOVERNORS_IMPLEMENTATION,
       clientsInfo.childProxyAdminClient,
-      bytes
+      bytes,
     );
 
     console.log(
       `- ${this.getPrefix()}DAOFactory#${UPGRADE_GOVERNORS_IMPLEMENTATION}(): tx status ${
         receipt.status
-      }\n`
+      }\n`,
     );
   };
 
@@ -181,10 +181,10 @@ export default abstract class DAOFactory extends Base {
       200000,
       UPGRADE_TOKEN_DAO_LOGIC_IMPL,
       clientsInfo.childProxyAdminClient,
-      args
+      args,
     );
     console.log(
-      `- ${this.getPrefix()}DAOFactory#${UPGRADE_TOKEN_DAO_LOGIC_IMPL}(): done\n`
+      `- ${this.getPrefix()}DAOFactory#${UPGRADE_TOKEN_DAO_LOGIC_IMPL}(): done\n`,
     );
   };
 
@@ -194,10 +194,10 @@ export default abstract class DAOFactory extends Base {
       200000,
       UPGRADE_TOKEN_HOLDER_FACTORY,
       clientsInfo.childProxyAdminClient,
-      args
+      args,
     );
     console.log(
-      `- ${this.getPrefix()}DAOFactory#${UPGRADE_TOKEN_HOLDER_FACTORY}(): done\n`
+      `- ${this.getPrefix()}DAOFactory#${UPGRADE_TOKEN_HOLDER_FACTORY}(): done\n`,
     );
   };
 
@@ -205,11 +205,11 @@ export default abstract class DAOFactory extends Base {
     const { result } = await this.execute(
       200000,
       GET_TOKEN_HOLDER_FACTORY_ADDRESS,
-      clientsInfo.childProxyAdminClient
+      clientsInfo.childProxyAdminClient,
     );
     const address = result.getAddress(0);
     console.log(
-      `- ${this.getPrefix()}DAOFactory#${GET_TOKEN_HOLDER_FACTORY_ADDRESS}(): address = ${address}\n`
+      `- ${this.getPrefix()}DAOFactory#${GET_TOKEN_HOLDER_FACTORY_ADDRESS}(): address = ${address}\n`,
     );
     return ContractId.fromSolidityAddress(address);
   };
@@ -220,6 +220,6 @@ export default abstract class DAOFactory extends Base {
   };
 
   protected abstract getTokenHolderInstance(
-    tokenId: TokenId
+    tokenId: TokenId,
   ): Promise<NFTHolder> | Promise<GodHolder>;
 }

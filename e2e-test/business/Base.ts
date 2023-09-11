@@ -44,7 +44,7 @@ export default abstract class Base {
   protected abstract getContractName(): string;
 
   private getLatestContractIdIfMissingInArgument = (
-    _contractId: ContractId | null = null
+    _contractId: ContractId | null = null,
   ): string => {
     const transparentProxyId =
       _contractId?.toString() ??
@@ -56,32 +56,32 @@ export default abstract class Base {
   private printContractInformation = () => {
     const businessClassName = this.getBusinessClassName();
     console.log(
-      `\n- Using business class[${businessClassName}], contract-id [${this.contractId}], and contract-name [${this.contractName}] \n`
+      `\n- Using business class[${businessClassName}], contract-id [${this.contractId}], and contract-name [${this.contractName}] \n`,
     );
   };
 
   public getRoleAdmin = async (
     role: Uint8Array,
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
   ) => {
     const args = new ContractFunctionParameters().addBytes32(role);
     const { result } = await this.execute(
       2_00_000,
       this.GET_ROLE_ADMIN,
       client,
-      args
+      args,
     );
     const roleInfo = this.getRoleInfo(role);
     const roleAdminHex = ethers.utils.hexlify(result.getBytes32(0));
     console.log(
-      `- Base#${this.GET_ROLE_ADMIN}(): done ${roleInfo}, roleAdmin = ${roleAdminHex}\n`
+      `- Base#${this.GET_ROLE_ADMIN}(): done ${roleInfo}, roleAdmin = ${roleAdminHex}\n`,
     );
   };
 
   public hasRole = async (
     role: Uint8Array,
     accountId: AccountId,
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
   ) => {
     const args = new ContractFunctionParameters()
       .addBytes32(role)
@@ -90,13 +90,13 @@ export default abstract class Base {
       5_00_000,
       this.HAS_ROLE,
       client,
-      args
+      args,
     );
     const roleInfo = this.getRoleInfo(role);
     const hasRoleHex = ethers.utils.hexlify(result.asBytes());
     const hasRole = result.getBool(0);
     console.log(
-      `- Base#${this.HAS_ROLE}(): done ${roleInfo}, hasRole = ${hasRole}, hasRoleHex = ${hasRoleHex}\n`
+      `- Base#${this.HAS_ROLE}(): done ${roleInfo}, hasRole = ${hasRole}, hasRoleHex = ${hasRoleHex}\n`,
     );
     return hasRole;
   };
@@ -104,7 +104,7 @@ export default abstract class Base {
   public grantRole = async (
     role: Uint8Array,
     accountId: AccountId,
-    superAdminClient: Client
+    superAdminClient: Client,
   ) => {
     const args = new ContractFunctionParameters()
       .addBytes32(role)
@@ -114,14 +114,14 @@ export default abstract class Base {
     console.log(
       `- Base#${
         this.GRANT_ROLE
-      }(): done ${roleInfo}, account = ${accountId.toString()}\n`
+      }(): done ${roleInfo}, account = ${accountId.toString()}\n`,
     );
   };
 
   public revokeRole = async (
     role: Uint8Array,
     accountId: AccountId,
-    superAdminClient: Client
+    superAdminClient: Client,
   ) => {
     const args = new ContractFunctionParameters()
       .addBytes32(role)
@@ -131,24 +131,24 @@ export default abstract class Base {
     console.log(
       `- Base#${
         this.REVOKE_ROLE
-      }(): done ${roleInfo}, account = ${accountId.toString()}\n`
+      }(): done ${roleInfo}, account = ${accountId.toString()}\n`,
     );
   };
 
   getCurrentImplementation = async (
     adminKey: PrivateKey = clientsInfo.proxyAdminKey,
-    client: Client = clientsInfo.proxyAdminClient
+    client: Client = clientsInfo.proxyAdminClient,
   ) => {
     const { result } = await this.execute(
       2000000,
       this.IMPLEMENTATION,
       client,
       undefined,
-      adminKey
+      adminKey,
     );
     const impAddress = result.getAddress(0);
     console.log(
-      `- Base#${this.IMPLEMENTATION}(): proxyId = ${this.contractId}, implementation =  ${impAddress}\n`
+      `- Base#${this.IMPLEMENTATION}(): proxyId = ${this.contractId}, implementation =  ${impAddress}\n`,
     );
     return impAddress;
   };
@@ -162,7 +162,7 @@ export default abstract class Base {
       | ContractFunctionParameters
       | undefined = undefined,
     keys: PrivateKey | PrivateKey[] | undefined = undefined,
-    amount: BigNumber | number = 0
+    amount: BigNumber | number = 0,
   ) => {
     const txn = new ContractExecuteTransaction()
       .setContractId(this.contractId)
@@ -186,22 +186,22 @@ export default abstract class Base {
 
   public isInitializationPending = async () => {
     return await MirrorNodeService.getInstance().isInitializationPending(
-      this.contractId
+      this.contractId,
     );
   };
 
   public upgradeHederaService = async (
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
   ) => {
     const args = new ContractFunctionParameters().addAddress(this.htsAddress);
     const { receipt } = await this.execute(
       20_00_000,
       this.UPGRADE_HEDERA_SERVICE,
       client,
-      args
+      args,
     );
     console.log(
-      `- Base#${this.UPGRADE_HEDERA_SERVICE}(): tx status ${receipt.status}\n`
+      `- Base#${this.UPGRADE_HEDERA_SERVICE}(): tx status ${receipt.status}\n`,
     );
   };
 
@@ -209,10 +209,10 @@ export default abstract class Base {
     const { result } = await this.execute(
       2_00_000,
       this.OWNER,
-      clientsInfo.operatorClient
+      clientsInfo.operatorClient,
     );
     console.log(
-      `- Base#${this.OWNER}(): owner address  ${result.getAddress(0)}\n`
+      `- Base#${this.OWNER}(): owner address  ${result.getAddress(0)}\n`,
     );
   };
 
@@ -237,11 +237,10 @@ export default abstract class Base {
   public async encodeFunctionData(
     contractName: string,
     functionName: string,
-    data: any[]
+    data: any[],
   ): Promise<{ bytes: Uint8Array; hex: string }> {
-    const contractInterface = await ContractMetadata.getContractInterface(
-      contractName
-    );
+    const contractInterface =
+      await ContractMetadata.getContractInterface(contractName);
     const hex = contractInterface.encodeFunctionData(functionName, data);
     return { bytes: ethers.utils.arrayify(hex), hex };
   }
@@ -249,17 +248,16 @@ export default abstract class Base {
   protected async decodeFunctionResult(
     contractName: string,
     functionName: string,
-    data: Uint8Array
+    data: Uint8Array,
   ) {
-    const contractInterface = await ContractMetadata.getContractInterface(
-      contractName
-    );
+    const contractInterface =
+      await ContractMetadata.getContractInterface(contractName);
     return contractInterface.decodeFunctionResult(functionName, data);
   }
 
   private getRoleInfo(role: Uint8Array) {
     const roleIndex = Object.values(dex.ROLES).findIndex(
-      (eachRole: Uint8Array) => role === eachRole
+      (eachRole: Uint8Array) => role === eachRole,
     );
     if (roleIndex !== -1) {
       const roleName = Object.keys(dex.ROLES)[roleIndex];

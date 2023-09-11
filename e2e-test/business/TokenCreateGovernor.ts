@@ -22,7 +22,7 @@ export default class TokenCreateGovernor extends Governor {
     client: Client = clientsInfo.operatorClient,
     description: string = this.DEFAULT_DESCRIPTION,
     link: string = this.DEFAULT_LINK,
-    nftTokenSerialId: number = this.DEFAULT_NFT_TOKEN_SERIAL_NO
+    nftTokenSerialId: number = this.DEFAULT_NFT_TOKEN_SERIAL_NO,
   ) => {
     const args = new ContractFunctionParameters()
       .addString(title)
@@ -37,29 +37,29 @@ export default class TokenCreateGovernor extends Governor {
       1_000_000,
       this.CREATE_PROPOSAL,
       client,
-      args
+      args,
     );
     const proposalId = result.getUint256(0).toFixed();
     console.log(
-      `- TokenCreateGovernor#${this.CREATE_PROPOSAL}(): proposal-id = ${proposalId}\n`
+      `- TokenCreateGovernor#${this.CREATE_PROPOSAL}(): proposal-id = ${proposalId}\n`,
     );
     return proposalId;
   };
 
   getTokenAddressFromGovernorTokenCreate = async (
     proposalId: string,
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
   ) => {
     const args = this.createParams(proposalId);
     const { result } = await this.execute(
       5_00_000,
       this.GET_TOKEN_ADDRESSES,
       client,
-      args
+      args,
     );
     const tokenAddress = result.getAddress(0);
     console.log(
-      `- TokenCreateGovernor#${this.GET_TOKEN_ADDRESSES}(): token-address = ${tokenAddress}\n`
+      `- TokenCreateGovernor#${this.GET_TOKEN_ADDRESSES}(): token-address = ${tokenAddress}\n`,
     );
     return TokenId.fromSolidityAddress(tokenAddress);
   };
@@ -67,7 +67,7 @@ export default class TokenCreateGovernor extends Governor {
   async mintToken(
     proposalId: string,
     amount: BigNumber,
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
   ) {
     const args = new ContractFunctionParameters()
       .addUint256(BigNumber(proposalId))
@@ -77,12 +77,12 @@ export default class TokenCreateGovernor extends Governor {
       3000000,
       this.MINT_TOKEN,
       client,
-      args
+      args,
     );
 
     const newTokenSupply = result.getInt64(0).toFixed();
     console.log(
-      `- TokenCreateGovernor#${this.MINT_TOKEN}(): new token supply = ${newTokenSupply}\n`
+      `- TokenCreateGovernor#${this.MINT_TOKEN}(): new token supply = ${newTokenSupply}\n`,
     );
 
     return newTokenSupply;
@@ -91,7 +91,7 @@ export default class TokenCreateGovernor extends Governor {
   async burnToken(
     proposalId: string,
     amount: BigNumber,
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
   ) {
     const args = new ContractFunctionParameters()
       .addUint256(BigNumber(proposalId))
@@ -101,12 +101,12 @@ export default class TokenCreateGovernor extends Governor {
       3000000,
       this.BURN_TOKEN,
       client,
-      args
+      args,
     );
 
     const newTokenSupply = result.getInt64(0).toFixed();
     console.log(
-      `- TokenCreateGovernor#${this.BURN_TOKEN}(): new token supply = ${newTokenSupply}\n`
+      `- TokenCreateGovernor#${this.BURN_TOKEN}(): new token supply = ${newTokenSupply}\n`,
     );
 
     return newTokenSupply;
@@ -116,7 +116,7 @@ export default class TokenCreateGovernor extends Governor {
     proposalId: string,
     to: string,
     amount: BigNumber,
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
   ) {
     const args = new ContractFunctionParameters()
       .addUint256(BigNumber(proposalId))
@@ -128,11 +128,11 @@ export default class TokenCreateGovernor extends Governor {
       this.TRANSFER_TOKEN,
       client,
       args,
-      clientsInfo.treasureKey
+      clientsInfo.treasureKey,
     );
 
     console.log(
-      `- TokenCreateGovernor#${this.TRANSFER_TOKEN}(): token transfer tx status = ${receipt.status}\n`
+      `- TokenCreateGovernor#${this.TRANSFER_TOKEN}(): token transfer tx status = ${receipt.status}\n`,
     );
   }
 }

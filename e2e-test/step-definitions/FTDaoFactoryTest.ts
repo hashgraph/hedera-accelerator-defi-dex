@@ -65,16 +65,16 @@ export class FTDaoFactoryTest extends CommonSteps {
     ftDaoFactory = new FTDAOFactory();
     await ftDaoFactory.initialize(
       clientsInfo.operatorClient,
-      ftTokenHolderFactory
+      ftTokenHolderFactory,
     );
 
     console.log(
-      "*******************Starting dao governor transfer token test with following credentials*******************"
+      "*******************Starting dao governor transfer token test with following credentials*******************",
     );
     console.log("FTDAOFactory contract-id:", ftDaoFactory.contractId);
     console.log(
       "FTHolderFactory contract-id:",
-      ftTokenHolderFactory.contractId
+      ftTokenHolderFactory.contractId,
     );
     console.log("Sender Id :", senderAccountId.toString());
     console.log("Receiver Id :", receiverAccountId.toString());
@@ -85,7 +85,7 @@ export class FTDaoFactoryTest extends CommonSteps {
   @when(
     /User create a DAO with name "([^"]*)" and url "([^"]*)"/,
     undefined,
-    70000
+    70000,
   )
   public async createDAO(daoName: string, daoURL: string) {
     const isDaoNameBlank = daoName.trim().length === 0;
@@ -101,12 +101,12 @@ export class FTDaoFactoryTest extends CommonSteps {
         CommonSteps.DEFAULT_VOTING_PERIOD,
         false,
         DAO_ADMIN_ADDRESS,
-        DAO_ADMIN_CLIENT
+        DAO_ADMIN_CLIENT,
       );
       await this.initDAOContext();
     } catch (e: any) {
       console.log(
-        `FTDao#createDAO(): dao-name = ${daoName}, isNameBlank = ${isDaoNameBlank}`
+        `FTDao#createDAO(): dao-name = ${daoName}, isNameBlank = ${isDaoNameBlank}`,
       );
       if (isDaoNameBlank) errorMessage = e.message;
       else throw e;
@@ -121,12 +121,12 @@ export class FTDaoFactoryTest extends CommonSteps {
   @when(
     /User create token association proposal with title "([^"]*)", description "([^"]*)", link "([^"]*)"/,
     undefined,
-    30000
+    30000,
   )
   public async createTokenAssociateProposal(
     title: string,
     description: string,
-    link: string
+    link: string,
   ): Promise<void> {
     proposalId = await governor.createTokenAssociateProposal(
       title,
@@ -134,24 +134,24 @@ export class FTDaoFactoryTest extends CommonSteps {
       DAO_ADMIN_CLIENT,
       description,
       link,
-      governor.DEFAULT_NFT_TOKEN_SERIAL_NO
+      governor.DEFAULT_NFT_TOKEN_SERIAL_NO,
     );
   }
 
   @when(
     /User create token transfer proposal with title "([^"]*)" description "([^"]*)" link "([^"]*)" and token amount (\d*)/,
     undefined,
-    30000
+    30000,
   )
   public async createProposal(
     title: string,
     description: string,
     link: string,
-    tokenAmount: number
+    tokenAmount: number,
   ): Promise<void> {
     try {
       tokenTransferAmount = new BigNumber(
-        tokenAmount * CommonSteps.withPrecision
+        tokenAmount * CommonSteps.withPrecision,
       );
       proposalId = await governor.createTokenTransferProposal(
         title,
@@ -161,7 +161,7 @@ export class FTDaoFactoryTest extends CommonSteps {
         DAO_ADMIN_CLIENT,
         governor.DEFAULT_NFT_TOKEN_SERIAL_NO,
         description,
-        link
+        link,
       );
     } catch (e: any) {
       errorMessage = e.message;
@@ -174,7 +174,7 @@ export class FTDaoFactoryTest extends CommonSteps {
       governor,
       proposalId,
       voterClient,
-      proposalState
+      proposalState,
     );
     expect(Number(currentState)).to.eql(proposalStateNumeric);
   }
@@ -191,7 +191,7 @@ export class FTDaoFactoryTest extends CommonSteps {
         governor,
         title,
         clientsInfo.treasureKey, // TODO: not needed
-        feePayerClient
+        feePayerClient,
       );
     } catch (e: any) {
       errorMessage = e.message;
@@ -206,14 +206,14 @@ export class FTDaoFactoryTest extends CommonSteps {
   @when(
     /User setup the default allowance for GTT proposal creation/,
     undefined,
-    30000
+    30000,
   )
   public async setAllowanceForProposalCreation() {
     await this.setupAllowanceForProposalCreation(
       governor,
       proposalCreatorClient,
       proposalCreatorAccountId,
-      proposalCreatorAccountPK
+      proposalCreatorAccountPK,
     );
   }
 
@@ -226,7 +226,7 @@ export class FTDaoFactoryTest extends CommonSteps {
       governor.contractId,
       proposalCreatorAccountId,
       proposalCreatorAccountPK,
-      proposalCreatorClient
+      proposalCreatorClient,
     );
   }
 
@@ -234,7 +234,7 @@ export class FTDaoFactoryTest extends CommonSteps {
   public async getTokenBalanceFromContract() {
     contractBalanceBeforeTransfer = await Common.getTokenBalance(
       ContractId.fromString(governor.contractId),
-      TRANSFER_TOKEN_ID
+      TRANSFER_TOKEN_ID,
     );
   }
 
@@ -242,7 +242,7 @@ export class FTDaoFactoryTest extends CommonSteps {
   public async getTokenBalanceFromReceiverAccount() {
     receiverBalanceBeforeTransfer = await Common.getTokenBalance(
       receiverAccountId,
-      TRANSFER_TOKEN_ID
+      TRANSFER_TOKEN_ID,
     );
   }
 
@@ -250,29 +250,29 @@ export class FTDaoFactoryTest extends CommonSteps {
   public async verifyTokenBalance() {
     const contractBalanceAfterTransfer = await Common.getTokenBalance(
       ContractId.fromString(governor.contractId),
-      TRANSFER_TOKEN_ID
+      TRANSFER_TOKEN_ID,
     );
     expect(
       contractBalanceAfterTransfer
         .plus(tokenTransferAmount)
-        .isEqualTo(contractBalanceBeforeTransfer)
+        .isEqualTo(contractBalanceBeforeTransfer),
     ).equals(true);
   }
 
   @then(
     /User verify token is transferred to receiver account/,
     undefined,
-    30000
+    30000,
   )
   public async verifyTokenBalanceInReceiverAccount() {
     const receiverBalanceAfterTransfer = await Common.getTokenBalance(
       receiverAccountId,
-      TRANSFER_TOKEN_ID
+      TRANSFER_TOKEN_ID,
     );
     expect(
       receiverBalanceBeforeTransfer
         .plus(tokenTransferAmount)
-        .isEqualTo(receiverBalanceAfterTransfer)
+        .isEqualTo(receiverBalanceAfterTransfer),
     ).equals(true);
   }
 
@@ -280,7 +280,7 @@ export class FTDaoFactoryTest extends CommonSteps {
   public async getLockedTokensFromGTT() {
     const transferTokenInGTT = await Common.getTokenBalance(
       ContractId.fromString(governor.contractId),
-      TRANSFER_TOKEN_ID
+      TRANSFER_TOKEN_ID,
     );
     if (transferTokenInGTT.isGreaterThan(0)) {
       await Common.transferAssets(
@@ -289,7 +289,7 @@ export class FTDaoFactoryTest extends CommonSteps {
         senderAccountId,
         AccountId.fromString(governor.contractId),
         clientsInfo.operatorKey,
-        feePayerClient
+        feePayerClient,
       );
     }
   }
@@ -302,14 +302,14 @@ export class FTDaoFactoryTest extends CommonSteps {
       AccountId.fromString(governor.contractId),
       senderAccountId,
       senderAccountPK,
-      feePayerClient
+      feePayerClient,
     );
   }
 
   @when(
     /User wait for the proposal state to be "([^"]*)" for max (\d*) seconds/,
     undefined,
-    60000
+    60000,
   )
   public async waitForState(state: string, seconds: number) {
     await this.waitForProposalState(governor, state, proposalId, seconds);
@@ -321,7 +321,7 @@ export class FTDaoFactoryTest extends CommonSteps {
       receiverAccountId,
       [TRANSFER_TOKEN_ID],
       feePayerClient,
-      receiverAccountPK
+      receiverAccountPK,
     );
   }
 
@@ -333,7 +333,7 @@ export class FTDaoFactoryTest extends CommonSteps {
       amount * CommonSteps.withPrecision,
       voterAccountId,
       voterAccountPK,
-      voterClient
+      voterClient,
     );
   }
 
@@ -347,7 +347,7 @@ export class FTDaoFactoryTest extends CommonSteps {
   public async verifyLockedTokensAmountInHolderContract() {
     const voterBalance = await ftHolder.balanceOfVoter(
       voterAccountId,
-      voterClient
+      voterClient,
     );
     expect(voterBalance).equals(tokenLockedAmount);
   }
@@ -360,7 +360,7 @@ export class FTDaoFactoryTest extends CommonSteps {
       AccountId.fromString(ftHolder.contractId),
       clientsInfo.operatorKey,
       GOD_TOKEN_ID,
-      feePayerClient
+      feePayerClient,
     );
   }
 

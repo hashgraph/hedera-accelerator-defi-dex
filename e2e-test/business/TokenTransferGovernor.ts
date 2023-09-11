@@ -19,7 +19,7 @@ export default class TokenTransferGovernor extends Governor {
     client: Client = clientsInfo.operatorClient,
     nftTokenSerialId: number = this.DEFAULT_NFT_TOKEN_SERIAL_NO,
     description: string = this.DEFAULT_DESCRIPTION,
-    link: string = this.DEFAULT_LINK
+    link: string = this.DEFAULT_LINK,
   ) => {
     const args = new ContractFunctionParameters()
       .addString(title)
@@ -34,11 +34,11 @@ export default class TokenTransferGovernor extends Governor {
       1_000_000,
       this.CREATE_PROPOSAL,
       client,
-      args
+      args,
     );
     const proposalId = result.getUint256(0).toFixed();
     console.log(
-      `- TokenTransferGovernor#${this.CREATE_PROPOSAL}(): proposal-id = ${proposalId}\n`
+      `- TokenTransferGovernor#${this.CREATE_PROPOSAL}(): proposal-id = ${proposalId}\n`,
     );
     return proposalId;
   };
@@ -49,7 +49,7 @@ export default class TokenTransferGovernor extends Governor {
     client: Client = clientsInfo.operatorClient,
     description: string = this.DEFAULT_DESCRIPTION,
     link: string = this.DEFAULT_LINK,
-    nftTokenSerialId: number = this.DEFAULT_NFT_TOKEN_SERIAL_NO
+    nftTokenSerialId: number = this.DEFAULT_NFT_TOKEN_SERIAL_NO,
   ) => {
     const args = new ContractFunctionParameters()
       .addString(title)
@@ -61,11 +61,11 @@ export default class TokenTransferGovernor extends Governor {
       1_000_000,
       CREATE_TOKEN_ASSOCIATE_PROPOSAL,
       client,
-      args
+      args,
     );
     const proposalId = result.getUint256(0).toFixed();
     console.log(
-      `- TokenTransferGovernor#${CREATE_TOKEN_ASSOCIATE_PROPOSAL}(): proposal-id = ${proposalId}\n`
+      `- TokenTransferGovernor#${CREATE_TOKEN_ASSOCIATE_PROPOSAL}(): proposal-id = ${proposalId}\n`,
     );
     return proposalId;
   };

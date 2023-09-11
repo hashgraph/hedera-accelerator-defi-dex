@@ -29,7 +29,7 @@ const createPair = async (
   factory: Factory,
   token0: TokenId,
   token1: TokenId,
-  fee: BigNumber
+  fee: BigNumber,
 ) => {
   const feeCollectionAccountId = clientsInfo.operatorId;
 
@@ -39,7 +39,7 @@ const createPair = async (
     feeCollectionAccountId,
     clientsInfo.uiUserKey,
     clientsInfo.uiUserClient,
-    fee
+    fee,
   );
 };
 
@@ -89,25 +89,25 @@ export async function main() {
   await nftTokenHolderFactory.initialize();
 
   const godHolderContractId = await godTokenHolderFactory.getTokenHolder(
-    tokenGOD.toSolidityAddress()
+    tokenGOD.toSolidityAddress(),
   );
   const godHolder = new GodHolder(godHolderContractId);
   await godTokenHolderFactory.getTokenHolder(
-    dex.TOKEN_LAB49_1_ID.toSolidityAddress()
+    dex.TOKEN_LAB49_1_ID.toSolidityAddress(),
   );
   await godTokenHolderFactory.getTokenHolder(
-    dex.GOVERNANCE_DAO_ONE_TOKEN_ID.toSolidityAddress()
+    dex.GOVERNANCE_DAO_ONE_TOKEN_ID.toSolidityAddress(),
   );
   await nftTokenHolderFactory.getTokenHolder(tokenNFT.toSolidityAddress());
 
   await new MultiSigDAOFactory().initialize();
   await new FTDAOFactory().initialize(
     clientsInfo.operatorClient,
-    godTokenHolderFactory
+    godTokenHolderFactory,
   );
   await new NFTDAOFactory().initialize(
     clientsInfo.operatorClient,
-    nftTokenHolderFactory
+    nftTokenHolderFactory,
   );
 
   await new TokenTransferGovernor().initialize(godHolder);

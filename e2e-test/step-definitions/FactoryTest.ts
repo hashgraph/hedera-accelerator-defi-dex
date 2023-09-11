@@ -15,10 +15,10 @@ const HBAR = "HBAR";
 
 const contractService = new ContractService();
 const baseContract = contractService.getContract(
-  contractService.hederaServiceContractName
+  contractService.hederaServiceContractName,
 );
 const factoryContractId = contractService.getContractWithProxy(
-  contractService.factoryContractName
+  contractService.factoryContractName,
 ).transparentProxyId!;
 const baseContractAddress = baseContract.address;
 const {
@@ -63,7 +63,7 @@ export class FactorySteps {
   @given(/User have setup the factory/, undefined, 30000)
   public async setUpFactory(): Promise<void> {
     console.log(
-      "*******************Starting factory test with following credentials*******************"
+      "*******************Starting factory test with following credentials*******************",
     );
     console.log("Factory contractId : ", factoryContractId);
     console.log("H address : ", baseContractAddress);
@@ -77,26 +77,26 @@ export class FactorySteps {
   @when(
     /User create a new pair of tokens with name "([^"]*)" and "([^"]*)" and with fee as (-?\d+\.\d+)%/,
     undefined,
-    60000
+    60000,
   )
   public async createNewPair(
     firstToken: string,
     secondToken: string,
-    fee: number
+    fee: number,
   ): Promise<void> {
     tokenOne = await Common.createToken(
       firstToken,
       firstToken,
       id,
       key,
-      client
+      client,
     );
     tokenTwo = await Common.createToken(
       secondToken,
       secondToken,
       id,
       key,
-      client
+      client,
     );
     fees = new BigNumber(fee * 100);
     actualPairAddress = await factory.createPair(
@@ -105,7 +105,7 @@ export class FactorySteps {
       id,
       key,
       client,
-      fees
+      fees,
     );
     tokenNameIdMap.set(firstToken, tokenOne);
     tokenNameIdMap.set(secondToken, tokenTwo);
@@ -116,14 +116,14 @@ export class FactorySteps {
   @then(
     /User verify address of pair is same to address received after pair creation/,
     undefined,
-    30000
+    30000,
   )
   public async getPair(): Promise<void> {
     expectedPairAddress = await factory.getPair(
       tokenOne,
       tokenTwo,
       fees,
-      client
+      client,
     );
     expect(actualPairAddress).to.eql(expectedPairAddress);
   }
@@ -146,7 +146,7 @@ export class FactorySteps {
       tokenTwo,
       id,
       key,
-      client
+      client,
     );
   }
 
@@ -159,7 +159,7 @@ export class FactorySteps {
   @then(/User verifies their address are different/, undefined, 30000)
   public async verifyAddressOfPairWithSameToken(): Promise<void> {
     expect(tokenOne.toSolidityAddress()).not.to.eql(
-      tokenTwo.toSolidityAddress()
+      tokenTwo.toSolidityAddress(),
     );
   }
 
@@ -172,7 +172,7 @@ export class FactorySteps {
   @then(
     /User receives fails message "([^"]*)" on creating pair with same token/,
     undefined,
-    30000
+    30000,
   )
   public async userVerifyErrorMessage(msg: string): Promise<void> {
     try {
@@ -190,7 +190,7 @@ export class FactorySteps {
       tokenHBARX,
       treasureId,
       treasureKey,
-      client
+      client,
     );
     tokenNameIdMap.set(tokenName, tokenOne);
     tokenNameIdMap.set("HBAR", tokenHBARX);
@@ -210,7 +210,7 @@ export class FactorySteps {
       tokenOne,
       treasureId,
       treasureKey,
-      client
+      client,
     );
     tokenNameIdMap.set(tokenName, tokenOne);
     tokenNameIdMap.set("HBAR", tokenHBARX);
@@ -225,11 +225,11 @@ export class FactorySteps {
   @when(
     /User verifies the order of addresses for created pair "([^"]*)" and "([^"]*)"/,
     undefined,
-    70000
+    70000,
   )
   public async verifyPairOrderOfHbarAndTokenA(
     tokenAName: string,
-    tokenBName: string
+    tokenBName: string,
   ): Promise<void> {
     if (tokenAName === "HBAR") {
       tokenNameIdMap.set("HBAR", tokenHBARX);
@@ -266,20 +266,20 @@ export class FactorySteps {
       clientsInfo.operatorId,
       [TokenId.fromSolidityAddress(pairAdd.lpTokenAddress)],
       clientsInfo.operatorClient,
-      clientsInfo.operatorKey
+      clientsInfo.operatorKey,
     );
   }
 
   @when(
     /User adds (\d+\.?\d*) units of "([^"]*)" and (\d+\.?\d*) units of "([^"]*)" token/,
     undefined,
-    30000
+    30000,
   )
   public async addLiquidityInPool(
     tokenACount: number,
     firstTokenName: string,
     tokenBCount: number,
-    secondTokenName: string
+    secondTokenName: string,
   ): Promise<void> {
     tokenOne = tokenNameIdMap.get(firstTokenName);
     const tokensBeforeFetched = await pair.getPairQty(client);
@@ -297,18 +297,18 @@ export class FactorySteps {
       tokenHBARX,
       tokenBCount,
       precision,
-      client
+      client,
     );
   }
 
   @then(
     /HBAR and Factory9 balances in the pool are (\d+\.?\d*) units and (\d+\.?\d*) units respectively/,
     undefined,
-    30000
+    30000,
   )
   public async verifyTokensInPool(
     tokenACount: number,
-    tokenBCount: number
+    tokenBCount: number,
   ): Promise<void> {
     const tokenAQty = Common.withPrecision(tokenACount, precision);
     const tokenBQty = Common.withPrecision(tokenBCount, precision);
@@ -327,7 +327,7 @@ export class FactorySteps {
 
   @when(/User gives (\d+\.?\d*) units of lptoken to pool/, undefined, 30000)
   public async returnLPTokensAndRemoveLiquidity(
-    lpTokenCount: number
+    lpTokenCount: number,
   ): Promise<void> {
     tokensBefore = await pair.getPairQty(client);
 
@@ -338,52 +338,52 @@ export class FactorySteps {
   @then(
     /User verifies (\d+\.?\d*) units of HBAR and (\d+\.?\d*) units of Factory9 are left in pool/,
     undefined,
-    30000
+    30000,
   )
   public async verifyTokensLeftInPoolAfterRemovingLiquidity(
     tokenAQuantity: Number,
-    tokenBQuantity: Number
+    tokenBQuantity: Number,
   ): Promise<void> {
     tokensAfter = await pair.getPairQty(client);
     const withPrecision = Common.withPrecision(1, precision);
     expect(Number(tokensAfter[0].dividedBy(withPrecision))).to.eql(
-      Number(tokenAQuantity)
+      Number(tokenAQuantity),
     );
     expect(Number(tokensAfter[1].dividedBy(withPrecision))).to.eql(
-      Number(tokenBQuantity)
+      Number(tokenBQuantity),
     );
   }
 
   @given(
     /Factory9 and HBAR are present in pool with quantity (\d+\.?\d*) units and (\d+\.?\d*) units respectively/,
     undefined,
-    30000
+    30000,
   )
   public async tokensArePresent(tokenOneQty: number, tokenTwoQty: number) {
     const tokensQty = await pair.getPairQty(client);
     const withPrecision = Common.withPrecision(1, precision);
     expect(Number(tokensQty[1].dividedBy(withPrecision))).to.eql(
-      Number(tokenOneQty)
+      Number(tokenOneQty),
     );
     expect(Number(tokensQty[0].dividedBy(withPrecision))).to.eql(
-      Number(tokenTwoQty)
+      Number(tokenTwoQty),
     );
   }
 
   @when(
     /User make swap of (\d+\.?\d*) unit of "([^"]*)" token with another token in pair with slippage as (\d+\.?\d*)/,
     undefined,
-    30000
+    30000,
   )
   public async swapToken(
     tokenCount: number,
     tokenName: string,
-    slippage: number
+    slippage: number,
   ): Promise<void> {
     tokensBefore = await pair.getPairQty(client);
     const tokenToSwap = tokenNameIdMap.get(tokenName);
     const slippageVal = new BigNumber(slippage).multipliedBy(
-      precision.div(100)
+      precision.div(100),
     );
     await pair.swapToken(
       tokenToSwap,
@@ -392,37 +392,37 @@ export class FactorySteps {
       key,
       precision,
       slippageVal,
-      client
+      client,
     );
   }
 
   @then(
     /HBAR token quantity is (\d+\.?\d*) and Factory9 quantity is (\d+\.?\d*) in pool/,
     undefined,
-    30000
+    30000,
   )
   public async verifyTokenAQtyIncreasedAndTokenBQtyDecreased(
     tokenAQuantity: BigNumber,
-    tokenBQuantity: BigNumber
+    tokenBQuantity: BigNumber,
   ): Promise<void> {
     tokensAfter = await pair.getPairQty(client);
 
     const withPrecision = Common.withPrecision(1, precision);
     expect(Number(tokensAfter[0].dividedBy(withPrecision))).to.eql(
-      Number(tokenAQuantity)
+      Number(tokenAQuantity),
     );
     expect(Number(tokensAfter[1].dividedBy(withPrecision))).to.eql(
-      Number(tokenBQuantity)
+      Number(tokenBQuantity),
     );
   }
 
   @then(
     /User receives message "([^"]*)" on creating pair with two HBAR tokens/,
     undefined,
-    30000
+    30000,
   )
   public async verifyErrorMessageOnPairCreationWithTwoHBAR(
-    msg: string
+    msg: string,
   ): Promise<void> {
     try {
       await factory.createPair(tokenHBARX, tokenHBARX, id, key, client);
@@ -440,19 +440,19 @@ export class FactorySteps {
   @then(
     /Expected quantity of Factory9 token should be (\d+\.?\d*)/,
     undefined,
-    30000
+    30000,
   )
   public async verifyTokenAQty(expectedTokenAQty: string) {
     const withPrecision = Common.withPrecision(1, precision);
     expect(Number(tokenAQty.dividedBy(withPrecision))).to.eql(
-      Number(expectedTokenAQty)
+      Number(expectedTokenAQty),
     );
   }
 
   @when(
     /User gives (\d+\.?\d*) units of Factory9 to calculate slippage out/,
     undefined,
-    30000
+    30000,
   )
   public async calculateSlippageOut(tokenACount: number) {
     const tokenAQty = Common.withPrecision(tokenACount, precision);
@@ -467,7 +467,7 @@ export class FactorySteps {
   @when(
     /User gives (\d+\.?\d*) units of HBAR to calculate slippage in/,
     undefined,
-    30000
+    30000,
   )
   public async calculateSlippageIn(tokenHBARCount: number) {
     const tokenBQty = Common.withPrecision(tokenHBARCount, precision);
@@ -482,11 +482,11 @@ export class FactorySteps {
   @then(
     /User verifies balance of "([^"]*)" token from contract is (\d+\.?\d*)/,
     undefined,
-    30000
+    30000,
   )
   public async fetchTokenBalanceFromContract(
     tokenName: string,
-    tokenQty: number
+    tokenQty: number,
   ) {
     console.log("--fetchTokenBalanceFromContract--", tokenName, tokenQty);
     const tokenId = tokenNameIdMap.get(tokenName);
@@ -500,12 +500,12 @@ export class FactorySteps {
   @when(
     /User create a new pair with tokens "([^"]*)" and "([^"]*)" and with fee as (-?\d+\.\d+)%/,
     undefined,
-    30000
+    30000,
   )
   public async createPairWithExistingTokens(
     firstTokenName: string,
     secondTokenName: string,
-    feeAmt: number
+    feeAmt: number,
   ) {
     const tokenOne = tokenNameIdMap.get(firstTokenName);
     const tokenTwo = tokenNameIdMap.get(secondTokenName);
@@ -517,7 +517,7 @@ export class FactorySteps {
         id,
         key,
         client,
-        fees
+        fees,
       );
     } catch (e: any) {
       errorMsg = e.message;
@@ -527,12 +527,12 @@ export class FactorySteps {
   @when(
     /User create pair with tokens "([^"]*)" and "([^"]*)" and with fee as (\d+\.?\d*)%/,
     undefined,
-    30000
+    30000,
   )
   public async createPairWithSameTokenAndSameFee(
     firstTokenName: string,
     secondTokenName: string,
-    feeAmt: number
+    feeAmt: number,
   ) {
     const tokenOne = tokenNameIdMap.get(firstTokenName);
     const tokenTwo = tokenNameIdMap.get(secondTokenName);
@@ -543,12 +543,12 @@ export class FactorySteps {
       id,
       key,
       client,
-      fees
+      fees,
     );
   }
 
   @then(
-    /User verify address received is same as of already created pair address/
+    /User verify address received is same as of already created pair address/,
   )
   public async verifyAddressIsSame() {
     expect(actualPairAddress).to.eql(pairWithSameTokenAndFeeAddress);
@@ -574,7 +574,7 @@ export class FactorySteps {
   @when(
     /User sets allowance amount as (\d+\.?\d*) for token "([^"]*)"/,
     undefined,
-    30000
+    30000,
   )
   public async setAllowanceForToken(allowanceAmt: number, tokenName: string) {
     const tokenId = tokenNameIdMap.get(tokenName);
@@ -589,7 +589,7 @@ export class FactorySteps {
       allowanceAmt * CommonSteps.withPrecision,
       id,
       key,
-      client
+      client,
     );
   }
 }

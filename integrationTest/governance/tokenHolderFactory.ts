@@ -13,13 +13,13 @@ const NFT_TOKEN_ID = dex.NFT_TOKEN_ID;
 
 async function executeTokensHolderFlow(
   factory: FTTokenHolderFactory | NFTTokenHolderFactory,
-  tokens: TokenId[]
+  tokens: TokenId[],
 ) {
   await factory.initialize();
   for (const token of tokens) {
     await factory.getTokenHolder(
       token.toSolidityAddress(),
-      clientsInfo.operatorClient
+      clientsInfo.operatorClient,
     );
   }
   await factory.getTokenHolders();

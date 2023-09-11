@@ -66,16 +66,16 @@ export class NFTDaoFactoryTest extends CommonSteps {
     nftDaoFactory = new NFTDAOFactory();
     await nftDaoFactory.initialize(
       clientsInfo.operatorClient,
-      nftTokenHolderFactory
+      nftTokenHolderFactory,
     );
 
     console.log(
-      "*******************Starting nft dao governor test with following credentials*******************"
+      "*******************Starting nft dao governor test with following credentials*******************",
     );
     console.log("NFTDAOFactory contract-id:", nftDaoFactory.contractId);
     console.log(
       "NFTHolderFactory contract-id:",
-      nftTokenHolderFactory.contractId
+      nftTokenHolderFactory.contractId,
     );
     console.log("Sender Id :", senderAccountId.toString());
     console.log("Receiver Id :", receiverAccountId.toString());
@@ -86,7 +86,7 @@ export class NFTDaoFactoryTest extends CommonSteps {
   @when(
     /User create a NFT DAO with name "([^"]*)" and url "([^"]*)"/,
     undefined,
-    70000
+    70000,
   )
   public async createDAO(daoName: string, daoURL: string) {
     const isDaoNameBlank = daoName.trim().length === 0;
@@ -102,12 +102,12 @@ export class NFTDaoFactoryTest extends CommonSteps {
         CommonSteps.DEFAULT_VOTING_PERIOD,
         false,
         DAO_ADMIN_ADDRESS,
-        DAO_ADMIN_CLIENT
+        DAO_ADMIN_CLIENT,
       );
       await this.initDAOContext();
     } catch (e: any) {
       console.log(
-        `NFTDao#createDAO(): dao-name = ${daoName}, isNameBlank = ${isDaoNameBlank}`
+        `NFTDao#createDAO(): dao-name = ${daoName}, isNameBlank = ${isDaoNameBlank}`,
       );
       if (isDaoNameBlank) errorMessage = e.message;
       else throw e;
@@ -117,7 +117,7 @@ export class NFTDaoFactoryTest extends CommonSteps {
   @then(
     /User verify that created NFT DAO address is available/,
     undefined,
-    30000
+    30000,
   )
   public async verifyDAOAddressIsAvailable() {
     expect(ethers.utils.isAddress(daoAddress)).equals(true);
@@ -126,7 +126,7 @@ export class NFTDaoFactoryTest extends CommonSteps {
   @when(
     /User creates the token association proposal with title "([^"]*)"/,
     undefined,
-    30000
+    30000,
   )
   public async createTokenAssociateProposal(title: string): Promise<void> {
     proposalId = await governor.createTokenAssociateProposal(
@@ -135,24 +135,24 @@ export class NFTDaoFactoryTest extends CommonSteps {
       DAO_ADMIN_CLIENT,
       governor.DEFAULT_DESCRIPTION,
       governor.DEFAULT_LINK,
-      governor.DEFAULT_NFT_TOKEN_SERIAL_NO
+      governor.DEFAULT_NFT_TOKEN_SERIAL_NO,
     );
   }
 
   @when(
     /User creates token transfer proposal with title "([^"]*)" description "([^"]*)" link "([^"]*)" and token amount (\d*)/,
     undefined,
-    30000
+    30000,
   )
   public async createProposal(
     title: string,
     description: string,
     link: string,
-    tokenAmount: number
+    tokenAmount: number,
   ): Promise<void> {
     try {
       tokenTransferAmount = new BigNumber(
-        tokenAmount * CommonSteps.withPrecision
+        tokenAmount * CommonSteps.withPrecision,
       );
       proposalId = await governor.createTokenTransferProposal(
         title,
@@ -162,7 +162,7 @@ export class NFTDaoFactoryTest extends CommonSteps {
         DAO_ADMIN_CLIENT,
         governor.DEFAULT_NFT_TOKEN_SERIAL_NO,
         description,
-        link
+        link,
       );
     } catch (e: any) {
       errorMessage = e.message;
@@ -175,7 +175,7 @@ export class NFTDaoFactoryTest extends CommonSteps {
       governor,
       proposalId,
       voterClient,
-      proposalState
+      proposalState,
     );
     expect(Number(currentState)).to.eql(proposalStateNumeric);
   }
@@ -192,7 +192,7 @@ export class NFTDaoFactoryTest extends CommonSteps {
         governor,
         title,
         clientsInfo.treasureKey, // TODO: not needed
-        feePayerClient
+        feePayerClient,
       );
     } catch (e: any) {
       errorMessage = e.message;
@@ -210,7 +210,7 @@ export class NFTDaoFactoryTest extends CommonSteps {
       governor,
       proposalCreatorClient,
       proposalCreatorAccountId,
-      proposalCreatorAccountPK
+      proposalCreatorAccountPK,
     );
   }
 
@@ -221,7 +221,7 @@ export class NFTDaoFactoryTest extends CommonSteps {
   public async getTokenBalanceFromContract() {
     contractBalanceBeforeTransfer = await Common.getTokenBalance(
       ContractId.fromString(governor.contractId),
-      TRANSFER_TOKEN_ID
+      TRANSFER_TOKEN_ID,
     );
   }
 
@@ -229,41 +229,41 @@ export class NFTDaoFactoryTest extends CommonSteps {
   public async getTokenBalanceFromReceiverAccount() {
     receiverBalanceBeforeTransfer = await Common.getTokenBalance(
       receiverAccountId,
-      TRANSFER_TOKEN_ID
+      TRANSFER_TOKEN_ID,
     );
   }
 
   @then(
     /User verify proposed token amount is transferred from GTT contract/,
     undefined,
-    30000
+    30000,
   )
   public async verifyTokenBalance() {
     const contractBalanceAfterTransfer = await Common.getTokenBalance(
       ContractId.fromString(governor.contractId),
-      TRANSFER_TOKEN_ID
+      TRANSFER_TOKEN_ID,
     );
     expect(
       contractBalanceAfterTransfer
         .plus(tokenTransferAmount)
-        .isEqualTo(contractBalanceBeforeTransfer)
+        .isEqualTo(contractBalanceBeforeTransfer),
     ).equals(true);
   }
 
   @then(
     /User verify proposed token amount is transferred to receiver account/,
     undefined,
-    30000
+    30000,
   )
   public async verifyTokenBalanceInReceiverAccount() {
     const receiverBalanceAfterTransfer = await Common.getTokenBalance(
       receiverAccountId,
-      TRANSFER_TOKEN_ID
+      TRANSFER_TOKEN_ID,
     );
     expect(
       receiverBalanceBeforeTransfer
         .plus(tokenTransferAmount)
-        .isEqualTo(receiverBalanceAfterTransfer)
+        .isEqualTo(receiverBalanceAfterTransfer),
     ).equals(true);
   }
 
@@ -275,14 +275,14 @@ export class NFTDaoFactoryTest extends CommonSteps {
       AccountId.fromString(governor.contractId),
       senderAccountId,
       senderAccountPK,
-      feePayerClient
+      feePayerClient,
     );
   }
 
   @when(
     /User waits for the proposal state to be "([^"]*)" for max (\d*) seconds/,
     undefined,
-    60000
+    60000,
   )
   public async waitForState(state: string, seconds: number) {
     await this.waitForProposalState(governor, state, proposalId, seconds);
@@ -294,14 +294,14 @@ export class NFTDaoFactoryTest extends CommonSteps {
       nftHolder,
       voterAccountId,
       voterAccountPK,
-      voterClient
+      voterClient,
     );
   }
 
   @when(
     /User lock nft-token serial no (\d+\.?\d*) for the voting/,
     undefined,
-    30000
+    30000,
   )
   public async lockNFTTokenForVoting(serialNo: number) {
     tokenLockedAmount = serialNo;
@@ -312,7 +312,7 @@ export class NFTDaoFactoryTest extends CommonSteps {
   public async verifyLockedTokensAmountInHolderContract() {
     const voterBalance = await nftHolder.balanceOfVoter(
       voterAccountId,
-      voterClient
+      voterClient,
     );
     expect(voterBalance).equals(1);
   }
@@ -323,14 +323,14 @@ export class NFTDaoFactoryTest extends CommonSteps {
       receiverAccountId,
       [TRANSFER_TOKEN_ID],
       feePayerClient,
-      receiverAccountPK
+      receiverAccountPK,
     );
   }
 
   @when(
     /User get the locked nft-token serial no back from holder/,
     undefined,
-    30000
+    30000,
   )
   public async revertGOD() {
     const evmAddress = await AddressHelper.idToEvmAddress(nftHolder.contractId);
@@ -340,7 +340,7 @@ export class NFTDaoFactoryTest extends CommonSteps {
       senderAccountId,
       NFT_TOKEN_ID,
       tokenLockedAmount,
-      feePayerClient
+      feePayerClient,
     );
   }
 
@@ -352,7 +352,7 @@ export class NFTDaoFactoryTest extends CommonSteps {
       governor.contractId,
       clientsInfo.operatorId,
       clientsInfo.operatorKey,
-      feePayerClient
+      feePayerClient,
     );
 
     // 2 - reset for token-holder
@@ -361,7 +361,7 @@ export class NFTDaoFactoryTest extends CommonSteps {
       nftHolder.contractId,
       clientsInfo.operatorId,
       clientsInfo.operatorKey,
-      feePayerClient
+      feePayerClient,
     );
   }
 
@@ -369,7 +369,7 @@ export class NFTDaoFactoryTest extends CommonSteps {
   public async getLockedTokensFromGTT() {
     const transferTokenInGTT = await Common.getTokenBalance(
       ContractId.fromString(governor.contractId),
-      TRANSFER_TOKEN_ID
+      TRANSFER_TOKEN_ID,
     );
     if (transferTokenInGTT.isGreaterThan(0)) {
       await Common.transferAssets(
@@ -378,7 +378,7 @@ export class NFTDaoFactoryTest extends CommonSteps {
         senderAccountId,
         AccountId.fromString(governor.contractId),
         clientsInfo.operatorKey,
-        feePayerClient
+        feePayerClient,
       );
     }
   }
