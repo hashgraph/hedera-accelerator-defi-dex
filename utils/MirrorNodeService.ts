@@ -1,4 +1,5 @@
-import Web3 from "web3";
+import web3EthAbi from "web3-eth-abi";
+import web3Utils from "web3-utils";
 import Long from "long";
 import axios from "axios";
 import ContractMetadata from "../utils/ContractMetadata";
@@ -10,7 +11,6 @@ import { AccountId, ContractId, TokenId, TransactionId } from "@hashgraph/sdk";
 const BASE_URL = "https://testnet.mirrornode.hedera.com";
 
 export class MirrorNodeService {
-  private web3 = new Web3();
   private isLogEnabled: boolean = false;
   private static mirrorNodeService = new MirrorNodeService();
 
@@ -97,7 +97,7 @@ export class MirrorNodeService {
     if (!message) {
       return { message: r.result, timestamp };
     }
-    if (message === "0x" || !this.web3.utils.isHex(message)) {
+    if (message === "0x" || web3Utils.isHex(message)) {
       const parsedMessage =
         await this.parseErrorMessageFromCallTraceIfAvailable(tId);
       const finalMessage = parsedMessage.length > 0 ? parsedMessage : message;
@@ -107,7 +107,7 @@ export class MirrorNodeService {
     const info = message.substring(10);
     const signatureMap = await new ContractMetadata().getSignatureToABIMap();
     const abi = signatureMap.get(signature);
-    const result = this.web3.eth.abi.decodeParameters(abi.inputs, info);
+    const result = web3EthAbi.decodeParameters(abi.inputs, info);
     return { message: result[0], timestamp };
   }
 
@@ -145,7 +145,7 @@ export class MirrorNodeService {
         const topics = log.topics.map(this.toHex);
         const eventAbi = signatureMap.get(topics[0]);
         if (eventAbi) {
-          const event = this.web3.eth.abi.decodeLog(
+          const event = web3EthAbi.decodeLog(
             eventAbi.inputs,
             data,
             eventAbi.anonymous === false ? topics.splice(1) : topics,
