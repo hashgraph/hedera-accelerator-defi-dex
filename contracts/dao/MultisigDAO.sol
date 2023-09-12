@@ -296,9 +296,9 @@ contract MultiSigDAO is IEvents, BaseDAO {
         return (creator, text);
     }
 
-    function _beforeUpdateDaoInfo(
+    function _updateDaoInfoUrl(
         string memory _infoUrl
-    ) internal pure override {
+    ) internal pure virtual override {
         if (bytes(_infoUrl).length > 0) {
             revert InvalidInput("MultiSigDAO: info url should empty");
         }

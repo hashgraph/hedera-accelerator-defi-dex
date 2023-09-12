@@ -246,7 +246,7 @@ describe("GovernanceTokenDAO tests", function () {
       ];
       await expect(governorDAOFactory.createDAO(CREATE_DAO_ARGS))
         .revertedWithCustomError(governorDAOFactory, "InvalidInput")
-        .withArgs("FTDAO: info url is empty");
+        .withArgs("BaseDAO: info url is empty");
     });
 
     it("Verify createDAO should be reverted when voting period is zero", async function () {
@@ -547,7 +547,7 @@ describe("GovernanceTokenDAO tests", function () {
           .updateDaoInfo(DAO_NAME, LOGO_URL, "", DESCRIPTION, WEB_LINKS)
       )
         .revertedWithCustomError(governorTokenDAO, "InvalidInput")
-        .withArgs("FTDAO: info url is empty");
+        .withArgs("BaseDAO: info url is empty");
     });
   });
 

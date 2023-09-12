@@ -64,7 +64,12 @@ abstract contract BaseDAO is IErrors, RoleBasedAccess {
         );
     }
 
-    function _beforeUpdateDaoInfo(string memory _infoUrl) internal virtual {}
+    function _updateDaoInfoUrl(string memory _infoUrl) internal virtual {
+        if (bytes(_infoUrl).length == 0) {
+            revert InvalidInput("BaseDAO: info url is empty");
+        }
+        daoInfo.infoUrl = _infoUrl;
+    }
 
     function updateDaoInfoInternally(
         string memory _name,
@@ -73,8 +78,7 @@ abstract contract BaseDAO is IErrors, RoleBasedAccess {
         string memory _description,
         string[] memory _webLinks
     ) private {
-        _beforeUpdateDaoInfo(_infoUrl);
-        daoInfo.infoUrl = _infoUrl;
+        _updateDaoInfoUrl(_infoUrl);
 
         if (bytes(_name).length == 0) {
             revert InvalidInput("BaseDAO: name is empty");

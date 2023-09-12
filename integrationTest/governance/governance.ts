@@ -366,5 +366,7 @@ async function cancelProposalInternally(
 ) {
   try {
     if (title) await governor.cancelProposal(title, client);
-  } catch (error) {}
+  } catch (error) {
+    console.log("cancelProposalInternally: ", title, error);
+  }
 }

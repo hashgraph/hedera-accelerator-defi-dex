@@ -238,7 +238,7 @@ describe("NFTDAOFactory contract tests", function () {
     ];
     await expect(governorDAOFactoryInstance.createDAO(CREATE_DAO_ARGS))
       .revertedWithCustomError(governorDAOFactoryInstance, "InvalidInput")
-      .withArgs("FTDAO: info url is empty");
+      .withArgs("BaseDAO: info url is empty");
   });
 
   it("Verify createDAO should add new dao into list when the dao is public", async function () {
