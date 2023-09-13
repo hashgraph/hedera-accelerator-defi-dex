@@ -1,5 +1,3 @@
-import web3EthAbi from "web3-eth-abi";
-import web3Utils from "web3-utils";
 import Long from "long";
 import axios from "axios";
 import ContractMetadata from "../utils/ContractMetadata";
@@ -97,7 +95,7 @@ export class MirrorNodeService {
     if (!message) {
       return { message: r.result, timestamp };
     }
-    if (message === "0x" || web3Utils.isHex(message)) {
+    if (message === "0x" || ethers.utils.isHexString(message)) {
       const parsedMessage =
         await this.parseErrorMessageFromCallTraceIfAvailable(tId);
       const finalMessage = parsedMessage.length > 0 ? parsedMessage : message;
@@ -106,8 +104,8 @@ export class MirrorNodeService {
     const signature = message.substring(0, 10);
     const info = message.substring(10);
     const signatureMap = await new ContractMetadata().getSignatureToABIMap();
-    const abi = signatureMap.get(signature);
-    const result = web3EthAbi.decodeParameters(abi.inputs, info);
+    const contractInterface = signatureMap.get(signature);
+    const result = contractInterface.parseError(info);
     return { message: result[0], timestamp };
   }
 
@@ -143,17 +141,13 @@ export class MirrorNodeService {
       try {
         const data = this.toHex(log.data);
         const topics = log.topics.map(this.toHex);
-        const eventAbi = signatureMap.get(topics[0]);
-        if (eventAbi) {
-          const event = web3EthAbi.decodeLog(
-            eventAbi.inputs,
-            data,
-            eventAbi.anonymous === false ? topics.splice(1) : topics,
-          );
-          const events = eventsMap.get(eventAbi.name) ?? [];
-          eventsMap.set(eventAbi.name, [
+        const contractInterface = signatureMap.get(topics[0]);
+        if (contractInterface) {
+          const event = contractInterface.parseLog({ data, topics });
+          const events = eventsMap.get(event.name) ?? [];
+          eventsMap.set(event.name, [
             ...events,
-            this.getEventArgumentsByName(event, eventAbi.name),
+            this.getEventArgumentsByName(event.args, event.name),
           ]);
         } else {
           this.isLogEnabled &&

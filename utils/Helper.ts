@@ -1,5 +1,4 @@
 import * as fs from "fs";
-import web3Utils from "web3-utils";
 import prompts from "prompts";
 import ContractMetadata from "./ContractMetadata";
 
@@ -145,7 +144,7 @@ export class Helper {
   }
 
   static createProposalTitle(titlePrefix: string, count: number = 20) {
-    return `${titlePrefix} ${web3Utils.randomHex(count)}`;
+    return `${titlePrefix} ${Math.random() * count}`;
   }
 
   static readWorkflowInputs() {

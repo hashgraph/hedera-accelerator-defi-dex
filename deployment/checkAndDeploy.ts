@@ -1,4 +1,3 @@
-import web3Utils from "web3-utils";
 import ContractMetadata from "../utils/ContractMetadata";
 import ContractUpgradeGovernor from "../e2e-test/business/ContractUpgradeGovernor";
 
@@ -29,7 +28,7 @@ async function createProposal(
   oldVersion: DeployedContract,
   newVersionAddress: string,
 ) {
-  const uniqueId = web3Utils.randomHex(20);
+  const uniqueId = Math.random();
   const desc = `Contract Name - ${
     oldVersion.name
   }, New Logic Address =  ${newVersionAddress}, Old Logic Id = ${oldVersion.id!}, Proxy Id = ${oldVersion.transparentProxyId!}`;

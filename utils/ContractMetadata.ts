@@ -1,4 +1,3 @@
-import web3EthAbi from "web3-eth-abi";
 import hre from "hardhat";
 import md5File from "md5-file";
 
@@ -147,12 +146,17 @@ export default class ContractMetadata {
     const contractsInfo = await this.getContractsInfo();
     for (const contractInfo of contractsInfo) {
       for (const eachABI of contractInfo.artifact.abi) {
+        const contractInterface = new ethers.utils.Interface(
+          contractInfo.artifact.abi,
+        );
         if (eachABI.type === "event") {
-          const signature = web3EthAbi.encodeEventSignature(eachABI);
-          signatureToAbiMap.set(signature, eachABI);
+          const eventFragment = contractInterface.getEvent(eachABI.name);
+          const topicHash = contractInterface.getEventTopic(eventFragment);
+          signatureToAbiMap.set(topicHash, contractInterface);
         } else if (eachABI.type === "error") {
-          const signature = web3EthAbi.encodeFunctionSignature(eachABI);
-          signatureToAbiMap.set(signature, eachABI);
+          const eventFragment = contractInterface.getError(eachABI.name);
+          const hash = contractInterface.getSighash(eventFragment);
+          signatureToAbiMap.set(hash, contractInterface);
         }
       }
     }

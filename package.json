@@ -59,9 +59,7 @@
     "solidity-coverage": "0.8.4",
     "ts-node": "^10.9.1",
     "typechain": "^8.3.1",
-    "typescript": "^5.2.2",
-    "web3-eth-abi": "^1.10.2",
-    "web3-utils": "^1.10.2"
+    "typescript": "^5.2.2"
   },
   "dependencies": {
     "npm-check-updates": "^16.13.3"
