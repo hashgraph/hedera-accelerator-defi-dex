@@ -12,7 +12,8 @@ describe("GovernanceTokenDAO tests", function () {
   const VOTING_PERIOD = 12;
 
   const DAO_NAME = "DAO_NAME";
-  const LOGO_URL = "LOGO_URL";
+  const LOGO_URL = "https://twitter.com";
+  const INFO_URL = "https://twitter.com";
   const DESCRIPTION = "DESCRIPTION";
   const WEB_LINKS = ["https://twitter.com", "https://linkedin.com"];
 
@@ -21,6 +22,7 @@ describe("GovernanceTokenDAO tests", function () {
     admin: string,
     daoName: string,
     logoUrl: string,
+    infoUrl: string,
     description: string,
     webLinks: string[]
   ) {
@@ -34,6 +36,7 @@ describe("GovernanceTokenDAO tests", function () {
     expect(daoInfo.name).equals(daoName);
     expect(daoInfo.admin).equals(admin);
     expect(daoInfo.logoUrl).equals(logoUrl);
+    expect(daoInfo.infoUrl).equals(infoUrl);
     expect(daoInfo.description).equals(description);
     expect(daoInfo.webLinks.join(",")).equals(webLinks.join(","));
   }
@@ -58,15 +61,15 @@ describe("GovernanceTokenDAO tests", function () {
     const governorTextProposal = await TestHelper.deployLogic(
       "GovernorTextProposal"
     );
-
     const inputs = {
       admin: daoAdminOne.address,
       name: DAO_NAME,
-      urls: LOGO_URL,
-      token: token.address,
-      QUORUM_THRESHOLD_BSP,
-      VOTING_DELAY,
-      VOTING_PERIOD,
+      logoUrl: LOGO_URL,
+      infoUrl: INFO_URL,
+      tokenAddress: token.address,
+      quorumThreshold: QUORUM_THRESHOLD_BSP,
+      votingDelay: VOTING_DELAY,
+      votingPeriod: VOTING_PERIOD,
       isPrivate: false,
       description: DESCRIPTION,
       webLinks: WEB_LINKS,
@@ -98,7 +101,8 @@ describe("GovernanceTokenDAO tests", function () {
       txn,
       inputs.admin,
       inputs.name,
-      inputs.urls,
+      inputs.logoUrl,
+      inputs.infoUrl,
       inputs.description,
       inputs.webLinks
     );
@@ -165,6 +169,7 @@ describe("GovernanceTokenDAO tests", function () {
         TestHelper.ZERO_ADDRESS,
         DAO_NAME,
         LOGO_URL,
+        INFO_URL,
         token.address,
         BigNumber.from(500),
         BigNumber.from(0),
@@ -186,6 +191,7 @@ describe("GovernanceTokenDAO tests", function () {
         daoAdminOne.address,
         "",
         LOGO_URL,
+        INFO_URL,
         token.address,
         BigNumber.from(500),
         BigNumber.from(0),
@@ -207,6 +213,7 @@ describe("GovernanceTokenDAO tests", function () {
         daoAdminOne.address,
         DAO_NAME,
         LOGO_URL,
+        INFO_URL,
         TestHelper.ZERO_ADDRESS,
         BigNumber.from(500),
         BigNumber.from(0),
@@ -220,6 +227,28 @@ describe("GovernanceTokenDAO tests", function () {
         .withArgs("DAOFactory: token address is zero");
     });
 
+    it("Verify createDAO should be reverted when info url is empty", async function () {
+      const { governorDAOFactory, daoAdminOne, token } = await loadFixture(
+        deployFixture
+      );
+      const CREATE_DAO_ARGS = [
+        daoAdminOne.address,
+        DAO_NAME,
+        LOGO_URL,
+        "",
+        token.address,
+        BigNumber.from(500),
+        BigNumber.from(0),
+        BigNumber.from(100),
+        true,
+        DESCRIPTION,
+        WEB_LINKS,
+      ];
+      await expect(governorDAOFactory.createDAO(CREATE_DAO_ARGS))
+        .revertedWithCustomError(governorDAOFactory, "InvalidInput")
+        .withArgs("BaseDAO: info url is empty");
+    });
+
     it("Verify createDAO should be reverted when voting period is zero", async function () {
       const { governorDAOFactory, daoAdminOne, token } = await loadFixture(
         deployFixture
@@ -228,6 +257,7 @@ describe("GovernanceTokenDAO tests", function () {
         daoAdminOne.address,
         DAO_NAME,
         LOGO_URL,
+        INFO_URL,
         token.address,
         BigNumber.from(500),
         BigNumber.from(0),
@@ -253,6 +283,7 @@ describe("GovernanceTokenDAO tests", function () {
         daoAdminOne.address,
         DAO_NAME,
         LOGO_URL,
+        INFO_URL,
         token.address,
         BigNumber.from(500),
         BigNumber.from(0),
@@ -284,6 +315,7 @@ describe("GovernanceTokenDAO tests", function () {
         daoAdminOne.address,
         DAO_NAME,
         LOGO_URL,
+        INFO_URL,
         token.address,
         BigNumber.from(500),
         BigNumber.from(0),
@@ -404,7 +436,7 @@ describe("GovernanceTokenDAO tests", function () {
     });
   });
 
-  describe("TokenTransferDAO contract tests", function () {
+  describe("FTDAO contract tests", function () {
     it("Verify contract should be revert for multiple initialization", async function () {
       const {
         governorTokenDAO,
@@ -423,7 +455,7 @@ describe("GovernanceTokenDAO tests", function () {
       ).revertedWith("Initializable: contract is already initialized");
     });
 
-    it("Verify TokenTransferDAO initialize call", async function () {
+    it("Verify FTDAO initialize call", async function () {
       const { inputs, governance, common, systemRoleBasedAccess } =
         await loadFixture(deployFixture);
       const dao = await TestHelper.deployLogic("FTDAO");
@@ -503,6 +535,20 @@ describe("GovernanceTokenDAO tests", function () {
           .upgradeHederaService(newHederaService.address)
       ).reverted;
     });
+
+    it("Verify updating dao info should be reverted for empty info-url", async function () {
+      const { governorTokenDAO, daoAdminOne } = await loadFixture(
+        deployFixture
+      );
+
+      await expect(
+        governorTokenDAO
+          .connect(daoAdminOne)
+          .updateDaoInfo(DAO_NAME, LOGO_URL, "", DESCRIPTION, WEB_LINKS)
+      )
+        .revertedWithCustomError(governorTokenDAO, "InvalidInput")
+        .withArgs("BaseDAO: info url is empty");
+    });
   });
 
   describe("BaseDAO contract tests", function () {
@@ -565,6 +611,7 @@ describe("GovernanceTokenDAO tests", function () {
           daoAdminOne.address,
           DAO_NAME,
           LOGO_URL,
+          INFO_URL,
           DESCRIPTION,
           WEB_LINKS
         )
@@ -591,7 +638,7 @@ describe("GovernanceTokenDAO tests", function () {
       await expect(
         governorTokenDAO
           .connect(daoAdminTwo)
-          .updateDaoInfo(DAO_NAME, LOGO_URL, DESCRIPTION, WEB_LINKS)
+          .updateDaoInfo(DAO_NAME, LOGO_URL, INFO_URL, DESCRIPTION, WEB_LINKS)
       ).reverted;
     });
 
@@ -603,7 +650,7 @@ describe("GovernanceTokenDAO tests", function () {
       await expect(
         governorTokenDAO
           .connect(daoAdminOne)
-          .updateDaoInfo("", LOGO_URL, DESCRIPTION, WEB_LINKS)
+          .updateDaoInfo("", LOGO_URL, INFO_URL, DESCRIPTION, WEB_LINKS)
       )
         .revertedWithCustomError(governorTokenDAO, "InvalidInput")
         .withArgs("BaseDAO: name is empty");
@@ -611,7 +658,7 @@ describe("GovernanceTokenDAO tests", function () {
       await expect(
         governorTokenDAO
           .connect(daoAdminOne)
-          .updateDaoInfo(DAO_NAME, LOGO_URL, "", WEB_LINKS)
+          .updateDaoInfo(DAO_NAME, LOGO_URL, INFO_URL, "", WEB_LINKS)
       )
         .revertedWithCustomError(governorTokenDAO, "InvalidInput")
         .withArgs("BaseDAO: description is empty");
@@ -619,7 +666,10 @@ describe("GovernanceTokenDAO tests", function () {
       await expect(
         governorTokenDAO
           .connect(daoAdminOne)
-          .updateDaoInfo(DAO_NAME, LOGO_URL, DESCRIPTION, [...WEB_LINKS, ""])
+          .updateDaoInfo(DAO_NAME, LOGO_URL, INFO_URL, DESCRIPTION, [
+            ...WEB_LINKS,
+            "",
+          ])
       )
         .revertedWithCustomError(governorTokenDAO, "InvalidInput")
         .withArgs("BaseDAO: invalid link");
@@ -632,6 +682,7 @@ describe("GovernanceTokenDAO tests", function () {
 
       const UPDATED_DAO_NAME = DAO_NAME + "_1";
       const UPDATED_LOGO_URL = LOGO_URL + "_1";
+      const UPDATED_INFO_URL = INFO_URL + "_1";
       const UPDATED_DESCRIPTION = DESCRIPTION + "_1";
       const UPDATED_WEB_LINKS = ["A", "B"];
       const txn = await governorTokenDAO
@@ -639,6 +690,7 @@ describe("GovernanceTokenDAO tests", function () {
         .updateDaoInfo(
           UPDATED_DAO_NAME,
           UPDATED_LOGO_URL,
+          UPDATED_INFO_URL,
           UPDATED_DESCRIPTION,
           UPDATED_WEB_LINKS
         );
@@ -648,6 +700,7 @@ describe("GovernanceTokenDAO tests", function () {
         daoAdminOne.address,
         UPDATED_DAO_NAME,
         UPDATED_LOGO_URL,
+        UPDATED_INFO_URL,
         UPDATED_DESCRIPTION,
         UPDATED_WEB_LINKS
       );

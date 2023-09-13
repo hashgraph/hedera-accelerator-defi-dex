@@ -1035,6 +1035,36 @@ describe("MultiSig tests", function () {
       ).reverted;
     });
 
+    it("Verify upgrade Safe service passes with system user", async function () {
+      const {
+        multiSigDAOInstance,
+        systemUsersSigners,
+        hederaGnosisSafeProxyContract,
+      } = await loadFixture(deployFixture);
+
+      expect(
+        await multiSigDAOInstance.getHederaGnosisSafeContractAddress()
+      ).equals(hederaGnosisSafeProxyContract.address);
+
+      await multiSigDAOInstance
+        .connect(systemUsersSigners.childProxyAdmin)
+        .upgradeHederaGnosisSafe(TestHelper.ONE_ADDRESS);
+
+      expect(
+        await multiSigDAOInstance.getHederaGnosisSafeContractAddress()
+      ).equals(TestHelper.ONE_ADDRESS);
+    });
+
+    it("Verify upgrade Safe fails with non-system user", async function () {
+      const { multiSigDAOInstance, signers } = await loadFixture(deployFixture);
+
+      await expect(
+        multiSigDAOInstance
+          .connect(signers[3])
+          .upgradeHederaGnosisSafe(signers[3].address)
+      ).reverted;
+    });
+
     it("Verify upgrade MultiSend service passes with system user", async function () {
       const { multiSigDAOInstance, systemUsersSigners, multiSend } =
         await loadFixture(deployFixture);
@@ -1090,6 +1120,20 @@ describe("MultiSig tests", function () {
         LINK_TO_DISCUSSION
       );
       await verifyTransactionCreatedEvent(txn, TXN_TYPE_TOKEN_ASSOCIATE);
+    });
+
+    it("Verify updating dao info should be reverted for non-empty info url", async function () {
+      const { multiSigDAOInstance, daoAdminOne } = await loadFixture(
+        deployFixture
+      );
+
+      await expect(
+        multiSigDAOInstance
+          .connect(daoAdminOne)
+          .updateDaoInfo(DAO_NAME, LOGO_URL, LOGO_URL, DESCRIPTION, WEB_LINKS)
+      )
+        .revertedWithCustomError(multiSigDAOInstance, "InvalidInput")
+        .withArgs("MultiSigDAO: info url should empty");
     });
 
     describe("Text proposal test cases", () => {

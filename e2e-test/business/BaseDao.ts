@@ -11,6 +11,7 @@ export default abstract class BaseDAO extends Base {
   updateDaoInfo = async (
     name: string,
     logoUrl: string,
+    infoUrl: string,
     description: string,
     webLinks: string[],
     client: Client
@@ -18,6 +19,7 @@ export default abstract class BaseDAO extends Base {
     const inputs = {
       _name: name,
       _logoUrl: logoUrl,
+      _infoUrl: infoUrl,
       _description: description,
       _webLinks: webLinks,
     };
@@ -45,6 +47,7 @@ export default abstract class BaseDAO extends Base {
       name: output.name,
       admin: output.admin,
       logoUrl: output.logoUrl,
+      infoUrl: output.infoUrl,
       description: output.description,
       webLinks: output.webLinks.toString(),
     };

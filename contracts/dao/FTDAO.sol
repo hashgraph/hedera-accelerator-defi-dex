@@ -51,6 +51,7 @@ contract FTDAO is BaseDAO, ISharedDAOModel {
             inputs.admin,
             inputs.name,
             inputs.logoUrl,
+            inputs.infoUrl,
             inputs.description,
             inputs.webLinks
         );

@@ -72,21 +72,26 @@ export async function createAndExecuteTextProposal(
   );
 
   const title = Helper.createProposalTitle("Text Proposal");
-  const proposalId = await governor.createTextProposal(
-    title,
-    creatorClient,
-    "Text Proposal - Desc",
-    "Text Proposal - LINK",
-    "Text Proposal - Metadata",
-    governor.DEFAULT_NFT_TOKEN_SERIAL_NO
-  );
-  await governor.getProposalDetails(proposalId, voterClient);
-  await governor.forVote(proposalId, 0, voterClient);
-  await governor.getProposalDetails(proposalId, voterClient);
-  if (await governor.isSucceeded(proposalId)) {
-    await governor.executeProposal(title, undefined, creatorClient, txnFee);
-  } else {
-    await governor.cancelProposal(title, creatorClient);
+  try {
+    const proposalId = await governor.createTextProposal(
+      title,
+      creatorClient,
+      "Text Proposal - Desc",
+      "Text Proposal - LINK",
+      "Text Proposal - Metadata",
+      governor.DEFAULT_NFT_TOKEN_SERIAL_NO
+    );
+    await governor.getProposalDetails(proposalId, voterClient);
+    await governor.forVote(proposalId, 0, voterClient);
+    await governor.getProposalDetails(proposalId, voterClient);
+    if (await governor.isSucceeded(proposalId)) {
+      await governor.executeProposal(title, undefined, creatorClient, txnFee);
+    } else {
+      await governor.cancelProposal(title, creatorClient);
+    }
+  } catch (error) {
+    await cancelProposalInternally(governor, title, creatorClient);
+    throw error;
   }
 }
 
@@ -114,40 +119,45 @@ export async function createAndExecuteAssetTransferProposal(
   );
 
   const title = Helper.createProposalTitle("Asset Transfer Proposal");
-  const proposalId = await governor.createTokenTransferProposal(
-    title,
-    receiverAccountId.toSolidityAddress(),
-    tokenId.toSolidityAddress(),
-    amountOrId,
-    creatorClient,
-    governor.DEFAULT_NFT_TOKEN_SERIAL_NO,
-    "Asset Transfer Proposal - Desc",
-    "Asset Transfer Proposal - Link",
-    "Asset Transfer Proposal - Metadata"
-  );
-  await governor.getProposalDetails(proposalId, voterClient);
-  await governor.forVote(proposalId, 0, voterClient);
-  await governor.getProposalDetails(proposalId, voterClient);
-  if (await governor.isSucceeded(proposalId)) {
-    // step - 1 transfer assets to governor contract
-    await Common.transferAssets(
-      tokenId,
+  try {
+    const proposalId = await governor.createTokenTransferProposal(
+      title,
+      receiverAccountId.toSolidityAddress(),
+      tokenId.toSolidityAddress(),
       amountOrId,
-      governor.contractId,
-      senderAccountId,
-      senderAccountPK,
-      creatorClient
-    );
-    // step - 2 associate token to receiver
-    await Common.associateTokensToAccount(
-      receiverAccountId,
-      [tokenId],
       creatorClient,
-      receiverAccountPK
+      governor.DEFAULT_NFT_TOKEN_SERIAL_NO,
+      "Asset Transfer Proposal - Desc",
+      "Asset Transfer Proposal - Link",
+      "Asset Transfer Proposal - Metadata"
     );
-    await governor.executeProposal(title, undefined, creatorClient, txnFee);
-  } else {
-    await governor.cancelProposal(title, creatorClient);
+    await governor.getProposalDetails(proposalId, voterClient);
+    await governor.forVote(proposalId, 0, voterClient);
+    await governor.getProposalDetails(proposalId, voterClient);
+    if (await governor.isSucceeded(proposalId)) {
+      // step - 1 transfer assets to governor contract
+      await Common.transferAssets(
+        tokenId,
+        amountOrId,
+        governor.contractId,
+        senderAccountId,
+        senderAccountPK,
+        creatorClient
+      );
+      // step - 2 associate token to receiver
+      await Common.associateTokensToAccount(
+        receiverAccountId,
+        [tokenId],
+        creatorClient,
+        receiverAccountPK
+      );
+      await governor.executeProposal(title, undefined, creatorClient, txnFee);
+    } else {
+      await governor.cancelProposal(title, creatorClient);
+    }
+  } catch (error) {
+    await cancelProposalInternally(governor, title, creatorClient);
+    throw error;
   }
 }
 
@@ -189,26 +199,31 @@ export async function createAndExecuteContractUpgradeProposal(
   );
 
   const title = Helper.createProposalTitle("Contract Upgrade Proposal");
-  const { proposalId } = await governor.createContractUpgradeProposal(
-    proxyAddress,
-    proxyLogicAddress,
-    title,
-    creatorClient,
-    governor.DEFAULT_DESCRIPTION,
-    governor.DEFAULT_LINK,
-    governor.DEFAULT_META_DATA,
-    governor.DEFAULT_NFT_TOKEN_SERIAL_NO
-  );
+  try {
+    const { proposalId } = await governor.createContractUpgradeProposal(
+      proxyAddress,
+      proxyLogicAddress,
+      title,
+      creatorClient,
+      governor.DEFAULT_DESCRIPTION,
+      governor.DEFAULT_LINK,
+      governor.DEFAULT_META_DATA,
+      governor.DEFAULT_NFT_TOKEN_SERIAL_NO
+    );
 
-  await governor.getProposalDetails(proposalId, voterClient);
-  await governor.forVote(proposalId, 0, voterClient);
-  await governor.getProposalDetails(proposalId, voterClient);
+    await governor.getProposalDetails(proposalId, voterClient);
+    await governor.forVote(proposalId, 0, voterClient);
+    await governor.getProposalDetails(proposalId, voterClient);
 
-  if (await governor.isSucceeded(proposalId)) {
-    await transferOwnershipToGovernance(proposalId, governor);
-    await governor.executeProposal(title, undefined, creatorClient, txnFee);
-  } else {
-    await governor.cancelProposal(title, creatorClient);
+    if (await governor.isSucceeded(proposalId)) {
+      await transferOwnershipToGovernance(proposalId, governor);
+      await governor.executeProposal(title, undefined, creatorClient, txnFee);
+    } else {
+      await governor.cancelProposal(title, creatorClient);
+    }
+  } catch (error) {
+    await cancelProposalInternally(governor, title, creatorClient);
+    throw error;
   }
 }
 
@@ -231,22 +246,27 @@ export async function createAndExecuteTokenAssociationProposal(
   );
 
   const title = Helper.createProposalTitle("Token Associate Proposal");
-  const proposalId = await governor.createTokenAssociateProposal(
-    title,
-    tokenId.toSolidityAddress(),
-    creatorClient,
-    "Token Association Proposal - Desc",
-    "Token Association Proposal - LINK",
-    "Token Association Proposal - Metadata",
-    governor.DEFAULT_NFT_TOKEN_SERIAL_NO
-  );
-  await governor.getProposalDetails(proposalId, voterClient);
-  await governor.forVote(proposalId, 0, voterClient);
-  await governor.getProposalDetails(proposalId, voterClient);
-  if (await governor.isSucceeded(proposalId)) {
-    await governor.executeProposal(title, undefined, creatorClient, txnFee);
-  } else {
-    await governor.cancelProposal(title, creatorClient);
+  try {
+    const proposalId = await governor.createTokenAssociateProposal(
+      title,
+      tokenId.toSolidityAddress(),
+      creatorClient,
+      "Token Association Proposal - Desc",
+      "Token Association Proposal - LINK",
+      "Token Association Proposal - Metadata",
+      governor.DEFAULT_NFT_TOKEN_SERIAL_NO
+    );
+    await governor.getProposalDetails(proposalId, voterClient);
+    await governor.forVote(proposalId, 0, voterClient);
+    await governor.getProposalDetails(proposalId, voterClient);
+    if (await governor.isSucceeded(proposalId)) {
+      await governor.executeProposal(title, undefined, creatorClient, txnFee);
+    } else {
+      await governor.cancelProposal(title, creatorClient);
+    }
+  } catch (error) {
+    await cancelProposalInternally(governor, title, creatorClient);
+    throw error;
   }
 }
 
@@ -272,29 +292,37 @@ export async function createAndExecuteTokenCreateProposal(
   );
 
   let tokenId: TokenId | null = null;
+  let proposalId: string | null = null;
   const title = Helper.createProposalTitle("Token Create Proposal");
-  const proposalId = await governor.createTokenProposal(
-    title,
-    name,
-    symbol,
-    treasureId,
-    creatorClient,
-    governor.DEFAULT_DESCRIPTION,
-    governor.DEFAULT_LINK,
-    governor.DEFAULT_META_DATA,
-    governor.DEFAULT_NFT_TOKEN_SERIAL_NO
-  );
+  try {
+    proposalId = await governor.createTokenProposal(
+      title,
+      name,
+      symbol,
+      treasureId,
+      creatorClient,
+      governor.DEFAULT_DESCRIPTION,
+      governor.DEFAULT_LINK,
+      governor.DEFAULT_META_DATA,
+      governor.DEFAULT_NFT_TOKEN_SERIAL_NO
+    );
 
-  await governor.getProposalDetails(proposalId, voterClient);
-  await governor.forVote(proposalId, 0, voterClient);
-  await governor.getProposalDetails(proposalId, voterClient);
-  if (await governor.isSucceeded(proposalId)) {
-    await governor.executeProposal(title, undefined, creatorClient, txnFee);
-    tokenId = await governor.getTokenAddressFromGovernorTokenCreate(proposalId);
-  } else {
-    await governor.cancelProposal(title, creatorClient);
+    await governor.getProposalDetails(proposalId, voterClient);
+    await governor.forVote(proposalId, 0, voterClient);
+    await governor.getProposalDetails(proposalId, voterClient);
+    if (await governor.isSucceeded(proposalId)) {
+      await governor.executeProposal(title, undefined, creatorClient, txnFee);
+      tokenId = await governor.getTokenAddressFromGovernorTokenCreate(
+        proposalId
+      );
+    } else {
+      await governor.cancelProposal(title, creatorClient);
+    }
+  } catch (error) {
+    await cancelProposalInternally(governor, title, creatorClient);
+    throw error;
   }
-  if (!tokenId) {
+  if (!tokenId || !proposalId) {
     throw Error("failed to created token inside integration test");
   }
   await governor.mintToken(proposalId, BigNumber(10), treasureClient);
@@ -328,5 +356,17 @@ async function setupProposalCreationAllowance(
       creatorId,
       creatorPK
     );
+  }
+}
+
+async function cancelProposalInternally(
+  governor: Governor,
+  title: string,
+  client: Client
+) {
+  try {
+    if (title) await governor.cancelProposal(title, client);
+  } catch (error) {
+    console.log("cancelProposalInternally: ", title, error);
   }
 }

@@ -1,13 +1,9 @@
-import Base from "../Base";
-
-import { Helper } from "../../../utils/Helper";
-import { Deployment } from "../../../utils/deployContractOnTestnet";
-import { clientsInfo } from "../../../utils/ClientManagement";
-import { TokenId } from "@hashgraph/sdk";
-import { ContractService } from "../../../deployment/service/ContractService";
-import NFTTokenHolderFactory from "./NFTTokenHolderFactory";
 import NFTHolder from "../NFTHolder";
 import DAOFactory from "./DAOFactory";
+import NFTTokenHolderFactory from "./NFTTokenHolderFactory";
+
+import { TokenId } from "@hashgraph/sdk";
+import { ContractService } from "../../../deployment/service/ContractService";
 
 export default class NFTDAOFactory extends DAOFactory {
   protected getContractName() {

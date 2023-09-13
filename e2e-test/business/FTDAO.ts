@@ -25,7 +25,8 @@ export default class FTDAO extends BaseDao {
   public async initialize(
     admin: string,
     name: string,
-    url: string,
+    logoUrl: string,
+    infoUrl: string,
     desc: string,
     webLinks: string[],
     tokenHolder: GodHolder | NFTHolder,
@@ -46,7 +47,8 @@ export default class FTDAO extends BaseDao {
         inputs: Object.values({
           admin,
           name,
-          url,
+          logoUrl,
+          infoUrl,
           tokenAddress: tokenId.toSolidityAddress(),
           quorumThreshold: defaultQuorumThresholdValue,
           votingDelay,

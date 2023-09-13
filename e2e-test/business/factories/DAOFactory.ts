@@ -84,6 +84,7 @@ export default abstract class DAOFactory extends Base {
   createDAO = async (
     name: string,
     logoUrl: string,
+    infoUrl: string,
     desc: string,
     webLinks: string[],
     tokenAddress: string,
@@ -98,6 +99,7 @@ export default abstract class DAOFactory extends Base {
       admin,
       name,
       logoUrl,
+      infoUrl,
       tokenAddress,
       quorumThreshold,
       votingDelay,

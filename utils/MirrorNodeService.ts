@@ -70,6 +70,21 @@ export class MirrorNodeService {
     return tokensMap;
   }
 
+  public async getNFTSerialNumbersInfo(id: TokenId | string): Promise<any[]> {
+    const serialNumbersInfo: any[] = [];
+    const tokensObject: any[] = [];
+    let url = `${BASE_URL}/api/v1/tokens/${id.toString()}/nfts?limit=100&order=asc`;
+    while ((url = await this.readRecords(url, tokensObject, "nfts")));
+    this.isLogEnabled && console.log("- Records count:", tokensObject.length);
+    for (const tokenObject of tokensObject) {
+      serialNumbersInfo.push({
+        accountId: tokenObject.account_id,
+        serialNo: tokenObject.serial_number,
+      });
+    }
+    return serialNumbersInfo;
+  }
+
   public async getErrorInfo(txnId: TransactionId) {
     await Helper.delay(5000);
     const response: any[] = [];
