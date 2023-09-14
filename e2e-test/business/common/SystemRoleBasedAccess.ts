@@ -20,11 +20,11 @@ export default class SystemRoleBasedAccess extends Base {
       const { bytes, hex } = await this.encodeFunctionData(
         this.getContractName(),
         INITIALIZE,
-        Object.values(data),
+        Object.values(data)
       );
       await this.execute(5_00_000, INITIALIZE, client, bytes);
       console.log(
-        `- SystemRoleBasedAccess#${INITIALIZE}(): done with hex-data = ${hex}\n`,
+        `- SystemRoleBasedAccess#${INITIALIZE}(): done with hex-data = ${hex}\n`
       );
       return;
     }
@@ -32,7 +32,7 @@ export default class SystemRoleBasedAccess extends Base {
   };
 
   public async checkIfChildProxyAdminRoleGiven(
-    accountId: AccountId = clientsInfo.childProxyAdminId,
+    accountId: AccountId = clientsInfo.childProxyAdminId
   ) {
     await this.getRoleAdmin(dex.ROLES.CHILD_PROXY_ADMIN_ROLE);
     return await this.hasRole(dex.ROLES.CHILD_PROXY_ADMIN_ROLE, accountId);

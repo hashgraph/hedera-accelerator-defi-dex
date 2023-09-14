@@ -24,13 +24,13 @@ const addRewards = async (vault: Vault, rToken: TokenId) => {
     REWARD_TOKEN_QTY,
     clientsInfo.treasureId,
     clientsInfo.treasureKey,
-    clientsInfo.treasureClient,
+    clientsInfo.treasureClient
   );
   await vault.addReward(
     rToken,
     REWARD_TOKEN_QTY,
     clientsInfo.treasureId,
-    clientsInfo.treasureClient,
+    clientsInfo.treasureClient
   );
 };
 
@@ -41,7 +41,7 @@ const stake = async (vault: Vault) => {
     STAKING_TOKEN_QTY,
     clientsInfo.uiUserId,
     clientsInfo.uiUserKey,
-    clientsInfo.uiUserClient,
+    clientsInfo.uiUserClient
   );
   return await vault.stake(STAKING_TOKEN_QTY, clientsInfo.uiUserClient);
 };
@@ -57,7 +57,7 @@ async function main() {
     clientsInfo.uiUserId,
     [REWARD_TOKEN, REWARD_TOKEN_1],
     clientsInfo.uiUserClient,
-    clientsInfo.uiUserKey,
+    clientsInfo.uiUserKey
   );
 
   await stake(vault);

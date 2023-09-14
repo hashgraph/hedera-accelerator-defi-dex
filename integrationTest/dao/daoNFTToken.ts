@@ -40,7 +40,7 @@ async function main() {
   const tokenHolderFactory = new NFTTokenHolderFactory();
 
   const nftHolderContractId = await tokenHolderFactory.getTokenHolder(
-    GovernorTokenMetaData.NFT_TOKEN_ID.toSolidityAddress(),
+    GovernorTokenMetaData.NFT_TOKEN_ID.toSolidityAddress()
   );
   const nftHolder = new NFTHolder(nftHolderContractId);
 
@@ -56,7 +56,7 @@ async function main() {
     0,
     30,
     GovernorTokenMetaData.NFT_TOKEN_ID,
-    GovernorTokenMetaData.NFT_TOKEN_ID,
+    GovernorTokenMetaData.NFT_TOKEN_ID
   );
 
   await executeGovernorTokenTransferFlow(nftHolder, tokenTransferDAO);
@@ -67,12 +67,12 @@ async function main() {
     "dao url - New",
     "desc - New",
     DAO_WEB_LINKS,
-    DAO_ADMIN_CLIENT,
+    DAO_ADMIN_CLIENT
   );
   const hasRole = await roleBasedAccess.checkIfChildProxyAdminRoleGiven();
   hasRole &&
     (await tokenTransferDAO.upgradeHederaService(
-      clientsInfo.childProxyAdminClient,
+      clientsInfo.childProxyAdminClient
     ));
   console.log(`\nDone`);
 }
@@ -98,30 +98,30 @@ export async function executeGovernorTokenTransferFlow(
   voterClient: Client = clientsInfo.operatorClient,
   voterAccountId: AccountId = clientsInfo.operatorId,
   voterAccountKey: PrivateKey = clientsInfo.operatorKey,
-  txnFeePayerClient: Client = clientsInfo.operatorClient,
+  txnFeePayerClient: Client = clientsInfo.operatorClient
 ) {
   const governorAddresses =
     await tokenTransferDAO.getGovernorTokenTransferContractAddresses();
 
   const governor = new TokenTransferGovernor(
-    governorAddresses.governorTokenTransferProxyId,
+    governorAddresses.governorTokenTransferProxyId
   );
 
   const quorum = await governor.quorum(txnFeePayerClient);
   const votingPowerAmount = await nftHolder.balanceOfVoter(
     voterAccountId,
-    txnFeePayerClient,
+    txnFeePayerClient
   );
 
   if (votingPowerAmount < quorum) {
     await nftHolder.setupAllowanceForTokenLocking(
       voterAccountId,
       voterAccountKey,
-      voterClient,
+      voterClient
     );
     await nftHolder.grabTokensForVoter(
       governor.DEFAULT_NFT_TOKEN_SERIAL_NO_FOR_VOTING,
-      voterClient,
+      voterClient
     );
   }
 
@@ -129,7 +129,7 @@ export async function executeGovernorTokenTransferFlow(
   await governor.setupNFTAllowanceForProposalCreation(
     daoAdminClient,
     daoAdminId,
-    daoAdminPK,
+    daoAdminPK
   );
 
   const title = Helper.createProposalTitle("Token Associate Proposal");
@@ -139,7 +139,7 @@ export async function executeGovernorTokenTransferFlow(
     daoAdminClient,
     "DAO Token Association Proposal - Desc",
     "DAO Token Association Proposal - LINK",
-    governor.DEFAULT_NFT_TOKEN_SERIAL_NO,
+    governor.DEFAULT_NFT_TOKEN_SERIAL_NO
   );
 
   await governor.getProposalDetails(proposalId, voterClient);
@@ -155,7 +155,7 @@ export async function executeGovernorTokenTransferFlow(
   await governor.setupNFTAllowanceForProposalCreation(
     daoAdminClient,
     daoAdminId,
-    daoAdminPK,
+    daoAdminPK
   );
 
   const title1 = Helper.createProposalTitle("Token Transfer Proposal");
@@ -167,7 +167,7 @@ export async function executeGovernorTokenTransferFlow(
     daoAdminClient,
     "DAO Token Transfer Proposal - Desc",
     "DAO Token Transfer Proposal - Link",
-    governor.DEFAULT_NFT_TOKEN_SERIAL_NO,
+    governor.DEFAULT_NFT_TOKEN_SERIAL_NO
   );
   await governor.getProposalDetails(proposalId1, voterClient);
   await governor.forVote(proposalId1, 0, voterClient);
@@ -180,7 +180,7 @@ export async function executeGovernorTokenTransferFlow(
       governor.contractId,
       senderAccountId,
       senderAccountPK,
-      txnFeePayerClient,
+      txnFeePayerClient
     );
 
     // step - 2 associate token to receiver
@@ -188,7 +188,7 @@ export async function executeGovernorTokenTransferFlow(
       receiverAccountId,
       [transferTokenId],
       txnFeePayerClient,
-      receiverAccountPK,
+      receiverAccountPK
     );
     await governor.executeProposal(title1);
   } else {

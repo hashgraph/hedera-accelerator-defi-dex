@@ -13,13 +13,13 @@ async function main() {
   await configuration.setTransactionFee(
     BigNumber(1),
     BigNumber(5),
-    clientsInfo.operatorKey,
+    clientsInfo.operatorKey
   );
   await configuration.getTransactionsFee();
   await configuration.getHbarxAddress();
   await configuration.setHbarxAddress(
     dex.HBARX_TOKEN_ADDRESS,
-    clientsInfo.operatorKey,
+    clientsInfo.operatorKey
   );
 }
 

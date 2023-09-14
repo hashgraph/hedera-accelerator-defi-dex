@@ -2,7 +2,7 @@ const https = require("https");
 
 export const httpRequest = async (
   contractEvmAddress: string,
-  postData: any,
+  postData: any
 ): Promise<any> => {
   const options = {
     hostname: "testnet.mirrornode.hedera.com",

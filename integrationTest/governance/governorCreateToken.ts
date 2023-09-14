@@ -24,7 +24,7 @@ async function runFactoryTest(token1: TokenId, token2: TokenId) {
     token1,
     token2,
     clientsInfo.operatorId,
-    clientsInfo.treasureKey,
+    clientsInfo.treasureKey
   );
   await factory.getPair(token1, token2);
   await factory.getPairs();
@@ -39,15 +39,15 @@ async function main() {
   await ftHolderFactory.initialize();
 
   const ftHolderContractId = await ftHolderFactory.getTokenHolder(
-    FT_TOKEN_ID.toSolidityAddress(),
+    FT_TOKEN_ID.toSolidityAddress()
   );
   const tokenHolder = new GodHolder(ftHolderContractId);
 
   const deploymentDetails = await new Deployment().deployProxy(
-    ContractService.GOVERNOR_TOKEN_CREATE,
+    ContractService.GOVERNOR_TOKEN_CREATE
   );
   const governor = new TokenCreateGovernor(
-    ContractId.fromString(deploymentDetails.transparentProxyId),
+    ContractId.fromString(deploymentDetails.transparentProxyId)
   );
   await governor.initialize(
     tokenHolder,
@@ -56,7 +56,7 @@ async function main() {
     0,
     20,
     FT_TOKEN_ID,
-    FT_TOKEN_ID,
+    FT_TOKEN_ID
   );
 
   // step - 0 lock required tokens to token holder
@@ -67,7 +67,7 @@ async function main() {
     voterAccountId,
     voterAccountKey,
     voterClient,
-    0,
+    0
   );
 
   // step - 1 token a created
@@ -82,7 +82,7 @@ async function main() {
     clientsInfo.operatorId,
     clientsInfo.operatorKey,
     clientsInfo.operatorClient,
-    governor.TXN_FEE_FOR_TOKEN_CREATE,
+    governor.TXN_FEE_FOR_TOKEN_CREATE
   );
 
   // step - 2 token b created
@@ -97,7 +97,7 @@ async function main() {
     clientsInfo.operatorId,
     clientsInfo.operatorKey,
     clientsInfo.operatorClient,
-    governor.TXN_FEE_FOR_TOKEN_CREATE,
+    governor.TXN_FEE_FOR_TOKEN_CREATE
   );
 
   // step - 3 unlock required tokens from token holder

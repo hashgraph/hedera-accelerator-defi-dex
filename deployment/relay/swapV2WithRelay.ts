@@ -7,7 +7,7 @@ async function main() {
   const contractName = "SwapV2";
   const deployedContract = await deployContract(
     contractName,
-    htsServiceAddress,
+    htsServiceAddress
   );
   console.log("SwapV2 deployed.");
 }

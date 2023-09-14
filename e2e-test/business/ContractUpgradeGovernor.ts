@@ -18,7 +18,7 @@ export default class ContractUpgradeGovernor extends Governor {
     description: string = this.DEFAULT_DESCRIPTION,
     link: string = this.DEFAULT_LINK,
     metadata: string = this.DEFAULT_META_DATA,
-    nftTokenSerialId: number = this.DEFAULT_NFT_TOKEN_SERIAL_NO,
+    nftTokenSerialId: number = this.DEFAULT_NFT_TOKEN_SERIAL_NO
   ) => {
     const args = new ContractFunctionParameters()
       .addString(title)
@@ -33,12 +33,12 @@ export default class ContractUpgradeGovernor extends Governor {
       1_000_000,
       this.CREATE_PROPOSAL,
       client,
-      args,
+      args
     );
     const proposalId = result.getUint256(0).toFixed();
     const success = receipt.status.toString().toLowerCase() === "success";
     console.log(
-      `- ContractUpgradeGovernor#${this.CREATE_PROPOSAL}(): proposal-id = ${proposalId}\n`,
+      `- ContractUpgradeGovernor#${this.CREATE_PROPOSAL}(): proposal-id = ${proposalId}\n`
     );
     return {
       proposalId,
@@ -48,14 +48,14 @@ export default class ContractUpgradeGovernor extends Governor {
 
   getContractAddressesFromGovernorUpgradeContract = async (
     proposalId: string,
-    client: Client = clientsInfo.operatorClient,
+    client: Client = clientsInfo.operatorClient
   ) => {
     const args = this.createParams(proposalId);
     const { result } = await this.execute(
       5_00_000,
       this.GET_CONTRACT_ADDRESSES,
       client,
-      args,
+      args
     );
     const proxyAddress = "0x" + result.getAddress(0);
     const logicAddress = "0x" + result.getAddress(1);
@@ -72,7 +72,7 @@ export default class ContractUpgradeGovernor extends Governor {
       logicAddress,
     };
     console.log(
-      `- ContractUpgradeGovernor#${this.GET_CONTRACT_ADDRESSES}(): proxyAddress = ${proxyAddress}, logicAddress = ${logicAddress}\n`,
+      `- ContractUpgradeGovernor#${this.GET_CONTRACT_ADDRESSES}(): proxyAddress = ${proxyAddress}, logicAddress = ${logicAddress}\n`
     );
     return response;
   };

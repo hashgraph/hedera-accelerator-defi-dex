@@ -19,7 +19,7 @@ Feature: Factory contract e2e test
 
     Scenario: Verify user can not create pair of same tokens with negative fees
         When User create a new pair with tokens "FactoryTest1" and "FactoryTest2" and with fee as -0.3%
-        Then User receive error message "CONTRACT_REVERT_EXECUTED"    
+        Then User receive error message "value out-of-bounds"    
     
     Scenario: Verify pair count in pool increases by 1 after creating new pair        
         When User get all pairs of tokens

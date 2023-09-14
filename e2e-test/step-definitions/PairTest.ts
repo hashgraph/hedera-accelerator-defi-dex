@@ -12,10 +12,10 @@ import { clientsInfo } from "../../utils/ClientManagement";
 
 const contractService = new ContractService();
 const lpTokenContract = contractService.getContractWithProxy(
-  contractService.lpTokenContractName,
+  contractService.lpTokenContractName
 );
 const pairContract = contractService.getContractWithProxy(
-  contractService.pairContractName,
+  contractService.pairContractName
 );
 
 const treasureId = clientsInfo.treasureId;
@@ -26,7 +26,7 @@ const client = clientsInfo.operatorClient;
 
 const pair = new Pair(ContractId.fromString(pairContract.transparentProxyId!));
 const lpToken = new LpToken(
-  ContractId.fromString(lpTokenContract.transparentProxyId!),
+  ContractId.fromString(lpTokenContract.transparentProxyId!)
 );
 let tokenNameIdMap = new Map();
 
@@ -54,14 +54,14 @@ export class PairTestSteps {
   @given(
     /User create two new tokens with name "([^"]*)" and "([^"]*)"/,
     undefined,
-    30000,
+    30000
   )
   public async createTokenPairAndInitializeThem(
     firstTokenName: string,
-    secondTokenName: string,
+    secondTokenName: string
   ): Promise<void> {
     console.log(
-      "*******************Starting pair test with following credentials*******************",
+      "*******************Starting pair test with following credentials*******************"
     );
     console.log("OPERATOR_ID : ", id.toString());
     console.log("treasureId :", treasureId.toString());
@@ -70,14 +70,14 @@ export class PairTestSteps {
       firstTokenName,
       id,
       key,
-      client,
+      client
     );
     tokenB = await Common.createToken(
       secondTokenName,
       secondTokenName,
       id,
       key,
-      client,
+      client
     );
     tokenNameIdMap.set(firstTokenName, tokenA);
     tokenNameIdMap.set(secondTokenName, tokenB);
@@ -93,7 +93,7 @@ export class PairTestSteps {
       clientsInfo.operatorId,
       [tokenId],
       clientsInfo.operatorClient,
-      clientsInfo.operatorKey,
+      clientsInfo.operatorKey
     );
   }
 
@@ -106,11 +106,11 @@ export class PairTestSteps {
   @when(
     /User adds (-?\d+\.\d+) units of PairToken1 and (-?\d+\.\d+) units of PairToken2/,
     undefined,
-    30000,
+    30000
   )
   public async addLiquidity(
     tokenACount: number,
-    tokenBCount: number,
+    tokenBCount: number
   ): Promise<void> {
     tokensBefore = await pair.getPairQty(client);
 
@@ -122,18 +122,18 @@ export class PairTestSteps {
       tokenB,
       tokenBCount,
       precision,
-      client,
+      client
     );
   }
 
   @then(
     /PairToken1 and PairToken2 balances in the pool are (-?\d+\.\d+) units and (-?\d+\.\d+) units respectively/,
     undefined,
-    30000,
+    30000
   )
   public async verifyTokensInPool(
     tokenACount: number,
-    tokenBCount: number,
+    tokenBCount: number
   ): Promise<void> {
     const tokenAQty = Common.withPrecision(tokenACount, precision);
     const tokenBQty = Common.withPrecision(tokenBCount, precision);
@@ -149,7 +149,7 @@ export class PairTestSteps {
 
   @when(/User returns (-?\d+\.\d+) units of lptoken/, undefined, 30000)
   public async returnLPTokensAndRemoveLiquidity(
-    lpTokenCount: number,
+    lpTokenCount: number
   ): Promise<void> {
     tokensBefore = await pair.getPairQty(client);
     lpTokenQty = Common.withPrecision(lpTokenCount, precision);
@@ -159,19 +159,19 @@ export class PairTestSteps {
   @then(
     /User verifies (-?\d+\.\d+) units of PairToken1 and (-?\d+\.\d+) units of PairToken2 are left in pool/,
     undefined,
-    30000,
+    30000
   )
   public async verifyTokensLeftInPoolAfterRemovingLiquidity(
     tokenAQuantity: number,
-    tokenBQuantity: number,
+    tokenBQuantity: number
   ): Promise<void> {
     tokensAfter = await pair.getPairQty(client);
     const withPrecision = Common.withPrecision(1, precision);
     expect(Number(tokensAfter[0].dividedBy(withPrecision))).to.eql(
-      Number(tokenAQuantity),
+      Number(tokenAQuantity)
     );
     expect(Number(tokensAfter[1].dividedBy(withPrecision))).to.eql(
-      Number(tokenBQuantity),
+      Number(tokenBQuantity)
     );
   }
 
@@ -185,15 +185,15 @@ export class PairTestSteps {
   @when(
     /User swap (\d*) unit of token "([^"]*)" with slippage as (-?\d+\.\d+)/,
     undefined,
-    30000,
+    30000
   )
   public async swapTokenA(
     tokenCount: number,
     tokenName: string,
-    slippage: number,
+    slippage: number
   ): Promise<void> {
     const slippageVal = new BigNumber(slippage).multipliedBy(
-      precision.div(100),
+      precision.div(100)
     );
     const tokenId = tokenNameIdMap.get(tokenName);
     await pair.swapToken(
@@ -203,7 +203,7 @@ export class PairTestSteps {
       key,
       precision,
       slippageVal,
-      client,
+      client
     );
     const withPrecision = Common.withPrecision(1, precision);
     const tokenQty = new BigNumber(tokenCount).multipliedBy(withPrecision);
@@ -213,16 +213,16 @@ export class PairTestSteps {
   @when(
     /User tries to swap "([^"]*)" unit of token "([^"]*)" with slippage as (-?\d+\.\d+)/,
     undefined,
-    30000,
+    30000
   )
   public async swapTokenWithMaxValue(
     tokenCount: string,
     tokenName: string,
-    slippage: number,
+    slippage: number
   ): Promise<void> {
     try {
       const slippageVal = new BigNumber(slippage).multipliedBy(
-        precision.div(100),
+        precision.div(100)
       );
       const tokenId = tokenNameIdMap.get(tokenName);
       await pair.swapToken(
@@ -232,7 +232,7 @@ export class PairTestSteps {
         key,
         precision,
         slippageVal,
-        client,
+        client
       );
     } catch (e: any) {
       errorMsg = e.message;
@@ -242,19 +242,19 @@ export class PairTestSteps {
   @then(
     /PairToken1 quantity is (-?\d+\.\d+) and PairToken2 quantity is (-?\d+\.\d+) in pool/,
     undefined,
-    30000,
+    30000
   )
   public async verifyTokenAQtyIncreasedAndTokenBQtyDecreased(
     tokenAQuantity: number,
-    tokenBQuantity: number,
+    tokenBQuantity: number
   ): Promise<void> {
     tokensAfter = await pair.getPairQty(client);
     const withPrecision = Common.withPrecision(1, precision);
     expect(Number(tokensAfter[0].dividedBy(withPrecision))).to.eql(
-      Number(tokenAQuantity),
+      Number(tokenAQuantity)
     );
     expect(Number(tokensAfter[1].dividedBy(withPrecision))).to.eql(
-      Number(tokenBQuantity),
+      Number(tokenBQuantity)
     );
   }
 
@@ -278,7 +278,7 @@ export class PairTestSteps {
   @when(
     /User tries to give maximum "([^"]*)" units of PairToken2 to the pool/,
     undefined,
-    30000,
+    30000
   )
   public async calculateTokenAQtyForMaxTokenBQty(tokenBCount: string) {
     try {
@@ -293,14 +293,14 @@ export class PairTestSteps {
   public async verifyTokenAQty(expectedTokenAQty: number) {
     const withPrecision = Common.withPrecision(1, precision);
     expect(Number(tokenAQty.dividedBy(withPrecision))).to.eql(
-      Number(expectedTokenAQty),
+      Number(expectedTokenAQty)
     );
   }
 
   @when(
     /User gives (\d*) units of PairToken1 for calculating slippage out/,
     undefined,
-    30000,
+    30000
   )
   public async calculateSlippageOut(tokenACount: number) {
     const tokenAQty = Common.withPrecision(tokenACount, precision);
@@ -310,7 +310,7 @@ export class PairTestSteps {
   @when(
     /User tries to give "([^"]*)" units of PairToken1 for calculating slippage out/,
     undefined,
-    30000,
+    30000
   )
   public async calculateSlippageOutForMaxGivenIn(tokenACount: string) {
     try {
@@ -329,7 +329,7 @@ export class PairTestSteps {
   @when(
     /User gives (\d*) units of PairToken2 for calculating slippage in/,
     undefined,
-    30000,
+    30000
   )
   public async calculateSlippageIn(tokenBCount: number) {
     const tokenBQty = await Common.withPrecision(tokenBCount, precision);
@@ -339,13 +339,13 @@ export class PairTestSteps {
   @when(
     /User tries to give "([^"]*)" units of PairToken2 for calculating slippage in/,
     undefined,
-    30000,
+    30000
   )
   public async calculateSlippageInForMaxValGivenOutVal(tokenBCount: string) {
     try {
       const tokenBQty = await Common.withPrecision(
         Number(tokenBCount),
-        precision,
+        precision
       );
       slippageInGivenOut = await pair.slippageInGivenOut(tokenBQty, client);
     } catch (e: any) {
@@ -365,14 +365,14 @@ export class PairTestSteps {
       lpTokenName,
       lpTokenSymbol,
       AccountId.fromString(pair.contractId),
-      client,
+      client
     );
   }
 
   @when(
     /User initialize pair contract with swap transaction fee as (-?\d+\.\d+)%/,
     undefined,
-    30000,
+    30000
   )
   public async initializePairOfTokens(fee: number): Promise<void> {
     console.log("Initializing pair contract with following");
@@ -380,7 +380,7 @@ export class PairTestSteps {
     console.log("treasureId : ", treasureId.toString());
     console.log(
       "lpTokenContract.transparentProxyAddress : ",
-      lpTokenContract.transparentProxyAddress,
+      lpTokenContract.transparentProxyAddress
     );
     await pair.initialize(
       lpTokenContract.transparentProxyAddress!,
@@ -389,14 +389,14 @@ export class PairTestSteps {
       tokenA,
       tokenB,
       new BigNumber(fee * 100),
-      client,
+      client
     );
   }
 
   @when(
     /User define lptoken name and symbol for newly created tokens/,
     undefined,
-    30000,
+    30000
   )
   public async createLPTokenName(): Promise<void> {
     const data = await Common.createLPTokenName(tokenA, tokenB);
@@ -407,19 +407,19 @@ export class PairTestSteps {
   @then(
     /User verify balance of "([^"]*)" token with contract is (-?\d+\.\d+)/,
     undefined,
-    30000,
+    30000
   )
   public async verifyTokenBalanceFromContract(
     tokenName: string,
-    tokenQty: number,
+    tokenQty: number
   ) {
     const tokenId = tokenNameIdMap.get(tokenName);
     const tokenBalance = Number(
       await Common.getTokenBalance(
         ContractId.fromString(pair.contractId),
         tokenId,
-        client,
-      ),
+        client
+      )
     );
     const withPrecision = Number(Common.withPrecision(1, precision));
     expect(Number(tokenBalance / withPrecision)).to.eql(Number(tokenQty));
@@ -428,15 +428,15 @@ export class PairTestSteps {
   @then(
     /User verify "([^"]*)" balance with treasury is (\d+\.\d+)/,
     undefined,
-    30000,
+    30000
   )
   public async verifyTokenBalanceWithTreasury(
     tokenName: string,
-    balance: number,
+    balance: number
   ) {
     const tokenId = tokenNameIdMap.get(tokenName);
     const tokenBalanceAfterSwapWithTreasury = Number(
-      await Common.getTokenBalance(treasureId, tokenId, client),
+      await Common.getTokenBalance(treasureId, tokenId, client)
     );
 
     const withPrecision = Number(Common.withPrecision(1, precision));
@@ -450,7 +450,7 @@ export class PairTestSteps {
   @when(
     /User tries to initialize the pair contract with same tokens and same fee as (-?\d+\.\d+)%/,
     undefined,
-    30000,
+    30000
   )
   public async initializeWithSameTokenAndFee(fee: number) {
     try {
@@ -461,7 +461,7 @@ export class PairTestSteps {
         tokenA,
         tokenB,
         new BigNumber(fee * 100),
-        client,
+        client
       );
     } catch (e: any) {
       errorMsg = e.message;
@@ -477,34 +477,34 @@ export class PairTestSteps {
   @then(
     /Balance of "([^"]*)" and "([^"]*)" in user account is (\d+\.?\d*) and (\d+\.?\d*) respectively/,
     undefined,
-    30000,
+    30000
   )
   public async verifyTokenBalance(
     firstTokenName: string,
     secondTokenName: string,
     firstTokenAmt: number,
-    secondTokenAmt: number,
+    secondTokenAmt: number
   ) {
     await Helper.delay(10000);
     const firstTokenId = tokenNameIdMap.get(firstTokenName);
     const secondTokenId = tokenNameIdMap.get(secondTokenName);
     const firstTokenBalance = Number(
-      await Common.getTokenBalance(id, firstTokenId, client),
+      await Common.getTokenBalance(id, firstTokenId, client)
     );
     const secondTokenBalance = Number(
-      await Common.getTokenBalance(id, secondTokenId, client),
+      await Common.getTokenBalance(id, secondTokenId, client)
     );
 
     expect(firstTokenBalance / Number(precision)).to.eql(Number(firstTokenAmt));
     expect(secondTokenBalance / Number(precision)).to.eql(
-      Number(secondTokenAmt),
+      Number(secondTokenAmt)
     );
   }
 
   @when(
     /User set allowance amount as (\d+\.?\d*) for token "([^"]*)"/,
     undefined,
-    30000,
+    30000
   )
   public async setAllowanceForToken(allowanceAmt: number, tokenName: string) {
     const tokenId = tokenNameIdMap.get(tokenName);
@@ -518,25 +518,23 @@ export class PairTestSteps {
       allowanceAmt * CommonSteps.withPrecision,
       id,
       key,
-      client,
+      client
     );
   }
 
   @given(
     /User verify that pair exists for given tokens "([^"]*)" and "([^"]*)"/,
     undefined,
-    30000,
+    30000
   )
   public async getPair(firstTokenName: string, secondTokenName: string) {
     const firstTokenIdFromMap = tokenNameIdMap.get(firstTokenName);
     const secondTokenIdFromMap = tokenNameIdMap.get(secondTokenName);
     const firstTokenId = TokenId.fromSolidityAddress(
-      (await pair.getTokenPairAddress(clientsInfo.operatorClient))
-        .tokenAAddress,
+      (await pair.getTokenPairAddress(clientsInfo.operatorClient)).tokenAAddress
     );
     const secondTokenId = TokenId.fromSolidityAddress(
-      (await pair.getTokenPairAddress(clientsInfo.operatorClient))
-        .tokenBAddress,
+      (await pair.getTokenPairAddress(clientsInfo.operatorClient)).tokenBAddress
     );
     expect(firstTokenIdFromMap).to.eql(firstTokenId);
     expect(secondTokenIdFromMap).to.eql(secondTokenId);
@@ -545,11 +543,11 @@ export class PairTestSteps {
   @when(
     /User set allowance amount "([^"]*)" for the token "([^"]*)"/,
     undefined,
-    30000,
+    30000
   )
   public async setAllowanceMoreThanAllowed(
     maximumLimit: string,
-    tokenName: string,
+    tokenName: string
   ) {
     const tokenId = tokenNameIdMap.get(tokenName);
     const contractId =
@@ -562,19 +560,19 @@ export class PairTestSteps {
       Number(maximumLimit),
       id,
       key,
-      client,
+      client
     );
   }
 
   @when(
     /User tries to add "([^"]*)" units of "([^"]*)" and "([^"]*)" to pool/,
     undefined,
-    30000,
+    30000
   )
   public async addLiquidityMoreThanMax(
     maximumLimit: number,
     firstTokenName: string,
-    secondTokenName: string,
+    secondTokenName: string
   ) {
     const firstTokenIdFromMap = tokenNameIdMap.get(firstTokenName);
     const secondTokenIdFromMap = tokenNameIdMap.get(secondTokenName);
@@ -587,7 +585,7 @@ export class PairTestSteps {
         secondTokenIdFromMap,
         new BigNumber(Number(maximumLimit)),
         precision,
-        client,
+        client
       );
     } catch (e: any) {
       console.log(e.message);
@@ -602,7 +600,7 @@ export class PairTestSteps {
         new BigNumber(Number(maximumLimit)),
         id,
         key,
-        client,
+        client
       );
     } catch (e: any) {
       errorMsg = e.message;

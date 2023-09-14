@@ -38,10 +38,10 @@ describe("NFTDAOFactory contract tests", function () {
     const governorTT = await TestHelper.deployLogic("GovernorTransferToken");
     const governorUpgrade = await TestHelper.deployLogic("GovernorUpgrade");
     const governorTokenCreate = await TestHelper.deployLogic(
-      "GovernorTokenCreate",
+      "GovernorTokenCreate"
     );
     const governorTextProposal = await TestHelper.deployLogic(
-      "GovernorTextProposal",
+      "GovernorTextProposal"
     );
 
     const inputs = {
@@ -78,11 +78,11 @@ describe("NFTDAOFactory contract tests", function () {
       "NFTTokenHolderFactory",
       bastHTS.address,
       nftHolder.address,
-      dexOwner.address,
+      dexOwner.address
     );
 
     const governorTransferToken = await TestHelper.deployLogic(
-      "GovernorTransferToken",
+      "GovernorTransferToken"
     );
 
     const governorDAOFactoryInstance = await TestHelper.deployProxy(
@@ -91,7 +91,7 @@ describe("NFTDAOFactory contract tests", function () {
       bastHTS.address,
       nftTokenDAO.address,
       nftHolderFactory.address,
-      governance,
+      governance
     );
 
     return {
@@ -129,14 +129,15 @@ describe("NFTDAOFactory contract tests", function () {
         bastHTS.address,
         nftTokenDAO.address,
         nftHolderFactory.address,
-        governance,
-      ),
+        governance
+      )
     ).revertedWith("Initializable: contract is already initialized");
   });
 
   it("Verify createDAO should be reverted when dao admin is zero", async function () {
-    const { governorDAOFactoryInstance, token } =
-      await loadFixture(deployFixture);
+    const { governorDAOFactoryInstance, token } = await loadFixture(
+      deployFixture
+    );
     const CREATE_DAO_ARGS = [
       TestHelper.ZERO_ADDRESS,
       DAO_NAME,
@@ -177,8 +178,9 @@ describe("NFTDAOFactory contract tests", function () {
   });
 
   it("Verify createDAO should be reverted when token address is zero", async function () {
-    const { governorDAOFactoryInstance, daoAdminOne } =
-      await loadFixture(deployFixture);
+    const { governorDAOFactoryInstance, daoAdminOne } = await loadFixture(
+      deployFixture
+    );
     const CREATE_DAO_ARGS = [
       daoAdminOne.address,
       DAO_NAME,
@@ -302,19 +304,20 @@ describe("NFTDAOFactory contract tests", function () {
   });
 
   it("Verify upgrade logic call should be reverted for non dex owner", async function () {
-    const { governorDAOFactoryInstance, governance } =
-      await loadFixture(deployFixture);
+    const { governorDAOFactoryInstance, governance } = await loadFixture(
+      deployFixture
+    );
 
     await expect(
-      governorDAOFactoryInstance.upgradeFTDAOLogicImplementation(zeroAddress),
+      governorDAOFactoryInstance.upgradeFTDAOLogicImplementation(zeroAddress)
     ).reverted;
 
     await expect(
-      governorDAOFactoryInstance.upgradeGovernorsImplementation(governance),
+      governorDAOFactoryInstance.upgradeGovernorsImplementation(governance)
     ).reverted;
 
     await expect(
-      governorDAOFactoryInstance.upgradeTokenHolderFactory(zeroAddress),
+      governorDAOFactoryInstance.upgradeTokenHolderFactory(zeroAddress)
     ).reverted;
   });
 
@@ -339,11 +342,11 @@ describe("NFTDAOFactory contract tests", function () {
     expect(event2.event).equal("GovernorLogicUpdated");
     expect(event2.args.name).equal("Governors");
     expect(event2.args.newImplementation.tokenTransferLogic).equal(
-      governance[0],
+      governance[0]
     );
     expect(event2.args.newImplementation.textLogic).equal(governance[1]);
     expect(event2.args.newImplementation.contractUpgradeLogic).equal(
-      governance[2],
+      governance[2]
     );
     expect(event2.args.newImplementation.createTokenLogic).equal(governance[3]);
 
@@ -358,18 +361,20 @@ describe("NFTDAOFactory contract tests", function () {
   });
 
   it("Verify getTokenHolderFactoryAddress return correct address", async function () {
-    const { governorDAOFactoryInstance, nftHolderFactory } =
-      await loadFixture(deployFixture);
+    const { governorDAOFactoryInstance, nftHolderFactory } = await loadFixture(
+      deployFixture
+    );
     expect(
-      await governorDAOFactoryInstance.getTokenHolderFactoryAddress(),
+      await governorDAOFactoryInstance.getTokenHolderFactoryAddress()
     ).equals(nftHolderFactory.address);
   });
 
   it("Verify upgradeHederaService should fail when non-owner try to upgrade Hedera service", async function () {
-    const { governorDAOFactoryInstance, signers } =
-      await loadFixture(deployFixture);
+    const { governorDAOFactoryInstance, signers } = await loadFixture(
+      deployFixture
+    );
     await expect(
-      governorDAOFactoryInstance.upgradeHederaService(signers[3].address),
+      governorDAOFactoryInstance.upgradeHederaService(signers[3].address)
     ).reverted;
   });
 
@@ -380,7 +385,7 @@ describe("NFTDAOFactory contract tests", function () {
     await expect(
       governorDAOFactoryInstance
         .connect(systemUsersSigners.childProxyAdmin)
-        .upgradeHederaService(signers[3].address),
+        .upgradeHederaService(signers[3].address)
     ).not.reverted;
   });
 });

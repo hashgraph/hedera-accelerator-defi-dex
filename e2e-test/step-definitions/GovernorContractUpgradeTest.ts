@@ -29,11 +29,11 @@ export class GovernorUpgradeSteps extends CommonSteps {
   @given(
     /User have initialized the governor upgrade contract/,
     undefined,
-    30000,
+    30000
   )
   public async initialize() {
     console.log(
-      "*******************Starting governor contract upgrade test with following credentials*******************",
+      "*******************Starting governor contract upgrade test with following credentials*******************"
     );
 
     factory = new Factory();
@@ -51,14 +51,14 @@ export class GovernorUpgradeSteps extends CommonSteps {
       godHolder,
       clientsInfo.operatorClient,
       GOD_TOKEN_ID,
-      GOD_TOKEN_ID,
+      GOD_TOKEN_ID
     );
   }
 
   @when(
     /User create a new contract upgrade proposal with title "([^"]*)"/,
     undefined,
-    30000,
+    30000
   )
   public async createContractUpgradeProposal(title: string) {
     const proposalDetails: { proposalId: string; success: boolean } =
@@ -66,7 +66,7 @@ export class GovernorUpgradeSteps extends CommonSteps {
         await AddressHelper.idToEvmAddress(factory.contractId),
         proposedLogicAddressForFactory,
         title,
-        clientsInfo.operatorClient,
+        clientsInfo.operatorClient
       );
     proposalId = proposalDetails.proposalId;
   }
@@ -74,7 +74,7 @@ export class GovernorUpgradeSteps extends CommonSteps {
   @when(
     /User wait for upgrade proposal state to be "([^"]*)" for max (\d*) seconds/,
     undefined,
-    30000,
+    30000
   )
   public async userWaitForState(state: string, seconds: number) {
     await this.waitForProposalState(governor, state, proposalId, seconds);
@@ -83,14 +83,14 @@ export class GovernorUpgradeSteps extends CommonSteps {
   @then(
     /User verify that proposal current state is "([^"]*)"/,
     undefined,
-    30000,
+    30000
   )
   public async verifyProposalState(proposalState: string): Promise<void> {
     const { currentState, proposalStateNumeric } = await this.getProposalState(
       governor,
       proposalId,
       clientsInfo.operatorClient,
-      proposalState,
+      proposalState
     );
     expect(Number(currentState)).to.eql(proposalStateNumeric);
   }
@@ -103,46 +103,46 @@ export class GovernorUpgradeSteps extends CommonSteps {
   @when(
     /User execute the upgrade proposal with title "([^"]*)"/,
     undefined,
-    30000,
+    30000
   )
   public async execute(title: string) {
     await this.executeProposal(
       governor,
       title,
       clientsInfo.treasureKey,
-      clientsInfo.operatorClient,
+      clientsInfo.operatorClient
     );
   }
 
   @when(
     /User get the address of target contract from governor upgrade contract/,
     undefined,
-    30000,
+    30000
   )
   public async getContractAddressToUpgrade() {
     upgradeResponse =
       await governor.getContractAddressesFromGovernorUpgradeContract(
         proposalId,
-        clientsInfo.operatorClient,
+        clientsInfo.operatorClient
       );
   }
 
   @when(/User transfer ownership to governor contract/, undefined, 30000)
   public async transferOwnershipToGovernorContract() {
     const governorEvmAddress = await AddressHelper.idToEvmAddress(
-      governor.contractId,
+      governor.contractId
     );
     await new Common(upgradeResponse.proxyId).changeAdmin(
       governorEvmAddress,
       clientsInfo.proxyAdminKey,
-      clientsInfo.proxyAdminClient,
+      clientsInfo.proxyAdminClient
     );
   }
 
   @then(
     /User verify logic address of target factory contract is updated/,
     undefined,
-    30000,
+    30000
   )
   public async verifyLogicAddressUpdated() {
     console.log("---------verification-------------");
@@ -155,7 +155,7 @@ export class GovernorUpgradeSteps extends CommonSteps {
   @then(
     /User verify logic address of target contract is not changed/,
     undefined,
-    30000,
+    30000
   )
   public async verifyLogicAddressAreSame() {
     console.log("---------verification-------------");
@@ -168,7 +168,7 @@ export class GovernorUpgradeSteps extends CommonSteps {
   @when(
     /User get the current logic address of factory contract/,
     undefined,
-    30000,
+    30000
   )
   public async getAddressOfFactoryContract() {
     currentLogicAddressForFactory = await factory.getCurrentImplementation();
@@ -183,7 +183,7 @@ export class GovernorUpgradeSteps extends CommonSteps {
   @when(
     /User cancel the contract upgrade proposal with title "([^"]*)"/,
     undefined,
-    30000,
+    30000
   )
   public async cancelProposal(title: string) {
     await governor.cancelProposal(title, clientsInfo.operatorClient);
@@ -192,20 +192,20 @@ export class GovernorUpgradeSteps extends CommonSteps {
   @when(
     /User lock (\d+\.?\d*) GOD token before voting to contract upgrade proposal/,
     undefined,
-    30000,
+    30000
   )
   public async lockGOD(tokenAmt: number) {
     await this.lockTokens(
       godHolder,
       tokenAmt * CommonSteps.withPrecision,
-      clientsInfo.operatorClient,
+      clientsInfo.operatorClient
     );
   }
 
   @when(
     /User fetch GOD tokens back from GOD holder for GovernorUpgrade/,
     undefined,
-    30000,
+    30000
   )
   public async revertGOD() {
     await this.revertTokens(
@@ -214,14 +214,14 @@ export class GovernorUpgradeSteps extends CommonSteps {
       AccountId.fromString(godHolder.contractId),
       clientsInfo.operatorKey,
       GOD_TOKEN_ID,
-      clientsInfo.operatorClient,
+      clientsInfo.operatorClient
     );
   }
 
   @when(
     /User setup (\d+\.?\d*) as allowance amount for token locking for contract upgrade proposal/,
     undefined,
-    30000,
+    30000
   )
   public async setAllowanceForTokenLocking(allowanceAmt: number) {
     await this.setupAllowanceForTokenLocking(
@@ -229,21 +229,21 @@ export class GovernorUpgradeSteps extends CommonSteps {
       allowanceAmt * CommonSteps.withPrecision,
       clientsInfo.operatorId,
       clientsInfo.operatorKey,
-      clientsInfo.operatorClient,
+      clientsInfo.operatorClient
     );
   }
 
   @when(
     /User setup default allowance for contract upgrade proposal creation/,
     undefined,
-    30000,
+    30000
   )
   public async setAllowanceForProposalCreation() {
     await this.setupAllowanceForProposalCreation(
       governor,
       clientsInfo.operatorClient,
       clientsInfo.operatorId,
-      clientsInfo.operatorKey,
+      clientsInfo.operatorKey
     );
   }
 }

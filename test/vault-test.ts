@@ -37,7 +37,7 @@ describe("Vault Tests", function () {
         const contract = await TestHelper.deployERC20Mock();
         await contract.setUserBalance(owner.address, TOTAL_AMOUNT);
         return contract;
-      }),
+      })
     );
 
     const ARGS = [
@@ -71,14 +71,14 @@ describe("Vault Tests", function () {
     alreadyClaimedCount: number,
     claimedRewardsCount: number,
     unclaimedRewardsCount: number,
-    totalRewardsCount: number,
+    totalRewardsCount: number
   ) {
     const lastEvent = (
       await TestHelper.readEvents(txn, ["ClaimRewardsCallResponse"])
     ).pop();
     const { name, args } = { name: lastEvent.event, args: lastEvent.args };
     const claimedRewardsTokens = args.response.claimedRewardsTokens.filter(
-      (item: string) => ethers.constants.AddressZero !== item,
+      (item: string) => ethers.constants.AddressZero !== item
     );
     expect(name).equals("ClaimRewardsCallResponse");
     expect(args.length).equals(2);
@@ -94,7 +94,7 @@ describe("Vault Tests", function () {
     txn: any,
     owner: SignerWithAddress,
     rewardTokenContract: Contract,
-    rewardAmount: number,
+    rewardAmount: number
   ) {
     const { name, args } = await TestHelper.readLastEvent(txn);
     expect(name).equals("RewardAdded");
@@ -107,7 +107,7 @@ describe("Vault Tests", function () {
   async function verifyUnStakedEvent(
     txn: any,
     owner: SignerWithAddress,
-    unStakedAmount: number,
+    unStakedAmount: number
   ) {
     const { name, args } = await TestHelper.readLastEvent(txn);
     expect(name).equals("UnStaked");
@@ -119,7 +119,7 @@ describe("Vault Tests", function () {
   async function verifyStakedEvent(
     txn: any,
     owner: SignerWithAddress,
-    stakedAmount: number,
+    stakedAmount: number
   ) {
     const { name, args } = await TestHelper.readLastEvent(txn);
     expect(name).equals("Staked");
@@ -137,8 +137,8 @@ describe("Vault Tests", function () {
           hederaService.address,
           TestHelper.ZERO_ADDRESS,
           LOCKING_PERIOD,
-          systemRoleBasedAccess.address,
-        ),
+          systemRoleBasedAccess.address
+        )
       ).revertedWith("Vault: staking token should not be zero");
     });
 
@@ -154,25 +154,26 @@ describe("Vault Tests", function () {
           hederaService.address,
           stakingTokenContract.address,
           0,
-          systemRoleBasedAccess.address,
-        ),
+          systemRoleBasedAccess.address
+        )
       ).revertedWith("Vault: locking period should be a positive number");
     });
 
     it("Verify contract should be reverted for multiple initialization call", async function () {
       const { ARGS, vaultContract } = await loadFixture(deployFixture);
       await expect(vaultContract.initialize(...ARGS)).revertedWith(
-        "Initializable: contract is already initialized",
+        "Initializable: contract is already initialized"
       );
     });
 
     it("Verify update hedera service should be reverted for non-owner user", async function () {
-      const { vaultContract, hederaService, signers } =
-        await loadFixture(deployFixture);
+      const { vaultContract, hederaService, signers } = await loadFixture(
+        deployFixture
+      );
       await expect(
         vaultContract
           .connect(signers[1])
-          .upgradeHederaService(hederaService.address),
+          .upgradeHederaService(hederaService.address)
       ).revertedWith("Ownable: caller is not the owner");
     });
 
@@ -181,7 +182,7 @@ describe("Vault Tests", function () {
       const hederaService = await TestHelper.deployMockHederaService();
       await vaultContract.upgradeHederaService(hederaService.address);
       expect(await vaultContract.getHederaServiceVersion()).equals(
-        hederaService.address,
+        hederaService.address
       );
     });
 
@@ -189,13 +190,13 @@ describe("Vault Tests", function () {
       const { vaultContract, stakingTokenContract, hederaService } =
         await loadFixture(deployFixture);
       expect(await vaultContract.getStakingTokenLockingPeriod()).equals(
-        LOCKING_PERIOD,
+        LOCKING_PERIOD
       );
       expect(await vaultContract.getStakingTokenAddress()).equals(
-        stakingTokenContract.address,
+        stakingTokenContract.address
       );
       expect(await vaultContract.getHederaServiceVersion()).equals(
-        hederaService.address,
+        hederaService.address
       );
     });
   });
@@ -204,16 +205,17 @@ describe("Vault Tests", function () {
     it("Verify stake operation should be reverted for non-positive amount", async function () {
       const { vaultContract } = await loadFixture(deployFixture);
       await expect(vaultContract.stake(0)).revertedWith(
-        "Vault: stake amount must be a positive number",
+        "Vault: stake amount must be a positive number"
       );
     });
 
     it("Verify stake operation should be reverted for token transfer failed", async function () {
-      const { vaultContract, stakingTokenContract } =
-        await loadFixture(deployFixture);
+      const { vaultContract, stakingTokenContract } = await loadFixture(
+        deployFixture
+      );
       await stakingTokenContract.setTransaferFailed(true);
       await expect(vaultContract.stake(STAKED_AMOUNT)).revertedWith(
-        "Vault: staking failed",
+        "Vault: staking failed"
       );
     });
 
@@ -224,30 +226,31 @@ describe("Vault Tests", function () {
     });
 
     it("Verify stake operation should be succeeded for valid inputs", async function () {
-      const { vaultContract, owner, stakingTokenContract } =
-        await loadFixture(deployFixture);
+      const { vaultContract, owner, stakingTokenContract } = await loadFixture(
+        deployFixture
+      );
       expect(await vaultContract.getStakingTokenTotalSupply()).equals(0);
       expect(await vaultContract.stakedTokenByUser(owner.address)).equals(0);
       expect(await stakingTokenContract.balanceOf(owner.address)).equals(
-        TOTAL_AMOUNT,
+        TOTAL_AMOUNT
       );
       expect(
-        await stakingTokenContract.balanceOf(vaultContract.address),
+        await stakingTokenContract.balanceOf(vaultContract.address)
       ).equals(0);
 
       await vaultContract.stake(STAKED_AMOUNT);
 
       expect(await vaultContract.getStakingTokenTotalSupply()).equals(
-        STAKED_AMOUNT,
+        STAKED_AMOUNT
       );
       expect(await vaultContract.stakedTokenByUser(owner.address)).equals(
-        STAKED_AMOUNT,
+        STAKED_AMOUNT
       );
       expect(await stakingTokenContract.balanceOf(owner.address)).equals(
-        TOTAL_AMOUNT - STAKED_AMOUNT,
+        TOTAL_AMOUNT - STAKED_AMOUNT
       );
       expect(
-        await stakingTokenContract.balanceOf(vaultContract.address),
+        await stakingTokenContract.balanceOf(vaultContract.address)
       ).equals(STAKED_AMOUNT);
     });
 
@@ -256,7 +259,7 @@ describe("Vault Tests", function () {
         await loadFixture(deployFixture);
       await vaultContract.stake(STAKED_AMOUNT);
       expect(await vaultContract.getStakingTokenTotalSupply()).equals(
-        STAKED_AMOUNT,
+        STAKED_AMOUNT
       );
       for (const rewardContract of rewardsContract) {
         await vaultContract
@@ -269,7 +272,7 @@ describe("Vault Tests", function () {
       await verifyClaimRewardsCallResponseEvent(txn, owner, 80, 20, 0, 100);
       await verifyStakedEvent(txn, owner, STAKED_AMOUNT);
       expect(await vaultContract.getStakingTokenTotalSupply()).equals(
-        STAKED_AMOUNT * 2,
+        STAKED_AMOUNT * 2
       );
     });
 
@@ -287,10 +290,10 @@ describe("Vault Tests", function () {
         .addReward(reward1TokenContract.address, REWARD_AMOUNT, owner.address);
       await vaultContract.connect(signers[1]).stake(STAKED_AMOUNT);
       expect(await vaultContract.canUserClaimRewards(owner.address)).equals(
-        true,
+        true
       );
       expect(
-        await vaultContract.canUserClaimRewards(signers[1].address),
+        await vaultContract.canUserClaimRewards(signers[1].address)
       ).equals(false);
     });
   });
@@ -300,7 +303,7 @@ describe("Vault Tests", function () {
       const { vaultContract } = await loadFixture(deployFixture);
       await vaultContract.stake(STAKED_AMOUNT);
       await expect(vaultContract.unstake(0)).revertedWith(
-        "Vault: unstake amount must be a positive number",
+        "Vault: unstake amount must be a positive number"
       );
     });
 
@@ -308,7 +311,7 @@ describe("Vault Tests", function () {
       const { vaultContract } = await loadFixture(deployFixture);
       await vaultContract.stake(STAKED_AMOUNT);
       await expect(vaultContract.unstake(UN_STAKED_AMOUNT)).revertedWith(
-        "Vault: unstake not allowed",
+        "Vault: unstake not allowed"
       );
     });
 
@@ -317,7 +320,7 @@ describe("Vault Tests", function () {
       await vaultContract.stake(STAKED_AMOUNT);
       await TestHelper.increaseEVMTime(ADVANCE_LOCKING_PERIOD);
       await expect(vaultContract.unstake(STAKED_AMOUNT + 1)).revertedWith(
-        "Vault: unstake not allowed",
+        "Vault: unstake not allowed"
       );
     });
 
@@ -326,18 +329,19 @@ describe("Vault Tests", function () {
       await vaultContract.stake(STAKED_AMOUNT);
       await TestHelper.increaseEVMTime(ADVANCE_LOCKING_PERIOD);
       await expect(
-        vaultContract.connect(signers[1]).unstake(STAKED_AMOUNT),
+        vaultContract.connect(signers[1]).unstake(STAKED_AMOUNT)
       ).revertedWith("Vault: unstake not allowed");
     });
 
     it("Verify unstake operation should be reverted during token transfer", async function () {
-      const { vaultContract, stakingTokenContract } =
-        await loadFixture(deployFixture);
+      const { vaultContract, stakingTokenContract } = await loadFixture(
+        deployFixture
+      );
       await vaultContract.stake(STAKED_AMOUNT);
       await TestHelper.increaseEVMTime(ADVANCE_LOCKING_PERIOD);
       await stakingTokenContract.setTransaferFailed(true);
       await expect(vaultContract.unstake(STAKED_AMOUNT)).revertedWith(
-        "Vault: unstaking failed",
+        "Vault: unstaking failed"
       );
     });
 
@@ -355,7 +359,7 @@ describe("Vault Tests", function () {
       await TestHelper.increaseEVMTime(ADVANCE_LOCKING_PERIOD);
       await vaultContract.unstake(UN_STAKED_AMOUNT);
       expect(await vaultContract.getStakingTokenTotalSupply()).equals(
-        STAKED_AMOUNT - UN_STAKED_AMOUNT,
+        STAKED_AMOUNT - UN_STAKED_AMOUNT
       );
     });
 
@@ -394,17 +398,18 @@ describe("Vault Tests", function () {
       await expect(
         vaultContract
           .connect(anyUser)
-          .addReward(TestHelper.ZERO_ADDRESS, REWARD_AMOUNT, owner.address),
+          .addReward(TestHelper.ZERO_ADDRESS, REWARD_AMOUNT, owner.address)
       ).reverted;
     });
 
     it("Verify reward operation should be reverted for zero token address", async function () {
-      const { vaultContract, owner, vaultAddRewardUser } =
-        await loadFixture(deployFixture);
+      const { vaultContract, owner, vaultAddRewardUser } = await loadFixture(
+        deployFixture
+      );
       await expect(
         vaultContract
           .connect(vaultAddRewardUser)
-          .addReward(TestHelper.ZERO_ADDRESS, REWARD_AMOUNT, owner.address),
+          .addReward(TestHelper.ZERO_ADDRESS, REWARD_AMOUNT, owner.address)
       ).revertedWith("Vault: reward token should not be zero");
     });
 
@@ -417,8 +422,8 @@ describe("Vault Tests", function () {
           .addReward(
             reward1TokenContract.address,
             REWARD_AMOUNT,
-            TestHelper.ZERO_ADDRESS,
-          ),
+            TestHelper.ZERO_ADDRESS
+          )
       ).revertedWith("Vault: from address should not be zero");
     });
 
@@ -428,7 +433,7 @@ describe("Vault Tests", function () {
       await expect(
         vaultContract
           .connect(vaultAddRewardUser)
-          .addReward(reward1TokenContract.address, 0, owner.address),
+          .addReward(reward1TokenContract.address, 0, owner.address)
       ).revertedWith("Vault: reward amount must be a positive number");
     });
 
@@ -438,11 +443,7 @@ describe("Vault Tests", function () {
       await expect(
         vaultContract
           .connect(vaultAddRewardUser)
-          .addReward(
-            reward1TokenContract.address,
-            REWARD_AMOUNT,
-            owner.address,
-          ),
+          .addReward(reward1TokenContract.address, REWARD_AMOUNT, owner.address)
       ).revertedWith("Vault: no token staked yet");
     });
 
@@ -454,11 +455,7 @@ describe("Vault Tests", function () {
       await expect(
         vaultContract
           .connect(vaultAddRewardUser)
-          .addReward(
-            reward1TokenContract.address,
-            REWARD_AMOUNT,
-            owner.address,
-          ),
+          .addReward(reward1TokenContract.address, REWARD_AMOUNT, owner.address)
       ).revertedWith("Vault: Add reward failed");
     });
 
@@ -471,11 +468,7 @@ describe("Vault Tests", function () {
       await expect(
         vaultContract
           .connect(vaultAddRewardUser)
-          .addReward(
-            stakingTokenContract.address,
-            REWARD_AMOUNT,
-            owner.address,
-          ),
+          .addReward(stakingTokenContract.address, REWARD_AMOUNT, owner.address)
       ).revertedWith("Vault: Reward and Staking tokens cannot be same.");
     });
 
@@ -517,10 +510,10 @@ describe("Vault Tests", function () {
         .addReward(reward2.address, REWARD_AMOUNT, owner.address);
 
       expect(await reward1.balanceOf(vaultContract.address)).equals(
-        REWARD_AMOUNT * 2,
+        REWARD_AMOUNT * 2
       );
       expect(await reward2.balanceOf(vaultContract.address)).equals(
-        REWARD_AMOUNT,
+        REWARD_AMOUNT
       );
     });
   });
@@ -535,7 +528,7 @@ describe("Vault Tests", function () {
         .addReward(reward1TokenContract.address, REWARD_AMOUNT, owner.address);
       await reward1TokenContract.setTransaferFailed(true);
       await expect(vaultContract.claimRewards(owner.address)).revertedWith(
-        "Vault: Claim reward failed",
+        "Vault: Claim reward failed"
       );
     });
 
@@ -598,10 +591,10 @@ describe("Vault Tests", function () {
       await vaultContract.claimRewards(owner.address);
       await vaultContract.unstake(UN_STAKED_AMOUNT);
       expect(
-        await reward1TokenContract.balanceOf(vaultContract.address),
+        await reward1TokenContract.balanceOf(vaultContract.address)
       ).equals(0);
       expect(await reward1TokenContract.balanceOf(owner.address)).equals(
-        TOTAL_AMOUNT,
+        TOTAL_AMOUNT
       );
     });
 
@@ -628,19 +621,19 @@ describe("Vault Tests", function () {
       await vaultContract.claimRewards(owner.address);
       await vaultContract.connect(owner).unstake(UN_STAKED_AMOUNT);
       expect(await vaultContract.getStakingTokenTotalSupply()).equals(
-        STAKED_AMOUNT * 2 - UN_STAKED_AMOUNT,
+        STAKED_AMOUNT * 2 - UN_STAKED_AMOUNT
       );
       expect(await reward1TokenContract.balanceOf(owner.address)).equals(
-        TOTAL_AMOUNT - REWARD_AMOUNT / 2,
+        TOTAL_AMOUNT - REWARD_AMOUNT / 2
       );
       expect(await reward2TokenContract.balanceOf(owner.address)).equals(
-        TOTAL_AMOUNT - REWARD_AMOUNT / 2,
+        TOTAL_AMOUNT - REWARD_AMOUNT / 2
       );
       expect(await reward1TokenContract.balanceOf(signers[1].address)).equals(
-        0,
+        0
       );
       expect(await reward2TokenContract.balanceOf(signers[1].address)).equals(
-        0,
+        0
       );
     });
 
@@ -652,10 +645,10 @@ describe("Vault Tests", function () {
         .connect(vaultAddRewardUser)
         .addReward(reward1TokenContract.address, REWARD_AMOUNT, owner.address);
       expect(await vaultContract.stakedTokenByUser(owner.address)).equals(
-        STAKED_AMOUNT,
+        STAKED_AMOUNT
       );
       expect(
-        await reward1TokenContract.balanceOf(vaultContract.address),
+        await reward1TokenContract.balanceOf(vaultContract.address)
       ).equals(REWARD_AMOUNT);
       await TestHelper.increaseEVMTime(ADVANCE_LOCKING_PERIOD);
 
@@ -663,10 +656,10 @@ describe("Vault Tests", function () {
       await vaultContract.claimRewards(owner.address);
       await vaultContract.unstake(STAKED_AMOUNT / 2);
       expect(await vaultContract.stakedTokenByUser(owner.address)).equals(
-        STAKED_AMOUNT / 2,
+        STAKED_AMOUNT / 2
       );
       expect(await vaultContract.getStakingTokenTotalSupply()).equals(
-        STAKED_AMOUNT / 2,
+        STAKED_AMOUNT / 2
       );
 
       // 2nd - unstake
@@ -692,16 +685,16 @@ describe("Vault Tests", function () {
         .addReward(reward2TokenContract.address, REWARD_AMOUNT, owner.address);
       await vaultContract.claimRewards(owner.address);
       expect(await reward1TokenContract.balanceOf(owner.address)).equals(
-        TOTAL_AMOUNT,
+        TOTAL_AMOUNT
       );
       expect(await reward2TokenContract.balanceOf(owner.address)).equals(
-        TOTAL_AMOUNT,
+        TOTAL_AMOUNT
       );
       expect(
-        await reward1TokenContract.balanceOf(vaultContract.address),
+        await reward1TokenContract.balanceOf(vaultContract.address)
       ).equals(0);
       expect(
-        await reward2TokenContract.balanceOf(vaultContract.address),
+        await reward2TokenContract.balanceOf(vaultContract.address)
       ).equals(0);
     });
   });

@@ -47,19 +47,19 @@ function initClientsInfo(): ClientsInfo {
   const uiUserKey = PrivateKey.fromString(process.env.UI_USER_KEY!);
 
   const operatorIdNoGODToken = AccountId.fromString(
-    process.env.OPERATOR_ID_WITH_NO_GOD_TOKEN!,
+    process.env.OPERATOR_ID_WITH_NO_GOD_TOKEN!
   );
 
   const operatorKeyNoGODToken = PrivateKey.fromString(
-    process.env.OPERATOR_KEY_WITH_NO_GOD_TOKEN!,
+    process.env.OPERATOR_KEY_WITH_NO_GOD_TOKEN!
   );
 
   const childProxyAdminId = AccountId.fromString(
-    process.env.CHILD_PROXY_ADMIN_ID!,
+    process.env.CHILD_PROXY_ADMIN_ID!
   );
 
   const childProxyAdminKey = PrivateKey.fromString(
-    process.env.CHILD_PROXY_ADMIN_KEY!,
+    process.env.CHILD_PROXY_ADMIN_KEY!
   );
 
   return {
@@ -83,7 +83,7 @@ function initClientsInfo(): ClientsInfo {
     operatorKeyNoGODToken,
     operatorIdNoGODTokenClient: _createClient(
       operatorIdNoGODToken,
-      operatorKeyNoGODToken,
+      operatorKeyNoGODToken
     ),
 
     childProxyAdminId,

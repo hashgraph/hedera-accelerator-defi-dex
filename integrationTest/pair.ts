@@ -19,11 +19,11 @@ const csDev = new ContractService();
 
 const lpTokenContract = csDev.getContractWithProxyAtIndex(
   csDev.lpTokenContractName,
-  0,
+  0
 );
 const pairContract = csDev.getContractWithProxyAtIndex(
   csDev.pairContractName,
-  0,
+  0
 );
 
 let tokenA: TokenId;
@@ -37,12 +37,12 @@ const initializeLPTokenContract = async () => {
   try {
     const { lpTokenSymbol, lpTokenName } = await Common.createLPTokenName(
       tokenA,
-      tokenB,
+      tokenB
     );
     await lpToken.initialize(
       lpTokenName,
       lpTokenSymbol,
-      ContractId.fromSolidityAddress(pairContract.transparentProxyAddress!),
+      ContractId.fromSolidityAddress(pairContract.transparentProxyAddress!)
     );
   } catch (error) {
     console.error(error);
@@ -58,7 +58,7 @@ const initializePairContract = async () => {
       clientsInfo.operatorId,
       clientsInfo.treasureKey,
       tokenA,
-      tokenB,
+      tokenB
     );
   } catch (error) {
     console.error(error);
@@ -123,7 +123,7 @@ const addLiquidity = async (lpTokenAddress: string) => {
     Number(Common.withPrecision(tokenAQty, precision)),
     userId,
     userKey,
-    userClient,
+    userClient
   );
 
   await Common.setTokenAllowance(
@@ -132,13 +132,13 @@ const addLiquidity = async (lpTokenAddress: string) => {
     Number(Common.withPrecision(tokenBQty, precision)),
     userId,
     userKey,
-    userClient,
+    userClient
   );
 
   await Common.associateTokensToAccount(
     userId,
     [TokenId.fromSolidityAddress(lpTokenAddress)],
-    userClient,
+    userClient
   );
 
   await pair.addLiquidity(
@@ -149,7 +149,7 @@ const addLiquidity = async (lpTokenAddress: string) => {
     tokenB,
     tokenBQty,
     precision,
-    userClient,
+    userClient
   );
   await pair.getPairQty();
 };
@@ -163,13 +163,13 @@ const removeLiquidity = async (lpTokenAddress: string) => {
     Number(lpTokenQty),
     clientsInfo.treasureId,
     clientsInfo.treasureKey,
-    clientsInfo.treasureClient,
+    clientsInfo.treasureClient
   );
 
   await pair.removeLiquidity(
     lpTokenQty,
     clientsInfo.treasureId,
-    clientsInfo.treasureKey,
+    clientsInfo.treasureKey
   );
 
   await pair.getPairQty();
@@ -184,7 +184,7 @@ const swapTokenA = async () => {
     Number(Common.withPrecision(swapTokenAQty, precision)),
     clientsInfo.treasureId,
     clientsInfo.treasureKey,
-    clientsInfo.treasureClient,
+    clientsInfo.treasureClient
   );
 
   await pair.swapToken(
@@ -193,7 +193,7 @@ const swapTokenA = async () => {
     clientsInfo.treasureId,
     clientsInfo.treasureKey,
     precision,
-    BigNumber(0),
+    BigNumber(0)
   );
   await pair.getPairQty();
 };
@@ -208,7 +208,7 @@ async function main() {
 
 async function testForSinglePair(
   pairContract: DeployedContract,
-  lpContract: DeployedContract,
+  lpContract: DeployedContract
 ) {
   console.log(`- Running test with below inputs:`);
   console.log(` - Pair contractId = ${pairContract.transparentProxyId}`);

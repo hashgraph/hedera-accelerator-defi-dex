@@ -21,11 +21,11 @@ export class GovernorTextProposal extends CommonSteps {
   @given(
     /User have initialized the governor text proposal contract/,
     undefined,
-    30000,
+    30000
   )
   public async initialize() {
     console.log(
-      "*******************Starting governor contract text proposal test with following credentials*******************",
+      "*******************Starting governor contract text proposal test with following credentials*******************"
     );
     godHolder = new GodHolder();
     governor = new TextGovernor();
@@ -38,7 +38,7 @@ export class GovernorTextProposal extends CommonSteps {
       godHolder,
       clientsInfo.operatorClient,
       TOKEN_ID,
-      TOKEN_ID,
+      TOKEN_ID
     );
   }
 
@@ -59,7 +59,7 @@ export class GovernorTextProposal extends CommonSteps {
   @when(
     /User wait for text proposal state to be "([^"]*)" for max (\d*) seconds/,
     undefined,
-    30000,
+    30000
   )
   public async waitForState(state: string, seconds: number) {
     await this.waitForProposalState(governor, state, proposalId, seconds);
@@ -76,7 +76,7 @@ export class GovernorTextProposal extends CommonSteps {
       governor,
       proposalId,
       clientsInfo.operatorClient,
-      proposalState,
+      proposalState
     );
     expect(Number(currentState)).to.eql(proposalStateNumeric);
   }
@@ -92,7 +92,7 @@ export class GovernorTextProposal extends CommonSteps {
       governor,
       title,
       clientsInfo.treasureKey,
-      clientsInfo.operatorClient,
+      clientsInfo.operatorClient
     );
   }
 
@@ -105,20 +105,20 @@ export class GovernorTextProposal extends CommonSteps {
   @when(
     /User lock (\d+\.?\d*) GOD token before voting to text proposal/,
     undefined,
-    30000,
+    30000
   )
   public async lockGOD(tokenAmt: number) {
     await this.lockTokens(
       godHolder,
       tokenAmt * CommonSteps.withPrecision,
-      clientsInfo.operatorClient,
+      clientsInfo.operatorClient
     );
   }
 
   @when(
     /User fetch GOD tokens back from GOD holder for GovernorText/,
     undefined,
-    30000,
+    30000
   )
   public async revertGOD() {
     await this.revertTokens(
@@ -127,14 +127,14 @@ export class GovernorTextProposal extends CommonSteps {
       AccountId.fromString(godHolder.contractId),
       clientsInfo.operatorKey,
       TOKEN_ID,
-      clientsInfo.operatorClient,
+      clientsInfo.operatorClient
     );
   }
 
   @when(
     /User setup (\d+\.?\d*) as allowance amount for token locking for text proposal/,
     undefined,
-    30000,
+    30000
   )
   public async setAllowanceForTokenLocking(allowanceAmt: number) {
     await this.setupAllowanceForTokenLocking(
@@ -142,21 +142,21 @@ export class GovernorTextProposal extends CommonSteps {
       allowanceAmt * CommonSteps.withPrecision,
       clientsInfo.operatorId,
       clientsInfo.operatorKey,
-      clientsInfo.operatorClient,
+      clientsInfo.operatorClient
     );
   }
 
   @when(
     /User setup default allowance for text proposal creation/,
     undefined,
-    30000,
+    30000
   )
   public async setAllowanceForProposalCreation() {
     await this.setupAllowanceForProposalCreation(
       governor,
       clientsInfo.operatorClient,
       clientsInfo.operatorId,
-      clientsInfo.operatorKey,
+      clientsInfo.operatorKey
     );
   }
 }

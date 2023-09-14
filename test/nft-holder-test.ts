@@ -14,8 +14,9 @@ describe("NFTHolder Tests", function () {
   const tokenCount = 1;
 
   async function deployFixture() {
-    const MockHederaService =
-      await ethers.getContractFactory("MockHederaService");
+    const MockHederaService = await ethers.getContractFactory(
+      "MockHederaService"
+    );
     const mockHederaService = await TestHelper.deployMockHederaService();
     return basicDeployments(mockHederaService);
   }
@@ -39,26 +40,26 @@ describe("NFTHolder Tests", function () {
     const nftHolder = await upgrades.deployProxy(
       NFTHolder,
       [mockHederaService.address, nftToken.address],
-      { unsafeAllow: ["delegatecall"] },
+      { unsafeAllow: ["delegatecall"] }
     );
 
     const MockNFTHolder = await ethers.getContractFactory("NFTHolder");
     const mockNFTHolder = await MockNFTHolder.deploy();
 
     const NFTTokenHolderFactory = await ethers.getContractFactory(
-      "NFTTokenHolderFactory",
+      "NFTTokenHolderFactory"
     );
     const nftTokenHolderFactory = await NFTTokenHolderFactory.deploy();
 
     await nftTokenHolderFactory.initialize(
       mockHederaService.address,
       mockNFTHolder.address,
-      admin,
+      admin
     );
 
     const tokenHolderCallerMock = await TestHelper.deployLogic(
       "TokenHolderCallerMock",
-      nftHolder.address,
+      nftHolder.address
     );
     await nftToken.setUserBalance(tokenHolderCallerMock.address, 40);
 
@@ -78,7 +79,7 @@ describe("NFTHolder Tests", function () {
   it("Verify NFTHolder initialize should be failed for initialize called after instance created", async function () {
     const { nftHolder } = await loadFixture(deployFixture);
     await expect(
-      nftHolder.initialize(zeroAddress, zeroAddress),
+      nftHolder.initialize(zeroAddress, zeroAddress)
     ).to.revertedWith("Initializable: contract is already initialized");
   });
 
@@ -90,11 +91,12 @@ describe("NFTHolder Tests", function () {
   });
 
   it("Verify NFTHolder grabTokens pass", async function () {
-    const { nftHolder, nftToken, voterAccount } =
-      await loadFixture(deployFixture);
+    const { nftHolder, nftToken, voterAccount } = await loadFixture(
+      deployFixture
+    );
 
     expect(await nftToken.balanceOf(voterAccount.address)).equal(
-      TestHelper.NFT_IDS.length,
+      TestHelper.NFT_IDS.length
     );
 
     await nftHolder
@@ -105,7 +107,7 @@ describe("NFTHolder Tests", function () {
     expect(nftHolderBalance).equal(1);
 
     expect(await nftToken.balanceOf(voterAccount.address)).equal(
-      TestHelper.NFT_IDS.length - 1,
+      TestHelper.NFT_IDS.length - 1
     );
 
     const votingTokenOwner = await nftToken.ownerOf(TestHelper.NFT_FOR_VOTING);
@@ -120,22 +122,19 @@ describe("NFTHolder Tests", function () {
 
     await tokenHolderCallerMock.connect(voterAccount).addProposal(1);
     expect(
-      (await nftHolder.connect(voterAccount).getActiveProposalsForUser())
-        .length,
+      (await nftHolder.connect(voterAccount).getActiveProposalsForUser()).length
     ).equal(1);
 
     await tokenHolderCallerMock.connect(voterAccount).addProposal(2);
     expect(
-      (await nftHolder.connect(voterAccount).getActiveProposalsForUser())
-        .length,
+      (await nftHolder.connect(voterAccount).getActiveProposalsForUser()).length
     ).equal(2);
 
     await tokenHolderCallerMock
       .connect(voterAccount)
       .removeProposals(1, [voterAccount.address]);
     expect(
-      (await nftHolder.connect(voterAccount).getActiveProposalsForUser())
-        .length,
+      (await nftHolder.connect(voterAccount).getActiveProposalsForUser()).length
     ).equal(1);
 
     await tokenHolderCallerMock
@@ -143,8 +142,7 @@ describe("NFTHolder Tests", function () {
       .removeProposals(2, [voterAccount.address]);
 
     expect(
-      (await nftHolder.connect(voterAccount).getActiveProposalsForUser())
-        .length,
+      (await nftHolder.connect(voterAccount).getActiveProposalsForUser()).length
     ).equal(0);
   });
 
@@ -152,17 +150,18 @@ describe("NFTHolder Tests", function () {
     const { nftHolder, tokenHolderCallerMock, voterAccount } =
       await loadFixture(deployFixture);
     await expect(nftHolder.revertTokensForVoter(0)).to.revertedWith(
-      "NFTHolder: No amount for the Voter.",
+      "NFTHolder: No amount for the Voter."
     );
     await tokenHolderCallerMock.connect(voterAccount).addProposal(1);
     await expect(nftHolder.revertTokensForVoter(0)).to.revertedWith(
-      "User's Proposals are active",
+      "User's Proposals are active"
     );
   });
 
   it("Verify NFTHolder revertTokensForVoter pass", async function () {
-    const { nftHolder, nftToken, voterAccount } =
-      await loadFixture(deployFixture);
+    const { nftHolder, nftToken, voterAccount } = await loadFixture(
+      deployFixture
+    );
 
     await nftHolder
       .connect(voterAccount)
@@ -170,31 +169,33 @@ describe("NFTHolder Tests", function () {
 
     expect(await nftToken.balanceOf(nftHolder.address)).equal(1);
     expect(await nftToken.balanceOf(voterAccount.address)).equal(
-      TestHelper.NFT_IDS.length - 1,
+      TestHelper.NFT_IDS.length - 1
     );
 
     await nftHolder.connect(voterAccount).revertTokensForVoter(0);
 
     expect(await nftToken.balanceOf(nftHolder.address)).equal(0);
     expect(await nftToken.balanceOf(voterAccount.address)).equal(
-      TestHelper.NFT_IDS.length,
+      TestHelper.NFT_IDS.length
     );
   });
 
   it("Given a NFTHolder when factory is asked to create holder then address should be populated", async () => {
-    const { nftTokenHolderFactory, nftToken } =
-      await loadFixture(deployFixture);
+    const { nftTokenHolderFactory, nftToken } = await loadFixture(
+      deployFixture
+    );
 
     const holder = await nftTokenHolderFactory.callStatic.getTokenHolder(
-      nftToken.address,
+      nftToken.address
     );
 
     expect(holder).not.to.be.equal("0x0");
   });
 
   it("Given a NFTHolder exist in factory when factory is asked to create another one with different token then address should be populated", async () => {
-    const { nftTokenHolderFactory, nftToken: token } =
-      await loadFixture(deployFixture);
+    const { nftTokenHolderFactory, nftToken: token } = await loadFixture(
+      deployFixture
+    );
 
     const tx = await nftTokenHolderFactory.getTokenHolder(token.address);
     const info = await verifyTokenHolderCreatedEvent(tx, token.address);
@@ -208,8 +209,9 @@ describe("NFTHolder Tests", function () {
   });
 
   it("Given a NFTHolder exist in factory when factory is asked to create another one with same token then existing address should return", async () => {
-    const { nftTokenHolderFactory, nftToken: token } =
-      await loadFixture(deployFixture);
+    const { nftTokenHolderFactory, nftToken: token } = await loadFixture(
+      deployFixture
+    );
 
     const tx = await nftTokenHolderFactory.getTokenHolder(token.address);
     const info = await verifyTokenHolderCreatedEvent(tx, token.address);
@@ -236,10 +238,10 @@ describe("NFTHolder Tests", function () {
 
     const nftHolderContract = await TestHelper.getContract(
       "NFTHolder",
-      nftHolderAddress,
+      nftHolderAddress
     );
     expect(await nftTokenHolderFactory.getHederaServiceVersion()).equals(
-      mockHederaService.address,
+      mockHederaService.address
     );
 
     let updatedAddress = await nftHolderContract.getHederaServiceVersion();
@@ -251,7 +253,7 @@ describe("NFTHolder Tests", function () {
       .connect(owner)
       .upgradeHederaService(newHederaServiceAddress);
     expect(await nftTokenHolderFactory.getHederaServiceVersion()).equals(
-      newHederaServiceAddress,
+      newHederaServiceAddress
     );
 
     updatedAddress = await nftHolderContract.getHederaServiceVersion();
@@ -259,8 +261,9 @@ describe("NFTHolder Tests", function () {
   });
 
   it("Verify upgrade Hedera service should fail when owner try to upgrade it ", async () => {
-    const { nftTokenHolderFactory, nftToken, signers } =
-      await loadFixture(deployFixture);
+    const { nftTokenHolderFactory, nftToken, signers } = await loadFixture(
+      deployFixture
+    );
 
     const tx = await nftTokenHolderFactory.getTokenHolder(nftToken.address);
     const { name, args } = await TestHelper.readLastEvent(tx);
@@ -275,7 +278,7 @@ describe("NFTHolder Tests", function () {
     await expect(
       nftTokenHolderFactory
         .connect(nonOwner)
-        .upgradeHederaService(signers[3].address),
+        .upgradeHederaService(signers[3].address)
     ).revertedWith("Ownable: caller is not the owner");
   });
 });

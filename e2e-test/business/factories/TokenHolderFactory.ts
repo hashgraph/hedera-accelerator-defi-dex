@@ -23,7 +23,7 @@ export default abstract class TokenHolderFactory extends Base {
   protected abstract getHolderLogic(): string;
 
   protected abstract getHolderInstance(
-    contractId: ContractId,
+    contractId: ContractId
   ): GodHolder | NFTHolder;
 
   public initialize = async (client: Client = clientsInfo.operatorClient) => {
@@ -36,18 +36,18 @@ export default abstract class TokenHolderFactory extends Base {
         .addAddress(clientsInfo.childProxyAdminId.toSolidityAddress());
       await this.execute(4_00_000, INITIALIZE, client, args);
       console.log(
-        `- ${this.getPrefix()}TokenHolderFactory#${INITIALIZE}(): done. \n`,
+        `- ${this.getPrefix()}TokenHolderFactory#${INITIALIZE}(): done. \n`
       );
       return;
     }
     console.log(
-      `- ${this.getPrefix()}TokenHolderFactory#${INITIALIZE}(): already done. \n`,
+      `- ${this.getPrefix()}TokenHolderFactory#${INITIALIZE}(): already done. \n`
     );
   };
 
   public getTokenHolder = async (
     tokenAddress: string,
-    client: Client = clientsInfo.operatorClient,
+    client: Client = clientsInfo.operatorClient
   ) => {
     const args = new ContractFunctionParameters().addAddress(tokenAddress);
 
@@ -55,7 +55,7 @@ export default abstract class TokenHolderFactory extends Base {
       20_00_000,
       GET_TOKEN_HOLDER,
       client,
-      args,
+      args
     );
     const address = result.getAddress(0);
     const contractId = await AddressHelper.addressToIdObject(address);
@@ -66,14 +66,14 @@ export default abstract class TokenHolderFactory extends Base {
       },
     ];
     console.log(
-      `- ${this.getPrefix()}TokenHolderFactory#${GET_TOKEN_HOLDER}():`,
+      `- ${this.getPrefix()}TokenHolderFactory#${GET_TOKEN_HOLDER}():`
     );
     console.table(items);
     return contractId;
   };
 
   public getTokenHolders = async (
-    client: Client = clientsInfo.operatorClient,
+    client: Client = clientsInfo.operatorClient
   ) => {
     const { result } = await this.execute(9_00_000, GET_TOKEN_HOLDERS, client);
     const contractAddresses = Helper.getAddressArray(result);
@@ -81,16 +81,17 @@ export default abstract class TokenHolderFactory extends Base {
     await Promise.all(
       contractAddresses.map(async (address: string) => {
         const contractId = await AddressHelper.addressToIdObject(address);
-        const tokenId =
-          await this.getHolderInstance(contractId).getToken(client);
+        const tokenId = await this.getHolderInstance(contractId).getToken(
+          client
+        );
         items.push({
           TokenId: tokenId.toString(),
           HolderContractId: contractId.toString(),
         });
-      }),
+      })
     );
     console.log(
-      `- ${this.getPrefix()}TokenHolderFactory#${GET_TOKEN_HOLDERS}():`,
+      `- ${this.getPrefix()}TokenHolderFactory#${GET_TOKEN_HOLDERS}():`
     );
     console.table(items);
     return items;

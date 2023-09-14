@@ -28,7 +28,7 @@ const getPrecisionValue = async () => {
 
 const getTreasureBalance = async (
   account: AccountId | ContractId,
-  tokens: TokenId[],
+  tokens: TokenId[]
 ) => {
   await Common.getAccountBalance(account, tokens);
   await pair.getPairQty();
@@ -53,7 +53,7 @@ const createPair = async (token0: TokenId, token1: TokenId, fee: BigNumber) => {
     feeCollectionAccountId,
     clientsInfo.uiUserKey,
     clientsInfo.uiUserClient,
-    fee,
+    fee
   );
 };
 
@@ -61,7 +61,7 @@ const addLiquidity = async (
   token0: TokenId,
   token1: TokenId,
   lpTokenAddress: string,
-  pairContractId: string,
+  pairContractId: string
 ) => {
   const tokenAQty = 2.1;
   const tokenBQty = 2.3;
@@ -76,7 +76,7 @@ const addLiquidity = async (
   await Common.associateTokensToAccount(
     userId,
     [TokenId.fromSolidityAddress(lpTokenAddress)],
-    userClient,
+    userClient
   );
 
   await Common.setTokenAllowance(
@@ -85,7 +85,7 @@ const addLiquidity = async (
     Number(Common.withPrecision(tokenAQty, precision)),
     userId,
     userKey,
-    userClient,
+    userClient
   );
 
   await Common.setTokenAllowance(
@@ -94,7 +94,7 @@ const addLiquidity = async (
     Number(Common.withPrecision(tokenBQty, precision)),
     userId,
     userKey,
-    userClient,
+    userClient
   );
 
   await pair.addLiquidity(
@@ -105,7 +105,7 @@ const addLiquidity = async (
     token1,
     tokenBQty,
     precision,
-    userClient,
+    userClient
   );
 };
 
@@ -120,14 +120,14 @@ const removeLiquidity = async (lpTokenAddress: string) => {
     Number(lpTokenQty),
     clientsInfo.uiUserId,
     clientsInfo.uiUserKey,
-    clientsInfo.uiUserClient,
+    clientsInfo.uiUserClient
   );
 
   await pair.removeLiquidity(
     lpTokenQty,
     clientsInfo.uiUserId,
     clientsInfo.uiUserKey,
-    clientsInfo.uiUserClient,
+    clientsInfo.uiUserClient
   );
 };
 
@@ -140,7 +140,7 @@ const swapToken = async (token: TokenId, pairContractId: string) => {
     Number(Common.withPrecision(swapTokenAQty, precision)),
     clientsInfo.treasureId,
     clientsInfo.treasureKey,
-    clientsInfo.treasureClient,
+    clientsInfo.treasureClient
   );
 
   await pair.swapToken(
@@ -149,19 +149,19 @@ const swapToken = async (token: TokenId, pairContractId: string) => {
     clientsInfo.treasureId,
     clientsInfo.treasureKey,
     precision,
-    BigNumber(0),
+    BigNumber(0)
   );
 };
 
 const recommendedPairToSwap = async (
   tokenAddress: TokenId,
   otherTokenAddress: TokenId,
-  qtyToSwap: number,
+  qtyToSwap: number
 ) => {
   await factory.recommendedPairToSwap(
     tokenAddress.toSolidityAddress(),
     otherTokenAddress.toSolidityAddress(),
-    Common.withPrecision(qtyToSwap, 100000000),
+    Common.withPrecision(qtyToSwap, 100000000)
   );
 };
 
@@ -186,12 +186,13 @@ async function main() {
 async function testForSinglePair(
   token0: TokenId,
   token1: TokenId,
-  fee: BigNumber = new BigNumber(15),
+  fee: BigNumber = new BigNumber(15)
 ) {
   await getTokensInfo(token0, token1);
   const pairContractAddress = await createPair(token0, token1, fee);
-  const pairContractId =
-    await AddressHelper.addressToIdObject(pairContractAddress);
+  const pairContractId = await AddressHelper.addressToIdObject(
+    pairContractAddress
+  );
   const pairContractIdAsString = pairContractId.toString();
   pair = new Pair(pairContractId);
   await getPrecisionValue();
@@ -201,7 +202,7 @@ async function testForSinglePair(
     token0,
     token1,
     tokenAddresses.lpTokenAddress,
-    pairContractIdAsString,
+    pairContractIdAsString
   );
   await getTreasureBalance(pairContractId, [token0, token1]);
   await removeLiquidity(tokenAddresses.lpTokenAddress);

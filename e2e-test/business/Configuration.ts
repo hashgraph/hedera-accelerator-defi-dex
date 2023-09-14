@@ -28,14 +28,14 @@ export default class Configuration extends Base {
     key: BigNumber,
     value: BigNumber,
     ownerKey: PrivateKey,
-    client: Client = clientsInfo.operatorClient,
+    client: Client = clientsInfo.operatorClient
   ) => {
     const args = new ContractFunctionParameters()
       .addUint256(key)
       .addUint256(value);
     await this.execute(400000, SET_TRANSACTIONS_FEE, client, args, ownerKey);
     console.log(
-      `- Configuration#${SET_TRANSACTIONS_FEE}(): key = ${key.toFixed()}, value = ${value.toFixed()} done\n`,
+      `- Configuration#${SET_TRANSACTIONS_FEE}(): key = ${key.toFixed()}, value = ${value.toFixed()} done\n`
     );
   };
 
@@ -46,7 +46,7 @@ export default class Configuration extends Base {
     console.log(
       `- Configuration#${GET_TRANSACTIONS_FEE}(): count = ${
         fees.length
-      }, fees = ${JSON.stringify(fees)}\n`,
+      }, fees = ${JSON.stringify(fees)}\n`
     );
     return items;
   };
@@ -55,7 +55,7 @@ export default class Configuration extends Base {
     const { result } = await this.execute(50000, GET_HBARX_ADDRESS, client);
     const hbarAddress = result.getAddress(0);
     console.log(
-      `- Configuration#${GET_HBARX_ADDRESS}(): address = ${hbarAddress}\n`,
+      `- Configuration#${GET_HBARX_ADDRESS}(): address = ${hbarAddress}\n`
     );
     return hbarAddress;
   };
@@ -63,17 +63,17 @@ export default class Configuration extends Base {
   setHbarxAddress = async (
     hbarxAddress: string,
     ownerKey: PrivateKey,
-    client: Client = clientsInfo.operatorClient,
+    client: Client = clientsInfo.operatorClient
   ) => {
     const args = new ContractFunctionParameters().addAddress(hbarxAddress);
     const { receipt } = await this.execute(
       50_000,
       SET_HBARX_ADDRESS,
       client,
-      args,
+      args
     );
     console.log(
-      `- Configuration#${SET_HBARX_ADDRESS}(): tx status = ${receipt.status}\n`,
+      `- Configuration#${SET_HBARX_ADDRESS}(): tx status = ${receipt.status}\n`
     );
   };
 }

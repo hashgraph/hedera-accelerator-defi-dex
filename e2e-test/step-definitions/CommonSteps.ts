@@ -23,7 +23,7 @@ export class CommonSteps {
     tokenHolder: GodHolder | NFTHolder,
     client: Client,
     governorTokenId: TokenId,
-    holderTokenId: TokenId,
+    holderTokenId: TokenId
   ) {
     await governor.initialize(
       tokenHolder,
@@ -32,7 +32,7 @@ export class CommonSteps {
       CommonSteps.DEFAULT_VOTING_DELAY,
       CommonSteps.DEFAULT_VOTING_PERIOD,
       governorTokenId,
-      holderTokenId,
+      holderTokenId
     );
   }
 
@@ -40,14 +40,14 @@ export class CommonSteps {
     governor: Governor,
     state: string,
     proposalId: string,
-    seconds: number,
+    seconds: number
   ) {
     const requiredState = await governor.getProposalNumericState(state);
     await governor.getStateWithTimeout(
       proposalId,
       requiredState,
       seconds * 1000,
-      1000,
+      1000
     );
   }
 
@@ -56,7 +56,7 @@ export class CommonSteps {
     vote: string,
     proposalId: string,
     client: Client,
-    tokenSerialIdOrAmt: number = 0,
+    tokenSerialIdOrAmt: number = 0
   ) {
     const voteVal = await governor.getProposalVoteNumeric(vote);
     await governor.vote(proposalId, voteVal, tokenSerialIdOrAmt, client);
@@ -68,7 +68,7 @@ export class CommonSteps {
     title: string,
     fromPrivateKey: PrivateKey,
     client: Client,
-    fee: number = 0,
+    fee: number = 0
   ) {
     await governor.executeProposal(title, fromPrivateKey, client, fee);
   }
@@ -77,11 +77,12 @@ export class CommonSteps {
     governor: Governor,
     proposalId: string,
     client: Client,
-    proposalState: string,
+    proposalState: string
   ) {
     const currentState = await governor.state(proposalId, client);
-    const proposalStateNumeric =
-      await governor.getProposalNumericState(proposalState);
+    const proposalStateNumeric = await governor.getProposalNumericState(
+      proposalState
+    );
 
     return {
       currentState,
@@ -95,7 +96,7 @@ export class CommonSteps {
     senderAccountId: AccountId,
     senderPrivateKey: PrivateKey,
     tokenId: TokenId,
-    client: Client,
+    client: Client
   ) {
     const qty = await this.getTokenBal(id, tokenId, client);
     if (qty.isGreaterThan(0.0)) {
@@ -105,7 +106,7 @@ export class CommonSteps {
         receiverAccountId,
         senderAccountId,
         senderPrivateKey,
-        client,
+        client
       );
     }
   }
@@ -113,7 +114,7 @@ export class CommonSteps {
   private async getTokenBal(
     id: AccountId | ContractId,
     tokenId: TokenId,
-    client: Client,
+    client: Client
   ) {
     return await Common.getTokenBalance(id, tokenId, client);
   }
@@ -121,7 +122,7 @@ export class CommonSteps {
   public async lockTokens(
     godHolder: GodHolder,
     tokenAmt: number,
-    client: Client,
+    client: Client
   ) {
     await godHolder.lock(tokenAmt, client);
   }
@@ -131,13 +132,13 @@ export class CommonSteps {
     allowanceAmount: number,
     accountId: AccountId,
     accountPrivateKey: PrivateKey,
-    client: Client,
+    client: Client
   ) {
     await godHolder.setupAllowanceForTokenLocking(
       allowanceAmount,
       accountId,
       accountPrivateKey,
-      client,
+      client
     );
   }
 
@@ -145,12 +146,12 @@ export class CommonSteps {
     governor: Governor,
     creatorClient: Client,
     creatorAccountId: AccountId,
-    creatorPrivateKey: PrivateKey,
+    creatorPrivateKey: PrivateKey
   ) {
     await governor.setupAllowanceForProposalCreation(
       creatorClient,
       creatorAccountId,
-      creatorPrivateKey,
+      creatorPrivateKey
     );
   }
 
@@ -158,12 +159,12 @@ export class CommonSteps {
     governor: Governor,
     creatorClient: Client,
     creatorAccountId: AccountId,
-    creatorPrivateKey: PrivateKey,
+    creatorPrivateKey: PrivateKey
   ) {
     await governor.setupNFTAllowanceForProposalCreation(
       creatorClient,
       creatorAccountId,
-      creatorPrivateKey,
+      creatorPrivateKey
     );
   }
 
@@ -174,14 +175,14 @@ export class CommonSteps {
     spenderAccountId: string | AccountId,
     tokenSenderAccountId: string | AccountId,
     tokenSenderPrivateKey: PrivateKey,
-    client: Client,
+    client: Client
   ) {
     await governor.setAllowanceForTransferTokenProposal(
       tokenId,
       tokenAmount,
       spenderAccountId,
       tokenSenderAccountId,
-      tokenSenderPrivateKey,
+      tokenSenderPrivateKey
     );
   }
 
@@ -189,19 +190,19 @@ export class CommonSteps {
     nftHolder: NFTHolder,
     voterAccountId: AccountId,
     voterAccountPrivateKey: PrivateKey,
-    voterClient: Client,
+    voterClient: Client
   ) {
     await nftHolder.setupAllowanceForTokenLocking(
       voterAccountId,
       voterAccountPrivateKey,
-      voterClient,
+      voterClient
     );
   }
 
   public async grabNFTTokensForAllowance(
     nftHolder: NFTHolder,
     tokenSerial: number,
-    voterClient: Client,
+    voterClient: Client
   ) {
     await nftHolder.grabTokensForVoter(tokenSerial, voterClient);
   }
@@ -212,12 +213,12 @@ export class CommonSteps {
     toAccountId: string | AccountId,
     tokenId: TokenId,
     tokenSerialNumber: number,
-    client: Client,
+    client: Client
   ) {
     const balance = await Common.getTokenBalance(
       fromEvmAddress,
       tokenId,
-      client,
+      client
     );
     const fromAccountId = await AddressHelper.addressToId(fromEvmAddress);
     if (balance.toNumber() > 0) {
@@ -227,7 +228,7 @@ export class CommonSteps {
         toAccountId,
         fromAccountId,
         fromAccountKey,
-        client,
+        client
       );
     }
   }
@@ -242,7 +243,7 @@ export class CommonSteps {
     await Promise.all(
       items.map(async (item: string) => {
         await deployment.deployProxyAndSave(item);
-      }),
+      })
     );
   }
 }

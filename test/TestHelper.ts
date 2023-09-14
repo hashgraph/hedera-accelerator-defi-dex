@@ -26,7 +26,7 @@ export class TestHelper {
   static async transferBalance(
     address: string,
     amount: number,
-    sender: SignerWithAddress,
+    sender: SignerWithAddress
   ) {
     const tx = {
       to: address,
@@ -100,7 +100,7 @@ export class TestHelper {
   static async deployGodTokenHolderFactory(
     hederaService: Contract,
     godHolder: Contract,
-    admin: string,
+    admin: string
   ) {
     const instance = await this.deployLogic("GODTokenHolderFactory");
     await instance.initialize(hederaService.address, godHolder.address, admin);
@@ -128,7 +128,7 @@ export class TestHelper {
   static async deploySystemRoleBasedAccess() {
     const systemUsersSigners = await TestHelper.systemUsersSigners();
     const systemUsersAddresses = Object.values(systemUsersSigners).map(
-      (user: SignerWithAddress) => user.address,
+      (user: SignerWithAddress) => user.address
     );
     const contract = await this.deployLogic("SystemRoleBasedAccess");
     await contract.initialize(systemUsersAddresses);
@@ -138,14 +138,14 @@ export class TestHelper {
   static async deployERC20Mock(
     total: number = this.toPrecision(100),
     name: String = "TEST",
-    symbol: String = "TEST",
+    symbol: String = "TEST"
   ) {
     return await this.deployLogic("ERC20Mock", name, symbol, total, 0);
   }
 
   static async deployERC721Mock(
     treasure: SignerWithAddress,
-    nftIds: number[] = TestHelper.NFT_IDS,
+    nftIds: number[] = TestHelper.NFT_IDS
   ) {
     const erc721 = await this.deployLogic("ERC721Mock");
     for (const nftId of nftIds) {
@@ -173,7 +173,7 @@ export class TestHelper {
   private static async deployInternally(
     name: string,
     isProxy: boolean,
-    args: Array<any>,
+    args: Array<any>
   ) {
     const Contract = await ethers.getContractFactory(name);
     const contractInstance = !isProxy

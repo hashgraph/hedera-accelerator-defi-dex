@@ -16,12 +16,12 @@ async function main() {
   await createToken(
     dex.GOVERNANCE_DAO_ONE,
     dex.GOVERNANCE_DAO_ONE,
-    200000 * 1e8,
+    200000 * 1e8
   );
   await createToken(
     dex.GOVERNANCE_DAO_TWO,
     dex.GOVERNANCE_DAO_TWO,
-    200000 * 1e8,
+    200000 * 1e8
   );
   return "executed successfully";
 }
@@ -29,7 +29,7 @@ async function main() {
 async function createToken(
   tokenName: string,
   tokenSymbol: string,
-  initialSupply: number,
+  initialSupply: number
 ) {
   const treasuryClient = clientsInfo.treasureClient;
   const treasureId = clientsInfo.treasureId;
@@ -57,7 +57,7 @@ async function createToken(
   };
   console.log(`- ${tokenName} Token ID: ${item.tokenId}`);
   console.log(
-    `- ${tokenName} Token ID in Solidity format: ${item.tokenAddressSol}`,
+    `- ${tokenName} Token ID in Solidity format: ${item.tokenAddressSol}`
   );
   return item;
 }

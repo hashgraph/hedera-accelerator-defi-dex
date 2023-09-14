@@ -35,7 +35,7 @@ export class MirrorNodeService {
   private async readRecords(
     url: string,
     items: any[],
-    key: string | undefined | null = null,
+    key: string | undefined | null = null
   ) {
     this.isLogEnabled && console.log("- Request url:", url);
     const data = (await axios.get(url))?.data;
@@ -47,7 +47,7 @@ export class MirrorNodeService {
 
   public async getTokenBalance(
     id: AccountId | ContractId,
-    tokens: TokenId[],
+    tokens: TokenId[]
   ): Promise<Map<string, Long>> {
     const tokensId = [...new Set(tokens.map((tokenId) => tokenId.toString()))];
     const tokensMap = new Map();
@@ -116,7 +116,7 @@ export class MirrorNodeService {
   public async getEvents(contractId: string, delayRequired: boolean = false) {
     this.isLogEnabled &&
       console.log(
-        `- Getting event(s) from mirror for contract id = ${contractId}`,
+        `- Getting event(s) from mirror for contract id = ${contractId}`
       );
     if (delayRequired) {
       this.isLogEnabled &&
@@ -175,10 +175,10 @@ export class MirrorNodeService {
     const errorMessages = (await this.getCallTrace(txnId))
       .filter(
         (call: any) =>
-          call.result_data_type === "ERROR" && call.result_data !== "0x",
+          call.result_data_type === "ERROR" && call.result_data !== "0x"
       )
       .map((call: any) =>
-        String.fromCharCode(...ethers.utils.arrayify(call.result_data)),
+        String.fromCharCode(...ethers.utils.arrayify(call.result_data))
       );
     return [...new Set(errorMessages)].join(",");
   }
@@ -186,7 +186,7 @@ export class MirrorNodeService {
   private getEventArgumentsByName(
     args: any,
     eventName: string,
-    excludedKeys: string[] = ["__length__"],
+    excludedKeys: string[] = ["__length__"]
   ) {
     const namedArguments: Record<string, any> = {};
     for (const key in args) {
@@ -205,7 +205,7 @@ export class MirrorNodeService {
   }
 
   public async getTokensAccountBalance(
-    tokenId: string | TokenId,
+    tokenId: string | TokenId
   ): Promise<any> {
     const tokensObject: any[] = [];
     let url = `${BASE_URL}/api/v1/tokens/${tokenId.toString()}/balances?limit=100&order=asc&account.balance=gt%3A0`;

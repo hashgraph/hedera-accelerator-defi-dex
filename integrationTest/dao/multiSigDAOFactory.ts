@@ -37,7 +37,7 @@ async function main() {
     DAO_WEB_LINKS,
     DAO_OWNERS_ADDRESSES,
     DAO_OWNERS_ADDRESSES.length,
-    false,
+    false
   );
   const addresses = await daoFactory.getDAOs();
   if (addresses.length > 0) {

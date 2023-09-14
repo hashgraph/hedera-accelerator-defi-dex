@@ -23,7 +23,7 @@ export class EtherDeployment {
     return new hethers.providers.HederaProvider(
       "0.0.5", // AccountLike
       "2.testnet.hedera.com:50211",
-      "https://testnet.mirrornode.hedera.com",
+      "https://testnet.mirrornode.hedera.com"
     );
   };
 
@@ -44,14 +44,14 @@ export class EtherDeployment {
 
     console.log(
       `\n- Wallet address balance: ${hethers.utils.formatHbar(
-        balance.toString(),
-      )} hbar`,
+        balance.toString()
+      )} hbar`
     );
   };
 
   public deployContract = async (
     filePath: string,
-    contractConstructorArgs: Array<any>,
+    contractConstructorArgs: Array<any>
   ) => {
     const signerId = process.env.OPERATOR_ID!;
     const signerKey = PrivateKey.fromString(process.env.OPERATOR_KEY!); // TO WORK WITH HETHERS, IT MUST BE ECDSA KEY (FOR NOW);
@@ -80,7 +80,7 @@ export class EtherDeployment {
     const factory = new hethers.ContractFactory(
       compiledContract.abi,
       compiledContract.bytecode,
-      wallet,
+      wallet
     );
 
     console.log("Deploying contract...");
@@ -98,18 +98,18 @@ export class EtherDeployment {
 
     const contractDeployWait = await contract.deployTransaction.wait();
     console.log(
-      `\n- Contract deployment status: ${contractDeployWait.status!.toString()}`,
+      `\n- Contract deployment status: ${contractDeployWait.status!.toString()}`
     );
 
     await this.contractService.recordDeployedContract(
       contract.address,
-      compiledContract.contractName,
+      compiledContract.contractName
     );
 
     // Get the address of the deployed contract
     const contractAddress = contract.address;
     console.log(
-      `\n- Contract address: ${contractAddress}  Contract Address: ${contract.contractId}`,
+      `\n- Contract address: ${contractAddress}  Contract Address: ${contract.contractId}`
     );
 
     await this.printBalance(wallet, walletAddress);
@@ -127,7 +127,7 @@ export class Deployment {
     contractName: string,
     adminKey: Key = clientsInfo.operatorKey.publicKey,
     client: Client = clientsInfo.operatorClient,
-    params: ContractFunctionParameters = new ContractFunctionParameters(),
+    params: ContractFunctionParameters = new ContractFunctionParameters()
   ) => {
     console.log(`- Deployment#deploy(): ${contractName} logic deploying...\n`);
     const result = await this._deployInternally(
@@ -135,10 +135,10 @@ export class Deployment {
       "",
       adminKey,
       client,
-      params,
+      params
     );
     console.log(
-      `- Deployment#deploy(): done where contract-name = ${contractName}, id = ${result.id}, address = ${result.address}\n`,
+      `- Deployment#deploy(): done where contract-name = ${contractName}, id = ${result.id}, address = ${result.address}\n`
     );
     return result;
   };
@@ -147,7 +147,7 @@ export class Deployment {
     contractName: string,
     adminKey: Key = clientsInfo.operatorKey.publicKey,
     client: Client = clientsInfo.operatorClient,
-    params: ContractFunctionParameters = new ContractFunctionParameters(),
+    params: ContractFunctionParameters = new ContractFunctionParameters()
   ) => {
     const result = await this.deploy(contractName, adminKey, client, params);
     this.contractService.addDeployed(result);
@@ -157,7 +157,7 @@ export class Deployment {
   public deployContracts = async (
     names: string[],
     adminKey: Key = clientsInfo.operatorKey.publicKey,
-    client: Client = clientsInfo.operatorClient,
+    client: Client = clientsInfo.operatorClient
   ) => {
     const deployedItems = new Map<String, any>();
     const pendingItems = names.map(async (name: string) => {
@@ -171,16 +171,16 @@ export class Deployment {
   public deployProxy = async (
     contractName: string,
     adminKey: Key = clientsInfo.operatorKey.publicKey,
-    client: Client = clientsInfo.operatorClient,
+    client: Client = clientsInfo.operatorClient
   ) => {
     console.log(
-      `- Deployment#deployProxy(): ${contractName} proxy deploying...\n`,
+      `- Deployment#deployProxy(): ${contractName} proxy deploying...\n`
     );
     const logic = await this._deployInternally(
       contractName,
       "",
       adminKey,
-      client,
+      client
     );
     const proxy = await this.deployProxyForGivenLogic(logic, adminKey, client);
     console.log(`- Deployment#deployProxy(): done`);
@@ -192,7 +192,7 @@ export class Deployment {
   public deployProxyAndSave = async (
     contractName: string,
     adminKey: Key = clientsInfo.operatorKey.publicKey,
-    client: Client = clientsInfo.operatorClient,
+    client: Client = clientsInfo.operatorClient
   ) => {
     const result = await this.deployProxy(contractName, adminKey, client);
     this.contractService.addDeployed(result);
@@ -202,7 +202,7 @@ export class Deployment {
   public deployProxies = async (
     names: string[],
     adminKey: Key = clientsInfo.operatorKey.publicKey,
-    client: Client = clientsInfo.operatorClient,
+    client: Client = clientsInfo.operatorClient
   ) => {
     const deployedItems = new Map<String, DeployedContract>();
     const pendingItems = names.map(async (name: string) => {
@@ -216,7 +216,7 @@ export class Deployment {
   public deployProxyForGivenLogic = async (
     logic: DeployedContract,
     adminKey: Key = clientsInfo.operatorKey.publicKey,
-    client: Client = clientsInfo.operatorClient,
+    client: Client = clientsInfo.operatorClient
   ) => {
     const proxy = await this._deployInternally(
       "TransparentUpgradeableProxy",
@@ -226,7 +226,7 @@ export class Deployment {
       new ContractFunctionParameters()
         .addAddress(logic.address)
         .addAddress(clientsInfo.proxyAdminId.toSolidityAddress())
-        .addBytes(new Uint8Array()),
+        .addBytes(new Uint8Array())
     );
     return {
       ...logic,
@@ -241,7 +241,7 @@ export class Deployment {
     additionalInfo: string,
     adminKey: Key = clientsInfo.operatorKey.publicKey,
     client: Client = clientsInfo.operatorClient,
-    params: ContractFunctionParameters = new ContractFunctionParameters(),
+    params: ContractFunctionParameters = new ContractFunctionParameters()
   ) => {
     let contractMemo = contractName;
     if (additionalInfo.length > 0) {

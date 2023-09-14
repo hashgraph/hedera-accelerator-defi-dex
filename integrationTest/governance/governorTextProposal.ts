@@ -28,15 +28,15 @@ async function main() {
   await ftHolderFactory.initialize();
 
   const ftHolderContractId = await ftHolderFactory.getTokenHolder(
-    FT_TOKEN_ID.toSolidityAddress(),
+    FT_TOKEN_ID.toSolidityAddress()
   );
   const tokenHolder = new GodHolder(ftHolderContractId);
 
   const deploymentDetails = await deployment.deployProxy(
-    ContractService.GOVERNOR_TEXT,
+    ContractService.GOVERNOR_TEXT
   );
   const governor = new TextGovernor(
-    ContractId.fromString(deploymentDetails.transparentProxyId),
+    ContractId.fromString(deploymentDetails.transparentProxyId)
   );
   await governor.initialize(
     tokenHolder,
@@ -45,7 +45,7 @@ async function main() {
     0,
     20,
     FT_TOKEN_ID,
-    FT_TOKEN_ID,
+    FT_TOKEN_ID
   );
 
   // step - 0 lock required tokens to token holder
@@ -56,7 +56,7 @@ async function main() {
     voterAccountId,
     voterAccountKey,
     voterClient,
-    0,
+    0
   );
 
   // step - 1 text proposal flow
@@ -67,7 +67,7 @@ async function main() {
     clientsInfo.operatorId,
     clientsInfo.operatorKey,
     clientsInfo.operatorClient,
-    0,
+    0
   );
 
   // step - 3 unlock required tokens from token holder
