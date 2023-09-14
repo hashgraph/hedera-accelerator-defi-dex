@@ -520,7 +520,9 @@ export class FactorySteps {
         fees
       );
     } catch (e: any) {
+      console.error(`e.message ${e.message} `);
       errorMsg = e.message;
+      console.error(`errorMsg ${errorMsg} `);
     }
   }
 
@@ -556,6 +558,8 @@ export class FactorySteps {
 
   @then(/User receive error message "([^"]*)"/, undefined, 30000)
   public async verifyErrorMsg(msg: string) {
+    console.log(`receive error message ${msg}`);
+    console.log(`errorMsg receive error message ${errorMsg}`);
     expect(errorMsg).contains(msg);
     errorMsg = "";
   }
