@@ -1,4 +1,3 @@
-import Web3 from "web3";
 import hre from "hardhat";
 import md5File from "md5-file";
 
@@ -140,7 +139,6 @@ export default class ContractMetadata {
   };
 
   public getSignatureToABIMap = async () => {
-    const web3 = new Web3();
     const signatureToAbiMap: Map<string, any> = new Map();
     signatureToAbiMap.set("0x08c379a0", ContractMetadata.ERROR_ABI);
     signatureToAbiMap.set("0x4e487b71", ContractMetadata.PANIC_ABI);
@@ -148,12 +146,17 @@ export default class ContractMetadata {
     const contractsInfo = await this.getContractsInfo();
     for (const contractInfo of contractsInfo) {
       for (const eachABI of contractInfo.artifact.abi) {
+        const contractInterface = new ethers.utils.Interface(
+          contractInfo.artifact.abi
+        );
         if (eachABI.type === "event") {
-          const signature = web3.eth.abi.encodeEventSignature(eachABI);
-          signatureToAbiMap.set(signature, eachABI);
+          const eventFragment = contractInterface.getEvent(eachABI.name);
+          const topicHash = contractInterface.getEventTopic(eventFragment);
+          signatureToAbiMap.set(topicHash, contractInterface);
         } else if (eachABI.type === "error") {
-          const signature = web3.eth.abi.encodeFunctionSignature(eachABI);
-          signatureToAbiMap.set(signature, eachABI);
+          const eventFragment = contractInterface.getError(eachABI.name);
+          const hash = contractInterface.getSighash(eventFragment);
+          signatureToAbiMap.set(hash, contractInterface);
         }
       }
     }

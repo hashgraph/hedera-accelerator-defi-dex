@@ -1,5 +1,4 @@
 import * as fs from "fs";
-import Web3 from "web3";
 import prompts from "prompts";
 import ContractMetadata from "./ContractMetadata";
 
@@ -16,7 +15,6 @@ import {
 import { MirrorNodeService } from "../utils/MirrorNodeService";
 import { ContractService } from "../deployment/service/ContractService";
 
-const web3 = new Web3();
 const csDev = new ContractService();
 
 export class Helper {
@@ -146,7 +144,7 @@ export class Helper {
   }
 
   static createProposalTitle(titlePrefix: string, count: number = 20) {
-    return `${titlePrefix} ${web3.utils.randomHex(count)}`;
+    return `${titlePrefix} ${Math.random() * count}`;
   }
 
   static readWorkflowInputs() {

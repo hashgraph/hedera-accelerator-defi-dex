@@ -1,4 +1,3 @@
-import Web3 from "web3";
 import Long from "long";
 import axios from "axios";
 import ContractMetadata from "../utils/ContractMetadata";
@@ -10,7 +9,6 @@ import { AccountId, ContractId, TokenId, TransactionId } from "@hashgraph/sdk";
 const BASE_URL = "https://testnet.mirrornode.hedera.com";
 
 export class MirrorNodeService {
-  private web3 = new Web3();
   private isLogEnabled: boolean = false;
   private static mirrorNodeService = new MirrorNodeService();
 
@@ -97,7 +95,7 @@ export class MirrorNodeService {
     if (!message) {
       return { message: r.result, timestamp };
     }
-    if (message === "0x" || !this.web3.utils.isHex(message)) {
+    if (message === "0x" || ethers.utils.isHexString(message)) {
       const parsedMessage =
         await this.parseErrorMessageFromCallTraceIfAvailable(tId);
       const finalMessage = parsedMessage.length > 0 ? parsedMessage : message;
@@ -106,8 +104,8 @@ export class MirrorNodeService {
     const signature = message.substring(0, 10);
     const info = message.substring(10);
     const signatureMap = await new ContractMetadata().getSignatureToABIMap();
-    const abi = signatureMap.get(signature);
-    const result = this.web3.eth.abi.decodeParameters(abi.inputs, info);
+    const contractInterface = signatureMap.get(signature);
+    const result = contractInterface.parseError(info);
     return { message: result[0], timestamp };
   }
 
@@ -143,17 +141,13 @@ export class MirrorNodeService {
       try {
         const data = this.toHex(log.data);
         const topics = log.topics.map(this.toHex);
-        const eventAbi = signatureMap.get(topics[0]);
-        if (eventAbi) {
-          const event = this.web3.eth.abi.decodeLog(
-            eventAbi.inputs,
-            data,
-            eventAbi.anonymous === false ? topics.splice(1) : topics
-          );
-          const events = eventsMap.get(eventAbi.name) ?? [];
-          eventsMap.set(eventAbi.name, [
+        const contractInterface = signatureMap.get(topics[0]);
+        if (contractInterface) {
+          const event = contractInterface.parseLog({ data, topics });
+          const events = eventsMap.get(event.name) ?? [];
+          eventsMap.set(event.name, [
             ...events,
-            this.getEventArgumentsByName(event, eventAbi.name),
+            this.getEventArgumentsByName(event.args, event.name),
           ]);
         } else {
           this.isLogEnabled &&

@@ -24,14 +24,14 @@ Feature: Pair contract e2e test
         When User set allowance amount "2e256" for the token "PairToken1"
         When User set allowance amount "2e256" for the token "PairToken2"
         When User tries to add "2e256" units of "PairToken1" and "PairToken2" to pool
-        Then User get error message "offset is out of bounds"
+        Then User get error message "value out-of-bounds"
         Then PairToken1 and PairToken2 balances in the pool are 210.00 units and 230.00 units respectively 
 
     Scenario: Verify user get error in case of underflow while removing liquidity 
         Given User verify that pair exists for given tokens "PairToken1" and "PairToken2"
         When User set allowance amount "2e256" for the token "lptoken"
         When User gives "2e256" units of lptoken
-        Then User get error message "offset is out of bounds"   
+        Then User get error message "value out-of-bounds"   
         Then PairToken1 and PairToken2 balances in the pool are 210.00 units and 230.00 units respectively   
     
     Scenario: Verify token balance after removing liquidity
@@ -44,7 +44,7 @@ Feature: Pair contract e2e test
         Given User verify that pair exists for given tokens "PairToken1" and "PairToken2"
         When User set allowance amount "2e256" for the token "PairToken1"
         When User tries to swap "2e256" unit of token "PairToken1" with slippage as 200.0       
-        Then User get error message "offset is out of bounds"   
+        Then User get error message "value out-of-bounds"   
         Then User verifies 205.22233458 units of PairToken1 and 224.76731882 units of PairToken2 are left in pool 
 
     Scenario: Verify swapping PairToken1 increase the PairToken1 quantity and decreases PairToken2 quantity
@@ -79,7 +79,7 @@ Feature: Pair contract e2e test
      Scenario: Verify user gets error message on giving max value of PairToken2
         Given PairToken1 and PairToken2 are present in pool
         When User tries to give maximum "2e256" units of PairToken2 to the pool
-        Then User get error message "offset is out of bounds" 
+        Then User get error message "value out-of-bounds" 
         Then User verify balance of "PairToken1" token with contract is 209.18886403
         Then User verify balance of "PairToken2" token with contract is 228.25786165
         Then Balance of "PairToken1" and "PairToken2" in user account is 199787.13331246 and 199767.90565263 respectively
@@ -92,7 +92,7 @@ Feature: Pair contract e2e test
      Scenario: Verify user gets error message on calculating slippage out value for max allowed given in PairToken2 quantity
         Given PairToken1 and PairToken2 are present in pool
         When User tries to give "2e256" units of PairToken1 for calculating slippage out
-        Then User get error message "offset is out of bounds" 
+        Then User get error message "value out-of-bounds" 
         Then User verify balance of "PairToken1" token with contract is 209.18886403
         Then User verify balance of "PairToken2" token with contract is 228.25786165
         Then Balance of "PairToken1" and "PairToken2" in user account is 199787.13331246 and 199767.90565263 respectively
@@ -106,7 +106,7 @@ Feature: Pair contract e2e test
      Scenario: Verify user gets error message on calculating slippage in value for max allowed given out PairToken1 quantity
         Given PairToken1 and PairToken2 are present in pool
         When User tries to give "2e256" units of PairToken2 for calculating slippage in
-        Then User get error message "offset is out of bounds" 
+        Then User get error message "value out-of-bounds" 
         Then User verify balance of "PairToken1" token with contract is 209.18886403
         Then User verify balance of "PairToken2" token with contract is 228.25786165
         Then Balance of "PairToken1" and "PairToken2" in user account is 199787.13331246 and 199767.90565263 respectively
