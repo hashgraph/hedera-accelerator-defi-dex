@@ -2,12 +2,12 @@ import dex from "../model/dex";
 import Common from "../../e2e-test/business/Common";
 
 import { Helper } from "../../utils/Helper";
-import { TokenId } from "@hashgraph/sdk";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { MirrorNodeService } from "../../utils/MirrorNodeService";
 
 export async function main() {
-  const NFT_TOKEN_ID = TokenId.fromString(dex.NFT_TOKEN_ID);
+  //const NFT_TOKEN_ID = TokenId.fromString(dex.E2E_NFT_TOKEN_ID);
+  const NFT_TOKEN_ID = dex.E2E_NFT_TOKEN_ID;
   const { treasuryAccountId } = await Common.getTokenInfo(NFT_TOKEN_ID);
   const nftTokenSerialNumbersInfo = (
     await MirrorNodeService.getInstance()
