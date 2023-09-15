@@ -21,12 +21,12 @@ export async function lockTokenForVotingIfNeeded(
   voterAccountId: AccountId,
   voterAccountKey: PrivateKey,
   voterClient: Client,
-  nftTokenSerialIdForVoting: number
+  nftTokenSerialIdForVoting: number,
 ) {
   const quorum = await governor.quorum(txnFeePayerClient);
   const votingPowerAmount = await tokenHolder.balanceOfVoter(
     voterAccountId,
-    txnFeePayerClient
+    txnFeePayerClient,
   );
 
   // tokens locking required in token holder if not enough power locked
@@ -37,18 +37,18 @@ export async function lockTokenForVotingIfNeeded(
         lockAmount,
         voterAccountId,
         voterAccountKey,
-        voterClient
+        voterClient,
       );
       await tokenHolder.lock(lockAmount, voterClient);
     } else {
       await tokenHolder.setupAllowanceForTokenLocking(
         voterAccountId,
         voterAccountKey,
-        voterClient
+        voterClient,
       );
       await tokenHolder.grabTokensForVoter(
         nftTokenSerialIdForVoting,
-        voterClient
+        voterClient,
       );
     }
   }
@@ -61,14 +61,14 @@ export async function createAndExecuteTextProposal(
   creatorId: AccountId,
   creatorPK: PrivateKey,
   creatorClient: Client,
-  txnFee: number
+  txnFee: number,
 ) {
   await setupProposalCreationAllowance(
     governor,
     tokenHolder,
     creatorId,
     creatorPK,
-    creatorClient
+    creatorClient,
   );
 
   const title = Helper.createProposalTitle("Text Proposal");
@@ -79,7 +79,7 @@ export async function createAndExecuteTextProposal(
       "Text Proposal - Desc",
       "Text Proposal - LINK",
       "Text Proposal - Metadata",
-      governor.DEFAULT_NFT_TOKEN_SERIAL_NO
+      governor.DEFAULT_NFT_TOKEN_SERIAL_NO,
     );
     await governor.getProposalDetails(proposalId, voterClient);
     await governor.forVote(proposalId, 0, voterClient);
@@ -108,14 +108,14 @@ export async function createAndExecuteAssetTransferProposal(
   creatorId: AccountId,
   creatorPK: PrivateKey,
   creatorClient: Client,
-  txnFee: number
+  txnFee: number,
 ) {
   await setupProposalCreationAllowance(
     governor,
     tokenHolder,
     creatorId,
     creatorPK,
-    creatorClient
+    creatorClient,
   );
 
   const title = Helper.createProposalTitle("Asset Transfer Proposal");
@@ -129,7 +129,7 @@ export async function createAndExecuteAssetTransferProposal(
       governor.DEFAULT_NFT_TOKEN_SERIAL_NO,
       "Asset Transfer Proposal - Desc",
       "Asset Transfer Proposal - Link",
-      "Asset Transfer Proposal - Metadata"
+      "Asset Transfer Proposal - Metadata",
     );
     await governor.getProposalDetails(proposalId, voterClient);
     await governor.forVote(proposalId, 0, voterClient);
@@ -142,14 +142,14 @@ export async function createAndExecuteAssetTransferProposal(
         governor.contractId,
         senderAccountId,
         senderAccountPK,
-        creatorClient
+        creatorClient,
       );
       // step - 2 associate token to receiver
       await Common.associateTokensToAccount(
         receiverAccountId,
         [tokenId],
         creatorClient,
-        receiverAccountPK
+        receiverAccountPK,
       );
       await governor.executeProposal(title, undefined, creatorClient, txnFee);
     } else {
@@ -170,23 +170,23 @@ export async function createAndExecuteContractUpgradeProposal(
   creatorId: AccountId,
   creatorPK: PrivateKey,
   creatorClient: Client,
-  txnFee: number
+  txnFee: number,
 ) {
   async function transferOwnershipToGovernance(
     proposalId: string,
-    contractUpgradeGovernor: ContractUpgradeGovernor
+    contractUpgradeGovernor: ContractUpgradeGovernor,
   ) {
     const governorEvmAddress = await AddressHelper.idToEvmAddress(
-      contractUpgradeGovernor.contractId
+      contractUpgradeGovernor.contractId,
     );
     const { proxyId } =
       await contractUpgradeGovernor.getContractAddressesFromGovernorUpgradeContract(
-        proposalId
+        proposalId,
       );
     await new Common(proxyId).changeAdmin(
       governorEvmAddress,
       clientsInfo.proxyAdminKey,
-      clientsInfo.proxyAdminClient
+      clientsInfo.proxyAdminClient,
     );
   }
 
@@ -195,7 +195,7 @@ export async function createAndExecuteContractUpgradeProposal(
     tokenHolder,
     creatorId,
     creatorPK,
-    creatorClient
+    creatorClient,
   );
 
   const title = Helper.createProposalTitle("Contract Upgrade Proposal");
@@ -208,7 +208,7 @@ export async function createAndExecuteContractUpgradeProposal(
       governor.DEFAULT_DESCRIPTION,
       governor.DEFAULT_LINK,
       governor.DEFAULT_META_DATA,
-      governor.DEFAULT_NFT_TOKEN_SERIAL_NO
+      governor.DEFAULT_NFT_TOKEN_SERIAL_NO,
     );
 
     await governor.getProposalDetails(proposalId, voterClient);
@@ -235,14 +235,14 @@ export async function createAndExecuteTokenAssociationProposal(
   creatorId: AccountId,
   creatorPK: PrivateKey,
   creatorClient: Client,
-  txnFee: number
+  txnFee: number,
 ) {
   await setupProposalCreationAllowance(
     governor,
     tokenHolder,
     creatorId,
     creatorPK,
-    creatorClient
+    creatorClient,
   );
 
   const title = Helper.createProposalTitle("Token Associate Proposal");
@@ -254,7 +254,7 @@ export async function createAndExecuteTokenAssociationProposal(
       "Token Association Proposal - Desc",
       "Token Association Proposal - LINK",
       "Token Association Proposal - Metadata",
-      governor.DEFAULT_NFT_TOKEN_SERIAL_NO
+      governor.DEFAULT_NFT_TOKEN_SERIAL_NO,
     );
     await governor.getProposalDetails(proposalId, voterClient);
     await governor.forVote(proposalId, 0, voterClient);
@@ -281,14 +281,14 @@ export async function createAndExecuteTokenCreateProposal(
   creatorId: AccountId,
   creatorPK: PrivateKey,
   creatorClient: Client,
-  txnFee: number
+  txnFee: number,
 ) {
   await setupProposalCreationAllowance(
     governor,
     tokenHolder,
     creatorId,
     creatorPK,
-    creatorClient
+    creatorClient,
   );
 
   let tokenId: TokenId | null = null;
@@ -304,7 +304,7 @@ export async function createAndExecuteTokenCreateProposal(
       governor.DEFAULT_DESCRIPTION,
       governor.DEFAULT_LINK,
       governor.DEFAULT_META_DATA,
-      governor.DEFAULT_NFT_TOKEN_SERIAL_NO
+      governor.DEFAULT_NFT_TOKEN_SERIAL_NO,
     );
 
     await governor.getProposalDetails(proposalId, voterClient);
@@ -312,9 +312,8 @@ export async function createAndExecuteTokenCreateProposal(
     await governor.getProposalDetails(proposalId, voterClient);
     if (await governor.isSucceeded(proposalId)) {
       await governor.executeProposal(title, undefined, creatorClient, txnFee);
-      tokenId = await governor.getTokenAddressFromGovernorTokenCreate(
-        proposalId
-      );
+      tokenId =
+        await governor.getTokenAddressFromGovernorTokenCreate(proposalId);
     } else {
       await governor.cancelProposal(title, creatorClient);
     }
@@ -332,7 +331,7 @@ export async function createAndExecuteTokenCreateProposal(
     proposalId,
     treasureId.toSolidityAddress(),
     BigNumber(1),
-    treasureClient
+    treasureClient,
   );
   return tokenId;
 }
@@ -342,19 +341,19 @@ async function setupProposalCreationAllowance(
   tokenHolder: GodHolder | NFTHolder,
   creatorId: AccountId,
   creatorPK: PrivateKey,
-  creatorClient: Client
+  creatorClient: Client,
 ) {
   if (tokenHolder instanceof GodHolder) {
     await governor.setupAllowanceForProposalCreation(
       creatorClient,
       creatorId,
-      creatorPK
+      creatorPK,
     );
   } else {
     await governor.setupNFTAllowanceForProposalCreation(
       creatorClient,
       creatorId,
-      creatorPK
+      creatorPK,
     );
   }
 }
@@ -362,7 +361,7 @@ async function setupProposalCreationAllowance(
 async function cancelProposalInternally(
   governor: Governor,
   title: string,
-  client: Client
+  client: Client,
 ) {
   try {
     if (title) await governor.cancelProposal(title, client);

@@ -23,16 +23,16 @@ async function main() {
 
   const ftTokenHolderFactory = new FTTokenHolderFactory();
   const ftHolderContractId = await ftTokenHolderFactory.getTokenHolder(
-    FT_TOKEN_ID.toSolidityAddress()
+    FT_TOKEN_ID.toSolidityAddress(),
   );
   const tokenHolder = new GodHolder(ftHolderContractId);
 
   const deploymentDetails = await new Deployment().deployProxy(
-    ContractService.GOVERNOR_UPGRADE
+    ContractService.GOVERNOR_UPGRADE,
   );
 
   const governor = new ContractUpgradeGovernor(
-    ContractId.fromString(deploymentDetails.transparentProxyId)
+    ContractId.fromString(deploymentDetails.transparentProxyId),
   );
   await governor.initialize(
     tokenHolder,
@@ -41,7 +41,7 @@ async function main() {
     0,
     20,
     FT_TOKEN_ID,
-    FT_TOKEN_ID
+    FT_TOKEN_ID,
   );
 
   // step - 0 lock required tokens to token holder
@@ -52,12 +52,12 @@ async function main() {
     voterAccountId,
     voterAccountKey,
     voterClient,
-    0
+    0,
   );
 
   // step - 1 contract upgrade proposal
   const contractToUpgradeInfo = new ContractService().getContract(
-    ContractService.MULTI_SIG
+    ContractService.MULTI_SIG,
   );
   await createAndExecuteContractUpgradeProposal(
     contractToUpgradeInfo.transparentProxyAddress!,
@@ -68,7 +68,7 @@ async function main() {
     clientsInfo.operatorId,
     clientsInfo.operatorKey,
     clientsInfo.operatorClient,
-    0
+    0,
   );
 
   // step - 3 unlock required tokens from token holder

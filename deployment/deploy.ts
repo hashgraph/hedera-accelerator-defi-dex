@@ -7,7 +7,7 @@ import { main as updateContractProxy } from "./scripts/upgradeProxy";
 async function main() {
   const contractName = await Helper.prompt(
     ContractMetadata.SUPPORTED_CONTRACTS_FOR_DEPLOYMENT,
-    "Please select which contract you want to deploy ?"
+    "Please select which contract you want to deploy ?",
   );
   if (contractName === "exit") {
     return "nothing to execute";
@@ -15,7 +15,7 @@ async function main() {
   await deployContract(contractName);
   const proxyOption = await Helper.prompt(
     ContractMetadata.SUPPORTED_PROXY_OPTIONS,
-    "Please select any option for proxy operation from menu !"
+    "Please select any option for proxy operation from menu !",
   );
   proxyOption === "create" && (await createContractProxy(contractName));
   proxyOption === "update" && (await updateContractProxy(contractName));

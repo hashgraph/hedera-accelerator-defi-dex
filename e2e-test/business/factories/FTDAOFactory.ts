@@ -17,7 +17,7 @@ export default class FTDAOFactory extends DAOFactory {
     const factoryProxyId = await this.getTokenHolderFactoryAddress();
     const godFactory = new FTTokenHolderFactory(factoryProxyId);
     return new GodHolder(
-      await godFactory.getTokenHolder(tokenId.toSolidityAddress())
+      await godFactory.getTokenHolder(tokenId.toSolidityAddress()),
     );
   };
 }

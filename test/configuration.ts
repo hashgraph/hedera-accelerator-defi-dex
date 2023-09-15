@@ -14,7 +14,7 @@ describe("Configuration contract tests", function () {
   it("Verify Configuration contract initialization", async function () {
     const { configurationInstance } = await loadFixture(deployFixture);
     const initialFees = Helper.convertToFeeObjectArray(
-      await configurationInstance.getTransactionsFee()
+      await configurationInstance.getTransactionsFee(),
     );
 
     expect(initialFees.length).to.be.equals(3);
@@ -32,14 +32,14 @@ describe("Configuration contract tests", function () {
   it("Verify Configuration contract revert for multiple initialization", async function () {
     const { configurationInstance } = await loadFixture(deployFixture);
     await expect(configurationInstance.initialize()).to.revertedWith(
-      "Initializable: contract is already initialized"
+      "Initializable: contract is already initialized",
     );
   });
 
   it("Verify setTransactionFee should update the new data for existing key", async function () {
     const { configurationInstance } = await loadFixture(deployFixture);
     const initialFees = Helper.convertToFeeObjectArray(
-      await configurationInstance.getTransactionsFee()
+      await configurationInstance.getTransactionsFee(),
     );
     expect(initialFees[0].key).to.be.equals(1);
     expect(initialFees[0].value).to.be.equals(5);
@@ -47,7 +47,7 @@ describe("Configuration contract tests", function () {
     await configurationInstance.setTransactionFee(1, 10);
 
     const updatedFees = Helper.convertToFeeObjectArray(
-      await configurationInstance.getTransactionsFee()
+      await configurationInstance.getTransactionsFee(),
     );
     expect(updatedFees[0].key).to.be.equals(1);
     expect(updatedFees[0].value).to.be.equals(10);
@@ -56,14 +56,14 @@ describe("Configuration contract tests", function () {
   it("Verify setTransactionFee should increase the map size for new key", async function () {
     const { configurationInstance } = await loadFixture(deployFixture);
     const initialFees = Helper.convertToFeeObjectArray(
-      await configurationInstance.getTransactionsFee()
+      await configurationInstance.getTransactionsFee(),
     );
     expect(initialFees.length).to.be.equals(3);
 
     await configurationInstance.setTransactionFee(10, 10);
 
     const updatedFees = Helper.convertToFeeObjectArray(
-      await configurationInstance.getTransactionsFee()
+      await configurationInstance.getTransactionsFee(),
     );
     expect(updatedFees.length).to.be.equals(4);
 
@@ -74,7 +74,7 @@ describe("Configuration contract tests", function () {
   it("Verify setTransactionFee should be reverted if caller is not owner", async function () {
     const { configurationInstance, signers } = await loadFixture(deployFixture);
     await expect(
-      configurationInstance.connect(signers[1]).setTransactionFee(10, 10)
+      configurationInstance.connect(signers[1]).setTransactionFee(10, 10),
     ).to.revertedWith("Ownable: caller is not the owner");
 
     const oldOwner = await configurationInstance.owner();
@@ -108,7 +108,7 @@ describe("Configuration contract tests", function () {
     const oldOwner = await configurationInstance.owner();
     expect(signers[0].address).to.be.equals(oldOwner);
     await expect(
-      configurationInstance.connect(nonOwner).setHbarxAddress(anyAddress)
+      configurationInstance.connect(nonOwner).setHbarxAddress(anyAddress),
     ).to.revertedWith("Ownable: caller is not the owner");
   });
 });

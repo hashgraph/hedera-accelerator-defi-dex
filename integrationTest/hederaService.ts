@@ -21,7 +21,7 @@ const {
 
 const contractService = new ContractService();
 const hederaService = contractService.getContract(
-  contractService.hederaServiceContractName
+  contractService.hederaServiceContractName,
 );
 const contractIdObject = ContractId.fromString(hederaService.id);
 
@@ -35,14 +35,14 @@ async function main() {
     hederaService.id,
     userAccountId.toSolidityAddress(),
     userPrivateKey,
-    tokenAddressSol
+    tokenAddressSol,
   );
   await transferTokenPublic(
     hederaService.id,
     tokenAddressSol,
     clientsInfo.treasureId.toSolidityAddress(),
     userAccountId.toSolidityAddress(),
-    20
+    20,
   );
   await balanceQueryFunction(userAccountId.toString(), tokenId);
   await balanceQueryFunction(clientsInfo.treasureId.toString(), tokenId);
@@ -90,7 +90,7 @@ async function createToken(initialSupply: number) {
 async function mintTokenPublic(
   contractId: string,
   tokenAddress: string,
-  amount: number
+  amount: number,
 ) {
   const args = new ContractFunctionParameters()
     .addAddress(tokenAddress)
@@ -107,7 +107,7 @@ async function mintTokenPublic(
     `- Token (${amount}) minted: ${JSON.stringify({
       responseCode,
       totalSupply,
-    })}`
+    })}`,
   );
 }
 
@@ -121,7 +121,7 @@ async function mintTokenPublic(
 async function burnTokenPublic(
   contractId: string,
   tokenAddress: string,
-  amount: number
+  amount: number,
 ) {
   const args = new ContractFunctionParameters()
     .addAddress(tokenAddress)
@@ -138,7 +138,7 @@ async function burnTokenPublic(
     `- Token (${amount}) burned: ${JSON.stringify({
       responseCode,
       totalSupply,
-    })}`
+    })}`,
   );
 }
 
@@ -154,7 +154,7 @@ async function associateTokenPublic(
   contractId: string,
   userAccountAddress: string,
   userAccountPrivateKey: PrivateKey,
-  tokenAddress: string
+  tokenAddress: string,
 ) {
   const args = new ContractFunctionParameters()
     .addAddress(userAccountAddress)
@@ -169,7 +169,7 @@ async function associateTokenPublic(
   const txnRecord = await txnResponse.getRecord(client);
   const responseCode = txnRecord.contractFunctionResult!.getInt256(0).c![0];
   console.log(
-    `- Token assosiation (reponse-code => 22 means success : ${responseCode}`
+    `- Token assosiation (reponse-code => 22 means success : ${responseCode}`,
   );
 }
 
@@ -187,7 +187,7 @@ async function transferTokenPublic(
   tokenAddress: string,
   senderAddress: string,
   receiverAddress: string,
-  amount: number
+  amount: number,
 ) {
   const args = new ContractFunctionParameters()
     .addAddress(tokenAddress)
@@ -202,7 +202,7 @@ async function transferTokenPublic(
   const txnRecord = await txnResponse.getRecord(client);
   const responseCode = txnRecord.contractFunctionResult!.getInt256(0).c![0];
   console.log(
-    `- Token (${amount}) transfer (reponse-code => 22 means success) : ${responseCode}`
+    `- Token (${amount}) transfer (reponse-code => 22 means success) : ${responseCode}`,
   );
 }
 
