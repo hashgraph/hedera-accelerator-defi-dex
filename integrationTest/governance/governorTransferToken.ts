@@ -41,15 +41,15 @@ const assetTransferWithFungibleTokenAsGODToken = async () => {
   await ftHolderFactory.initialize();
 
   const ftHolderContractId = await ftHolderFactory.getTokenHolder(
-    FT_TOKEN_ID.toSolidityAddress()
+    FT_TOKEN_ID.toSolidityAddress(),
   );
   const tokenHolder = new GodHolder(ftHolderContractId);
 
   const deploymentDetails = await deployment.deployProxy(
-    ContractService.GOVERNOR_TT
+    ContractService.GOVERNOR_TT,
   );
   const governor = new TokenTransferGovernor(
-    ContractId.fromString(deploymentDetails.transparentProxyId)
+    ContractId.fromString(deploymentDetails.transparentProxyId),
   );
   await governor.initialize(
     tokenHolder,
@@ -58,7 +58,7 @@ const assetTransferWithFungibleTokenAsGODToken = async () => {
     0,
     20,
     FT_TOKEN_ID,
-    FT_TOKEN_ID
+    FT_TOKEN_ID,
   );
 
   // step - 0 lock required tokens to token holder
@@ -69,7 +69,7 @@ const assetTransferWithFungibleTokenAsGODToken = async () => {
     voterAccountId,
     voterAccountKey,
     voterClient,
-    0
+    0,
   );
 
   // step - 1 (A) ft token association
@@ -81,7 +81,7 @@ const assetTransferWithFungibleTokenAsGODToken = async () => {
     clientsInfo.operatorId,
     clientsInfo.operatorKey,
     clientsInfo.operatorClient,
-    0
+    0,
   );
 
   // step - 1 (B) ft transfer flow
@@ -98,7 +98,7 @@ const assetTransferWithFungibleTokenAsGODToken = async () => {
     clientsInfo.operatorId,
     clientsInfo.operatorKey,
     clientsInfo.operatorClient,
-    0
+    0,
   );
 
   // step - 2 (A) nft token association
@@ -110,7 +110,7 @@ const assetTransferWithFungibleTokenAsGODToken = async () => {
     clientsInfo.operatorId,
     clientsInfo.operatorKey,
     clientsInfo.operatorClient,
-    0
+    0,
   );
 
   // step - 2 (B) nft transfer flow
@@ -127,7 +127,7 @@ const assetTransferWithFungibleTokenAsGODToken = async () => {
     clientsInfo.operatorId,
     clientsInfo.operatorKey,
     clientsInfo.operatorClient,
-    0
+    0,
   );
 
   // step - 3 HBar transfer flow
@@ -144,7 +144,7 @@ const assetTransferWithFungibleTokenAsGODToken = async () => {
     clientsInfo.operatorId,
     clientsInfo.operatorKey,
     clientsInfo.operatorClient,
-    0
+    0,
   );
 
   // step - 4 unlock required tokens from token holder
@@ -159,15 +159,15 @@ const assetTransferWithNonFungibleTokenAsGODToken = async () => {
 
   const nftHolderFactory = new NFTTokenHolderFactory();
   const nftHolderContractId = await nftHolderFactory.getTokenHolder(
-    NFT_TOKEN_ID.toSolidityAddress()
+    NFT_TOKEN_ID.toSolidityAddress(),
   );
   const tokenHolder = new NFTHolder(nftHolderContractId);
 
   const deploymentDetails = await deployment.deployProxy(
-    ContractService.GOVERNOR_TT
+    ContractService.GOVERNOR_TT,
   );
   const governor = new TokenTransferGovernor(
-    ContractId.fromString(deploymentDetails.transparentProxyId)
+    ContractId.fromString(deploymentDetails.transparentProxyId),
   );
 
   await governor.initialize(
@@ -177,7 +177,7 @@ const assetTransferWithNonFungibleTokenAsGODToken = async () => {
     0,
     20,
     NFT_TOKEN_ID,
-    NFT_TOKEN_ID
+    NFT_TOKEN_ID,
   );
 
   // step - 0 lock required tokens to token holder
@@ -188,7 +188,7 @@ const assetTransferWithNonFungibleTokenAsGODToken = async () => {
     voterAccountId,
     voterAccountKey,
     voterClient,
-    governor.DEFAULT_NFT_TOKEN_SERIAL_NO_FOR_VOTING
+    governor.DEFAULT_NFT_TOKEN_SERIAL_NO_FOR_VOTING,
   );
 
   // step - 1 (A) ft token association
@@ -200,7 +200,7 @@ const assetTransferWithNonFungibleTokenAsGODToken = async () => {
     clientsInfo.operatorId,
     clientsInfo.operatorKey,
     clientsInfo.operatorClient,
-    0
+    0,
   );
 
   // step - 1 (B) ft transfer flow
@@ -217,7 +217,7 @@ const assetTransferWithNonFungibleTokenAsGODToken = async () => {
     clientsInfo.operatorId,
     clientsInfo.operatorKey,
     clientsInfo.operatorClient,
-    0
+    0,
   );
 
   // step - 2 (A) nft token association
@@ -229,7 +229,7 @@ const assetTransferWithNonFungibleTokenAsGODToken = async () => {
     clientsInfo.operatorId,
     clientsInfo.operatorKey,
     clientsInfo.operatorClient,
-    0
+    0,
   );
 
   // step - 2 (B) nft transfer flow
@@ -246,7 +246,7 @@ const assetTransferWithNonFungibleTokenAsGODToken = async () => {
     clientsInfo.operatorId,
     clientsInfo.operatorKey,
     clientsInfo.operatorClient,
-    0
+    0,
   );
 
   // step - 3 HBar transfer flow
@@ -263,7 +263,7 @@ const assetTransferWithNonFungibleTokenAsGODToken = async () => {
     clientsInfo.operatorId,
     clientsInfo.operatorKey,
     clientsInfo.operatorClient,
-    0
+    0,
   );
 
   // step - 4 unlock required tokens from token holder

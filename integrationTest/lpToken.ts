@@ -20,16 +20,16 @@ async function main() {
     TOKEN_NAME,
     TOKEN_SYMBOL,
     clientsInfo.operatorId,
-    clientsInfo.operatorClient
+    clientsInfo.operatorClient,
   );
   const tokenId = TokenId.fromSolidityAddress(
-    await lpToken.getLpTokenAddress(clientsInfo.treasureClient)
+    await lpToken.getLpTokenAddress(clientsInfo.treasureClient),
   );
   await Common.associateTokensToAccount(
     clientsInfo.treasureId,
     [tokenId],
     clientsInfo.treasureClient,
-    clientsInfo.treasureKey
+    clientsInfo.treasureKey,
   );
   await lpToken.allotLPToken(
     TOKEN_A_QTY_IN_POOL,
@@ -37,7 +37,7 @@ async function main() {
     TOKEN_A_QTY,
     TOKEN_B_QTY,
     clientsInfo.treasureId,
-    clientsInfo.operatorClient
+    clientsInfo.operatorClient,
   );
   await Common.setTokenAllowance(
     tokenId,
@@ -45,12 +45,12 @@ async function main() {
     TOKEN_LP_QTY.toNumber(),
     clientsInfo.treasureId,
     clientsInfo.treasureKey,
-    clientsInfo.treasureClient
+    clientsInfo.treasureClient,
   );
   await lpToken.removeLPToken(
     TOKEN_LP_QTY,
     clientsInfo.treasureId,
-    clientsInfo.operatorClient
+    clientsInfo.operatorClient,
   );
   await lpToken.getAllLPTokenCount(clientsInfo.treasureClient);
   await lpToken.lpTokenForUser(clientsInfo.treasureId);

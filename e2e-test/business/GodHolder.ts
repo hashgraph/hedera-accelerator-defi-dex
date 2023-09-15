@@ -26,7 +26,7 @@ const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
 export default class GodHolder extends Base {
   initialize = async (
     client: Client = clientsInfo.operatorClient,
-    tokenAddress: string = GOD_TOKEN_ID.toSolidityAddress()
+    tokenAddress: string = GOD_TOKEN_ID.toSolidityAddress(),
   ) => {
     if (await this.isInitializationPending()) {
       const args = new ContractFunctionParameters()
@@ -45,7 +45,7 @@ export default class GodHolder extends Base {
 
   checkAndClaimGodTokens = async (
     client: Client = clientsInfo.operatorClient,
-    accountId: AccountId = clientsInfo.operatorId
+    accountId: AccountId = clientsInfo.operatorId,
   ) => {
     if (await this.canUserClaimTokens(accountId, client)) {
       const balance = await this.balanceOfVoter(accountId, client);
@@ -55,17 +55,17 @@ export default class GodHolder extends Base {
 
   canUserClaimTokens = async (accountId: AccountId, client: Client) => {
     const args = new ContractFunctionParameters().addAddress(
-      accountId.toSolidityAddress()
+      accountId.toSolidityAddress(),
     );
     const { result } = await this.execute(
       3_00_000,
       CAN_USER_CLAIM_TOKENS,
       client,
-      args
+      args,
     );
     const canUserClaimTokens = result.getBool(0);
     console.log(
-      `- GodHolder#${CAN_USER_CLAIM_TOKENS}(): canUserClaimTokens = ${canUserClaimTokens}\n`
+      `- GodHolder#${CAN_USER_CLAIM_TOKENS}(): canUserClaimTokens = ${canUserClaimTokens}\n`,
     );
     return canUserClaimTokens;
   };
@@ -76,11 +76,11 @@ export default class GodHolder extends Base {
       3_00_000,
       REVERT_TOKENS_FOR_VOTER,
       client,
-      args
+      args,
     );
     const code = result.getUint256(0);
     console.log(
-      `- GodHolder#${REVERT_TOKENS_FOR_VOTER}(): amount = ${balance}, code = ${code}\n`
+      `- GodHolder#${REVERT_TOKENS_FOR_VOTER}(): amount = ${balance}, code = ${code}\n`,
     );
     return code;
   };
@@ -90,24 +90,24 @@ export default class GodHolder extends Base {
     const address = result.getAddress(0);
     const token = TokenId.fromSolidityAddress(address);
     console.log(
-      `- GodHolder#${GET_TOKEN}(): address = ${address}, token = ${token.toString()}\n`
+      `- GodHolder#${GET_TOKEN}(): address = ${address}, token = ${token.toString()}\n`,
     );
     return token;
   };
 
   balanceOfVoter = async (accountId: AccountId, client: Client) => {
     const args = new ContractFunctionParameters().addAddress(
-      accountId.toSolidityAddress()
+      accountId.toSolidityAddress(),
     );
     const { result } = await this.execute(
       50_000,
       BALANCE_OF_VOTER,
       client,
-      args
+      args,
     );
     const balance = result.getUint256(0);
     console.log(
-      `- GodHolder#${BALANCE_OF_VOTER}(): accountId = ${accountId.toString()}, balance = ${balance}\n`
+      `- GodHolder#${BALANCE_OF_VOTER}(): accountId = ${accountId.toString()}, balance = ${balance}\n`,
     );
     return balance.toNumber();
   };
@@ -116,30 +116,30 @@ export default class GodHolder extends Base {
     const { result } = await this.execute(
       5_00_000,
       GET_ACTIVE_PROPOSALS,
-      client
+      client,
     );
     const balance = Helper.getUint256Array(result).map((vale: BigNumber) =>
-      vale.toFixed()
+      vale.toFixed(),
     );
     console.log(
-      `- GodHolder#${GET_ACTIVE_PROPOSALS}(): counts = ${balance.length}, proposals = ${balance}\n`
+      `- GodHolder#${GET_ACTIVE_PROPOSALS}(): counts = ${balance.length}, proposals = ${balance}\n`,
     );
   };
 
   lock = async (
     lockedAmount: number = 50001e8, // 50001 tokens
-    client: Client
+    client: Client,
   ) => {
     const args = new ContractFunctionParameters().addUint256(lockedAmount);
     const { result } = await this.execute(
       5_00_000,
       GRAB_TOKEN_FROM_USER,
       client,
-      args
+      args,
     );
     const code = result.getUint256(0);
     console.log(
-      `- GodHolder#${GRAB_TOKEN_FROM_USER}(): amount = ${lockedAmount}\n`
+      `- GodHolder#${GRAB_TOKEN_FROM_USER}(): amount = ${lockedAmount}\n`,
     );
     return code;
   };
@@ -148,7 +148,7 @@ export default class GodHolder extends Base {
     allowanceAmount: number = 50001e8, // 50001 tokens,
     accountId: AccountId = clientsInfo.uiUserId,
     accountPrivateKey: PrivateKey = clientsInfo.uiUserKey,
-    client: Client = clientsInfo.uiUserClient
+    client: Client = clientsInfo.uiUserClient,
   ) => {
     const tokenId = await this.getToken(client);
     await Common.getTokenBalance(accountId, tokenId, client);
@@ -158,7 +158,7 @@ export default class GodHolder extends Base {
       allowanceAmount,
       accountId,
       accountPrivateKey,
-      client
+      client,
     );
   };
 }

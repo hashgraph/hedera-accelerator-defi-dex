@@ -95,7 +95,7 @@ export default class ContractMetadata {
   public getAllChangedContractNames = async () => {
     const eligibleContractsForDeployments: string[] = [];
     const contractsInfo = await this.getContractsInfo(
-      ContractMetadata.SUPPORTED_CONTRACTS_FOR_UPGRADE
+      ContractMetadata.SUPPORTED_CONTRACTS_FOR_UPGRADE,
     );
     for (const contractInfo of contractsInfo) {
       const name = contractInfo.artifact.contractName.toLowerCase();
@@ -116,7 +116,7 @@ export default class ContractMetadata {
       "ContractUpgradeDAO",
       "BaseDAO",
       "IERC20",
-    ]
+    ],
   ) => {
     return await this._readAllContractInfo(contractNameList);
   };
@@ -125,7 +125,7 @@ export default class ContractMetadata {
     return (await this.getContractsInfo()).find(
       (contract: ContractInfo) =>
         contract.artifact.contractName.toLowerCase() ===
-        contractName.toLowerCase()
+        contractName.toLowerCase(),
     )!;
   };
 
@@ -133,7 +133,7 @@ export default class ContractMetadata {
     const info = (await new ContractMetadata().getContractsInfo()).find(
       (contract: ContractInfo) =>
         contract.artifact.contractName.toLowerCase() ===
-        contractName.toLowerCase()
+        contractName.toLowerCase(),
     )!;
     return new ethers.utils.Interface(info.artifact.abi);
   };
@@ -147,7 +147,7 @@ export default class ContractMetadata {
     for (const contractInfo of contractsInfo) {
       for (const eachABI of contractInfo.artifact.abi) {
         const contractInterface = new ethers.utils.Interface(
-          contractInfo.artifact.abi
+          contractInfo.artifact.abi,
         );
         if (eachABI.type === "event") {
           const eventFragment = contractInterface.getEvent(eachABI.name);

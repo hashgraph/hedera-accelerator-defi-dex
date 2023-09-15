@@ -31,14 +31,14 @@ const createVaults = async () => {
 const vaultsMultiplier = async (splitter: Splitter, vaultsId: ContractId[]) => {
   return await Promise.all(
     vaultsId.map(async (vaultId: ContractId) =>
-      splitter.vaultMultiplier(vaultId)
-    )
+      splitter.vaultMultiplier(vaultId),
+    ),
   );
 };
 
 const setupVaultAllowances = async (
   amounts: BigNumber[],
-  vaultsId: ContractId[]
+  vaultsId: ContractId[],
 ) => {
   const allowance = async (amount: BigNumber, index: number) =>
     Common.setTokenAllowance(
@@ -47,7 +47,7 @@ const setupVaultAllowances = async (
       amount.toNumber(),
       clientsInfo.treasureId,
       clientsInfo.treasureKey,
-      clientsInfo.operatorClient
+      clientsInfo.operatorClient,
     );
   return await Promise.all(amounts.map(allowance));
 };
@@ -59,7 +59,7 @@ const stake = async (vault: Vault) => {
     STAKING_TOKEN_QTY,
     clientsInfo.uiUserId,
     clientsInfo.uiUserKey,
-    clientsInfo.uiUserClient
+    clientsInfo.uiUserClient,
   );
   await vault.stake(STAKING_TOKEN_QTY, clientsInfo.uiUserClient);
 };
@@ -72,12 +72,12 @@ const initialize = async (splitter: Splitter) => {
         await vault.initialize(STAKING_TOKEN, LOCKING_PERIOD_IN_SECONDS);
         await stake(vault);
         return ContractId.fromString(vault.contractId);
-      })
+      }),
     );
     await splitter.initialize(vaultIds, [1, 14, 30]);
   } else {
     console.log(
-      `- Splitter#initialize(): already done, contract-id = ${splitter.contractId}\n`
+      `- Splitter#initialize(): already done, contract-id = ${splitter.contractId}\n`,
     );
   }
 };
@@ -87,15 +87,14 @@ async function main() {
   await initialize(splitter);
   const vaultsId = await splitter.vaults();
   await vaultsMultiplier(splitter, vaultsId);
-  const amounts = await splitter.getSplittedAmountListForGivenAmount(
-    REWARD_TOKEN_QTY
-  );
+  const amounts =
+    await splitter.getSplittedAmountListForGivenAmount(REWARD_TOKEN_QTY);
   await setupVaultAllowances(amounts, vaultsId);
   await splitter.splitTokens(
     REWARD_TOKEN,
     clientsInfo.treasureId,
     REWARD_TOKEN_QTY,
-    clientsInfo.treasureClient
+    clientsInfo.treasureClient,
   );
 }
 

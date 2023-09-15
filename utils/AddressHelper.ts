@@ -9,7 +9,7 @@ export class AddressHelper {
   private static async getContractInfoFromMirrorNode(
     idOrAddress: string,
     maxWaitInMs: number = 30 * 1000,
-    eachIterationDelayInMS: number = 1 * 1000
+    eachIterationDelayInMS: number = 1 * 1000,
   ): Promise<any> {
     const mirrorNodeService = MirrorNodeService.getInstance();
     while (maxWaitInMs > 0) {

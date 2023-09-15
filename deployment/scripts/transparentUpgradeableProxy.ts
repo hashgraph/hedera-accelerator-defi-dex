@@ -11,7 +11,7 @@ export async function main(_contractName: string) {
     _contractName = process.env.CONTRACT_NAME!;
   }
   console.log(
-    `Deployment#deployProxyForGivenLogic(): ${_contractName.toLowerCase()} proxy deploying...`
+    `Deployment#deployProxyForGivenLogic(): ${_contractName.toLowerCase()} proxy deploying...`,
   );
   const logic = contractService.getContract(_contractName.toLowerCase());
   const proxy = await new Deployment().deployProxyForGivenLogic(logic);

@@ -49,12 +49,12 @@ async function transfer() {
             clientsInfo.treasureId,
             AccountId.fromString(item.account),
             PrivateKey.fromString(creatorKey),
-            clientsInfo.operatorClient
+            clientsInfo.operatorClient,
           );
         } catch (error: any) {
           console.log("transfer: ", error.message, item);
         }
-      })
+      }),
   );
 
   function getAccountKey(accountId: string) {

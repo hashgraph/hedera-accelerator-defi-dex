@@ -23,9 +23,9 @@ export async function main() {
         clientsInfo.operatorId.toString(),
         item.accountId,
         clientsInfo.operatorKey,
-        clientsInfo.operatorClient
-      )
-    )
+        clientsInfo.operatorClient,
+      ),
+    ),
   );
 }
 

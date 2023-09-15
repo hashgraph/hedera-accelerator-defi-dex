@@ -56,7 +56,7 @@ export default class Factory extends Base {
     feeCollectionAccountId: AccountId,
     tokensOwnerKey: PrivateKey,
     client: Client = clientsInfo.operatorClient,
-    fee: BigNumber = new BigNumber(10)
+    fee: BigNumber = new BigNumber(10),
   ) => {
     const args = new ContractFunctionParameters()
       .addAddress(token1.toSolidityAddress())
@@ -69,11 +69,11 @@ export default class Factory extends Base {
       client,
       args,
       tokensOwnerKey,
-      100
+      100,
     );
     const address = result.getAddress(0);
     console.log(
-      `- Factory#${CREATE_PAIR}(): TokenId = ${token1}, TokenId = ${token2}, fee = ${fee} and resulted pair = ${address}\n`
+      `- Factory#${CREATE_PAIR}(): TokenId = ${token1}, TokenId = ${token2}, fee = ${fee} and resulted pair = ${address}\n`,
     );
     return address;
   };
@@ -82,7 +82,7 @@ export default class Factory extends Base {
     token1: TokenId,
     token2: TokenId,
     fee: BigNumber = new BigNumber(10),
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
   ) => {
     const args = new ContractFunctionParameters()
       .addAddress(token1.toSolidityAddress())
@@ -93,7 +93,7 @@ export default class Factory extends Base {
       GET_PAIR,
       client,
       args,
-      undefined
+      undefined,
     );
     const address = result.getAddress(0);
     console.log(`- Factory#${GET_PAIR}(): pair = ${address}\n`);
@@ -101,18 +101,18 @@ export default class Factory extends Base {
   };
 
   getPairs = async (
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
   ): Promise<string[]> => {
     const { result } = await this.execute(
       1_000_000,
       GET_PAIRS,
       client,
       undefined,
-      undefined
+      undefined,
     );
     const addresses = Helper.getAddressArray(result);
     console.log(
-      `- Factory#${GET_PAIRS}(): count = ${addresses.length}, pairs = [${addresses}]\n`
+      `- Factory#${GET_PAIRS}(): count = ${addresses.length}, pairs = [${addresses}]\n`,
     );
     return addresses;
   };
@@ -123,7 +123,7 @@ export default class Factory extends Base {
       1_00_000,
       functionName,
       clientsInfo.childProxyAdminClient,
-      args
+      args,
     );
     console.log(`- Factory${functionName}(): done\n`);
   };
@@ -143,7 +143,7 @@ export default class Factory extends Base {
     tokenAddress: string,
     otherTokenAddress: string,
     qtyToSwap: BigNumber,
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
   ): Promise<number> => {
     const args = new ContractFunctionParameters()
       .addAddress(tokenAddress)
@@ -155,7 +155,7 @@ export default class Factory extends Base {
       RECOMMENDED_PAIR_TO_SWAP,
       client,
       args,
-      undefined
+      undefined,
     );
     console.log(
       `- Factory#${RECOMMENDED_PAIR_TO_SWAP}(): 
@@ -164,7 +164,7 @@ export default class Factory extends Base {
       swapped qty = ${result.getUint256(2)}, 
       fee = ${result.getUint256(3)}, 
       slippage = ${result.getUint256(4)}
-      \n`
+      \n`,
     );
     return Number(result.getUint256(2));
   };
