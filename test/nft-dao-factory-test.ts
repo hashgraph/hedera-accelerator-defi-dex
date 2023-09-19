@@ -3,384 +3,554 @@ import { BigNumber } from "ethers";
 import { TestHelper } from "./TestHelper";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-describe("NFTDAOFactory contract tests", function () {
+describe("NFTDAOFactory contratc tests", function () {
   const QUORUM_THRESHOLD = 5;
   const QUORUM_THRESHOLD_BSP = QUORUM_THRESHOLD * 100;
+
   const VOTING_DELAY = 0;
   const VOTING_PERIOD = 12;
 
-  const zeroAddress = "0x0000000000000000000000000000000000000000";
-  const oneAddress = "0x0000000000000000000000000000000000000001";
-  const total = 100 * 1e8;
   const DAO_NAME = "DAO_NAME";
-  const LOGO_URL = "LOGO_URL";
+  const LOGO_URL = "https://twitter.com";
   const INFO_URL = "https://twitter.com";
   const DESCRIPTION = "DESCRIPTION";
-  const WEB_LINKS = [
-    "TWITTER",
-    "https://twitter.com",
-    "LINKEDIN",
-    "https://linkedin.com",
-  ];
+  const WEB_LINKS = ["https://twitter.com", "https://linkedin.com"];
+
+  async function verifyDAOCreatedEvent(txn: any) {
+    const event = await TestHelper.readLastEvent(txn);
+    expect(event.name).equal("DAOCreated");
+    expect(event.args.length).equal(5);
+    expect(event.args.daoAddress).not.equal(TestHelper.ZERO_ADDRESS);
+    expect(event.args.governorAddress).not.equal(TestHelper.ZERO_ADDRESS);
+    expect(event.args.tokenHolderAddress).not.equal(TestHelper.ZERO_ADDRESS);
+    expect(event.args.assetsHolderAddress).not.equal(TestHelper.ZERO_ADDRESS);
+
+    const dao = await TestHelper.getContract("FTDAO", event.args.daoAddress);
+    const governor = await TestHelper.getContract(
+      "HederaGovernor",
+      event.args.governorAddress,
+    );
+    return { dao, governor };
+  }
+
+  async function verifyDAOInfoUpdatedEvent(
+    txn: any,
+    admin: string,
+    daoName: string,
+    logoUrl: string,
+    infoUrl: string,
+    description: string,
+    webLinks: string[],
+  ) {
+    const lastEvent = (
+      await TestHelper.readEvents(txn, ["DAOInfoUpdated"])
+    ).pop();
+    const { name, args } = { name: lastEvent.event, args: lastEvent.args };
+    expect(name).equals("DAOInfoUpdated");
+    const daoInfo = args.daoInfo;
+
+    expect(daoInfo.name).equals(daoName);
+    expect(daoInfo.admin).equals(admin);
+    expect(daoInfo.logoUrl).equals(logoUrl);
+    expect(daoInfo.infoUrl).equals(infoUrl);
+    expect(daoInfo.description).equals(description);
+    expect(daoInfo.webLinks.join(",")).equals(webLinks.join(","));
+  }
 
   async function deployFixture() {
     const dexOwner = await TestHelper.getDexOwner();
+    const daoAdminOne = await TestHelper.getDAOAdminOne();
+    const daoAdminTwo = await TestHelper.getDAOAdminTwo();
+
     const signers = await TestHelper.getSigners();
-    const daoAdminOne = signers[5];
-    const daoAdminTwo = signers[6];
+    const systemUsers = await TestHelper.systemUsersSigners();
 
-    const token = await TestHelper.deployLogic("ERC721Mock");
-    token.setUserBalance(signers[0].address, total);
+    const hederaService = await TestHelper.deployMockHederaService();
 
-    const bastHTS = await TestHelper.deployMockHederaService();
-    const godHolder = await TestHelper.deployGodHolder(bastHTS, token);
-
-    const governorTT = await TestHelper.deployLogic("GovernorTransferToken");
-    const governorUpgrade = await TestHelper.deployLogic("GovernorUpgrade");
-    const governorTokenCreate = await TestHelper.deployLogic(
-      "GovernorTokenCreate",
-    );
-    const governorTextProposal = await TestHelper.deployLogic(
-      "GovernorTextProposal",
-    );
+    const token = await TestHelper.deployERC721Mock(signers[0]);
+    const nftHolder = await TestHelper.deployNftGodHolder(hederaService, token);
 
     const inputs = {
       admin: daoAdminOne.address,
       name: DAO_NAME,
-      LOGO_URL,
-      token: token.address,
-      QUORUM_THRESHOLD_BSP,
-      VOTING_DELAY,
-      VOTING_PERIOD,
+      logoUrl: LOGO_URL,
+      infoUrl: INFO_URL,
+      tokenAddress: token.address,
+      quorumThreshold: QUORUM_THRESHOLD_BSP,
+      votingDelay: VOTING_DELAY,
+      votingPeriod: VOTING_PERIOD,
       isPrivate: false,
       description: DESCRIPTION,
       webLinks: WEB_LINKS,
     };
 
-    const governance = [
-      governorTT.address,
-      governorTextProposal.address,
-      governorUpgrade.address,
-      governorTokenCreate.address,
-    ];
-
-    const common = [bastHTS.address, godHolder.address];
-
-    const systemUsersSigners = await TestHelper.systemUsersSigners();
-    const systemRoleBasedAccess = (
-      await TestHelper.deploySystemRoleBasedAccess()
-    ).address;
-
-    const nftTokenDAO = await TestHelper.deployLogic("FTDAO");
-
-    const nftHolder = await TestHelper.deployLogic("NFTHolder");
     const nftHolderFactory = await TestHelper.deployProxy(
       "NFTTokenHolderFactory",
-      bastHTS.address,
+      hederaService.address,
       nftHolder.address,
       dexOwner.address,
     );
 
-    const governorTransferToken = await TestHelper.deployLogic(
-      "GovernorTransferToken",
-    );
+    const governor = await TestHelper.deployLogic("HederaGovernor");
+    const assetsHolder = await TestHelper.deployAssetsHolder();
+    const roleBasedAccess = await TestHelper.deploySystemRoleBasedAccess();
+    const governorTokenDAO = await TestHelper.deployLogic("FTDAO");
 
-    const governorDAOFactoryInstance = await TestHelper.deployProxy(
-      "NFTDAOFactory",
-      systemRoleBasedAccess,
-      bastHTS.address,
-      nftTokenDAO.address,
-      nftHolderFactory.address,
-      governance,
-    );
+    const INIT_ARGS = {
+      _daoLogic: governorTokenDAO.address,
+      _governorLogic: governor.address,
+      _assetsHolderLogic: assetsHolder.address,
+      _hederaService: hederaService.address,
+      _tokenHolderFactory: nftHolderFactory.address,
+      _iSystemRoleBasedAccess: roleBasedAccess.address,
+    };
+
+    const factory = await TestHelper.deployLogic("NFTDAOFactory");
+    const txn = await factory.initialize(...Object.values(INIT_ARGS));
+    const events = await TestHelper.readEvents(txn, ["LogicUpdated"]);
+    expect(events.length).equals(6);
 
     return {
-      governorDAOFactoryInstance,
-      dexOwner,
-      bastHTS,
-      nftTokenDAO,
-      nftHolderFactory,
-      governorTransferToken,
-      daoAdminOne,
-      daoAdminTwo,
       token,
       signers,
+      hederaService,
+      daoAdminOne,
+      daoAdminTwo,
+      nftHolderFactory,
+      factory,
       inputs,
-      governance,
-      common,
-      systemRoleBasedAccess,
-      systemUsersSigners,
+      roleBasedAccess,
+      systemUsers,
+      INIT_ARGS,
     };
   }
 
-  it("Verify NFTDAOFactory contract revert for multiple initialization", async function () {
-    const {
-      governorDAOFactoryInstance,
-      bastHTS,
-      nftTokenDAO,
-      nftHolderFactory,
-      governance,
-      systemRoleBasedAccess,
-    } = await loadFixture(deployFixture);
+  describe("DAOFactory contract tests", async function () {
+    it("Verify contract should be revert for multiple initialization", async function () {
+      const { factory, INIT_ARGS } = await loadFixture(deployFixture);
 
-    await expect(
-      governorDAOFactoryInstance.initialize(
-        systemRoleBasedAccess,
-        bastHTS.address,
-        nftTokenDAO.address,
+      await expect(
+        factory.initialize(...Object.values(INIT_ARGS)),
+      ).revertedWith("Initializable: contract is already initialized");
+    });
+
+    it("Verify createDAO should be reverted when dao admin is zero", async function () {
+      const { factory, token } = await loadFixture(deployFixture);
+      const CREATE_DAO_ARGS = [
+        TestHelper.ZERO_ADDRESS,
+        DAO_NAME,
+        LOGO_URL,
+        INFO_URL,
+        token.address,
+        BigNumber.from(500),
+        BigNumber.from(0),
+        BigNumber.from(100),
+        true,
+        DESCRIPTION,
+        WEB_LINKS,
+      ];
+      await expect(factory.createDAO(CREATE_DAO_ARGS))
+        .revertedWithCustomError(factory, "InvalidInput")
+        .withArgs("BaseDAO: admin address is zero");
+    });
+
+    it("Verify createDAO should be reverted when dao name is empty", async function () {
+      const { factory, daoAdminOne, token } = await loadFixture(deployFixture);
+      const CREATE_DAO_ARGS = [
+        daoAdminOne.address,
+        "",
+        LOGO_URL,
+        INFO_URL,
+        token.address,
+        BigNumber.from(500),
+        BigNumber.from(0),
+        BigNumber.from(100),
+        true,
+        DESCRIPTION,
+        WEB_LINKS,
+      ];
+      await expect(factory.createDAO(CREATE_DAO_ARGS))
+        .revertedWithCustomError(factory, "InvalidInput")
+        .withArgs("BaseDAO: name is empty");
+    });
+
+    it("Verify createDAO should be reverted when token address is zero", async function () {
+      const { factory, daoAdminOne } = await loadFixture(deployFixture);
+      const CREATE_DAO_ARGS = [
+        daoAdminOne.address,
+        DAO_NAME,
+        LOGO_URL,
+        INFO_URL,
+        TestHelper.ZERO_ADDRESS,
+        BigNumber.from(500),
+        BigNumber.from(0),
+        BigNumber.from(100),
+        true,
+        DESCRIPTION,
+        WEB_LINKS,
+      ];
+      await expect(factory.createDAO(CREATE_DAO_ARGS))
+        .revertedWithCustomError(factory, "InvalidInput")
+        .withArgs("DAOFactory: token address is zero");
+    });
+
+    it("Verify createDAO should be reverted when info url is empty", async function () {
+      const { factory, daoAdminOne, token } = await loadFixture(deployFixture);
+      const CREATE_DAO_ARGS = [
+        daoAdminOne.address,
+        DAO_NAME,
+        LOGO_URL,
+        "",
+        token.address,
+        BigNumber.from(500),
+        BigNumber.from(0),
+        BigNumber.from(100),
+        true,
+        DESCRIPTION,
+        WEB_LINKS,
+      ];
+      await expect(factory.createDAO(CREATE_DAO_ARGS))
+        .revertedWithCustomError(factory, "InvalidInput")
+        .withArgs("BaseDAO: info url is empty");
+    });
+
+    it("Verify createDAO should be reverted when voting period is zero", async function () {
+      const { factory, daoAdminOne, token } = await loadFixture(deployFixture);
+      const CREATE_DAO_ARGS = [
+        daoAdminOne.address,
+        DAO_NAME,
+        LOGO_URL,
+        INFO_URL,
+        token.address,
+        BigNumber.from(500),
+        BigNumber.from(0),
+        BigNumber.from(0),
+        false,
+        DESCRIPTION,
+        WEB_LINKS,
+      ];
+      await expect(factory.createDAO(CREATE_DAO_ARGS))
+        .revertedWithCustomError(factory, "InvalidInput")
+        .withArgs("DAOFactory: voting period is zero");
+    });
+
+    it("Verify createDAO should add new dao into list when the dao is public", async function () {
+      const { factory, daoAdminOne, token } = await loadFixture(deployFixture);
+
+      const currentList = await factory.getDAOs();
+      expect(currentList.length).equal(0);
+
+      const CREATE_DAO_ARGS = [
+        daoAdminOne.address,
+        DAO_NAME,
+        LOGO_URL,
+        INFO_URL,
+        token.address,
+        BigNumber.from(500),
+        BigNumber.from(0),
+        BigNumber.from(100),
+        false,
+        DESCRIPTION,
+        WEB_LINKS,
+      ];
+
+      const txn = await factory.createDAO(CREATE_DAO_ARGS);
+
+      const lastEvent = (await txn.wait()).events.pop();
+      expect(lastEvent.event).equal("DAOCreated");
+      expect(lastEvent.args.daoAddress).not.equal("0x0");
+
+      const updatedList = await factory.getDAOs();
+      expect(updatedList.length).equal(1);
+    });
+
+    it("Verify createDAO should not add new dao into list when the dao is private", async function () {
+      const { factory, daoAdminOne, token } = await loadFixture(deployFixture);
+
+      const currentList = await factory.getDAOs();
+      expect(currentList.length).equal(0);
+
+      const CREATE_DAO_ARGS = [
+        daoAdminOne.address,
+        DAO_NAME,
+        LOGO_URL,
+        INFO_URL,
+        token.address,
+        BigNumber.from(500),
+        BigNumber.from(0),
+        BigNumber.from(100),
+        true,
+        DESCRIPTION,
+        WEB_LINKS,
+      ];
+
+      const txn = await factory.createDAO(CREATE_DAO_ARGS);
+
+      const lastEvent = (await txn.wait()).events.pop();
+      expect(lastEvent.event).equal("DAOCreated");
+      expect(lastEvent.args.daoAddress).not.equal("0x0");
+
+      const updatedList = await factory.getDAOs();
+      expect(updatedList.length).equal(0);
+    });
+
+    it("Verify upgrade logic call should be reverted for non dex owner", async function () {
+      const { factory, daoAdminOne } = await loadFixture(deployFixture);
+
+      await expect(
+        factory
+          .connect(daoAdminOne)
+          .upgradeDAOLogicImplementation(TestHelper.ZERO_ADDRESS),
+      ).reverted;
+
+      await expect(
+        factory
+          .connect(daoAdminOne)
+          .upgradeGovernorImplementation(TestHelper.ZERO_ADDRESS),
+      ).reverted;
+
+      await expect(
+        factory
+          .connect(daoAdminOne)
+          .upgradeAssetHolderImplementation(TestHelper.ZERO_ADDRESS),
+      ).reverted;
+
+      await expect(
+        factory
+          .connect(daoAdminOne)
+          .upgradeTokenHolderFactory(TestHelper.ZERO_ADDRESS),
+      ).reverted;
+
+      await expect(
+        factory
+          .connect(daoAdminOne)
+          .upgradeHederaService(TestHelper.ZERO_ADDRESS),
+      ).reverted;
+
+      await expect(
+        factory
+          .connect(daoAdminOne)
+          .upgradeISystemRoleBasedAccess(TestHelper.ZERO_ADDRESS),
+      ).reverted;
+    });
+
+    it("Verify upgrade logic call should be proceeded for dex owner", async function () {
+      const { factory, systemUsers } = await loadFixture(deployFixture);
+
+      await expect(
+        factory
+          .connect(systemUsers.childProxyAdmin)
+          .upgradeDAOLogicImplementation(TestHelper.ZERO_ADDRESS),
+      ).emit(factory, "LogicUpdated");
+
+      await expect(
+        factory
+          .connect(systemUsers.childProxyAdmin)
+          .upgradeGovernorImplementation(TestHelper.ZERO_ADDRESS),
+      ).emit(factory, "LogicUpdated");
+
+      await expect(
+        factory
+          .connect(systemUsers.childProxyAdmin)
+          .upgradeAssetHolderImplementation(TestHelper.ZERO_ADDRESS),
+      ).emit(factory, "LogicUpdated");
+
+      await expect(
+        factory
+          .connect(systemUsers.childProxyAdmin)
+          .upgradeTokenHolderFactory(TestHelper.ZERO_ADDRESS),
+      ).emit(factory, "LogicUpdated");
+
+      await expect(
+        factory
+          .connect(systemUsers.childProxyAdmin)
+          .upgradeHederaService(TestHelper.ZERO_ADDRESS),
+      ).emit(factory, "LogicUpdated");
+
+      await expect(
+        factory
+          .connect(systemUsers.childProxyAdmin)
+          .upgradeISystemRoleBasedAccess(TestHelper.ZERO_ADDRESS),
+      ).emit(factory, "LogicUpdated");
+    });
+
+    it("Verify getTokenHolderFactoryAddress return correct address", async function () {
+      const { factory, nftHolderFactory } = await loadFixture(deployFixture);
+      expect(await factory.getTokenHolderFactoryAddress()).equals(
         nftHolderFactory.address,
-        governance,
-      ),
-    ).revertedWith("Initializable: contract is already initialized");
+      );
+    });
+
+    it("Verify getHederaServiceVersion return correct address", async function () {
+      const { factory, hederaService } = await loadFixture(deployFixture);
+      expect(await factory.getHederaServiceVersion()).equals(
+        hederaService.address,
+      );
+    });
+
+    it("Verify upgrade Hedera service should fail when non-owner try to upgrade Hedera service", async function () {
+      const { factory, signers } = await loadFixture(deployFixture);
+      await expect(
+        factory.connect(signers[3]).upgradeHederaService(signers[3].address),
+      ).reverted;
+    });
+
+    it("Verify upgrade Hedera service should pass when child-proxy-admin try to upgrade it", async function () {
+      const { factory, hederaService, systemUsers } =
+        await loadFixture(deployFixture);
+
+      expect(await factory.getHederaServiceVersion()).equals(
+        hederaService.address,
+      );
+
+      const newHederaService = await TestHelper.deployMockHederaService();
+      await expect(
+        factory
+          .connect(systemUsers.childProxyAdmin)
+          .upgradeHederaService(newHederaService.address),
+      ).emit(factory, "LogicUpdated");
+
+      expect(await factory.getHederaServiceVersion()).equals(
+        newHederaService.address,
+      );
+    });
   });
 
-  it("Verify createDAO should be reverted when dao admin is zero", async function () {
-    const { governorDAOFactoryInstance, token } =
-      await loadFixture(deployFixture);
-    const CREATE_DAO_ARGS = [
-      TestHelper.ZERO_ADDRESS,
-      DAO_NAME,
-      LOGO_URL,
-      INFO_URL,
-      token.address,
-      BigNumber.from(500),
-      BigNumber.from(0),
-      BigNumber.from(100),
-      true,
-      DESCRIPTION,
-      WEB_LINKS,
-    ];
-    await expect(governorDAOFactoryInstance.createDAO(CREATE_DAO_ARGS))
-      .revertedWithCustomError(governorDAOFactoryInstance, "InvalidInput")
-      .withArgs("BaseDAO: admin address is zero");
+  describe("FTDAO contract tests", function () {
+    it("Verify contract should be revert for multiple initialization", async function () {
+      const { factory, inputs } = await loadFixture(deployFixture);
+      const txn = await factory.createDAO(Object.values(inputs));
+      const info = await verifyDAOCreatedEvent(txn);
+      await expect(
+        info.dao.initialize(info.governor.address, Object.values(inputs)),
+      ).revertedWith("Initializable: contract is already initialized");
+    });
+
+    it("Verify governorAddress should return correct value", async function () {
+      const { factory, inputs } = await loadFixture(deployFixture);
+      const txn = await factory.createDAO(Object.values(inputs));
+      const info = await verifyDAOCreatedEvent(txn);
+      expect(await info.dao.governorAddress()).equals(info.governor.address);
+    });
+
+    it("Verify updating dao info should be reverted for empty info-url", async function () {
+      const { factory, inputs, daoAdminOne } = await loadFixture(deployFixture);
+      const txn = await factory.createDAO(Object.values(inputs));
+      const info = await verifyDAOCreatedEvent(txn);
+
+      await expect(
+        info.dao
+          .connect(daoAdminOne)
+          .updateDaoInfo(DAO_NAME, LOGO_URL, "", DESCRIPTION, WEB_LINKS),
+      )
+        .revertedWithCustomError(info.dao, "InvalidInput")
+        .withArgs("BaseDAO: info url is empty");
+    });
   });
 
-  it("Verify createDAO should be reverted when dao name is empty", async function () {
-    const { governorDAOFactoryInstance, daoAdminOne, token } =
-      await loadFixture(deployFixture);
-    const CREATE_DAO_ARGS = [
-      daoAdminOne.address,
-      "",
-      LOGO_URL,
-      INFO_URL,
-      token.address,
-      BigNumber.from(500),
-      BigNumber.from(0),
-      BigNumber.from(100),
-      true,
-      DESCRIPTION,
-      WEB_LINKS,
-    ];
-    await expect(governorDAOFactoryInstance.createDAO(CREATE_DAO_ARGS))
-      .revertedWithCustomError(governorDAOFactoryInstance, "InvalidInput")
-      .withArgs("BaseDAO: name is empty");
-  });
+  describe("BaseDAO contract tests", function () {
+    it("Verify contract should be reverted if __BaseDAO_init called from outside", async function () {
+      const { factory, inputs, daoAdminOne } = await loadFixture(deployFixture);
+      const txn = await factory.createDAO(Object.values(inputs));
+      const info = await verifyDAOCreatedEvent(txn);
+      await expect(
+        info.dao.__BaseDAO_init(
+          daoAdminOne.address,
+          DAO_NAME,
+          LOGO_URL,
+          INFO_URL,
+          DESCRIPTION,
+          WEB_LINKS,
+        ),
+      ).revertedWith("Initializable: contract is not initializing");
+    });
 
-  it("Verify createDAO should be reverted when token address is zero", async function () {
-    const { governorDAOFactoryInstance, daoAdminOne } =
-      await loadFixture(deployFixture);
-    const CREATE_DAO_ARGS = [
-      daoAdminOne.address,
-      DAO_NAME,
-      LOGO_URL,
-      INFO_URL,
-      TestHelper.ZERO_ADDRESS,
-      BigNumber.from(500),
-      BigNumber.from(0),
-      BigNumber.from(100),
-      true,
-      DESCRIPTION,
-      WEB_LINKS,
-    ];
-    await expect(governorDAOFactoryInstance.createDAO(CREATE_DAO_ARGS))
-      .revertedWithCustomError(governorDAOFactoryInstance, "InvalidInput")
-      .withArgs("DAOFactory: token address is zero");
-  });
+    it("Verify updating dao info should be reverted for non-admin user", async function () {
+      const { factory, inputs, daoAdminTwo } = await loadFixture(deployFixture);
+      const txn = await factory.createDAO(Object.values(inputs));
+      const info = await verifyDAOCreatedEvent(txn);
 
-  it("Verify createDAO should be reverted when voting period is zero", async function () {
-    const { governorDAOFactoryInstance, daoAdminOne, token } =
-      await loadFixture(deployFixture);
-    const CREATE_DAO_ARGS = [
-      daoAdminOne.address,
-      DAO_NAME,
-      LOGO_URL,
-      INFO_URL,
-      token.address,
-      BigNumber.from(500),
-      BigNumber.from(0),
-      BigNumber.from(0),
-      true,
-      DESCRIPTION,
-      WEB_LINKS,
-    ];
-    await expect(governorDAOFactoryInstance.createDAO(CREATE_DAO_ARGS))
-      .revertedWithCustomError(governorDAOFactoryInstance, "InvalidInput")
-      .withArgs("DAOFactory: voting period is zero");
-  });
+      await expect(
+        info.dao
+          .connect(daoAdminTwo)
+          .updateDaoInfo(DAO_NAME, LOGO_URL, INFO_URL, DESCRIPTION, WEB_LINKS),
+      ).reverted;
+    });
 
-  it("Verify createDAO should be reverted when info url is empty", async function () {
-    const { governorDAOFactoryInstance, daoAdminOne, token } =
-      await loadFixture(deployFixture);
-    const CREATE_DAO_ARGS = [
-      daoAdminOne.address,
-      DAO_NAME,
-      LOGO_URL,
-      "",
-      token.address,
-      BigNumber.from(500),
-      BigNumber.from(0),
-      BigNumber.from(100),
-      true,
-      DESCRIPTION,
-      WEB_LINKS,
-    ];
-    await expect(governorDAOFactoryInstance.createDAO(CREATE_DAO_ARGS))
-      .revertedWithCustomError(governorDAOFactoryInstance, "InvalidInput")
-      .withArgs("BaseDAO: info url is empty");
-  });
+    it("Verify updating dao info should be reverted for invalid inputs", async function () {
+      const { factory, inputs, daoAdminOne } = await loadFixture(deployFixture);
+      const txn = await factory.createDAO(Object.values(inputs));
+      const info = await verifyDAOCreatedEvent(txn);
 
-  it("Verify createDAO should add new dao into list when the dao is public", async function () {
-    const { governorDAOFactoryInstance, daoAdminOne, token } =
-      await loadFixture(deployFixture);
+      await expect(
+        info.dao
+          .connect(daoAdminOne)
+          .updateDaoInfo("", LOGO_URL, INFO_URL, DESCRIPTION, WEB_LINKS),
+      )
+        .revertedWithCustomError(info.dao, "InvalidInput")
+        .withArgs("BaseDAO: name is empty");
 
-    const currentList = await governorDAOFactoryInstance.getDAOs();
-    expect(currentList.length).equal(0);
+      await expect(
+        info.dao
+          .connect(daoAdminOne)
+          .updateDaoInfo(DAO_NAME, LOGO_URL, INFO_URL, "", WEB_LINKS),
+      )
+        .revertedWithCustomError(info.dao, "InvalidInput")
+        .withArgs("BaseDAO: description is empty");
 
-    const CREATE_DAO_ARGS = [
-      daoAdminOne.address,
-      DAO_NAME,
-      LOGO_URL,
-      INFO_URL,
-      token.address,
-      BigNumber.from(500),
-      BigNumber.from(0),
-      BigNumber.from(100),
-      false,
-      DESCRIPTION,
-      WEB_LINKS,
-    ];
+      await expect(
+        info.dao
+          .connect(daoAdminOne)
+          .updateDaoInfo(DAO_NAME, LOGO_URL, INFO_URL, DESCRIPTION, [
+            ...WEB_LINKS,
+            "",
+          ]),
+      )
+        .revertedWithCustomError(info.dao, "InvalidInput")
+        .withArgs("BaseDAO: invalid link");
+    });
 
-    const txn = await governorDAOFactoryInstance.createDAO(CREATE_DAO_ARGS);
+    it("Verify updating dao info should be succeeded for valid inputs", async function () {
+      const { factory, inputs, daoAdminOne } = await loadFixture(deployFixture);
+      const txn0 = await factory.createDAO(Object.values(inputs));
+      const info = await verifyDAOCreatedEvent(txn0);
 
-    const lastEvent = (await txn.wait()).events.pop();
-    expect(lastEvent.event).equal("DAOCreated");
-    expect(lastEvent.args.daoAddress).not.equal("0x0");
+      const UPDATED_DAO_NAME = DAO_NAME + "_1";
+      const UPDATED_LOGO_URL = LOGO_URL + "_1";
+      const UPDATED_INFO_URL = INFO_URL + "_1";
+      const UPDATED_DESCRIPTION = DESCRIPTION + "_1";
+      const UPDATED_WEB_LINKS = ["A", "B"];
+      const txn = await info.dao
+        .connect(daoAdminOne)
+        .updateDaoInfo(
+          UPDATED_DAO_NAME,
+          UPDATED_LOGO_URL,
+          UPDATED_INFO_URL,
+          UPDATED_DESCRIPTION,
+          UPDATED_WEB_LINKS,
+        );
 
-    const updatedList = await governorDAOFactoryInstance.getDAOs();
-    expect(updatedList.length).equal(1);
-  });
+      await verifyDAOInfoUpdatedEvent(
+        txn,
+        daoAdminOne.address,
+        UPDATED_DAO_NAME,
+        UPDATED_LOGO_URL,
+        UPDATED_INFO_URL,
+        UPDATED_DESCRIPTION,
+        UPDATED_WEB_LINKS,
+      );
+    });
 
-  it("Verify createDAO should not add new dao into list when the dao is private", async function () {
-    const { governorDAOFactoryInstance, daoAdminOne, token } =
-      await loadFixture(deployFixture);
-
-    const currentList = await governorDAOFactoryInstance.getDAOs();
-    expect(currentList.length).equal(0);
-
-    const CREATE_DAO_ARGS = [
-      daoAdminOne.address,
-      DAO_NAME,
-      LOGO_URL,
-      INFO_URL,
-      token.address,
-      BigNumber.from(500),
-      BigNumber.from(0),
-      BigNumber.from(100),
-      true,
-      DESCRIPTION,
-      WEB_LINKS,
-    ];
-
-    const txn = await governorDAOFactoryInstance.createDAO(CREATE_DAO_ARGS);
-
-    const lastEvent = (await txn.wait()).events.pop();
-    expect(lastEvent.event).equal("DAOCreated");
-    expect(lastEvent.args.daoAddress).not.equal("0x0");
-
-    const updatedList = await governorDAOFactoryInstance.getDAOs();
-    expect(updatedList.length).equal(0);
-  });
-
-  it("Verify upgrade logic call should be reverted for non dex owner", async function () {
-    const { governorDAOFactoryInstance, governance } =
-      await loadFixture(deployFixture);
-
-    await expect(
-      governorDAOFactoryInstance.upgradeFTDAOLogicImplementation(zeroAddress),
-    ).reverted;
-
-    await expect(
-      governorDAOFactoryInstance.upgradeGovernorsImplementation(governance),
-    ).reverted;
-
-    await expect(
-      governorDAOFactoryInstance.upgradeTokenHolderFactory(zeroAddress),
-    ).reverted;
-  });
-
-  it("Verify upgrade logic call should be proceeded for dex owner", async function () {
-    const { governorDAOFactoryInstance, governance, systemUsersSigners } =
-      await loadFixture(deployFixture);
-
-    const txn1 = await governorDAOFactoryInstance
-      .connect(systemUsersSigners.childProxyAdmin)
-      .upgradeFTDAOLogicImplementation(oneAddress);
-
-    const event1 = (await txn1.wait()).events.pop();
-    expect(event1.event).equal("LogicUpdated");
-    expect(event1.args.name).equal("FTDAO");
-    expect(event1.args.newImplementation).equal(oneAddress);
-
-    const txn2 = await governorDAOFactoryInstance
-      .connect(systemUsersSigners.childProxyAdmin)
-      .upgradeGovernorsImplementation(governance);
-
-    const event2 = (await txn2.wait()).events.pop();
-    expect(event2.event).equal("GovernorLogicUpdated");
-    expect(event2.args.name).equal("Governors");
-    expect(event2.args.newImplementation.tokenTransferLogic).equal(
-      governance[0],
-    );
-    expect(event2.args.newImplementation.textLogic).equal(governance[1]);
-    expect(event2.args.newImplementation.contractUpgradeLogic).equal(
-      governance[2],
-    );
-    expect(event2.args.newImplementation.createTokenLogic).equal(governance[3]);
-
-    const txn3 = await governorDAOFactoryInstance
-      .connect(systemUsersSigners.childProxyAdmin)
-      .upgradeTokenHolderFactory(oneAddress);
-
-    const event3 = (await txn3.wait()).events.pop();
-    expect(event3.event).equal("LogicUpdated");
-    expect(event3.args.name).equal("TokenHolderFactory");
-    expect(event3.args.newImplementation).equal(oneAddress);
-  });
-
-  it("Verify getTokenHolderFactoryAddress return correct address", async function () {
-    const { governorDAOFactoryInstance, nftHolderFactory } =
-      await loadFixture(deployFixture);
-    expect(
-      await governorDAOFactoryInstance.getTokenHolderFactoryAddress(),
-    ).equals(nftHolderFactory.address);
-  });
-
-  it("Verify upgradeHederaService should fail when non-owner try to upgrade Hedera service", async function () {
-    const { governorDAOFactoryInstance, signers } =
-      await loadFixture(deployFixture);
-    await expect(
-      governorDAOFactoryInstance.upgradeHederaService(signers[3].address),
-    ).reverted;
-  });
-
-  it("Verify upgrade Hedera service should pass when owner try to upgrade it", async function () {
-    const { governorDAOFactoryInstance, signers, systemUsersSigners } =
-      await loadFixture(deployFixture);
-
-    await expect(
-      governorDAOFactoryInstance
-        .connect(systemUsersSigners.childProxyAdmin)
-        .upgradeHederaService(signers[3].address),
-    ).not.reverted;
+    it("Verify getDaoInfo returns correct values", async function () {
+      const { factory, inputs, daoAdminOne } = await loadFixture(deployFixture);
+      const txn = await factory.createDAO(Object.values(inputs));
+      const info = await verifyDAOCreatedEvent(txn);
+      const daoInfo = await info.dao.getDaoInfo();
+      expect(daoInfo.name).equals(DAO_NAME);
+      expect(daoInfo.admin).equals(daoAdminOne.address);
+      expect(daoInfo.logoUrl).equals(LOGO_URL);
+      expect(daoInfo.description).equals(DESCRIPTION);
+      expect(daoInfo.webLinks.join(",")).equals(WEB_LINKS.join(","));
+    });
   });
 });

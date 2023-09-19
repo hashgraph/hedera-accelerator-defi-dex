@@ -1,3 +1,4 @@
+import { time } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { BigNumber, Contract } from "ethers";
 import { ethers, upgrades } from "hardhat";
@@ -42,7 +43,7 @@ export class TestHelper {
   }
 
   static async increaseEVMTime(seconds: number) {
-    await ethers.provider.send("evm_increaseTime", [seconds]);
+    await time.increase(seconds);
   }
 
   static toPrecision(targetAmount: number) {
@@ -152,6 +153,10 @@ export class TestHelper {
       await erc721.setUserBalance(treasure.address, nftId);
     }
     return erc721;
+  }
+
+  static async deployAssetsHolder() {
+    return await this.deployLogic("AssetsHolder");
   }
 
   static async deployMockHederaService(tokenTesting: boolean = true) {

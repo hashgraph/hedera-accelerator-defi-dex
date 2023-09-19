@@ -13,10 +13,7 @@ contract TokenHolderCallerMock {
         tokenHolder.addProposalForVoter(proposalId);
     }
 
-    function removeProposals(
-        uint256 proposalId,
-        address[] memory voters
-    ) public {
-        tokenHolder.removeActiveProposals(voters, proposalId);
+    function removeProposals(uint256 proposalId) public {
+        tokenHolder.removeActiveProposals(proposalId);
     }
 }

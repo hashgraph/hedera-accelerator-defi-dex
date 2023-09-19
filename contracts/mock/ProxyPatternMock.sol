@@ -11,7 +11,7 @@ contract ProxyPatternMock {
     }
 
     modifier ifAdmin() {
-        require(msg.sender == adminAddress, "Not admin");
+        require(msg.sender == adminAddress, "ProxyPatternMock: Not admin");
         _;
     }
 
