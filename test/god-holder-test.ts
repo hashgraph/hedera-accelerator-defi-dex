@@ -177,9 +177,7 @@ describe("GODHolder tests", function () {
         "User's Proposals are active",
       );
 
-      await tokenHolderCallerMock
-        .connect(voterAccount)
-        .removeProposals(1, [voterAccount.address]);
+      await tokenHolderCallerMock.connect(voterAccount).removeProposals(1);
 
       await expect(
         godHolder.revertTokensForVoter(TestHelper.toPrecision(1000)),
@@ -259,23 +257,9 @@ describe("GODHolder tests", function () {
       await expect(godHolder.addProposalForVoter(1)).revertedWith(
         "TokenHolder: caller must be contract",
       );
-      await expect(godHolder.removeActiveProposals([], 1)).revertedWith(
+      await expect(godHolder.removeActiveProposals(1)).revertedWith(
         "TokenHolder: caller must be contract",
       );
-    });
-
-    it("Verify remove active proposals should be reverted if wrong voters passed", async function () {
-      const { signers, voterAccount, tokenHolderCallerMock } =
-        await loadFixture(deployFixture);
-
-      await tokenHolderCallerMock.connect(voterAccount).addProposal(1);
-      await expect(
-        tokenHolderCallerMock.removeProposals(1, [signers[9].address]),
-      ).revertedWith("TokenHolder: voter info not available");
-
-      await expect(
-        tokenHolderCallerMock.removeProposals(2, [voterAccount.address]),
-      ).revertedWith("TokenHolder: voter info not available");
     });
 
     it("Verify add and remove active proposals should be reverted if caller contract having zero god tokens", async function () {
@@ -291,9 +275,7 @@ describe("GODHolder tests", function () {
       ).revertedWith("TokenHolder: insufficient balance");
 
       await expect(
-        tokenHolderCallerMock
-          .connect(voterAccount)
-          .removeProposals(1, [voterAccount.address]),
+        tokenHolderCallerMock.connect(voterAccount).removeProposals(1),
       ).revertedWith("TokenHolder: insufficient balance");
     });
 
@@ -312,14 +294,10 @@ describe("GODHolder tests", function () {
       await tokenHolderCallerMock.connect(voterAccount).addProposal(2);
       expect((await godHolder.getActiveProposalsForUser()).length).equal(2);
 
-      await tokenHolderCallerMock
-        .connect(voterAccount)
-        .removeProposals(1, [voterAccount.address]);
+      await tokenHolderCallerMock.connect(voterAccount).removeProposals(1);
       expect((await godHolder.getActiveProposalsForUser()).length).equal(1);
 
-      await tokenHolderCallerMock
-        .connect(voterAccount)
-        .removeProposals(2, [voterAccount.address]);
+      await tokenHolderCallerMock.connect(voterAccount).removeProposals(2);
       expect((await godHolder.getActiveProposalsForUser()).length).equal(0);
     });
 
@@ -346,9 +324,7 @@ describe("GODHolder tests", function () {
       expect((await godHolder.getActiveProposalsForUser()).length).equal(1);
       expect(await godHolder.canUserClaimTokens(voter)).equals(false);
 
-      await tokenHolderCallerMock
-        .connect(voterAccount)
-        .removeProposals(1, [voterAccount.address]);
+      await tokenHolderCallerMock.connect(voterAccount).removeProposals(1);
 
       expect((await godHolder.getActiveProposalsForUser()).length).equal(0);
       expect(await godHolder.canUserClaimTokens(voter)).equals(true);

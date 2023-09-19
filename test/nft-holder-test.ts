@@ -130,17 +130,13 @@ describe("NFTHolder Tests", function () {
         .length,
     ).equal(2);
 
-    await tokenHolderCallerMock
-      .connect(voterAccount)
-      .removeProposals(1, [voterAccount.address]);
+    await tokenHolderCallerMock.connect(voterAccount).removeProposals(1);
     expect(
       (await nftHolder.connect(voterAccount).getActiveProposalsForUser())
         .length,
     ).equal(1);
 
-    await tokenHolderCallerMock
-      .connect(voterAccount)
-      .removeProposals(2, [voterAccount.address]);
+    await tokenHolderCallerMock.connect(voterAccount).removeProposals(2);
 
     expect(
       (await nftHolder.connect(voterAccount).getActiveProposalsForUser())

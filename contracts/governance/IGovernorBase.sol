@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.18;
 
-import "../common/IERC20.sol";
-import "../common/IHederaService.sol";
+import "../holder/IAssetsHolder.sol";
 import "../common/ISystemRoleBasedAccess.sol";
 import "../governance/ITokenHolder.sol";
 

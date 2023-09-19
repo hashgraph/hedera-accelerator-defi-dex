@@ -440,7 +440,7 @@ abstract contract GovernorCountingSimpleInternal is
 
     function _cleanup(uint256 proposalId) private {
         ProposalInfo storage proposalInfo = _getProposalInfoIfExist(proposalId);
-        tokenHolder.removeActiveProposals(proposalInfo.voters, proposalId);
+        tokenHolder.removeActiveProposals(proposalId);
         _returnGODToken(proposalInfo.creator, proposalInfo.amountOrId);
         delete (proposalInfo.voters);
         if (activeProposalsCount > 0) {
@@ -472,4 +472,12 @@ abstract contract GovernorCountingSimpleInternal is
      * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
      */
     uint256[49] private __gap;
+
+    function clock() public view override returns (uint48) {
+        return SafeCastUpgradeable.toUint48(block.number);
+    }
+
+    function CLOCK_MODE() public pure override returns (string memory) {
+        return "block.number";
+    }
 }
