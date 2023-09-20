@@ -1,10 +1,9 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.18;
 
-import "./ISharedDAOModel.sol";
-
 import "../common/IEvents.sol";
 import "../common/IErrors.sol";
+import "../common/ISharedModel.sol";
 import "../common/IHederaService.sol";
 import "../common/ISystemRoleBasedAccess.sol";
 
@@ -18,7 +17,7 @@ import "../governance/ITokenHolderFactory.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-contract FTDAOFactory is IErrors, IEvents, Initializable, ISharedDAOModel {
+contract FTDAOFactory is IErrors, IEvents, ISharedModel, Initializable {
     event DAOCreated(
         address tokenHolderAddress,
         address assetsHolderAddress,
@@ -187,29 +186,33 @@ contract FTDAOFactory is IErrors, IEvents, Initializable, ISharedDAOModel {
     function _createGovernanceDAOContractInstance(
         CreateDAOInputs memory _createDAOInputs
     ) private returns (address, address, address, address) {
-        // 0 - creating token holder
+        // 0- setting up config variable
+        GovernorConfig memory config;
+        config.votingDelay = _createDAOInputs.votingDelay;
+        config.votingPeriod = _createDAOInputs.votingPeriod;
+        config.quorumThresholdInBsp = _createDAOInputs.quorumThreshold;
+
+        // 1 - creating token holder
         ITokenHolder iTokenHolder = tokenHolderFactory.getTokenHolder(
             address(_createDAOInputs.tokenAddress)
         );
 
-        // 1 - creating asset holder
+        // 2 - creating asset holder
         IAssetsHolder iAssets = IAssetsHolder(_createProxy(assetsHolderLogic));
 
-        // 2 - creating governor
+        // 3 - creating governor
         HederaGovernor governor = HederaGovernor(
             payable(_createProxy(governorLogic))
         );
         governor.initialize(
-            _createDAOInputs.votingDelay,
-            _createDAOInputs.votingPeriod,
-            _createDAOInputs.quorumThreshold,
+            config,
             iTokenHolder,
             iAssets,
             hederaService,
             iSystemRoleBasedAccess
         );
 
-        // 3 - creating dao
+        // 4 - creating dao
         FTDAO dao = FTDAO(_createProxy(daoLogic));
         dao.initialize(address(governor), _createDAOInputs);
 

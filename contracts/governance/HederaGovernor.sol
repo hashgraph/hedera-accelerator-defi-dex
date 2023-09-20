@@ -6,6 +6,7 @@ import "./ITokenHolder.sol";
 import "../holder/IAssetsHolder.sol";
 
 import "../common/IErrors.sol";
+import "../common/ISharedModel.sol";
 import "../common/TokenOperations.sol";
 import "../common/ISystemRoleBasedAccess.sol";
 import "../common/hedera/HederaResponseCodes.sol";
@@ -16,6 +17,7 @@ import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorCounti
 
 contract HederaGovernor is
     IErrors,
+    ISharedModel,
     TokenOperations,
     OwnableUpgradeable,
     GovernorSettingsUpgradeable,
@@ -80,9 +82,7 @@ contract HederaGovernor is
     uint256[49] private __gap;
 
     function initialize(
-        uint256 _votingDelay,
-        uint256 _votingPeriod,
-        uint256 _quorumThresholdInBsp,
+        GovernorConfig memory config,
         ITokenHolder _iTokenHolder,
         IAssetsHolder _iAssetsHolder,
         IHederaService _iHederaService,
@@ -90,12 +90,12 @@ contract HederaGovernor is
     ) public initializer {
         __Ownable_init();
         __Governor_init("HederaGovernor");
-        __GovernorSettings_init(_votingDelay, _votingPeriod, 0);
+        __GovernorSettings_init(config.votingDelay, config.votingPeriod, 0);
         __GovernorCountingSimple_init();
 
-        quorumThresholdInBsp = _quorumThresholdInBsp == 0
+        quorumThresholdInBsp = config.quorumThresholdInBsp == 0
             ? 500
-            : _quorumThresholdInBsp;
+            : config.quorumThresholdInBsp;
 
         iSystemRoleBasedAccess = _iSystemRoleBasedAccess;
 

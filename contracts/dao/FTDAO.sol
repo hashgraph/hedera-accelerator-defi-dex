@@ -1,9 +1,9 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.18;
 import "./BaseDAO.sol";
-import "./ISharedDAOModel.sol";
+import "../common/ISharedModel.sol";
 
-contract FTDAO is BaseDAO, ISharedDAOModel {
+contract FTDAO is BaseDAO, ISharedModel {
     address public governorAddress;
 
     function initialize(

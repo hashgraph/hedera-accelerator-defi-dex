@@ -26,8 +26,7 @@ describe("NFTDAOFactory contratc tests", function () {
     expect(event.args.assetsHolderAddress).not.equal(TestHelper.ZERO_ADDRESS);
 
     const dao = await TestHelper.getContract("FTDAO", event.args.daoAddress);
-    const governor = await TestHelper.getContract(
-      "HederaGovernor",
+    const governor = await TestHelper.getDeployGovernorAt(
       event.args.governorAddress,
     );
     return { dao, governor };
@@ -91,7 +90,7 @@ describe("NFTDAOFactory contratc tests", function () {
       dexOwner.address,
     );
 
-    const governor = await TestHelper.deployLogic("HederaGovernor");
+    const governor = await TestHelper.deployGovernor();
     const assetsHolder = await TestHelper.deployAssetsHolder();
     const roleBasedAccess = await TestHelper.deploySystemRoleBasedAccess();
     const governorTokenDAO = await TestHelper.deployLogic("FTDAO");
