@@ -21,7 +21,7 @@ contract AssetsHolder is
 
     string private constant HederaService = "HederaService";
 
-    address private governanceToken;
+    address public governanceToken;
     IHederaService private iHederaService;
 
     uint256[49] private __gap;
