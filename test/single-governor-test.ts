@@ -63,9 +63,7 @@ describe("Governor Tests", function () {
     const nftAssetsHolder = await TestHelper.deployAssetsHolder();
 
     const FT_ARGS = [
-      VOTING_DELAY_IN_SECONDS,
-      VOTING_PERIOD_IN_SECONDS,
-      QUORUM_THRESHOLD_BSP,
+      [VOTING_DELAY_IN_SECONDS, VOTING_PERIOD_IN_SECONDS, QUORUM_THRESHOLD_BSP],
       ftTokenHolder.address,
       ftAssetsHolder.address,
       hederaService.address,
@@ -73,9 +71,7 @@ describe("Governor Tests", function () {
     ];
 
     const NFT_ARGS = [
-      VOTING_DELAY_IN_SECONDS,
-      VOTING_PERIOD_IN_SECONDS,
-      QUORUM_THRESHOLD_BSP,
+      [VOTING_DELAY_IN_SECONDS, VOTING_PERIOD_IN_SECONDS, QUORUM_THRESHOLD_BSP],
       nftTokenHolder.address,
       nftAssetsHolder.address,
       hederaService.address,
@@ -83,12 +79,9 @@ describe("Governor Tests", function () {
     ];
 
     // FT governor
-    const ftGovernor = await TestHelper.deployLogic("HederaGovernor");
-    await ftGovernor.initialize(...FT_ARGS);
-
+    const ftGovernor = await TestHelper.deployGovernor(FT_ARGS);
     // NFT governor
-    const nftGovernor = await TestHelper.deployLogic("HederaGovernor");
-    await nftGovernor.initialize(...NFT_ARGS);
+    const nftGovernor = await TestHelper.deployGovernor(NFT_ARGS);
 
     const systemUsersSigners = await TestHelper.systemUsersSigners();
     const governorTestProxy = await TestHelper.deployLogic(
@@ -806,18 +799,15 @@ describe("Governor Tests", function () {
 
       const ftAssetsHolder = await TestHelper.deployAssetsHolder();
 
-      const ARGS = [
-        VOTING_DELAY_IN_SECONDS,
-        VOTING_PERIOD_IN_SECONDS,
-        0,
+      const GOVERNOR_ARGS = [
+        [VOTING_DELAY_IN_SECONDS, VOTING_PERIOD_IN_SECONDS, 0],
         ftTokenHolder.address,
         ftAssetsHolder.address,
         hederaService.address,
         roleBasedAccess.address,
       ];
 
-      const ftGovernor = await TestHelper.deployLogic("HederaGovernor");
-      await ftGovernor.initialize(...ARGS);
+      const ftGovernor = await TestHelper.deployGovernor(GOVERNOR_ARGS);
       const result = await ftGovernor.quorum(0);
       expect(result).equals(TestHelper.toPrecision(QUORUM_THRESHOLD));
     });

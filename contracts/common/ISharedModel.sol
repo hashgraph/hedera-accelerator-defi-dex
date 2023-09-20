@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.18;
 
-interface ISharedDAOModel {
+interface ISharedModel {
     struct CreateDAOInputs {
         address admin;
         string name;
@@ -25,5 +25,11 @@ interface ISharedDAOModel {
         bool isPrivate;
         string description;
         string[] webLinks;
+    }
+
+    struct GovernorConfig {
+        uint256 votingDelay;
+        uint256 votingPeriod;
+        uint256 quorumThresholdInBsp;
     }
 }
