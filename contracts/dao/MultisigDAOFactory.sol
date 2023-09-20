@@ -1,10 +1,9 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.18;
 
-import "./ISharedDAOModel.sol";
-
 import "../common/IEvents.sol";
 import "../common/IErrors.sol";
+import "../common/ISharedModel.sol";
 import "../common/IHederaService.sol";
 
 import "../dao/MultisigDAO.sol";
@@ -16,12 +15,7 @@ import "../gnosis/HederaGnosisSafeProxyFactory.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-contract MultisigDAOFactory is
-    IErrors,
-    IEvents,
-    Initializable,
-    ISharedDAOModel
-{
+contract MultisigDAOFactory is IErrors, IEvents, ISharedModel, Initializable {
     event DAOCreated(
         address daoAddress,
         address safeAddress,

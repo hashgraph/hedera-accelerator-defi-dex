@@ -47,11 +47,12 @@ contract MockHederaService is IHederaService {
     function mintTokenPublic(
         address tokenAddress,
         uint256 amount
-    ) external view override returns (int256, int64) {
-        string memory tokenName = ERC20Mock(tokenAddress).name();
-        if (isFailureToken(tokenName)) {
-            return (23, int64(int256(amount)));
+    ) external override returns (int256, int64) {
+        ERC20Mock token = ERC20Mock(tokenAddress);
+        if (isFailureToken(token.name())) {
+            return (23, int64(-1));
         } else {
+            token.setTotal(amount);
             return (22, int64(int256(amount)));
         }
     }
@@ -59,18 +60,19 @@ contract MockHederaService is IHederaService {
     function burnTokenPublic(
         address tokenAddress,
         uint256 amount
-    ) external view override returns (int256, int64) {
-        string memory tokenName = ERC20Mock(tokenAddress).name();
-        if (isFailureToken(tokenName)) {
-            return (23, int64(int256(amount)));
+    ) external override returns (int256, int64) {
+        ERC20Mock token = ERC20Mock(tokenAddress);
+        if (isFailureToken(token.name())) {
+            return (23, int64(-1));
         } else {
+            token.setTotal(amount);
             return (22, int64(int256(amount)));
         }
     }
 
     function createFungibleTokenPublic(
         IHederaTokenService.HederaToken memory tokenToCreate,
-        uint256,
+        uint256 initialTotalSupply,
         uint256
     )
         external
@@ -83,7 +85,12 @@ contract MockHederaService is IHederaService {
             tokenAddress = address(0x0);
         } else {
             tokenAddress = address(
-                new ERC20Mock(tokenToCreate.name, tokenToCreate.symbol, 0, 10)
+                new ERC20Mock(
+                    tokenToCreate.name,
+                    tokenToCreate.symbol,
+                    initialTotalSupply,
+                    initialTotalSupply
+                )
             );
             responseCode = 22;
         }

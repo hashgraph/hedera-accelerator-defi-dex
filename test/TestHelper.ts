@@ -1,3 +1,4 @@
+import { time } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { BigNumber, Contract } from "ethers";
 import { ethers, upgrades } from "hardhat";
@@ -42,7 +43,7 @@ export class TestHelper {
   }
 
   static async increaseEVMTime(seconds: number) {
-    await ethers.provider.send("evm_increaseTime", [seconds]);
+    await time.increase(seconds);
   }
 
   static toPrecision(targetAmount: number) {
@@ -154,8 +155,22 @@ export class TestHelper {
     return erc721;
   }
 
+  static async deployAssetsHolder() {
+    return await this.deployLogic("AssetsHolder");
+  }
+
   static async deployMockHederaService(tokenTesting: boolean = true) {
     return await this.deployLogic("MockHederaService", tokenTesting);
+  }
+
+  static async deployGovernor(args: any = undefined) {
+    const governor = await TestHelper.deployLogic("HederaGovernor");
+    Array.isArray(args) && (await governor.initialize(...args));
+    return governor;
+  }
+
+  static async getDeployGovernorAt(address: string) {
+    return await TestHelper.getContract("HederaGovernor", address);
   }
 
   static async deployLogic(name: string, ...args: any) {
