@@ -26,6 +26,8 @@ contract AssetsHolder is
 
     uint256[49] private __gap;
 
+    receive() external payable {}
+
     function initialize(
         address _governanceToken,
         IHederaService _iHederaService
