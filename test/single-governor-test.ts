@@ -1087,7 +1087,7 @@ describe("Governor Tests", function () {
         );
       });
 
-      it.skip("Verify HBar transfer should be succeeded", async function () {
+      it("Verify HBar transfer should be succeeded", async function () {
         const TRANSFER_AMOUNT = 10;
         const { creator, receiver, ftGovernor, ftTokenHolder, ftAssetsHolder } =
           await loadFixture(deployFixture);
