@@ -80,7 +80,7 @@ contract HederaGovernor is
     uint256[49] private __gap;
 
     function initialize(
-        GovernorConfig memory _config,
+        GovernorConfig memory config,
         ITokenHolder _iTokenHolder,
         IAssetsHolder _iAssetsHolder,
         IHederaService _iHederaService,
@@ -88,12 +88,12 @@ contract HederaGovernor is
     ) public initializer {
         __Ownable_init();
         __Governor_init("HederaGovernor");
-        __GovernorSettings_init(_config.votingDelay, _config.votingPeriod, 0);
+        __GovernorSettings_init(config.votingDelay, config.votingPeriod, 0);
         __GovernorCountingSimple_init();
 
-        quorumThresholdInBsp = _config.quorumThresholdInBsp == 0
+        quorumThresholdInBsp = config.quorumThresholdInBsp == 0
             ? 500
-            : _config.quorumThresholdInBsp;
+            : config.quorumThresholdInBsp;
 
         iSystemRoleBasedAccess = _iSystemRoleBasedAccess;
 
