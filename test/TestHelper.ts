@@ -20,6 +20,10 @@ export class TestHelper {
     TestHelper.NFT_FOR_PROPOSAL_CREATION2,
   ];
 
+  static nonZeroAddress(address: any): boolean {
+    return address !== TestHelper.ZERO_ADDRESS;
+  }
+
   static async getAccountHBars(address: string): Promise<BigNumber> {
     return await ethers.provider.getBalance(address);
   }

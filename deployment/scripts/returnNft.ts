@@ -20,7 +20,7 @@ export async function main() {
       Common.transferAssets(
         NFT_TOKEN_ID,
         item.serialNo,
-        clientsInfo.operatorId.toString(),
+        clientsInfo.treasureId.toString(),
         item.accountId,
         clientsInfo.operatorKey,
         clientsInfo.operatorClient,

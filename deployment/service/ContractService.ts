@@ -26,6 +26,8 @@ export class ContractService {
   public static SYSTEM_ROLE_BASED_ACCESS = "systemrolebasedaccess";
   public static FT_TOKEN_HOLDER_FACTORY = "godtokenholderfactory";
   public static NFT_TOKEN_HOLDER_FACTORY = "nftTokenHolderFactory";
+  public static HEDERA_GOVERNOR = "hederagovernor";
+  public static ASSET_HOLDER = "assetsholder";
 
   public factoryContractName = "factory";
   public pairContractName = "pair";

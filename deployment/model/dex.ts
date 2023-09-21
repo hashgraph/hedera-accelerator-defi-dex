@@ -6,7 +6,7 @@ const ZERO_TOKEN_ID = TokenId.fromString("0.0.0");
 const GOD_TOKEN_ID = "0.0.80158";
 const GOD_TOKEN_ADDRESS = "0x000000000000000000000000000000000001391e";
 
-const NFT_TOKEN_ID = TokenId.fromString("0.0.82625");
+const NFT_TOKEN_ID = TokenId.fromString("0.0.2019043");
 
 const E2E_NFT_TOKEN_ID = TokenId.fromString("0.0.83109");
 
