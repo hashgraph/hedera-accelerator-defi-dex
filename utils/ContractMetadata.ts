@@ -50,6 +50,8 @@ export default class ContractMetadata {
     "NFTHolder",
     "HederaMultiSend",
     "SystemRoleBasedAccess",
+    "HederaGovernor",
+    "AssetsHolder",
   ];
 
   static SUPPORTED_PROXY_OPTIONS = ["create", "update"];
@@ -116,6 +118,7 @@ export default class ContractMetadata {
       "ContractUpgradeDAO",
       "BaseDAO",
       "IERC20",
+      "AssetsHolder",
     ],
   ) => {
     return await this._readAllContractInfo(contractNameList);

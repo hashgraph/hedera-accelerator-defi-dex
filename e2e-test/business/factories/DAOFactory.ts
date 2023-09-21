@@ -1,20 +1,20 @@
 import Base from "../Base";
+import FTDAO from "../FTDAO";
+import GodHolder from "../GodHolder";
+import NFTHolder from "../NFTHolder";
+import TokenHolderFactory from "./TokenHolderFactory";
 
 import { Helper } from "../../../utils/Helper";
 import { Deployment } from "../../../utils/deployContractOnTestnet";
 import { clientsInfo } from "../../../utils/ClientManagement";
+import { AddressHelper } from "../../../utils/AddressHelper";
+import { ContractService } from "../../../deployment/service/ContractService";
 import {
   Client,
+  TokenId,
   ContractId,
   ContractFunctionParameters,
-  TokenId,
 } from "@hashgraph/sdk";
-import { ContractService } from "../../../deployment/service/ContractService";
-import TokenHolderFactory from "./TokenHolderFactory";
-import FTDAO from "../FTDAO";
-import GodHolder from "../GodHolder";
-import NFTHolder from "../NFTHolder";
-import { AddressHelper } from "../../../utils/AddressHelper";
 
 const deployment = new Deployment();
 
@@ -23,8 +23,6 @@ const CREATE_DAO = "createDAO";
 const INITIALIZE = "initialize";
 const UPGRADE_TOKEN_HOLDER_FACTORY = "upgradeTokenHolderFactory";
 const GET_TOKEN_HOLDER_FACTORY_ADDRESS = "getTokenHolderFactoryAddress";
-const UPGRADE_TOKEN_DAO_LOGIC_IMPL = "upgradeFTDAOLogicImplementation";
-const UPGRADE_GOVERNORS_IMPLEMENTATION = "upgradeGovernorsImplementation";
 
 export default abstract class DAOFactory extends Base {
   protected abstract getPrefix(): string;
@@ -34,46 +32,37 @@ export default abstract class DAOFactory extends Base {
     tokenHolderFactory: TokenHolderFactory,
   ) => {
     if (await this.isInitializationPending()) {
-      const tokenHolderFactoryContractId = ContractId.fromString(
+      const tokenHolderFactoryAddress = ContractId.fromString(
         tokenHolderFactory.contractId,
       ).toSolidityAddress();
-      const tokenHolderFactoryAddress = tokenHolderFactoryContractId;
       const deployedItems = await deployment.deployContracts([
         ContractService.FT_DAO,
-        ContractService.GOVERNOR_TT,
-        ContractService.GOVERNOR_TEXT,
-        ContractService.GOVERNOR_UPGRADE,
-        ContractService.GOVERNOR_TOKEN_CREATE,
+        ContractService.ASSET_HOLDER,
+        ContractService.HEDERA_GOVERNOR,
       ]);
       const ftDao = deployedItems.get(ContractService.FT_DAO);
+      const governor = deployedItems.get(ContractService.HEDERA_GOVERNOR);
+      const assetsHolder = deployedItems.get(ContractService.ASSET_HOLDER);
 
       const data = {
-        _iSystemRoleBasedAccess: this.getSystemBasedRoleAccessContractAddress(),
-        _hederaService: this.htsAddress,
         _daoLogic: ftDao.address,
+        _governorLogic: governor.address,
+        _assetsHolderLogic: assetsHolder.address,
+        _hederaService: this.htsAddress,
         _tokenHolderFactory: tokenHolderFactoryAddress,
-        _governors: Object.values({
-          tokenTransferLogic: deployedItems.get(ContractService.GOVERNOR_TT)
-            .address,
-          textLogic: deployedItems.get(ContractService.GOVERNOR_TEXT).address,
-          upgradeLogic: deployedItems.get(ContractService.GOVERNOR_UPGRADE)
-            .address,
-          createTokenLogic: deployedItems.get(
-            ContractService.GOVERNOR_TOKEN_CREATE,
-          ).address,
-        }),
+        _iSystemRoleBasedAccess: this.getSystemBasedRoleAccessContractAddress(),
       };
 
-      const { bytes, hex } = await this.encodeFunctionData(
+      const { bytes } = await this.encodeFunctionData(
         ContractService.FT_DAO_FACTORY,
         INITIALIZE,
         Object.values(data),
       );
 
-      await this.execute(800000, INITIALIZE, client, bytes);
-      console.log(
-        `- ${this.getPrefix()}DAOFactory#${INITIALIZE}(): done with hex-data = ${hex}\n`,
-      );
+      await this.execute(7_00_000, INITIALIZE, client, bytes);
+      console.log(`- ${this.getPrefix()}DAOFactory#${INITIALIZE}(): done\n`);
+      console.table(data);
+      console.log();
       return;
     }
     console.log(
@@ -81,7 +70,7 @@ export default abstract class DAOFactory extends Base {
     );
   };
 
-  createDAO = async (
+  public createDAO = async (
     name: string,
     logoUrl: string,
     infoUrl: string,
@@ -133,7 +122,7 @@ export default abstract class DAOFactory extends Base {
     return address;
   };
 
-  getDAOs = async (client: Client = clientsInfo.operatorClient) => {
+  public getDAOs = async (client: Client = clientsInfo.operatorClient) => {
     const { result } = await this.execute(1_000_000, GET_DAOS, client);
     const addresses = Helper.getAddressArray(result);
     console.log(
@@ -144,53 +133,7 @@ export default abstract class DAOFactory extends Base {
     return addresses;
   };
 
-  upgradeGovernorsImplementation = async (
-    tokenTransferLogic: string,
-    tokenCreateLogic: string,
-    textProposalLogic: string,
-    contractUpgrade: string,
-  ) => {
-    const args = {
-      tokenTransferLogic,
-      textProposalLogic,
-      contractUpgrade,
-      tokenCreateLogic,
-    };
-
-    const { bytes } = await this.encodeFunctionData(
-      ContractService.FT_DAO_FACTORY,
-      UPGRADE_GOVERNORS_IMPLEMENTATION,
-      [Object.values(args)],
-    );
-
-    const { receipt } = await this.execute(
-      2_00_000,
-      UPGRADE_GOVERNORS_IMPLEMENTATION,
-      clientsInfo.childProxyAdminClient,
-      bytes,
-    );
-
-    console.log(
-      `- ${this.getPrefix()}DAOFactory#${UPGRADE_GOVERNORS_IMPLEMENTATION}(): tx status ${
-        receipt.status
-      }\n`,
-    );
-  };
-
-  upgradeFTDAOLogicImplementation = async (_newImpl: string) => {
-    const args = new ContractFunctionParameters().addAddress(_newImpl);
-    await this.execute(
-      200000,
-      UPGRADE_TOKEN_DAO_LOGIC_IMPL,
-      clientsInfo.childProxyAdminClient,
-      args,
-    );
-    console.log(
-      `- ${this.getPrefix()}DAOFactory#${UPGRADE_TOKEN_DAO_LOGIC_IMPL}(): done\n`,
-    );
-  };
-
-  upgradeTokenHolderFactory = async (_newImpl: string) => {
+  public upgradeTokenHolderFactory = async (_newImpl: string) => {
     const args = new ContractFunctionParameters().addAddress(_newImpl);
     await this.execute(
       200000,
