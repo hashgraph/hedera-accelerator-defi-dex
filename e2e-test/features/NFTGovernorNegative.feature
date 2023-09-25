@@ -1,4 +1,5 @@
 @NFTGovernorNegative
+@TestSuite-5
 Feature: Fungible Token Governor e2e test
 
     #  HederaGovernor

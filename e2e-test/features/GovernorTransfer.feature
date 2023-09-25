@@ -1,4 +1,5 @@
 @GovernorTransfer
+@TestSuite-4
 Feature: FT and NFT Governor e2e test For assets transfer 
 
     #  HederaGovernor

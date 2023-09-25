@@ -1,4 +1,5 @@
 @FTGovernorNegative
+@TestSuite-2
 Feature: Fungible Token Governor e2e test
 
     #  HederaGovernor

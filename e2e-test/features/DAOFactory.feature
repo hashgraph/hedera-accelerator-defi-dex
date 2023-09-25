@@ -1,4 +1,4 @@
-@TestSuite-4
+@TestSuite-1
 Feature: DAOFactory e2e test
 
     This feature file contains e2e test for DAO Governor Token
