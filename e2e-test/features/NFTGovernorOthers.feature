@@ -1,4 +1,5 @@
 @GovernorOthers
+@TestSuite-7
 Feature: Fungible Token Governor e2e test
 
     #  HederaGovernor

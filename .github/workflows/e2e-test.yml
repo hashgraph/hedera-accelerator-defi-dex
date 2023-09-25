@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   pull_request:
     types: [opened]
-    branches: [develop]
+    branches: [develop, optimization-with-single-governor]
   push:
     branches: [develop]
 
@@ -60,7 +60,7 @@ jobs:
         id: create-json
         with:
           name: "deployment/scripts/workflow-inputs.json"
-          json: '{"contracts":"GODHolder,GovernorUpgrade,GovernorTextProposal"}'
+          json: '{"contracts":"MultiSigDAO,MultisigDAOFactory"}'
       - name: Deployment
         run: npx hardhat run deployment/scripts/createContractsE2E.ts;
       - name: e2e
@@ -80,16 +80,8 @@ jobs:
         with:
           node-version: "18.15.0"
       - run: npm ci
-      - name: Save user inputs
-        uses: jsdaniell/create-json@v1.2.2
-        id: create-json
-        with:
-          name: "deployment/scripts/workflow-inputs.json"
-          json: '{"contracts":"GODHolder,GovernorTokenCreate"}'
-      - name: Deployment
-        run: npx hardhat run deployment/scripts/createContractsE2E.ts;
       - name: e2e
-        run: npm run e2e-test suite-three
+        run: npx hardhat compile && npm run e2e-test suite-three
 
   suite-4:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
@@ -106,7 +98,7 @@ jobs:
           node-version: "18.15.0"
       - run: npm ci
       - name: e2e
-        run: npx hardhat compile --force && npm run e2e-test suite-four
+        run: npx hardhat compile && npm run e2e-test suite-four
 
   suite-5:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
@@ -119,13 +111,47 @@ jobs:
         with:
           node-version: "18.15.0"
       - run: npm ci
-      - name: Save user inputs
-        uses: jsdaniell/create-json@v1.2.2
-        id: create-json
-        with:
-          name: "deployment/scripts/workflow-inputs.json"
-          json: '{"contracts":"MultiSigDAO,MultisigDAOFactory"}'
-      - name: Deployment
-        run: npx hardhat run deployment/scripts/createContractsE2E.ts;
       - name: e2e
-        run: npm run e2e-test suite-five
+        run: npx hardhat compile && npm run e2e-test suite-five
+
+  suite-6:
+    if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18.15.0"
+      - run: npm ci
+      - name: e2e
+        run: npx hardhat compile && npm run e2e-test suite-six
+
+  suite-7:
+    if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18.15.0"
+      - run: npm ci
+      - name: e2e
+        run: npx hardhat compile && npm run e2e-test suite-seven
+
+  suite-8:
+    if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18.15.0"
+      - run: npm ci
+      - name: e2e
+        run: npx hardhat compile && npm run e2e-test suite-eight

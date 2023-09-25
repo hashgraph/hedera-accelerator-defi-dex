@@ -11,6 +11,9 @@
     "suite-three": "./node_modules/.bin/cucumber-js -p suiteThree",
     "suite-four": "./node_modules/.bin/cucumber-js -p suiteFour",
     "suite-five": "./node_modules/.bin/cucumber-js -p suiteFive",
+    "suite-six": "./node_modules/.bin/cucumber-js -p suiteSix",
+    "suite-seven": "./node_modules/.bin/cucumber-js -p suiteSeven",
+    "suite-eight": "./node_modules/.bin/cucumber-js -p suiteEight",
     "test": "./node_modules/.bin/cucumber-js -p default",
     "e2e-test": "node trigger-test.js"
   },
