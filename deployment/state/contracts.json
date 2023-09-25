@@ -8,10 +8,10 @@
   },
   {
     "name": "hederaservice",
-    "id": "0.0.850232",
+    "id": "0.0.1926123",
     "hash": "a1ae62f0671e1165784759946b80df3d",
-    "address": "0x00000000000000000000000000000000000cf938",
-    "timestamp": "2023-08-24T18:59:38.080Z"
+    "address": "0x00000000000000000000000000000000001d63eb",
+    "timestamp": "2023-09-15T14:58:56.776Z"
   },
   {
     "name": "configuration",
@@ -24,12 +24,12 @@
   },
   {
     "name": "nfttokenholderfactory",
-    "id": "0.0.1194574",
-    "hash": "ab60db54fcc11c31a2b48e112b1baced",
-    "address": "0x0000000000000000000000000000000000123a4e",
-    "timestamp": "2023-09-08T08:32:13.325Z",
-    "transparentProxyId": "0.0.1194576",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000123a50"
+    "id": "0.0.2024909",
+    "hash": "e5bdf67fbb4d97e028ec04dadbc7296f",
+    "address": "0x00000000000000000000000000000000001ee5cd",
+    "timestamp": "2023-09-19T17:24:18.285Z",
+    "transparentProxyId": "0.0.2024911",
+    "transparentProxyAddress": "0x00000000000000000000000000000000001ee5cf"
   },
   {
     "name": "lptoken",
@@ -42,12 +42,12 @@
   },
   {
     "name": "godtokenholderfactory",
-    "id": "0.0.1194743",
-    "hash": "8236343ef4aa715e1687a7f018f4c519",
-    "address": "0x0000000000000000000000000000000000123af7",
-    "timestamp": "2023-09-08T09:27:54.536Z",
-    "transparentProxyId": "0.0.1194745",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000123af9"
+    "id": "0.0.2090762",
+    "hash": "98b44ec5c832aa283e38415d31e8488d",
+    "address": "0x00000000000000000000000000000000001fe70a",
+    "timestamp": "2023-09-20T09:21:17.705Z",
+    "transparentProxyId": "0.0.2090784",
+    "transparentProxyAddress": "0x00000000000000000000000000000000001fe720"
   },
   {
     "name": "godholder",
@@ -78,12 +78,12 @@
   },
   {
     "name": "nftdaofactory",
-    "id": "0.0.1194570",
-    "hash": "3435fadcc407444f00cea3e6633745f5",
-    "address": "0x0000000000000000000000000000000000123a4a",
-    "timestamp": "2023-09-08T08:31:46.867Z",
-    "transparentProxyId": "0.0.1194572",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000123a4c"
+    "id": "0.0.2019225",
+    "hash": "e05d9c114d6cfc988773adda7c71c00e",
+    "address": "0x00000000000000000000000000000000001ecf99",
+    "timestamp": "2023-09-18T18:31:44.139Z",
+    "transparentProxyId": "0.0.2019227",
+    "transparentProxyAddress": "0x00000000000000000000000000000000001ecf9b"
   },
   {
     "name": "pair",
@@ -96,12 +96,12 @@
   },
   {
     "name": "ftdaofactory",
-    "id": "0.0.1194739",
-    "hash": "1430dbf355e7036d80f8de68404c93c9",
-    "address": "0x0000000000000000000000000000000000123af3",
-    "timestamp": "2023-09-08T09:27:22.526Z",
-    "transparentProxyId": "0.0.1194741",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000123af5"
+    "id": "0.0.2019144",
+    "hash": "f8e8ac80d6dca829304a9e23af00b7fb",
+    "address": "0x00000000000000000000000000000000001ecf48",
+    "timestamp": "2023-09-18T17:55:27.214Z",
+    "transparentProxyId": "0.0.2019146",
+    "transparentProxyAddress": "0x00000000000000000000000000000000001ecf4a"
   },
   {
     "name": "multisigdaofactory",
@@ -183,5 +183,23 @@
     "timestamp": "2023-08-23T09:32:56.471Z",
     "transparentProxyId": "0.0.634566",
     "transparentProxyAddress": "0x000000000000000000000000000000000009aec6"
+  },
+  {
+    "name": "hederagovernor",
+    "id": "0.0.2090703",
+    "hash": "432bb79edabcc392eefb394d1ff5c349",
+    "address": "0x00000000000000000000000000000000001fe6cf",
+    "timestamp": "2023-09-20T09:20:49.451Z",
+    "transparentProxyId": "0.0.2090724",
+    "transparentProxyAddress": "0x00000000000000000000000000000000001fe6e4"
+  },
+  {
+    "name": "assetsholder",
+    "id": "0.0.2014634",
+    "hash": "2463859182332eeb38a48825e48c2a9d",
+    "address": "0x00000000000000000000000000000000001ebdaa",
+    "timestamp": "2023-09-18T10:48:08.730Z",
+    "transparentProxyId": "0.0.2014636",
+    "transparentProxyAddress": "0x00000000000000000000000000000000001ebdac"
   }
 ]
