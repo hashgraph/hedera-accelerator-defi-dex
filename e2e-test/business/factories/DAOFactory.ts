@@ -108,18 +108,29 @@ export default abstract class DAOFactory extends Base {
       client,
       bytes,
     );
-    const address = result.getAddress(0);
+    const tokenHolderAddress = result.getAddress(0);
+    const assetsHolderAddress = result.getAddress(1);
+    const governorAddress = result.getAddress(2);
+    const daoAddress = result.getAddress(3);
     console.log(
       `- ${this.getPrefix()}DAOFactory#${CREATE_DAO}(): with input data = ${hex}`,
     );
     console.table({
       ...params,
       webLinks: webLinks.toString(),
-      daoAddress: address,
+      daoAddress,
+      tokenHolderAddress,
+      assetsHolderAddress,
+      governorAddress,
       daoFactoryId: this.contractId,
       txnId: record.transactionId.toString(),
     });
-    return address;
+    return {
+      tokenHolderAddress,
+      assetsHolderAddress,
+      governorAddress,
+      daoAddress,
+    };
   };
 
   public getDAOs = async (client: Client = clientsInfo.operatorClient) => {

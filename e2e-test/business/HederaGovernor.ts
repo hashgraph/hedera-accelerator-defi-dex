@@ -103,15 +103,13 @@ export default class HederaGovernor extends Base {
     votingPeriod: number = this.DEFAULT_VOTING_PERIOD,
     holderTokenId: TokenId = this.GOD_TOKEN_ID,
   ) {
-    await tokenHolder.initialize(client, holderTokenId.toSolidityAddress());
-
-    const tokenHolderProxyAddress = await AddressHelper.idToEvmAddress(
-      tokenHolder.contractId,
-    );
-
     if (await this.isInitializationPending()) {
       const assetHolderInfo = await new Deployment().deployProxy(
         ContractService.ASSET_HOLDER,
+      );
+      await tokenHolder.initialize(client, holderTokenId.toSolidityAddress());
+      const tokenHolderProxyAddress = await AddressHelper.idToEvmAddress(
+        tokenHolder.contractId,
       );
       const data = await this.encodeFunctionData(
         this.getContractName(),
@@ -285,7 +283,7 @@ export default class HederaGovernor extends Base {
       AssetsHolderProps.ASSOCIATE,
       [tokenId.toSolidityAddress()],
     );
-    return await this.createProposal(
+    const proposalInfo = await this.createProposal(
       AssetsHolderProps.Type.ASSOCIATE,
       title,
       [assetHolder.contractEvmAddress],
@@ -297,6 +295,7 @@ export default class HederaGovernor extends Base {
       metadata,
       amountOrId,
     );
+    return { proposalInfo, assetHolder };
   };
 
   public createAssetTransferProposal = async (
@@ -527,6 +526,76 @@ export default class HederaGovernor extends Base {
     return receipt.status.toString() === "SUCCESS";
   };
 
+  public decodeTransferProposalData = async (proposalInfo: ProposalInfo) => {
+    if (
+      proposalInfo.proposalType.toString() ===
+      AssetsHolderProps.Type.TRANSFER.toString()
+    ) {
+      return await this.decodeFunctionData(
+        ContractService.ASSET_HOLDER,
+        AssetsHolderProps.TRANSFER,
+        ethers.utils.arrayify(proposalInfo.calldatas[0]),
+      );
+    }
+  };
+
+  public decodeProxyUpgradeProposalData = async (
+    proposalInfo: ProposalInfo,
+  ) => {
+    if (
+      proposalInfo.proposalType.toString() ===
+      AssetsHolderProps.Type.UPGRADE_PROXY.toString()
+    ) {
+      return await this.decodeFunctionData(
+        ContractService.ASSET_HOLDER,
+        AssetsHolderProps.UPGRADE_PROXY,
+        ethers.utils.arrayify(proposalInfo.calldatas[0]),
+      );
+    }
+  };
+
+  /**
+   * Only for dev or e2e testing
+   * @param creatorClient
+   */
+  public async cancelAllProposals(creatorClient: Client) {
+    function removeSubset(superset: any[], subset: any[]) {
+      return superset.filter((supersetItem) => {
+        const item = subset.find(
+          (subsetItem) =>
+            subsetItem.proposalId.toString() ===
+            supersetItem.proposalId.toString(),
+        );
+        return item === undefined;
+      });
+    }
+
+    const events = await MirrorNodeService.getInstance().getEvents(
+      this.contractId,
+      true,
+    );
+    const executedProposals = events.get("ProposalExecuted") ?? [];
+    const cancelledProposals = events.get("ProposalCanceled") ?? [];
+    const createdProposals = events.get("ProposalCreated") ?? [];
+    const activeProposals = removeSubset(createdProposals, [
+      ...executedProposals,
+      ...cancelledProposals,
+    ]);
+    console.log("- Total proposals count:- ", createdProposals.length);
+    activeProposals.length > 0 &&
+      console.log("- Active proposals count :- ", activeProposals.length);
+    for (const activeProposal of activeProposals) {
+      const proposalInfo = this.parseProposalCreatedEvent(
+        activeProposal.proposalId.toString(),
+        events,
+      );
+      const state = await this.state(proposalInfo.proposalId, creatorClient);
+      state.toNumber() !== ProposalState.Canceled &&
+        state.toNumber() !== ProposalState.Executed &&
+        (await this.cancelProposal(proposalInfo, creatorClient));
+    }
+  }
+
   public async setupAllowanceForProposalCreation(
     creatorClient: Client,
     creatorAccountId: AccountId,
@@ -623,6 +692,14 @@ export default class HederaGovernor extends Base {
     client: Client = clientsInfo.operatorClient,
   ) => await this.vote(proposalId, 2, client);
 
+  public vote = async (proposalId: string, support: number, client: Client) => {
+    const args = this.createBaseParams(proposalId).addUint8(support);
+    await this.execute(5_00_000, this.CAST_VOTE, client, args);
+    console.log(
+      `- Governor#${this.CAST_VOTE}(): proposal-id = ${proposalId}, support = ${support}\n`,
+    );
+  };
+
   private createProposal = async (
     proposalType: number,
     title: string,
@@ -665,18 +742,6 @@ export default class HederaGovernor extends Base {
       `- Governor#${this.CREATE_PROPOSAL}():`,
     );
     return proposalInfo;
-  };
-
-  private vote = async (
-    proposalId: string,
-    support: number,
-    client: Client,
-  ) => {
-    const args = this.createBaseParams(proposalId).addUint8(support);
-    await this.execute(5_00_000, this.CAST_VOTE, client, args);
-    console.log(
-      `- Governor#${this.CAST_VOTE}(): proposal-id = ${proposalId}, support = ${support}\n`,
-    );
   };
 
   private createBaseParams(proposalId: string) {
