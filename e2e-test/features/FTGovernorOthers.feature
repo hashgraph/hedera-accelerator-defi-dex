@@ -6,6 +6,8 @@ Feature: Fungible Token Governor e2e test
     #  TokenHolder
     #  "0.0.80158" FT-Token for FTGovernor (default amount (proposal_creation = 1e8))
     #  "1e8" stands for 1 with 8 zeros i.e 1_00_00_00_00
+    #  "0.0.2621021" proxy
+    #  "0.0.2621003" logic
 
     ### -> e2e are covering below proposals
     #  Text proposal
@@ -56,10 +58,10 @@ Scenario: FT token burn proposal
 
 Scenario: Contract's logic upgrade proposal
     Given User setup allowance for proposal creation with amount/id "1e8"
-    When User create a contract-logic upgrade proposal proxy is "0.0.88490" and logic is "0.0.88440"
+    When User create a contract-logic upgrade proposal proxy is "0.0.2621021" and logic is "0.0.2621003"
     When User votes "For" proposal    
     Then User waits for proposal state to be "Succeeded" for max 15 seconds
-    When User transfer ownership of proxy "0.0.88490" to assets-holder
+    When User transfer ownership of proxy "0.0.2621021" to assets-holder
     Then User execute the proposal with fee "0"
     Then User verify proxy logic address
 

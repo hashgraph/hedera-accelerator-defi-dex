@@ -8,7 +8,7 @@ Feature: FT and NFT Governor e2e test For assets transfer
     #  receiver must associate the receiving token first before proposal execution
     #  "0.0.0" represent HBAR token as per our implementation
     #  "0.0.80158" FT-Token for FTGovernor (default amount (proposal_creation = 1e8))
-    #  "0.0.2368573" NFT-Token for NFTGovernor (default ids (creation = 1, voting = 2, transfer = 3))
+    #  "0.0.2368573" NFT-Token for NFTGovernor (default transfer id = 33)
     #  "0.0.80170" FT-Token used in transfer for amount 1e8
     #  "1e8" stands for 1 with 8 zeros i.e 1_00_00_00_00
 
@@ -64,10 +64,10 @@ Scenario: NFT association proposal execution
 
 Scenario: NFT transfer proposal
     Given User setup allowance for proposal creation with amount/id "1e8"
-    When User create a assets transfer proposal for token "0.0.2368573" & amount/id "3"
+    When User create a assets transfer proposal for token "0.0.2368573" & amount/id "33"
     When User votes "For" proposal    
     Then User waits for proposal state to be "Succeeded" for max 15 seconds   
-    When User transfer assets to assets-holder before execution for token "0.0.2368573" & amount/id "3" 
+    When User transfer assets to assets-holder before execution for token "0.0.2368573" & amount/id "33" 
     When User associate the receiving token to their account "0.0.2368573"
     When User fetch current receiver balance for token "0.0.2368573"
     Then User execute the proposal with fee "0"

@@ -5,7 +5,7 @@ on:
     types: [opened]
     branches: [develop, optimization-with-single-governor]
   push:
-    branches: [develop]
+    branches: [develop, optimization-with-single-governor-03]
 
 env:
   PROXY_ADMIN_ID: 0.0.78567

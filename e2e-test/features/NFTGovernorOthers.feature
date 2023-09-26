@@ -6,6 +6,8 @@ Feature: Fungible Token Governor e2e test
     #  TokenHolder
     #  "0.0.2368573" NFT-Token for NFTGovernor (default ids (creation = 11, voting = 12))
     #  "1e8" stands for 1 with 8 zeros i.e 1_00_00_00_00
+    #  "0.0.88490" proxy
+    #  "0.0.88440" logic
 
     ### -> e2e are covering below proposals
     #  Text proposal
