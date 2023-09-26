@@ -61,7 +61,7 @@ Scenario: Contract's logic upgrade proposal
     When User create a contract-logic upgrade proposal proxy is "0.0.2621021" and logic is "0.0.2621003"
     When User votes "For" proposal    
     Then User waits for proposal state to be "Succeeded" for max 15 seconds
-    When User transfer ownership of proxy "0.0.2621021" to assets-holder
+    When User transfer ownership of proxy to assets-holder
     Then User execute the proposal with fee "0"
     Then User verify proxy logic address
 

@@ -181,7 +181,7 @@ export default class Common extends Base {
     client: Client = clientsInfo.proxyAdminClient,
   ) => {
     const args = new ContractFunctionParameters().addAddress(newAdminAddress);
-    await this.execute(50_000, Common.CHANGE_ADMIN, client, args, adminKey);
+    await this.execute(80_000, Common.CHANGE_ADMIN, client, args, adminKey);
     console.log(
       `- Common#changeAdmin(): proxyId = ${this.contractId.toString()}, new-admin-address = ${newAdminAddress}\n`,
     );

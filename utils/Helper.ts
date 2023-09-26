@@ -195,4 +195,14 @@ export class Helper {
     }
     return typeof value[Symbol.iterator] === "function";
   }
+
+  static areAddressesSame(first: string, second: string) {
+    try {
+      console.log(" - Helper#areAddressesSame(): ", first, second);
+      return ethers.utils.getAddress(first) === ethers.utils.getAddress(second);
+    } catch (error: any) {
+      console.error(" - Helper#areAddressesSame(): ", error.message);
+      return false;
+    }
+  }
 }

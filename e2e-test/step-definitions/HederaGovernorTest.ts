@@ -307,16 +307,17 @@ export class HederaGovernorTest extends CommonSteps {
     );
   }
 
-  @when(
-    /User transfer ownership of proxy "([^"]*)" to assets-holder/,
-    undefined,
-    30000,
-  )
-  public async transferProxyOwnershipToAssetHolder(proxyId: string) {
-    const proxyContractId = ContractId.fromString(proxyId);
-    await new Common(proxyContractId).changeAdmin(
-      proposal.assetHolder.contractEvmAddress,
-    );
+  @when(/User transfer ownership of proxy to assets-holder/, undefined, 30000)
+  public async transferProxyOwnershipToAssetHolder() {
+    const pInfo = proposal.proposalInfo;
+    const decodedInfo = await governor.decodeProxyUpgradeProposalData(pInfo);
+    if (decodedInfo) {
+      console.log(" - transferProxyOwnershipToAssetHolder:", decodedInfo);
+      const proxy = decodedInfo._proxy;
+      const proxyContractId = await AddressHelper.addressToIdObject(proxy);
+      const common = new Common(proxyContractId);
+      await common.changeAdmin(proposal.assetHolder.contractEvmAddress);
+    }
   }
 
   @when(
@@ -457,19 +458,21 @@ export class HederaGovernorTest extends CommonSteps {
       const decodedInfo = await governor.decodeProxyUpgradeProposalData(pInfo);
       if (decodedInfo) {
         console.log(" - verifyProxyLogicAddressChanges:", decodedInfo);
-        const proxy = decodedInfo._proxy;
-        const proxyLogic = decodedInfo._proxyLogic;
+        const proxy: string = decodedInfo._proxy;
+        const proxyLogic: string = decodedInfo._proxyLogic;
         const proxyContractId = await AddressHelper.addressToIdObject(proxy);
         const common = new Common(proxyContractId);
         const proxyCurrentLogic = await common.getCurrentImplementation();
-        expect(proxyLogic).includes(proxyCurrentLogic);
+        expect(Helper.areAddressesSame(proxyLogic, proxyCurrentLogic)).equals(
+          true,
+        );
       }
     }
   }
 
   @then(/User received the error message "([^"]*)"/, undefined, 30000)
   public async verifyErrorMessage(msg: string) {
-    expect(errorMessage).includes(msg);
+    expect(errorMessage.toLowerCase()).includes(msg.toLowerCase());
     errorMessage = "";
   }
 
