@@ -20,7 +20,8 @@ contract MultisigDAOFactory is
     IErrors,
     IEvents,
     Initializable,
-    ISharedDAOModel
+    ISharedDAOModel,
+    TokenOperations
 {
     event DAOCreated(
         address daoAddress,
@@ -28,6 +29,14 @@ contract MultisigDAOFactory is
         address multiSendAddress,
         MultiSigCreateDAOInputs inputs
     );
+
+    struct DAOConfigDetails {
+        address payable daoTreasurer;
+        address tokenAddress;
+        uint256 daoFee;
+    }
+
+    event DAOConfig(DAOConfigDetails daoConfig);
 
     bytes private constant NO_DATA = "";
     string private constant DaoLogic = "DaoLogic";
@@ -39,6 +48,7 @@ contract MultisigDAOFactory is
     address private daoLogic;
     address private safeLogic;
     address private safeFactory;
+    DAOConfigDetails private daoConfig;
     IHederaService private hederaService;
     HederaMultiSend private multiSend;
     ISystemRoleBasedAccess private iSystemRoleManagment;
@@ -50,6 +60,7 @@ contract MultisigDAOFactory is
         address _daoLogic,
         address _safeLogic,
         address _safeFactory,
+        DAOConfigDetails memory _daoConfigDetails,
         IHederaService _hederaService,
         HederaMultiSend _multiSend
     ) external initializer {
@@ -59,11 +70,44 @@ contract MultisigDAOFactory is
         safeFactory = _safeFactory;
         hederaService = _hederaService;
         multiSend = _multiSend;
+        daoConfig = _daoConfigDetails;
         emit LogicUpdated(address(0), daoLogic, DaoLogic);
         emit LogicUpdated(address(0), safeLogic, SafeLogic);
         emit LogicUpdated(address(0), safeFactory, SafeFactory);
         emit LogicUpdated(address(0), address(hederaService), HederaService);
         emit LogicUpdated(address(0), address(multiSend), MultiSend);
+        emit DAOConfig(daoConfig);
+    }
+
+    modifier DAOTreasureOnly() {
+        require(
+            msg.sender == daoConfig.daoTreasurer,
+            "MultiSig DAO Factory: DAO treasurer only."
+        );
+        _;
+    }
+
+    function changeDAOConfig(
+        address payable daoTreasurer,
+        address tokenAddress,
+        uint256 daoFee
+    ) external DAOTreasureOnly {
+        require(
+            daoFee > 0 && daoTreasurer != payable(address(0)),
+            "MultiSig DAO Factory: Invalid DAO Config Data."
+        );
+        daoConfig.daoFee = daoFee;
+        daoConfig.tokenAddress = tokenAddress;
+        daoConfig.daoTreasurer = daoTreasurer;
+        emit DAOConfig(daoConfig);
+    }
+
+    function getDAOConfigDetails()
+        external
+        view
+        returns (DAOConfigDetails memory)
+    {
+        return daoConfig;
     }
 
     function upgradeSafeFactoryAddress(address _newImpl) external {
@@ -114,11 +158,13 @@ contract MultisigDAOFactory is
 
     function createDAO(
         MultiSigCreateDAOInputs memory _createDAOInputs
-    ) external returns (address) {
+    ) external payable returns (address) {
         HederaGnosisSafe hederaGnosisSafe = _createGnosisSafeProxyInstance(
             _createDAOInputs.owners,
             _createDAOInputs.threshold
         );
+
+        payDAOCreationFee();
         address createdDAOAddress = _createMultiSigDAOInstance(
             _createDAOInputs.admin,
             _createDAOInputs.name,
@@ -137,6 +183,31 @@ contract MultisigDAOFactory is
             _createDAOInputs
         );
         return createdDAOAddress;
+    }
+
+    function payDAOCreationFee() private {
+        bool isHbarToken = daoConfig.tokenAddress == address(0);
+        if (isHbarToken) {
+            (bool sent, ) = daoConfig.daoTreasurer.call{
+                value: daoConfig.daoFee
+            }("");
+            require(
+                sent,
+                "MultiSig DAO Factory: Transfer HBAR To DAO Treasurer Failed"
+            );
+        } else {
+            int256 responseCode = _transferToken(
+                hederaService,
+                daoConfig.tokenAddress,
+                msg.sender,
+                daoConfig.daoTreasurer,
+                daoConfig.daoFee
+            );
+            require(
+                responseCode == HederaResponseCodes.SUCCESS,
+                "MultiSig DAO Factory: Transfer Token To DAO Treasurer Failed"
+            );
+        }
     }
 
     function _createMultiSigDAOInstance(

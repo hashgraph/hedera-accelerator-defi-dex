@@ -1,12 +1,14 @@
 import MultiSigDao from "../../e2e-test/business/MultiSigDao";
 import MultiSigDAOFactory from "../../e2e-test/business/factories/MultiSigDAOFactory";
 import SystemRoleBasedAccess from "../../e2e-test/business/common/SystemRoleBasedAccess";
-
+import Common from "../../e2e-test/business/Common";
+import { TokenId } from "@hashgraph/sdk";
 import { Helper } from "../../utils/Helper";
 import { Deployment } from "../../utils/deployContractOnTestnet";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { AddressHelper } from "../../utils/AddressHelper";
 import { ContractService } from "../../deployment/service/ContractService";
+import { DEFAULT_DAO_CONFIG } from "../../e2e-test/business/factories/MultiSigDAOFactory";
 import {
   DAO_LOGO,
   DAO_NAME,
@@ -21,6 +23,13 @@ import {
   DAO_OWNERS_ADDRESSES,
 } from "./multiSigDAO";
 
+const TOKEN_ALLOWANCE_DETAILS = {
+  TOKEN: TokenId.fromSolidityAddress(DEFAULT_DAO_CONFIG.tokenAddress),
+  FROM_CLIENT: clientsInfo.uiUserClient,
+  FROM_ID: clientsInfo.uiUserId,
+  FROM_KEY: clientsInfo.uiUserKey,
+};
+
 async function main() {
   // only for dev testing
   // await createNewCopies();
@@ -30,6 +39,14 @@ async function main() {
 
   const daoFactory = new MultiSigDAOFactory();
   await daoFactory.initialize();
+  await Common.setTokenAllowance(
+    TOKEN_ALLOWANCE_DETAILS.TOKEN,
+    daoFactory.contractId,
+    DEFAULT_DAO_CONFIG.daoFee,
+    TOKEN_ALLOWANCE_DETAILS.FROM_ID,
+    TOKEN_ALLOWANCE_DETAILS.FROM_KEY,
+    TOKEN_ALLOWANCE_DETAILS.FROM_CLIENT,
+  );
   await daoFactory.createDAO(
     DAO_NAME,
     DAO_LOGO,
