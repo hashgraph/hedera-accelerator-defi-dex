@@ -10,7 +10,14 @@ import {
 } from "@hashgraph/sdk";
 import { ContractService } from "../../../deployment/service/ContractService";
 import { MirrorNodeService } from "../../../utils/MirrorNodeService";
+import dex from "../../../deployment/model/dex";
+import { CommonSteps } from "../../step-definitions/CommonSteps";
 
+interface DAOConfigDetails {
+  daoTreasurer: string;
+  tokenAddress: string;
+  daoFee: number;
+}
 const deployment = new Deployment();
 
 const GET_DAOS = "getDAOs";
@@ -20,8 +27,17 @@ const UPGRADE_SAFE_LOGIC_IMPL = "upgradeSafeLogicAddress";
 const UPGRADE_DAO_LOGIC_IMPL = "upgradeDaoLogicAddress";
 const UPGRADE_SAFE_FACTORY_LOGIC_IMPL = "upgradeSafeFactoryAddress";
 
+export const DEFAULT_DAO_CONFIG = {
+  daoTreasurer: clientsInfo.treasureId.toSolidityAddress(),
+  tokenAddress: dex.GOD_TOKEN_ADDRESS,
+  daoFee: CommonSteps.withPrecision * 20,
+};
+
 export default class MultiSigDAOFactory extends Base {
-  initialize = async (client: Client = clientsInfo.operatorClient) => {
+  initialize = async (
+    daoConfigDetails: DAOConfigDetails = DEFAULT_DAO_CONFIG,
+    client: Client = clientsInfo.operatorClient,
+  ) => {
     if (await this.isInitializationPending()) {
       const deployedItems = await deployment.deployContracts([
         ContractService.SAFE_FACTORY,
@@ -36,6 +52,7 @@ export default class MultiSigDAOFactory extends Base {
         _daoLogic: multiSigDao.address,
         _safeLogic: gnosisLogic.address,
         _safeFactory: gnosisFactory.address,
+        _daoConfigDetails: Object.values(daoConfigDetails),
         _hederaService: this.htsAddress,
         _multiSend: this.getMultiSendContractAddress(),
       };

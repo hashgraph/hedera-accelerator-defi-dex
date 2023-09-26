@@ -63,6 +63,18 @@ describe("MultiSig tests", function () {
     return { txnHash, info };
   }
 
+  async function verifyDAOConfigChangeEvent(txn: any, daoConfig: any) {
+    const { name, args } = await TestHelper.readLastEvent(txn);
+    const txnHash = args.txnHash;
+    const newDAOConfig = args.daoConfig;
+
+    expect(name).equal("DAOConfig");
+    expect(newDAOConfig.daoTreasurer).equals(daoConfig.daoTreasurer);
+    expect(newDAOConfig.tokenAddress).equals(daoConfig.tokenAddress);
+    expect(newDAOConfig.daoFee).equals(daoConfig.daoFee);
+    return { txnHash, newDAOConfig };
+  }
+
   async function proposeTransaction(
     multiSigDAOInstance: Contract,
     receiver: string,
@@ -213,6 +225,12 @@ describe("MultiSig tests", function () {
     const events = await TestHelper.readEvents(txn, ["DAOInfoUpdated"]);
     expect(events.length).equals(1);
 
+    const daoConfigData = {
+      daoTreasurer: signers[11].address,
+      tokenAddress: tokenInstance.address,
+      daoFee: TestHelper.toPrecision(20),
+    };
+
     // factory setup
     const multiSigDAOFactoryInstance =
       await TestHelper.deployLogic("MultisigDAOFactory");
@@ -221,6 +239,7 @@ describe("MultiSig tests", function () {
       multiSigDAOLogicInstance.address,
       hederaGnosisSafeLogicInstance.address,
       hederaGnosisSafeProxyFactoryInstance.address,
+      Object.values(daoConfigData),
       hederaService.address,
       multiSend.address,
     );
@@ -259,6 +278,7 @@ describe("MultiSig tests", function () {
       systemRoleBasedAccess,
       systemUsersSigners,
       multiSendProxy,
+      daoConfigData,
     };
   }
 
@@ -408,6 +428,7 @@ describe("MultiSig tests", function () {
         hederaGnosisSafeProxyFactoryInstance,
         hederaService,
         multiSend,
+        daoConfigData,
       } = await loadFixture(deployFixture);
       await expect(
         multiSigDAOFactoryInstance.initialize(
@@ -415,6 +436,7 @@ describe("MultiSig tests", function () {
           multiSigDAOLogicInstance.address,
           hederaGnosisSafeLogicInstance.address,
           hederaGnosisSafeProxyFactoryInstance.address,
+          daoConfigData,
           hederaService.address,
           multiSend.address,
         ),
@@ -483,6 +505,173 @@ describe("MultiSig tests", function () {
 
       const updatedList = await multiSigDAOFactoryInstance.getDAOs();
       expect(updatedList.length).equal(1);
+    });
+
+    it("Verify createDAO should defined HBAR as DAO creation fee", async function () {
+      const {
+        doaSignersAddresses,
+        daoAdminOne,
+        signers,
+        systemRoleBasedAccess,
+        multiSigDAOLogicInstance,
+        hederaGnosisSafeLogicInstance,
+        hederaGnosisSafeProxyFactoryInstance,
+        hederaService,
+        multiSend,
+      } = await loadFixture(deployFixture);
+
+      const daoConfigData = {
+        daoTreasurer: signers[11].address,
+        tokenAddress: TestHelper.ZERO_ADDRESS,
+        daoFee: TestHelper.toPrecision(20),
+      };
+
+      const multiSigDAOFactoryInstance =
+        await TestHelper.deployLogic("MultisigDAOFactory");
+
+      await multiSigDAOFactoryInstance.initialize(
+        systemRoleBasedAccess,
+        multiSigDAOLogicInstance.address,
+        hederaGnosisSafeLogicInstance.address,
+        hederaGnosisSafeProxyFactoryInstance.address,
+        Object.values(daoConfigData),
+        hederaService.address,
+        multiSend.address,
+      );
+
+      const ARGS = [
+        daoAdminOne.address,
+        DAO_NAME,
+        LOGO_URL,
+        doaSignersAddresses,
+        doaSignersAddresses.length,
+        true,
+        DESCRIPTION,
+        WEB_LINKS,
+      ];
+
+      await expect(
+        multiSigDAOFactoryInstance.createDAO(ARGS, {
+          value: daoConfigData.daoFee,
+        }),
+      ).changeEtherBalances(
+        [signers[0].address, daoConfigData.daoTreasurer],
+        [-daoConfigData.daoFee, daoConfigData.daoFee],
+      );
+    });
+
+    it("Verify createDAO should defined token as DAO creation fee", async function () {
+      const {
+        doaSignersAddresses,
+        daoAdminOne,
+        signers,
+        tokenInstance,
+        daoConfigData,
+        multiSigDAOFactoryInstance,
+      } = await loadFixture(deployFixture);
+
+      await tokenInstance.setUserBalance(
+        signers[0].address,
+        daoConfigData.daoFee,
+      );
+
+      const ARGS = [
+        daoAdminOne.address,
+        DAO_NAME,
+        LOGO_URL,
+        doaSignersAddresses,
+        doaSignersAddresses.length,
+        true,
+        DESCRIPTION,
+        WEB_LINKS,
+      ];
+
+      await expect(
+        multiSigDAOFactoryInstance.createDAO(ARGS),
+      ).changeTokenBalances(
+        tokenInstance,
+        [signers[0].address, daoConfigData.daoTreasurer],
+        [-daoConfigData.daoFee, daoConfigData.daoFee],
+      );
+    });
+
+    it("Verify Change DAO Configuration Change should work", async function () {
+      const {
+        multiSigDAOFactoryInstance,
+        signers,
+        tokenInstance,
+        daoAdminOne,
+      } = await loadFixture(deployFixture);
+
+      const {
+        daoTreasurer: initialTreasurerAddress,
+        tokenAddress: initialTokenAddress,
+        daoFee: initialFee,
+      } = await multiSigDAOFactoryInstance.getDAOConfigDetails();
+
+      const initialTreasurer = signers[11];
+      expect(initialTreasurerAddress).equals(initialTreasurer.address);
+      expect(initialTokenAddress).equals(tokenInstance.address);
+      expect(initialFee).equals(TestHelper.toPrecision(20));
+
+      const newDAOConfig = {
+        daoTreasurer: signers[12].address,
+        tokenAddress: tokenInstance.address,
+        daoFee: TestHelper.toPrecision(30),
+      };
+
+      await expect(
+        multiSigDAOFactoryInstance
+          .connect(daoAdminOne)
+          .changeDAOConfig(
+            newDAOConfig.daoTreasurer,
+            newDAOConfig.tokenAddress,
+            newDAOConfig.daoFee,
+          ),
+      ).revertedWith("MultiSig DAO Factory: DAO treasurer only.");
+
+      const txn = await multiSigDAOFactoryInstance
+        .connect(initialTreasurer)
+        .changeDAOConfig(
+          newDAOConfig.daoTreasurer,
+          newDAOConfig.tokenAddress,
+          newDAOConfig.daoFee,
+        );
+
+      verifyDAOConfigChangeEvent(txn, newDAOConfig);
+    });
+
+    it("Verify Initialize MultiSig Factory emits DAOConfig", async function () {
+      const {
+        signers,
+        tokenInstance,
+        systemRoleBasedAccess,
+        multiSigDAOLogicInstance,
+        hederaGnosisSafeLogicInstance,
+        hederaGnosisSafeProxyFactoryInstance,
+        hederaService,
+        multiSend,
+      } = await loadFixture(deployFixture);
+
+      const daoConfigData = {
+        daoTreasurer: signers[11].address,
+        tokenAddress: tokenInstance.address,
+        daoFee: TestHelper.toPrecision(20),
+      };
+
+      const multiSigDAOFactoryInstance =
+        await TestHelper.deployLogic("MultisigDAOFactory");
+
+      const transaction = await multiSigDAOFactoryInstance.initialize(
+        systemRoleBasedAccess,
+        multiSigDAOLogicInstance.address,
+        hederaGnosisSafeLogicInstance.address,
+        hederaGnosisSafeProxyFactoryInstance.address,
+        Object.values(daoConfigData),
+        hederaService.address,
+        multiSend.address,
+      );
+      verifyDAOConfigChangeEvent(transaction, daoConfigData);
     });
 
     it("Verify createDAO should not add new dao into list when the dao is private", async function () {
