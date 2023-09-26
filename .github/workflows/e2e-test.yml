@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   pull_request:
     types: [opened]
-    branches: [develop]
+    branches: [develop, optimization-with-single-governor]
   push:
     branches: [develop]
 
@@ -22,7 +22,7 @@ env:
   UI_USER_KEY: 302e020100300506032b657004220420899ec4fb7e8153a36bd37dd9500b9057982bf76bc1f0efa5b8cb170ee2329997
 
 jobs:
-  suite-1:
+  Factory-And-Pair:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
 
@@ -44,71 +44,7 @@ jobs:
       - name: e2e
         run: npm run e2e-test suite-one
 
-  suite-2:
-    if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v3
-      - name: Use Node.js 18.x
-        uses: actions/setup-node@v3
-        with:
-          node-version: "18.15.0"
-      - run: npm ci
-      - name: Save user inputs
-        uses: jsdaniell/create-json@v1.2.2
-        id: create-json
-        with:
-          name: "deployment/scripts/workflow-inputs.json"
-          json: '{"contracts":"GODHolder,GovernorUpgrade,GovernorTextProposal"}'
-      - name: Deployment
-        run: npx hardhat run deployment/scripts/createContractsE2E.ts;
-      - name: e2e
-        run: npm run e2e-test suite-two
-
-  suite-3:
-    if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    env:
-      UI_USER_ID: 0.0.405652
-      UI_USER_KEY: 302e020100300506032b6570042204208e8fe8f694707f2e578f5ced24304a5190b59ef014a0b978d9db0732eaf6445d
-
-    steps:
-      - uses: actions/checkout@v3
-      - name: Use Node.js 18.x
-        uses: actions/setup-node@v3
-        with:
-          node-version: "18.15.0"
-      - run: npm ci
-      - name: Save user inputs
-        uses: jsdaniell/create-json@v1.2.2
-        id: create-json
-        with:
-          name: "deployment/scripts/workflow-inputs.json"
-          json: '{"contracts":"GODHolder,GovernorTokenCreate"}'
-      - name: Deployment
-        run: npx hardhat run deployment/scripts/createContractsE2E.ts;
-      - name: e2e
-        run: npm run e2e-test suite-three
-
-  suite-4:
-    if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    env:
-      UI_USER_ID: 0.0.405576
-      UI_USER_KEY: 302e020100300506032b6570042204202cc790b009e400a3ed97363980ae27ddfb58102fa8fb7c1a7b69e212f756c084
-
-    steps:
-      - uses: actions/checkout@v3
-      - name: Use Node.js 18.x
-        uses: actions/setup-node@v3
-        with:
-          node-version: "18.15.0"
-      - run: npm ci
-      - name: e2e
-        run: npx hardhat compile --force && npm run e2e-test suite-four
-
-  suite-5:
+  MultiSig-DAO:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
 
@@ -128,4 +64,108 @@ jobs:
       - name: Deployment
         run: npx hardhat run deployment/scripts/createContractsE2E.ts;
       - name: e2e
-        run: npm run e2e-test suite-five
+        run: npm run e2e-test suite-two
+
+  FT-Governor-Negative:
+    if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18.15.0"
+      - run: npm ci
+      - name: e2e
+        run: npx hardhat compile && npm run e2e-test suite-three
+
+  NFT-Governor-Negative:
+    if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18.15.0"
+      - run: npm ci
+      - name: e2e
+        run: npx hardhat compile && npm run e2e-test suite-four
+
+  FT-Governor-Others:
+    if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18.15.0"
+      - run: npm ci
+      - name: e2e
+        run: npx hardhat compile && npm run e2e-test suite-five
+
+  NFT-Governor-Others:
+    if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18.15.0"
+      - run: npm ci
+      - name: e2e
+        run: npx hardhat compile && npm run e2e-test suite-six
+
+  FT-Governor-Transfer:
+    if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    env:
+      UI_USER_ID: 0.0.405652
+      UI_USER_KEY: 302e020100300506032b6570042204208e8fe8f694707f2e578f5ced24304a5190b59ef014a0b978d9db0732eaf6445d
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18.15.0"
+      - run: npm ci
+      - name: e2e
+        run: npx hardhat compile && npm run e2e-test suite-seven
+
+  NFT-Governor-Transfer:
+    if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    env:
+      UI_USER_ID: 0.0.405576
+      UI_USER_KEY: 302e020100300506032b6570042204202cc790b009e400a3ed97363980ae27ddfb58102fa8fb7c1a7b69e212f756c084
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18.15.0"
+      - run: npm ci
+      - name: e2e
+        run: npx hardhat compile && npm run e2e-test suite-eight
+
+  FT-NFT-DAOFactory:
+    if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18.15.0"
+      - run: npm ci
+      - name: e2e
+        run: npx hardhat compile && npm run e2e-test suite-nine

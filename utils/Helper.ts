@@ -144,7 +144,9 @@ export class Helper {
   }
 
   static createProposalTitle(titlePrefix: string, count: number = 20) {
-    return `${titlePrefix} ${Math.random() * count}`;
+    return titlePrefix.length >= 0
+      ? `${titlePrefix} ${Math.random() * count}`
+      : titlePrefix;
   }
 
   static readWorkflowInputs() {
