@@ -13,7 +13,13 @@ import "./ISharedDAOModel.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-contract FTDAOFactory is IErrors, IEvents, Initializable, ISharedDAOModel {
+contract FTDAOFactory is
+    IErrors,
+    IEvents,
+    Initializable,
+    ISharedDAOModel,
+    TokenOperations
+{
     event DAOCreated(
         address daoAddress,
         Governor governors,
@@ -28,6 +34,7 @@ contract FTDAOFactory is IErrors, IEvents, Initializable, ISharedDAOModel {
 
     address[] private daos;
     FTDAO private daoLogic;
+    DAOConfigDetails private daoConfig;
     Governor private governors;
     IHederaService private hederaService;
     ITokenHolderFactory private tokenHolderFactory;
@@ -37,6 +44,7 @@ contract FTDAOFactory is IErrors, IEvents, Initializable, ISharedDAOModel {
         ISystemRoleBasedAccess _iSystemRoleBasedAccess,
         IHederaService _hederaService,
         FTDAO _daoLogic,
+        DAOConfigDetails memory _daoConfigDetails,
         ITokenHolderFactory _tokenHolderFactory,
         Governor memory _governors
     ) external initializer {
@@ -45,7 +53,7 @@ contract FTDAOFactory is IErrors, IEvents, Initializable, ISharedDAOModel {
         daoLogic = _daoLogic;
         tokenHolderFactory = _tokenHolderFactory;
         governors = _governors;
-
+        daoConfig = _daoConfigDetails;
         emit LogicUpdated(address(0), address(daoLogic), FungibleTokenDAO);
         emit LogicUpdated(
             address(0),
@@ -55,6 +63,63 @@ contract FTDAOFactory is IErrors, IEvents, Initializable, ISharedDAOModel {
         emit LogicUpdated(address(0), address(hederaService), HederaService);
         Governor memory oldGovernors;
         emit GovernorLogicUpdated(oldGovernors, _governors, Governors);
+        emit DAOConfig(daoConfig);
+    }
+
+    modifier FTDAOTreasurerOnly() {
+        require(
+            msg.sender == daoConfig.daoTreasurer,
+            "FT DAO Factroy: DAO Treasurer only."
+        );
+        _;
+    }
+
+    function changeDAOConfig(
+        address payable daoTreasurer,
+        address tokenAddress,
+        uint256 daoFee
+    ) external FTDAOTreasurerOnly {
+        require(
+            daoFee > 0 && daoTreasurer != payable(address(0)),
+            "FT DAO Factory: Invalid DAO Config Data."
+        );
+        daoConfig.daoFee = daoFee;
+        daoConfig.tokenAddress = tokenAddress;
+        daoConfig.daoTreasurer = daoTreasurer;
+        emit DAOConfig(daoConfig);
+    }
+
+    function getDAOConfigDetails()
+        external
+        view
+        returns (DAOConfigDetails memory)
+    {
+        return daoConfig;
+    }
+
+    function payDAOCreationFee() private {
+        bool isHbarToken = daoConfig.tokenAddress == address(0);
+        if (isHbarToken) {
+            (bool sent, ) = daoConfig.daoTreasurer.call{
+                value: daoConfig.daoFee
+            }("");
+            require(
+                sent,
+                "FT DAO Factory: Transfer HBAR To DAO Treasurer Failed"
+            );
+        } else {
+            int256 responseCode = _transferToken(
+                hederaService,
+                daoConfig.tokenAddress,
+                msg.sender,
+                daoConfig.daoTreasurer,
+                daoConfig.daoFee
+            );
+            require(
+                responseCode == HederaResponseCodes.SUCCESS,
+                "FT DAO Factory: Transfer Token To DAO Treasurer Failed"
+            );
+        }
     }
 
     function upgradeTokenHolderFactory(
@@ -109,13 +174,14 @@ contract FTDAOFactory is IErrors, IEvents, Initializable, ISharedDAOModel {
 
     function createDAO(
         CreateDAOInputs memory _createDAOInputs
-    ) external returns (address) {
+    ) external payable returns (address) {
         if (address(_createDAOInputs.tokenAddress) == address(0)) {
             revert InvalidInput("DAOFactory: token address is zero");
         }
         if (_createDAOInputs.votingPeriod == 0) {
             revert InvalidInput("DAOFactory: voting period is zero");
         }
+        payDAOCreationFee();
         ITokenHolder iTokenHolder = tokenHolderFactory.getTokenHolder(
             address(_createDAOInputs.tokenAddress)
         );

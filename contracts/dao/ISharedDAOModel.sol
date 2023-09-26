@@ -46,4 +46,12 @@ interface ISharedDAOModel {
         string description;
         string[] webLinks;
     }
+
+    struct DAOConfigDetails {
+        address payable daoTreasurer;
+        address tokenAddress;
+        uint256 daoFee;
+    }
+
+    event DAOConfig(DAOConfigDetails daoConfig);
 }

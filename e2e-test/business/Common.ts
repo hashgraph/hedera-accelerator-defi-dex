@@ -88,7 +88,8 @@ export default class Common extends Base {
     ownerAccountPrivateKey: PrivateKey,
     client: Client,
   ) => {
-    dex.HBARX_TOKEN_ID === tokenId.toString()
+    dex.HBARX_TOKEN_ID === tokenId.toString() ||
+    dex.ZERO_TOKEN_ID.toString() == tokenId.toString()
       ? await Common.approveHbarAllowance(
           spenderAccountId,
           amount,

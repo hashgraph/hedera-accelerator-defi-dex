@@ -41,12 +41,24 @@ describe("GovernanceTokenDAO tests", function () {
     expect(daoInfo.webLinks.join(",")).equals(webLinks.join(","));
   }
 
+  async function verifyDAOConfigChangeEvent(txn: any, daoConfig: any) {
+    const { name, args } = await TestHelper.readLastEvent(txn);
+    const txnHash = args.txnHash;
+    const newDAOConfig = args.daoConfig;
+
+    expect(name).equal("DAOConfig");
+    expect(newDAOConfig.daoTreasurer).equals(daoConfig.daoTreasurer);
+    expect(newDAOConfig.tokenAddress).equals(daoConfig.tokenAddress);
+    expect(newDAOConfig.daoFee).equals(daoConfig.daoFee);
+    return { txnHash, newDAOConfig };
+  }
+
   async function deployFixture() {
     const dexOwner = await TestHelper.getDexOwner();
     const daoAdminOne = await TestHelper.getDAOAdminOne();
     const daoAdminTwo = await TestHelper.getDAOAdminTwo();
     const signers = await TestHelper.getSigners();
-
+    const tokenInstance = await TestHelper.deployERC20Mock();
     const hederaService = await TestHelper.deployMockHederaService();
     const token = await TestHelper.deployERC20Mock(TOTAL);
     await token.setUserBalance(signers[0].address, TOTAL);
@@ -113,12 +125,18 @@ describe("GovernanceTokenDAO tests", function () {
       dexOwner.address,
     );
 
+    const daoConfigData = {
+      daoTreasurer: signers[11].address,
+      tokenAddress: tokenInstance.address,
+      daoFee: TestHelper.toPrecision(20),
+    };
     const governorDAOFactory = await TestHelper.deployLogic("FTDAOFactory");
 
     await governorDAOFactory.initialize(
       systemRoleBasedAccess,
       hederaService.address,
       governorTokenDAO.address,
+      Object.values(daoConfigData),
       godHolderFactory.address,
       governance,
     );
@@ -138,6 +156,8 @@ describe("GovernanceTokenDAO tests", function () {
       common,
       systemRoleBasedAccess,
       systemUsersSigners,
+      daoConfigData,
+      tokenInstance,
     };
   }
 
@@ -150,6 +170,7 @@ describe("GovernanceTokenDAO tests", function () {
         governorTokenDAO,
         godHolderFactory,
         governance,
+        daoConfigData,
       } = await loadFixture(deployFixture);
 
       await expect(
@@ -157,6 +178,7 @@ describe("GovernanceTokenDAO tests", function () {
           systemRoleBasedAccess,
           hederaService.address,
           governorTokenDAO.address,
+          Object.values(daoConfigData),
           godHolderFactory.address,
           governance,
         ),
@@ -296,6 +318,135 @@ describe("GovernanceTokenDAO tests", function () {
 
       const updatedList = await governorDAOFactory.getDAOs();
       expect(updatedList.length).equal(1);
+    });
+
+    it("Verify createDAO should defined HBAR as DAO creation fee", async function () {
+      const {
+        governance,
+        systemRoleBasedAccess,
+        signers,
+        hederaService,
+        governorTokenDAO,
+        godHolderFactory,
+        inputs,
+      } = await loadFixture(deployFixture);
+
+      const daoConfigData = {
+        daoTreasurer: signers[11].address,
+        tokenAddress: TestHelper.ZERO_ADDRESS,
+        daoFee: TestHelper.toPrecision(20),
+      };
+
+      const governorDAOFactoryInstance =
+        await TestHelper.deployLogic("FTDAOFactory");
+      await governorDAOFactoryInstance.initialize(
+        systemRoleBasedAccess,
+        hederaService.address,
+        governorTokenDAO.address,
+        Object.values(daoConfigData),
+        godHolderFactory.address,
+        governance,
+      );
+
+      await expect(
+        governorDAOFactoryInstance.createDAO(inputs, {
+          value: daoConfigData.daoFee,
+        }),
+      ).changeEtherBalances(
+        [signers[0].address, daoConfigData.daoTreasurer],
+        [-daoConfigData.daoFee, daoConfigData.daoFee],
+      );
+    });
+
+    it("Verify createDAO should defined token as DAO creation fee", async function () {
+      const {
+        governorDAOFactory,
+        signers,
+        inputs,
+        tokenInstance,
+        daoConfigData,
+      } = await loadFixture(deployFixture);
+
+      await tokenInstance.setUserBalance(
+        signers[0].address,
+        daoConfigData.daoFee,
+      );
+      await expect(governorDAOFactory.createDAO(inputs)).changeTokenBalances(
+        tokenInstance,
+        [signers[0].address, daoConfigData.daoTreasurer],
+        [-daoConfigData.daoFee, daoConfigData.daoFee],
+      );
+    });
+
+    it("Verify Change DAO Configuration Change should work", async function () {
+      const { governorDAOFactory, signers, tokenInstance, daoAdminOne } =
+        await loadFixture(deployFixture);
+
+      const initialTreasurer = signers[11];
+      const {
+        daoTreasurer: initialTreasurerAddress,
+        tokenAddress: initialTokenAddress,
+        daoFee: initialFee,
+      } = await governorDAOFactory.getDAOConfigDetails();
+
+      expect(initialTreasurerAddress).equals(initialTreasurer.address);
+      expect(initialTokenAddress).equals(tokenInstance.address);
+      expect(initialFee).equals(TestHelper.toPrecision(20));
+
+      await expect(
+        governorDAOFactory
+          .connect(daoAdminOne)
+          .changeDAOConfig(
+            signers[12].address,
+            tokenInstance.address,
+            TestHelper.toPrecision(30),
+          ),
+      ).revertedWith("FT DAO Factroy: DAO Treasurer only.");
+
+      const newDAOConfig = {
+        daoTreasurer: signers[12].address,
+        tokenAddress: tokenInstance.address,
+        daoFee: TestHelper.toPrecision(30),
+      };
+      const txn = await governorDAOFactory
+        .connect(initialTreasurer)
+        .changeDAOConfig(
+          newDAOConfig.daoTreasurer,
+          newDAOConfig.tokenAddress,
+          newDAOConfig.daoFee,
+        );
+
+      verifyDAOConfigChangeEvent(txn, newDAOConfig);
+    });
+
+    it("Verify Initialize FT DAO Factory emits DAOConfig", async function () {
+      const {
+        hederaService,
+        governorTokenDAO,
+        systemRoleBasedAccess,
+        godHolderFactory,
+        governance,
+        signers,
+        tokenInstance,
+      } = await loadFixture(deployFixture);
+
+      const daoConfigData = {
+        daoTreasurer: signers[11].address,
+        tokenAddress: tokenInstance.address,
+        daoFee: TestHelper.toPrecision(20),
+      };
+
+      const ftDAOFactoryInstance = await TestHelper.deployLogic("FTDAOFactory");
+
+      const transaction = await ftDAOFactoryInstance.initialize(
+        systemRoleBasedAccess,
+        hederaService.address,
+        governorTokenDAO.address,
+        Object.values(daoConfigData),
+        godHolderFactory.address,
+        governance,
+      );
+      verifyDAOConfigChangeEvent(transaction, daoConfigData);
     });
 
     it("Verify createDAO should not add new dao into list when the dao is private", async function () {

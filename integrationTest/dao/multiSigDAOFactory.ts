@@ -2,13 +2,14 @@ import MultiSigDao from "../../e2e-test/business/MultiSigDao";
 import MultiSigDAOFactory from "../../e2e-test/business/factories/MultiSigDAOFactory";
 import SystemRoleBasedAccess from "../../e2e-test/business/common/SystemRoleBasedAccess";
 import Common from "../../e2e-test/business/Common";
-import { TokenId } from "@hashgraph/sdk";
+import { Hbar, TokenId } from "@hashgraph/sdk";
 import { Helper } from "../../utils/Helper";
 import { Deployment } from "../../utils/deployContractOnTestnet";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { AddressHelper } from "../../utils/AddressHelper";
 import { ContractService } from "../../deployment/service/ContractService";
-import { DEFAULT_DAO_CONFIG } from "../../e2e-test/business/factories/MultiSigDAOFactory";
+import { DEFAULT_DAO_CONFIG } from "../../e2e-test/business/constants";
+
 import {
   DAO_LOGO,
   DAO_NAME,
@@ -22,6 +23,7 @@ import {
   DAO_WEB_LINKS,
   DAO_OWNERS_ADDRESSES,
 } from "./multiSigDAO";
+import dex from "../../deployment/model/dex";
 
 const TOKEN_ALLOWANCE_DETAILS = {
   TOKEN: TokenId.fromSolidityAddress(DEFAULT_DAO_CONFIG.tokenAddress),
@@ -39,14 +41,25 @@ async function main() {
 
   const daoFactory = new MultiSigDAOFactory();
   await daoFactory.initialize();
+  const CONFIG_DETAILS = {
+    ...DEFAULT_DAO_CONFIG,
+    daoFee:
+      TOKEN_ALLOWANCE_DETAILS.TOKEN.toString() === dex.ZERO_TOKEN_ID.toString()
+        ? 20
+        : DEFAULT_DAO_CONFIG.daoFee,
+  };
   await Common.setTokenAllowance(
     TOKEN_ALLOWANCE_DETAILS.TOKEN,
     daoFactory.contractId,
-    DEFAULT_DAO_CONFIG.daoFee,
+    CONFIG_DETAILS.daoFee,
     TOKEN_ALLOWANCE_DETAILS.FROM_ID,
     TOKEN_ALLOWANCE_DETAILS.FROM_KEY,
     TOKEN_ALLOWANCE_DETAILS.FROM_CLIENT,
   );
+  const hbarPayableAmount =
+    TOKEN_ALLOWANCE_DETAILS.TOKEN.toString() === dex.ZERO_TOKEN_ID.toString()
+      ? CONFIG_DETAILS.daoFee
+      : 0;
   await daoFactory.createDAO(
     DAO_NAME,
     DAO_LOGO,
@@ -55,6 +68,7 @@ async function main() {
     DAO_OWNERS_ADDRESSES,
     DAO_OWNERS_ADDRESSES.length,
     false,
+    hbarPayableAmount,
   );
   const addresses = await daoFactory.getDAOs();
   if (addresses.length > 0) {

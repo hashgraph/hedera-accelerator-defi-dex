@@ -30,14 +30,6 @@ contract MultisigDAOFactory is
         MultiSigCreateDAOInputs inputs
     );
 
-    struct DAOConfigDetails {
-        address payable daoTreasurer;
-        address tokenAddress;
-        uint256 daoFee;
-    }
-
-    event DAOConfig(DAOConfigDetails daoConfig);
-
     bytes private constant NO_DATA = "";
     string private constant DaoLogic = "DaoLogic";
     string private constant SafeLogic = "SafeLogic";

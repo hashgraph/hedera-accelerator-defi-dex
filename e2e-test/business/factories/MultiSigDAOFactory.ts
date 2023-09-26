@@ -10,14 +10,9 @@ import {
 } from "@hashgraph/sdk";
 import { ContractService } from "../../../deployment/service/ContractService";
 import { MirrorNodeService } from "../../../utils/MirrorNodeService";
-import dex from "../../../deployment/model/dex";
-import { CommonSteps } from "../../step-definitions/CommonSteps";
+import { DEFAULT_DAO_CONFIG } from "../constants";
+import { DAOConfigDetails } from "../types";
 
-interface DAOConfigDetails {
-  daoTreasurer: string;
-  tokenAddress: string;
-  daoFee: number;
-}
 const deployment = new Deployment();
 
 const GET_DAOS = "getDAOs";
@@ -26,12 +21,6 @@ const INITIALIZE = "initialize";
 const UPGRADE_SAFE_LOGIC_IMPL = "upgradeSafeLogicAddress";
 const UPGRADE_DAO_LOGIC_IMPL = "upgradeDaoLogicAddress";
 const UPGRADE_SAFE_FACTORY_LOGIC_IMPL = "upgradeSafeFactoryAddress";
-
-export const DEFAULT_DAO_CONFIG = {
-  daoTreasurer: clientsInfo.treasureId.toSolidityAddress(),
-  tokenAddress: dex.GOD_TOKEN_ADDRESS,
-  daoFee: CommonSteps.withPrecision * 20,
-};
 
 export default class MultiSigDAOFactory extends Base {
   initialize = async (
@@ -84,6 +73,7 @@ export default class MultiSigDAOFactory extends Base {
     owners: string[],
     threshold: number,
     isPrivate: boolean,
+    hbarAmount: number = 0,
     admin: string = clientsInfo.uiUserId.toSolidityAddress(),
     client: Client = clientsInfo.uiUserClient,
   ) => {
@@ -107,6 +97,8 @@ export default class MultiSigDAOFactory extends Base {
       CREATE_DAO,
       client,
       bytes,
+      undefined,
+      hbarAmount,
     );
     const address = result.getAddress(0);
     console.log(

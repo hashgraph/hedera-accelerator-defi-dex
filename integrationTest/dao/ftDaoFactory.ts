@@ -20,6 +20,8 @@ import TextGovernor from "../../e2e-test/business/TextGovernor";
 import TokenCreateGovernor from "../../e2e-test/business/TokenCreateGovernor";
 import TokenTransferGovernor from "../../e2e-test/business/TokenTransferGovernor";
 import ContractUpgradeGovernor from "../../e2e-test/business/ContractUpgradeGovernor";
+import { DEFAULT_DAO_CONFIG } from "../../e2e-test/business/constants";
+import Common from "../../e2e-test/business/Common";
 
 const DAO_DESC = "Lorem Ipsum is simply dummy text";
 const DAO_ADMIN = clientsInfo.uiUserId.toSolidityAddress();
@@ -38,6 +40,13 @@ const HBAR_TRANSFER_AMOUNT = Hbar.from(1, HbarUnit.Hbar)
   .toTinybars()
   .toNumber();
 
+const TOKEN_ALLOWANCE_DETAILS = {
+  TOKEN: TokenId.fromSolidityAddress(DEFAULT_DAO_CONFIG.tokenAddress),
+  FROM_CLIENT: clientsInfo.operatorClient,
+  FROM_ID: clientsInfo.operatorId,
+  FROM_KEY: clientsInfo.operatorKey,
+};
+
 async function main() {
   // only for dev testing
   // await createNewCopies();
@@ -46,6 +55,25 @@ async function main() {
 
   const daoFactory = new FTDAOFactory();
   await daoFactory.initialize(clientsInfo.operatorClient, tokenHolderFactory);
+  const CONFIG_DETAILS = {
+    ...DEFAULT_DAO_CONFIG,
+    daoFee:
+      TOKEN_ALLOWANCE_DETAILS.TOKEN.toString() === dex.ZERO_TOKEN_ID.toString()
+        ? 20
+        : DEFAULT_DAO_CONFIG.daoFee,
+  };
+  await Common.setTokenAllowance(
+    TOKEN_ALLOWANCE_DETAILS.TOKEN,
+    daoFactory.contractId,
+    CONFIG_DETAILS.daoFee,
+    TOKEN_ALLOWANCE_DETAILS.FROM_ID,
+    TOKEN_ALLOWANCE_DETAILS.FROM_KEY,
+    TOKEN_ALLOWANCE_DETAILS.FROM_CLIENT,
+  );
+  const hbarPayableAmount =
+    TOKEN_ALLOWANCE_DETAILS.TOKEN.toString() === dex.ZERO_TOKEN_ID.toString()
+      ? CONFIG_DETAILS.daoFee
+      : 0;
   await daoFactory.createDAO(
     dex.GOVERNANCE_DAO_TWO,
     DAO_LOGO_URL,
@@ -57,6 +85,7 @@ async function main() {
     0,
     20,
     false,
+    hbarPayableAmount,
     DAO_ADMIN,
     clientsInfo.operatorClient,
   );
