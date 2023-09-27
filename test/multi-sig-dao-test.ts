@@ -637,7 +637,7 @@ describe("MultiSig tests", function () {
             newDAOConfig.tokenAddress,
             newDAOConfig.daoFee,
           ),
-      ).revertedWith("MultiSig DAO Factory: DAO treasurer only.");
+      ).revertedWith("DAO treasurer only.");
 
       const txn = await multiSigDAOFactoryInstance
         .connect(initialTreasurer)

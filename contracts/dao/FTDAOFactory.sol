@@ -9,6 +9,7 @@ import "../common/IHederaService.sol";
 import "../dao/FTDAO.sol";
 import "../governance/ITokenHolderFactory.sol";
 import "./ISharedDAOModel.sol";
+import "./DAOConfiguration.sol";
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
@@ -18,7 +19,7 @@ contract FTDAOFactory is
     IEvents,
     Initializable,
     ISharedDAOModel,
-    TokenOperations
+    DAOConfiguration
 {
     event DAOCreated(
         address daoAddress,
@@ -34,7 +35,6 @@ contract FTDAOFactory is
 
     address[] private daos;
     FTDAO private daoLogic;
-    DAOConfigDetails private daoConfig;
     Governor private governors;
     IHederaService private hederaService;
     ITokenHolderFactory private tokenHolderFactory;
@@ -64,62 +64,6 @@ contract FTDAOFactory is
         Governor memory oldGovernors;
         emit GovernorLogicUpdated(oldGovernors, _governors, Governors);
         emit DAOConfig(daoConfig);
-    }
-
-    modifier FTDAOTreasurerOnly() {
-        require(
-            msg.sender == daoConfig.daoTreasurer,
-            "FT DAO Factroy: DAO Treasurer only."
-        );
-        _;
-    }
-
-    function changeDAOConfig(
-        address payable daoTreasurer,
-        address tokenAddress,
-        uint256 daoFee
-    ) external FTDAOTreasurerOnly {
-        require(
-            daoFee > 0 && daoTreasurer != payable(address(0)),
-            "FT DAO Factory: Invalid DAO Config Data."
-        );
-        daoConfig.daoFee = daoFee;
-        daoConfig.tokenAddress = tokenAddress;
-        daoConfig.daoTreasurer = daoTreasurer;
-        emit DAOConfig(daoConfig);
-    }
-
-    function getDAOConfigDetails()
-        external
-        view
-        returns (DAOConfigDetails memory)
-    {
-        return daoConfig;
-    }
-
-    function payDAOCreationFee() private {
-        bool isHbarToken = daoConfig.tokenAddress == address(0);
-        if (isHbarToken) {
-            (bool sent, ) = daoConfig.daoTreasurer.call{
-                value: daoConfig.daoFee
-            }("");
-            require(
-                sent,
-                "FT DAO Factory: Transfer HBAR To DAO Treasurer Failed"
-            );
-        } else {
-            int256 responseCode = _transferToken(
-                hederaService,
-                daoConfig.tokenAddress,
-                msg.sender,
-                daoConfig.daoTreasurer,
-                daoConfig.daoFee
-            );
-            require(
-                responseCode == HederaResponseCodes.SUCCESS,
-                "FT DAO Factory: Transfer Token To DAO Treasurer Failed"
-            );
-        }
     }
 
     function upgradeTokenHolderFactory(
@@ -181,7 +125,7 @@ contract FTDAOFactory is
         if (_createDAOInputs.votingPeriod == 0) {
             revert InvalidInput("DAOFactory: voting period is zero");
         }
-        payDAOCreationFee();
+        payDAOCreationFee(hederaService);
         ITokenHolder iTokenHolder = tokenHolderFactory.getTokenHolder(
             address(_createDAOInputs.tokenAddress)
         );

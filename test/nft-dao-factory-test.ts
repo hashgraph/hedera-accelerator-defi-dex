@@ -517,7 +517,7 @@ describe("NFTDAOFactory contract tests", function () {
           tokenInstance.address,
           TestHelper.toPrecision(30),
         ),
-    ).revertedWith("FT DAO Factroy: DAO Treasurer only.");
+    ).revertedWith("DAO treasurer only.");
 
     const newDAOConfig = {
       daoTreasurer: signers[12].address,
