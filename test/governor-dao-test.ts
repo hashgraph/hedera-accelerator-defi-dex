@@ -42,15 +42,15 @@ describe("GovernanceTokenDAO tests", function () {
   }
 
   async function verifyDAOConfigChangeEvent(txn: any, daoConfig: any) {
-    const { name, args } = await TestHelper.readLastEvent(txn);
-    const txnHash = args.txnHash;
+    const { event: name, args } = (
+      await TestHelper.readEvents(txn, ["DAOConfig"])
+    ).pop();
     const newDAOConfig = args.daoConfig;
 
     expect(name).equal("DAOConfig");
     expect(newDAOConfig.daoTreasurer).equals(daoConfig.daoTreasurer);
     expect(newDAOConfig.tokenAddress).equals(daoConfig.tokenAddress);
     expect(newDAOConfig.daoFee).equals(daoConfig.daoFee);
-    return { txnHash, newDAOConfig };
   }
 
   async function deployFixture() {
@@ -401,7 +401,7 @@ describe("GovernanceTokenDAO tests", function () {
             tokenInstance.address,
             TestHelper.toPrecision(30),
           ),
-      ).revertedWith("DAO treasurer only.");
+      ).revertedWith("DAOConfiguration: DAO treasurer only.");
 
       const newDAOConfig = {
         daoTreasurer: signers[12].address,

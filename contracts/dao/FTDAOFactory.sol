@@ -8,19 +8,12 @@ import "../common/IHederaService.sol";
 
 import "../dao/FTDAO.sol";
 import "../governance/ITokenHolderFactory.sol";
-import "./ISharedDAOModel.sol";
 import "./DAOConfiguration.sol";
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-contract FTDAOFactory is
-    IErrors,
-    IEvents,
-    Initializable,
-    ISharedDAOModel,
-    DAOConfiguration
-{
+contract FTDAOFactory is IErrors, IEvents, Initializable, DAOConfiguration {
     event DAOCreated(
         address daoAddress,
         Governor governors,

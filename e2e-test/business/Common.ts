@@ -397,4 +397,11 @@ export default class Common extends Base {
     }
     return await balanceQuery.execute(client);
   };
+
+  static isHBAR = (tokenId: TokenId) => {
+    return (
+      tokenId.toString() === dex.ZERO_TOKEN_ID.toString() ||
+      tokenId.toString() === dex.HBARX_TOKEN_ID.toString()
+    );
+  };
 }

@@ -32,6 +32,13 @@ const TOKEN_ALLOWANCE_DETAILS = {
   FROM_KEY: clientsInfo.uiUserKey,
 };
 
+const getDAOFee = () => {
+  const daoFee = Common.isHBAR(TOKEN_ALLOWANCE_DETAILS.TOKEN)
+    ? dex.DAO_FEE
+    : DEFAULT_DAO_CONFIG.daoFee;
+  return daoFee;
+};
+
 async function main() {
   // only for dev testing
   // await createNewCopies();
@@ -41,25 +48,18 @@ async function main() {
 
   const daoFactory = new MultiSigDAOFactory();
   await daoFactory.initialize();
-  const CONFIG_DETAILS = {
-    ...DEFAULT_DAO_CONFIG,
-    daoFee:
-      TOKEN_ALLOWANCE_DETAILS.TOKEN.toString() === dex.ZERO_TOKEN_ID.toString()
-        ? 20
-        : DEFAULT_DAO_CONFIG.daoFee,
-  };
+  const daoFee = getDAOFee();
   await Common.setTokenAllowance(
     TOKEN_ALLOWANCE_DETAILS.TOKEN,
     daoFactory.contractId,
-    CONFIG_DETAILS.daoFee,
+    daoFee,
     TOKEN_ALLOWANCE_DETAILS.FROM_ID,
     TOKEN_ALLOWANCE_DETAILS.FROM_KEY,
     TOKEN_ALLOWANCE_DETAILS.FROM_CLIENT,
   );
-  const hbarPayableAmount =
-    TOKEN_ALLOWANCE_DETAILS.TOKEN.toString() === dex.ZERO_TOKEN_ID.toString()
-      ? CONFIG_DETAILS.daoFee
-      : 0;
+  const hbarPayableAmount = Common.isHBAR(TOKEN_ALLOWANCE_DETAILS.TOKEN)
+    ? daoFee
+    : 0;
   await daoFactory.createDAO(
     DAO_NAME,
     DAO_LOGO,

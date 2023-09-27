@@ -6,8 +6,6 @@ import "../common/TokenOperations.sol";
 import "../common/IHederaService.sol";
 
 contract DAOConfiguration is ISharedDAOModel, TokenOperations {
-    DAOConfigDetails internal daoConfig;
-
     struct DAOConfigDetails {
         address payable daoTreasurer;
         address tokenAddress;
@@ -15,8 +13,20 @@ contract DAOConfiguration is ISharedDAOModel, TokenOperations {
     }
     event DAOConfig(DAOConfigDetails daoConfig);
 
+    DAOConfigDetails internal daoConfig;
+
+     /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+    uint256[49] private __gap;
+
     modifier DAOTreasureOnly() {
-        require(msg.sender == daoConfig.daoTreasurer, "DAO treasurer only.");
+        require(
+            msg.sender == daoConfig.daoTreasurer,
+            "DAOConfiguration: DAO treasurer only."
+        );
         _;
     }
 
@@ -27,7 +37,7 @@ contract DAOConfiguration is ISharedDAOModel, TokenOperations {
     ) external DAOTreasureOnly {
         require(
             daoFee > 0 && daoTreasurer != payable(address(0)),
-            "Invalid DAO Config Data."
+            "DAOConfiguration: Invalid DAO Config Data."
         );
         daoConfig.daoFee = daoFee;
         daoConfig.tokenAddress = tokenAddress;
@@ -49,7 +59,10 @@ contract DAOConfiguration is ISharedDAOModel, TokenOperations {
             (bool sent, ) = daoConfig.daoTreasurer.call{
                 value: daoConfig.daoFee
             }("");
-            require(sent, "Transfer HBAR To DAO Treasurer Failed");
+            require(
+                sent,
+                "DAOConfiguration: Transfer HBAR To DAO Treasurer Failed."
+            );
         } else {
             int256 responseCode = _transferToken(
                 _hederaService,
@@ -60,7 +73,7 @@ contract DAOConfiguration is ISharedDAOModel, TokenOperations {
             );
             require(
                 responseCode == HederaResponseCodes.SUCCESS,
-                "Transfer Token To DAO Treasurer Failed"
+                "DAOConfiguration: Transfer Token To DAO Treasurer Failed."
             );
         }
     }

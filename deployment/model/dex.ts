@@ -31,6 +31,8 @@ const GOVERNANCE_DAO_TWO_TOKEN_ID = TokenId.fromString("0.0.80188");
 
 const MULTI_SIG_DAO_ONE = "MULTI_SIG_DAO_ONE";
 
+const DAO_FEE = 20;
+
 const ROLES = {
   DAO_ADMIN: Helper.role("DAO_ADMIN"),
   DEFAULT_ADMIN_ROLE: new Uint8Array(), // it is zero inside contract i.e 0x00
@@ -102,4 +104,5 @@ export default {
   ROLES,
   ACCOUNTS,
   ZERO_TOKEN_ID,
+  DAO_FEE,
 };
