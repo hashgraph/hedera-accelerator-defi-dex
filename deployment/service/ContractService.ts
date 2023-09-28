@@ -28,6 +28,7 @@ export class ContractService {
   public static NFT_TOKEN_HOLDER_FACTORY = "nftTokenHolderFactory";
   public static HEDERA_GOVERNOR = "hederagovernor";
   public static ASSET_HOLDER = "assetsholder";
+  public static BARCLAYS_REPO = "barclaysrepo";
 
   public factoryContractName = "factory";
   public pairContractName = "pair";

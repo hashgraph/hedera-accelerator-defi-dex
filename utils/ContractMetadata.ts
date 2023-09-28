@@ -21,6 +21,7 @@ export default class ContractMetadata {
     "FTDAOFactory",
     "NFTDAOFactory",
     "MultisigDAOFactory",
+    "BarclaysRepo",
   ];
 
   static SUPPORTED_CONTRACTS_FOR_DEPLOYMENT = [
@@ -44,6 +45,7 @@ export default class ContractMetadata {
     "SystemRoleBasedAccess",
     "HederaGovernor",
     "AssetsHolder",
+    "BarclaysRepo",
   ];
 
   static SUPPORTED_PROXY_OPTIONS = ["create", "update"];

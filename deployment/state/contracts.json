@@ -138,5 +138,59 @@
     "timestamp": "2023-10-03T09:40:44.937Z",
     "transparentProxyId": "0.0.3760572",
     "transparentProxyAddress": "0x00000000000000000000000000000000003961bc"
+  },
+  {
+    "name": "barclaysrepo",
+    "id": "0.0.2901567",
+    "hash": "478354aff36ec370fe7110e21c0be219",
+    "address": "0x00000000000000000000000000000000002c463f",
+    "timestamp": "2023-09-28T01:46:47.761Z",
+    "transparentProxyId": "0.0.2901598",
+    "transparentProxyAddress": "0x00000000000000000000000000000000002c465e"
+  },
+  {
+    "name": "barclaysrepo",
+    "id": "0.0.2925492",
+    "hash": "2cacab5c95c9ab163a5c1f28491c5b5b",
+    "address": "0x00000000000000000000000000000000002ca3b4",
+    "timestamp": "2023-09-28T05:05:09.275Z",
+    "transparentProxyId": "0.0.2901598",
+    "transparentProxyAddress": "0x00000000000000000000000000000000002c465e"
+  },
+  {
+    "name": "barclaysrepo",
+    "id": "0.0.2927334",
+    "hash": "1ffbceec9543f44fead6f215c4630d58",
+    "address": "0x00000000000000000000000000000000002caae6",
+    "timestamp": "2023-09-28T05:20:34.762Z",
+    "transparentProxyId": "0.0.2901598",
+    "transparentProxyAddress": "0x00000000000000000000000000000000002c465e"
+  },
+  {
+    "name": "barclaysrepo",
+    "id": "0.0.2927621",
+    "hash": "2cacab5c95c9ab163a5c1f28491c5b5b",
+    "address": "0x00000000000000000000000000000000002cac05",
+    "timestamp": "2023-09-28T05:22:53.788Z",
+    "transparentProxyId": "0.0.2901598",
+    "transparentProxyAddress": "0x00000000000000000000000000000000002c465e"
+  },
+  {
+    "name": "barclaysrepo",
+    "id": "0.0.2938556",
+    "hash": "6372cb07dcf2d7c7aaed4d00221d78d5",
+    "address": "0x00000000000000000000000000000000002cd6bc",
+    "timestamp": "2023-09-28T06:53:34.334Z",
+    "transparentProxyId": "0.0.2901598",
+    "transparentProxyAddress": "0x00000000000000000000000000000000002c465e"
+  },
+  {
+    "name": "barclaysrepo",
+    "id": "0.0.2939938",
+    "hash": "c6d69e59966452e8e2f1dd45d77a0a13",
+    "address": "0x00000000000000000000000000000000002cdc22",
+    "timestamp": "2023-09-28T07:04:51.097Z",
+    "transparentProxyId": "0.0.2939972",
+    "transparentProxyAddress": "0x00000000000000000000000000000000002cdc44"
   }
 ]
