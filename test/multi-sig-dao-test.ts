@@ -19,6 +19,8 @@ describe("MultiSig tests", function () {
   const DAO_NAME = "DAO_NAME";
   const LOGO_URL = "LOGO_URL";
   const DESCRIPTION = "DESCRIPTION";
+  const DEFAULT_META_DATA = "";
+  const META_DATA_TEXT = "Meta Data for Text";
   const TEXT_PROPOSAL_TEXT = "TEXT_PROPOSAL_TEXT";
   const WEB_LINKS = [
     "TWITTER",
@@ -58,6 +60,9 @@ describe("MultiSig tests", function () {
     txnType === TXN_TYPE_TEXT
       ? expect(info.description).equals(TEXT_PROPOSAL_TEXT)
       : expect(info.description).equals(DESCRIPTION);
+    txnType === TXN_TYPE_TEXT
+      ? expect(info.metaData).equals(META_DATA_TEXT)
+      : expect(info.metaData).equals(DEFAULT_META_DATA);
     expect(info.linkToDiscussion).equals(LINK_TO_DISCUSSION);
     expect(info.creator).not.equals(TestHelper.ZERO_ADDRESS);
     return { txnHash, info };
@@ -82,6 +87,7 @@ describe("MultiSig tests", function () {
     amount: number = TRANSFER_AMOUNT,
     title: string = TITLE,
     description: string = DESCRIPTION,
+    metaData: string = DEFAULT_META_DATA,
   ) {
     const txn = await multiSigDAOInstance.proposeTransaction(
       token,
@@ -90,6 +96,7 @@ describe("MultiSig tests", function () {
       title,
       description,
       LINK_TO_DISCUSSION,
+      metaData,
     );
     return await verifyTransactionCreatedEvent(txn, TXN_TYPE_TRANSFER);
   }
@@ -99,6 +106,7 @@ describe("MultiSig tests", function () {
     text: string,
     creator: string,
     title: string = TITLE,
+    metaData: string = DEFAULT_META_DATA,
   ) {
     const txn = await multiSigDAOInstance.proposeTransaction(
       multiSigDAOInstance.address,
@@ -107,6 +115,7 @@ describe("MultiSig tests", function () {
       title,
       text,
       LINK_TO_DISCUSSION,
+      metaData,
     );
     return await verifyTransactionCreatedEvent(txn, TXN_TYPE_TEXT);
   }
@@ -1325,6 +1334,8 @@ describe("MultiSig tests", function () {
             multiSigDAOInstance,
             TEXT_PROPOSAL_TEXT,
             signers[0].address,
+            TITLE,
+            META_DATA_TEXT,
           );
 
         const approvalStatus1 =
