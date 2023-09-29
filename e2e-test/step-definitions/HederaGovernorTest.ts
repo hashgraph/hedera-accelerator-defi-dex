@@ -58,7 +58,7 @@ export class HederaGovernorTest extends CommonSteps {
     await this.deployRequiredContracts();
   }
 
-  @when(/User initialized the contracts/, undefined, 600000)
+  @when(/User initializes the contracts/, undefined, 600000)
   public async initContracts() {
     await this._initContracts();
   }
