@@ -1,0 +1,164 @@
+[
+  {
+    "trade_id": "UC1GQN1435RKX0",
+    "buyer": {
+      "buyer_name": "CLIENT01",
+      "buyer_lei": "CLIENT01-LEI02",
+      "buyer_account": "CLIENT01-ACCOUNT02"
+    },
+    "seller": {
+      "seller_name": "DEALER02",
+      "seller_lei": "DEALER02-LEI01",
+      "seller_account": "DEALER02-ACCOUNT01"
+    },
+    "trade_details": {
+      "trade_date": "2023-10-02",
+      "effective_date": "2023-10-02",
+      "maturity_date": "2023-10-03",
+      "repo_rate": 0.05,
+      "rate_daycount_convention": "ACT_360",
+      "collateral_id": "GBTHQ4XCY21",
+      "collateral_notional": 2000000,
+      "collateral_haircut": 0.02,
+      "collateral_dirty_price": "99.00",
+      "trade_ccy": "GBP",
+      "cash_amount": "1940400.00",
+      "termination_cash_amount": "1940665.81"
+    }
+  },
+  {
+    "trade_id": "UC1SE6TL418HF0",
+    "buyer": {
+      "buyer_name": "CLIENT03",
+      "buyer_lei": "CLIENT03-LEI01",
+      "buyer_account": "CLIENT03-ACCOUNT01"
+    },
+    "seller": {
+      "seller_name": "DEALER02",
+      "seller_lei": "DEALER02-LEI01",
+      "seller_account": "DEALER02-ACCOUNT01"
+    },
+    "trade_details": {
+      "trade_date": "2023-10-02",
+      "effective_date": "2023-10-02",
+      "maturity_date": "2023-10-05",
+      "repo_rate": 0.05,
+      "rate_daycount_convention": "ACT_360",
+      "collateral_id": "GBKEJBF0U51",
+      "collateral_notional": 3000000,
+      "collateral_haircut": 0.02,
+      "collateral_dirty_price": "99.70",
+      "trade_ccy": "GBP",
+      "cash_amount": "2931180.00",
+      "termination_cash_amount": "2932384.59"
+    }
+  },
+  {
+    "trade_id": "UC1SXER3V1NJC0",
+    "buyer": {
+      "buyer_name": "DEALER02",
+      "buyer_lei": "DEALER02-LEI01",
+      "buyer_account": "DEALER02-ACCOUNT01"
+    },
+    "seller": {
+      "seller_name": "CLIENT03",
+      "seller_lei": "CLIENT03-LEI02",
+      "seller_account": "CLIENT03-ACCOUNT02"
+    },
+    "trade_details": {
+      "trade_date": "2023-10-02",
+      "effective_date": "2023-10-02",
+      "maturity_date": "2023-10-04",
+      "repo_rate": 0.05,
+      "rate_daycount_convention": "ACT_360",
+      "collateral_id": "GBKEJBF0U51",
+      "collateral_notional": 7000000,
+      "collateral_haircut": 0.02,
+      "collateral_dirty_price": "99.00",
+      "trade_ccy": "GBP",
+      "cash_amount": "6791400.00",
+      "termination_cash_amount": "6793260.66"
+    }
+  },
+  {
+    "trade_id": "UC1CWBLQAG46F0",
+    "buyer": {
+      "buyer_name": "DEALER01",
+      "buyer_lei": "DEALER01-LEI01",
+      "buyer_account": "DEALER01-ACCOUNT01"
+    },
+    "seller": {
+      "seller_name": "CLIENT01",
+      "seller_lei": "CLIENT01-LEI01",
+      "seller_account": "CLIENT01-ACCOUNT01"
+    },
+    "trade_details": {
+      "trade_date": "2023-10-03",
+      "effective_date": "2023-10-03",
+      "maturity_date": "2023-10-06",
+      "repo_rate": 0.05,
+      "rate_daycount_convention": "ACT_360",
+      "collateral_id": "GBKEJBF0U51",
+      "collateral_notional": 2000000,
+      "collateral_haircut": 0.02,
+      "collateral_dirty_price": "100.60",
+      "trade_ccy": "GBP",
+      "cash_amount": "1971760.00",
+      "termination_cash_amount": "1972570.31"
+    }
+  },
+  {
+    "trade_id": "UC1HGM6BPNTY80",
+    "buyer": {
+      "buyer_name": "DEALER02",
+      "buyer_lei": "DEALER02-LEI01",
+      "buyer_account": "DEALER02-ACCOUNT01"
+    },
+    "seller": {
+      "seller_name": "CLIENT02",
+      "seller_lei": "CLIENT02-LEI01",
+      "seller_account": "CLIENT02-ACCOUNT01"
+    },
+    "trade_details": {
+      "trade_date": "2023-10-03",
+      "effective_date": "2023-10-03",
+      "maturity_date": "2023-10-06",
+      "repo_rate": 0.05,
+      "rate_daycount_convention": "ACT_360",
+      "collateral_id": "GBB6X0F5WG1",
+      "collateral_notional": 6000000,
+      "collateral_haircut": 0.02,
+      "collateral_dirty_price": "92.10",
+      "trade_ccy": "GBP",
+      "cash_amount": "5415480.00",
+      "termination_cash_amount": "5417705.54"
+    }
+  },
+  {
+    "trade_id": "UC1JF75V0L2UW0",
+    "buyer": {
+      "buyer_name": "CLIENT02",
+      "buyer_lei": "CLIENT02-LEI02",
+      "buyer_account": "CLIENT02-ACCOUNT02"
+    },
+    "seller": {
+      "seller_name": "DEALER02",
+      "seller_lei": "DEALER02-LEI01",
+      "seller_account": "DEALER02-ACCOUNT01"
+    },
+    "trade_details": {
+      "trade_date": "2023-10-03",
+      "effective_date": "2023-10-03",
+      "maturity_date": "2023-10-04",
+      "repo_rate": 0.05,
+      "rate_daycount_convention": "ACT_360",
+      "collateral_id": "GBRP1LWZDV1",
+      "collateral_notional": 6000000,
+      "collateral_haircut": 0.02,
+      "collateral_dirty_price": "101.90",
+      "trade_ccy": "GBP",
+      "cash_amount": "5991720.00",
+      "termination_cash_amount": "5992540.78"
+    }
+  }
+]

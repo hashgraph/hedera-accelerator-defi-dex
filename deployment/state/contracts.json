@@ -192,5 +192,23 @@
     "timestamp": "2023-09-28T07:04:51.097Z",
     "transparentProxyId": "0.0.2939972",
     "transparentProxyAddress": "0x00000000000000000000000000000000002cdc44"
+  },
+  {
+    "name": "barclaysrepo",
+    "id": "0.0.2956054",
+    "hash": "c6d69e59966452e8e2f1dd45d77a0a13",
+    "address": "0x00000000000000000000000000000000002d1b16",
+    "timestamp": "2023-09-28T09:18:28.177Z",
+    "transparentProxyId": "0.0.2956116",
+    "transparentProxyAddress": "0x00000000000000000000000000000000002d1b54"
+  },
+  {
+    "name": "barclaysrepo",
+    "id": "0.0.2968134",
+    "hash": "c6d69e59966452e8e2f1dd45d77a0a13",
+    "address": "0x00000000000000000000000000000000002d4a46",
+    "timestamp": "2023-09-28T10:57:43.569Z",
+    "transparentProxyId": "0.0.2968169",
+    "transparentProxyAddress": "0x00000000000000000000000000000000002d4a69"
   }
 ]

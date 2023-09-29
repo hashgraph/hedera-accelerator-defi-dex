@@ -1,4 +1,6 @@
 import Common from "../e2e-test/business/Common";
+import * as fs from "fs";
+import { ethers } from "ethers";
 
 import { Helper } from "../utils/Helper";
 import BarclaysRepo, {
@@ -17,6 +19,12 @@ const TOKEN_B_QTY_IN_POOL = Common.withPrecision(10, 1e8);
 const TOKEN_NAME = "LP-Token-Name";
 const TOKEN_SYMBOL = "LP-Token-Symbol";
 
+const readFileTrades = async () => {
+  const rawdata: any = fs.readFileSync("./tmp.json");
+  const data = JSON.parse(rawdata);
+  return data;
+};
+
 async function main() {
   const barclaysRepo = new BarclaysRepo();
   const blankTrade: TradeMatchingInputs = {
@@ -30,18 +38,18 @@ async function main() {
   };
 
   const tradeMatchingInputs: TradeMatchingInputs = {
-    role: "role",
-    tradeId: "tradeId",
-    counterparty: "counterparty",
-    eventDate: "eventDate",
-    eventType: "eventType",
-    cdmHash: "cdmHash",
-    lineageHash: "lineageHash",
+    role: "Buyer",
+    tradeId: "UC1GQN1435RKX0",
+    counterparty: "CLIENT01",
+    eventDate: "2023-10-02",
+    eventType: "NewTrade",
+    cdmHash: "77a0a13",
+    lineageHash: "77a0a13",
   };
 
   const economicTerms: EconomicTerms = {
-    effectiveDate: "28-09-2023",
-    maturityDate: "30-09-2023",
+    effectiveDate: "2023-10-02",
+    maturityDate: "2023-10-03",
   };
   const blankEconomicTerms: EconomicTerms = {
     effectiveDate: "",
@@ -50,8 +58,8 @@ async function main() {
 
   const settlementEvent: SettlementEvent = {
     dvpDate: "02-10-2023",
-    collateral: "Securites",
-    amount: "0",
+    collateral: "GBTHQ4XCY21",
+    amount: "1940400",
   };
 
   const blankSettlementEvent: SettlementEvent = {
@@ -60,7 +68,54 @@ async function main() {
     amount: "",
   };
 
-  // await barclaysRepo.initialize(blankTrade, blankEconomicTerms, blankSettlementEvent);
+  //await barclaysRepo.initialize(tradeMatchingInputs, economicTerms, settlementEvent);
+
+  const data = await readFileTrades();
+
+  for (let i = 0; i < data.length; i++) {
+    const element = data[i];
+    const tradeMatchingInputs: TradeMatchingInputs = {
+      role: element.buyer.buyer_name,
+      tradeId: element.trade_id,
+      counterparty: element.seller.seller_name,
+      eventDate: element.trade_details.trade_date,
+      eventType: "New Contract",
+      cdmHash: ethers.utils.keccak256(
+        ethers.utils.toUtf8Bytes(
+          element.buyer.buyer_name + element.seller.seller_name,
+        ),
+      ),
+      lineageHash: ethers.utils.keccak256(
+        ethers.utils.toUtf8Bytes(
+          element.buyer.buyer_name + element.seller.seller_name,
+        ),
+      ),
+    };
+
+    const economicTerms: EconomicTerms = {
+      effectiveDate: element.trade_details.effective_date,
+      maturityDate: element.trade_details.maturity_date,
+    };
+
+    const settlementEvent: SettlementEvent = {
+      dvpDate: "",
+      collateral: element.trade_details.collateral_id,
+      amount: element.trade_details.cash_amount,
+    };
+
+    console.log(JSON.stringify(tradeMatchingInputs));
+    console.log(JSON.stringify(economicTerms));
+    console.log(JSON.stringify(settlementEvent));
+
+    await barclaysRepo.updateTradeMatchingInputs(tradeMatchingInputs);
+
+    await barclaysRepo.updateEconomicTerms(
+      economicTerms.effectiveDate,
+      economicTerms.maturityDate,
+    );
+
+    await barclaysRepo.updateSettlementEvent(settlementEvent);
+  }
 
   // const updatedTradeMatchingInputs: TradeMatchingInputs = {
   //     role: "role",
