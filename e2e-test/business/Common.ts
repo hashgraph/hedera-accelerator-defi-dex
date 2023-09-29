@@ -1,7 +1,12 @@
 import Base from "./Base";
 import dex from "../../deployment/model/dex";
+import Token from "./Token";
 
+import { BigNumber } from "bignumber.js";
+import { clientsInfo } from "../../utils/ClientManagement";
+import { AddressHelper } from "../../utils/AddressHelper";
 import {
+  Hbar,
   Client,
   TokenId,
   TokenType,
@@ -18,12 +23,7 @@ import {
   TokenMintTransaction,
   TokenAssociateTransaction,
   AccountAllowanceApproveTransaction,
-  Hbar,
 } from "@hashgraph/sdk";
-import { BigNumber } from "bignumber.js";
-import { clientsInfo } from "../../utils/ClientManagement";
-import { AddressHelper } from "../../utils/AddressHelper";
-import Token from "./Token";
 
 export default class Common extends Base {
   static baseUrl: string = "https://testnet.mirrornode.hedera.com/";
@@ -32,6 +32,12 @@ export default class Common extends Base {
 
   protected getContractName(): string {
     return this.constructor.name;
+  }
+
+  static isHBAR(tokenId: string) {
+    return (
+      tokenId === dex.ZERO_TOKEN_ID.toString() || tokenId === dex.HBARX_TOKEN_ID
+    );
   }
 
   static setNFTTokenAllowance = async (
@@ -88,7 +94,7 @@ export default class Common extends Base {
     ownerAccountPrivateKey: PrivateKey,
     client: Client,
   ) => {
-    dex.HBARX_TOKEN_ID === tokenId.toString()
+    this.isHBAR(tokenId.toString())
       ? await Common.approveHbarAllowance(
           spenderAccountId,
           amount,
@@ -175,7 +181,7 @@ export default class Common extends Base {
     client: Client = clientsInfo.proxyAdminClient,
   ) => {
     const args = new ContractFunctionParameters().addAddress(newAdminAddress);
-    await this.execute(50_000, Common.CHANGE_ADMIN, client, args, adminKey);
+    await this.execute(80_000, Common.CHANGE_ADMIN, client, args, adminKey);
     console.log(
       `- Common#changeAdmin(): proxyId = ${this.contractId.toString()}, new-admin-address = ${newAdminAddress}\n`,
     );
@@ -248,7 +254,7 @@ export default class Common extends Base {
 
   static getTokenBalance = async (
     idOrEvmAddress: AccountId | ContractId | string,
-    tokenId: TokenId,
+    tokenId: string | TokenId,
     client: Client = clientsInfo.operatorClient,
   ) => {
     let address: string = "";
@@ -273,14 +279,19 @@ export default class Common extends Base {
       .setTokenId(tokenId)
       .execute(client);
     const isNFT = response.tokenType === TokenType.NonFungibleUnique;
+    const totalSupply = response.totalSupply.toNumber();
     console.log(
-      `- Common#getTokenInfo(): TokenId = ${tokenId}, name = ${response.name}, symbol = ${response.symbol}, totalSupply = ${response.totalSupply}, isNFT = ${isNFT}\n`,
+      `- Common#getTokenInfo(): TokenId = ${tokenId}, name = ${response.name}, symbol = ${response.symbol}, totalSupply = ${response.totalSupply}, isNFT = ${isNFT}, totalSupply = ${totalSupply}\n`,
     );
     return {
       name: response.name,
       symbol: response.symbol,
-      treasuryAccountId: response.treasuryAccountId?.toString(),
+      treasuryAccountId: response.treasuryAccountId!.toString(),
       isNFT,
+      id: response.tokenId.toString(),
+      address: response.tokenId.toSolidityAddress(),
+      decimals: response.decimals,
+      totalSupply,
     };
   };
 
@@ -294,8 +305,7 @@ export default class Common extends Base {
   ) => {
     const txn = new TransferTransaction();
     switch (true) {
-      case tokenId.toString() === dex.HBARX_TOKEN_ID:
-      case tokenId.toString() === dex.ZERO_TOKEN_ID.toString():
+      case this.isHBAR(tokenId.toString()):
         txn
           .addHbarTransfer(fromAccountId, Hbar.fromTinybars(-amountOrId))
           .addHbarTransfer(toAccountId, Hbar.fromTinybars(amountOrId));

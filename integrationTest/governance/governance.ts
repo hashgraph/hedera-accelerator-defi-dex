@@ -84,7 +84,7 @@ async function createAndExecuteTokenAssociationProposal(
     creatorClient,
   );
   const title = Helper.createProposalTitle("Token Associate Proposal");
-  const proposalInfo = await governor.createTokenAssociationProposal(
+  const { proposalInfo } = await governor.createTokenAssociationProposal(
     tokenId,
     title,
     creatorClient,

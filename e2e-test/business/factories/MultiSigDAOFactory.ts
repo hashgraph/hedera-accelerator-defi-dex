@@ -13,7 +13,7 @@ import { MirrorNodeService } from "../../../utils/MirrorNodeService";
 import dex from "../../../deployment/model/dex";
 import { CommonSteps } from "../../step-definitions/CommonSteps";
 
-interface DAOConfigDetails {
+export interface DAOConfigDetails {
   daoTreasurer: string;
   tokenAddress: string;
   daoFee: number;

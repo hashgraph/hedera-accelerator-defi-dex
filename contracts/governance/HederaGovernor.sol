@@ -38,6 +38,7 @@ contract HederaGovernor is
 
     struct CoreInformation {
         address creator;
+        uint256 createdAt;
         uint256 voteStart;
         uint256 voteEnd;
         uint256 blockedAmountOrId;
@@ -66,7 +67,7 @@ contract HederaGovernor is
     );
 
     // token related info
-    int32 private tokenType;
+    bool private isNFTToken;
     address private tokenAddress;
     ITokenHolder private tokenHolder;
 
@@ -99,7 +100,7 @@ contract HederaGovernor is
 
         tokenHolder = _iTokenHolder;
         tokenAddress = _iTokenHolder.getToken();
-        tokenType = _tokenType(_iHederaService, tokenAddress);
+        isNFTToken = _isNFTToken(_iHederaService, tokenAddress);
 
         iAssetsHolder = _iAssetsHolder;
         iAssetsHolder.initialize(tokenAddress, _iHederaService);
@@ -160,7 +161,7 @@ contract HederaGovernor is
     }
 
     function quorum(uint256) public view virtual override returns (uint256) {
-        if (tokenType == 1) {
+        if (isNFTToken) {
             return 1;
         } else {
             uint256 totalSupply = IERC20(tokenAddress).totalSupply();
@@ -212,6 +213,7 @@ contract HederaGovernor is
 
         CoreInformation memory info;
         info.creator = _msgSender();
+        info.createdAt = clock();
         info.voteStart = proposalSnapshot(proposalId);
         info.voteEnd = proposalDeadline(proposalId);
         info.blockedAmountOrId = blockedAmountOrId;
@@ -288,9 +290,9 @@ contract HederaGovernor is
         address _creator,
         uint256 _amountOrId
     ) private returns (uint256) {
-        _amountOrId = tokenType == 1 ? _amountOrId : 1e8;
+        _amountOrId = isNFTToken ? _amountOrId : 1e8;
         int256 code = _transferAssests(
-            tokenType,
+            isNFTToken,
             tokenAddress,
             _creator,
             address(this),
@@ -308,7 +310,7 @@ contract HederaGovernor is
         uint256 _blockedAmountOrId
     ) private {
         int256 code = _transferAssests(
-            tokenType,
+            isNFTToken,
             tokenAddress,
             address(this),
             _creator,
@@ -326,11 +328,10 @@ contract HederaGovernor is
             address(this),
             tokenAddress
         );
-        if (
-            code != HederaResponseCodes.SUCCESS &&
-            code != HederaResponseCodes.TOKEN_ALREADY_ASSOCIATED_TO_ACCOUNT
-        ) {
-            revert("GCSI: association failed");
-        }
+        require(
+            code == HederaResponseCodes.TOKEN_ALREADY_ASSOCIATED_TO_ACCOUNT ||
+                code == HederaResponseCodes.SUCCESS,
+            "GCSI: association failed"
+        );
     }
 }

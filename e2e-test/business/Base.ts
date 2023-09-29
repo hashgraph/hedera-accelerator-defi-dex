@@ -255,6 +255,16 @@ export default abstract class Base {
     return contractInterface.decodeFunctionResult(functionName, data);
   }
 
+  protected async decodeFunctionData(
+    contractName: string,
+    functionName: string,
+    data: Uint8Array,
+  ) {
+    const contractInterface =
+      await ContractMetadata.getContractInterface(contractName);
+    return contractInterface.decodeFunctionData(functionName, data);
+  }
+
   private getRoleInfo(role: Uint8Array) {
     const roleIndex = Object.values(dex.ROLES).findIndex(
       (eachRole: Uint8Array) => role === eachRole,
