@@ -20,6 +20,24 @@ describe("LPToken, Pair and Factory tests", function () {
   const fee2 = BigNumber.from(2);
   const defaultSlippageInput = BigNumber.from(0);
 
+  const deployLpTokenContract = async (
+    hederaService: Contract,
+    signer: any,
+    tokenName: string,
+    tokenSymbol: string,
+    contractName: string,
+  ) => {
+    const LP_TOKEN_ARGS = [
+      hederaService.address,
+      signer.address,
+      tokenName,
+      tokenSymbol,
+    ];
+    const lpTokenContract = await TestHelper.deployLogic("MockLPToken");
+    await lpTokenContract.initialize(...LP_TOKEN_ARGS);
+    return lpTokenContract;
+  };
+
   async function lpTokenFixture() {
     const signers = await TestHelper.getSigners();
     const hederaService = await TestHelper.deployMockHederaService();
@@ -29,8 +47,13 @@ describe("LPToken, Pair and Factory tests", function () {
       "LpToken-Name",
       "LpToken-Symbol",
     ];
-    const lpTokenContract = await TestHelper.deployLogic("LPToken");
-    await lpTokenContract.initialize(...LP_TOKEN_ARGS);
+    const lpTokenContract = await deployLpTokenContract(
+      hederaService,
+      signers[0],
+      "LpToken-Name",
+      "LpToken-Symbol",
+      "LPToken",
+    );
     const lpToken = await TestHelper.getContract(
       "ERC20Mock",
       await lpTokenContract.getLpTokenAddress(),
@@ -71,17 +94,22 @@ describe("LPToken, Pair and Factory tests", function () {
 
     const tokenCont2 = await deployERC20Mock();
     const token3Address = tokenCont2.address;
-    const pair = await TestHelper.deployLogic("Pair");
-    const lpTokenCont = await TestHelper.deployLogic("MockLPToken");
+    const pair = await TestHelper.deployLogic("MockPair");
 
-    await lpTokenCont.initialize(
+    const lptTokenArguments = [
       mockHederaService.address,
       pair.address,
       "tokenName",
       "tokenSymbol",
+    ];
+    const lpTokenCont = await deployLpTokenContract(
+      mockHederaService,
+      pair,
+      "tokenName",
+      "tokenSymbol",
+      "MockLPToken",
     );
 
-    await lpTokenCont.deployed();
     const lpToken = await deployERC20Mock();
     if (isLpTokenRequired) {
       await lpTokenCont.setLPToken(lpToken.address);
@@ -123,8 +151,7 @@ describe("LPToken, Pair and Factory tests", function () {
 
   async function deployConfiguration(): Promise<Contract> {
     const Configuration = await ethers.getContractFactory("Configuration");
-    const configuration = await Configuration.deploy();
-    await configuration.initialize();
+    const configuration = await upgrades.deployProxy(Configuration);
     return configuration;
   }
 
@@ -1841,7 +1868,7 @@ describe("LPToken, Pair and Factory tests", function () {
           "FAIL",
           "FAIL",
         ),
-      ).revertedWith("LPToken: Token creation failed.");
+      ).revertedWith("Initializable: contract is already initialized");
     });
 
     it("Verify allotLPTokenFor should be reverted if initialization is not done", async function () {

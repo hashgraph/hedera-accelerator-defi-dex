@@ -16,6 +16,11 @@ contract LPToken is IEvents, ILPToken, OwnableUpgradeable, TokenOperations {
     IHederaService hederaService;
     IERC20 lpToken;
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     function lpTokenForUser(
         address _user
     ) external view override returns (uint256) {
