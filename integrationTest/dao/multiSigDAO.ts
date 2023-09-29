@@ -49,6 +49,7 @@ export const DAO_OWNERS_INFO = [
 
 export const DAO_NAME = dex.MULTI_SIG_DAO_ONE;
 export const DAO_LOGO = "https://defi-ui.hedera.com/";
+export const INFO_URL = "";
 export const DAO_WEB_LINKS = ["https://linkedin.com"];
 export const DAO_DESC = "Lorem Ipsum is simply dummy text";
 export const DAO_OWNERS_ADDRESSES = DAO_OWNERS_INFO.map(
@@ -67,6 +68,7 @@ async function main() {
   await multiSigDAO.updateDaoInfo(
     DAO_NAME + "_NEW",
     DAO_LOGO + "daos",
+    INFO_URL,
     DAO_DESC + "and updated",
     [...DAO_WEB_LINKS, "https://github.com"],
     DAO_ADMIN_CLIENT,

@@ -27,6 +27,7 @@ contract MultiSigDAO is IEvents, BaseDAO {
         string description;
         string linkToDiscussion;
         address creator;
+        string metaData;
     }
     string private constant HederaService = "HederaService";
     string private constant MultiSend = "HederaMultiSend";
@@ -95,7 +96,8 @@ contract MultiSigDAO is IEvents, BaseDAO {
         uint256 _type,
         string memory title,
         string memory desc,
-        string memory linkToDiscussion
+        string memory linkToDiscussion,
+        string memory metaData
     ) public returns (bytes32) {
         require(bytes(title).length != 0, "MultiSigDAO: title can't be blank");
         require(bytes(desc).length != 0, "MultiSigDAO: desc can't be blank");
@@ -116,6 +118,7 @@ contract MultiSigDAO is IEvents, BaseDAO {
         transactionInfo.title = title;
         transactionInfo.description = desc;
         transactionInfo.linkToDiscussion = linkToDiscussion;
+        transactionInfo.metaData = metaData;
         transactionInfo.creator = msg.sender;
 
         emit TransactionCreated(txnHash, transactionInfo);
@@ -140,7 +143,8 @@ contract MultiSigDAO is IEvents, BaseDAO {
                 TXN_TYPE_TOKEN_ASSOCIATE,
                 _title,
                 _desc,
-                _linkToDiscussion
+                _linkToDiscussion,
+                ""
             );
     }
 
@@ -180,7 +184,8 @@ contract MultiSigDAO is IEvents, BaseDAO {
                 TXN_TYPE_BATCH,
                 title,
                 desc,
-                linkToDiscussion
+                linkToDiscussion,
+                ""
             );
     }
 
@@ -206,7 +211,8 @@ contract MultiSigDAO is IEvents, BaseDAO {
                 TXN_TYPE_UPGRADE_PROXY,
                 _title,
                 _desc,
-                _linkToDiscussion
+                _linkToDiscussion,
+                ""
             );
     }
 
@@ -232,7 +238,8 @@ contract MultiSigDAO is IEvents, BaseDAO {
                 TXN_TYPE_TRANSFER,
                 _title,
                 _desc,
-                _linkToDiscussion
+                _linkToDiscussion,
+                ""
             );
     }
 

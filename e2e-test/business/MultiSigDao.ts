@@ -21,6 +21,7 @@ import {
 const TITLE = "TITLE";
 const DESCRIPTION = "DESCRIPTION";
 const LINK_TO_DISCUSSION = "LINK_TO_DISCUSSION";
+const META_DATA = "META_DATA";
 
 const STATE = "state";
 const INITIALIZE = "initialize";
@@ -216,6 +217,7 @@ export default class MultiSigDao extends BaseDao {
     title: string = TITLE,
     description: string = DESCRIPTION,
     linkToDiscussion: string = LINK_TO_DISCUSSION,
+    metaData: string = META_DATA,
   ) => {
     const args = new ContractFunctionParameters()
       .addAddress(to)
@@ -223,7 +225,8 @@ export default class MultiSigDao extends BaseDao {
       .addUint256(transactionType)
       .addString(title)
       .addString(description)
-      .addString(linkToDiscussion);
+      .addString(linkToDiscussion)
+      .addString(metaData);
     const { result } = await this.execute(
       3_000_000,
       PROPOSE_TRANSACTION,
@@ -463,6 +466,7 @@ export default class MultiSigDao extends BaseDao {
     title: string = TITLE,
     description: string = DESCRIPTION,
     linkToDiscussion: string = LINK_TO_DISCUSSION,
+    metaData: string = META_DATA,
   ) => {
     const textTxData = await this.encodeFunctionData(
       this.getContractName(),
@@ -477,6 +481,7 @@ export default class MultiSigDao extends BaseDao {
       title,
       description,
       linkToDiscussion,
+      metaData,
     );
   };
 
