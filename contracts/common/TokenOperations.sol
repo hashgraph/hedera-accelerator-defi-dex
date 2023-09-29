@@ -8,10 +8,10 @@ import "./IHederaService.sol";
 contract TokenOperations {
     using Bits for uint256;
 
-    function _tokenType(
+    function _isNFTToken(
         IHederaService _hederaService,
         address _token
-    ) internal returns (int32) {
+    ) internal returns (bool) {
         (int64 code, int32 tokenType) = _hederaService.getTokenTypePublic(
             _token
         );
@@ -19,7 +19,7 @@ contract TokenOperations {
             code == HederaResponseCodes.SUCCESS,
             "TokenOperations: invalid token"
         );
-        return tokenType;
+        return tokenType == 1;
     }
 
     function _balanceOf(
@@ -48,8 +48,8 @@ contract TokenOperations {
         address _receiver,
         uint256 _amountOrId
     ) internal returns (int256 responseCode) {
-        int32 _type = _tokenType(_hederaService, _token);
-        return _transferAssests(_type, _token, _sender, _receiver, _amountOrId);
+        bool isNFT = _isNFTToken(_hederaService, _token);
+        return _transferAssests(isNFT, _token, _sender, _receiver, _amountOrId);
     }
 
     function isContract(address _account) internal view returns (bool) {
@@ -182,14 +182,14 @@ contract TokenOperations {
     }
 
     function _transferAssests(
-        int32 _type,
+        bool isNFT,
         address _token,
         address _sender,
         address _receiver,
         uint256 _amountOrId
     ) internal returns (int256 responseCode) {
         bool sent;
-        if (_type == 0) {
+        if (!isNFT) {
             sent = isContractSendingTokens(_sender)
                 ? IERC20(_token).transfer(_receiver, _amountOrId)
                 : IERC20(_token).transferFrom(_sender, _receiver, _amountOrId);

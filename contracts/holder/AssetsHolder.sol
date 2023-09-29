@@ -133,12 +133,11 @@ contract AssetsHolder is
 
     function _associateTokenInteranlly(address _token) internal {
         int256 code = _associateToken(iHederaService, address(this), _token);
-        if (
-            code != HederaResponseCodes.SUCCESS &&
-            code != HederaResponseCodes.TOKEN_ALREADY_ASSOCIATED_TO_ACCOUNT
-        ) {
-            revert("AH: association failed");
-        }
+        require(
+            code == HederaResponseCodes.TOKEN_ALREADY_ASSOCIATED_TO_ACCOUNT ||
+                code == HederaResponseCodes.SUCCESS,
+            "AH: association failed"
+        );
     }
 
     function getHederaServiceVersion()

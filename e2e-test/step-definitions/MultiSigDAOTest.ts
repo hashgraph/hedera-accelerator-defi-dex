@@ -3,14 +3,16 @@ import Common from "../business/Common";
 import BigNumber from "bignumber.js";
 import MultiSigDao from "../business/MultiSigDao";
 import HederaGnosisSafe from "../business/HederaGnosisSafe";
-import MultiSigDAOFactory from "../../e2e-test/business/factories/MultiSigDAOFactory";
+import MultiSigDAOFactory, {
+  DAOConfigDetails,
+} from "../../e2e-test/business/factories/MultiSigDAOFactory";
 
 import { expect } from "chai";
-import { AccountId } from "@hashgraph/sdk";
 import { clientsInfo } from "../../utils/ClientManagement";
+import { AddressHelper } from "../../utils/AddressHelper";
+import { AccountId, TokenId } from "@hashgraph/sdk";
 import { main as deployContract } from "../../deployment/scripts/logic";
 import { binding, given, then, when } from "cucumber-tsflow";
-import { AddressHelper } from "../../utils/AddressHelper";
 
 const PRECISION = 1e8;
 const TOKEN_ID = dex.TOKEN_LAB49_1_ID;
@@ -18,6 +20,8 @@ const TOKEN_ID = dex.TOKEN_LAB49_1_ID;
 const DAO_DESC = "Lorem Ipsum is simply dummy text";
 const DAO_WEB_LINKS = ["https://linkedin.com"];
 
+const DAO_ADMIN_ID = clientsInfo.uiUserId;
+const DAO_ADMIN_KEY = clientsInfo.uiUserKey;
 const DAO_ADMIN_ADDRESS = clientsInfo.uiUserId.toSolidityAddress();
 const DAO_ADMIN_CLIENT = clientsInfo.uiUserClient;
 
@@ -32,6 +36,15 @@ const DAO_OWNERS_INFO = [
   },
 ];
 const DAO_OWNERS_ADDRESSES = DAO_OWNERS_INFO.map((item: any) => item.address);
+
+const daoConfig = {
+  daoFee: 1e4,
+  tokenAddress: dex.GOD_TOKEN_ADDRESS,
+  daoTreasurer: clientsInfo.treasureId.toSolidityAddress(),
+  fromAccountId: DAO_ADMIN_ID,
+  fromAccountKey: DAO_ADMIN_KEY,
+  fromAccountClient: DAO_ADMIN_CLIENT,
+};
 
 const multiSigDAOFactory = new MultiSigDAOFactory();
 let multiSigDao = new MultiSigDao();
@@ -336,7 +349,28 @@ export class MultiSigDAOSteps {
       "MultiSigDaoFactory contract-id :",
       multiSigDAOFactory.contractId,
     );
-    await multiSigDAOFactory.initialize();
+    const _daoConfig: DAOConfigDetails = {
+      daoTreasurer: daoConfig.daoTreasurer,
+      tokenAddress: daoConfig.tokenAddress,
+      daoFee: daoConfig.daoFee,
+    };
+    await multiSigDAOFactory.initialize(_daoConfig);
+  }
+
+  @when(
+    /User setup allowance for dao creation for collecting fee/,
+    undefined,
+    30000,
+  )
+  public async setupAllowanceForCollectingDAOCreationFee() {
+    await Common.setTokenAllowance(
+      TokenId.fromSolidityAddress(daoConfig.tokenAddress),
+      multiSigDAOFactory.contractId,
+      daoConfig.daoFee,
+      daoConfig.fromAccountId,
+      daoConfig.fromAccountKey,
+      daoConfig.fromAccountClient,
+    );
   }
 
   @when(

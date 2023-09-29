@@ -42,6 +42,7 @@ enum VoteType {
 export interface ProposalInfo {
   proposalId: string;
   creator: string;
+  createdAt: string;
   voteStart: string;
   voteEnd: string;
   blockedAmountOrId: string;
@@ -103,15 +104,13 @@ export default class HederaGovernor extends Base {
     votingPeriod: number = this.DEFAULT_VOTING_PERIOD,
     holderTokenId: TokenId = this.GOD_TOKEN_ID,
   ) {
-    await tokenHolder.initialize(client, holderTokenId.toSolidityAddress());
-
-    const tokenHolderProxyAddress = await AddressHelper.idToEvmAddress(
-      tokenHolder.contractId,
-    );
-
     if (await this.isInitializationPending()) {
       const assetHolderInfo = await new Deployment().deployProxy(
         ContractService.ASSET_HOLDER,
+      );
+      await tokenHolder.initialize(client, holderTokenId.toSolidityAddress());
+      const tokenHolderProxyAddress = await AddressHelper.idToEvmAddress(
+        tokenHolder.contractId,
       );
       const data = await this.encodeFunctionData(
         this.getContractName(),
@@ -181,7 +180,9 @@ export default class HederaGovernor extends Base {
     proposalId: string,
     client: Client = clientsInfo.operatorClient,
   ) => {
-    const args = this.createBaseParams(proposalId);
+    const args = new ContractFunctionParameters().addUint256(
+      BigNumber(proposalId),
+    );
     const { result } = await this.execute(
       5_00_000,
       this.GET_VOTING_INFORMATION,
@@ -217,7 +218,9 @@ export default class HederaGovernor extends Base {
     proposalId: string,
     client: Client = clientsInfo.operatorClient,
   ) => {
-    const args = this.createBaseParams(proposalId);
+    const args = new ContractFunctionParameters().addUint256(
+      BigNumber(proposalId),
+    );
     const { result } = await this.execute(5_00_000, this.STATE, client, args);
     const state = result.getInt256(0);
     console.log(
@@ -233,40 +236,30 @@ export default class HederaGovernor extends Base {
     eachIterationDelayInMS: number = this.EACH_ITERATION_DELAY,
     client: Client = clientsInfo.operatorClient,
   ): Promise<number> => {
+    console.time("Wait operation took:");
     console.log(
       `- Governor#getStateWithTimeout(): called with maxWaitInMs = ${maxWaitInMs}, eachIterationDelayInMS = ${eachIterationDelayInMS}, requiredState = ${requiredState}, proposal-id = ${proposalId}\n`,
     );
     let currentState = -1;
-    const maxWaitInMsInternally = maxWaitInMs;
     while (maxWaitInMs > 0) {
       try {
         currentState = Number(await this.state(proposalId, client));
         if (currentState === requiredState) {
-          console.log(
-            `- Governor#getStateWithTimeout(): succeeded where total waiting time = ${
-              maxWaitInMsInternally - maxWaitInMs
-            } ms\n`,
-          );
+          console.log(`- Governor#getStateWithTimeout(): succeeded\n`);
           break;
         }
         if (currentState === ProposalState.Defeated) {
-          console.log(
-            `- Governor#getStateWithTimeout(): defeated where total waiting time = ${
-              maxWaitInMsInternally - maxWaitInMs
-            } ms\n`,
-          );
+          console.log(`- Governor#getStateWithTimeout(): defeated\n`);
           break;
         }
-      } catch (e: any) {
-        console.log(
-          `- Governor#getStateWithTimeout(): failed and ms left = ${maxWaitInMs}`,
-          e,
-        );
+      } catch (error: any) {
+        console.log(`- Governor#getStateWithTimeout(): failed`, error.message);
       }
       await Helper.delay(eachIterationDelayInMS);
       maxWaitInMs -= eachIterationDelayInMS;
     }
     console.log(`- Governor#getStateWithTimeout(): done\n`);
+    console.timeEnd("Wait operation took:");
     return currentState;
   };
 
@@ -285,7 +278,7 @@ export default class HederaGovernor extends Base {
       AssetsHolderProps.ASSOCIATE,
       [tokenId.toSolidityAddress()],
     );
-    return await this.createProposal(
+    const proposalInfo = await this.createProposal(
       AssetsHolderProps.Type.ASSOCIATE,
       title,
       [assetHolder.contractEvmAddress],
@@ -297,6 +290,7 @@ export default class HederaGovernor extends Base {
       metadata,
       amountOrId,
     );
+    return { proposalInfo, assetHolder };
   };
 
   public createAssetTransferProposal = async (
@@ -527,6 +521,76 @@ export default class HederaGovernor extends Base {
     return receipt.status.toString() === "SUCCESS";
   };
 
+  public decodeTransferProposalData = async (proposalInfo: ProposalInfo) => {
+    if (
+      proposalInfo.proposalType.toString() ===
+      AssetsHolderProps.Type.TRANSFER.toString()
+    ) {
+      return await this.decodeFunctionData(
+        ContractService.ASSET_HOLDER,
+        AssetsHolderProps.TRANSFER,
+        ethers.utils.arrayify(proposalInfo.calldatas[0]),
+      );
+    }
+  };
+
+  public decodeProxyUpgradeProposalData = async (
+    proposalInfo: ProposalInfo,
+  ) => {
+    if (
+      proposalInfo.proposalType.toString() ===
+      AssetsHolderProps.Type.UPGRADE_PROXY.toString()
+    ) {
+      return await this.decodeFunctionData(
+        ContractService.ASSET_HOLDER,
+        AssetsHolderProps.UPGRADE_PROXY,
+        ethers.utils.arrayify(proposalInfo.calldatas[0]),
+      );
+    }
+  };
+
+  /**
+   * Only for dev or e2e testing
+   * @param creatorClient
+   */
+  public async cancelAllProposals(creatorClient: Client) {
+    function removeSubset(superset: any[], subset: any[]) {
+      return superset.filter((supersetItem) => {
+        const item = subset.find(
+          (subsetItem) =>
+            subsetItem.proposalId.toString() ===
+            supersetItem.proposalId.toString(),
+        );
+        return item === undefined;
+      });
+    }
+
+    const events = await MirrorNodeService.getInstance().getEvents(
+      this.contractId,
+      true,
+    );
+    const executedProposals = events.get("ProposalExecuted") ?? [];
+    const cancelledProposals = events.get("ProposalCanceled") ?? [];
+    const createdProposals = events.get("ProposalCreated") ?? [];
+    const activeProposals = removeSubset(createdProposals, [
+      ...executedProposals,
+      ...cancelledProposals,
+    ]);
+    console.log("- Total proposals count:- ", createdProposals.length);
+    activeProposals.length > 0 &&
+      console.log("- Active proposals count :- ", activeProposals.length);
+    for (const activeProposal of activeProposals) {
+      const proposalInfo = this.parseProposalCreatedEvent(
+        activeProposal.proposalId.toString(),
+        events,
+      );
+      const state = await this.state(proposalInfo.proposalId, creatorClient);
+      state.toNumber() !== ProposalState.Canceled &&
+        state.toNumber() !== ProposalState.Executed &&
+        (await this.cancelProposal(proposalInfo, creatorClient));
+    }
+  }
+
   public async setupAllowanceForProposalCreation(
     creatorClient: Client,
     creatorAccountId: AccountId,
@@ -595,7 +659,7 @@ export default class HederaGovernor extends Base {
   public getProposalInfoFromMirrorNode = async (
     proposalId: string,
     delayRequired: boolean = true,
-  ): Promise<ProposalInfo> => {
+  ) => {
     const events = await MirrorNodeService.getInstance().getEvents(
       this.contractId,
       delayRequired,
@@ -605,7 +669,11 @@ export default class HederaGovernor extends Base {
       proposalInfo,
       `- Governor#getProposalInfoFromMirrorNode():`,
     );
-    return proposalInfo;
+    const assetHolder = await this.getAssetHolderContractAddressInfo();
+    return {
+      proposalInfo,
+      assetHolder,
+    };
   };
 
   public againstVote = async (
@@ -623,6 +691,16 @@ export default class HederaGovernor extends Base {
     client: Client = clientsInfo.operatorClient,
   ) => await this.vote(proposalId, 2, client);
 
+  public vote = async (proposalId: string, support: number, client: Client) => {
+    const args = new ContractFunctionParameters()
+      .addUint256(BigNumber(proposalId))
+      .addUint8(support);
+    await this.execute(5_00_000, this.CAST_VOTE, client, args);
+    console.log(
+      `- Governor#${this.CAST_VOTE}(): proposal-id = ${proposalId}, support = ${support}, done\n`,
+    );
+  };
+
   private createProposal = async (
     proposalType: number,
     title: string,
@@ -636,22 +714,20 @@ export default class HederaGovernor extends Base {
     amountOrId: number = this.DEFAULT_NFT_TOKEN_SERIAL_NO,
   ) => {
     const createProposalInputs = {
-      _inputs: Object.values({
-        proposalType,
-        title,
-        description,
-        discussionLink,
-        metadata,
-        amountOrId,
-        targets,
-        values,
-        calldatas,
-      }),
+      proposalType,
+      title,
+      description,
+      discussionLink,
+      metadata,
+      amountOrId,
+      targets,
+      values,
+      calldatas,
     };
     const createProposalInputsData = await this.encodeFunctionData(
       this.getContractName(),
       this.CREATE_PROPOSAL,
-      Object.values(createProposalInputs),
+      [Object.values(createProposalInputs)],
     );
     const { result } = await this.execute(
       9_00_000,
@@ -666,22 +742,6 @@ export default class HederaGovernor extends Base {
     );
     return proposalInfo;
   };
-
-  private vote = async (
-    proposalId: string,
-    support: number,
-    client: Client,
-  ) => {
-    const args = this.createBaseParams(proposalId).addUint8(support);
-    await this.execute(5_00_000, this.CAST_VOTE, client, args);
-    console.log(
-      `- Governor#${this.CAST_VOTE}(): proposal-id = ${proposalId}, support = ${support}\n`,
-    );
-  };
-
-  private createBaseParams(proposalId: string) {
-    return new ContractFunctionParameters().addUint256(BigNumber(proposalId));
-  }
 
   private createExecuteOrCancelTransactionParams(proposalInfo: ProposalInfo) {
     return new ContractFunctionParameters()
@@ -718,6 +778,7 @@ export default class HederaGovernor extends Base {
       proposalId: proposalCreatedEvent.proposalId.toString(),
 
       creator: coreInformation.creator,
+      createdAt: coreInformation.createdAt.toString(),
       voteStart: coreInformation.voteStart.toString(),
       voteEnd: coreInformation.voteEnd.toString(),
       blockedAmountOrId: coreInformation.blockedAmountOrId.toString(),
