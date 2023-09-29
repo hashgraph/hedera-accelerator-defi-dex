@@ -15,6 +15,8 @@ import FTDAO from "../FTDAO";
 import GodHolder from "../GodHolder";
 import NFTHolder from "../NFTHolder";
 import { AddressHelper } from "../../../utils/AddressHelper";
+import { DEFAULT_DAO_CONFIG } from "../constants";
+import { DAOConfigDetails } from "../types";
 
 const deployment = new Deployment();
 
@@ -32,6 +34,7 @@ export default abstract class DAOFactory extends Base {
   initialize = async (
     client: Client = clientsInfo.operatorClient,
     tokenHolderFactory: TokenHolderFactory,
+    daoConfigDetails: DAOConfigDetails = DEFAULT_DAO_CONFIG,
   ) => {
     if (await this.isInitializationPending()) {
       const tokenHolderFactoryContractId = ContractId.fromString(
@@ -51,6 +54,7 @@ export default abstract class DAOFactory extends Base {
         _iSystemRoleBasedAccess: this.getSystemBasedRoleAccessContractAddress(),
         _hederaService: this.htsAddress,
         _daoLogic: ftDao.address,
+        _daoConfigDetails: daoConfigDetails,
         _tokenHolderFactory: tokenHolderFactoryAddress,
         _governors: Object.values({
           tokenTransferLogic: deployedItems.get(ContractService.GOVERNOR_TT)
@@ -92,6 +96,7 @@ export default abstract class DAOFactory extends Base {
     votingDelay: number,
     votingPeriod: number,
     isPrivate: boolean,
+    hbarAmount: number = 0,
     admin: string = clientsInfo.operatorId.toSolidityAddress(),
     client: Client = clientsInfo.operatorClient,
   ) => {
@@ -118,6 +123,8 @@ export default abstract class DAOFactory extends Base {
       CREATE_DAO,
       client,
       bytes,
+      undefined,
+      hbarAmount,
     );
     const address = result.getAddress(0);
     console.log(

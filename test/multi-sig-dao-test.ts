@@ -69,15 +69,15 @@ describe("MultiSig tests", function () {
   }
 
   async function verifyDAOConfigChangeEvent(txn: any, daoConfig: any) {
-    const { name, args } = await TestHelper.readLastEvent(txn);
-    const txnHash = args.txnHash;
+    const { event: name, args } = (
+      await TestHelper.readEvents(txn, ["DAOConfig"])
+    ).pop();
     const newDAOConfig = args.daoConfig;
 
     expect(name).equal("DAOConfig");
     expect(newDAOConfig.daoTreasurer).equals(daoConfig.daoTreasurer);
     expect(newDAOConfig.tokenAddress).equals(daoConfig.tokenAddress);
     expect(newDAOConfig.daoFee).equals(daoConfig.daoFee);
-    return { txnHash, newDAOConfig };
   }
 
   async function proposeTransaction(
@@ -637,7 +637,7 @@ describe("MultiSig tests", function () {
             newDAOConfig.tokenAddress,
             newDAOConfig.daoFee,
           ),
-      ).revertedWith("MultiSig DAO Factory: DAO treasurer only.");
+      ).revertedWith("DAOConfiguration: DAO treasurer only.");
 
       const txn = await multiSigDAOFactoryInstance
         .connect(initialTreasurer)
@@ -647,7 +647,7 @@ describe("MultiSig tests", function () {
           newDAOConfig.daoFee,
         );
 
-      verifyDAOConfigChangeEvent(txn, newDAOConfig);
+      await verifyDAOConfigChangeEvent(txn, newDAOConfig);
     });
 
     it("Verify Initialize MultiSig Factory emits DAOConfig", async function () {
@@ -680,7 +680,7 @@ describe("MultiSig tests", function () {
         hederaService.address,
         multiSend.address,
       );
-      verifyDAOConfigChangeEvent(transaction, daoConfigData);
+      await verifyDAOConfigChangeEvent(transaction, daoConfigData);
     });
 
     it("Verify createDAO should not add new dao into list when the dao is private", async function () {

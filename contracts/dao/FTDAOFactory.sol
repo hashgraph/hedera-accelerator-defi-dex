@@ -8,12 +8,12 @@ import "../common/IHederaService.sol";
 
 import "../dao/FTDAO.sol";
 import "../governance/ITokenHolderFactory.sol";
-import "./ISharedDAOModel.sol";
+import "./DAOConfiguration.sol";
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-contract FTDAOFactory is IErrors, IEvents, Initializable, ISharedDAOModel {
+contract FTDAOFactory is IErrors, IEvents, Initializable, DAOConfiguration {
     event DAOCreated(
         address daoAddress,
         Governor governors,
@@ -37,6 +37,7 @@ contract FTDAOFactory is IErrors, IEvents, Initializable, ISharedDAOModel {
         ISystemRoleBasedAccess _iSystemRoleBasedAccess,
         IHederaService _hederaService,
         FTDAO _daoLogic,
+        DAOConfigDetails memory _daoConfigDetails,
         ITokenHolderFactory _tokenHolderFactory,
         Governor memory _governors
     ) external initializer {
@@ -45,7 +46,7 @@ contract FTDAOFactory is IErrors, IEvents, Initializable, ISharedDAOModel {
         daoLogic = _daoLogic;
         tokenHolderFactory = _tokenHolderFactory;
         governors = _governors;
-
+        daoConfig = _daoConfigDetails;
         emit LogicUpdated(address(0), address(daoLogic), FungibleTokenDAO);
         emit LogicUpdated(
             address(0),
@@ -55,6 +56,7 @@ contract FTDAOFactory is IErrors, IEvents, Initializable, ISharedDAOModel {
         emit LogicUpdated(address(0), address(hederaService), HederaService);
         Governor memory oldGovernors;
         emit GovernorLogicUpdated(oldGovernors, _governors, Governors);
+        emit DAOConfig(daoConfig);
     }
 
     function upgradeTokenHolderFactory(
@@ -109,13 +111,14 @@ contract FTDAOFactory is IErrors, IEvents, Initializable, ISharedDAOModel {
 
     function createDAO(
         CreateDAOInputs memory _createDAOInputs
-    ) external returns (address) {
+    ) external payable returns (address) {
         if (address(_createDAOInputs.tokenAddress) == address(0)) {
             revert InvalidInput("DAOFactory: token address is zero");
         }
         if (_createDAOInputs.votingPeriod == 0) {
             revert InvalidInput("DAOFactory: voting period is zero");
         }
+        payDAOCreationFee(hederaService);
         ITokenHolder iTokenHolder = tokenHolderFactory.getTokenHolder(
             address(_createDAOInputs.tokenAddress)
         );

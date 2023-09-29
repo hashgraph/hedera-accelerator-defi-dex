@@ -15,6 +15,7 @@ async function main() {
   await governanceDAOFactory.createDAO(
     input.daoName,
     "https://defi-ui.hedera.com/",
+    "https://defi-ui.hedera.com/",
     input.daoDescription,
     webLinks,
     input.tokenAddress,
@@ -22,6 +23,7 @@ async function main() {
     Number(input.votingDelay),
     Number(input.votingPeriod),
     input.isPrivate.toLowerCase() === "true",
+    0,
     input.daoAdmin,
   );
 }

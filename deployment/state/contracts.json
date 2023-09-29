@@ -78,12 +78,12 @@
   },
   {
     "name": "nftdaofactory",
-    "id": "0.0.1194570",
-    "hash": "3435fadcc407444f00cea3e6633745f5",
-    "address": "0x0000000000000000000000000000000000123a4a",
-    "timestamp": "2023-09-08T08:31:46.867Z",
-    "transparentProxyId": "0.0.1194572",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000123a4c"
+    "id": "0.0.2806627",
+    "hash": "0e348fb2ebe3644692b5be85d298b32a",
+    "address": "0x00000000000000000000000000000000002ad363",
+    "timestamp": "2023-09-27T12:47:26.660Z",
+    "transparentProxyId": "0.0.2806656",
+    "transparentProxyAddress": "0x00000000000000000000000000000000002ad380"
   },
   {
     "name": "pair",
@@ -96,21 +96,21 @@
   },
   {
     "name": "ftdaofactory",
-    "id": "0.0.1194739",
-    "hash": "1430dbf355e7036d80f8de68404c93c9",
-    "address": "0x0000000000000000000000000000000000123af3",
-    "timestamp": "2023-09-08T09:27:22.526Z",
-    "transparentProxyId": "0.0.1194741",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000123af5"
+    "id": "0.0.2806512",
+    "hash": "499f01ed6683e1064e941079d23641cf",
+    "address": "0x00000000000000000000000000000000002ad2f0",
+    "timestamp": "2023-09-27T12:46:32.472Z",
+    "transparentProxyId": "0.0.2806542",
+    "transparentProxyAddress": "0x00000000000000000000000000000000002ad30e"
   },
   {
     "name": "multisigdaofactory",
-    "id": "0.0.2328354",
-    "hash": "d16bb907e1da3fd2761ba4c11c4130c1",
-    "address": "0x0000000000000000000000000000000000238722",
-    "timestamp": "2023-09-23T04:44:12.291Z",
-    "transparentProxyId": "0.0.2328384",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000238740"
+    "id": "0.0.2806345",
+    "hash": "b3197479ee05f404762c133f9f231569",
+    "address": "0x00000000000000000000000000000000002ad249",
+    "timestamp": "2023-09-27T12:45:14.269Z",
+    "transparentProxyId": "0.0.2806383",
+    "transparentProxyAddress": "0x00000000000000000000000000000000002ad26f"
   },
   {
     "name": "factory",
@@ -123,12 +123,12 @@
   },
   {
     "name": "multisigdao",
-    "id": "0.0.850276",
-    "hash": "2e5bdf44115ac10458ca21e62b03b209",
-    "address": "0x00000000000000000000000000000000000cf964",
-    "timestamp": "2023-08-24T19:00:10.342Z",
-    "transparentProxyId": "0.0.850302",
-    "transparentProxyAddress": "0x00000000000000000000000000000000000cf97e"
+    "id": "0.0.2952911",
+    "hash": "f22a7095d6997e88f92dc0658ff6e937",
+    "address": "0x00000000000000000000000000000000002d0ecf",
+    "timestamp": "2023-09-28T08:52:35.606Z",
+    "transparentProxyId": "0.0.2952969",
+    "transparentProxyAddress": "0x00000000000000000000000000000000002d0f09"
   },
   {
     "name": "governortextproposal",
@@ -183,14 +183,5 @@
     "timestamp": "2023-08-23T09:32:56.471Z",
     "transparentProxyId": "0.0.634566",
     "transparentProxyAddress": "0x000000000000000000000000000000000009aec6"
-  },
-  {
-    "name": "multisigdao",
-    "id": "0.0.2952911",
-    "hash": "f22a7095d6997e88f92dc0658ff6e937",
-    "address": "0x00000000000000000000000000000000002d0ecf",
-    "timestamp": "2023-09-28T08:52:35.606Z",
-    "transparentProxyId": "0.0.2952969",
-    "transparentProxyAddress": "0x00000000000000000000000000000000002d0f09"
   }
 ]

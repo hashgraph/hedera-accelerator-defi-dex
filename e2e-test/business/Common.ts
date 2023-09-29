@@ -88,7 +88,7 @@ export default class Common extends Base {
     ownerAccountPrivateKey: PrivateKey,
     client: Client,
   ) => {
-    dex.HBARX_TOKEN_ID === tokenId.toString()
+    Common.isHBAR(tokenId)
       ? await Common.approveHbarAllowance(
           spenderAccountId,
           amount,
@@ -395,5 +395,12 @@ export default class Common extends Base {
       balanceQuery.setContractId(id);
     }
     return await balanceQuery.execute(client);
+  };
+
+  static isHBAR = (tokenId: TokenId) => {
+    return (
+      tokenId.toString() === dex.ZERO_TOKEN_ID.toString() ||
+      tokenId.toString() === dex.HBARX_TOKEN_ID.toString()
+    );
   };
 }

@@ -23,9 +23,22 @@ describe("NFTDAOFactory contract tests", function () {
     "https://linkedin.com",
   ];
 
+  async function verifyDAOConfigChangeEvent(txn: any, daoConfig: any) {
+    const { event: name, args } = (
+      await TestHelper.readEvents(txn, ["DAOConfig"])
+    ).pop();
+    const newDAOConfig = args.daoConfig;
+
+    expect(name).equal("DAOConfig");
+    expect(newDAOConfig.daoTreasurer).equals(daoConfig.daoTreasurer);
+    expect(newDAOConfig.tokenAddress).equals(daoConfig.tokenAddress);
+    expect(newDAOConfig.daoFee).equals(daoConfig.daoFee);
+  }
+
   async function deployFixture() {
     const dexOwner = await TestHelper.getDexOwner();
     const signers = await TestHelper.getSigners();
+    const tokenInstance = await TestHelper.deployERC20Mock();
     const daoAdminOne = signers[5];
     const daoAdminTwo = signers[6];
 
@@ -85,11 +98,17 @@ describe("NFTDAOFactory contract tests", function () {
       "GovernorTransferToken",
     );
 
+    const daoConfigData = {
+      daoTreasurer: signers[11].address,
+      tokenAddress: tokenInstance.address,
+      daoFee: TestHelper.toPrecision(20),
+    };
     const governorDAOFactoryInstance = await TestHelper.deployProxy(
       "NFTDAOFactory",
       systemRoleBasedAccess,
       bastHTS.address,
       nftTokenDAO.address,
+      Object.values(daoConfigData),
       nftHolderFactory.address,
       governance,
     );
@@ -110,6 +129,8 @@ describe("NFTDAOFactory contract tests", function () {
       common,
       systemRoleBasedAccess,
       systemUsersSigners,
+      tokenInstance,
+      daoConfigData,
     };
   }
 
@@ -121,6 +142,7 @@ describe("NFTDAOFactory contract tests", function () {
       nftHolderFactory,
       governance,
       systemRoleBasedAccess,
+      daoConfigData,
     } = await loadFixture(deployFixture);
 
     await expect(
@@ -128,6 +150,7 @@ describe("NFTDAOFactory contract tests", function () {
         systemRoleBasedAccess,
         bastHTS.address,
         nftTokenDAO.address,
+        Object.values(daoConfigData),
         nftHolderFactory.address,
         governance,
       ),
@@ -382,5 +405,169 @@ describe("NFTDAOFactory contract tests", function () {
         .connect(systemUsersSigners.childProxyAdmin)
         .upgradeHederaService(signers[3].address),
     ).not.reverted;
+  });
+
+  it("Verify createDAO should defined HBAR as DAO creation fee", async function () {
+    const {
+      bastHTS,
+      nftTokenDAO,
+      nftHolderFactory,
+      governance,
+      systemRoleBasedAccess,
+      signers,
+      daoAdminOne,
+      token,
+    } = await loadFixture(deployFixture);
+
+    const daoConfigData = {
+      daoTreasurer: signers[11].address,
+      tokenAddress: TestHelper.ZERO_ADDRESS,
+      daoFee: TestHelper.toPrecision(20),
+    };
+
+    const CREATE_DAO_ARGS = [
+      daoAdminOne.address,
+      DAO_NAME,
+      LOGO_URL,
+      INFO_URL,
+      token.address,
+      BigNumber.from(500),
+      BigNumber.from(0),
+      BigNumber.from(100),
+      true,
+      DESCRIPTION,
+      WEB_LINKS,
+    ];
+    const governorDAOFactoryInstance = await TestHelper.deployProxy(
+      "NFTDAOFactory",
+      systemRoleBasedAccess,
+      bastHTS.address,
+      nftTokenDAO.address,
+      Object.values(daoConfigData),
+      nftHolderFactory.address,
+      governance,
+    );
+
+    await expect(
+      governorDAOFactoryInstance.createDAO(CREATE_DAO_ARGS, {
+        value: daoConfigData.daoFee,
+      }),
+    ).changeEtherBalances(
+      [signers[0].address, daoConfigData.daoTreasurer],
+      [-daoConfigData.daoFee, daoConfigData.daoFee],
+    );
+  });
+
+  it("Verify createDAO should defined token as DAO creation fee", async function () {
+    const {
+      governorDAOFactoryInstance,
+      signers,
+      tokenInstance,
+      daoConfigData,
+      daoAdminOne,
+      token,
+    } = await loadFixture(deployFixture);
+
+    await tokenInstance.setUserBalance(
+      signers[0].address,
+      daoConfigData.daoFee,
+    );
+    const CREATE_DAO_ARGS = [
+      daoAdminOne.address,
+      DAO_NAME,
+      LOGO_URL,
+      INFO_URL,
+      token.address,
+      BigNumber.from(500),
+      BigNumber.from(0),
+      BigNumber.from(100),
+      true,
+      DESCRIPTION,
+      WEB_LINKS,
+    ];
+    await expect(
+      governorDAOFactoryInstance.createDAO(CREATE_DAO_ARGS),
+    ).changeTokenBalances(
+      tokenInstance,
+      [signers[0].address, daoConfigData.daoTreasurer],
+      [-daoConfigData.daoFee, daoConfigData.daoFee],
+    );
+  });
+
+  it("Verify Change DAO Configuration Change should work", async function () {
+    const { governorDAOFactoryInstance, signers, tokenInstance, daoAdminOne } =
+      await loadFixture(deployFixture);
+
+    const initialTreasurer = signers[11];
+    const {
+      daoTreasurer: initialTreasurerAddress,
+      tokenAddress: initialTokenAddress,
+      daoFee: initialFee,
+    } = await governorDAOFactoryInstance.getDAOConfigDetails();
+
+    expect(initialTreasurerAddress).equals(initialTreasurer.address);
+    expect(initialTokenAddress).equals(tokenInstance.address);
+    expect(initialFee).equals(TestHelper.toPrecision(20));
+
+    await expect(
+      governorDAOFactoryInstance
+        .connect(daoAdminOne)
+        .changeDAOConfig(
+          signers[12].address,
+          tokenInstance.address,
+          TestHelper.toPrecision(30),
+        ),
+    ).revertedWith("DAOConfiguration: DAO treasurer only.");
+
+    const newDAOConfig = {
+      daoTreasurer: signers[12].address,
+      tokenAddress: tokenInstance.address,
+      daoFee: TestHelper.toPrecision(30),
+    };
+    const txn = await governorDAOFactoryInstance
+      .connect(initialTreasurer)
+      .changeDAOConfig(
+        newDAOConfig.daoTreasurer,
+        newDAOConfig.tokenAddress,
+        newDAOConfig.daoFee,
+      );
+
+    await verifyDAOConfigChangeEvent(txn, newDAOConfig);
+  });
+
+  it("Verify Initialize NFT DAO Factory emits DAOConfig", async function () {
+    const {
+      bastHTS,
+      nftTokenDAO,
+      nftHolderFactory,
+      governance,
+      systemRoleBasedAccess,
+      signers,
+    } = await loadFixture(deployFixture);
+
+    const daoConfigData = {
+      daoTreasurer: signers[11].address,
+      tokenAddress: TestHelper.ZERO_ADDRESS,
+      daoFee: TestHelper.toPrecision(20),
+    };
+
+    const governorDAOFactoryInstance = await TestHelper.deployProxy(
+      "NFTDAOFactory",
+      systemRoleBasedAccess,
+      bastHTS.address,
+      nftTokenDAO.address,
+      Object.values(daoConfigData),
+      nftHolderFactory.address,
+      governance,
+    );
+    const daoConfigFilter = governorDAOFactoryInstance.filters.DAOConfig();
+    const transaction =
+      await governorDAOFactoryInstance.queryFilter(daoConfigFilter);
+    const { event, args } = transaction[0];
+    const daoConfig = args?.daoConfig;
+    expect(event).equal("DAOConfig");
+    expect(daoConfigData.daoTreasurer).equals(daoConfig.daoTreasurer);
+    expect(daoConfigData.tokenAddress).equals(daoConfig.tokenAddress);
+    expect(daoConfigData.daoFee).equals(daoConfig.daoFee);
   });
 });

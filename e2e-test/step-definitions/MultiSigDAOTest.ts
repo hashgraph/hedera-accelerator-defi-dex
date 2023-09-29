@@ -353,6 +353,7 @@ export class MultiSigDAOSteps {
       DAO_OWNERS_ADDRESSES,
       DAO_OWNERS_ADDRESSES.length,
       false,
+      0,
       DAO_ADMIN_ADDRESS,
       DAO_ADMIN_CLIENT,
     );
@@ -379,6 +380,7 @@ export class MultiSigDAOSteps {
         DAO_OWNERS_ADDRESSES,
         DAO_OWNERS_ADDRESSES.length,
         false,
+        0,
         DAO_ADMIN_ADDRESS,
         DAO_ADMIN_CLIENT,
       );

@@ -102,6 +102,7 @@ export class FTDaoFactoryTest extends CommonSteps {
         CommonSteps.DEFAULT_VOTING_DELAY,
         CommonSteps.DEFAULT_VOTING_PERIOD,
         false,
+        0,
         DAO_ADMIN_ADDRESS,
         DAO_ADMIN_CLIENT,
       );
