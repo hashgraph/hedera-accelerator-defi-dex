@@ -7,7 +7,7 @@ import { BigNumber, Contract } from "ethers";
 import { Helper } from "../utils/Helper";
 import { TestHelper } from "./TestHelper";
 
-describe.only("LPToken, Pair and Factory tests", function () {
+describe("LPToken, Pair and Factory tests", function () {
   const tokenBAddress = "0x0000000000000000000000000000000000010001";
   const tokenAAddress = "0x0000000000000000000000000000000000020002";
   const tokenCAddress = "0x0000000000000000000000000000000000020003";
@@ -33,7 +33,9 @@ describe.only("LPToken, Pair and Factory tests", function () {
       tokenName,
       tokenSymbol,
     ];
-    return await TestHelper.deployProxy(contractName, ...LP_TOKEN_ARGS);
+    const lpTokenContract = await TestHelper.deployLogic("MockLPToken");
+    await lpTokenContract.initialize(...LP_TOKEN_ARGS);
+    return lpTokenContract;
   };
 
   async function lpTokenFixture() {
@@ -92,7 +94,7 @@ describe.only("LPToken, Pair and Factory tests", function () {
 
     const tokenCont2 = await deployERC20Mock();
     const token3Address = tokenCont2.address;
-    const pair = await TestHelper.deployLogic("Pair");
+    const pair = await TestHelper.deployLogic("MockPair");
 
     const lptTokenArguments = [
       mockHederaService.address,
