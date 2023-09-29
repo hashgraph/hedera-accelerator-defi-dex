@@ -139,22 +139,25 @@ export class CommonSteps {
     const voteEnd = new Date(Number(proposalInfo.voteEnd) * 1e3);
     const currentDate = new Date();
 
+    const adjustTime = (first: number, second: number) =>
+      Math.round(first - second) / 1e3;
+
     const info: VotingPeriodInfo = {
       createdAt: createdAt.toString(),
       voteStart: voteStart.toString(),
       voteEnd: voteEnd.toString(),
       currentTime: currentDate.toString(),
-      votingPeriod: Math.round(voteEnd.getTime() - voteStart.getTime()) / 1e3,
-      votingDelay: Math.round(voteStart.getTime() - createdAt.getTime()) / 1e3,
+      votingPeriod: adjustTime(voteEnd.getTime(), voteStart.getTime()),
+      votingDelay: adjustTime(voteStart.getTime(), createdAt.getTime()),
       isVotingStarted: currentDate.getTime() > voteStart.getTime(),
       isVotingEnded: currentDate.getTime() > voteEnd.getTime(),
       votingStartsIn:
         currentDate.getTime() < voteStart.getTime()
-          ? Math.round(voteStart.getTime() - currentDate.getTime()) / 1e3
+          ? adjustTime(voteStart.getTime(), currentDate.getTime())
           : -1,
       votingEndsIn:
         currentDate.getTime() < voteEnd.getTime()
-          ? Math.round(voteEnd.getTime() - currentDate.getTime()) / 1e3
+          ? adjustTime(voteEnd.getTime(), currentDate.getTime())
           : -1,
     };
     console.log(message);

@@ -169,6 +169,7 @@ describe("Governor Tests", function () {
     expect(proposalId).not.equals("0");
 
     expect(coreInformation.creator).equals(creator);
+    expect(coreInformation.createdAt).greaterThan(0);
     expect(coreInformation.voteStart).greaterThan(0);
     expect(coreInformation.voteEnd).greaterThan(0);
     expect(coreInformation.blockedAmountOrId).equals(
