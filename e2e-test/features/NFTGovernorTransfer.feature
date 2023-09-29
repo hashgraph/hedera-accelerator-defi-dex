@@ -1,5 +1,5 @@
 @TestSuite-8
-Feature: FT and NFT Governor e2e test For assets transfer 
+Feature: NFT Governor e2e test For assets transfer 
 
     #  HederaGovernor
     #  AssetsHolder
@@ -21,7 +21,7 @@ Feature: FT and NFT Governor e2e test For assets transfer
 
 Scenario: NFTGovernor flow
     Given User creates the Governor for token-id "0.0.2726474"
-    When User initialized the contracts
+    When User initializes the contracts
     Then User verify the initialization
     When User setup "2" tokens allowance for Locking
     When User lock "2" tokens in token holder for voting

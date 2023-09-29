@@ -8,12 +8,11 @@ import MultiSigDAOFactory, {
 } from "../../e2e-test/business/factories/MultiSigDAOFactory";
 
 import { expect } from "chai";
-import { CommonSteps } from "./CommonSteps";
-import { AccountId, TokenId } from "@hashgraph/sdk";
 import { clientsInfo } from "../../utils/ClientManagement";
+import { AddressHelper } from "../../utils/AddressHelper";
+import { AccountId, TokenId } from "@hashgraph/sdk";
 import { main as deployContract } from "../../deployment/scripts/logic";
 import { binding, given, then, when } from "cucumber-tsflow";
-import { AddressHelper } from "../../utils/AddressHelper";
 
 const PRECISION = 1e8;
 const TOKEN_ID = dex.TOKEN_LAB49_1_ID;

@@ -9,8 +9,8 @@ Feature: DAOFactory e2e test
     #  FTDAO
 
 Scenario: Verify user initialize DAOFactory contract based on FT Token
-        Given User creates the DAOFactory for token-id "0.0.2726163"
-        When User get initialized the contracts
+        When User creates the DAOFactory for token-id "0.0.2726163"
+        Then User gets initialized contracts
 
 Scenario: Verify user can't create DAO with empty name
         When User create a DAO with name ""

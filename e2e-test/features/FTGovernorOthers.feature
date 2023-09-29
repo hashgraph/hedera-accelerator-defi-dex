@@ -1,5 +1,5 @@
 @TestSuite-5
-Feature: Fungible Token Governor e2e test
+Feature: FT Governor e2e test
 
     #  HederaGovernor
     #  AssetsHolder
@@ -18,7 +18,7 @@ Feature: Fungible Token Governor e2e test
 
 Scenario: FTGovernor flow
     Given User creates the Governor for token-id "0.0.2726163"
-    When User initialized the contracts
+    When User initializes the contracts
     Then User verify the initialization
     When User setup "20e8" tokens allowance for Locking
     When User lock "20e8" tokens in token holder for voting

@@ -24,7 +24,7 @@ let godTokenInfo: TokenInfo;
 
 @binding()
 export class DAOFactoryTest extends CommonSteps {
-  @given(/User creates the DAOFactory for token-id "([^"]*)"/, undefined, 60000)
+  @when(/User creates the DAOFactory for token-id "([^"]*)"/, undefined, 60000)
   public async setup(godTokenId: string) {
     console.log("---:Running DAOFactory:---");
     console.log("----------------------------------", "\n");
@@ -33,7 +33,7 @@ export class DAOFactoryTest extends CommonSteps {
     await this.deployRequiredContracts();
   }
 
-  @given(/User get initialized the contracts/, undefined, 300000)
+  @then(/User gets initialized contracts/, undefined, 300000)
   public async initContracts(): Promise<void> {
     await this._initContracts();
   }
