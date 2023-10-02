@@ -16,10 +16,6 @@ export default class ContractMetadata {
     "Factory",
     "LPToken",
     "Pair",
-    "GovernorUpgrade",
-    "GovernorTransferToken",
-    "GovernorTextProposal",
-    "GovernorTokenCreate",
     "Splitter",
     "Configuration",
     "FTDAOFactory",
@@ -32,10 +28,6 @@ export default class ContractMetadata {
     "LPToken",
     "Pair",
     "HederaService",
-    "GovernorUpgrade",
-    "GovernorTransferToken",
-    "GovernorTextProposal",
-    "GovernorTokenCreate",
     "Splitter",
     "Vault",
     "Configuration",
@@ -50,6 +42,8 @@ export default class ContractMetadata {
     "NFTHolder",
     "HederaMultiSend",
     "SystemRoleBasedAccess",
+    "HederaGovernor",
+    "AssetsHolder",
   ];
 
   static SUPPORTED_PROXY_OPTIONS = ["create", "update"];

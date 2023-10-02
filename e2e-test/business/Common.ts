@@ -1,6 +1,10 @@
 import Base from "./Base";
 import dex from "../../deployment/model/dex";
+import Token from "./Token";
 
+import { BigNumber } from "bignumber.js";
+import { clientsInfo } from "../../utils/ClientManagement";
+import { AddressHelper } from "../../utils/AddressHelper";
 import {
   Client,
   TokenId,
@@ -20,10 +24,6 @@ import {
   AccountAllowanceApproveTransaction,
   Hbar,
 } from "@hashgraph/sdk";
-import { BigNumber } from "bignumber.js";
-import { clientsInfo } from "../../utils/ClientManagement";
-import { AddressHelper } from "../../utils/AddressHelper";
-import Token from "./Token";
 
 export default class Common extends Base {
   static baseUrl: string = "https://testnet.mirrornode.hedera.com/";
@@ -273,14 +273,19 @@ export default class Common extends Base {
       .setTokenId(tokenId)
       .execute(client);
     const isNFT = response.tokenType === TokenType.NonFungibleUnique;
+    const totalSupply = response.totalSupply.toNumber();
     console.log(
-      `- Common#getTokenInfo(): TokenId = ${tokenId}, name = ${response.name}, symbol = ${response.symbol}, totalSupply = ${response.totalSupply}, isNFT = ${isNFT}\n`,
+      `- Common#getTokenInfo(): TokenId = ${tokenId}, name = ${response.name}, symbol = ${response.symbol}, totalSupply = ${response.totalSupply}, isNFT = ${isNFT}, totalSupply = ${totalSupply}\n`,
     );
     return {
       name: response.name,
       symbol: response.symbol,
-      treasuryAccountId: response.treasuryAccountId?.toString(),
+      treasuryAccountId: response.treasuryAccountId!.toString(),
       isNFT,
+      id: response.tokenId.toString(),
+      address: response.tokenId.toSolidityAddress(),
+      decimals: response.decimals,
+      totalSupply,
     };
   };
 
@@ -376,10 +381,12 @@ export default class Common extends Base {
       const transactionStatus = receipt.status;
       console.log(
         `Common#associateTokensToAccount(): TokenIds = ${tokenIds},  accountId = ${accountId}, transaction status is: ${transactionStatus.toString()} \n`,
+        `- Common#associateTokensToAccount(): TokenIds = ${tokenIds},  accountId = ${accountId}, transaction status is: ${transactionStatus.toString()} \n`,
       );
     } catch (error: any) {
       console.log(
         `Common#associateTokensToAccount(): TokenIds = ${tokenIds},  accountId = ${accountId}, transaction status is: ${error.toString()} \n`,
+        `- Common#associateTokensToAccount(): TokenIds = ${tokenIds},  accountId = ${accountId}, transaction status is: ${error.toString()} \n`,
       );
     }
   };

@@ -8,10 +8,10 @@ import "./IHederaService.sol";
 contract TokenOperations {
     using Bits for uint256;
 
-    function _tokenType(
+    function _isNFTToken(
         IHederaService _hederaService,
         address _token
-    ) internal returns (int32) {
+    ) internal returns (bool) {
         (int64 code, int32 tokenType) = _hederaService.getTokenTypePublic(
             _token
         );
@@ -19,7 +19,7 @@ contract TokenOperations {
             code == HederaResponseCodes.SUCCESS,
             "TokenOperations: invalid token"
         );
-        return tokenType;
+        return tokenType == 1;
     }
 
     function _balanceOf(
@@ -48,16 +48,8 @@ contract TokenOperations {
         address _receiver,
         uint256 _amountOrId
     ) internal returns (int256 responseCode) {
-        bool sent;
-        if (_tokenType(_hederaService, _token) == 0) {
-            sent = isContractSendingTokens(_sender)
-                ? IERC20(_token).transfer(_receiver, _amountOrId)
-                : IERC20(_token).transferFrom(_sender, _receiver, _amountOrId);
-        } else {
-            IERC721(_token).transferFrom(_sender, _receiver, _amountOrId);
-            sent = (IERC721(_token).ownerOf(_amountOrId) == _receiver);
-        }
-        return sent ? HederaResponseCodes.SUCCESS : HederaResponseCodes.UNKNOWN;
+        bool isNFT = _isNFTToken(_hederaService, _token);
+        return _transferAssests(isNFT, _token, _sender, _receiver, _amountOrId);
     }
 
     function isContract(address _account) internal view returns (bool) {
@@ -187,6 +179,25 @@ contract TokenOperations {
         (responseCode, newTotalSupply) = success
             ? abi.decode(result, (int256, int64))
             : (int256(HederaResponseCodes.UNKNOWN), int64(0));
+    }
+
+    function _transferAssests(
+        bool isNFT,
+        address _token,
+        address _sender,
+        address _receiver,
+        uint256 _amountOrId
+    ) internal returns (int256 responseCode) {
+        bool sent;
+        if (!isNFT) {
+            sent = isContractSendingTokens(_sender)
+                ? IERC20(_token).transfer(_receiver, _amountOrId)
+                : IERC20(_token).transferFrom(_sender, _receiver, _amountOrId);
+        } else {
+            IERC721(_token).transferFrom(_sender, _receiver, _amountOrId);
+            sent = (IERC721(_token).ownerOf(_amountOrId) == _receiver);
+        }
+        return sent ? HederaResponseCodes.SUCCESS : HederaResponseCodes.UNKNOWN;
     }
 }
 

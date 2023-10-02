@@ -133,6 +133,34 @@ export class MirrorNodeService {
     return events;
   }
 
+  public async getTokenAllowanceSpenders(accountId: AccountId | string) {
+    let allowances: any[] = [];
+    let url = `${BASE_URL}/api/v1/accounts/${accountId.toString()}/allowances/tokens?limit=100&order=desc`;
+    while ((url = await this.readRecords(url, allowances, "allowances")));
+    allowances = allowances.filter((item: any) => item.amount_granted > 0);
+    this.isLogEnabled &&
+      console.log(
+        "- Tokens Records count:",
+        allowances.length,
+        accountId.toString(),
+      );
+    return allowances;
+  }
+
+  public async getCryptoAllowanceSpenders(accountId: AccountId | string) {
+    let allowances: any[] = [];
+    let url = `${BASE_URL}/api/v1/accounts/${accountId.toString()}/allowances/crypto?limit=100&order=desc`;
+    while ((url = await this.readRecords(url, allowances, "allowances")));
+    allowances = allowances.filter((item: any) => item.amount_granted > 0);
+    this.isLogEnabled &&
+      console.log(
+        "- HBars Records count:",
+        allowances.length,
+        accountId.toString(),
+      );
+    return allowances;
+  }
+
   public async decodeLog(logs: any[]) {
     this.isLogEnabled && console.log("- Events count:", logs.length);
     const eventsMap = new Map<string, any[]>();
