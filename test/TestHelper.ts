@@ -95,41 +95,25 @@ export class TestHelper {
   }
 
   static async deployGodHolder(hederaService: Contract, token: Contract) {
-    const instance = await this.deployLogic("GODHolder");
+    const instance = await this.deployLogic("GODHolderMock");
     await instance.initialize(hederaService.address, token.address);
     return instance;
   }
 
   static async deployNftGodHolder(hederaService: Contract, token: Contract) {
-    const instance = await this.deployLogic("NFTHolder");
+    const instance = await this.deployLogic("NFTHolderMock");
     await instance.initialize(hederaService.address, token.address);
     return instance;
   }
 
-  static async deployFTHolderFactory(
+  static async deployGodTokenHolderFactory(
     hederaService: Contract,
-    ftHolder: Contract,
-    adminAddress: string,
+    godHolder: Contract,
+    admin: string,
   ) {
-    return await this.deployProxy(
-      "GODTokenHolderFactory",
-      hederaService.address,
-      ftHolder.address,
-      adminAddress,
-    );
-  }
-
-  static async deployNFTHolderFactory(
-    hederaService: Contract,
-    nftHolder: Contract,
-    adminAddress: string,
-  ) {
-    return await this.deployProxy(
-      "NFTTokenHolderFactory",
-      hederaService.address,
-      nftHolder.address,
-      adminAddress,
-    );
+    const instance = await this.deployLogic("GODTokenHolderFactoryMock");
+    await instance.initialize(hederaService.address, godHolder.address, admin);
+    return instance;
   }
 
   static async systemUsersSigners() {

@@ -30,6 +30,11 @@ contract TokenHolderFactory is
         _;
     }
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     function initialize(
         IHederaService _hederaService,
         ITokenHolder _tokenHolderLogic,

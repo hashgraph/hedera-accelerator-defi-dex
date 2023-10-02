@@ -46,7 +46,7 @@ describe("NFTHolder Tests", function () {
     const mockNFTHolder = await MockNFTHolder.deploy();
 
     const NFTTokenHolderFactory = await ethers.getContractFactory(
-      "NFTTokenHolderFactory",
+      "NFTTokenHolderFactoryMock",
     );
     const nftTokenHolderFactory = await NFTTokenHolderFactory.deploy();
 
