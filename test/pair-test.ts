@@ -426,7 +426,7 @@ describe("LPToken, Pair and Factory tests", function () {
       ).to.be.revertedWith("Pair: Fee should be greater than zero.");
     });
 
-    describe.skip("Order of tokens matter while creating pair via Factory ", () => {
+    describe("Order of tokens matter while creating pair via Factory ", () => {
       const orderTokenAddresses = (
         token2Address: string,
         token1Address: string,
