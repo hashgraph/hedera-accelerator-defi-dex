@@ -45,6 +45,11 @@ contract MultisigDAOFactory is
 
     address[] private daos;
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     function initialize(
         ISystemRoleBasedAccess _iSystemRoleBasedAccess,
         address _daoLogic,

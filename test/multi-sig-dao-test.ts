@@ -229,9 +229,16 @@ describe("MultiSig tests", function () {
       systemRoleBasedAccess,
     ];
 
-    const multiSigDAOInstance = await TestHelper.deployLogic("MultiSigDAO");
-    const txn = await multiSigDAOInstance.initialize(...MULTISIG_ARGS);
-    const events = await TestHelper.readEvents(txn, ["DAOInfoUpdated"]);
+    const multiSigDAOInstance = await TestHelper.deployProxy(
+      "MultiSigDAO",
+      ...MULTISIG_ARGS,
+    );
+    const currentBlockNumber = await ethers.provider.getBlockNumber();
+    const events = await multiSigDAOInstance.queryFilter(
+      "DAOInfoUpdated",
+      0,
+      currentBlockNumber,
+    );
     expect(events.length).equals(1);
 
     const daoConfigData = {
@@ -240,10 +247,7 @@ describe("MultiSig tests", function () {
       daoFee: TestHelper.toPrecision(20),
     };
 
-    // factory setup
-    const multiSigDAOFactoryInstance =
-      await TestHelper.deployLogic("MultisigDAOFactory");
-    await multiSigDAOFactoryInstance.initialize(
+    const multiSigDaoFactoryArgs = [
       systemRoleBasedAccess,
       multiSigDAOLogicInstance.address,
       hederaGnosisSafeLogicInstance.address,
@@ -251,6 +255,12 @@ describe("MultiSig tests", function () {
       Object.values(daoConfigData),
       hederaService.address,
       multiSend.address,
+    ];
+
+    // factory setup
+    const multiSigDAOFactoryInstance = await TestHelper.deployProxy(
+      "MultisigDAOFactory",
+      ...multiSigDaoFactoryArgs,
     );
 
     // token association to gnosis contract not possible in unit test as of now
@@ -535,10 +545,7 @@ describe("MultiSig tests", function () {
         daoFee: TestHelper.toPrecision(20),
       };
 
-      const multiSigDAOFactoryInstance =
-        await TestHelper.deployLogic("MultisigDAOFactory");
-
-      await multiSigDAOFactoryInstance.initialize(
+      const args = [
         systemRoleBasedAccess,
         multiSigDAOLogicInstance.address,
         hederaGnosisSafeLogicInstance.address,
@@ -546,6 +553,10 @@ describe("MultiSig tests", function () {
         Object.values(daoConfigData),
         hederaService.address,
         multiSend.address,
+      ];
+      const multiSigDAOFactoryInstance = await TestHelper.deployProxy(
+        "MultisigDAOFactory",
+        ...args,
       );
 
       const ARGS = [
@@ -668,10 +679,7 @@ describe("MultiSig tests", function () {
         daoFee: TestHelper.toPrecision(20),
       };
 
-      const multiSigDAOFactoryInstance =
-        await TestHelper.deployLogic("MultisigDAOFactory");
-
-      const transaction = await multiSigDAOFactoryInstance.initialize(
+      const args = [
         systemRoleBasedAccess,
         multiSigDAOLogicInstance.address,
         hederaGnosisSafeLogicInstance.address,
@@ -679,8 +687,23 @@ describe("MultiSig tests", function () {
         Object.values(daoConfigData),
         hederaService.address,
         multiSend.address,
+      ];
+
+      const multiSigDAOFactoryInstance = await TestHelper.deployProxy(
+        "MultisigDAOFactory",
+        ...args,
       );
-      await verifyDAOConfigChangeEvent(transaction, daoConfigData);
+
+      const daoConfigEventLog = await multiSigDAOFactoryInstance.queryFilter(
+        "DAOConfig",
+        0,
+        1000,
+      );
+      const newDAOConfig = daoConfigEventLog.pop()?.args?.daoConfig;
+
+      expect(newDAOConfig.daoTreasurer).equals(daoConfigData.daoTreasurer);
+      expect(newDAOConfig.tokenAddress).equals(daoConfigData.tokenAddress);
+      expect(newDAOConfig.daoFee).equals(daoConfigData.daoFee);
     });
 
     it("Verify createDAO should not add new dao into list when the dao is private", async function () {
