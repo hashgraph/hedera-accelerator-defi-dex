@@ -47,7 +47,6 @@ describe("Vault Tests", function () {
       systemRoleBasedAccess.address,
     ];
     const vaultContract = await TestHelper.deployProxy("Vault", ...ARGS);
-    const nonInitVaultContract = await TestHelper.deployLogic("Vault");
 
     return {
       ARGS,
@@ -57,7 +56,6 @@ describe("Vault Tests", function () {
       stakingTokenContract,
       reward1TokenContract,
       reward2TokenContract,
-      nonInitVaultContract,
       rewardsContract,
       owner,
       systemRoleBasedAccess,
@@ -130,31 +128,33 @@ describe("Vault Tests", function () {
 
   describe("Common tests", function () {
     it("Verify contract initialization should be reverted when staking token address is zero", async function () {
-      const { nonInitVaultContract, hederaService, systemRoleBasedAccess } =
+      const { hederaService, systemRoleBasedAccess } =
         await loadFixture(deployFixture);
       await expect(
-        nonInitVaultContract.initialize(
-          hederaService.address,
-          TestHelper.ZERO_ADDRESS,
-          LOCKING_PERIOD,
-          systemRoleBasedAccess.address,
+        TestHelper.deployProxy(
+          "Vault",
+          ...[
+            hederaService.address,
+            TestHelper.ZERO_ADDRESS,
+            LOCKING_PERIOD,
+            systemRoleBasedAccess.address,
+          ],
         ),
       ).revertedWith("Vault: staking token should not be zero");
     });
 
     it("Verify contract initialization should be reverted when locking period is zero", async function () {
-      const {
-        nonInitVaultContract,
-        hederaService,
-        stakingTokenContract,
-        systemRoleBasedAccess,
-      } = await loadFixture(deployFixture);
+      const { hederaService, stakingTokenContract, systemRoleBasedAccess } =
+        await loadFixture(deployFixture);
       await expect(
-        nonInitVaultContract.initialize(
-          hederaService.address,
-          stakingTokenContract.address,
-          0,
-          systemRoleBasedAccess.address,
+        TestHelper.deployProxy(
+          "Vault",
+          ...[
+            hederaService.address,
+            stakingTokenContract.address,
+            0,
+            systemRoleBasedAccess.address,
+          ],
         ),
       ).revertedWith("Vault: locking period should be a positive number");
     });

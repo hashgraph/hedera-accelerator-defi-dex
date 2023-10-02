@@ -182,4 +182,8 @@ export class TestHelper {
     await contractInstance.deployed();
     return contractInstance;
   }
+
+  static getCurrentBlockNumber = async () => {
+    return await ethers.provider.getBlockNumber();
+  };
 }
