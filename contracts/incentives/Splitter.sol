@@ -14,6 +14,11 @@ contract Splitter is ISplitter, OwnableUpgradeable {
     IVault[] private vaults;
     mapping(IVault => uint256) private vaultMultipliers;
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     function initialize(
         IVault[] memory _vaults,
         uint256[] memory _multipliers
