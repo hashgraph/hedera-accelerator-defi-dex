@@ -130,8 +130,18 @@ describe("LPToken, Pair and Factory tests", function () {
     await tokenCont.setUserBalance(signers[0].address, precision.mul(1000));
     await tokenCont1.setUserBalance(signers[0].address, precision.mul(1000));
 
-    const Factory = await ethers.getContractFactory("Factory");
-    const factory = await Factory.deploy();
+    const factoryArguments = [
+      mockHederaService.address,
+      signers[0].address,
+      pair.address,
+      lpTokenCont.address,
+      configuration.address,
+    ];
+
+    const factory = await TestHelper.deployProxy(
+      "Factory",
+      ...factoryArguments,
+    );
 
     return {
       pair,
@@ -328,24 +338,8 @@ describe("LPToken, Pair and Factory tests", function () {
 
   describe("Factory Contract positive Tests", async () => {
     it("Check createPair method, Same Tokens and same fees", async function () {
-      const {
-        factory,
-        mockHederaService,
-        signers,
-        token1Address,
-        token2Address,
-        configuration,
-        pair,
-        lpTokenCont,
-      } = await loadFixture(deployFixture);
-      // Given
-      await factory.setUpFactory(
-        mockHederaService.address,
-        signers[0].address,
-        pair.address,
-        lpTokenCont.address,
-        configuration.address,
-      );
+      const { factory, token1Address, token2Address } =
+        await loadFixture(deployFixture);
 
       // When
       // we call createPair with same token pair and fees multiple time,
@@ -365,24 +359,8 @@ describe("LPToken, Pair and Factory tests", function () {
     });
 
     it("Check createPair method, Same Tokens and different fees", async function () {
-      const {
-        factory,
-        mockHederaService,
-        signers,
-        token1Address,
-        token2Address,
-        configuration,
-        pair,
-        lpTokenCont,
-      } = await loadFixture(deployFixture);
-      // Given
-      await factory.setUpFactory(
-        mockHederaService.address,
-        signers[0].address,
-        pair.address,
-        lpTokenCont.address,
-        configuration.address,
-      );
+      const { factory, token1Address, token2Address } =
+        await loadFixture(deployFixture);
 
       // When
       // we call createPair with same token pair and different fees multiple time,
@@ -401,24 +379,8 @@ describe("LPToken, Pair and Factory tests", function () {
     });
 
     it("When user try to createPair with zero fee then pair creation should fail", async function () {
-      const {
-        factory,
-        mockHederaService,
-        signers,
-        token1Address,
-        token2Address,
-        configuration,
-        pair,
-        lpTokenCont,
-      } = await loadFixture(deployFixture);
-      // Given
-      await factory.setUpFactory(
-        mockHederaService.address,
-        signers[0].address,
-        pair.address,
-        lpTokenCont.address,
-        configuration.address,
-      );
+      const { factory, token1Address, token2Address } =
+        await loadFixture(deployFixture);
 
       const zeroFee = 0;
       await expect(
@@ -446,24 +408,9 @@ describe("LPToken, Pair and Factory tests", function () {
             };
       };
       it("Given token2 address is greater than token1 address when user try to createPair then created pair's first token should be token1", async function () {
-        const {
-          factory,
-          mockHederaService,
-          signers,
-          token1Address,
-          token2Address,
-          configuration,
-          pair,
-          lpTokenCont,
-        } = await loadFixture(deployFixture);
+        const { factory, signers, token1Address, token2Address } =
+          await loadFixture(deployFixture);
         // Given
-        await factory.setUpFactory(
-          mockHederaService.address,
-          signers[0].address,
-          pair.address,
-          lpTokenCont.address,
-          configuration.address,
-        );
 
         const { localToken1Address, localToken2Address } = orderTokenAddresses(
           token1Address,
@@ -493,25 +440,9 @@ describe("LPToken, Pair and Factory tests", function () {
       });
 
       it("Given token2 address is greater than token1 address when user try to createPair then created pair's first token should be token1", async function () {
-        const {
-          factory,
-          mockHederaService,
-          signers,
-          token1Address,
-          token2Address,
-          configuration,
-          pair,
-          lpTokenCont,
-        } = await loadFixture(deployFixture);
+        const { factory, signers, token1Address, token2Address } =
+          await loadFixture(deployFixture);
         // Given
-        await factory.setUpFactory(
-          mockHederaService.address,
-          signers[0].address,
-          pair.address,
-          lpTokenCont.address,
-          configuration.address,
-        );
-
         const { localToken1Address, localToken2Address } = orderTokenAddresses(
           token1Address,
           token2Address,
@@ -540,24 +471,8 @@ describe("LPToken, Pair and Factory tests", function () {
       });
 
       it("Given token2 address is greater than token1 address when user try to createPair then created pair's first token should be token1 and when add liquidity happens then pair automatically adjust the passed token addresses", async function () {
-        const {
-          factory,
-          mockHederaService,
-          signers,
-          token1Address,
-          token2Address,
-          configuration,
-          pair,
-          lpTokenCont,
-        } = await loadFixture(deployFixture);
-        // Given
-        await factory.setUpFactory(
-          mockHederaService.address,
-          signers[0].address,
-          pair.address,
-          lpTokenCont.address,
-          configuration.address,
-        );
+        const { factory, signers, token1Address, token2Address } =
+          await loadFixture(deployFixture);
 
         const { localToken1Address, tokenAQty, localToken2Address, tokenBQty } =
           orderTokenAddresses(token1Address, token2Address);
@@ -601,25 +516,8 @@ describe("LPToken, Pair and Factory tests", function () {
       });
 
       it("Given token2 address is greater than token1 address when user try to createPair then created pair's first token should be token1 and when add liquidity(with reverse token order) happens then pair automatically adjust the passed token addresses", async function () {
-        const {
-          factory,
-          mockHederaService,
-          signers,
-          token1Address,
-          token2Address,
-          configuration,
-          pair,
-          lpTokenCont,
-        } = await loadFixture(deployFixture);
-        // Given
-        await factory.setUpFactory(
-          mockHederaService.address,
-          signers[0].address,
-          pair.address,
-          lpTokenCont.address,
-          configuration.address,
-        );
-
+        const { factory, signers, token1Address, token2Address } =
+          await loadFixture(deployFixture);
         const { localToken1Address, tokenAQty, localToken2Address, tokenBQty } =
           orderTokenAddresses(token1Address, token2Address);
 
@@ -664,24 +562,8 @@ describe("LPToken, Pair and Factory tests", function () {
 
     describe("Recommended pool for swap tests ", () => {
       it("Given no pool of pair exists when user asks for swap recommendation then no pair should be returned ", async function () {
-        const {
-          factory,
-          mockHederaService,
-          signers,
-          token1Address,
-          token2Address,
-          configuration,
-          pair,
-          lpTokenCont,
-        } = await loadFixture(deployFixture);
-
-        await factory.setUpFactory(
-          mockHederaService.address,
-          signers[0].address,
-          pair.address,
-          lpTokenCont.address,
-          configuration.address,
-        );
+        const { factory, token1Address, token2Address } =
+          await loadFixture(deployFixture);
 
         const tokenSwapResult = await factory.recommendedPairToSwap(
           token1Address,
@@ -695,22 +577,13 @@ describe("LPToken, Pair and Factory tests", function () {
 
       it("Given one pool of pair exists when user asks for swap recommendation for tokenA swap then that should be returned ", async function () {
         const {
-          pair,
           factory,
-          mockHederaService,
+          pair,
           signers,
           token1Address,
           token2Address,
           configuration,
-          lpTokenCont,
         } = await loadFixture(deployFixture);
-        await factory.setUpFactory(
-          mockHederaService.address,
-          signers[0].address,
-          pair.address,
-          lpTokenCont.address,
-          configuration.address,
-        );
 
         const initialFees = Helper.convertToFeeObjectArray(
           await configuration.getTransactionsFee(),
@@ -759,23 +632,13 @@ describe("LPToken, Pair and Factory tests", function () {
 
       it("Given one pool of pair exists when user asks for swap recommendation for tokenB swap then that should be returned ", async function () {
         const {
-          pair,
           factory,
-          mockHederaService,
+          pair,
           signers,
           token1Address,
           token2Address,
           configuration,
-          lpTokenCont,
         } = await loadFixture(deployFixture);
-        await factory.setUpFactory(
-          mockHederaService.address,
-          signers[0].address,
-          pair.address,
-          lpTokenCont.address,
-          configuration.address,
-        );
-
         const initialFees = Helper.convertToFeeObjectArray(
           await configuration.getTransactionsFee(),
         );
@@ -823,22 +686,13 @@ describe("LPToken, Pair and Factory tests", function () {
 
       it("Given multiple pools(with low fee pool first) of a exist when user asks for recommendation for swap then pool that gives maximum quantity should be returned. ", async function () {
         const {
-          pair,
           factory,
-          mockHederaService,
+          pair,
           signers,
           token1Address,
           token2Address,
           configuration,
-          lpTokenCont,
         } = await loadFixture(deployFixture);
-        await factory.setUpFactory(
-          mockHederaService.address,
-          signers[0].address,
-          pair.address,
-          lpTokenCont.address,
-          configuration.address,
-        );
 
         const initialFees = Helper.convertToFeeObjectArray(
           await configuration.getTransactionsFee(),
@@ -909,22 +763,13 @@ describe("LPToken, Pair and Factory tests", function () {
 
       it("Given multiple pools(with high fee pool first) of a exist when user asks for recommendation for swap then pool that gives maximum quantity should be returned. ", async function () {
         const {
-          pair,
           factory,
-          mockHederaService,
+          pair,
           signers,
           token1Address,
           token2Address,
           configuration,
-          lpTokenCont,
         } = await loadFixture(deployFixture);
-        await factory.setUpFactory(
-          mockHederaService.address,
-          signers[0].address,
-          pair.address,
-          lpTokenCont.address,
-          configuration.address,
-        );
 
         const initialFees = Helper.convertToFeeObjectArray(
           await configuration.getTransactionsFee(),
@@ -995,22 +840,13 @@ describe("LPToken, Pair and Factory tests", function () {
 
       it("Given multiple pools exist when user ask for recommendation for swap(other token) then pool that gives maximum quantity should be returned. ", async function () {
         const {
-          pair,
           factory,
-          mockHederaService,
+          pair,
           signers,
           token1Address,
           token2Address,
           configuration,
-          lpTokenCont,
         } = await loadFixture(deployFixture);
-        await factory.setUpFactory(
-          mockHederaService.address,
-          signers[0].address,
-          pair.address,
-          lpTokenCont.address,
-          configuration.address,
-        );
 
         const initialFees = Helper.convertToFeeObjectArray(
           await configuration.getTransactionsFee(),
@@ -1113,43 +949,23 @@ describe("LPToken, Pair and Factory tests", function () {
         pair,
         lpTokenCont,
       } = await loadFixture(deployFixture);
-      await factory.setUpFactory(
+      const factoryArguments = [
         mockHederaService.address,
         signers[0].address,
         pair.address,
         lpTokenCont.address,
         configuration.address,
+      ];
+
+      await expect(factory.setUpFactory(...factoryArguments)).to.revertedWith(
+        "Initializable: contract is already initialized",
       );
-      await expect(
-        factory.setUpFactory(
-          mockHederaService.address,
-          signers[0].address,
-          pair.address,
-          lpTokenCont.address,
-          configuration.address,
-        ),
-      ).to.revertedWith("Initializable: contract is already initialized");
     });
 
     it("Check getPairs method", async function () {
-      const {
-        factory,
-        mockHederaService,
-        signers,
-        token1Address,
-        token2Address,
-        token3Address,
-        configuration,
-        pair,
-        lpTokenCont,
-      } = await loadFixture(deployFixture);
-      await factory.setUpFactory(
-        mockHederaService.address,
-        signers[0].address,
-        pair.address,
-        lpTokenCont.address,
-        configuration.address,
-      );
+      const { factory, token1Address, token2Address, token3Address } =
+        await loadFixture(deployFixture);
+
       await factory.createPair(token1Address, token2Address, treasury, fee);
       const pairs = await factory.getPairs();
       expect(pairs.length).to.be.equals(1);
@@ -1159,65 +975,24 @@ describe("LPToken, Pair and Factory tests", function () {
     });
 
     it("Check For identical Tokens", async function () {
-      const {
-        factory,
-        mockHederaService,
-        signers,
-        configuration,
-        pair,
-        lpTokenCont,
-      } = await loadFixture(deployFixture);
-      await factory.setUpFactory(
-        mockHederaService.address,
-        signers[0].address,
-        pair.address,
-        lpTokenCont.address,
-        configuration.address,
-      );
+      const { factory } = await loadFixture(deployFixture);
       await expect(
         factory.createPair(tokenAAddress, tokenAAddress, treasury, fee),
       ).to.revertedWith("IDENTICAL_ADDRESSES");
     });
 
     it("Check For zero Token address", async function () {
-      const {
-        factory,
-        mockHederaService,
-        signers,
-        configuration,
-        pair,
-        lpTokenCont,
-      } = await loadFixture(deployFixture);
-      await factory.setUpFactory(
-        mockHederaService.address,
-        signers[0].address,
-        pair.address,
-        lpTokenCont.address,
-        configuration.address,
-      );
+      const { factory } = await loadFixture(deployFixture);
+
       await expect(
         factory.createPair(newZeroAddress, tokenAAddress, treasury, fee),
       ).to.revertedWith("ZERO_ADDRESS");
     });
 
     it("Check getPair method", async function () {
-      const {
-        factory,
-        mockHederaService,
-        signers,
-        token1Address,
-        token2Address,
-        configuration,
-        pair,
-        lpTokenCont,
-      } = await loadFixture(deployFixture);
-      await factory.setUpFactory(
-        mockHederaService.address,
-        signers[0].address,
-        pair.address,
-        lpTokenCont.address,
-        configuration.address,
-      );
+      const { factory, token1Address, token2Address } =
+        await loadFixture(deployFixture);
+
       await factory.createPair(token1Address, token2Address, treasury, fee);
       const pairFromFactory = await factory.getPair(
         token1Address,
@@ -1234,18 +1009,7 @@ describe("LPToken, Pair and Factory tests", function () {
         signers,
         token1Address,
         token2Address,
-        configuration,
-        pair,
-        lpTokenCont,
       } = await loadFixture(deployFixture);
-
-      await factory.setUpFactory(
-        mockHederaService.address,
-        signers[0].address,
-        pair.address,
-        lpTokenCont.address,
-        configuration.address,
-      );
 
       await factory.createPair(token1Address, token2Address, treasury, fee);
 
@@ -1299,24 +1063,8 @@ describe("LPToken, Pair and Factory tests", function () {
     });
 
     it("Verify Hedera upgrade service fails when non-owner tries", async () => {
-      const {
-        factory,
-        mockHederaService,
-        signers,
-        token1Address,
-        token2Address,
-        configuration,
-        pair,
-        lpTokenCont,
-      } = await loadFixture(deployFixture);
-
-      await factory.setUpFactory(
-        mockHederaService.address,
-        signers[0].address,
-        pair.address,
-        lpTokenCont.address,
-        configuration.address,
-      );
+      const { factory, signers, token1Address, token2Address } =
+        await loadFixture(deployFixture);
 
       await factory.createPair(token1Address, token2Address, treasury, fee);
 

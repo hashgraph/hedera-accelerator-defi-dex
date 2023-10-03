@@ -176,9 +176,10 @@ export class TestHelper {
     args: Array<any>,
   ) {
     const Contract = await ethers.getContractFactory(name);
+    const options = name === "Factory" ? { initializer: "setUpFactory" } : {};
     const contractInstance = !isProxy
       ? await Contract.deploy(...args)
-      : await upgrades.deployProxy(Contract, args);
+      : await upgrades.deployProxy(Contract, args, options);
     await contractInstance.deployed();
     return contractInstance;
   }
