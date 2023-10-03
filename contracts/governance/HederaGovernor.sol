@@ -80,6 +80,11 @@ contract HederaGovernor is
     // must be last in order
     uint256[49] private __gap;
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     function initialize(
         GovernorConfig memory _config,
         ITokenHolder _iTokenHolder,

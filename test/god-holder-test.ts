@@ -31,7 +31,7 @@ describe("GODHolder tests", function () {
       TestHelper.toPrecision(1),
     );
 
-    const godHolderFactory = await TestHelper.deployFTHolderFactory(
+    const godHolderFactory = await TestHelper.deployGodTokenHolderFactory(
       hederaService,
       godHolder,
       admin,
