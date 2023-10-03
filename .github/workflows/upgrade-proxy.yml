@@ -31,8 +31,8 @@ jobs:
         with:
           node-version: "18.15.0"
       - run: npm ci
-      - name: Run code coverage
-        run: npx hardhat coverage
+      - name: Run code test
+        run: npx hardhat test
       - name: Deploy if contract changed
         run: npx hardhat run deployment/checkAndDeploy.ts
       - name: Reformat code before auto commit

@@ -22,6 +22,11 @@ abstract contract BaseDAO is IErrors, RoleBasedAccess {
 
     uint256[45] __baseDaoGap; //For future use
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     function __BaseDAO_init(
         address _admin,
         string memory _name,

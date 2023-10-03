@@ -42,6 +42,11 @@ abstract contract TokenHolder is
      */
     uint256[50] private __gap;
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     function initialize(
         IHederaService _hederaService,
         address token

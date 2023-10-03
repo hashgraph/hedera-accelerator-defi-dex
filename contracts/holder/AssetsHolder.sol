@@ -26,6 +26,11 @@ contract AssetsHolder is
 
     uint256[49] private __gap;
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     receive() external payable {}
 
     function initialize(

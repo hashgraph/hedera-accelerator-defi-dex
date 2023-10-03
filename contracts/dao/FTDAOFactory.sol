@@ -48,6 +48,11 @@ contract FTDAOFactory is
     ITokenHolderFactory private tokenHolderFactory;
     ISystemRoleBasedAccess private iSystemRoleBasedAccess;
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     function initialize(
         address _daoLogic,
         address _governorLogic,

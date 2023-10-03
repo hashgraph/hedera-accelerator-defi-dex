@@ -20,6 +20,10 @@ export class TestHelper {
     TestHelper.NFT_FOR_PROPOSAL_CREATION2,
   ];
 
+  static getCurrentBlockNumber = async () => {
+    return await ethers.provider.getBlockNumber();
+  };
+
   static nonZeroAddress(address: any): boolean {
     return address !== TestHelper.ZERO_ADDRESS;
   }
@@ -94,44 +98,6 @@ export class TestHelper {
     return (await ethers.getSigners()).slice(4, 6)!;
   }
 
-  static async deployGodHolder(hederaService: Contract, token: Contract) {
-    const instance = await this.deployLogic("GODHolder");
-    await instance.initialize(hederaService.address, token.address);
-    return instance;
-  }
-
-  static async deployNftGodHolder(hederaService: Contract, token: Contract) {
-    const instance = await this.deployLogic("NFTHolder");
-    await instance.initialize(hederaService.address, token.address);
-    return instance;
-  }
-
-  static async deployFTHolderFactory(
-    hederaService: Contract,
-    ftHolder: Contract,
-    adminAddress: string,
-  ) {
-    return await this.deployProxy(
-      "GODTokenHolderFactory",
-      hederaService.address,
-      ftHolder.address,
-      adminAddress,
-    );
-  }
-
-  static async deployNFTHolderFactory(
-    hederaService: Contract,
-    nftHolder: Contract,
-    adminAddress: string,
-  ) {
-    return await this.deployProxy(
-      "NFTTokenHolderFactory",
-      hederaService.address,
-      nftHolder.address,
-      adminAddress,
-    );
-  }
-
   static async systemUsersSigners() {
     const signers = await TestHelper.getSigners();
     return {
@@ -148,6 +114,52 @@ export class TestHelper {
 
   static regularExpressionForMissingRole() {
     return /AccessControl: account .* is missing role .*/;
+  }
+
+  static async deployGodHolder(hederaService: Contract, token: Contract) {
+    const instance = await this.deployLogic("GODHolderMock");
+    await instance.initialize(hederaService.address, token.address);
+    return instance;
+  }
+
+  static async deployNftGodHolder(hederaService: Contract, token: Contract) {
+    const instance = await this.deployLogic("NFTHolderMock");
+    await instance.initialize(hederaService.address, token.address);
+    return instance;
+  }
+
+  static async deployGodTokenHolderFactory(
+    hederaService: Contract,
+    ftTokenHolder: Contract,
+    proxyAdmin: string,
+  ) {
+    return await this.deployProxy(
+      "GODTokenHolderFactoryMock",
+      hederaService.address,
+      ftTokenHolder.address,
+      proxyAdmin,
+    );
+  }
+
+  static async deployNFTTokenHolderFactory(
+    hederaService: Contract,
+    nftTokenHolder: Contract,
+    proxyAdmin: string,
+  ) {
+    return await this.deployProxy(
+      "NFTTokenHolderFactoryMock",
+      hederaService.address,
+      nftTokenHolder.address,
+      proxyAdmin,
+    );
+  }
+
+  static async deployFTDAOFactory(args: any[]) {
+    return this.deployProxy("FTDAOFactory", ...args);
+  }
+
+  static async deployNFTDAOFactory(args: any[]) {
+    return this.deployProxy("NFTDAOFactory", ...args);
   }
 
   static async deploySystemRoleBasedAccess() {
@@ -180,17 +192,18 @@ export class TestHelper {
   }
 
   static async deployAssetsHolder() {
-    return await this.deployLogic("AssetsHolder");
+    return await this.deployLogic("AssetsHolderMock");
   }
 
   static async deployMockHederaService(tokenTesting: boolean = true) {
     return await this.deployLogic("MockHederaService", tokenTesting);
   }
 
-  static async deployGovernor(args: any = undefined) {
-    const governor = await TestHelper.deployLogic("HederaGovernor");
-    Array.isArray(args) && (await governor.initialize(...args));
-    return governor;
+  static async deployGovernor(args: any[] = []) {
+    if (args.length > 0) {
+      return this.deployProxy("HederaGovernor", ...args);
+    }
+    return this.deployLogic("HederaGovernor");
   }
 
   static async getDeployGovernorAt(address: string) {
@@ -222,8 +235,4 @@ export class TestHelper {
     await contractInstance.deployed();
     return contractInstance;
   }
-
-  static getCurrentBlockNumber = async () => {
-    return await ethers.provider.getBlockNumber();
-  };
 }

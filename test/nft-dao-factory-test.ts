@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { BigNumber } from "ethers";
+import { BigNumber, Contract } from "ethers";
 import { TestHelper } from "./TestHelper";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
@@ -56,13 +56,12 @@ describe("NFT-Governance-DAO tests", function () {
     expect(daoInfo.webLinks.join(",")).equals(webLinks.join(","));
   }
 
-  async function verifyDAOConfigChangeEvent(txn: any, daoConfig: any) {
-    const { event: name, args } = (
-      await TestHelper.readEvents(txn, ["DAOConfig"])
-    ).pop();
-    const newDAOConfig = args.daoConfig;
-
-    expect(name).equal("DAOConfig");
+  async function verifyDAOConfigChangeEvent(
+    contract: Contract,
+    daoConfig: any,
+  ) {
+    const { args } = (await contract.queryFilter("DAOConfig")).pop()!;
+    const newDAOConfig = args!.daoConfig;
     expect(newDAOConfig.daoTreasurer).equals(daoConfig.daoTreasurer);
     expect(newDAOConfig.tokenAddress).equals(daoConfig.tokenAddress);
     expect(newDAOConfig.daoFee).equals(daoConfig.daoFee);
@@ -97,7 +96,7 @@ describe("NFT-Governance-DAO tests", function () {
       webLinks: WEB_LINKS,
     };
 
-    const godHolderFactory = await TestHelper.deployFTHolderFactory(
+    const godHolderFactory = await TestHelper.deployNFTTokenHolderFactory(
       hederaService,
       godHolder,
       dexOwner.address,
@@ -124,11 +123,12 @@ describe("NFT-Governance-DAO tests", function () {
       _iSystemRoleBasedAccess: roleBasedAccess.address,
     };
 
-    const factory = await TestHelper.deployLogic("FTDAOFactory");
-    const txn = await factory.initialize(...Object.values(INIT_ARGS));
-    await verifyDAOConfigChangeEvent(txn, DEFAULT_DAO_CONFIG_DATA);
+    const factory = await TestHelper.deployNFTDAOFactory(
+      Object.values(INIT_ARGS),
+    );
+    await verifyDAOConfigChangeEvent(factory, DEFAULT_DAO_CONFIG_DATA);
 
-    const events = await TestHelper.readEvents(txn, ["LogicUpdated"]);
+    const events = await factory.queryFilter("LogicUpdated");
     expect(events.length).equals(6);
 
     return {
@@ -452,8 +452,9 @@ describe("NFT-Governance-DAO tests", function () {
         _daoConfigDetails: Object.values(CONFIG_DATA_HBAR_AS_FEE),
       };
 
-      const factory = await TestHelper.deployLogic("FTDAOFactory");
-      await factory.initialize(...Object.values(INIT_ARGS_FOR_HBAR_AS_FEE));
+      const factory = await TestHelper.deployNFTDAOFactory(
+        Object.values(INIT_ARGS_FOR_HBAR_AS_FEE),
+      );
 
       await expect(
         factory.createDAO(inputs, {
@@ -502,7 +503,7 @@ describe("NFT-Governance-DAO tests", function () {
         tokenAddress: TestHelper.ONE_ADDRESS,
         daoFee: 2,
       };
-      const txn = await factory
+      await factory
         .connect(daoTreasure)
         .changeDAOConfig(
           NEW_DAO_CONFIG_DATA.daoTreasurer,
@@ -510,7 +511,7 @@ describe("NFT-Governance-DAO tests", function () {
           NEW_DAO_CONFIG_DATA.daoFee,
         );
 
-      await verifyDAOConfigChangeEvent(txn, NEW_DAO_CONFIG_DATA);
+      await verifyDAOConfigChangeEvent(factory, NEW_DAO_CONFIG_DATA);
     });
 
     it("Verify Change DAO Configuration should be reverted for invalid inputs", async function () {
