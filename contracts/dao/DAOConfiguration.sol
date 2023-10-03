@@ -1,11 +1,11 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.18;
 
-import "./ISharedDAOModel.sol";
+import "../common/ISharedModel.sol";
 import "../common/TokenOperations.sol";
 import "../common/IHederaService.sol";
 
-contract DAOConfiguration is ISharedDAOModel, TokenOperations {
+contract DAOConfiguration is ISharedModel, TokenOperations {
     struct DAOConfigDetails {
         address payable daoTreasurer;
         address tokenAddress;
@@ -15,7 +15,7 @@ contract DAOConfiguration is ISharedDAOModel, TokenOperations {
 
     DAOConfigDetails internal daoConfig;
 
-     /**
+    /**
      * @dev This empty reserved space is put in place to allow future versions to add new
      * variables without shifting down storage in the inheritance chain.
      * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps

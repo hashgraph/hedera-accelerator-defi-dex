@@ -7,9 +7,9 @@ import {
   TokenId,
 } from "@hashgraph/sdk";
 
-const accountId = clientsInfo.operatorId;
-const accountKey = clientsInfo.operatorKey;
-const accountClient = clientsInfo.operatorClient;
+const accountId = clientsInfo.treasureId;
+const accountKey = clientsInfo.treasureKey;
+const accountClient = clientsInfo.treasureClient;
 
 async function main() {
   await createNFTToken("Lab49NFT", "Lab49NFT");

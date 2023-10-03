@@ -144,7 +144,9 @@ export class Helper {
   }
 
   static createProposalTitle(titlePrefix: string, count: number = 20) {
-    return `${titlePrefix} ${Math.random() * count}`;
+    return titlePrefix.length >= 0
+      ? `${titlePrefix} ${Math.random() * count}`
+      : titlePrefix;
   }
 
   static readWorkflowInputs() {
@@ -192,5 +194,15 @@ export class Helper {
       return false;
     }
     return typeof value[Symbol.iterator] === "function";
+  }
+
+  static areAddressesSame(first: string, second: string) {
+    try {
+      console.log(" - Helper#areAddressesSame(): ", first, second);
+      return ethers.utils.getAddress(first) === ethers.utils.getAddress(second);
+    } catch (error: any) {
+      console.error(" - Helper#areAddressesSame(): ", error.message);
+      return false;
+    }
   }
 }

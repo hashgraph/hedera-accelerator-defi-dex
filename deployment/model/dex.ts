@@ -6,9 +6,9 @@ const ZERO_TOKEN_ID = TokenId.fromString("0.0.0");
 const GOD_TOKEN_ID = "0.0.80158";
 const GOD_TOKEN_ADDRESS = "0x000000000000000000000000000000000001391e";
 
-const NFT_TOKEN_ID = TokenId.fromString("0.0.82625");
+const NFT_TOKEN_ID = TokenId.fromString("0.0.2019043");
 
-const E2E_NFT_TOKEN_ID = TokenId.fromString("0.0.83109");
+const E2E_NFT_TOKEN_ID = TokenId.fromString("0.0.2726474");
 
 const HBARX_TOKEN_ID = "0.0.80165";
 const HBARX_TOKEN_ADDRESS = "0x0000000000000000000000000000000000013925";
@@ -31,7 +31,7 @@ const GOVERNANCE_DAO_TWO_TOKEN_ID = TokenId.fromString("0.0.80188");
 
 const MULTI_SIG_DAO_ONE = "MULTI_SIG_DAO_ONE";
 
-const DAO_FEE = 20;
+const DAO_FEE = 1;
 
 const ROLES = {
   DAO_ADMIN: Helper.role("DAO_ADMIN"),

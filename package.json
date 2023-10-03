@@ -11,6 +11,10 @@
     "suite-three": "./node_modules/.bin/cucumber-js -p suiteThree",
     "suite-four": "./node_modules/.bin/cucumber-js -p suiteFour",
     "suite-five": "./node_modules/.bin/cucumber-js -p suiteFive",
+    "suite-six": "./node_modules/.bin/cucumber-js -p suiteSix",
+    "suite-seven": "./node_modules/.bin/cucumber-js -p suiteSeven",
+    "suite-eight": "./node_modules/.bin/cucumber-js -p suiteEight",
+    "suite-nine": "./node_modules/.bin/cucumber-js -p suiteNine",
     "test": "./node_modules/.bin/cucumber-js -p default",
     "e2e-test": "node trigger-test.js"
   },
@@ -22,8 +26,8 @@
     "@nomicfoundation/hardhat-chai-matchers": "^1.0.5",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.9",
     "@nomiclabs/hardhat-ethers": "^2.2.3",
-    "@openzeppelin/contracts": "^4.8.0",
-    "@openzeppelin/contracts-upgradeable": "^4.8.0",
+    "@openzeppelin/contracts": "^4.9.3",
+    "@openzeppelin/contracts-upgradeable": "^4.9.3",
     "@openzeppelin/hardhat-upgrades": "^1.21.0",
     "@typechain/ethers-v5": "^10.1.1",
     "@typechain/hardhat": "^6.1.4",
@@ -37,7 +41,7 @@
     "chai": "^4.3.8",
     "cucumber": "^6.0.7",
     "cucumber-pretty": "^6.0.1",
-    "cucumber-tsflow": "^4.0.6",
+    "cucumber-tsflow": "^4.1.1",
     "dotenv": "^16.3.1",
     "eslint": "^8.49.0",
     "eslint-config-prettier": "^9.0.0",
@@ -56,12 +60,12 @@
     "prettier-plugin-solidity": "^1.1.3",
     "prompts": "^2.4.2",
     "solhint": "^3.6.2",
-    "solidity-coverage": "0.8.4",
+    "solidity-coverage": "0.8.5",
     "ts-node": "^10.9.1",
     "typechain": "^8.3.1",
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "npm-check-updates": "^16.13.3"
+    "npm-check-updates": "^16.14.2"
   }
 }

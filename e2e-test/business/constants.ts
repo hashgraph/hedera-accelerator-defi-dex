@@ -1,5 +1,5 @@
-import { clientsInfo } from "../../utils/ClientManagement";
 import dex from "../../deployment/model/dex";
+import { clientsInfo } from "../../utils/ClientManagement";
 import { CommonSteps } from "../step-definitions/CommonSteps";
 
 export const DEFAULT_DAO_CONFIG = {

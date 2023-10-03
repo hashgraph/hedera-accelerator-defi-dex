@@ -2,12 +2,12 @@ import dex from "../model/dex";
 import Common from "../../e2e-test/business/Common";
 
 import { Helper } from "../../utils/Helper";
-import { TokenId } from "@hashgraph/sdk";
+import { PrivateKey, TokenId } from "@hashgraph/sdk";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { MirrorNodeService } from "../../utils/MirrorNodeService";
 
-export async function main() {
-  const NFT_TOKEN_ID = TokenId.fromString(dex.NFT_TOKEN_ID);
+export async function main(nftIdString: string) {
+  const NFT_TOKEN_ID = TokenId.fromString(nftIdString);
   const { treasuryAccountId } = await Common.getTokenInfo(NFT_TOKEN_ID);
   const nftTokenSerialNumbersInfo = (
     await MirrorNodeService.getInstance()
@@ -20,17 +20,24 @@ export async function main() {
       Common.transferAssets(
         NFT_TOKEN_ID,
         item.serialNo,
-        clientsInfo.operatorId.toString(),
+        treasuryAccountId,
         item.accountId,
-        clientsInfo.operatorKey,
+        getFromAccountPrivateKey(item.accountId),
         clientsInfo.operatorClient,
       ),
     ),
   );
 }
 
+function getFromAccountPrivateKey(fromAccountId: string) {
+  return PrivateKey.fromString(
+    dex.ACCOUNTS.find((item: any) => item.id === fromAccountId)?.key ??
+      clientsInfo.operatorKey.toStringRaw(),
+  );
+}
+
 if (require.main === module) {
-  main([])
+  main(dex.NFT_TOKEN_ID.toString())
     .then(() => process.exit(0))
     .catch(Helper.processError);
 }
