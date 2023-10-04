@@ -8,7 +8,7 @@ import "../common/TokenOperations.sol";
 import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-abstract contract DAOConfiguration is
+abstract contract FeeConfiguration is
     ISharedModel,
     Initializable,
     TokenOperations
@@ -19,67 +19,62 @@ abstract contract DAOConfiguration is
 
     uint256[49] private __gap__;
 
-    modifier onlyTreasure() {
-        require(
-            msg.sender == feeConfig.daoTreasurer,
-            "DAOConfiguration: DAO treasurer only."
-        );
-        _;
-    }
-
-    function __DAOConfiguration_init(
+    function __FeeConfiguration_init(
         FeeConfig memory _feeConfig
     ) internal onlyInitializing {
-        _setFeeConfigInternally(
-            _feeConfig.daoTreasurer,
+        _updateFeeConfigInternally(
+            _feeConfig.receiver,
             _feeConfig.tokenAddress,
-            _feeConfig.daoFee
+            _feeConfig.amountOrId
         );
     }
 
-    function changeDAOConfig(
-        FeeConfig memory _feeConfig
-    ) external onlyTreasure {
-        _setFeeConfigInternally(
-            _feeConfig.daoTreasurer,
+    function _updateConfigExecutor() internal view virtual returns (address) {
+        return feeConfig.receiver;
+    }
+
+    function updateFeeConfig(FeeConfig memory _feeConfig) external {
+        require(msg.sender == _updateConfigExecutor(), "FC: No Authorization");
+        _updateFeeConfigInternally(
+            _feeConfig.receiver,
             _feeConfig.tokenAddress,
-            _feeConfig.daoFee
+            _feeConfig.amountOrId
         );
     }
 
-    function _deductCreationFee(IHederaService _hederaService) internal {
+    function _deductFee(IHederaService _hederaService) internal {
         if (feeConfig.tokenAddress == address(0)) {
             AddressUpgradeable.sendValue(
-                payable(feeConfig.daoTreasurer),
-                feeConfig.daoFee
+                payable(feeConfig.receiver),
+                feeConfig.amountOrId
             );
         } else {
             int256 code = _transferToken(
                 _hederaService,
                 feeConfig.tokenAddress,
                 msg.sender,
-                feeConfig.daoTreasurer,
-                feeConfig.daoFee
+                feeConfig.receiver,
+                feeConfig.amountOrId
             );
             require(
                 code == HederaResponseCodes.SUCCESS,
-                "DAOConfiguration: Transfer Token To DAO Treasurer Failed."
+                "FC: Fee transfer failed"
             );
         }
     }
 
-    function _setFeeConfigInternally(
+    function _updateFeeConfigInternally(
         address _receiver,
         address _token,
         uint256 _amountOrId
     ) private {
         require(
             _amountOrId > 0 && _receiver != address(0),
-            "DAOConfiguration: Invalid DAO Config Data."
+            "FC: Invalid fee config data"
         );
-        feeConfig.daoTreasurer = _receiver;
+        feeConfig.receiver = _receiver;
         feeConfig.tokenAddress = _token;
-        feeConfig.daoFee = _amountOrId;
+        feeConfig.amountOrId = _amountOrId;
         emit FeeConfigUpdated(feeConfig);
     }
 }

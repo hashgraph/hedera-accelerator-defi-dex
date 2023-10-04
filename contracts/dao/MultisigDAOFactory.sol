@@ -5,9 +5,9 @@ import "../common/IEvents.sol";
 import "../common/IErrors.sol";
 import "../common/ISharedModel.sol";
 import "../common/IHederaService.sol";
+import "../common/FeeConfiguration.sol";
 
 import "../dao/MultisigDAO.sol";
-import "./DAOConfiguration.sol";
 
 import "../gnosis/HederaMultiSend.sol";
 import "../gnosis/HederaGnosisSafe.sol";
@@ -20,7 +20,7 @@ contract MultisigDAOFactory is
     IErrors,
     IEvents,
     Initializable,
-    DAOConfiguration
+    FeeConfiguration
 {
     event DAOCreated(
         address daoAddress,
@@ -59,7 +59,7 @@ contract MultisigDAOFactory is
         IHederaService _hederaService,
         HederaMultiSend _multiSend
     ) external initializer {
-        __DAOConfiguration_init(_feeConfig);
+        __FeeConfiguration_init(_feeConfig);
 
         iSystemRoleManagment = _iSystemRoleBasedAccess;
         daoLogic = _daoLogic;
@@ -123,7 +123,7 @@ contract MultisigDAOFactory is
     function createDAO(
         MultiSigCreateDAOInputs memory _createDAOInputs
     ) external payable returns (address) {
-        _deductCreationFee(hederaService);
+        _deductFee(hederaService);
         HederaGnosisSafe hederaGnosisSafe = _createGnosisSafeProxyInstance(
             _createDAOInputs.owners,
             _createDAOInputs.threshold

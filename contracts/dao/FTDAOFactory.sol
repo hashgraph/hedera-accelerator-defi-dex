@@ -1,11 +1,10 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.18;
 
-import "./DAOConfiguration.sol";
-
 import "../common/IEvents.sol";
 import "../common/IErrors.sol";
 import "../common/IHederaService.sol";
+import "../common/FeeConfiguration.sol";
 import "../common/ISystemRoleBasedAccess.sol";
 
 import "../dao/FTDAO.sol";
@@ -17,7 +16,7 @@ import "../governance/ITokenHolderFactory.sol";
 
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-contract FTDAOFactory is IErrors, IEvents, ISharedModel, DAOConfiguration {
+contract FTDAOFactory is IErrors, IEvents, ISharedModel, FeeConfiguration {
     event DAOCreated(
         address tokenHolderAddress,
         address assetsHolderAddress,
@@ -55,7 +54,7 @@ contract FTDAOFactory is IErrors, IEvents, ISharedModel, DAOConfiguration {
         ITokenHolderFactory _tokenHolderFactory,
         ISystemRoleBasedAccess _iSystemRoleBasedAccess
     ) external initializer {
-        __DAOConfiguration_init(_feeConfig);
+        __FeeConfiguration_init(_feeConfig);
 
         daoLogic = _daoLogic;
         governorLogic = _governorLogic;
@@ -169,13 +168,13 @@ contract FTDAOFactory is IErrors, IEvents, ISharedModel, DAOConfiguration {
             address daoAddress
         )
     {
+        _deductFee(hederaService);
         if (address(_createDAOInputs.tokenAddress) == address(0)) {
             revert InvalidInput("DAOFactory: token address is zero");
         }
         if (_createDAOInputs.votingPeriod == 0) {
             revert InvalidInput("DAOFactory: voting period is zero");
         }
-        _deductCreationFee(hederaService);
         (
             tokenHolderAddress,
             assetsHolderAddress,
