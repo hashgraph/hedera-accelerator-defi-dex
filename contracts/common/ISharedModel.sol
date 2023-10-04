@@ -34,8 +34,8 @@ interface ISharedModel {
     }
 
     struct FeeConfig {
-        address daoTreasurer;
+        address receiver;
         address tokenAddress;
-        uint256 daoFee;
+        uint256 amountOrId;
     }
 }

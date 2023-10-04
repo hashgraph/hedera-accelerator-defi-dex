@@ -75,13 +75,11 @@ describe("MultiSig tests", function () {
     const feeConfigInContract = args.feeConfig;
 
     expect(name).equal("FeeConfigUpdated");
-    expect(feeConfigInContract.daoTreasurer).equals(
-      feeConfigPassed.daoTreasurer,
-    );
+    expect(feeConfigInContract.receiver).equals(feeConfigPassed.receiver);
     expect(feeConfigInContract.tokenAddress).equals(
       feeConfigPassed.tokenAddress,
     );
-    expect(feeConfigInContract.daoFee).equals(feeConfigPassed.daoFee);
+    expect(feeConfigInContract.amountOrId).equals(feeConfigPassed.amountOrId);
   }
 
   async function proposeTransaction(
@@ -246,9 +244,9 @@ describe("MultiSig tests", function () {
     expect(events.length).equals(1);
 
     const daoConfigData = {
-      daoTreasurer: signers[11].address,
+      receiver: signers[11].address,
       tokenAddress: tokenInstance.address,
-      daoFee: TestHelper.toPrecision(20),
+      amountOrId: TestHelper.toPrecision(20),
     };
 
     const multiSigDaoFactoryArgs = [
@@ -544,9 +542,9 @@ describe("MultiSig tests", function () {
       } = await loadFixture(deployFixture);
 
       const daoConfigData = {
-        daoTreasurer: signers[11].address,
+        receiver: signers[11].address,
         tokenAddress: TestHelper.ZERO_ADDRESS,
-        daoFee: TestHelper.toPrecision(20),
+        amountOrId: TestHelper.toPrecision(20),
       };
 
       const args = [
@@ -576,11 +574,11 @@ describe("MultiSig tests", function () {
 
       await expect(
         multiSigDAOFactoryInstance.createDAO(ARGS, {
-          value: daoConfigData.daoFee,
+          value: daoConfigData.amountOrId,
         }),
       ).changeEtherBalances(
-        [signers[0].address, daoConfigData.daoTreasurer],
-        [-daoConfigData.daoFee, daoConfigData.daoFee],
+        [signers[0].address, daoConfigData.receiver],
+        [-daoConfigData.amountOrId, daoConfigData.amountOrId],
       );
     });
 
@@ -596,7 +594,7 @@ describe("MultiSig tests", function () {
 
       await tokenInstance.setUserBalance(
         signers[0].address,
-        daoConfigData.daoFee,
+        daoConfigData.amountOrId,
       );
 
       const ARGS = [
@@ -614,8 +612,8 @@ describe("MultiSig tests", function () {
         multiSigDAOFactoryInstance.createDAO(ARGS),
       ).changeTokenBalances(
         tokenInstance,
-        [signers[0].address, daoConfigData.daoTreasurer],
-        [-daoConfigData.daoFee, daoConfigData.daoFee],
+        [signers[0].address, daoConfigData.receiver],
+        [-daoConfigData.amountOrId, daoConfigData.amountOrId],
       );
     });
 
@@ -628,9 +626,9 @@ describe("MultiSig tests", function () {
       } = await loadFixture(deployFixture);
 
       const {
-        daoTreasurer: initialTreasurerAddress,
+        receiver: initialTreasurerAddress,
         tokenAddress: initialTokenAddress,
-        daoFee: initialFee,
+        amountOrId: initialFee,
       } = await multiSigDAOFactoryInstance.feeConfig();
 
       const initialTreasurer = signers[11];
@@ -639,20 +637,20 @@ describe("MultiSig tests", function () {
       expect(initialFee).equals(TestHelper.toPrecision(20));
 
       const newDAOConfig = {
-        daoTreasurer: signers[12].address,
+        receiver: signers[12].address,
         tokenAddress: tokenInstance.address,
-        daoFee: TestHelper.toPrecision(30),
+        amountOrId: TestHelper.toPrecision(30),
       };
 
       await expect(
         multiSigDAOFactoryInstance
           .connect(daoAdminOne)
-          .changeDAOConfig(Object.values(newDAOConfig)),
-      ).revertedWith("DAOConfiguration: DAO treasurer only.");
+          .updateFeeConfig(Object.values(newDAOConfig)),
+      ).revertedWith("FC: No Authorization");
 
       const txn = await multiSigDAOFactoryInstance
         .connect(initialTreasurer)
-        .changeDAOConfig(Object.values(newDAOConfig));
+        .updateFeeConfig(Object.values(newDAOConfig));
 
       await verifyDAOConfigChangeEvent(txn, newDAOConfig);
     });
@@ -670,9 +668,9 @@ describe("MultiSig tests", function () {
       } = await loadFixture(deployFixture);
 
       const daoConfigData = {
-        daoTreasurer: signers[11].address,
+        receiver: signers[11].address,
         tokenAddress: tokenInstance.address,
-        daoFee: TestHelper.toPrecision(20),
+        amountOrId: TestHelper.toPrecision(20),
       };
 
       const args = [
@@ -694,9 +692,9 @@ describe("MultiSig tests", function () {
         await multiSigDAOFactoryInstance.queryFilter("FeeConfigUpdated");
       const newDAOConfig = daoConfigEventLog.pop()?.args?.feeConfig;
 
-      expect(newDAOConfig.daoTreasurer).equals(daoConfigData.daoTreasurer);
+      expect(newDAOConfig.receiver).equals(daoConfigData.receiver);
       expect(newDAOConfig.tokenAddress).equals(daoConfigData.tokenAddress);
-      expect(newDAOConfig.daoFee).equals(daoConfigData.daoFee);
+      expect(newDAOConfig.amountOrId).equals(daoConfigData.amountOrId);
     });
 
     it("Verify createDAO should not add new dao into list when the dao is private", async function () {

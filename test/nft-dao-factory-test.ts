@@ -77,13 +77,11 @@ describe("NFT-Governance-DAO tests", function () {
   ) {
     const { args } = (await contract.queryFilter("FeeConfigUpdated")).pop()!;
     const feeConfigInContract = args!.feeConfig;
-    expect(feeConfigInContract.daoTreasurer).equals(
-      feeConfigPassed.daoTreasurer,
-    );
+    expect(feeConfigInContract.receiver).equals(feeConfigPassed.receiver);
     expect(feeConfigInContract.tokenAddress).equals(
       feeConfigPassed.tokenAddress,
     );
-    expect(feeConfigInContract.daoFee).equals(feeConfigPassed.daoFee);
+    expect(feeConfigInContract.amountOrId).equals(feeConfigPassed.amountOrId);
   }
 
   async function deployFixture() {
@@ -127,9 +125,9 @@ describe("NFT-Governance-DAO tests", function () {
     const governorTokenDAO = await TestHelper.deployLogic("FTDAO");
 
     const DEFAULT_DAO_CONFIG_DATA = {
-      daoTreasurer: daoTreasure.address,
+      receiver: daoTreasure.address,
       tokenAddress: token.address,
-      daoFee: 1,
+      amountOrId: 1,
     };
 
     const INIT_ARGS = {
@@ -461,9 +459,9 @@ describe("NFT-Governance-DAO tests", function () {
       const { signers, inputs, INIT_ARGS } = await loadFixture(deployFixture);
 
       const CONFIG_DATA_HBAR_AS_FEE = {
-        daoTreasurer: signers[11].address,
+        receiver: signers[11].address,
         tokenAddress: TestHelper.ZERO_ADDRESS,
-        daoFee: TestHelper.toPrecision(20),
+        amountOrId: TestHelper.toPrecision(20),
       };
 
       const INIT_ARGS_FOR_HBAR_AS_FEE = {
@@ -477,11 +475,14 @@ describe("NFT-Governance-DAO tests", function () {
 
       await expect(
         factory.createDAO(inputs, {
-          value: CONFIG_DATA_HBAR_AS_FEE.daoFee,
+          value: CONFIG_DATA_HBAR_AS_FEE.amountOrId,
         }),
       ).changeEtherBalances(
-        [signers[0].address, CONFIG_DATA_HBAR_AS_FEE.daoTreasurer],
-        [-CONFIG_DATA_HBAR_AS_FEE.daoFee, CONFIG_DATA_HBAR_AS_FEE.daoFee],
+        [signers[0].address, CONFIG_DATA_HBAR_AS_FEE.receiver],
+        [
+          -CONFIG_DATA_HBAR_AS_FEE.amountOrId,
+          CONFIG_DATA_HBAR_AS_FEE.amountOrId,
+        ],
       );
     });
 
@@ -491,15 +492,18 @@ describe("NFT-Governance-DAO tests", function () {
 
       await expect(factory.createDAO(inputs)).changeTokenBalances(
         token,
-        [signers[0].address, DEFAULT_DAO_CONFIG_DATA.daoTreasurer],
-        [-DEFAULT_DAO_CONFIG_DATA.daoFee, DEFAULT_DAO_CONFIG_DATA.daoFee],
+        [signers[0].address, DEFAULT_DAO_CONFIG_DATA.receiver],
+        [
+          -DEFAULT_DAO_CONFIG_DATA.amountOrId,
+          DEFAULT_DAO_CONFIG_DATA.amountOrId,
+        ],
       );
     });
 
     it("Verify createDAO should be reverted during dao fee transfer", async function () {
       const { inputs, factory, daoAdminOne } = await loadFixture(deployFixture);
       await expect(factory.connect(daoAdminOne).createDAO(inputs)).revertedWith(
-        "DAOConfiguration: Transfer Token To DAO Treasurer Failed.",
+        "FC: Fee transfer failed",
       );
     });
 
@@ -511,20 +515,22 @@ describe("NFT-Governance-DAO tests", function () {
       expect(currentDAOConfig.tokenAddress).equals(
         DEFAULT_DAO_CONFIG_DATA.tokenAddress,
       );
-      expect(currentDAOConfig.daoTreasurer).equals(
-        DEFAULT_DAO_CONFIG_DATA.daoTreasurer,
+      expect(currentDAOConfig.receiver).equals(
+        DEFAULT_DAO_CONFIG_DATA.receiver,
       );
-      expect(currentDAOConfig.daoFee).equals(DEFAULT_DAO_CONFIG_DATA.daoFee);
+      expect(currentDAOConfig.amountOrId).equals(
+        DEFAULT_DAO_CONFIG_DATA.amountOrId,
+      );
 
       const NEW_DAO_CONFIG_DATA = {
         ...DEFAULT_DAO_CONFIG_DATA,
         daoTreasure: TestHelper.ONE_ADDRESS,
         tokenAddress: TestHelper.ONE_ADDRESS,
-        daoFee: 2,
+        amountOrId: 2,
       };
       await factory
         .connect(daoTreasure)
-        .changeDAOConfig(Object.values(NEW_DAO_CONFIG_DATA));
+        .updateFeeConfig(Object.values(NEW_DAO_CONFIG_DATA));
 
       await verifyDAOConfigChangeEvent(factory, NEW_DAO_CONFIG_DATA);
     });
@@ -536,32 +542,32 @@ describe("NFT-Governance-DAO tests", function () {
       await expect(
         factory
           .connect(daoAdminOne)
-          .changeDAOConfig([
+          .updateFeeConfig([
             TestHelper.ONE_ADDRESS,
             TestHelper.ONE_ADDRESS,
             TestHelper.toPrecision(30),
           ]),
-      ).revertedWith("DAOConfiguration: DAO treasurer only.");
+      ).revertedWith("FC: No Authorization");
 
       await expect(
         factory
           .connect(daoTreasure)
-          .changeDAOConfig([
+          .updateFeeConfig([
             TestHelper.ZERO_ADDRESS,
             TestHelper.ONE_ADDRESS,
             TestHelper.toPrecision(30),
           ]),
-      ).revertedWith("DAOConfiguration: Invalid DAO Config Data.");
+      ).revertedWith("FC: Invalid fee config data");
 
       await expect(
         factory
           .connect(daoTreasure)
-          .changeDAOConfig([
+          .updateFeeConfig([
             TestHelper.ONE_ADDRESS,
             TestHelper.ONE_ADDRESS,
             TestHelper.toPrecision(0),
           ]),
-      ).revertedWith("DAOConfiguration: Invalid DAO Config Data.");
+      ).revertedWith("FC: Invalid fee config data");
     });
   });
 
