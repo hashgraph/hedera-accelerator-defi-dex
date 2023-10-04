@@ -1,6 +1,6 @@
 # Project Setup -
 
-## Run locally follow these instructions - Needs Node v16.15.1 and npm
+## Run locally follow these instructions - Needs Node v18.x.x and npm
 
 [Follow this link to get context of HardHat](https://hardhat.org/getting-started)
 
@@ -46,17 +46,18 @@ Tests run before deploying the contract on testnet.
 ### Existing contract
 Run `npx hardhat run deployment/deploy.ts`
 
-once above command executes, a prompt in terminal displays options to execute required flow.
+Once above command executes, a prompt in terminal displays options to deploy contracts
+1. create - Deploys a new logic contract
+2. upgrade - Upgrades the existing proxy with new implementation
 -----
 ## [Contract Upgrade Strategy](./UPGRADE.md)
 -----
 
 ## Deploy changed Contracts on testnet
  Follow these steps after a new Pull-Request merges in Develop Branch.
-## [Contracts Update Steps](./DEPLOYLOGICS.md)
 
 
-## `Linter` -
+## `Linter set up` -
 * All *.sol files should be formatted with - NomicFoundation.hardhat-solidity
 * Pls verify the default formatter is below under `/Users/<USER>/Library/Application\ Support/Code/User/settings.json`
 * Please enable format on save settings in VS code - Code -> Preferences -> Settings -> Text Editor -> Formatting -> Format On Save
