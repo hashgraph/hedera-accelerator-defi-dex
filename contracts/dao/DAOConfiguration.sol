@@ -2,79 +2,84 @@
 pragma solidity ^0.8.18;
 
 import "../common/ISharedModel.sol";
-import "../common/TokenOperations.sol";
 import "../common/IHederaService.sol";
+import "../common/TokenOperations.sol";
 
-contract DAOConfiguration is ISharedModel, TokenOperations {
-    struct DAOConfigDetails {
-        address payable daoTreasurer;
-        address tokenAddress;
-        uint256 daoFee;
-    }
-    event DAOConfig(DAOConfigDetails daoConfig);
+import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-    DAOConfigDetails internal daoConfig;
+abstract contract DAOConfiguration is
+    ISharedModel,
+    Initializable,
+    TokenOperations
+{
+    event FeeConfigUpdated(FeeConfig feeConfig);
 
-    /**
-     * @dev This empty reserved space is put in place to allow future versions to add new
-     * variables without shifting down storage in the inheritance chain.
-     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
-     */
-    uint256[49] private __gap;
+    FeeConfig public feeConfig;
 
-    modifier DAOTreasureOnly() {
+    uint256[49] private __gap__;
+
+    modifier onlyTreasure() {
         require(
-            msg.sender == daoConfig.daoTreasurer,
+            msg.sender == feeConfig.daoTreasurer,
             "DAOConfiguration: DAO treasurer only."
         );
         _;
     }
 
-    function changeDAOConfig(
-        address payable daoTreasurer,
-        address tokenAddress,
-        uint256 daoFee
-    ) external DAOTreasureOnly {
-        require(
-            daoFee > 0 && daoTreasurer != payable(address(0)),
-            "DAOConfiguration: Invalid DAO Config Data."
+    function __DAOConfiguration_init(
+        FeeConfig memory _feeConfig
+    ) internal onlyInitializing {
+        _setFeeConfigInternally(
+            _feeConfig.daoTreasurer,
+            _feeConfig.tokenAddress,
+            _feeConfig.daoFee
         );
-        daoConfig.daoFee = daoFee;
-        daoConfig.tokenAddress = tokenAddress;
-        daoConfig.daoTreasurer = daoTreasurer;
-        emit DAOConfig(daoConfig);
     }
 
-    function getDAOConfigDetails()
-        external
-        view
-        returns (DAOConfigDetails memory)
-    {
-        return daoConfig;
+    function changeDAOConfig(
+        FeeConfig memory _feeConfig
+    ) external onlyTreasure {
+        _setFeeConfigInternally(
+            _feeConfig.daoTreasurer,
+            _feeConfig.tokenAddress,
+            _feeConfig.daoFee
+        );
     }
 
-    function payDAOCreationFee(IHederaService _hederaService) internal {
-        bool isHbarToken = daoConfig.tokenAddress == address(0);
-        if (isHbarToken) {
-            (bool sent, ) = daoConfig.daoTreasurer.call{
-                value: daoConfig.daoFee
-            }("");
-            require(
-                sent,
-                "DAOConfiguration: Transfer HBAR To DAO Treasurer Failed."
+    function _deductCreationFee(IHederaService _hederaService) internal {
+        if (feeConfig.tokenAddress == address(0)) {
+            AddressUpgradeable.sendValue(
+                payable(feeConfig.daoTreasurer),
+                feeConfig.daoFee
             );
         } else {
-            int256 responseCode = _transferToken(
+            int256 code = _transferToken(
                 _hederaService,
-                daoConfig.tokenAddress,
+                feeConfig.tokenAddress,
                 msg.sender,
-                daoConfig.daoTreasurer,
-                daoConfig.daoFee
+                feeConfig.daoTreasurer,
+                feeConfig.daoFee
             );
             require(
-                responseCode == HederaResponseCodes.SUCCESS,
+                code == HederaResponseCodes.SUCCESS,
                 "DAOConfiguration: Transfer Token To DAO Treasurer Failed."
             );
         }
+    }
+
+    function _setFeeConfigInternally(
+        address _receiver,
+        address _token,
+        uint256 _amountOrId
+    ) private {
+        require(
+            _amountOrId > 0 && _receiver != address(0),
+            "DAOConfiguration: Invalid DAO Config Data."
+        );
+        feeConfig.daoTreasurer = _receiver;
+        feeConfig.tokenAddress = _token;
+        feeConfig.daoFee = _amountOrId;
+        emit FeeConfigUpdated(feeConfig);
     }
 }

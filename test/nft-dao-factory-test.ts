@@ -58,13 +58,17 @@ describe("NFT-Governance-DAO tests", function () {
 
   async function verifyDAOConfigChangeEvent(
     contract: Contract,
-    daoConfig: any,
+    feeConfigPassed: any,
   ) {
-    const { args } = (await contract.queryFilter("DAOConfig")).pop()!;
-    const newDAOConfig = args!.daoConfig;
-    expect(newDAOConfig.daoTreasurer).equals(daoConfig.daoTreasurer);
-    expect(newDAOConfig.tokenAddress).equals(daoConfig.tokenAddress);
-    expect(newDAOConfig.daoFee).equals(daoConfig.daoFee);
+    const { args } = (await contract.queryFilter("FeeConfigUpdated")).pop()!;
+    const feeConfigInContract = args!.feeConfig;
+    expect(feeConfigInContract.daoTreasurer).equals(
+      feeConfigPassed.daoTreasurer,
+    );
+    expect(feeConfigInContract.tokenAddress).equals(
+      feeConfigPassed.tokenAddress,
+    );
+    expect(feeConfigInContract.daoFee).equals(feeConfigPassed.daoFee);
   }
 
   async function deployFixture() {
@@ -488,7 +492,7 @@ describe("NFT-Governance-DAO tests", function () {
       const { factory, daoTreasure, DEFAULT_DAO_CONFIG_DATA } =
         await loadFixture(deployFixture);
 
-      const currentDAOConfig = await factory.getDAOConfigDetails();
+      const currentDAOConfig = await factory.feeConfig();
       expect(currentDAOConfig.tokenAddress).equals(
         DEFAULT_DAO_CONFIG_DATA.tokenAddress,
       );
@@ -505,11 +509,7 @@ describe("NFT-Governance-DAO tests", function () {
       };
       await factory
         .connect(daoTreasure)
-        .changeDAOConfig(
-          NEW_DAO_CONFIG_DATA.daoTreasurer,
-          NEW_DAO_CONFIG_DATA.tokenAddress,
-          NEW_DAO_CONFIG_DATA.daoFee,
-        );
+        .changeDAOConfig(Object.values(NEW_DAO_CONFIG_DATA));
 
       await verifyDAOConfigChangeEvent(factory, NEW_DAO_CONFIG_DATA);
     });
@@ -521,31 +521,31 @@ describe("NFT-Governance-DAO tests", function () {
       await expect(
         factory
           .connect(daoAdminOne)
-          .changeDAOConfig(
+          .changeDAOConfig([
             TestHelper.ONE_ADDRESS,
             TestHelper.ONE_ADDRESS,
             TestHelper.toPrecision(30),
-          ),
+          ]),
       ).revertedWith("DAOConfiguration: DAO treasurer only.");
 
       await expect(
         factory
           .connect(daoTreasure)
-          .changeDAOConfig(
+          .changeDAOConfig([
             TestHelper.ZERO_ADDRESS,
             TestHelper.ONE_ADDRESS,
             TestHelper.toPrecision(30),
-          ),
+          ]),
       ).revertedWith("DAOConfiguration: Invalid DAO Config Data.");
 
       await expect(
         factory
           .connect(daoTreasure)
-          .changeDAOConfig(
+          .changeDAOConfig([
             TestHelper.ONE_ADDRESS,
             TestHelper.ONE_ADDRESS,
             TestHelper.toPrecision(0),
-          ),
+          ]),
       ).revertedWith("DAOConfiguration: Invalid DAO Config Data.");
     });
   });

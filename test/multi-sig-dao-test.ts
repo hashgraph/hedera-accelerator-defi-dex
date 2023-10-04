@@ -68,16 +68,20 @@ describe("MultiSig tests", function () {
     return { txnHash, info };
   }
 
-  async function verifyDAOConfigChangeEvent(txn: any, daoConfig: any) {
+  async function verifyDAOConfigChangeEvent(txn: any, feeConfigPassed: any) {
     const { event: name, args } = (
-      await TestHelper.readEvents(txn, ["DAOConfig"])
+      await TestHelper.readEvents(txn, ["FeeConfigUpdated"])
     ).pop();
-    const newDAOConfig = args.daoConfig;
+    const feeConfigInContract = args.feeConfig;
 
-    expect(name).equal("DAOConfig");
-    expect(newDAOConfig.daoTreasurer).equals(daoConfig.daoTreasurer);
-    expect(newDAOConfig.tokenAddress).equals(daoConfig.tokenAddress);
-    expect(newDAOConfig.daoFee).equals(daoConfig.daoFee);
+    expect(name).equal("FeeConfigUpdated");
+    expect(feeConfigInContract.daoTreasurer).equals(
+      feeConfigPassed.daoTreasurer,
+    );
+    expect(feeConfigInContract.tokenAddress).equals(
+      feeConfigPassed.tokenAddress,
+    );
+    expect(feeConfigInContract.daoFee).equals(feeConfigPassed.daoFee);
   }
 
   async function proposeTransaction(
@@ -627,7 +631,7 @@ describe("MultiSig tests", function () {
         daoTreasurer: initialTreasurerAddress,
         tokenAddress: initialTokenAddress,
         daoFee: initialFee,
-      } = await multiSigDAOFactoryInstance.getDAOConfigDetails();
+      } = await multiSigDAOFactoryInstance.feeConfig();
 
       const initialTreasurer = signers[11];
       expect(initialTreasurerAddress).equals(initialTreasurer.address);
@@ -643,20 +647,12 @@ describe("MultiSig tests", function () {
       await expect(
         multiSigDAOFactoryInstance
           .connect(daoAdminOne)
-          .changeDAOConfig(
-            newDAOConfig.daoTreasurer,
-            newDAOConfig.tokenAddress,
-            newDAOConfig.daoFee,
-          ),
+          .changeDAOConfig(Object.values(newDAOConfig)),
       ).revertedWith("DAOConfiguration: DAO treasurer only.");
 
       const txn = await multiSigDAOFactoryInstance
         .connect(initialTreasurer)
-        .changeDAOConfig(
-          newDAOConfig.daoTreasurer,
-          newDAOConfig.tokenAddress,
-          newDAOConfig.daoFee,
-        );
+        .changeDAOConfig(Object.values(newDAOConfig));
 
       await verifyDAOConfigChangeEvent(txn, newDAOConfig);
     });
@@ -694,12 +690,9 @@ describe("MultiSig tests", function () {
         ...args,
       );
 
-      const daoConfigEventLog = await multiSigDAOFactoryInstance.queryFilter(
-        "DAOConfig",
-        0,
-        1000,
-      );
-      const newDAOConfig = daoConfigEventLog.pop()?.args?.daoConfig;
+      const daoConfigEventLog =
+        await multiSigDAOFactoryInstance.queryFilter("FeeConfigUpdated");
+      const newDAOConfig = daoConfigEventLog.pop()?.args?.feeConfig;
 
       expect(newDAOConfig.daoTreasurer).equals(daoConfigData.daoTreasurer);
       expect(newDAOConfig.tokenAddress).equals(daoConfigData.tokenAddress);

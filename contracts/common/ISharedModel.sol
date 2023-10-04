@@ -32,4 +32,10 @@ interface ISharedModel {
         uint256 votingPeriod;
         uint256 quorumThresholdInBsp;
     }
+
+    struct FeeConfig {
+        address daoTreasurer;
+        address tokenAddress;
+        uint256 daoFee;
+    }
 }

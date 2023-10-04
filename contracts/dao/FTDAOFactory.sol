@@ -15,16 +15,9 @@ import "../governance/HederaGovernor.sol";
 
 import "../governance/ITokenHolderFactory.sol";
 
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-contract FTDAOFactory is
-    IErrors,
-    IEvents,
-    ISharedModel,
-    Initializable,
-    DAOConfiguration
-{
+contract FTDAOFactory is IErrors, IEvents, ISharedModel, DAOConfiguration {
     event DAOCreated(
         address tokenHolderAddress,
         address assetsHolderAddress,
@@ -58,16 +51,17 @@ contract FTDAOFactory is
         address _governorLogic,
         address _assetsHolderLogic,
         IHederaService _hederaService,
-        DAOConfigDetails memory _daoConfigDetails,
+        FeeConfig memory _feeConfig,
         ITokenHolderFactory _tokenHolderFactory,
         ISystemRoleBasedAccess _iSystemRoleBasedAccess
     ) external initializer {
+        __DAOConfiguration_init(_feeConfig);
+
         daoLogic = _daoLogic;
         governorLogic = _governorLogic;
         assetsHolderLogic = _assetsHolderLogic;
 
         hederaService = _hederaService;
-        daoConfig = _daoConfigDetails;
 
         tokenHolderFactory = _tokenHolderFactory;
         iSystemRoleBasedAccess = _iSystemRoleBasedAccess;
@@ -87,7 +81,6 @@ contract FTDAOFactory is
             address(iSystemRoleBasedAccess),
             ISystemRole
         );
-        emit DAOConfig(daoConfig);
     }
 
     function upgradeDAOLogicImplementation(address _daoLogic) external {
@@ -182,7 +175,7 @@ contract FTDAOFactory is
         if (_createDAOInputs.votingPeriod == 0) {
             revert InvalidInput("DAOFactory: voting period is zero");
         }
-        payDAOCreationFee(hederaService);
+        _deductCreationFee(hederaService);
         (
             tokenHolderAddress,
             assetsHolderAddress,
