@@ -1,0 +1,22 @@
+@startuml RepoFlow
+actor Buyer
+actor Seller
+control MatchingContract
+control TradeContractMultisig
+actor Operator
+Seller -> MatchingContract: Sends sell request to Matching contract
+Buyer -> MatchingContract: Sends buy request to Matching contract
+MatchingContract -> MatchingContract: Create a new Contract to facilitate trade
+MatchingContract -> TradeContractMultisig: New contract
+Seller -> TradeContractMultisig: Sends digital assets
+Buyer -> TradeContractMultisig: Sends digital assets
+== At this point anyone can recall their funds ==
+Seller -> TradeContractMultisig: Gives acceptance to funds
+Buyer -> TradeContractMultisig: Gives acceptance to funds
+== Funds are locked ==
+Operator -> Operator: Create a swap transaction
+Seller -> TradeContractMultisig: Signs the transaction
+Buyer -> TradeContractMultisig: Signs the transaction
+TradeContractMultisig -> TradeContractMultisig: Performs the swap
+== Funds are swaped ==
+@enduml

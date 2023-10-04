@@ -28,22 +28,31 @@ contract BarclaysRepo is OwnableUpgradeable {
     event TradeState(
         TradeMatchingInputs tradeInputs,
         EconomicTerms economicTerms,
-        SettlementEvent settlementEvent
+        SettlementEvent settlementEvent,
+        address seller,
+        address buyer
     );
 
     TradeMatchingInputs private tradeInputs;
     EconomicTerms private economicTerms;
     SettlementEvent private settlementEvent;
 
+    address seller;
+    address buyer;
+
     function initialize(
         TradeMatchingInputs memory _tradeInputs,
         EconomicTerms memory _economicTerms,
-        SettlementEvent memory _settlementEvent
+        SettlementEvent memory _settlementEvent,
+        address _seller,
+        address _buyer
     ) external initializer {
         tradeInputs = _tradeInputs;
         economicTerms = _economicTerms;
         settlementEvent = _settlementEvent;
-        emit TradeState(_tradeInputs, _economicTerms, _settlementEvent);
+        seller = _seller;
+        buyer = _buyer;
+        emit TradeState(_tradeInputs, _economicTerms, _settlementEvent, _seller, _buyer);
     }
 
     function updateTradeState(
@@ -54,7 +63,7 @@ contract BarclaysRepo is OwnableUpgradeable {
         tradeInputs = _tradeInputs;
         economicTerms = _economicTerms;
         settlementEvent = _settlementEvent;
-        emit TradeState(_tradeInputs, _economicTerms, _settlementEvent);
+        emit TradeState(_tradeInputs, _economicTerms, _settlementEvent, seller, buyer);
     }
 
     function updateTradeMatchinInputs(
@@ -63,7 +72,7 @@ contract BarclaysRepo is OwnableUpgradeable {
     ) public {
         economicTerms.effectiveDate = effectiveDate;
         economicTerms.maturityDate = maturityDate;
-        emit TradeState(tradeInputs, economicTerms, settlementEvent);
+        emit TradeState(tradeInputs, economicTerms, settlementEvent, seller, buyer);
     }
 
     function updateEconomicTerms(
@@ -72,7 +81,7 @@ contract BarclaysRepo is OwnableUpgradeable {
     ) public {
         economicTerms.effectiveDate = effectiveDate;
         economicTerms.maturityDate = maturityDate;
-        emit TradeState(tradeInputs, economicTerms, settlementEvent);
+        emit TradeState(tradeInputs, economicTerms, settlementEvent, seller, buyer);
     }
 
     function updateSettlementEvent(
@@ -83,7 +92,7 @@ contract BarclaysRepo is OwnableUpgradeable {
         settlementEvent.dvpDate = dvpDate;
         settlementEvent.collateral = collateral;
         settlementEvent.amount = amount;
-        emit TradeState(tradeInputs, economicTerms, settlementEvent);
+        emit TradeState(tradeInputs, economicTerms, settlementEvent, seller, buyer);
     }
 
     function updateTradeMatchingInputs(
@@ -102,6 +111,6 @@ contract BarclaysRepo is OwnableUpgradeable {
         tradeInputs.eventType = eventType;
         tradeInputs.cdmHash = cdmHash;
         tradeInputs.lineageHash = lineageHash;
-        emit TradeState(tradeInputs, economicTerms, settlementEvent);
+        emit TradeState(tradeInputs, economicTerms, settlementEvent, seller, buyer);
     }
 }
