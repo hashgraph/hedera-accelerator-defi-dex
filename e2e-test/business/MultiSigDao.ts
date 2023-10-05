@@ -1,6 +1,7 @@
 import Common from "./Common";
 import BaseDao from "./BaseDao";
 import HederaGnosisSafe from "./HederaGnosisSafe";
+import FeeConfig from "./FeeConfig";
 
 import { ethers } from "ethers";
 import { Helper } from "../../utils/Helper";
@@ -9,6 +10,9 @@ import { Deployment } from "../../utils/deployContractOnTestnet";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { AddressHelper } from "../../utils/AddressHelper";
 import { ContractService } from "../../deployment/service/ContractService";
+import { DEFAULT_FEE_CONFIG } from "./constants";
+import { FeeConfigDetails } from "./types";
+
 import {
   Client,
   TokenId,
@@ -51,7 +55,7 @@ const TYPE_SET_TEXT = 1005;
 
 const deployment = new Deployment();
 
-export default class MultiSigDao extends BaseDao {
+export default class MultiSigDao extends FeeConfig {
   async initialize(
     admin: string,
     name: string,
@@ -59,6 +63,7 @@ export default class MultiSigDao extends BaseDao {
     desc: string,
     webLinks: string[],
     owners: string[],
+    feeConfig: FeeConfigDetails = DEFAULT_FEE_CONFIG,
     client: Client = clientsInfo.operatorClient,
     threshold: number = owners.length,
   ) {
@@ -87,6 +92,7 @@ export default class MultiSigDao extends BaseDao {
         _logoUrl: logoURL,
         _description: desc,
         _webLinks: webLinks,
+        _feeConfig: feeConfig,
         _hederaGnosisSafe: gnosisProxy,
         _hederaService: this.htsAddress,
         _multiSend: this.getMultiSendContractAddress(),

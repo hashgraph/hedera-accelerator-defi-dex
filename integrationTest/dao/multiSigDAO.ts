@@ -17,6 +17,7 @@ import {
   ContractId,
   PrivateKey,
 } from "@hashgraph/sdk";
+import { DEFAULT_FEE_CONFIG } from "../../e2e-test/business/constants";
 
 const TOKEN = TokenId.fromString(dex.TOKEN_LAB49_1);
 const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
@@ -87,6 +88,7 @@ async function initDAO(dao: MultiSigDao) {
     DAO_DESC,
     DAO_WEB_LINKS,
     DAO_OWNERS_ADDRESSES,
+    DEFAULT_FEE_CONFIG,
     clientsInfo.uiUserClient,
     DAO_OWNERS_ADDRESSES.length,
   );
@@ -319,6 +321,7 @@ export async function executeHbarTransfer(
 ) {
   console.log(`- executing Multi-sig DAO = ${multiSigDAO.contractId}\n`);
 
+  const feeConfig = await multiSigDAO.getFeeConfig();
   const gnosisSafe = await getGnosisSafeInstance(multiSigDAO);
 
   // step 1 - create hBar proposal

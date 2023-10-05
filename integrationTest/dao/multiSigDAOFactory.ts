@@ -8,7 +8,7 @@ import { Deployment } from "../../utils/deployContractOnTestnet";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { AddressHelper } from "../../utils/AddressHelper";
 import { ContractService } from "../../deployment/service/ContractService";
-import { DEFAULT_DAO_CONFIG } from "../../e2e-test/business/constants";
+import { DEFAULT_FEE_CONFIG } from "../../e2e-test/business/constants";
 
 import {
   DAO_LOGO,
@@ -26,7 +26,7 @@ import {
 import dex from "../../deployment/model/dex";
 
 const TOKEN_ALLOWANCE_DETAILS = {
-  TOKEN: TokenId.fromSolidityAddress(DEFAULT_DAO_CONFIG.tokenAddress),
+  TOKEN: TokenId.fromSolidityAddress(DEFAULT_FEE_CONFIG.tokenAddress),
   FROM_CLIENT: clientsInfo.uiUserClient,
   FROM_ID: clientsInfo.uiUserId,
   FROM_KEY: clientsInfo.uiUserKey,
@@ -35,7 +35,7 @@ const TOKEN_ALLOWANCE_DETAILS = {
 const getDAOFee = () => {
   const daoFee = Common.isHBAR(TOKEN_ALLOWANCE_DETAILS.TOKEN)
     ? dex.DAO_FEE
-    : DEFAULT_DAO_CONFIG.daoFee;
+    : DEFAULT_FEE_CONFIG.amountOrId;
   return daoFee;
 };
 
