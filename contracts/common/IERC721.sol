@@ -2,6 +2,12 @@
 pragma solidity ^0.8.18;
 
 interface IERC721 {
+    event ApprovalForAll(
+        address indexed owner,
+        address indexed operator,
+        bool approved
+    );
+
     function balanceOf(address _owner) external view returns (uint256);
 
     function ownerOf(uint256 _tokenId) external view returns (address);

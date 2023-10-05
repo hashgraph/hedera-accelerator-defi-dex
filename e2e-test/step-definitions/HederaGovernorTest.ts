@@ -537,10 +537,6 @@ export class HederaGovernorTest extends CommonSteps {
       CommonSteps.DEFAULT_VOTING_PERIOD,
       TokenId.fromString(godTokenInfo.id),
     );
-    // proposal = await governor.getProposalInfoFromMirrorNode(
-    //   "58102523636014566441196519494389034240940623030019873155743717402346126358248",
-    //   false,
-    // );
   }
 
   private normalizeAmountOrId(amountOrId: string) {

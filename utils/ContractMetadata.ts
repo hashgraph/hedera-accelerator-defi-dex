@@ -110,6 +110,7 @@ export default class ContractMetadata {
       "ContractUpgradeDAO",
       "BaseDAO",
       "IERC20",
+      "IERC721",
     ],
   ) => {
     return await this._readAllContractInfo(contractNameList);

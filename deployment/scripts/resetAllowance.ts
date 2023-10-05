@@ -1,9 +1,17 @@
 import dex from "../../deployment/model/dex";
 import Common from "../../e2e-test/business/Common";
+import NFTToken from "../../e2e-test/business/NFTToken";
 
 import { Helper } from "../../utils/Helper";
+import { clientsInfo } from "../../utils/ClientManagement";
 import { MirrorNodeService } from "../../utils/MirrorNodeService";
-import { TokenId, Client, PrivateKey, AccountId } from "@hashgraph/sdk";
+import {
+  TokenId,
+  Client,
+  AccountId,
+  ContractId,
+  PrivateKey,
+} from "@hashgraph/sdk";
 
 async function main() {
   for (const item of dex.ACCOUNTS) {
@@ -12,6 +20,7 @@ async function main() {
       PrivateKey.fromString(item.key),
     );
   }
+  await resetNFTAllowance(dex.E2E_NFT_TOKEN_ID);
 }
 
 async function resetTask(accountId: AccountId, privateKey: PrivateKey) {
@@ -68,6 +77,47 @@ async function resetCryptoAllowance(
   }
   console.log(`Resetting HBar allowance done ${accountId.toString()}`);
   console.log("------------------------------------------\n\n");
+}
+
+async function resetNFTAllowance(tokenId: TokenId | string) {
+  console.log("------------------------------------------");
+  console.log(
+    `Resetting NFT allowance in progress for Token ${tokenId.toString()} ...`,
+  );
+  const contractId = ContractId.fromString(tokenId.toString());
+  const client = Client.forTestnet();
+  const allowances = await MirrorNodeService.getInstance()
+    .disableLogs()
+    .getNFTTokenAllowanceSpenders(tokenId);
+  await Promise.all(
+    allowances.map(async (allowance: any) => {
+      try {
+        const owner = allowance.owner;
+        const ownerAccountId = AccountId.fromEvmAddress(0, 0, owner);
+        const ownerPrivateKey = getFromAccountPrivateKey(
+          ownerAccountId.toString(),
+        );
+        const ownerClient = client.setOperator(ownerAccountId, ownerPrivateKey);
+        const spender = allowance.operator;
+        await new NFTToken(contractId).setApprovalForAll(
+          spender,
+          false,
+          ownerClient,
+        );
+      } catch (error: any) {
+        console.error(" - resetNFTAllowance sub-task failed:", error.message);
+      }
+    }),
+  );
+  console.log(`Resetting NFT allowance done for Token ${tokenId.toString()}`);
+  console.log("------------------------------------------\n\n");
+}
+
+function getFromAccountPrivateKey(fromAccountId: string) {
+  return PrivateKey.fromString(
+    dex.ACCOUNTS.find((item: any) => item.id === fromAccountId)?.key ??
+      clientsInfo.operatorKey.toStringRaw(),
+  );
 }
 
 main()

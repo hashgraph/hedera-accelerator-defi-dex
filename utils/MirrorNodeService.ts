@@ -1,6 +1,7 @@
 import Long from "long";
 import axios from "axios";
 import ContractMetadata from "../utils/ContractMetadata";
+import { ApprovalForAll } from "../deployment/model/ApprovalForAll";
 
 import { ethers } from "hardhat";
 import { Helper } from "./Helper";
@@ -145,6 +146,32 @@ export class MirrorNodeService {
         accountId.toString(),
       );
     return allowances;
+  }
+
+  public async getNFTTokenAllowanceSpenders(
+    nftTokenId: TokenId | string,
+  ): Promise<ApprovalForAll[]> {
+    const SYMBOL = "<>";
+    const activeSpenders = new Set<string>();
+    const eventsMap = await this.getEvents(nftTokenId.toString());
+    const approvals: ApprovalForAll[] = eventsMap.get("ApprovalForAll") ?? [];
+    approvals.forEach((eachItem: ApprovalForAll) => {
+      const uniqueKey = eachItem.owner + SYMBOL + eachItem.operator;
+      if (activeSpenders.has(uniqueKey) && !eachItem.approved) {
+        activeSpenders.delete(uniqueKey);
+      } else {
+        activeSpenders.add(uniqueKey);
+      }
+    });
+    console.log("- NFTs Records count:", activeSpenders.size);
+    return Array.from(activeSpenders.values()).map((item: string) => {
+      const processedItem = item.split(SYMBOL);
+      return {
+        owner: processedItem[0],
+        operator: processedItem[1],
+        approved: true,
+      };
+    });
   }
 
   public async getCryptoAllowanceSpenders(accountId: AccountId | string) {
