@@ -152,19 +152,19 @@ export class MirrorNodeService {
     nftTokenId: TokenId | string,
   ): Promise<ApprovalForAll[]> {
     const SYMBOL = "<>";
-    const activeSpenders = new Set<string>();
+    const activeOwnerAndOperators = new Set<string>();
     const eventsMap = await this.getEvents(nftTokenId.toString());
     const approvals: ApprovalForAll[] = eventsMap.get("ApprovalForAll") ?? [];
     approvals.forEach((eachItem: ApprovalForAll) => {
-      const uniqueKey = eachItem.owner + SYMBOL + eachItem.operator;
-      if (activeSpenders.has(uniqueKey) && !eachItem.approved) {
-        activeSpenders.delete(uniqueKey);
+      const ownerAndOperatorAsKey = eachItem.owner + SYMBOL + eachItem.operator;
+      if (eachItem.approved) {
+        activeOwnerAndOperators.add(ownerAndOperatorAsKey);
       } else {
-        activeSpenders.add(uniqueKey);
+        activeOwnerAndOperators.delete(ownerAndOperatorAsKey);
       }
     });
-    console.log("- NFTs Records count:", activeSpenders.size);
-    return Array.from(activeSpenders.values()).map((item: string) => {
+    console.log("- NFTs Records count:", activeOwnerAndOperators.size);
+    return Array.from(activeOwnerAndOperators.values()).map((item: string) => {
       const processedItem = item.split(SYMBOL);
       return {
         owner: processedItem[0],
