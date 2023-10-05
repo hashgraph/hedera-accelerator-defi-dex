@@ -11,7 +11,6 @@ import { Helper } from "../../utils/Helper";
 import { BigNumber } from "bignumber.js";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { AddressHelper } from "../../utils/AddressHelper";
-import { ApprovalForAll } from "../../deployment/model/ApprovalForAll";
 import { CommonSteps, TokenInfo } from "./CommonSteps";
 import { binding, given, then, when } from "cucumber-tsflow";
 import { Hbar, TokenId, HbarUnit, AccountId, ContractId } from "@hashgraph/sdk";
@@ -454,6 +453,7 @@ export class HederaGovernorTest extends CommonSteps {
 
   @when(/User run cleanup task/, undefined, 900000)
   public async cleanup() {
+    console.log("Cleanup started:");
     try {
       await governor.cancelAllProposals(creatorClient);
     } catch (error: any) {
@@ -479,7 +479,7 @@ export class HederaGovernorTest extends CommonSteps {
       );
       // 2- reset proposal creation approvals
       const governorEvmAddress = await AddressHelper.idToEvmAddress(
-        tokenHolder.contractId,
+        governor.contractId,
       );
       await nftToken.setApprovalForAll(
         governorEvmAddress,

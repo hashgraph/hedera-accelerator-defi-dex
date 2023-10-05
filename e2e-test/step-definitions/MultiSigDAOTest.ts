@@ -422,7 +422,7 @@ export class MultiSigDAOSteps {
     }
   }
 
-  @when(/User deploy "([^"]*)" contract/, undefined, 30000)
+  @when(/User deploy "([^"]*)" contract/, undefined, 60000)
   public async contractDeploy(contractName: string) {
     contractNewAddress = (await deployContract(contractName)).address;
   }
