@@ -1,4 +1,4 @@
-import { Helper } from "../../utils/Helper";
+import { BigNumber } from "ethers";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { Client } from "@hashgraph/sdk";
 import BaseDAO from "./BaseDao";
@@ -19,7 +19,7 @@ export default abstract class FeeConfig extends BaseDAO {
     const feeConfig = {
       receiver: feeConfigData.receiver,
       tokenAddress: feeConfigData.tokenAddress,
-      amountOrId: feeConfigData.amountOrId,
+      amountOrId: BigNumber.from(feeConfigData.amountOrId).toNumber(),
     };
     return feeConfig;
   };

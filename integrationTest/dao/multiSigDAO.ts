@@ -18,6 +18,7 @@ import {
   PrivateKey,
 } from "@hashgraph/sdk";
 import { DEFAULT_FEE_CONFIG } from "../../e2e-test/business/constants";
+import common from "mocha/lib/interfaces/common";
 
 const TOKEN = TokenId.fromString(dex.TOKEN_LAB49_1);
 const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
@@ -324,7 +325,16 @@ export async function executeHbarTransfer(
   const feeConfig = await multiSigDAO.getFeeConfig();
   const gnosisSafe = await getGnosisSafeInstance(multiSigDAO);
 
+  console.log("Roshan", feeConfig.amountOrId, DEFAULT_FEE_CONFIG.amountOrId);
   // step 1 - create hBar proposal
+  await Common.setTokenAllowance(
+    TokenId.fromSolidityAddress(feeConfig.tokenAddress),
+    multiSigDAO.contractId,
+    feeConfig.amountOrId,
+    fromAccountId,
+    fromPrivateKey,
+    safeTxnExecutionClient,
+  );
   const hBarTransferTxnHash = await multiSigDAO.proposeTransferTransaction(
     toAccountId.toSolidityAddress(),
     ethers.constants.AddressZero,

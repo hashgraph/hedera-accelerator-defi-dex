@@ -138,5 +138,14 @@
     "timestamp": "2023-10-03T09:40:44.937Z",
     "transparentProxyId": "0.0.3760572",
     "transparentProxyAddress": "0x00000000000000000000000000000000003961bc"
+  },
+  {
+    "name": "multisigdaofactory",
+    "id": "0.0.4479311",
+    "hash": "7037187f3adc0f1e907feb9d54e202ab",
+    "address": "0x000000000000000000000000000000000044594f",
+    "timestamp": "2023-10-05T08:14:53.947Z",
+    "transparentProxyId": "0.0.4479314",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000445952"
   }
 ]
