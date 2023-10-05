@@ -1,3 +1,4 @@
+import dex from "../../deployment/model/dex";
 import Common from "../business/Common";
 import NFTToken from "../business/NFTToken";
 import GodHolder from "../business/GodHolder";
@@ -10,6 +11,7 @@ import { Helper } from "../../utils/Helper";
 import { BigNumber } from "bignumber.js";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { AddressHelper } from "../../utils/AddressHelper";
+import { ApprovalForAll } from "../../deployment/model/ApprovalForAll";
 import { CommonSteps, TokenInfo } from "./CommonSteps";
 import { binding, given, then, when } from "cucumber-tsflow";
 import { Hbar, TokenId, HbarUnit, AccountId, ContractId } from "@hashgraph/sdk";
@@ -450,13 +452,42 @@ export class HederaGovernorTest extends CommonSteps {
     lastCreatedToken = (await this.getAllCreatedToken()).at(-1)!;
   }
 
-  @when(/User run cleanup task/, undefined, 600000)
+  @when(/User run cleanup task/, undefined, 900000)
   public async cleanup() {
     try {
       await governor.cancelAllProposals(creatorClient);
+    } catch (error: any) {
+      console.error("cleanup - cancelAllProposals:-", error.message);
+    }
+    try {
       await tokenHolder.checkAndClaimGodTokens(voterClient, voterAccountId);
     } catch (error: any) {
-      console.error("cleanup:-", error.message);
+      console.error("cleanup - checkAndClaimGodTokens:-", error.message);
+    }
+    try {
+      const e2eNFT = dex.E2E_NFT_TOKEN_ID;
+      const contractId = ContractId.fromString(e2eNFT.toString());
+      const nftToken = new NFTToken(contractId);
+      // 1- reset token locking approvals
+      const tokenHolderEvmAddress = await AddressHelper.idToEvmAddress(
+        tokenHolder.contractId,
+      );
+      await nftToken.setApprovalForAll(
+        tokenHolderEvmAddress,
+        false,
+        voterClient,
+      );
+      // 2- reset proposal creation approvals
+      const governorEvmAddress = await AddressHelper.idToEvmAddress(
+        tokenHolder.contractId,
+      );
+      await nftToken.setApprovalForAll(
+        governorEvmAddress,
+        false,
+        creatorClient,
+      );
+    } catch (error: any) {
+      console.error("cleanup - setApprovalForAll:-", error.message);
     }
   }
 
