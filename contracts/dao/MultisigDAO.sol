@@ -134,7 +134,7 @@ contract MultiSigDAO is IEvents, BaseDAO, FeeConfiguration {
         string memory _title,
         string memory _desc,
         string memory _linkToDiscussion
-    ) external returns (bytes32) {
+    ) external payable returns (bytes32) {
         bytes memory data = abi.encodeWithSelector(
             HederaGnosisSafe.associateToken.selector,
             hederaService,
@@ -159,7 +159,7 @@ contract MultiSigDAO is IEvents, BaseDAO, FeeConfiguration {
         string memory title,
         string memory desc,
         string memory linkToDiscussion
-    ) public returns (bytes32) {
+    ) public payable returns (bytes32) {
         require(
             _targets.length > 0 &&
                 _targets.length == _values.length &&
@@ -199,7 +199,7 @@ contract MultiSigDAO is IEvents, BaseDAO, FeeConfiguration {
         string memory _title,
         string memory _desc,
         string memory _linkToDiscussion
-    ) external returns (bytes32) {
+    ) external payable returns (bytes32) {
         require(_proxy != address(0), "MultiSigDAO: proxy can't be zero");
         require(_proxyLogic != address(0), "MultiSigDAO: logic can't be zero");
         bytes memory data = abi.encodeWithSelector(
@@ -227,7 +227,7 @@ contract MultiSigDAO is IEvents, BaseDAO, FeeConfiguration {
         string memory _title,
         string memory _desc,
         string memory _linkToDiscussion
-    ) external returns (bytes32) {
+    ) external payable returns (bytes32) {
         bytes memory data = abi.encodeWithSelector(
             HederaGnosisSafe.transferAssets.selector,
             hederaService,

@@ -18,7 +18,7 @@ import {
   PrivateKey,
 } from "@hashgraph/sdk";
 import { DEFAULT_FEE_CONFIG } from "../../e2e-test/business/constants";
-import common from "mocha/lib/interfaces/common";
+import { FeeConfigDetails } from "../../e2e-test/business/types";
 
 const TOKEN = TokenId.fromString(dex.TOKEN_LAB49_1);
 const GOD_TOKEN_ID = TokenId.fromString(dex.GOD_TOKEN_ID);
@@ -57,6 +57,19 @@ export const DAO_DESC = "Lorem Ipsum is simply dummy text";
 export const DAO_OWNERS_ADDRESSES = DAO_OWNERS_INFO.map(
   (item: any) => item.address,
 );
+
+function getTokenAllowanceAndProposalFee(feeConfig: FeeConfigDetails) {
+  const isHBAR = Common.isHBAR(
+    TokenId.fromSolidityAddress(feeConfig.tokenAddress),
+  );
+  const proposalFee = isHBAR
+    ? Hbar.fromTinybars(feeConfig.amountOrId).toBigNumber().toNumber()
+    : feeConfig.amountOrId;
+  const hbarPayableAmountForProposal = isHBAR
+    ? Hbar.fromTinybars(feeConfig.amountOrId).toBigNumber().toNumber()
+    : 0;
+  return { proposalFee, hbarPayableAmountForProposal };
+}
 
 async function main() {
   const multiSigDAO = new MultiSigDao();
@@ -105,16 +118,34 @@ export async function executeNFTTokenTransferProposal(
   tokenReceiverClient: Client = clientsInfo.operatorClient,
   tokenSenderAccountId: AccountId = clientsInfo.operatorId,
   tokenSenderPrivateKey: PrivateKey = clientsInfo.operatorKey,
+  tokenSenderClient: Client = clientsInfo.operatorClient,
   safeTxnExecutionClient: Client = clientsInfo.treasureClient,
 ) {
   console.log(
     `- executing nft token transfer Multi-sig DAO = ${multiSigDAO.contractId}\n`,
   );
 
-  // Step - 1 associate nft token to contract
+  // Step - 1 setup allowance for proposal
+  const feeConfig = await multiSigDAO.getFeeConfig();
+  const { proposalFee, hbarPayableAmountForProposal } =
+    getTokenAllowanceAndProposalFee(feeConfig);
+  await Common.setTokenAllowance(
+    TokenId.fromSolidityAddress(feeConfig.tokenAddress),
+    multiSigDAO.contractId,
+    proposalFee,
+    tokenSenderAccountId,
+    tokenSenderPrivateKey,
+    tokenSenderClient,
+  );
+
+  // Step - 2 associate nft token to contract
   const gnosisSafe = await getGnosisSafeInstance(multiSigDAO);
   const tokenAssociateTxnHash =
-    await multiSigDAO.proposeTokenAssociateTransaction(nftToken);
+    await multiSigDAO.proposeTokenAssociateTransaction(
+      nftToken,
+      tokenSenderClient,
+      hbarPayableAmountForProposal,
+    );
   const tokenAssociateTxnInfo = await multiSigDAO.getTransactionInfo(
     tokenAssociateTxnHash,
   );
@@ -131,7 +162,7 @@ export async function executeNFTTokenTransferProposal(
     safeTxnExecutionClient,
   );
 
-  // Step - 2 transfer nft token from wallet to safe
+  // Step - 3 transfer nft token from wallet to safe
   await Common.transferAssets(
     nftToken,
     nftTokenSerialId,
@@ -141,7 +172,7 @@ export async function executeNFTTokenTransferProposal(
     safeTxnExecutionClient,
   );
 
-  // Step - 3 associate nft token to receiver account
+  // Step - 4 associate nft token to receiver account
   await Common.associateTokensToAccount(
     tokenReceiver.toString(),
     [nftToken],
@@ -149,12 +180,23 @@ export async function executeNFTTokenTransferProposal(
     tokenReceiverPrivateKey,
   );
 
-  // Step - 4 transfer nft token from safe to receiver account
+  // Step - 5 setup allowance for proposal
+  await Common.setTokenAllowance(
+    TokenId.fromSolidityAddress(feeConfig.tokenAddress),
+    multiSigDAO.contractId,
+    proposalFee,
+    tokenSenderAccountId,
+    tokenSenderPrivateKey,
+    safeTxnExecutionClient,
+  );
+
+  // Step - 6 transfer nft token from safe to receiver account
   const transferTxnHash = await multiSigDAO.proposeTransferTransaction(
     tokenReceiver.toSolidityAddress(),
     nftToken.toSolidityAddress(),
     nftTokenSerialId,
     safeTxnExecutionClient,
+    hbarPayableAmountForProposal,
   );
   const transferTxnInfo = await multiSigDAO.getTransactionInfo(transferTxnHash);
   for (const daoOwner of ownersInfo) {
@@ -186,10 +228,27 @@ export async function executeFTTokenTransferProposal(
     `- executing token transfer Multi-sig DAO = ${multiSigDAO.contractId}\n`,
   );
 
-  // Step - 1 associate ft token to safe
+  // Step - 1 Setup Allowance for Proposal
+  const feeConfig = await multiSigDAO.getFeeConfig();
+  const { proposalFee, hbarPayableAmountForProposal } =
+    getTokenAllowanceAndProposalFee(feeConfig);
+  await Common.setTokenAllowance(
+    TokenId.fromSolidityAddress(feeConfig.tokenAddress),
+    multiSigDAO.contractId,
+    proposalFee,
+    tokenSenderAccountId,
+    tokenSenderPrivateKey,
+    safeTxnExecutionClient,
+  );
+
+  // Step - 2 associate ft token to safe
   const gnosisSafe = await getGnosisSafeInstance(multiSigDAO);
   const tokenAssociateTxnHash =
-    await multiSigDAO.proposeTokenAssociateTransaction(ftToken);
+    await multiSigDAO.proposeTokenAssociateTransaction(
+      ftToken,
+      safeTxnExecutionClient,
+      hbarPayableAmountForProposal,
+    );
   const tokenAssociateTxnInfo = await multiSigDAO.getTransactionInfo(
     tokenAssociateTxnHash,
   );
@@ -206,7 +265,7 @@ export async function executeFTTokenTransferProposal(
     safeTxnExecutionClient,
   );
 
-  // Step - 2 transfer ft token from wallet to safe
+  // Step - 3 transfer ft token from wallet to safe
   await Common.transferAssets(
     ftToken,
     ftTokenAmount,
@@ -215,7 +274,7 @@ export async function executeFTTokenTransferProposal(
     tokenSenderPrivateKey,
   );
 
-  // Step - 3 associate ft token to receiver account
+  // Step - 4 associate ft token to receiver account
   await Common.associateTokensToAccount(
     tokenReceiver.toString(),
     [ftToken],
@@ -223,12 +282,23 @@ export async function executeFTTokenTransferProposal(
     tokenReceiverPrivateKey,
   );
 
-  // Step - 4 transfer ft token from safe to receiver account
+  // Step - 5 Set up allowance for proposal
+  await Common.setTokenAllowance(
+    TokenId.fromSolidityAddress(feeConfig.tokenAddress),
+    multiSigDAO.contractId,
+    proposalFee,
+    tokenSenderAccountId,
+    tokenSenderPrivateKey,
+    safeTxnExecutionClient,
+  );
+
+  // Step - 6 transfer ft token from safe to receiver account
   const transferTxnHash = await multiSigDAO.proposeTransferTransaction(
     tokenReceiver.toSolidityAddress(),
     ftToken.toSolidityAddress(),
     ftTokenAmount,
     safeTxnExecutionClient,
+    hbarPayableAmountForProposal,
   );
   const transferTxnInfo = await multiSigDAO.getTransactionInfo(transferTxnHash);
   for (const daoOwner of ownersInfo) {
@@ -247,12 +317,25 @@ export async function executeFTTokenTransferProposal(
 export async function executeBatchTransaction(
   multiSigDAO: MultiSigDao,
   ownersInfo: any[] = DAO_OWNERS_INFO,
+  fromAccountId: AccountId = clientsInfo.treasureId,
+  fromPrivateKey: PrivateKey = clientsInfo.treasureKey,
   safeTxnExecutionClient: Client = clientsInfo.treasureClient,
 ) {
   console.log(
     `- executing batch operation using Multi-sig DAO = ${multiSigDAO.contractId}\n`,
   );
 
+  const feeConfig = await multiSigDAO.getFeeConfig();
+  const { proposalFee, hbarPayableAmountForProposal } =
+    getTokenAllowanceAndProposalFee(feeConfig);
+  await Common.setTokenAllowance(
+    TokenId.fromSolidityAddress(feeConfig.tokenAddress),
+    multiSigDAO.contractId,
+    proposalFee,
+    fromAccountId,
+    fromPrivateKey,
+    safeTxnExecutionClient,
+  );
   async function proposeBatchTransaction(multiSigDAO: MultiSigDao) {
     const targets = [
       ContractId.fromString(TOKEN.toString()),
@@ -271,6 +354,8 @@ export async function executeBatchTransaction(
       [0, 0], // 0 HBars
       targets, // contract address
       callDataArray, // contract call data
+      safeTxnExecutionClient,
+      hbarPayableAmountForProposal,
     );
   }
 
@@ -322,24 +407,27 @@ export async function executeHbarTransfer(
 ) {
   console.log(`- executing Multi-sig DAO = ${multiSigDAO.contractId}\n`);
 
+  // step 1 - Set up Allowance to create the Proposal
   const feeConfig = await multiSigDAO.getFeeConfig();
-  const gnosisSafe = await getGnosisSafeInstance(multiSigDAO);
-
-  console.log("Roshan", feeConfig.amountOrId, DEFAULT_FEE_CONFIG.amountOrId);
-  // step 1 - create hBar proposal
+  const { proposalFee, hbarPayableAmountForProposal } =
+    getTokenAllowanceAndProposalFee(feeConfig);
   await Common.setTokenAllowance(
     TokenId.fromSolidityAddress(feeConfig.tokenAddress),
     multiSigDAO.contractId,
-    feeConfig.amountOrId,
+    proposalFee,
     fromAccountId,
     fromPrivateKey,
     safeTxnExecutionClient,
   );
+
+  // step 2 - create HBAR Proposal
+  const gnosisSafe = await getGnosisSafeInstance(multiSigDAO);
   const hBarTransferTxnHash = await multiSigDAO.proposeTransferTransaction(
     toAccountId.toSolidityAddress(),
     ethers.constants.AddressZero,
     hBarAmount.to(HbarUnit.Tinybar),
     safeTxnExecutionClient,
+    hbarPayableAmountForProposal,
   );
   const transferTxnInfo =
     await multiSigDAO.getTransactionInfo(hBarTransferTxnHash);
@@ -369,10 +457,23 @@ export async function executeHbarTransfer(
 export async function executeDAOUpgradeProposal(
   multiSigDAO: MultiSigDao,
   ownersInfo: any[] = DAO_OWNERS_INFO,
+  fromAccountId: AccountId = clientsInfo.treasureId,
+  fromPrivateKey: PrivateKey = clientsInfo.treasureKey,
   safeTxnExecutionClient: Client = clientsInfo.treasureClient,
 ) {
   console.log(
     `- executing Multi-sig DAO upgrade contract flow = ${multiSigDAO.contractId}\n`,
+  );
+  const feeConfig = await multiSigDAO.getFeeConfig();
+  const { proposalFee, hbarPayableAmountForProposal } =
+    getTokenAllowanceAndProposalFee(feeConfig);
+  await Common.setTokenAllowance(
+    TokenId.fromSolidityAddress(feeConfig.tokenAddress),
+    multiSigDAO.contractId,
+    proposalFee,
+    fromAccountId,
+    fromPrivateKey,
+    safeTxnExecutionClient,
   );
   const gnosisSafe = await getGnosisSafeInstance(multiSigDAO);
   const safeEvmAddress = await AddressHelper.idToEvmAddress(
@@ -386,6 +487,8 @@ export async function executeDAOUpgradeProposal(
   const updateTxnHash = await multiSigDAO.proposeUpgradeProxyTransaction(
     proxyAddress,
     proxyLogic,
+    safeTxnExecutionClient,
+    hbarPayableAmountForProposal,
   );
   const updateTxnInfo = await multiSigDAO.getTransactionInfo(updateTxnHash);
   for (const daoOwner of ownersInfo) {
@@ -415,6 +518,7 @@ export async function executeDAOTextProposal(
   multiSigDAO: MultiSigDao,
   ownersInfo: any[] = DAO_OWNERS_INFO,
   creatorAccountId: AccountId = clientsInfo.treasureId,
+  creatorPrivateKey: PrivateKey = clientsInfo.treasureKey,
   creatorAccountClient: Client = clientsInfo.treasureClient,
   safeTxnExecutionClient: Client = clientsInfo.treasureClient,
 ) {
@@ -422,11 +526,24 @@ export async function executeDAOTextProposal(
     `- executing text proposal using Multi-sig DAO  = ${multiSigDAO.contractId}\n`,
   );
 
+  const feeConfig = await multiSigDAO.getFeeConfig();
+  const { proposalFee, hbarPayableAmountForProposal } =
+    getTokenAllowanceAndProposalFee(feeConfig);
+  await Common.setTokenAllowance(
+    TokenId.fromSolidityAddress(feeConfig.tokenAddress),
+    multiSigDAO.contractId,
+    proposalFee,
+    creatorAccountId,
+    creatorPrivateKey,
+    creatorAccountClient,
+  );
+
   const gnosisSafe = await getGnosisSafeInstance(multiSigDAO);
   const textTxnHash = await multiSigDAO.proposeTextTransaction(
     Helper.createProposalTitle("MultiSig Text Proposal"),
     creatorAccountId,
     creatorAccountClient,
+    hbarPayableAmountForProposal,
   );
 
   const textTxnInfo = await multiSigDAO.getTransactionInfo(textTxnHash);

@@ -76,11 +76,11 @@ async function main() {
     const multiSigDAOId = await AddressHelper.addressToIdObject(dao);
     const multiSigDAO = new MultiSigDao(multiSigDAOId);
     await executeHbarTransfer(multiSigDAO);
-    // await executeDAOTextProposal(multiSigDAO);
-    // await executeBatchTransaction(multiSigDAO);
-    // await executeDAOUpgradeProposal(multiSigDAO);
-    // await executeFTTokenTransferProposal(multiSigDAO);
-    // await executeNFTTokenTransferProposal(multiSigDAO);
+    await executeDAOTextProposal(multiSigDAO);
+    await executeBatchTransaction(multiSigDAO);
+    await executeDAOUpgradeProposal(multiSigDAO);
+    await executeFTTokenTransferProposal(multiSigDAO);
+    await executeNFTTokenTransferProposal(multiSigDAO);
   }
   const hasRole = await roleBasedAccess.checkIfChildProxyAdminRoleGiven();
   hasRole &&
