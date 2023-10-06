@@ -37,7 +37,7 @@ function getFromAccountPrivateKey(fromAccountId: string) {
 }
 
 if (require.main === module) {
-  main(dex.NFT_TOKEN_ID.toString())
+  main(dex.E2E_NFT_TOKEN_ID.toString())
     .then(() => process.exit(0))
     .catch(Helper.processError);
 }

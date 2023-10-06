@@ -1,3 +1,4 @@
+import dex from "../../deployment/model/dex";
 import Common from "../business/Common";
 import NFTToken from "../business/NFTToken";
 import GodHolder from "../business/GodHolder";
@@ -450,13 +451,43 @@ export class HederaGovernorTest extends CommonSteps {
     lastCreatedToken = (await this.getAllCreatedToken()).at(-1)!;
   }
 
-  @when(/User run cleanup task/, undefined, 600000)
+  @when(/User run cleanup task/, undefined, 900000)
   public async cleanup() {
+    console.log("Cleanup started:");
     try {
       await governor.cancelAllProposals(creatorClient);
+    } catch (error: any) {
+      console.error("cleanup - cancelAllProposals:-", error.message);
+    }
+    try {
       await tokenHolder.checkAndClaimGodTokens(voterClient, voterAccountId);
     } catch (error: any) {
-      console.error("cleanup:-", error.message);
+      console.error("cleanup - checkAndClaimGodTokens:-", error.message);
+    }
+    try {
+      const e2eNFT = dex.E2E_NFT_TOKEN_ID;
+      const contractId = ContractId.fromString(e2eNFT.toString());
+      const nftToken = new NFTToken(contractId);
+      // 1- reset token locking approvals
+      const tokenHolderEvmAddress = await AddressHelper.idToEvmAddress(
+        tokenHolder.contractId,
+      );
+      await nftToken.setApprovalForAll(
+        tokenHolderEvmAddress,
+        false,
+        voterClient,
+      );
+      // 2- reset proposal creation approvals
+      const governorEvmAddress = await AddressHelper.idToEvmAddress(
+        governor.contractId,
+      );
+      await nftToken.setApprovalForAll(
+        governorEvmAddress,
+        false,
+        creatorClient,
+      );
+    } catch (error: any) {
+      console.error("cleanup - setApprovalForAll:-", error.message);
     }
   }
 
@@ -537,10 +568,6 @@ export class HederaGovernorTest extends CommonSteps {
       CommonSteps.DEFAULT_VOTING_PERIOD,
       TokenId.fromString(godTokenInfo.id),
     );
-    // proposal = await governor.getProposalInfoFromMirrorNode(
-    //   "58102523636014566441196519494389034240940623030019873155743717402346126358248",
-    //   false,
-    // );
   }
 
   private normalizeAmountOrId(amountOrId: string) {

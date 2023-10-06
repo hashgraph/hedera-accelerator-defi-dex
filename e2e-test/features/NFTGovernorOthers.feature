@@ -33,10 +33,10 @@ Scenario: Text proposal execution
 
 Scenario: FT token create proposal
     Given User setup allowance for proposal creation with amount/id "11"
-    When User create a token-create proposal with name & symbol "E2E-Test-Token" and initial value "10e8" where fee "20e8" 
+    When User create a token-create proposal with name & symbol "E2E-Test-Token" and initial value "10e8" where fee "30e8" 
     When User votes "For" proposal    
     Then User waits for proposal state to be "Succeeded" for max 40 seconds   
-    Then User execute the proposal with fee "20e8"
+    Then User execute the proposal with fee "30e8"
     When User fetch last created token
     Then User verify token supply amount "10e8"
 

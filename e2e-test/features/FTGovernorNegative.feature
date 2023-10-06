@@ -108,7 +108,7 @@ Scenario: FT / NFT token association should be failed for invalid token
 
 Scenario: FT token create proposal should be failed if no creation fee send
     Given User setup allowance for proposal creation with amount/id "1e8"
-    When User create a token-create proposal with name & symbol "E2E-Test-Token" and initial value "10e8" where fee "20e8" 
+    When User create a token-create proposal with name & symbol "E2E-Test-Token" and initial value "10e8" where fee "30e8" 
     When User votes "For" proposal    
     Then User waits for proposal state to be "Succeeded" for max 40 seconds   
     When User enables error flag to verify the error
