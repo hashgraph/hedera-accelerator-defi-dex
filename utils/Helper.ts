@@ -1,5 +1,4 @@
 import * as fs from "fs";
-import Web3 from "web3";
 import prompts from "prompts";
 import ContractMetadata from "./ContractMetadata";
 
@@ -16,7 +15,6 @@ import {
 import { MirrorNodeService } from "../utils/MirrorNodeService";
 import { ContractService } from "../deployment/service/ContractService";
 
-const web3 = new Web3();
 const csDev = new ContractService();
 
 export class Helper {
@@ -53,7 +51,7 @@ export class Helper {
   static async readContractIdFromPrompt() {
     const name: string = await Helper.prompt(
       ContractMetadata.SUPPORTED_CONTRACTS_FOR_DEPLOYMENT,
-      "Please select which contract events you want to read?"
+      "Please select which contract events you want to read?",
     );
     if (name === "exit") {
       throw Error("nothing to execute");
@@ -75,7 +73,7 @@ export class Helper {
   static getAddressArray = (
     contractFunctionResult: ContractFunctionResult,
     topLevelOffset: number = 0,
-    arrayItemsLengthIndexOffset: number = 0
+    arrayItemsLengthIndexOffset: number = 0,
   ) => {
     const arrayItemsLengthIndex = contractFunctionResult
       .getUint256(arrayItemsLengthIndexOffset)
@@ -146,13 +144,15 @@ export class Helper {
   }
 
   static createProposalTitle(titlePrefix: string, count: number = 20) {
-    return `${titlePrefix} ${web3.utils.randomHex(count)}`;
+    return titlePrefix.length >= 0
+      ? `${titlePrefix} ${Math.random() * count}`
+      : titlePrefix;
   }
 
   static readWorkflowInputs() {
     try {
       const rawData: any = fs.readFileSync(
-        "./deployment/scripts/workflow-inputs.json"
+        "./deployment/scripts/workflow-inputs.json",
       );
       const inputs = JSON.parse(rawData);
       console.log("- Inputs from workflow:");
@@ -170,7 +170,7 @@ export class Helper {
   static signTxnIfNeeded = async (
     txn: Transaction,
     keys: PrivateKey | PrivateKey[] | undefined = undefined,
-    client: Client
+    client: Client,
   ) => {
     if (!keys) return txn;
 
@@ -194,5 +194,15 @@ export class Helper {
       return false;
     }
     return typeof value[Symbol.iterator] === "function";
+  }
+
+  static areAddressesSame(first: string, second: string) {
+    try {
+      console.log(" - Helper#areAddressesSame(): ", first, second);
+      return ethers.utils.getAddress(first) === ethers.utils.getAddress(second);
+    } catch (error: any) {
+      console.error(" - Helper#areAddressesSame(): ", error.message);
+      return false;
+    }
   }
 }

@@ -1,7 +1,7 @@
-import Web3 from "web3";
 import Long from "long";
 import axios from "axios";
 import ContractMetadata from "../utils/ContractMetadata";
+import { ApprovalForAll } from "../deployment/model/ApprovalForAll";
 
 import { ethers } from "hardhat";
 import { Helper } from "./Helper";
@@ -10,7 +10,6 @@ import { AccountId, ContractId, TokenId, TransactionId } from "@hashgraph/sdk";
 const BASE_URL = "https://testnet.mirrornode.hedera.com";
 
 export class MirrorNodeService {
-  private web3 = new Web3();
   private isLogEnabled: boolean = false;
   private static mirrorNodeService = new MirrorNodeService();
 
@@ -37,7 +36,7 @@ export class MirrorNodeService {
   private async readRecords(
     url: string,
     items: any[],
-    key: string | undefined | null = null
+    key: string | undefined | null = null,
   ) {
     this.isLogEnabled && console.log("- Request url:", url);
     const data = (await axios.get(url))?.data;
@@ -49,7 +48,7 @@ export class MirrorNodeService {
 
   public async getTokenBalance(
     id: AccountId | ContractId,
-    tokens: TokenId[]
+    tokens: TokenId[],
   ): Promise<Map<string, Long>> {
     const tokensId = [...new Set(tokens.map((tokenId) => tokenId.toString()))];
     const tokensMap = new Map();
@@ -70,6 +69,21 @@ export class MirrorNodeService {
     return tokensMap;
   }
 
+  public async getNFTSerialNumbersInfo(id: TokenId | string): Promise<any[]> {
+    const serialNumbersInfo: any[] = [];
+    const tokensObject: any[] = [];
+    let url = `${BASE_URL}/api/v1/tokens/${id.toString()}/nfts?limit=100&order=asc`;
+    while ((url = await this.readRecords(url, tokensObject, "nfts")));
+    this.isLogEnabled && console.log("- Records count:", tokensObject.length);
+    for (const tokenObject of tokensObject) {
+      serialNumbersInfo.push({
+        accountId: tokenObject.account_id,
+        serialNo: tokenObject.serial_number,
+      });
+    }
+    return serialNumbersInfo;
+  }
+
   public async getErrorInfo(txnId: TransactionId) {
     await Helper.delay(5000);
     const response: any[] = [];
@@ -82,7 +96,7 @@ export class MirrorNodeService {
     if (!message) {
       return { message: r.result, timestamp };
     }
-    if (message === "0x" || !this.web3.utils.isHex(message)) {
+    if (message === "0x" || ethers.utils.isHexString(message)) {
       const parsedMessage =
         await this.parseErrorMessageFromCallTraceIfAvailable(tId);
       const finalMessage = parsedMessage.length > 0 ? parsedMessage : message;
@@ -91,8 +105,8 @@ export class MirrorNodeService {
     const signature = message.substring(0, 10);
     const info = message.substring(10);
     const signatureMap = await new ContractMetadata().getSignatureToABIMap();
-    const abi = signatureMap.get(signature);
-    const result = this.web3.eth.abi.decodeParameters(abi.inputs, info);
+    const contractInterface = signatureMap.get(signature);
+    const result = contractInterface.parseError(info);
     return { message: result[0], timestamp };
   }
 
@@ -103,7 +117,7 @@ export class MirrorNodeService {
   public async getEvents(contractId: string, delayRequired: boolean = false) {
     this.isLogEnabled &&
       console.log(
-        `- Getting event(s) from mirror for contract id = ${contractId}`
+        `- Getting event(s) from mirror for contract id = ${contractId}`,
       );
     if (delayRequired) {
       this.isLogEnabled &&
@@ -120,6 +134,60 @@ export class MirrorNodeService {
     return events;
   }
 
+  public async getTokenAllowanceSpenders(accountId: AccountId | string) {
+    let allowances: any[] = [];
+    let url = `${BASE_URL}/api/v1/accounts/${accountId.toString()}/allowances/tokens?limit=100&order=desc`;
+    while ((url = await this.readRecords(url, allowances, "allowances")));
+    allowances = allowances.filter((item: any) => item.amount_granted > 0);
+    this.isLogEnabled &&
+      console.log(
+        "- Tokens Records count:",
+        allowances.length,
+        accountId.toString(),
+      );
+    return allowances;
+  }
+
+  public async getNFTTokenAllowanceSpenders(
+    nftTokenId: TokenId | string,
+  ): Promise<ApprovalForAll[]> {
+    const SYMBOL = "<>";
+    const activeOwnerAndOperators = new Set<string>();
+    const eventsMap = await this.getEvents(nftTokenId.toString());
+    const approvals: ApprovalForAll[] = eventsMap.get("ApprovalForAll") ?? [];
+    approvals.forEach((eachItem: ApprovalForAll) => {
+      const ownerAndOperatorAsKey = eachItem.owner + SYMBOL + eachItem.operator;
+      if (eachItem.approved) {
+        activeOwnerAndOperators.add(ownerAndOperatorAsKey);
+      } else {
+        activeOwnerAndOperators.delete(ownerAndOperatorAsKey);
+      }
+    });
+    console.log("- NFTs Records count:", activeOwnerAndOperators.size);
+    return Array.from(activeOwnerAndOperators.values()).map((item: string) => {
+      const processedItem = item.split(SYMBOL);
+      return {
+        owner: processedItem[0],
+        operator: processedItem[1],
+        approved: true,
+      };
+    });
+  }
+
+  public async getCryptoAllowanceSpenders(accountId: AccountId | string) {
+    let allowances: any[] = [];
+    let url = `${BASE_URL}/api/v1/accounts/${accountId.toString()}/allowances/crypto?limit=100&order=desc`;
+    while ((url = await this.readRecords(url, allowances, "allowances")));
+    allowances = allowances.filter((item: any) => item.amount_granted > 0);
+    this.isLogEnabled &&
+      console.log(
+        "- HBars Records count:",
+        allowances.length,
+        accountId.toString(),
+      );
+    return allowances;
+  }
+
   public async decodeLog(logs: any[]) {
     this.isLogEnabled && console.log("- Events count:", logs.length);
     const eventsMap = new Map<string, any[]>();
@@ -128,17 +196,13 @@ export class MirrorNodeService {
       try {
         const data = this.toHex(log.data);
         const topics = log.topics.map(this.toHex);
-        const eventAbi = signatureMap.get(topics[0]);
-        if (eventAbi) {
-          const event = this.web3.eth.abi.decodeLog(
-            eventAbi.inputs,
-            data,
-            eventAbi.anonymous === false ? topics.splice(1) : topics
-          );
-          const events = eventsMap.get(eventAbi.name) ?? [];
-          eventsMap.set(eventAbi.name, [
+        const contractInterface = signatureMap.get(topics[0]);
+        if (contractInterface) {
+          const event = contractInterface.parseLog({ data, topics });
+          const events = eventsMap.get(event.name) ?? [];
+          eventsMap.set(event.name, [
             ...events,
-            this.getEventArgumentsByName(event, eventAbi.name),
+            this.getEventArgumentsByName(event.args, event.name),
           ]);
         } else {
           this.isLogEnabled &&
@@ -166,10 +230,10 @@ export class MirrorNodeService {
     const errorMessages = (await this.getCallTrace(txnId))
       .filter(
         (call: any) =>
-          call.result_data_type === "ERROR" && call.result_data !== "0x"
+          call.result_data_type === "ERROR" && call.result_data !== "0x",
       )
       .map((call: any) =>
-        String.fromCharCode(...ethers.utils.arrayify(call.result_data))
+        String.fromCharCode(...ethers.utils.arrayify(call.result_data)),
       );
     return [...new Set(errorMessages)].join(",");
   }
@@ -177,7 +241,7 @@ export class MirrorNodeService {
   private getEventArgumentsByName(
     args: any,
     eventName: string,
-    excludedKeys: string[] = ["__length__"]
+    excludedKeys: string[] = ["__length__"],
   ) {
     const namedArguments: Record<string, any> = {};
     for (const key in args) {
@@ -196,7 +260,7 @@ export class MirrorNodeService {
   }
 
   public async getTokensAccountBalance(
-    tokenId: string | TokenId
+    tokenId: string | TokenId,
   ): Promise<any> {
     const tokensObject: any[] = [];
     let url = `${BASE_URL}/api/v1/tokens/${tokenId.toString()}/balances?limit=100&order=asc&account.balance=gt%3A0`;

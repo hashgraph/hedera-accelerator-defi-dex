@@ -1,4 +1,4 @@
-@TestSuite-5
+@TestSuite-2
 Feature: MultiSigDAO e2e test
 
     This feature file contains e2e test for MultiSigDAO functionality
@@ -100,6 +100,7 @@ Feature: MultiSigDAO e2e test
 
     @MultiSigDAOFactory
     Scenario: Verify complete journey of token transfer via multisigdao via factory
+        When User setup allowance for dao creation for collecting fee
         When User create MultiSigDAO with name "MultiSigDAOFactory" and logo as "" via factory
         When User propose the transaction for associating the token
         When User get 2 approval from DAO owners

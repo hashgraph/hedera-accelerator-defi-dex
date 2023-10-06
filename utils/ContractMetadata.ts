@@ -1,4 +1,3 @@
-import Web3 from "web3";
 import hre from "hardhat";
 import md5File from "md5-file";
 
@@ -17,10 +16,6 @@ export default class ContractMetadata {
     "Factory",
     "LPToken",
     "Pair",
-    "GovernorUpgrade",
-    "GovernorTransferToken",
-    "GovernorTextProposal",
-    "GovernorTokenCreate",
     "Splitter",
     "Configuration",
     "FTDAOFactory",
@@ -33,10 +28,6 @@ export default class ContractMetadata {
     "LPToken",
     "Pair",
     "HederaService",
-    "GovernorUpgrade",
-    "GovernorTransferToken",
-    "GovernorTextProposal",
-    "GovernorTokenCreate",
     "Splitter",
     "Vault",
     "Configuration",
@@ -51,6 +42,8 @@ export default class ContractMetadata {
     "NFTHolder",
     "HederaMultiSend",
     "SystemRoleBasedAccess",
+    "HederaGovernor",
+    "AssetsHolder",
   ];
 
   static SUPPORTED_PROXY_OPTIONS = ["create", "update"];
@@ -96,7 +89,7 @@ export default class ContractMetadata {
   public getAllChangedContractNames = async () => {
     const eligibleContractsForDeployments: string[] = [];
     const contractsInfo = await this.getContractsInfo(
-      ContractMetadata.SUPPORTED_CONTRACTS_FOR_UPGRADE
+      ContractMetadata.SUPPORTED_CONTRACTS_FOR_UPGRADE,
     );
     for (const contractInfo of contractsInfo) {
       const name = contractInfo.artifact.contractName.toLowerCase();
@@ -117,7 +110,8 @@ export default class ContractMetadata {
       "ContractUpgradeDAO",
       "BaseDAO",
       "IERC20",
-    ]
+      "IERC721",
+    ],
   ) => {
     return await this._readAllContractInfo(contractNameList);
   };
@@ -126,7 +120,7 @@ export default class ContractMetadata {
     return (await this.getContractsInfo()).find(
       (contract: ContractInfo) =>
         contract.artifact.contractName.toLowerCase() ===
-        contractName.toLowerCase()
+        contractName.toLowerCase(),
     )!;
   };
 
@@ -134,13 +128,12 @@ export default class ContractMetadata {
     const info = (await new ContractMetadata().getContractsInfo()).find(
       (contract: ContractInfo) =>
         contract.artifact.contractName.toLowerCase() ===
-        contractName.toLowerCase()
+        contractName.toLowerCase(),
     )!;
     return new ethers.utils.Interface(info.artifact.abi);
   };
 
   public getSignatureToABIMap = async () => {
-    const web3 = new Web3();
     const signatureToAbiMap: Map<string, any> = new Map();
     signatureToAbiMap.set("0x08c379a0", ContractMetadata.ERROR_ABI);
     signatureToAbiMap.set("0x4e487b71", ContractMetadata.PANIC_ABI);
@@ -148,12 +141,17 @@ export default class ContractMetadata {
     const contractsInfo = await this.getContractsInfo();
     for (const contractInfo of contractsInfo) {
       for (const eachABI of contractInfo.artifact.abi) {
+        const contractInterface = new ethers.utils.Interface(
+          contractInfo.artifact.abi,
+        );
         if (eachABI.type === "event") {
-          const signature = web3.eth.abi.encodeEventSignature(eachABI);
-          signatureToAbiMap.set(signature, eachABI);
+          const eventFragment = contractInterface.getEvent(eachABI.name);
+          const topicHash = contractInterface.getEventTopic(eventFragment);
+          signatureToAbiMap.set(topicHash, contractInterface);
         } else if (eachABI.type === "error") {
-          const signature = web3.eth.abi.encodeFunctionSignature(eachABI);
-          signatureToAbiMap.set(signature, eachABI);
+          const eventFragment = contractInterface.getError(eachABI.name);
+          const hash = contractInterface.getSighash(eventFragment);
+          signatureToAbiMap.set(hash, contractInterface);
         }
       }
     }

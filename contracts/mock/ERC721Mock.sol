@@ -46,9 +46,11 @@ contract ERC721Mock is IERC721, ITokenType {
     }
 
     function transferFrom(address from, address to, uint256 tokenId) public {
-        _balances[from] -= 1;
-        _balances[to] += 1;
-        _owners[tokenId] = to;
+        if (_balances[from] > 0) {
+            _balances[from] -= 1;
+            _balances[to] += 1;
+            _owners[tokenId] = to;
+        }
     }
 
     function approve(address _approved, uint256 _tokenId) external {}

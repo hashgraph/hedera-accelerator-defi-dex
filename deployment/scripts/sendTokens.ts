@@ -10,11 +10,11 @@ async function main() {
     100000 * 1e8,
     AccountId.fromString("0.0.78391"),
     clientsInfo.uiUserId,
-    clientsInfo.uiUserKey
+    clientsInfo.uiUserKey,
   );
   await Common.getTokenBalance(
     AccountId.fromString("0.0.78391"),
-    TokenId.fromString(dex.GOD_TOKEN_ID)
+    TokenId.fromString(dex.GOD_TOKEN_ID),
   );
   return "executed successfully";
 }

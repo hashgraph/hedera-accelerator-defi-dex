@@ -56,6 +56,11 @@ contract Pair is
 
     Configuration configuration;
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     function initialize(
         IHederaService _hederaService,
         ILPToken _lpTokenContract,

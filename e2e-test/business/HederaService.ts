@@ -21,7 +21,7 @@ export default class HederaService extends Base {
     tokenId: TokenId,
     accountId: AccountId | ContractId,
     accountOwnerPrivateKey: PrivateKey,
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
   ) => {
     const args = new ContractFunctionParameters()
       .addAddress(accountId.toSolidityAddress())
@@ -31,11 +31,11 @@ export default class HederaService extends Base {
       ASSOCIATE_TOKEN_PUBLIC,
       client,
       args,
-      accountOwnerPrivateKey
+      accountOwnerPrivateKey,
     );
     const responseCode = result.getUint256(0);
     console.log(
-      `- HederaService#${ASSOCIATE_TOKEN_PUBLIC}(): done with code = ${responseCode}\n`
+      `- HederaService#${ASSOCIATE_TOKEN_PUBLIC}(): done with code = ${responseCode}\n`,
     );
   };
 }

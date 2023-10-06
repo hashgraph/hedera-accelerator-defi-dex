@@ -8,12 +8,13 @@ import { MirrorNodeService } from "../../utils/MirrorNodeService";
 import { AccountId, PrivateKey } from "@hashgraph/sdk";
 
 const ACCOUNTS = dex.ACCOUNTS;
-const TOKEN_ID = "0.0.8576";
+const TOKEN_ID = dex.TOKEN_LAB49_1;
 const TOKENS_PATH = "./deployment/state/token_balances.json";
 
 async function main() {
+  const tokenInfo = await Common.getTokenInfo(TOKEN_ID);
   await fetchBalance();
-  await transfer();
+  await transfer(tokenInfo.treasuryAccountId);
 }
 
 async function fetchBalance() {
@@ -25,7 +26,7 @@ async function fetchBalance() {
   });
 }
 
-async function transfer() {
+async function transfer(treasuryAccountId: string) {
   const eoaAccountList = ACCOUNTS.map((account: any) => String(account.id));
   console.log("- excluding EOA's accounts i.e", eoaAccountList);
   const mirrorNode = MirrorNodeService.getInstance().disableLogs();
@@ -46,15 +47,15 @@ async function transfer() {
           await Common.transferAssets(
             TOKEN_ID.toString(),
             item.balance,
-            clientsInfo.treasureId,
+            treasuryAccountId,
             AccountId.fromString(item.account),
             PrivateKey.fromString(creatorKey),
-            clientsInfo.operatorClient
+            clientsInfo.operatorClient,
           );
         } catch (error: any) {
           console.log("transfer: ", error.message, item);
         }
-      })
+      }),
   );
 
   function getAccountKey(accountId: string) {

@@ -1,6 +1,10 @@
 import Base from "./Base";
 import dex from "../../deployment/model/dex";
+import Token from "./Token";
 
+import { BigNumber } from "bignumber.js";
+import { clientsInfo } from "../../utils/ClientManagement";
+import { AddressHelper } from "../../utils/AddressHelper";
 import {
   Client,
   TokenId,
@@ -20,10 +24,6 @@ import {
   AccountAllowanceApproveTransaction,
   Hbar,
 } from "@hashgraph/sdk";
-import { BigNumber } from "bignumber.js";
-import { clientsInfo } from "../../utils/ClientManagement";
-import { AddressHelper } from "../../utils/AddressHelper";
-import Token from "./Token";
 
 export default class Common extends Base {
   static baseUrl: string = "https://testnet.mirrornode.hedera.com/";
@@ -39,13 +39,13 @@ export default class Common extends Base {
     spenderAccountId: string | AccountId,
     ownerAccount: string | AccountId,
     ownerAccountPrivateKey: PrivateKey,
-    client: Client
+    client: Client,
   ) => {
     const allowanceTxn =
       new AccountAllowanceApproveTransaction().approveTokenNftAllowanceAllSerials(
         tokenId,
         ownerAccount,
-        spenderAccountId
+        spenderAccountId,
       );
     const signTx = await allowanceTxn
       .freezeWith(client)
@@ -54,7 +54,7 @@ export default class Common extends Base {
     const receipt = await txResponse.getReceipt(client);
     const transactionStatus = receipt.status;
     console.log(
-      `- Common#setNFTTokenAllowance(): status = ${transactionStatus.toString()}, tokenId = ${tokenId.toString()}, spenderAccountId = ${spenderAccountId.toString()}, ownerAccount = ${ownerAccount.toString()}\n`
+      `- Common#setNFTTokenAllowance(): status = ${transactionStatus.toString()}, tokenId = ${tokenId.toString()}, spenderAccountId = ${spenderAccountId.toString()}, ownerAccount = ${ownerAccount.toString()}\n`,
     );
   };
 
@@ -63,20 +63,20 @@ export default class Common extends Base {
     spenderAccountId: string | AccountId,
     ownerAccount: string | AccountId,
     ownerAccountPrivateKey: PrivateKey,
-    client: Client
+    client: Client,
   ) => {
     const txn =
       new AccountAllowanceApproveTransaction().deleteTokenNftAllowanceAllSerials(
         tokenId,
         ownerAccount,
-        spenderAccountId
+        spenderAccountId,
       );
     const signTx = await txn.freezeWith(client).sign(ownerAccountPrivateKey);
     const txResponse = await signTx.execute(client);
     const receipt = await txResponse.getReceipt(client);
     const transactionStatus = receipt.status;
     console.log(
-      `- Common#deleteSpendersNftAllowanceForAllSerials(): status = ${transactionStatus.toString()}, tokenId = ${tokenId.toString()}\n`
+      `- Common#deleteSpendersNftAllowanceForAllSerials(): status = ${transactionStatus.toString()}, tokenId = ${tokenId.toString()}\n`,
     );
   };
 
@@ -86,15 +86,15 @@ export default class Common extends Base {
     amount: number,
     ownerAccount: string | AccountId,
     ownerAccountPrivateKey: PrivateKey,
-    client: Client
+    client: Client,
   ) => {
-    dex.HBARX_TOKEN_ID === tokenId.toString()
+    Common.isHBAR(tokenId)
       ? await Common.approveHbarAllowance(
           spenderAccountId,
           amount,
           ownerAccount,
           ownerAccountPrivateKey,
-          client
+          client,
         )
       : await Common.approveTokenAllowance(
           tokenId,
@@ -102,7 +102,7 @@ export default class Common extends Base {
           amount,
           ownerAccount,
           ownerAccountPrivateKey,
-          client
+          client,
         );
   };
 
@@ -112,14 +112,14 @@ export default class Common extends Base {
     amount: number,
     ownerAccount: string | AccountId,
     ownerAccountPrivateKey: PrivateKey,
-    client: Client
+    client: Client,
   ) => {
     const allowanceTxn =
       new AccountAllowanceApproveTransaction().approveTokenAllowance(
         tokenId,
         ownerAccount,
         spenderAccountId,
-        amount
+        amount,
       );
     const signTx = await allowanceTxn
       .freezeWith(client)
@@ -128,7 +128,7 @@ export default class Common extends Base {
     const receipt = await txResponse.getReceipt(client);
     const transactionStatus = receipt.status;
     console.log(
-      `- Common#approveTokenAllowance(): status = ${transactionStatus.toString()}, tokenId = ${tokenId.toString()}, spenderAccountId = ${spenderAccountId.toString()}, ownerAccount = ${ownerAccount.toString()}, amount = ${amount}\n`
+      `- Common#approveTokenAllowance(): status = ${transactionStatus.toString()}, tokenId = ${tokenId.toString()}, spenderAccountId = ${spenderAccountId.toString()}, ownerAccount = ${ownerAccount.toString()}, amount = ${amount}\n`,
     );
   };
 
@@ -137,13 +137,13 @@ export default class Common extends Base {
     amount: number,
     ownerAccount: string | AccountId,
     ownerAccountPrivateKey: PrivateKey,
-    client: Client
+    client: Client,
   ) => {
     const allowanceTxn =
       new AccountAllowanceApproveTransaction().approveHbarAllowance(
         ownerAccount,
         spenderAccountId,
-        amount
+        amount,
       );
     const signTx = await allowanceTxn
       .freezeWith(client)
@@ -152,7 +152,7 @@ export default class Common extends Base {
     const receipt = await txResponse.getReceipt(client);
     const transactionStatus = receipt.status;
     console.log(
-      `- Common#approveHbarAllowance(): status = ${transactionStatus.toString()}, spenderAccountId = ${spenderAccountId.toString()}, ownerAccount = ${ownerAccount.toString()}, hbar = ${amount}\n`
+      `- Common#approveHbarAllowance(): status = ${transactionStatus.toString()}, spenderAccountId = ${spenderAccountId.toString()}, ownerAccount = ${ownerAccount.toString()}, hbar = ${amount}\n`,
     );
   };
 
@@ -160,30 +160,30 @@ export default class Common extends Base {
     proxyAddress: string,
     logicAddress: string,
     adminKey: PrivateKey = clientsInfo.proxyAdminKey,
-    client: Client = clientsInfo.proxyAdminClient
+    client: Client = clientsInfo.proxyAdminClient,
   ) => {
     const args = new ContractFunctionParameters().addAddress(logicAddress);
     await this.execute(2_00_000, Common.UPGRADE_TO, client, args, adminKey);
     console.log(
-      `- Common#upgradeTo(): proxyId = ${this.contractId}, new-implementation =  ${logicAddress}\n`
+      `- Common#upgradeTo(): proxyId = ${this.contractId}, new-implementation =  ${logicAddress}\n`,
     );
   };
 
   public changeAdmin = async (
     newAdminAddress: string,
     adminKey: PrivateKey = clientsInfo.proxyAdminKey,
-    client: Client = clientsInfo.proxyAdminClient
+    client: Client = clientsInfo.proxyAdminClient,
   ) => {
     const args = new ContractFunctionParameters().addAddress(newAdminAddress);
     await this.execute(50_000, Common.CHANGE_ADMIN, client, args, adminKey);
     console.log(
-      `- Common#changeAdmin(): proxyId = ${this.contractId.toString()}, new-admin-address = ${newAdminAddress}\n`
+      `- Common#changeAdmin(): proxyId = ${this.contractId.toString()}, new-admin-address = ${newAdminAddress}\n`,
     );
   };
 
   static async createLPTokenName(
     tokenA: TokenId | string,
-    tokenB: TokenId | string
+    tokenB: TokenId | string,
   ) {
     const tokenADetail = await this.getTokenInfo(tokenA);
     const tokenBDetail = await this.getTokenInfo(tokenB);
@@ -196,7 +196,7 @@ export default class Common extends Base {
 
   static withPrecision = (
     value: BigNumber | number,
-    precision: BigNumber | number
+    precision: BigNumber | number,
   ): BigNumber => {
     return new BigNumber(value).multipliedBy(precision);
   };
@@ -206,7 +206,7 @@ export default class Common extends Base {
     tokenSymbol: string,
     treasuryId: AccountId,
     treasuryKey: PrivateKey,
-    client: Client
+    client: Client,
   ): Promise<TokenId> => {
     const txn = await new TokenCreateTransaction()
       .setTokenName(tokenName)
@@ -223,7 +223,7 @@ export default class Common extends Base {
     const txnReceipt = await txn.getReceipt(client);
     const tokenId = txnReceipt.tokenId!;
     console.log(
-      `- Common#createToken(): TokenId = ${tokenId}, TokenAddress = ${tokenId.toSolidityAddress()}, name = ${tokenName}, symbol = ${tokenSymbol}\n`
+      `- Common#createToken(): TokenId = ${tokenId}, TokenAddress = ${tokenId.toSolidityAddress()}, name = ${tokenName}, symbol = ${tokenSymbol}\n`,
     );
     return tokenId;
   };
@@ -231,7 +231,7 @@ export default class Common extends Base {
   static getAccountBalance = async (
     accountId: AccountId | ContractId,
     tokens: TokenId[] | undefined = undefined,
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
   ) => {
     console.log(`- Common#getAccountBalance(): account-id = ${accountId}`);
     const response = await this.getBalanceInternally(accountId, client);
@@ -249,7 +249,7 @@ export default class Common extends Base {
   static getTokenBalance = async (
     idOrEvmAddress: AccountId | ContractId | string,
     tokenId: TokenId,
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
   ) => {
     let address: string = "";
     if (idOrEvmAddress instanceof ContractId) {
@@ -267,20 +267,25 @@ export default class Common extends Base {
 
   static getTokenInfo = async (
     tokenId: string | TokenId,
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
   ) => {
     const response = await new TokenInfoQuery()
       .setTokenId(tokenId)
       .execute(client);
     const isNFT = response.tokenType === TokenType.NonFungibleUnique;
+    const totalSupply = response.totalSupply.toNumber();
     console.log(
-      `- Common#getTokenInfo(): TokenId = ${tokenId}, name = ${response.name}, symbol = ${response.symbol}, totalSupply = ${response.totalSupply}, isNFT = ${isNFT}\n`
+      `- Common#getTokenInfo(): TokenId = ${tokenId}, name = ${response.name}, symbol = ${response.symbol}, totalSupply = ${response.totalSupply}, isNFT = ${isNFT}, totalSupply = ${totalSupply}\n`,
     );
     return {
       name: response.name,
       symbol: response.symbol,
-      treasuryAccountId: response.treasuryAccountId?.toString(),
+      treasuryAccountId: response.treasuryAccountId!.toString(),
       isNFT,
+      id: response.tokenId.toString(),
+      address: response.tokenId.toSolidityAddress(),
+      decimals: response.decimals,
+      totalSupply,
     };
   };
 
@@ -290,7 +295,7 @@ export default class Common extends Base {
     toAccountId: string | AccountId,
     fromAccountId: string | AccountId,
     fromPrivateKey: PrivateKey,
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
   ) => {
     const txn = new TransferTransaction();
     switch (true) {
@@ -326,7 +331,7 @@ export default class Common extends Base {
   static deleteToken = async (
     tokenId: string | TokenId,
     client: Client = clientsInfo.operatorClient,
-    adminKey: PrivateKey = clientsInfo.operatorKey
+    adminKey: PrivateKey = clientsInfo.operatorKey,
   ) => {
     const transaction = new TokenDeleteTransaction()
       .setTokenId(tokenId)
@@ -336,7 +341,7 @@ export default class Common extends Base {
     const receipt = await txResponse.getReceipt(client);
     const transactionStatus = receipt.status;
     console.log(
-      `Common#deleteToken(): TokenId = ${tokenId}, transaction status is: ${transactionStatus.toString()}`
+      `Common#deleteToken(): TokenId = ${tokenId}, transaction status is: ${transactionStatus.toString()}`,
     );
   };
 
@@ -344,7 +349,7 @@ export default class Common extends Base {
     tokenId: TokenId,
     mintAmt: number,
     supplyKey: PrivateKey = clientsInfo.operatorKey,
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
   ) => {
     const transaction = new TokenMintTransaction()
       .setTokenId(tokenId)
@@ -355,7 +360,7 @@ export default class Common extends Base {
     const receipt = await txResponse.getReceipt(client);
     const transactionStatus = receipt.status;
     console.log(
-      `Common#mintToken(): TokenId = ${tokenId},  mintAmt = ${mintAmt}, transaction status is: ${transactionStatus.toString()}`
+      `Common#mintToken(): TokenId = ${tokenId},  mintAmt = ${mintAmt}, transaction status is: ${transactionStatus.toString()}`,
     );
   };
 
@@ -363,7 +368,7 @@ export default class Common extends Base {
     accountId: string | AccountId,
     tokenIds: (string | TokenId)[],
     client: Client = clientsInfo.operatorClient,
-    accountKey: PrivateKey = clientsInfo.operatorKey
+    accountKey: PrivateKey = clientsInfo.operatorKey,
   ) => {
     const transaction = await new TokenAssociateTransaction()
       .setAccountId(accountId)
@@ -375,18 +380,20 @@ export default class Common extends Base {
       const receipt = await txResponse.getReceipt(client);
       const transactionStatus = receipt.status;
       console.log(
-        `Common#associateTokensToAccount(): TokenIds = ${tokenIds},  accountId = ${accountId}, transaction status is: ${transactionStatus.toString()} \n`
+        `Common#associateTokensToAccount(): TokenIds = ${tokenIds},  accountId = ${accountId}, transaction status is: ${transactionStatus.toString()} \n`,
+        `- Common#associateTokensToAccount(): TokenIds = ${tokenIds},  accountId = ${accountId}, transaction status is: ${transactionStatus.toString()} \n`,
       );
     } catch (error: any) {
       console.log(
-        `Common#associateTokensToAccount(): TokenIds = ${tokenIds},  accountId = ${accountId}, transaction status is: ${error.toString()} \n`
+        `Common#associateTokensToAccount(): TokenIds = ${tokenIds},  accountId = ${accountId}, transaction status is: ${error.toString()} \n`,
+        `- Common#associateTokensToAccount(): TokenIds = ${tokenIds},  accountId = ${accountId}, transaction status is: ${error.toString()} \n`,
       );
     }
   };
 
   private static getBalanceInternally = async (
     id: AccountId | ContractId,
-    client: Client
+    client: Client,
   ) => {
     const balanceQuery = new AccountBalanceQuery();
     if (id instanceof AccountId) {
@@ -395,5 +402,12 @@ export default class Common extends Base {
       balanceQuery.setContractId(id);
     }
     return await balanceQuery.execute(client);
+  };
+
+  static isHBAR = (tokenId: TokenId) => {
+    return (
+      tokenId.toString() === dex.ZERO_TOKEN_ID.toString() ||
+      tokenId.toString() === dex.HBARX_TOKEN_ID.toString()
+    );
   };
 }

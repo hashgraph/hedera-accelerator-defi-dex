@@ -7,9 +7,9 @@ import {
   TokenId,
 } from "@hashgraph/sdk";
 
-const accountId = clientsInfo.operatorId;
-const accountKey = clientsInfo.operatorKey;
-const accountClient = clientsInfo.operatorClient;
+const accountId = clientsInfo.treasureId;
+const accountKey = clientsInfo.treasureKey;
+const accountClient = clientsInfo.treasureClient;
 
 async function main() {
   await createNFTToken("Lab49NFT", "Lab49NFT");
@@ -27,6 +27,7 @@ async function createNFTToken(tokenName: string, tokenSymbol: string) {
     .setTreasuryAccountId(accountId)
     .setSupplyType(TokenSupplyType.Finite)
     .setMaxSupply(1000)
+    .setAdminKey(accountKey)
     .setSupplyKey(accountKey)
     .freezeWith(accountClient);
 
@@ -40,6 +41,9 @@ async function createNFTToken(tokenName: string, tokenSymbol: string) {
   };
   console.log(`- NFT Token ID: ${item.tokenId}`);
   console.log(`- NFT Token ID in Solidity format: ${item.tokenAddressSol}`);
+  await mintNFT(tokenId);
+  await mintNFT(tokenId);
+  await mintNFT(tokenId);
   await mintNFT(tokenId);
   await mintNFT(tokenId);
   return item;

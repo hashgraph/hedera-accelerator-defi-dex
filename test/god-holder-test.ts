@@ -22,19 +22,19 @@ describe("GODHolder tests", function () {
 
     const tokenHolderCallerMock = await TestHelper.deployLogic(
       "TokenHolderCallerMock",
-      godHolder.address
+      godHolder.address,
     );
     // addProposalForVoter / removeActiveProposals methods from TokenHolder having balance verification check during call
     // so adding 1e8 token in advance
     await token.setUserBalance(
       tokenHolderCallerMock.address,
-      TestHelper.toPrecision(1)
+      TestHelper.toPrecision(1),
     );
 
     const godHolderFactory = await TestHelper.deployGodTokenHolderFactory(
       hederaService,
       godHolder,
-      admin
+      admin,
     );
 
     return {
@@ -54,7 +54,7 @@ describe("GODHolder tests", function () {
     info: any,
     user: string,
     canClaim: boolean,
-    operation: number
+    operation: number,
   ) {
     const { name, args } = info;
     expect(name).equals("CanClaimAmount");
@@ -75,35 +75,34 @@ describe("GODHolder tests", function () {
 
   describe("GODHolder contract tests", function () {
     it("Verify contract should be reverted for multiple initialization", async function () {
-      const { godHolder, hederaService, token } = await loadFixture(
-        deployFixture
-      );
+      const { godHolder, hederaService, token } =
+        await loadFixture(deployFixture);
       await expect(
-        godHolder.initialize(hederaService.address, token.address)
+        godHolder.initialize(hederaService.address, token.address),
       ).revertedWith("Initializable: contract is already initialized");
     });
 
     it("Verify contract should be reverted for invalid inputs during token locking", async function () {
       const { godHolder, voter, token } = await loadFixture(deployFixture);
       await expect(godHolder.grabTokensFromUser(0)).revertedWith(
-        "GODHolder: lock amount must be a positive number"
+        "GODHolder: lock amount must be a positive number",
       );
 
       await expect(
-        godHolder.grabTokensFromUser(TestHelper.toPrecision(1000))
+        godHolder.grabTokensFromUser(TestHelper.toPrecision(1000)),
       ).revertedWith(
-        "GODHolder: lock amount can't be greater to the balance amount"
+        "GODHolder: lock amount can't be greater to the balance amount",
       );
 
       await token.setUserBalance(voter, 0);
       await expect(
-        godHolder.grabTokensFromUser(TestHelper.toPrecision(10))
+        godHolder.grabTokensFromUser(TestHelper.toPrecision(10)),
       ).revertedWith("GODHolder: balance amount must be a positive number");
 
       await token.setUserBalance(voter, TOTAL_AMOUNT);
       await token.setTransaferFailed(true);
       await expect(
-        godHolder.grabTokensFromUser(TestHelper.toPrecision(1))
+        godHolder.grabTokensFromUser(TestHelper.toPrecision(1)),
       ).revertedWith("GODHolder: token transfer failed to contract.");
     });
 
@@ -113,7 +112,7 @@ describe("GODHolder tests", function () {
         await godHolder.balanceOfVoter(voter);
       const voterBalanceFromTokenBeforeLocking = await token.balanceOf(voter);
       const contractBalanceFromTokenBeforeLocking = await token.balanceOf(
-        godHolder.address
+        godHolder.address,
       );
 
       await godHolder.grabTokensFromUser(TOTAL_AMOUNT);
@@ -122,7 +121,7 @@ describe("GODHolder tests", function () {
         await godHolder.balanceOfVoter(voter);
       const voterBalanceFromTokenAfterLocking = await token.balanceOf(voter);
       const contractBalanceFromTokenAfterLocking = await token.balanceOf(
-        godHolder.address
+        godHolder.address,
       );
 
       expect(contractBalanceFromTokenBeforeLocking).equals(0);
@@ -140,7 +139,7 @@ describe("GODHolder tests", function () {
         await godHolder.balanceOfVoter(voter);
       const voterBalanceFromTokenBeforeLocking = await token.balanceOf(voter);
       const contractBalanceFromTokenBeforeLocking = await token.balanceOf(
-        godHolder.address
+        godHolder.address,
       );
 
       const LOCKED_AMOUNT = TOTAL_AMOUNT - TestHelper.toPrecision(5);
@@ -151,7 +150,7 @@ describe("GODHolder tests", function () {
         await godHolder.balanceOfVoter(voter);
       const voterBalanceFromTokenAfterLocking = await token.balanceOf(voter);
       const contractBalanceFromTokenAfterLocking = await token.balanceOf(
-        godHolder.address
+        godHolder.address,
       );
 
       expect(contractBalanceFromTokenBeforeLocking).equals(0);
@@ -170,27 +169,25 @@ describe("GODHolder tests", function () {
       await godHolder.connect(voterAccount).grabTokensFromUser(TOTAL_AMOUNT);
 
       await expect(
-        godHolder.connect(voterAccount).revertTokensForVoter(0)
+        godHolder.connect(voterAccount).revertTokensForVoter(0),
       ).revertedWith("GODHolder: unlock amount must be a positive number");
 
       await tokenHolderCallerMock.connect(voterAccount).addProposal(1);
       await expect(godHolder.revertTokensForVoter(TOTAL_AMOUNT)).revertedWith(
-        "User's Proposals are active"
+        "User's Proposals are active",
       );
 
-      await tokenHolderCallerMock
-        .connect(voterAccount)
-        .removeProposals(1, [voterAccount.address]);
+      await tokenHolderCallerMock.connect(voterAccount).removeProposals(1);
 
       await expect(
-        godHolder.revertTokensForVoter(TestHelper.toPrecision(1000))
+        godHolder.revertTokensForVoter(TestHelper.toPrecision(1000)),
       ).revertedWith(
-        "GODHolder: unlock amount can't be greater to the locked amount"
+        "GODHolder: unlock amount can't be greater to the locked amount",
       );
 
       await token.setTransaferFailed(true);
       await expect(godHolder.revertTokensForVoter(TOTAL_AMOUNT)).revertedWith(
-        "GODHolder: token transfer failed from contract."
+        "GODHolder: token transfer failed from contract.",
       );
       await token.setTransaferFailed(false);
     });
@@ -203,7 +200,7 @@ describe("GODHolder tests", function () {
         await godHolder.balanceOfVoter(voter);
       const voterBalanceFromTokenBeforeUnLocking = await token.balanceOf(voter);
       const contractBalanceFromTokenBeforeUnLocking = await token.balanceOf(
-        godHolder.address
+        godHolder.address,
       );
 
       await godHolder.revertTokensForVoter(TOTAL_AMOUNT);
@@ -212,7 +209,7 @@ describe("GODHolder tests", function () {
         await godHolder.balanceOfVoter(voter);
       const voterBalanceFromTokenAfterUnLocking = await token.balanceOf(voter);
       const contractBalanceFromTokenAfterUnLocking = await token.balanceOf(
-        godHolder.address
+        godHolder.address,
       );
 
       expect(contractBalanceFromTokenBeforeUnLocking).equals(TOTAL_AMOUNT);
@@ -232,7 +229,7 @@ describe("GODHolder tests", function () {
         await godHolder.balanceOfVoter(voter);
       const voterBalanceFromTokenBeforeUnLocking = await token.balanceOf(voter);
       const contractBalanceFromTokenBeforeUnLocking = await token.balanceOf(
-        godHolder.address
+        godHolder.address,
       );
 
       const UNLOCK_AMOUNT = TOTAL_AMOUNT - TestHelper.toPrecision(1);
@@ -243,7 +240,7 @@ describe("GODHolder tests", function () {
         await godHolder.balanceOfVoter(voter);
       const voterBalanceFromTokenAfterUnLocking = await token.balanceOf(voter);
       const contractBalanceFromTokenAfterUnLocking = await token.balanceOf(
-        godHolder.address
+        godHolder.address,
       );
 
       expect(contractBalanceFromTokenBeforeUnLocking).equals(TOTAL_AMOUNT);
@@ -258,44 +255,27 @@ describe("GODHolder tests", function () {
     it("Verify add and remove active proposals should be reverted if called from outside contract", async function () {
       const { godHolder } = await loadFixture(deployFixture);
       await expect(godHolder.addProposalForVoter(1)).revertedWith(
-        "TokenHolder: caller must be contract"
+        "TokenHolder: caller must be contract",
       );
-      await expect(godHolder.removeActiveProposals([], 1)).revertedWith(
-        "TokenHolder: caller must be contract"
+      await expect(godHolder.removeActiveProposals(1)).revertedWith(
+        "TokenHolder: caller must be contract",
       );
-    });
-
-    it("Verify remove active proposals should be reverted if wrong voters passed", async function () {
-      const { signers, voterAccount, tokenHolderCallerMock } =
-        await loadFixture(deployFixture);
-
-      await tokenHolderCallerMock.connect(voterAccount).addProposal(1);
-      await expect(
-        tokenHolderCallerMock.removeProposals(1, [signers[9].address])
-      ).revertedWith("TokenHolder: voter info not available");
-
-      await expect(
-        tokenHolderCallerMock.removeProposals(2, [voterAccount.address])
-      ).revertedWith("TokenHolder: voter info not available");
     });
 
     it("Verify add and remove active proposals should be reverted if caller contract having zero god tokens", async function () {
-      const { token, voterAccount, tokenHolderCallerMock } = await loadFixture(
-        deployFixture
-      );
+      const { token, voterAccount, tokenHolderCallerMock } =
+        await loadFixture(deployFixture);
 
       // reset balance of caller contract before proposal creation
       await token.setUserBalance(tokenHolderCallerMock.address, 0);
       expect(await token.balanceOf(tokenHolderCallerMock.address)).equals(0);
 
       await expect(
-        tokenHolderCallerMock.connect(voterAccount).addProposal(1)
+        tokenHolderCallerMock.connect(voterAccount).addProposal(1),
       ).revertedWith("TokenHolder: insufficient balance");
 
       await expect(
-        tokenHolderCallerMock
-          .connect(voterAccount)
-          .removeProposals(1, [voterAccount.address])
+        tokenHolderCallerMock.connect(voterAccount).removeProposals(1),
       ).revertedWith("TokenHolder: insufficient balance");
     });
 
@@ -305,7 +285,7 @@ describe("GODHolder tests", function () {
 
       // balance of governor before proposal creation
       expect(await token.balanceOf(tokenHolderCallerMock.address)).greaterThan(
-        0
+        0,
       );
 
       await tokenHolderCallerMock.connect(voterAccount).addProposal(1);
@@ -314,14 +294,10 @@ describe("GODHolder tests", function () {
       await tokenHolderCallerMock.connect(voterAccount).addProposal(2);
       expect((await godHolder.getActiveProposalsForUser()).length).equal(2);
 
-      await tokenHolderCallerMock
-        .connect(voterAccount)
-        .removeProposals(1, [voterAccount.address]);
+      await tokenHolderCallerMock.connect(voterAccount).removeProposals(1);
       expect((await godHolder.getActiveProposalsForUser()).length).equal(1);
 
-      await tokenHolderCallerMock
-        .connect(voterAccount)
-        .removeProposals(2, [voterAccount.address]);
+      await tokenHolderCallerMock.connect(voterAccount).removeProposals(2);
       expect((await godHolder.getActiveProposalsForUser()).length).equal(0);
     });
 
@@ -340,7 +316,7 @@ describe("GODHolder tests", function () {
             name: "CanClaimAmount",
             args: { user, canClaim, operation, length: 3 },
           });
-        }
+        },
       );
 
       await godHolder.connect(voterAccount).grabTokensFromUser(TOTAL_AMOUNT);
@@ -348,9 +324,7 @@ describe("GODHolder tests", function () {
       expect((await godHolder.getActiveProposalsForUser()).length).equal(1);
       expect(await godHolder.canUserClaimTokens(voter)).equals(false);
 
-      await tokenHolderCallerMock
-        .connect(voterAccount)
-        .removeProposals(1, [voterAccount.address]);
+      await tokenHolderCallerMock.connect(voterAccount).removeProposals(1);
 
       expect((await godHolder.getActiveProposalsForUser()).length).equal(0);
       expect(await godHolder.canUserClaimTokens(voter)).equals(true);
@@ -372,8 +346,8 @@ describe("GODHolder tests", function () {
         godHolderFactory.initialize(
           hederaService.address,
           godHolder.address,
-          admin
-        )
+          admin,
+        ),
       ).revertedWith("Initializable: contract is already initialized");
     });
 
@@ -419,10 +393,10 @@ describe("GODHolder tests", function () {
 
       const godHolderContract = await TestHelper.getContract(
         "GODHolder",
-        info.tokenHolder
+        info.tokenHolder,
       );
       expect(await godHolderFactory.getHederaServiceVersion()).equals(
-        hederaService.address
+        hederaService.address,
       );
 
       let updatedAddress = await godHolderContract.getHederaServiceVersion();
@@ -434,7 +408,7 @@ describe("GODHolder tests", function () {
         .connect(owner)
         .upgradeHederaService(newHederaServiceAddress);
       expect(await godHolderFactory.getHederaServiceVersion()).equals(
-        newHederaServiceAddress
+        newHederaServiceAddress,
       );
 
       updatedAddress = await godHolderContract.getHederaServiceVersion();
@@ -447,7 +421,7 @@ describe("GODHolder tests", function () {
       await expect(
         godHolderFactory
           .connect(nonOwner)
-          .upgradeHederaService(signers[3].address)
+          .upgradeHederaService(signers[3].address),
       ).revertedWith("Ownable: caller is not the owner");
     });
   });

@@ -1,3 +1,4 @@
+import { time } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { BigNumber, Contract } from "ethers";
 import { ethers, upgrades } from "hardhat";
@@ -19,6 +20,14 @@ export class TestHelper {
     TestHelper.NFT_FOR_PROPOSAL_CREATION2,
   ];
 
+  static getCurrentBlockNumber = async () => {
+    return await ethers.provider.getBlockNumber();
+  };
+
+  static nonZeroAddress(address: any): boolean {
+    return address !== TestHelper.ZERO_ADDRESS;
+  }
+
   static async getAccountHBars(address: string): Promise<BigNumber> {
     return await ethers.provider.getBalance(address);
   }
@@ -26,7 +35,7 @@ export class TestHelper {
   static async transferBalance(
     address: string,
     amount: number,
-    sender: SignerWithAddress
+    sender: SignerWithAddress,
   ) {
     const tx = {
       to: address,
@@ -42,7 +51,7 @@ export class TestHelper {
   }
 
   static async increaseEVMTime(seconds: number) {
-    await ethers.provider.send("evm_increaseTime", [seconds]);
+    await time.increase(seconds);
   }
 
   static toPrecision(targetAmount: number) {
@@ -81,30 +90,12 @@ export class TestHelper {
     return (await ethers.getSigners()).at(-3)!;
   }
 
+  static async getDAOTreasure() {
+    return (await ethers.getSigners()).at(11)!;
+  }
+
   static async getDAOSigners() {
     return (await ethers.getSigners()).slice(4, 6)!;
-  }
-
-  static async deployGodHolder(hederaService: Contract, token: Contract) {
-    const instance = await this.deployLogic("GODHolder");
-    await instance.initialize(hederaService.address, token.address);
-    return instance;
-  }
-
-  static async deployNftGodHolder(hederaService: Contract, token: Contract) {
-    const instance = await this.deployLogic("NFTHolder");
-    await instance.initialize(hederaService.address, token.address);
-    return instance;
-  }
-
-  static async deployGodTokenHolderFactory(
-    hederaService: Contract,
-    godHolder: Contract,
-    admin: string
-  ) {
-    const instance = await this.deployLogic("GODTokenHolderFactory");
-    await instance.initialize(hederaService.address, godHolder.address, admin);
-    return instance;
   }
 
   static async systemUsersSigners() {
@@ -125,10 +116,56 @@ export class TestHelper {
     return /AccessControl: account .* is missing role .*/;
   }
 
+  static async deployGodHolder(hederaService: Contract, token: Contract) {
+    const instance = await this.deployLogic("GODHolderMock");
+    await instance.initialize(hederaService.address, token.address);
+    return instance;
+  }
+
+  static async deployNftGodHolder(hederaService: Contract, token: Contract) {
+    const instance = await this.deployLogic("NFTHolderMock");
+    await instance.initialize(hederaService.address, token.address);
+    return instance;
+  }
+
+  static async deployGodTokenHolderFactory(
+    hederaService: Contract,
+    ftTokenHolder: Contract,
+    proxyAdmin: string,
+  ) {
+    return await this.deployProxy(
+      "GODTokenHolderFactoryMock",
+      hederaService.address,
+      ftTokenHolder.address,
+      proxyAdmin,
+    );
+  }
+
+  static async deployNFTTokenHolderFactory(
+    hederaService: Contract,
+    nftTokenHolder: Contract,
+    proxyAdmin: string,
+  ) {
+    return await this.deployProxy(
+      "NFTTokenHolderFactoryMock",
+      hederaService.address,
+      nftTokenHolder.address,
+      proxyAdmin,
+    );
+  }
+
+  static async deployFTDAOFactory(args: any[]) {
+    return this.deployProxy("FTDAOFactory", ...args);
+  }
+
+  static async deployNFTDAOFactory(args: any[]) {
+    return this.deployProxy("NFTDAOFactory", ...args);
+  }
+
   static async deploySystemRoleBasedAccess() {
     const systemUsersSigners = await TestHelper.systemUsersSigners();
     const systemUsersAddresses = Object.values(systemUsersSigners).map(
-      (user: SignerWithAddress) => user.address
+      (user: SignerWithAddress) => user.address,
     );
     const contract = await this.deployLogic("SystemRoleBasedAccess");
     await contract.initialize(systemUsersAddresses);
@@ -138,14 +175,14 @@ export class TestHelper {
   static async deployERC20Mock(
     total: number = this.toPrecision(100),
     name: String = "TEST",
-    symbol: String = "TEST"
+    symbol: String = "TEST",
   ) {
     return await this.deployLogic("ERC20Mock", name, symbol, total, 0);
   }
 
   static async deployERC721Mock(
     treasure: SignerWithAddress,
-    nftIds: number[] = TestHelper.NFT_IDS
+    nftIds: number[] = TestHelper.NFT_IDS,
   ) {
     const erc721 = await this.deployLogic("ERC721Mock");
     for (const nftId of nftIds) {
@@ -154,8 +191,23 @@ export class TestHelper {
     return erc721;
   }
 
+  static async deployAssetsHolder() {
+    return await this.deployLogic("AssetsHolderMock");
+  }
+
   static async deployMockHederaService(tokenTesting: boolean = true) {
     return await this.deployLogic("MockHederaService", tokenTesting);
+  }
+
+  static async deployGovernor(args: any[] = []) {
+    if (args.length > 0) {
+      return this.deployProxy("HederaGovernor", ...args);
+    }
+    return this.deployLogic("HederaGovernor");
+  }
+
+  static async getDeployGovernorAt(address: string) {
+    return await TestHelper.getContract("HederaGovernor", address);
   }
 
   static async deployLogic(name: string, ...args: any) {
@@ -173,12 +225,13 @@ export class TestHelper {
   private static async deployInternally(
     name: string,
     isProxy: boolean,
-    args: Array<any>
+    args: Array<any>,
   ) {
     const Contract = await ethers.getContractFactory(name);
+    const options = name === "Factory" ? { initializer: "setUpFactory" } : {};
     const contractInstance = !isProxy
       ? await Contract.deploy(...args)
-      : await upgrades.deployProxy(Contract, args);
+      : await upgrades.deployProxy(Contract, args, options);
     await contractInstance.deployed();
     return contractInstance;
   }

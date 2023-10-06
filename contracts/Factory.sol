@@ -39,6 +39,11 @@ contract Factory is IEvents, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     mapping(address => mapping(address => mapping(uint256 => address)))
         private pairs;
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     function setUpFactory(
         IHederaService _hederaService,
         address _proxyAdmin,

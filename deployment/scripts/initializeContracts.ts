@@ -1,22 +1,19 @@
 import dex from "../model/dex";
-import BigNumber from "bignumber.js";
 import Factory from "../../e2e-test/business/Factory";
+import BigNumber from "bignumber.js";
+import GodHolder from "../../e2e-test/business/GodHolder";
+import Configuration from "../../e2e-test/business/Configuration";
+import FTDAOFactory from "../../e2e-test/business/factories/FTDAOFactory";
+import NFTDAOFactory from "../../e2e-test/business/factories/NFTDAOFactory";
+import HederaGovernor from "../../e2e-test/business/HederaGovernor";
+import MultiSigDAOFactory from "../../e2e-test/business/factories/MultiSigDAOFactory";
+import FTTokenHolderFactory from "../../e2e-test/business/factories/FTTokenHolderFactory";
+import NFTTokenHolderFactory from "../../e2e-test/business/factories/NFTTokenHolderFactory";
+import SystemRoleBasedAccess from "../../e2e-test/business/common/SystemRoleBasedAccess";
 
 import { Helper } from "../../utils/Helper";
 import { TokenId } from "@hashgraph/sdk";
 import { clientsInfo } from "../../utils/ClientManagement";
-import Configuration from "../../e2e-test/business/Configuration";
-import MultiSigDAOFactory from "../../e2e-test/business/factories/MultiSigDAOFactory";
-import FTDAOFactory from "../../e2e-test/business/factories/FTDAOFactory";
-import NFTDAOFactory from "../../e2e-test/business/factories/NFTDAOFactory";
-import TokenTransferGovernor from "../../e2e-test/business/TokenTransferGovernor";
-import GodHolder from "../../e2e-test/business/GodHolder";
-import TokenCreateGovernor from "../../e2e-test/business/TokenCreateGovernor";
-import ContractUpgradeGovernor from "../../e2e-test/business/ContractUpgradeGovernor";
-import TextGovernor from "../../e2e-test/business/TextGovernor";
-import FTTokenHolderFactory from "../../e2e-test/business/factories/FTTokenHolderFactory";
-import NFTTokenHolderFactory from "../../e2e-test/business/factories/NFTTokenHolderFactory";
-import SystemRoleBasedAccess from "../../e2e-test/business/common/SystemRoleBasedAccess";
 
 const tokenA = TokenId.fromString(dex.TOKEN_LAB49_1);
 const tokenB = TokenId.fromString(dex.TOKEN_LAB49_2);
@@ -29,7 +26,7 @@ const createPair = async (
   factory: Factory,
   token0: TokenId,
   token1: TokenId,
-  fee: BigNumber
+  fee: BigNumber,
 ) => {
   const feeCollectionAccountId = clientsInfo.operatorId;
 
@@ -39,7 +36,7 @@ const createPair = async (
     feeCollectionAccountId,
     clientsInfo.uiUserKey,
     clientsInfo.uiUserClient,
-    fee
+    fee,
   );
 };
 
@@ -53,6 +50,8 @@ export async function main() {
 
   const factory = new Factory();
   await factory.setupFactory();
+  await factory.getPairs();
+
   try {
     await createPair(factory, tokenB, tokenHBARX, fees[1]);
   } catch (error) {
@@ -85,35 +84,34 @@ export async function main() {
 
   const godTokenHolderFactory = new FTTokenHolderFactory();
   await godTokenHolderFactory.initialize();
+  await godTokenHolderFactory.getTokenHolder(tokenGOD.toSolidityAddress());
+  await godTokenHolderFactory.getTokenHolder(
+    dex.TOKEN_LAB49_1_ID.toSolidityAddress(),
+  );
+  await godTokenHolderFactory.getTokenHolder(
+    dex.GOVERNANCE_DAO_ONE_TOKEN_ID.toSolidityAddress(),
+  );
+
   const nftTokenHolderFactory = new NFTTokenHolderFactory();
   await nftTokenHolderFactory.initialize();
-
-  const godHolderContractId = await godTokenHolderFactory.getTokenHolder(
-    tokenGOD.toSolidityAddress()
-  );
-  const godHolder = new GodHolder(godHolderContractId);
-  await godTokenHolderFactory.getTokenHolder(
-    dex.TOKEN_LAB49_1_ID.toSolidityAddress()
-  );
-  await godTokenHolderFactory.getTokenHolder(
-    dex.GOVERNANCE_DAO_ONE_TOKEN_ID.toSolidityAddress()
-  );
   await nftTokenHolderFactory.getTokenHolder(tokenNFT.toSolidityAddress());
 
   await new MultiSigDAOFactory().initialize();
+
   await new FTDAOFactory().initialize(
     clientsInfo.operatorClient,
-    godTokenHolderFactory
-  );
-  await new NFTDAOFactory().initialize(
-    clientsInfo.operatorClient,
-    nftTokenHolderFactory
+    godTokenHolderFactory,
   );
 
-  await new TokenTransferGovernor().initialize(godHolder);
-  await new TokenCreateGovernor().initialize(godHolder);
-  await new ContractUpgradeGovernor().initialize(godHolder);
-  await new TextGovernor().initialize(godHolder);
+  await new NFTDAOFactory().initialize(
+    clientsInfo.operatorClient,
+    nftTokenHolderFactory,
+  );
+
+  const godHolder = new GodHolder(
+    await godTokenHolderFactory.getTokenHolder(tokenGOD.toSolidityAddress()),
+  );
+  await new HederaGovernor().initialize(godHolder);
 }
 
 if (require.main === module) {

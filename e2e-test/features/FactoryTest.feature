@@ -4,7 +4,7 @@ Feature: Factory contract e2e test
 
     This feature file contains e2e test for factory contract
 
-    Scenario: Verify address of pair is same to address recieved after pair creation
+    Scenario: Verify address of pair is same to address received after pair creation
         Given User have setup the factory
         When User create a new pair of tokens with name "FactoryTest1" and "FactoryTest2" and with fee as 0.1%
         Then User verify address of pair is same to address received after pair creation
@@ -19,7 +19,7 @@ Feature: Factory contract e2e test
 
     Scenario: Verify user can not create pair of same tokens with negative fees
         When User create a new pair with tokens "FactoryTest1" and "FactoryTest2" and with fee as -0.3%
-        Then User receive error message "CONTRACT_REVERT_EXECUTED"    
+        Then User receive error message "value out-of-bounds"    
     
     Scenario: Verify pair count in pool increases by 1 after creating new pair        
         When User get all pairs of tokens

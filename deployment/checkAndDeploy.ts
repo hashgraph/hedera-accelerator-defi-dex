@@ -1,4 +1,3 @@
-import Web3 from "web3";
 import ContractMetadata from "../utils/ContractMetadata";
 import ContractUpgradeGovernor from "../e2e-test/business/ContractUpgradeGovernor";
 
@@ -8,7 +7,6 @@ import { clientsInfo } from "../utils/ClientManagement";
 import { ContractService } from "./service/ContractService";
 import { DeployedContract } from "./model/contract";
 
-const web3 = new Web3();
 const deployment = new Deployment();
 
 const contractMetadata = new ContractMetadata();
@@ -28,9 +26,9 @@ async function main() {
 
 async function createProposal(
   oldVersion: DeployedContract,
-  newVersionAddress: string
+  newVersionAddress: string,
 ) {
-  const uniqueId = web3.utils.randomHex(20);
+  const uniqueId = Math.random();
   const desc = `Contract Name - ${
     oldVersion.name
   }, New Logic Address =  ${newVersionAddress}, Old Logic Id = ${oldVersion.id!}, Proxy Id = ${oldVersion.transparentProxyId!}`;
@@ -39,7 +37,7 @@ async function createProposal(
   await governor.setupAllowanceForProposalCreation(
     clientsInfo.operatorClient,
     clientsInfo.operatorId,
-    clientsInfo.operatorKey
+    clientsInfo.operatorKey,
   );
 
   const result = await governor.createContractUpgradeProposal(
@@ -47,7 +45,7 @@ async function createProposal(
     newVersionAddress,
     `${gitLastCommitMessage} (${uniqueId})`,
     clientsInfo.operatorClient,
-    desc
+    desc,
   );
   console.log("Proposal creation status :", result.success, result.proposalId);
   return result.success;

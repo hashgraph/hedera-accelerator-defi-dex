@@ -1,8 +1,9 @@
-import { TokenId } from "@hashgraph/sdk";
-import { ContractService } from "../../../deployment/service/ContractService";
 import GodHolder from "../GodHolder";
 import DAOFactory from "./DAOFactory";
 import FTTokenHolderFactory from "./FTTokenHolderFactory";
+
+import { TokenId } from "@hashgraph/sdk";
+import { ContractService } from "../../../deployment/service/ContractService";
 
 export default class FTDAOFactory extends DAOFactory {
   protected getContractName() {
@@ -17,7 +18,7 @@ export default class FTDAOFactory extends DAOFactory {
     const factoryProxyId = await this.getTokenHolderFactoryAddress();
     const godFactory = new FTTokenHolderFactory(factoryProxyId);
     return new GodHolder(
-      await godFactory.getTokenHolder(tokenId.toSolidityAddress())
+      await godFactory.getTokenHolder(tokenId.toSolidityAddress()),
     );
   };
 }

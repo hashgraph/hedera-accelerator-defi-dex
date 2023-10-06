@@ -54,6 +54,11 @@ contract Vault is IEvents, IVault, OwnableUpgradeable, TokenOperations {
 
     ISystemRoleBasedAccess private iSystemRoleBasedAccess;
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     function initialize(
         IHederaService _hederaService,
         address _stakingToken,

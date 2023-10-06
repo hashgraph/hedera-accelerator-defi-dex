@@ -27,7 +27,7 @@ export default class LpToken extends Base {
     tokenName: string,
     tokenSymbol: string,
     ownerId: AccountId | ContractId,
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
   ) => {
     if (await this.isInitializationPending()) {
       const args = new ContractFunctionParameters()
@@ -59,7 +59,7 @@ export default class LpToken extends Base {
   lpTokenCountForGivenTokensQty = async (
     tokenAQty: BigNumber,
     tokenBQty: BigNumber,
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
   ) => {
     const args = new ContractFunctionParameters()
       .addUint256(tokenAQty)
@@ -71,12 +71,12 @@ export default class LpToken extends Base {
       2_00_000,
       LPTOKEN_COUNT_FOR_GIVEN_TOKENS_QTY,
       client,
-      args
+      args,
     );
 
     const count = result.getInt256(0);
     console.log(
-      `- LpToken#${LPTOKEN_COUNT_FOR_GIVEN_TOKENS_QTY}(): count = ${count}\n`
+      `- LpToken#${LPTOKEN_COUNT_FOR_GIVEN_TOKENS_QTY}(): count = ${count}\n`,
     );
     return count;
   };
@@ -87,7 +87,7 @@ export default class LpToken extends Base {
     tokenAQty: BigNumber,
     tokenBQty: BigNumber,
     receiverAccountId: AccountId,
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
   ) => {
     const args = new ContractFunctionParameters()
       .addUint256(tokenAQtyInPool)
@@ -98,14 +98,14 @@ export default class LpToken extends Base {
     await this.execute(2_00_000, ALLOT_LP_TOKEN, client, args);
     const sqrt = Math.sqrt(Number(tokenAQty.multipliedBy(tokenBQty)));
     console.log(
-      `- LpToken#${ALLOT_LP_TOKEN}(): quantities = [${tokenAQty} x ${tokenAQty}], qty = ${sqrt}\n`
+      `- LpToken#${ALLOT_LP_TOKEN}(): quantities = [${tokenAQty} x ${tokenAQty}], qty = ${sqrt}\n`,
     );
   };
 
   removeLPToken = async (
     lpTokenQty: BigNumber,
     senderAccountId: AccountId,
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
   ) => {
     const args = new ContractFunctionParameters()
       .addUint256(lpTokenQty)
@@ -116,16 +116,16 @@ export default class LpToken extends Base {
 
   lpTokenForUser = async (
     userAccountId: AccountId,
-    client: Client = clientsInfo.operatorClient
+    client: Client = clientsInfo.operatorClient,
   ) => {
     const args = new ContractFunctionParameters().addAddress(
-      userAccountId.toSolidityAddress()
+      userAccountId.toSolidityAddress(),
     );
     const { result } = await this.execute(
       2_00_000,
       LP_TOKEN_FOR_USER,
       client,
-      args
+      args,
     );
     const count = result.getInt256(0);
     console.log(`- LpToken#${LP_TOKEN_FOR_USER}(): count = ${count}\n`);

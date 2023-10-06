@@ -1,13 +1,13 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.18;
 
-import "./ISharedDAOModel.sol";
-
 import "../common/IEvents.sol";
 import "../common/IErrors.sol";
+import "../common/ISharedModel.sol";
 import "../common/IHederaService.sol";
 
 import "../dao/MultisigDAO.sol";
+import "./DAOConfiguration.sol";
 
 import "../gnosis/HederaMultiSend.sol";
 import "../gnosis/HederaGnosisSafe.sol";
@@ -20,7 +20,7 @@ contract MultisigDAOFactory is
     IErrors,
     IEvents,
     Initializable,
-    ISharedDAOModel
+    DAOConfiguration
 {
     event DAOCreated(
         address daoAddress,
@@ -45,11 +45,17 @@ contract MultisigDAOFactory is
 
     address[] private daos;
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     function initialize(
         ISystemRoleBasedAccess _iSystemRoleBasedAccess,
         address _daoLogic,
         address _safeLogic,
         address _safeFactory,
+        DAOConfigDetails memory _daoConfigDetails,
         IHederaService _hederaService,
         HederaMultiSend _multiSend
     ) external initializer {
@@ -59,11 +65,13 @@ contract MultisigDAOFactory is
         safeFactory = _safeFactory;
         hederaService = _hederaService;
         multiSend = _multiSend;
+        daoConfig = _daoConfigDetails;
         emit LogicUpdated(address(0), daoLogic, DaoLogic);
         emit LogicUpdated(address(0), safeLogic, SafeLogic);
         emit LogicUpdated(address(0), safeFactory, SafeFactory);
         emit LogicUpdated(address(0), address(hederaService), HederaService);
         emit LogicUpdated(address(0), address(multiSend), MultiSend);
+        emit DAOConfig(daoConfig);
     }
 
     function upgradeSafeFactoryAddress(address _newImpl) external {
@@ -114,7 +122,8 @@ contract MultisigDAOFactory is
 
     function createDAO(
         MultiSigCreateDAOInputs memory _createDAOInputs
-    ) external returns (address) {
+    ) external payable returns (address) {
+        payDAOCreationFee(hederaService);
         HederaGnosisSafe hederaGnosisSafe = _createGnosisSafeProxyInstance(
             _createDAOInputs.owners,
             _createDAOInputs.threshold

@@ -4,14 +4,14 @@ import { BigNumber } from "@ethersproject/bignumber";
 
 export const deployContract = async (
   contractName: string,
-  contractConstructorArgs: any
+  contractConstructorArgs: any,
 ) => {
   const provider = new hre.ethers.providers.JsonRpcProvider(
-    "https://testnet.hashio.io/api"
+    "https://testnet.hashio.io/api",
   );
   const wallet = new hre.ethers.Wallet(
     "0xb17080a89335f96f01e350d93c5c5ae59a0f685681bcc8c08bbb32cf02dcc96a",
-    provider
+    provider,
   );
   wallet.estimateGas = async (tnx: any) => {
     return BigNumber.from("500000");
@@ -19,7 +19,7 @@ export const deployContract = async (
 
   const constractFactory = await hre.ethers.getContractFactory(
     contractName,
-    wallet
+    wallet,
   );
 
   const contract = await constractFactory.deploy();
@@ -28,7 +28,7 @@ export const deployContract = async (
   const contractId = hethers.utils.getAccountFromAddress(contractAddress);
 
   console.log(
-    `${contractName} contract id: ${hethers.utils.asAccountString(contractId)}`
+    `${contractName} contract id: ${hethers.utils.asAccountString(contractId)}`,
   );
   console.log(`${contractName} deployed to: ${contractAddress}`);
 

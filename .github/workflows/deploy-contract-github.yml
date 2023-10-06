@@ -8,21 +8,18 @@ on:
         required: true
         options:
           - Factory
-          - GODHolder
-          - Configuration
-          - GovernorUpgrade
-          - MultisigDAOFactory
-          - GovernorTokenCreate
-          - GovernorTextProposal
-          - GovernorTransferToken
           - FTDAOFactory
           - NFTDAOFactory
+          - MultisigDAOFactory
           - GODTokenHolderFactory
+          - NFTTokenHolderFactory
+          - Configuration
       contractType:
         type: choice
         description: Please select the type
         required: true
         options:
+          - Logic
           - Proxy
           - Upgrade
 env:

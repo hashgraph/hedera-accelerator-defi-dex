@@ -8,12 +8,7 @@ For now, we have decided to use transparent proxy because it has proven the test
 
 1. Added `import "@openzeppelin/hardhat-upgrades"` to `hardhat.config.ts`
 2. Run `npx hardhat compile`
-3. Run `npx hardhat run deployment/upgradeableSwap.ts`
-4. Copy deployed contract address
-5. Update deployment/transparentUpgradeableProxy.ts and run `npx hardhat run deployment/transparentUpgradeableProxy.ts`
-6. You can interact as admin using `integrationTest/swapV2Admin.ts`
-7. You can call Swap contract function using `integrationTest/swapV2.ts`
-
+3. Run `npx hardhat run deployment/deploy.ts`
 
 ## Guidelines to update Swap contract - 
 

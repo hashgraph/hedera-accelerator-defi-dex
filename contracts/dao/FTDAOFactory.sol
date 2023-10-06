@@ -1,98 +1,155 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.18;
 
-import "../common/IERC20.sol";
+import "./DAOConfiguration.sol";
+
 import "../common/IEvents.sol";
 import "../common/IErrors.sol";
 import "../common/IHederaService.sol";
+import "../common/ISystemRoleBasedAccess.sol";
 
 import "../dao/FTDAO.sol";
+import "../holder/IAssetsHolder.sol";
+import "../governance/ITokenHolder.sol";
+import "../governance/HederaGovernor.sol";
+
 import "../governance/ITokenHolderFactory.sol";
-import "./ISharedDAOModel.sol";
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-contract FTDAOFactory is IErrors, IEvents, Initializable, ISharedDAOModel {
+contract FTDAOFactory is
+    IErrors,
+    IEvents,
+    ISharedModel,
+    Initializable,
+    DAOConfiguration
+{
     event DAOCreated(
-        address daoAddress,
-        Governor governors,
         address tokenHolderAddress,
+        address assetsHolderAddress,
+        address governorAddress,
+        address daoAddress,
         CreateDAOInputs inputs
     );
 
-    string private constant FungibleTokenDAO = "FTDAO";
+    string private constant DAO = "G_DAO";
+    string private constant Governance = "Governance";
+    string private constant AssetsHolder = "AssetsHolder";
     string private constant TokenHolderFactory = "TokenHolderFactory";
-    string private constant Governors = "Governors";
     string private constant HederaService = "HederaService";
+    string private constant ISystemRole = "ISystemRole";
 
     address[] private daos;
-    FTDAO private daoLogic;
-    Governor private governors;
+    address private daoLogic;
+    address private governorLogic;
+    address private assetsHolderLogic;
     IHederaService private hederaService;
     ITokenHolderFactory private tokenHolderFactory;
     ISystemRoleBasedAccess private iSystemRoleBasedAccess;
 
-    function initialize(
-        ISystemRoleBasedAccess _iSystemRoleBasedAccess,
-        IHederaService _hederaService,
-        FTDAO _daoLogic,
-        ITokenHolderFactory _tokenHolderFactory,
-        Governor memory _governors
-    ) external initializer {
-        iSystemRoleBasedAccess = _iSystemRoleBasedAccess;
-        hederaService = _hederaService;
-        daoLogic = _daoLogic;
-        tokenHolderFactory = _tokenHolderFactory;
-        governors = _governors;
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
 
-        emit LogicUpdated(address(0), address(daoLogic), FungibleTokenDAO);
+    function initialize(
+        address _daoLogic,
+        address _governorLogic,
+        address _assetsHolderLogic,
+        IHederaService _hederaService,
+        DAOConfigDetails memory _daoConfigDetails,
+        ITokenHolderFactory _tokenHolderFactory,
+        ISystemRoleBasedAccess _iSystemRoleBasedAccess
+    ) external initializer {
+        daoLogic = _daoLogic;
+        governorLogic = _governorLogic;
+        assetsHolderLogic = _assetsHolderLogic;
+
+        hederaService = _hederaService;
+        daoConfig = _daoConfigDetails;
+
+        tokenHolderFactory = _tokenHolderFactory;
+        iSystemRoleBasedAccess = _iSystemRoleBasedAccess;
+
+        emit LogicUpdated(address(0), daoLogic, DAO);
+        emit LogicUpdated(address(0), governorLogic, Governance);
+        emit LogicUpdated(address(0), assetsHolderLogic, AssetsHolder);
+
+        emit LogicUpdated(address(0), address(hederaService), HederaService);
         emit LogicUpdated(
             address(0),
             address(tokenHolderFactory),
             TokenHolderFactory
         );
-        emit LogicUpdated(address(0), address(hederaService), HederaService);
-        Governor memory oldGovernors;
-        emit GovernorLogicUpdated(oldGovernors, _governors, Governors);
+        emit LogicUpdated(
+            address(0),
+            address(iSystemRoleBasedAccess),
+            ISystemRole
+        );
+        emit DAOConfig(daoConfig);
+    }
+
+    function upgradeDAOLogicImplementation(address _daoLogic) external {
+        iSystemRoleBasedAccess.checkChildProxyAdminRole(msg.sender);
+        emit LogicUpdated(address(daoLogic), address(_daoLogic), DAO);
+        daoLogic = _daoLogic;
+    }
+
+    function upgradeGovernorImplementation(address _governorLogic) external {
+        iSystemRoleBasedAccess.checkChildProxyAdminRole(msg.sender);
+        emit LogicUpdated(
+            address(governorLogic),
+            address(_governorLogic),
+            Governance
+        );
+        governorLogic = _governorLogic;
+    }
+
+    function upgradeAssetHolderImplementation(
+        address _assetsHolderLogic
+    ) external {
+        iSystemRoleBasedAccess.checkChildProxyAdminRole(msg.sender);
+        emit LogicUpdated(
+            address(assetsHolderLogic),
+            address(_assetsHolderLogic),
+            AssetsHolder
+        );
+        assetsHolderLogic = _assetsHolderLogic;
     }
 
     function upgradeTokenHolderFactory(
-        ITokenHolderFactory _newTokenHolderFactory
+        ITokenHolderFactory _tokenHolderFactory
     ) external {
         iSystemRoleBasedAccess.checkChildProxyAdminRole(msg.sender);
         emit LogicUpdated(
             address(tokenHolderFactory),
-            address(_newTokenHolderFactory),
+            address(_tokenHolderFactory),
             TokenHolderFactory
         );
-        tokenHolderFactory = _newTokenHolderFactory;
+        tokenHolderFactory = _tokenHolderFactory;
     }
 
-    function upgradeFTDAOLogicImplementation(FTDAO _newImpl) external {
-        iSystemRoleBasedAccess.checkChildProxyAdminRole(msg.sender);
-        emit LogicUpdated(
-            address(daoLogic),
-            address(_newImpl),
-            FungibleTokenDAO
-        );
-        daoLogic = _newImpl;
-    }
-
-    function upgradeGovernorsImplementation(Governor memory _newImpl) external {
-        iSystemRoleBasedAccess.checkChildProxyAdminRole(msg.sender);
-        emit GovernorLogicUpdated(governors, _newImpl, Governors);
-        governors = _newImpl;
-    }
-
-    function upgradeHederaService(IHederaService newHederaService) external {
+    function upgradeHederaService(IHederaService _hederaService) external {
         iSystemRoleBasedAccess.checkChildProxyAdminRole(msg.sender);
         emit LogicUpdated(
             address(hederaService),
-            address(newHederaService),
+            address(_hederaService),
             HederaService
         );
-        hederaService = newHederaService;
+        hederaService = _hederaService;
+    }
+
+    function upgradeISystemRoleBasedAccess(
+        ISystemRoleBasedAccess _iSystemRoleBasedAccess
+    ) external {
+        iSystemRoleBasedAccess.checkChildProxyAdminRole(msg.sender);
+        emit LogicUpdated(
+            address(iSystemRoleBasedAccess),
+            address(_iSystemRoleBasedAccess),
+            ISystemRole
+        );
+        iSystemRoleBasedAccess = _iSystemRoleBasedAccess;
     }
 
     function getTokenHolderFactoryAddress() external view returns (address) {
@@ -109,61 +166,80 @@ contract FTDAOFactory is IErrors, IEvents, Initializable, ISharedDAOModel {
 
     function createDAO(
         CreateDAOInputs memory _createDAOInputs
-    ) external returns (address) {
+    )
+        external
+        payable
+        returns (
+            address tokenHolderAddress,
+            address assetsHolderAddress,
+            address governorAddress,
+            address daoAddress
+        )
+    {
         if (address(_createDAOInputs.tokenAddress) == address(0)) {
             revert InvalidInput("DAOFactory: token address is zero");
         }
         if (_createDAOInputs.votingPeriod == 0) {
             revert InvalidInput("DAOFactory: voting period is zero");
         }
+        payDAOCreationFee(hederaService);
+        (
+            tokenHolderAddress,
+            assetsHolderAddress,
+            governorAddress,
+            daoAddress
+        ) = _createGovernanceDAOContractInstance(_createDAOInputs);
+        if (!_createDAOInputs.isPrivate) {
+            daos.push(daoAddress);
+        }
+        emit DAOCreated(
+            tokenHolderAddress,
+            tokenHolderAddress,
+            governorAddress,
+            daoAddress,
+            _createDAOInputs
+        );
+    }
+
+    function _createGovernanceDAOContractInstance(
+        CreateDAOInputs memory _createDAOInputs
+    ) private returns (address, address, address, address) {
+        // 0- setting up config variable
+        GovernorConfig memory config;
+        config.votingDelay = _createDAOInputs.votingDelay;
+        config.votingPeriod = _createDAOInputs.votingPeriod;
+        config.quorumThresholdInBsp = _createDAOInputs.quorumThreshold;
+
+        // 1 - creating token holder
         ITokenHolder iTokenHolder = tokenHolderFactory.getTokenHolder(
             address(_createDAOInputs.tokenAddress)
         );
-        address createdDAOAddress = _createFTDAOContractInstance(
-            _createDAOInputs,
-            iTokenHolder
+
+        // 2 - creating asset holder
+        IAssetsHolder iAssets = IAssetsHolder(_createProxy(assetsHolderLogic));
+
+        // 3 - creating governor
+        HederaGovernor governor = HederaGovernor(
+            payable(_createProxy(governorLogic))
         );
-        FTDAO dao = FTDAO(createdDAOAddress);
-        (
-            address governorTokenTransferProxy,
-            address governorTextProposalProxy,
-            address governorUpgradeProxy,
-            address governorTokenCreateProxy
-        ) = dao.getGovernorContractAddresses();
-
-        if (!_createDAOInputs.isPrivate) {
-            daos.push(createdDAOAddress);
-        }
-        Governor memory proxies;
-        proxies.tokenTransferLogic = governorTokenTransferProxy;
-        proxies.contractUpgradeLogic = governorUpgradeProxy;
-        proxies.textLogic = governorTextProposalProxy;
-        proxies.createTokenLogic = governorTokenCreateProxy;
-        emit DAOCreated(
-            createdDAOAddress,
-            proxies,
-            address(iTokenHolder),
-            _createDAOInputs
-        );
-        return createdDAOAddress;
-    }
-
-    function _createFTDAOContractInstance(
-        CreateDAOInputs memory _createDAOInputs,
-        ITokenHolder iTokenHolder
-    ) private returns (address daoAddress) {
-        FTDAO dao = FTDAO(_createProxy(address(daoLogic)));
-        Common memory common;
-        common.hederaService = hederaService;
-        common.iTokenHolder = iTokenHolder;
-
-        dao.initialize(
-            _createDAOInputs,
-            governors,
-            common,
+        governor.initialize(
+            config,
+            iTokenHolder,
+            iAssets,
+            hederaService,
             iSystemRoleBasedAccess
         );
-        return address(dao);
+
+        // 4 - creating dao
+        FTDAO dao = FTDAO(_createProxy(daoLogic));
+        dao.initialize(address(governor), _createDAOInputs);
+
+        return (
+            address(iTokenHolder),
+            address(iAssets),
+            address(governor),
+            address(dao)
+        );
     }
 
     function _createProxy(address _logic) private returns (address) {
