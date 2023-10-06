@@ -8,17 +8,18 @@ on:
         required: true
         options:
           - Factory
-          - GODHolder
-          - Configuration
-          - MultisigDAOFactory
           - FTDAOFactory
           - NFTDAOFactory
+          - MultisigDAOFactory
           - GODTokenHolderFactory
+          - NFTTokenHolderFactory
+          - Configuration
       contractType:
         type: choice
         description: Please select the type
         required: true
         options:
+          - Logic
           - Proxy
           - Upgrade
 env:
