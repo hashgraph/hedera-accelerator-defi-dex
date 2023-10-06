@@ -8,7 +8,9 @@ import {
   verifyFeeConfigUpdatedEvent,
 } from "./common";
 
-describe("NFT-Governance-DAO tests", function () {
+describe("FT-Governance-DAO tests", function () {
+  const TOTAL = 100 * 1e8;
+
   const DAO_NAME = "DAO_NAME";
   const LOGO_URL = "https://twitter.com";
   const INFO_URL = "https://twitter.com";
@@ -26,11 +28,12 @@ describe("NFT-Governance-DAO tests", function () {
 
     const hederaService = await TestHelper.deployMockHederaService();
 
-    const token = await TestHelper.deployERC721Mock(signers[0]);
+    const token = await TestHelper.deployERC20Mock(TOTAL);
+    await token.setUserBalance(signers[0].address, TOTAL);
 
-    const godHolder = await TestHelper.deployNftGodHolder(hederaService, token);
+    const godHolder = await TestHelper.deployGodHolder(hederaService, token);
 
-    const godHolderFactory = await TestHelper.deployNFTTokenHolderFactory(
+    const godHolderFactory = await TestHelper.deployGodTokenHolderFactory(
       hederaService,
       godHolder,
       dexOwner.address,
@@ -246,6 +249,15 @@ describe("NFT-Governance-DAO tests", function () {
         Object.values(UPDATED_INIT_ARGS),
       );
       await expect(factory.createDAO(Object.values(CREATE_DAO_ARGS))).reverted;
+    });
+
+    it("Verify createDAO should be reverted during dao fee transfer", async function () {
+      const { factory, token, CREATE_DAO_ARGS } =
+        await loadFixture(deployFixture);
+      await token.setTransaferFailed(true);
+      await expect(
+        factory.createDAO(Object.values(CREATE_DAO_ARGS)),
+      ).revertedWith("FC: Fee transfer failed");
     });
 
     it("Verify dao creation fee configuration should be updated", async function () {

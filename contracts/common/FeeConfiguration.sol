@@ -29,12 +29,12 @@ abstract contract FeeConfiguration is
         );
     }
 
-    function _updateConfigExecutor() internal view virtual returns (address) {
+    function _feeConfigExecutor() internal view virtual returns (address) {
         return feeConfig.receiver;
     }
 
     function updateFeeConfig(FeeConfig memory _feeConfig) external {
-        require(msg.sender == _updateConfigExecutor(), "FC: No Authorization");
+        require(msg.sender == _feeConfigExecutor(), "FC: No Authorization");
         _updateFeeConfigInternally(
             _feeConfig.receiver,
             _feeConfig.tokenAddress,
