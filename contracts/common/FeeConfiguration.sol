@@ -44,6 +44,10 @@ abstract contract FeeConfiguration is
 
     function _deductFee(IHederaService _hederaService) internal {
         if (feeConfig.tokenAddress == address(0)) {
+            require(
+                msg.value == feeConfig.amountOrId,
+                "FC: HBAR amount must be same to config amount"
+            );
             AddressUpgradeable.sendValue(
                 payable(feeConfig.receiver),
                 feeConfig.amountOrId

@@ -17,6 +17,7 @@ export enum Type {
   MINT_TOKEN = 1005,
   BURN_TOKEN = 1006,
   UPGRADE_PROXY = 1007,
+  UPDATE_FEE_CONFIG = 1008,
 }
 
 export const INITIALIZE = "initialize";

@@ -216,6 +216,7 @@ contract FTDAOFactory is IErrors, IEvents, ISharedModel, FeeConfiguration {
         );
         governor.initialize(
             config,
+            _createDAOInputs.feeConfig,
             iTokenHolder,
             iAssets,
             hederaService,

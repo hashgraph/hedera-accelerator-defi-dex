@@ -1,4 +1,5 @@
-import AssetsHolder from "../artifacts/contracts/holder/AssetsHolder.sol/AssetsHolder.json";
+import AssetsHolderABI from "../artifacts/contracts/holder/AssetsHolder.sol/AssetsHolder.json";
+import HederaGovernorABI from "../artifacts/contracts/governance/HederaGovernor.sol/HederaGovernor.json";
 import * as AssetsHolderProps from "../e2e-test/business/AssetsHolder";
 
 import { ethers } from "hardhat";
@@ -8,6 +9,7 @@ import { Contract } from "ethers";
 import { TestHelper } from "./TestHelper";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { verifyFeeConfigUpdatedEvent } from "./common";
 
 interface CreationInputs {
   proposalType: number;
@@ -66,9 +68,11 @@ describe("Governor Tests", function () {
     const roleBasedAccess = await TestHelper.deploySystemRoleBasedAccess();
     const ftAssetsHolder = await TestHelper.deployAssetsHolder();
     const nftAssetsHolder = await TestHelper.deployAssetsHolder();
+    const proposalCreationFeeConfig = await TestHelper.getDefaultFeeConfig();
 
     const FT_ARGS = [
       [VOTING_DELAY_IN_SECONDS, VOTING_PERIOD_IN_SECONDS, QUORUM_THRESHOLD_BSP],
+      Object.values(proposalCreationFeeConfig),
       ftTokenHolder.address,
       ftAssetsHolder.address,
       hederaService.address,
@@ -77,6 +81,7 @@ describe("Governor Tests", function () {
 
     const NFT_ARGS = [
       [VOTING_DELAY_IN_SECONDS, VOTING_PERIOD_IN_SECONDS, QUORUM_THRESHOLD_BSP],
+      Object.values(proposalCreationFeeConfig),
       nftTokenHolder.address,
       nftAssetsHolder.address,
       hederaService.address,
@@ -85,8 +90,11 @@ describe("Governor Tests", function () {
 
     // FT governor
     const ftGovernor = await TestHelper.deployGovernor(FT_ARGS);
+    await verifyFeeConfigUpdatedEvent(ftGovernor, proposalCreationFeeConfig);
+
     // NFT governor
     const nftGovernor = await TestHelper.deployGovernor(NFT_ARGS);
+    await verifyFeeConfigUpdatedEvent(ftGovernor, proposalCreationFeeConfig);
 
     const systemUsersSigners = await TestHelper.systemUsersSigners();
     const governorTestProxy = await TestHelper.deployLogic(
@@ -119,13 +127,15 @@ describe("Governor Tests", function () {
       governorTestProxy,
       systemUsersSigners,
       roleBasedAccess,
+
+      proposalCreationFeeConfig,
     };
   }
 
   async function encodeFunctionData(
     functionName: string,
     data: any[],
-    defaultAbi: any = AssetsHolder.abi,
+    defaultAbi: any = AssetsHolderABI.abi,
   ): Promise<{ bytes: Uint8Array; hex: string }> {
     const iface = new ethers.utils.Interface(defaultAbi);
     const hex = iface.encodeFunctionData(functionName, data);
@@ -189,6 +199,15 @@ describe("Governor Tests", function () {
     return { tx, proposalId, inputs };
   };
 
+  async function getProposalCreationFeeInHBar(
+    governance: Contract,
+  ): Promise<number> {
+    const feeConfig = await governance.feeConfig();
+    return TestHelper.ZERO_ADDRESS === feeConfig.tokenAddress
+      ? feeConfig.amountOrId
+      : 0;
+  }
+
   async function createProposal(
     governance: Contract,
     account: SignerWithAddress,
@@ -198,7 +217,11 @@ describe("Governor Tests", function () {
     targets: string[],
     values: number[],
     calldatas: Uint8Array[],
+    hBarAsFee?: number,
   ) {
+    if (!hBarAsFee) {
+      hBarAsFee = await getProposalCreationFeeInHBar(governance);
+    }
     const creationInputs: CreationInputs = {
       proposalType,
       title,
@@ -212,7 +235,7 @@ describe("Governor Tests", function () {
     };
     const tx = await governance
       .connect(account)
-      .createProposal(Object.values(creationInputs));
+      .createProposal(Object.values(creationInputs), { value: hBarAsFee });
     return verifyProposalCoreInformationEvent(
       tx,
       account.address,
@@ -225,6 +248,7 @@ describe("Governor Tests", function () {
     account: SignerWithAddress,
     title: string = TITLE,
     amountOrId: number = 0,
+    proposalCreationFee?: number,
   ) {
     const assetsAddress = await governance.getAssetHolderContractAddress();
     const calldata = await encodeFunctionData(AssetsHolderProps.SET_TEXT, []);
@@ -237,6 +261,7 @@ describe("Governor Tests", function () {
       [assetsAddress],
       [0],
       [calldata.bytes],
+      proposalCreationFee,
     );
   }
 
@@ -245,6 +270,7 @@ describe("Governor Tests", function () {
     account: SignerWithAddress,
     tokenName: string,
     amountOrId: number = 0,
+    proposalCreationFee?: number,
   ) {
     const assetsAddress = await governance.getAssetHolderContractAddress();
     const calldata = await encodeFunctionData(AssetsHolderProps.CREATE_TOKEN, [
@@ -261,6 +287,7 @@ describe("Governor Tests", function () {
       [assetsAddress],
       [TOKEN_CREATION_HBAR_FEE],
       [calldata.bytes],
+      proposalCreationFee,
     );
   }
 
@@ -270,6 +297,7 @@ describe("Governor Tests", function () {
     tokenAddress: string,
     mintAmount: number,
     amountOrId: number = 0,
+    proposalCreationFee?: number,
   ) {
     const assetsAddress = await governance.getAssetHolderContractAddress();
     const calldata = await encodeFunctionData(AssetsHolderProps.MINT_TOKEN, [
@@ -285,6 +313,7 @@ describe("Governor Tests", function () {
       [assetsAddress],
       [0],
       [calldata.bytes],
+      proposalCreationFee,
     );
   }
 
@@ -294,6 +323,7 @@ describe("Governor Tests", function () {
     tokenAddress: string,
     burnAmount: number,
     amountOrId: number = 0,
+    proposalCreationFee?: number,
   ) {
     const assetsAddress = await governance.getAssetHolderContractAddress();
     const calldata = await encodeFunctionData(AssetsHolderProps.BURN_TOKEN, [
@@ -309,6 +339,7 @@ describe("Governor Tests", function () {
       [assetsAddress],
       [0],
       [calldata.bytes],
+      proposalCreationFee,
     );
   }
 
@@ -319,6 +350,7 @@ describe("Governor Tests", function () {
     tokenAddress: string,
     amount: number,
     amountOrId: number = 0,
+    proposalCreationFee?: number,
   ) {
     const assetsAddress = await governance.getAssetHolderContractAddress();
     const calldata = await encodeFunctionData(AssetsHolderProps.TRANSFER, [
@@ -335,6 +367,7 @@ describe("Governor Tests", function () {
       [assetsAddress],
       [0],
       [calldata.bytes],
+      proposalCreationFee,
     );
   }
 
@@ -345,6 +378,7 @@ describe("Governor Tests", function () {
     proxyLogicAddress: string,
     proxyAdminAddress: string,
     amountOrId: number = 0,
+    proposalCreationFee?: number,
   ) {
     const assetsAddress = await governance.getAssetHolderContractAddress();
     const calldata = await encodeFunctionData(AssetsHolderProps.UPGRADE_PROXY, [
@@ -361,6 +395,32 @@ describe("Governor Tests", function () {
       [assetsAddress],
       [0],
       [calldata.bytes],
+      proposalCreationFee,
+    );
+  }
+
+  async function createFeeConfigUpdateProposal(
+    governance: Contract,
+    account: SignerWithAddress,
+    feeConfig: any,
+    amountOrId: number = 0,
+    proposalCreationFee?: number,
+  ) {
+    const calldata = await encodeFunctionData(
+      "updateFeeConfig",
+      [Object.values(feeConfig)],
+      HederaGovernorABI.abi,
+    );
+    return createProposal(
+      governance,
+      account,
+      TITLE,
+      amountOrId,
+      AssetsHolderProps.Type.UPDATE_FEE_CONFIG,
+      [governance.address],
+      [0],
+      [calldata.bytes],
+      proposalCreationFee,
     );
   }
 
@@ -769,13 +829,18 @@ describe("Governor Tests", function () {
     });
 
     it("Verify contract should initialize quorum threshold value with 500 when user passed 0 as threshold", async function () {
-      const { ftTokenHolder, hederaService, roleBasedAccess } =
-        await loadFixture(deployFixture);
+      const {
+        ftTokenHolder,
+        hederaService,
+        roleBasedAccess,
+        proposalCreationFeeConfig,
+      } = await loadFixture(deployFixture);
 
       const ftAssetsHolder = await TestHelper.deployAssetsHolder();
 
       const GOVERNOR_ARGS = [
         [VOTING_DELAY_IN_SECONDS, VOTING_PERIOD_IN_SECONDS, 0],
+        Object.values(proposalCreationFeeConfig),
         ftTokenHolder.address,
         ftAssetsHolder.address,
         hederaService.address,
@@ -836,6 +901,72 @@ describe("Governor Tests", function () {
       await expect(ftGovernor.propose([], [], [], ""))
         .revertedWithCustomError(ftGovernor, "InvalidInput")
         .withArgs("GCSI: propose api disabled");
+    });
+
+    it("Verify updating fee config directly should be reverted as it should be done via proposal", async function () {
+      const { ftGovernor, proposalCreationFeeConfig } =
+        await loadFixture(deployFixture);
+      await expect(
+        ftGovernor.updateFeeConfig(Object.values(proposalCreationFeeConfig)),
+      ).revertedWith("FC: No Authorization");
+    });
+
+    it("Verify updating fee config should be executed via proposal", async function () {
+      const { creator, ftAsGodToken, ftGovernor, ftTokenHolder } =
+        await loadFixture(deployFixture);
+      const newFeeConfig = await TestHelper.getDefaultFeeConfig(
+        ftAsGodToken.address,
+      );
+      await ftTokenHolder.grabTokensFromUser(LOCKED_TOKEN);
+      const info = await createFeeConfigUpdateProposal(
+        ftGovernor,
+        creator,
+        newFeeConfig,
+      );
+      await ftGovernor.castVote(info.proposalId, 1);
+      await TestHelper.increaseEVMTime(VOTING_PERIOD_IN_SECONDS);
+      await execute(ftGovernor, info.inputs);
+      await verifyFeeConfigUpdatedEvent(ftGovernor, newFeeConfig);
+
+      // re-verifying if next proposal is being created with new fee
+      await ftAsGodToken.setUserBalance(
+        creator.address,
+        newFeeConfig.amountOrId,
+      );
+      const { tx } = await createTextProposal(ftGovernor, creator, TITLE);
+      await expect(tx).changeTokenBalances(
+        ftAsGodToken,
+        [newFeeConfig.receiver, creator.address],
+        [newFeeConfig.amountOrId, -newFeeConfig.amountOrId],
+      );
+    });
+
+    it("Verify create proposal should deduct HBAR as fee", async function () {
+      const { ftGovernor, creator, ftTokenHolder } =
+        await loadFixture(deployFixture);
+      await ftTokenHolder.grabTokensFromUser(LOCKED_TOKEN);
+      const feeConfig = await ftGovernor.feeConfig();
+      const { tx } = await createTextProposal(ftGovernor, creator, TITLE);
+      await expect(tx).changeEtherBalances(
+        [feeConfig.receiver, creator.address],
+        [feeConfig.amountOrId, -feeConfig.amountOrId],
+      );
+    });
+
+    it("Verify create proposal should be reverted if user passed other than configured HBAR amount", async function () {
+      const { ftGovernor, creator, ftTokenHolder } =
+        await loadFixture(deployFixture);
+      await ftTokenHolder.grabTokensFromUser(LOCKED_TOKEN);
+      const feeConfig = await ftGovernor.feeConfig();
+      await expect(
+        createTextProposal(
+          ftGovernor,
+          creator,
+          TITLE,
+          0,
+          feeConfig.amountOrId + 1,
+        ),
+      ).revertedWith("FC: HBAR amount must be same to config amount");
     });
   });
 
