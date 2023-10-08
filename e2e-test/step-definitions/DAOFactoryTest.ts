@@ -8,7 +8,7 @@ import NFTTokenHolderFactory from "../business/factories/NFTTokenHolderFactory";
 import { expect } from "chai";
 import { ethers } from "ethers";
 import { clientsInfo } from "../../utils/ClientManagement";
-import { DAOConfigDetails } from "../business/types";
+import { FeeConfigDetails } from "../business/types";
 import { binding, then, when } from "cucumber-tsflow";
 import { CommonSteps, TokenInfo } from "./CommonSteps";
 import { Hbar, TokenId, HbarUnit } from "@hashgraph/sdk";
@@ -30,7 +30,7 @@ let daoFactory: DAOFactory;
 
 let errorMessage: string;
 let godTokenInfo: TokenInfo;
-let daoFeeConfig: DAOConfigDetails;
+let daoFeeConfig: FeeConfigDetails;
 
 @binding()
 export class DAOFactoryTest extends CommonSteps {
@@ -55,9 +55,9 @@ export class DAOFactoryTest extends CommonSteps {
     const daoFee = CommonSteps.normalizeAmountOrId(feeAmountOrId);
     const daoFeeTokenId = TokenId.fromString(feeTokenId);
     daoFeeConfig = {
-      daoTreasurer: DAO_CONFIG.daoTreasurerId.toSolidityAddress(),
+      receiver: DAO_CONFIG.daoTreasurerId.toSolidityAddress(),
       tokenAddress: daoFeeTokenId.toSolidityAddress(),
-      daoFee,
+      amountOrId: daoFee,
     };
     console.log(" - DAO fee config details:-");
     console.table({ daoFeeConfig });
@@ -142,10 +142,10 @@ export class DAOFactoryTest extends CommonSteps {
   private async setupDAOCreationAllowanceAndGetFeeAmount(factory: DAOFactory) {
     const tokenId = TokenId.fromSolidityAddress(daoFeeConfig.tokenAddress);
     const feeAllowanceAmount = Common.isHBAR(tokenId)
-      ? Hbar.from(daoFeeConfig.daoFee, HbarUnit.Tinybar)
+      ? Hbar.from(daoFeeConfig.amountOrId, HbarUnit.Tinybar)
           .to(HbarUnit.Hbar)
           .toNumber()
-      : daoFeeConfig.daoFee;
+      : daoFeeConfig.amountOrId;
 
     // 1- setup allowance
     await Common.setTokenAllowance(

@@ -6,12 +6,12 @@ Feature: MultiSigDAO e2e test
 # default number of DAO owners are - 2
     @MultiSigDAO
     Scenario: Verify user can not create a multisigdao with blank name 
-        Given User tries to initialize the multisigdao with name as "" and logo as "https://defi-ui.hedera.com/"
+        Given User tries to initialize the multisigdao with name as "" and logo as "https://defi-ui.zilbo.com/"
         Then User receives the error message "CONTRACT_REVERT_EXECUTED"
 
     @MultiSigDAO
     Scenario: Verify transaction is not approved if required approval are not taken
-        Given User initialize the multisigdao with name as "MultiSigDAO" and logo as "https://defi-ui.hedera.com/"
+        Given User initialize the multisigdao with name as "MultiSigDAO" and logo as "https://defi-ui.zilbo.com/"
         When User propose the transaction for transferring 1 unit of the token
         Then User verify transaction state is "Pending"
         When User get 1 approval from DAO owners 
@@ -95,7 +95,7 @@ Feature: MultiSigDAO e2e test
 
     @MultiSigDAOFactory
     Scenario: Verify user can not create multisigdao with blank name via factory
-        Given User tries to create the multisigdao with name as "" and logo as "https://defi-ui.hedera.com/"
+        Given User tries to create the multisigdao with name as "" and logo as "https://defi-ui.zilbo.com/"
         Then User receives the error message "CONTRACT_REVERT_EXECUTED"
 
     @MultiSigDAOFactory

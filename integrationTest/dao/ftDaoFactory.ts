@@ -10,18 +10,18 @@ import { TokenId } from "@hashgraph/sdk";
 import { Deployment } from "../../utils/deployContractOnTestnet";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { ContractService } from "../../deployment/service/ContractService";
-import { DEFAULT_DAO_CONFIG } from "../../e2e-test/business/constants";
+import { DEFAULT_FEE_CONFIG } from "../../e2e-test/business/constants";
 
 const DAO_DESC = "Lorem Ipsum is simply dummy text";
 const DAO_ADMIN = clientsInfo.uiUserId.toSolidityAddress();
 const DAO_ADMIN_CLIENT = clientsInfo.uiUserClient;
-const DAO_LOGO_URL = "https://defi-ui.hedera.com/";
+const DAO_LOGO_URL = "https://defi-ui.zilbo.com/";
 const DAO_TOKEN_ID = dex.GOVERNANCE_DAO_TWO_TOKEN_ID;
 const DAO_WEB_LINKS = ["LINKEDIN", "https://linkedin.com"];
 const DAO_INFO_URL = "https://daoinfo.com";
 
 const TOKEN_ALLOWANCE_DETAILS = {
-  TOKEN: TokenId.fromSolidityAddress(DEFAULT_DAO_CONFIG.tokenAddress),
+  TOKEN: TokenId.fromSolidityAddress(DEFAULT_FEE_CONFIG.tokenAddress),
   FROM_CLIENT: clientsInfo.operatorClient,
   FROM_ID: clientsInfo.operatorId,
   FROM_KEY: clientsInfo.operatorKey,
@@ -100,7 +100,7 @@ async function createNewCopies() {
 async function setupDAOCreationAllowanceAndGetFeeAmount(factory: DAOFactory) {
   const feeAllowanceAmount = Common.isHBAR(TOKEN_ALLOWANCE_DETAILS.TOKEN)
     ? dex.DAO_FEE
-    : DEFAULT_DAO_CONFIG.daoFee;
+    : DEFAULT_FEE_CONFIG.amountOrId;
 
   const feeInHBAR = Common.isHBAR(TOKEN_ALLOWANCE_DETAILS.TOKEN)
     ? feeAllowanceAmount

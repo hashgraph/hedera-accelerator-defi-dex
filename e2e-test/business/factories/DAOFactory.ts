@@ -9,8 +9,8 @@ import { Deployment } from "../../../utils/deployContractOnTestnet";
 import { clientsInfo } from "../../../utils/ClientManagement";
 import { AddressHelper } from "../../../utils/AddressHelper";
 import { ContractService } from "../../../deployment/service/ContractService";
-import { DAOConfigDetails } from "../../../e2e-test/business/types";
-import { DEFAULT_DAO_CONFIG } from "../../../e2e-test/business/constants";
+import { FeeConfigDetails } from "../../../e2e-test/business/types";
+import { DEFAULT_FEE_CONFIG } from "../../../e2e-test/business/constants";
 import {
   Client,
   TokenId,
@@ -32,7 +32,7 @@ export default abstract class DAOFactory extends Base {
   initialize = async (
     client: Client = clientsInfo.operatorClient,
     tokenHolderFactory: TokenHolderFactory,
-    daoConfigDetails: DAOConfigDetails = DEFAULT_DAO_CONFIG,
+    daoConfigDetails: FeeConfigDetails = DEFAULT_FEE_CONFIG,
   ) => {
     if (await this.isInitializationPending()) {
       const tokenHolderFactoryAddress = ContractId.fromString(

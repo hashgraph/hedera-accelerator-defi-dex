@@ -7,9 +7,10 @@ import "../common/IHederaService.sol";
 import "../common/ISystemRoleBasedAccess.sol";
 import "../gnosis/HederaMultiSend.sol";
 import "../gnosis/HederaGnosisSafe.sol";
+import "../common/FeeConfiguration.sol";
 import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
-contract MultiSigDAO is IEvents, BaseDAO {
+contract MultiSigDAO is IEvents, BaseDAO, FeeConfiguration {
     event TransactionCreated(bytes32 txnHash, TransactionInfo info);
     enum TransactionState {
         Pending,
@@ -50,6 +51,7 @@ contract MultiSigDAO is IEvents, BaseDAO {
         string memory _logoUrl,
         string memory _description,
         string[] memory _webLinks,
+        FeeConfig memory _feeConfig,
         HederaGnosisSafe _hederaGnosisSafe,
         IHederaService _hederaService,
         HederaMultiSend _multiSend,
@@ -59,6 +61,7 @@ contract MultiSigDAO is IEvents, BaseDAO {
         hederaGnosisSafe = _hederaGnosisSafe;
         multiSend = _multiSend;
         iSystemRoleBasedAccess = _iSystemRoleBasedAccess;
+        __FeeConfiguration_init(_feeConfig);
         __BaseDAO_init(_admin, _name, _logoUrl, "", _description, _webLinks);
         emit LogicUpdated(address(0), address(hederaService), HederaService);
         emit LogicUpdated(address(0), address(multiSend), MultiSend);
@@ -98,9 +101,10 @@ contract MultiSigDAO is IEvents, BaseDAO {
         string memory desc,
         string memory linkToDiscussion,
         string memory metaData
-    ) public returns (bytes32) {
+    ) public payable returns (bytes32) {
         require(bytes(title).length != 0, "MultiSigDAO: title can't be blank");
         require(bytes(desc).length != 0, "MultiSigDAO: desc can't be blank");
+        _deductFee(hederaService);
         Enum.Operation _operation = Enum.Operation.Call;
         (bytes32 txnHash, uint256 txnNonce) = hederaGnosisSafe.getTxnHash(
             _to,
@@ -130,7 +134,7 @@ contract MultiSigDAO is IEvents, BaseDAO {
         string memory _title,
         string memory _desc,
         string memory _linkToDiscussion
-    ) external returns (bytes32) {
+    ) external payable returns (bytes32) {
         bytes memory data = abi.encodeWithSelector(
             HederaGnosisSafe.associateToken.selector,
             hederaService,
@@ -155,7 +159,7 @@ contract MultiSigDAO is IEvents, BaseDAO {
         string memory title,
         string memory desc,
         string memory linkToDiscussion
-    ) public returns (bytes32) {
+    ) public payable returns (bytes32) {
         require(
             _targets.length > 0 &&
                 _targets.length == _values.length &&
@@ -195,7 +199,7 @@ contract MultiSigDAO is IEvents, BaseDAO {
         string memory _title,
         string memory _desc,
         string memory _linkToDiscussion
-    ) external returns (bytes32) {
+    ) external payable returns (bytes32) {
         require(_proxy != address(0), "MultiSigDAO: proxy can't be zero");
         require(_proxyLogic != address(0), "MultiSigDAO: logic can't be zero");
         bytes memory data = abi.encodeWithSelector(
@@ -223,7 +227,7 @@ contract MultiSigDAO is IEvents, BaseDAO {
         string memory _title,
         string memory _desc,
         string memory _linkToDiscussion
-    ) external returns (bytes32) {
+    ) external payable returns (bytes32) {
         bytes memory data = abi.encodeWithSelector(
             HederaGnosisSafe.transferAssets.selector,
             hederaService,

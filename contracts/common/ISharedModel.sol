@@ -26,6 +26,7 @@ interface ISharedModel {
         bool isPrivate;
         string description;
         string[] webLinks;
+        FeeConfig feeConfig;
     }
 
     struct GovernorConfig {

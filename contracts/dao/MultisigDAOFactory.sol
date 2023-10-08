@@ -134,6 +134,7 @@ contract MultisigDAOFactory is
             _createDAOInputs.logoUrl,
             _createDAOInputs.description,
             _createDAOInputs.webLinks,
+            _createDAOInputs.feeConfig,
             hederaGnosisSafe
         );
         if (!_createDAOInputs.isPrivate) {
@@ -154,6 +155,7 @@ contract MultisigDAOFactory is
         string memory _logoUrl,
         string memory _desc,
         string[] memory _webLinks,
+        FeeConfig memory _feeConfig,
         HederaGnosisSafe hederaGnosisSafe
     ) private returns (address) {
         address proxyAdmin = iSystemRoleManagment.getSystemUsers().proxyAdmin;
@@ -169,6 +171,7 @@ contract MultisigDAOFactory is
             _logoUrl,
             _desc,
             _webLinks,
+            _feeConfig,
             hederaGnosisSafe,
             hederaService,
             multiSend,

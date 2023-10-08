@@ -1,4 +1,3 @@
-import Base from "../Base";
 import NFTHolder from "../NFTHolder";
 
 import { ContractService } from "../../../deployment/service/ContractService";

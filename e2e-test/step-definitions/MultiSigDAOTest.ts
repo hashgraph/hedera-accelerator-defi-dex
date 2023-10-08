@@ -8,7 +8,7 @@ import MultiSigDAOFactory from "../../e2e-test/business/factories/MultiSigDAOFac
 import { expect } from "chai";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { AddressHelper } from "../../utils/AddressHelper";
-import { DAOConfigDetails } from "../business/types";
+import { FeeConfigDetails } from "../business/types";
 import { AccountId, TokenId } from "@hashgraph/sdk";
 import { main as deployContract } from "../../deployment/scripts/logic";
 import { binding, given, then, when } from "cucumber-tsflow";
@@ -70,6 +70,11 @@ export class MultiSigDAOSteps {
     );
     console.log("MultiSigDao contract-id :", multiSigDao.contractId);
     console.log("Dao admin address :", DAO_ADMIN_ADDRESS);
+    const feeConfig: FeeConfigDetails = {
+      receiver: daoConfig.daoTreasurer,
+      tokenAddress: daoConfig.tokenAddress,
+      amountOrId: daoConfig.daoFee,
+    };
     try {
       await multiSigDao.initialize(
         DAO_ADMIN_ADDRESS,
@@ -78,6 +83,7 @@ export class MultiSigDAOSteps {
         DAO_DESC,
         DAO_WEB_LINKS,
         DAO_OWNERS_ADDRESSES,
+        feeConfig,
         DAO_ADMIN_CLIENT,
         DAO_OWNERS_ADDRESSES.length,
       );
@@ -98,6 +104,11 @@ export class MultiSigDAOSteps {
     240000,
   )
   public async initializeSafe(name: string, logo: string): Promise<void> {
+    const feeConfig: FeeConfigDetails = {
+      receiver: daoConfig.daoTreasurer,
+      tokenAddress: daoConfig.tokenAddress,
+      amountOrId: daoConfig.daoFee,
+    };
     await multiSigDao.initialize(
       DAO_ADMIN_ADDRESS,
       name,
@@ -105,6 +116,7 @@ export class MultiSigDAOSteps {
       DAO_DESC,
       DAO_WEB_LINKS,
       DAO_OWNERS_ADDRESSES,
+      feeConfig,
       DAO_ADMIN_CLIENT,
       DAO_OWNERS_ADDRESSES.length,
     );
@@ -348,10 +360,10 @@ export class MultiSigDAOSteps {
       "MultiSigDaoFactory contract-id :",
       multiSigDAOFactory.contractId,
     );
-    const _daoConfig: DAOConfigDetails = {
-      daoTreasurer: daoConfig.daoTreasurer,
+    const _daoConfig: FeeConfigDetails = {
+      receiver: daoConfig.daoTreasurer,
       tokenAddress: daoConfig.tokenAddress,
-      daoFee: daoConfig.daoFee,
+      amountOrId: daoConfig.daoFee,
     };
     await multiSigDAOFactory.initialize(_daoConfig);
   }
@@ -378,6 +390,11 @@ export class MultiSigDAOSteps {
     30000,
   )
   public async createDAOSafe(name: string, logo: string) {
+    const feeConfig: FeeConfigDetails = {
+      receiver: daoConfig.daoTreasurer,
+      tokenAddress: daoConfig.tokenAddress,
+      amountOrId: daoConfig.daoFee,
+    };
     const daoAddress = await multiSigDAOFactory.createDAO(
       name,
       logo,
@@ -387,6 +404,7 @@ export class MultiSigDAOSteps {
       DAO_OWNERS_ADDRESSES.length,
       false,
       0,
+      feeConfig,
       DAO_ADMIN_ADDRESS,
       DAO_ADMIN_CLIENT,
     );
@@ -404,6 +422,11 @@ export class MultiSigDAOSteps {
     30000,
   )
   public async createDAOFail(name: string, logo: string) {
+    const feeConfig: FeeConfigDetails = {
+      receiver: daoConfig.daoTreasurer,
+      tokenAddress: daoConfig.tokenAddress,
+      amountOrId: daoConfig.daoFee,
+    };
     try {
       await multiSigDAOFactory.createDAO(
         name,
@@ -414,6 +437,7 @@ export class MultiSigDAOSteps {
         DAO_OWNERS_ADDRESSES.length,
         false,
         0,
+        feeConfig,
         DAO_ADMIN_ADDRESS,
         DAO_ADMIN_CLIENT,
       );

@@ -1,5 +1,5 @@
-export interface DAOConfigDetails {
-  daoTreasurer: string;
+export interface FeeConfigDetails {
+  receiver: string;
   tokenAddress: string;
-  daoFee: number;
+  amountOrId: number;
 }
