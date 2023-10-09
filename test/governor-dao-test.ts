@@ -27,6 +27,21 @@ describe("FT-Governance-DAO tests", function () {
     expect(event.args.assetsHolderAddress).not.equal(TestHelper.ZERO_ADDRESS);
 
     const dao = await TestHelper.getContract("FTDAO", event.args.daoAddress);
+
+    const tokenHolder = await TestHelper.getContract(
+      "NFTHolder",
+      event.args.tokenHolderAddress,
+    );
+    expect(await tokenHolder.isNFTType()).equals(false);
+
+    const assetsHolder = await TestHelper.getContract(
+      "AssetsHolder",
+      event.args.assetsHolderAddress,
+    );
+    await expect(assetsHolder.setText()).revertedWith(
+      "Ownable: caller is not the owner",
+    );
+
     const governor = await TestHelper.getDeployGovernorAt(
       event.args.governorAddress,
     );
