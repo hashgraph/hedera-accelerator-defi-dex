@@ -23,8 +23,25 @@ export async function verifyDAOCreatedEvent(txn: any) {
   expect(event.args.assetsHolderAddress).not.equal(TestHelper.ZERO_ADDRESS);
 
   const dao = await TestHelper.getContract("FTDAO", event.args.daoAddress);
+  expect(await dao.governorAddress()).not.equal(TestHelper.ZERO_ADDRESS);
+
   const governor = await TestHelper.getDeployGovernorAt(
     event.args.governorAddress,
+  );
+  expect(await governor.clock()).greaterThan(0);
+
+  const tokenHolder = await TestHelper.getContract(
+    "TokenHolder",
+    event.args.tokenHolderAddress,
+  );
+  await expect(tokenHolder.isNFTType()).not.reverted;
+
+  const assetsHolder = await TestHelper.getContract(
+    "AssetsHolder",
+    event.args.assetsHolderAddress,
+  );
+  await expect(assetsHolder.setText()).revertedWith(
+    "Ownable: caller is not the owner",
   );
   return { dao, governor };
 }
