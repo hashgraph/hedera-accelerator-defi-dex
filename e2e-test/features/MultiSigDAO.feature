@@ -12,13 +12,15 @@ Feature: MultiSigDAO e2e test
     @MultiSigDAO
     Scenario: Verify transaction is not approved if required approval are not taken
         Given User initialize the multisigdao with name as "MultiSigDAO" and logo as "https://defi-ui.zilbo.com/"
+        When User setup allowance for proposal creation for collecting fee
         When User propose the transaction for transferring 1 unit of the token
         Then User verify transaction state is "Pending"
         When User get 1 approval from DAO owners 
         When User verify transaction state is "Pending"
 
     @MultiSigDAO
-    Scenario: Verify user gets error message on executing transaction for higher token amount than available in safe  
+    Scenario: Verify user gets error message on executing transaction for higher token amount than available in safe
+        When User setup allowance for proposal creation for collecting fee  
         When User propose the transaction for associating the token
         When User get 2 approval from DAO owners
         When User execute the transaction
@@ -30,6 +32,7 @@ Feature: MultiSigDAO e2e test
 
     @MultiSigDAO
     Scenario: Verify complete journey of token transfer via multisigdao
+        When User setup allowance for proposal creation for collecting fee
         When User propose the transaction for associating the token
         When User get 2 approval from DAO owners
         When User execute the transaction 
@@ -45,7 +48,8 @@ Feature: MultiSigDAO e2e test
         Then User verify that target token is transferred to the payee account
 
     @MultiSigDAO
-    Scenario: Verify change of threshold of approvals    
+    Scenario: Verify change of threshold of approvals
+        When User setup allowance for proposal creation for collecting fee   
         When User propose the transaction for changing the threshold of approvals to 1
         Then User verify transaction state is "Pending"
         When User get list of owners
@@ -56,7 +60,8 @@ Feature: MultiSigDAO e2e test
 
     @MultiSigDAO
     Scenario: Verify remove DAO Owner
-        When User get list of owners       
+        When User get list of owners
+        When User setup allowance for proposal creation for collecting fee       
         When User propose the transaction for removing 1 owner
         Then User verify transaction state is "Pending"
         When User get 2 approval from DAO owners 
@@ -66,7 +71,8 @@ Feature: MultiSigDAO e2e test
 
     @MultiSigDAO
     Scenario: Verify add DAO Owner 
-        When User get list of owners      
+        When User get list of owners    
+        When User setup allowance for proposal creation for collecting fee  
         When User propose the transaction for adding 1 new owner 
         Then User verify transaction state is "Pending"
         When User get 1 approval from DAO owners 
@@ -76,7 +82,8 @@ Feature: MultiSigDAO e2e test
 
     @MultiSigDAO
     Scenario: Verify swap DAO Owner
-        When User get list of owners        
+        When User get list of owners     
+        When User setup allowance for proposal creation for collecting fee     
         When User propose the transaction for swapping owner
         Then User verify transaction state is "Pending"
         When User get 2 approval from DAO owners 
@@ -102,6 +109,7 @@ Feature: MultiSigDAO e2e test
     Scenario: Verify complete journey of token transfer via multisigdao via factory
         When User setup allowance for dao creation for collecting fee
         When User create MultiSigDAO with name "MultiSigDAOFactory" and logo as "" via factory
+        When User setup allowance for proposal creation for collecting fee
         When User propose the transaction for associating the token
         When User get 2 approval from DAO owners
         When User execute the transaction 

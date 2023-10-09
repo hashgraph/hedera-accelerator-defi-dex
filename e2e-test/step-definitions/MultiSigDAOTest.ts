@@ -242,14 +242,6 @@ export class MultiSigDAOSteps {
     60000,
   )
   public async proposeTransferTransfer(amount: number) {
-    await Common.setTokenAllowance(
-      TokenId.fromSolidityAddress(feeConfig.tokenAddress),
-      multiSigDao.contractId,
-      feeConfig.amountOrId,
-      feeConfig.fromAccountId,
-      feeConfig.fromAccountKey,
-      feeConfig.fromAccountClient,
-    );
     txnHash = await multiSigDao.proposeTransferTransaction(
       clientsInfo.treasureId.toSolidityAddress(),
       TOKEN_ID.toSolidityAddress(),
@@ -263,14 +255,6 @@ export class MultiSigDAOSteps {
     60000,
   )
   public async proposeTransferTransferWithGreaterAmount() {
-    await Common.setTokenAllowance(
-      TokenId.fromSolidityAddress(feeConfig.tokenAddress),
-      multiSigDao.contractId,
-      feeConfig.amountOrId,
-      feeConfig.fromAccountId,
-      feeConfig.fromAccountKey,
-      feeConfig.fromAccountClient,
-    );
     txnHash = await multiSigDao.proposeTransferTransaction(
       clientsInfo.treasureId.toSolidityAddress(),
       TOKEN_ID.toSolidityAddress(),
@@ -286,14 +270,6 @@ export class MultiSigDAOSteps {
   public async proposeTransactionForChangingApprovalThreshold(
     numberOfApprovals: number,
   ) {
-    await Common.setTokenAllowance(
-      TokenId.fromSolidityAddress(feeConfig.tokenAddress),
-      multiSigDao.contractId,
-      feeConfig.amountOrId,
-      feeConfig.fromAccountId,
-      feeConfig.fromAccountKey,
-      feeConfig.fromAccountClient,
-    );
     txnHash = await multiSigDao.proposeChangeThreshold(
       numberOfApprovals,
       gnosisSafe,
@@ -401,6 +377,22 @@ export class MultiSigDAOSteps {
     await Common.setTokenAllowance(
       TokenId.fromSolidityAddress(feeConfig.tokenAddress),
       multiSigDAOFactory.contractId,
+      feeConfig.amountOrId,
+      feeConfig.fromAccountId,
+      feeConfig.fromAccountKey,
+      feeConfig.fromAccountClient,
+    );
+  }
+
+  @when(
+    /User setup allowance for proposal creation for collecting fee/,
+    undefined,
+    30000,
+  )
+  public async setupAllowanceForProposalCreationFee() {
+    await Common.setTokenAllowance(
+      TokenId.fromSolidityAddress(feeConfig.tokenAddress),
+      multiSigDao.contractId,
       feeConfig.amountOrId,
       feeConfig.fromAccountId,
       feeConfig.fromAccountKey,
