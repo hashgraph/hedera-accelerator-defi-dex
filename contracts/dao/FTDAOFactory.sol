@@ -194,7 +194,7 @@ contract FTDAOFactory is
         }
         emit DAOCreated(
             tokenHolderAddress,
-            tokenHolderAddress,
+            assetsHolderAddress,
             governorAddress,
             daoAddress,
             _createDAOInputs
