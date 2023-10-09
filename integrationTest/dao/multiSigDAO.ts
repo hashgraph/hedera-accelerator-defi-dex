@@ -63,9 +63,7 @@ async function getAllowanceDetailsForProposal(multiSigDAO: MultiSigDao) {
   const proposalFee = isHBAR
     ? Hbar.fromTinybars(amountOrId).toBigNumber().toNumber()
     : amountOrId;
-  const hBarPayable = isHBAR
-    ? Hbar.fromTinybars(amountOrId).toBigNumber().toNumber()
-    : 0;
+  const hBarPayable = isHBAR ? proposalFee : 0;
   return { proposalFee, hBarPayable, tokenAddress };
 }
 
