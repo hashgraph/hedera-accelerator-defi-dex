@@ -47,6 +47,7 @@ describe("FT-Governance-DAO tests", function () {
     const daoCreationFeeConfig = await TestHelper.getDefaultFeeConfig(
       token.address,
     );
+
     const INIT_ARGS = {
       _daoLogic: governorTokenDAO.address,
       _governorLogic: governor.address,

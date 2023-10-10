@@ -16,6 +16,7 @@ describe("MultiSig tests", function () {
   const INVALID_TXN_HASH = ethers.utils.formatBytes32String("INVALID_TXN_HASH");
   const TOTAL = 100 * 1e8;
   const TRANSFER_AMOUNT = 10 * 1e8;
+  const DEFAULT_PROPOSAL_HBAR_FEE = 0;
   const DAO_NAME = "DAO_NAME";
   const LOGO_URL = "LOGO_URL";
   const DESCRIPTION = "DESCRIPTION";
@@ -65,7 +66,7 @@ describe("MultiSig tests", function () {
       : expect(info.metaData).equals(DEFAULT_META_DATA);
     expect(info.linkToDiscussion).equals(LINK_TO_DISCUSSION);
     expect(info.creator).not.equals(TestHelper.ZERO_ADDRESS);
-    return { txnHash, info };
+    return { txnHash, info, txn };
   }
 
   async function verifyDAOConfigChangeEvent(txn: any, feeConfigPassed: any) {
@@ -86,11 +87,13 @@ describe("MultiSig tests", function () {
     multiSigDAOInstance: Contract,
     receiver: string,
     token: string,
+    hBarPayable: number = DEFAULT_PROPOSAL_HBAR_FEE,
     amount: number = TRANSFER_AMOUNT,
     title: string = TITLE,
     description: string = DESCRIPTION,
     metaData: string = DEFAULT_META_DATA,
   ) {
+    const hBarAmount = { value: hBarPayable };
     const txn = await multiSigDAOInstance.proposeTransaction(
       token,
       createTransferTransactionABIData(receiver, amount),
@@ -99,6 +102,7 @@ describe("MultiSig tests", function () {
       description,
       LINK_TO_DISCUSSION,
       metaData,
+      hBarAmount,
     );
     return await verifyTransactionCreatedEvent(txn, TXN_TYPE_TRANSFER);
   }
@@ -107,9 +111,11 @@ describe("MultiSig tests", function () {
     multiSigDAOInstance: Contract,
     text: string,
     creator: string,
+    hBarPayable: number = DEFAULT_PROPOSAL_HBAR_FEE,
     title: string = TITLE,
     metaData: string = DEFAULT_META_DATA,
   ) {
+    const hBarAmount = { value: hBarPayable };
     const txn = await multiSigDAOInstance.proposeTransaction(
       multiSigDAOInstance.address,
       createTextTransaction(creator, text),
@@ -118,6 +124,7 @@ describe("MultiSig tests", function () {
       text,
       LINK_TO_DISCUSSION,
       metaData,
+      hBarAmount,
     );
     return await verifyTransactionCreatedEvent(txn, TXN_TYPE_TEXT);
   }
@@ -127,10 +134,12 @@ describe("MultiSig tests", function () {
     receiver: string,
     token: string,
     type: number,
+    hBarPayable: number = DEFAULT_PROPOSAL_HBAR_FEE,
     amount: number = TRANSFER_AMOUNT,
     title: string = TITLE,
     description: string = DESCRIPTION,
   ) {
+    const hBarAmount = { value: hBarPayable };
     const txn = await multiSigDAOInstance.proposeTransferTransaction(
       receiver,
       token,
@@ -138,6 +147,7 @@ describe("MultiSig tests", function () {
       title,
       description,
       LINK_TO_DISCUSSION,
+      hBarAmount,
     );
     return await verifyTransactionCreatedEvent(txn, type);
   }
@@ -219,12 +229,19 @@ describe("MultiSig tests", function () {
       TestHelper.ZERO_ADDRESS,
     );
 
+    const feeConfigData = {
+      receiver: signers[11].address,
+      tokenAddress: tokenInstance.address,
+      amountOrId: TestHelper.toPrecision(1),
+    };
+
     const MULTISIG_ARGS = [
       daoAdminOne.address,
       DAO_NAME,
       LOGO_URL,
       DESCRIPTION,
       WEB_LINKS,
+      feeConfigData,
       hederaGnosisSafeProxyInstance,
       hederaService.address,
       multiSend.address,
@@ -243,18 +260,12 @@ describe("MultiSig tests", function () {
     );
     expect(events.length).equals(1);
 
-    const daoConfigData = {
-      receiver: signers[11].address,
-      tokenAddress: tokenInstance.address,
-      amountOrId: TestHelper.toPrecision(20),
-    };
-
     const multiSigDaoFactoryArgs = [
       systemRoleBasedAccess,
       multiSigDAOLogicInstance.address,
       hederaGnosisSafeLogicInstance.address,
       hederaGnosisSafeProxyFactoryInstance.address,
-      Object.values(daoConfigData),
+      Object.values(feeConfigData),
       hederaService.address,
       multiSend.address,
     ];
@@ -299,7 +310,7 @@ describe("MultiSig tests", function () {
       systemRoleBasedAccess,
       systemUsersSigners,
       multiSendProxy,
-      daoConfigData,
+      feeConfigData,
     };
   }
 
@@ -311,11 +322,13 @@ describe("MultiSig tests", function () {
         tokenInstance,
         hederaGnosisSafeProxyContract,
         daoSigners,
+        feeConfigData,
       } = await loadFixture(deployFixture);
       const { txnHash } = await proposeTransaction(
         multiSigDAOInstance,
         signers[1].address,
         tokenInstance.address,
+        feeConfigData.amountOrId,
       );
       const approvalStatus1 =
         await hederaGnosisSafeProxyContract.checkApprovals(txnHash);
@@ -380,11 +393,13 @@ describe("MultiSig tests", function () {
         signers,
         tokenInstance,
         hederaGnosisSafeProxyContract,
+        feeConfigData,
       } = await loadFixture(deployFixture);
       const { info } = await proposeTransaction(
         multiSigDAOInstance,
         signers[1].address,
         tokenInstance.address,
+        feeConfigData.amountOrId,
       );
       await expect(
         hederaGnosisSafeProxyContract.execTransaction(
@@ -409,11 +424,13 @@ describe("MultiSig tests", function () {
         tokenInstance,
         hederaGnosisSafeProxyContract,
         daoSigners,
+        feeConfigData,
       } = await loadFixture(deployFixture);
       const { txnHash, info } = await proposeTransaction(
         multiSigDAOInstance,
         signers[1].address,
         tokenInstance.address,
+        feeConfigData.amountOrId,
       );
       for (const signer of daoSigners) {
         await hederaGnosisSafeProxyContract
@@ -449,7 +466,7 @@ describe("MultiSig tests", function () {
         hederaGnosisSafeProxyFactoryInstance,
         hederaService,
         multiSend,
-        daoConfigData,
+        feeConfigData,
       } = await loadFixture(deployFixture);
       await expect(
         multiSigDAOFactoryInstance.initialize(
@@ -457,7 +474,7 @@ describe("MultiSig tests", function () {
           multiSigDAOLogicInstance.address,
           hederaGnosisSafeLogicInstance.address,
           hederaGnosisSafeProxyFactoryInstance.address,
-          daoConfigData,
+          feeConfigData,
           hederaService.address,
           multiSend.address,
         ),
@@ -465,7 +482,7 @@ describe("MultiSig tests", function () {
     });
 
     it("Verify createDAO should be reverted when dao admin is zero", async function () {
-      const { multiSigDAOFactoryInstance, doaSignersAddresses } =
+      const { multiSigDAOFactoryInstance, doaSignersAddresses, feeConfigData } =
         await loadFixture(deployFixture);
       const ARGS = [
         TestHelper.ZERO_ADDRESS,
@@ -476,15 +493,24 @@ describe("MultiSig tests", function () {
         true,
         DESCRIPTION,
         WEB_LINKS,
+        feeConfigData,
       ];
-      await expect(multiSigDAOFactoryInstance.createDAO(ARGS))
+      await expect(
+        multiSigDAOFactoryInstance.createDAO(ARGS, {
+          value: feeConfigData.amountOrId,
+        }),
+      )
         .revertedWithCustomError(multiSigDAOFactoryInstance, "InvalidInput")
         .withArgs("BaseDAO: admin address is zero");
     });
 
     it("Verify createDAO should be reverted when dao name is empty", async function () {
-      const { multiSigDAOFactoryInstance, doaSignersAddresses, daoAdminOne } =
-        await loadFixture(deployFixture);
+      const {
+        multiSigDAOFactoryInstance,
+        doaSignersAddresses,
+        daoAdminOne,
+        feeConfigData,
+      } = await loadFixture(deployFixture);
       const ARGS = [
         daoAdminOne.address,
         "",
@@ -494,15 +520,24 @@ describe("MultiSig tests", function () {
         true,
         DESCRIPTION,
         WEB_LINKS,
+        feeConfigData,
       ];
-      await expect(multiSigDAOFactoryInstance.createDAO(ARGS))
+      await expect(
+        multiSigDAOFactoryInstance.createDAO(ARGS, {
+          value: feeConfigData.amountOrId,
+        }),
+      )
         .revertedWithCustomError(multiSigDAOFactoryInstance, "InvalidInput")
         .withArgs("BaseDAO: name is empty");
     });
 
     it("Verify createDAO should add new dao into list when the dao is public", async function () {
-      const { multiSigDAOFactoryInstance, doaSignersAddresses, daoAdminOne } =
-        await loadFixture(deployFixture);
+      const {
+        multiSigDAOFactoryInstance,
+        doaSignersAddresses,
+        daoAdminOne,
+        feeConfigData,
+      } = await loadFixture(deployFixture);
 
       const currentList = await multiSigDAOFactoryInstance.getDAOs();
       expect(currentList.length).equal(0);
@@ -516,9 +551,12 @@ describe("MultiSig tests", function () {
         false,
         DESCRIPTION,
         WEB_LINKS,
+        feeConfigData,
       ];
 
-      const txn = await multiSigDAOFactoryInstance.createDAO(ARGS);
+      const txn = await multiSigDAOFactoryInstance.createDAO(ARGS, {
+        value: feeConfigData.amountOrId,
+      });
 
       const { name, args } = await TestHelper.readLastEvent(txn);
       expect(name).equal("DAOCreated");
@@ -528,7 +566,7 @@ describe("MultiSig tests", function () {
       expect(updatedList.length).equal(1);
     });
 
-    it("Verify createDAO should defined HBAR as DAO creation fee", async function () {
+    it("Verify creating dao deducts HBAR as fee", async function () {
       const {
         doaSignersAddresses,
         daoAdminOne,
@@ -541,7 +579,7 @@ describe("MultiSig tests", function () {
         multiSend,
       } = await loadFixture(deployFixture);
 
-      const daoConfigData = {
+      const feeConfigData = {
         receiver: signers[11].address,
         tokenAddress: TestHelper.ZERO_ADDRESS,
         amountOrId: TestHelper.toPrecision(20),
@@ -552,7 +590,7 @@ describe("MultiSig tests", function () {
         multiSigDAOLogicInstance.address,
         hederaGnosisSafeLogicInstance.address,
         hederaGnosisSafeProxyFactoryInstance.address,
-        Object.values(daoConfigData),
+        Object.values(feeConfigData),
         hederaService.address,
         multiSend.address,
       ];
@@ -570,31 +608,51 @@ describe("MultiSig tests", function () {
         true,
         DESCRIPTION,
         WEB_LINKS,
+        feeConfigData,
       ];
 
       await expect(
         multiSigDAOFactoryInstance.createDAO(ARGS, {
-          value: daoConfigData.amountOrId,
+          value: feeConfigData.amountOrId,
         }),
       ).changeEtherBalances(
-        [signers[0].address, daoConfigData.receiver],
-        [-daoConfigData.amountOrId, daoConfigData.amountOrId],
+        [signers[0].address, feeConfigData.receiver],
+        [-feeConfigData.amountOrId, feeConfigData.amountOrId],
       );
     });
 
-    it("Verify createDAO should defined token as DAO creation fee", async function () {
+    it("Verify creating dao deducts FT token defined in FeeConfig as fee", async function () {
       const {
         doaSignersAddresses,
         daoAdminOne,
         signers,
+        systemRoleBasedAccess,
+        multiSigDAOLogicInstance,
+        hederaGnosisSafeLogicInstance,
+        hederaGnosisSafeProxyFactoryInstance,
+        hederaService,
+        multiSend,
         tokenInstance,
-        daoConfigData,
-        multiSigDAOFactoryInstance,
       } = await loadFixture(deployFixture);
 
-      await tokenInstance.setUserBalance(
-        signers[0].address,
-        daoConfigData.amountOrId,
+      const feeConfigData = {
+        receiver: signers[11].address,
+        tokenAddress: tokenInstance.address,
+        amountOrId: TestHelper.toPrecision(1),
+      };
+
+      const args = [
+        systemRoleBasedAccess,
+        multiSigDAOLogicInstance.address,
+        hederaGnosisSafeLogicInstance.address,
+        hederaGnosisSafeProxyFactoryInstance.address,
+        Object.values(feeConfigData),
+        hederaService.address,
+        multiSend.address,
+      ];
+      const multiSigDAOFactoryInstance = await TestHelper.deployProxy(
+        "MultisigDAOFactory",
+        ...args,
       );
 
       const ARGS = [
@@ -606,23 +664,30 @@ describe("MultiSig tests", function () {
         true,
         DESCRIPTION,
         WEB_LINKS,
+        feeConfigData,
       ];
+
+      await tokenInstance.setUserBalance(
+        signers[0].address,
+        feeConfigData.amountOrId,
+      );
 
       await expect(
         multiSigDAOFactoryInstance.createDAO(ARGS),
       ).changeTokenBalances(
         tokenInstance,
-        [signers[0].address, daoConfigData.receiver],
-        [-daoConfigData.amountOrId, daoConfigData.amountOrId],
+        [signers[0].address, feeConfigData.receiver],
+        [-feeConfigData.amountOrId, feeConfigData.amountOrId],
       );
     });
 
-    it("Verify Change DAO Configuration Change should work", async function () {
+    it("Verify change fee configuration in factory should work", async function () {
       const {
         multiSigDAOFactoryInstance,
         signers,
         tokenInstance,
         daoAdminOne,
+        feeConfigData,
       } = await loadFixture(deployFixture);
 
       const {
@@ -631,12 +696,11 @@ describe("MultiSig tests", function () {
         amountOrId: initialFee,
       } = await multiSigDAOFactoryInstance.feeConfig();
 
-      const initialTreasurer = signers[11];
-      expect(initialTreasurerAddress).equals(initialTreasurer.address);
-      expect(initialTokenAddress).equals(tokenInstance.address);
-      expect(initialFee).equals(TestHelper.toPrecision(20));
+      expect(initialTreasurerAddress).equals(feeConfigData.receiver);
+      expect(initialTokenAddress).equals(feeConfigData.tokenAddress);
+      expect(initialFee).equals(feeConfigData.amountOrId);
 
-      const newDAOConfig = {
+      const newFeeConfig = {
         receiver: signers[12].address,
         tokenAddress: tokenInstance.address,
         amountOrId: TestHelper.toPrecision(30),
@@ -645,14 +709,14 @@ describe("MultiSig tests", function () {
       await expect(
         multiSigDAOFactoryInstance
           .connect(daoAdminOne)
-          .updateFeeConfig(Object.values(newDAOConfig)),
+          .updateFeeConfig(Object.values(newFeeConfig)),
       ).revertedWith("FC: No Authorization");
 
       const txn = await multiSigDAOFactoryInstance
-        .connect(initialTreasurer)
-        .updateFeeConfig(Object.values(newDAOConfig));
+        .connect(signers[11])
+        .updateFeeConfig(Object.values(newFeeConfig));
 
-      await verifyDAOConfigChangeEvent(txn, newDAOConfig);
+      await verifyDAOConfigChangeEvent(txn, newFeeConfig);
     });
 
     it("Verify Initialize MultiSig Factory emits DAOConfig", async function () {
@@ -667,7 +731,7 @@ describe("MultiSig tests", function () {
         multiSend,
       } = await loadFixture(deployFixture);
 
-      const daoConfigData = {
+      const feeConfigData = {
         receiver: signers[11].address,
         tokenAddress: tokenInstance.address,
         amountOrId: TestHelper.toPrecision(20),
@@ -678,7 +742,7 @@ describe("MultiSig tests", function () {
         multiSigDAOLogicInstance.address,
         hederaGnosisSafeLogicInstance.address,
         hederaGnosisSafeProxyFactoryInstance.address,
-        Object.values(daoConfigData),
+        Object.values(feeConfigData),
         hederaService.address,
         multiSend.address,
       ];
@@ -692,14 +756,20 @@ describe("MultiSig tests", function () {
         await multiSigDAOFactoryInstance.queryFilter("FeeConfigUpdated");
       const newDAOConfig = daoConfigEventLog.pop()?.args?.feeConfig;
 
-      expect(newDAOConfig.receiver).equals(daoConfigData.receiver);
-      expect(newDAOConfig.tokenAddress).equals(daoConfigData.tokenAddress);
-      expect(newDAOConfig.amountOrId).equals(daoConfigData.amountOrId);
+      expect(newDAOConfig.receiver).equals(feeConfigData.receiver);
+      expect(newDAOConfig.tokenAddress).equals(feeConfigData.tokenAddress);
+      expect(newDAOConfig.amountOrId).equals(feeConfigData.amountOrId);
     });
 
     it("Verify createDAO should not add new dao into list when the dao is private", async function () {
-      const { multiSigDAOFactoryInstance, doaSignersAddresses, daoAdminOne } =
-        await loadFixture(deployFixture);
+      const {
+        multiSigDAOFactoryInstance,
+        doaSignersAddresses,
+        daoAdminOne,
+        feeConfigData,
+        tokenInstance,
+        signers,
+      } = await loadFixture(deployFixture);
 
       const currentList = await multiSigDAOFactoryInstance.getDAOs();
       expect(currentList.length).equal(0);
@@ -713,9 +783,15 @@ describe("MultiSig tests", function () {
         true,
         DESCRIPTION,
         WEB_LINKS,
+        feeConfigData,
       ];
-
-      const txn = await multiSigDAOFactoryInstance.createDAO(ARGS);
+      await tokenInstance.setUserBalance(
+        signers[0].address,
+        feeConfigData.amountOrId,
+      );
+      const txn = await multiSigDAOFactoryInstance.createDAO(ARGS, {
+        value: feeConfigData.amountOrId,
+      });
 
       const { name, args } = await TestHelper.readLastEvent(txn);
       expect(name).equal("DAOCreated");
@@ -879,24 +955,26 @@ describe("MultiSig tests", function () {
     });
 
     it("Verify propose transaction should return a valid hash", async function () {
-      const { multiSigDAOInstance, signers, tokenInstance } =
+      const { multiSigDAOInstance, signers, tokenInstance, feeConfigData } =
         await loadFixture(deployFixture);
       const { txnHash } = await proposeTransaction(
         multiSigDAOInstance,
         signers[1].address,
         tokenInstance.address,
+        feeConfigData.amountOrId,
       );
       await expect(multiSigDAOInstance.getTransactionInfo(txnHash)).not
         .reverted;
     });
 
     it("Verify propose transaction should be in pending state", async function () {
-      const { multiSigDAOInstance, signers, tokenInstance } =
+      const { multiSigDAOInstance, signers, tokenInstance, feeConfigData } =
         await loadFixture(deployFixture);
       const { txnHash } = await proposeTransaction(
         multiSigDAOInstance,
         signers[1].address,
         tokenInstance.address,
+        feeConfigData.amountOrId,
       );
       expect(await multiSigDAOInstance.getApprovalCounts(txnHash)).equals(0);
       expect(await multiSigDAOInstance.state(txnHash)).equals(0); // Pending
@@ -909,11 +987,13 @@ describe("MultiSig tests", function () {
         tokenInstance,
         hederaGnosisSafeProxyContract,
         daoSigners,
+        feeConfigData,
       } = await loadFixture(deployFixture);
       const { txnHash } = await proposeTransaction(
         multiSigDAOInstance,
         signers[1].address,
         tokenInstance.address,
+        feeConfigData.amountOrId,
       );
       expect(await multiSigDAOInstance.getApprovalCounts(txnHash)).equals(0);
       for (const signer of daoSigners) {
@@ -934,12 +1014,14 @@ describe("MultiSig tests", function () {
         tokenInstance,
         hederaGnosisSafeProxyContract,
         daoSigners,
+        feeConfigData,
       } = await loadFixture(deployFixture);
       const { txnHash, info } = await proposeTransferTransaction(
         multiSigDAOInstance,
         signers[1].address,
         tokenInstance.address,
         TXN_TYPE_TRANSFER,
+        feeConfigData.amountOrId,
       );
       for (const signer of daoSigners) {
         await hederaGnosisSafeProxyContract
@@ -1043,12 +1125,14 @@ describe("MultiSig tests", function () {
         daoSigners,
         multiSigDAOInstance,
         hederaGnosisSafeProxyContract,
+        feeConfigData,
       } = await loadFixture(deployFixture);
       const { txnHash, info } = await proposeTransferTransaction(
         multiSigDAOInstance,
         signers[1].address,
         TestHelper.ZERO_ADDRESS,
         TXN_TYPE_TRANSFER,
+        feeConfigData.amountOrId,
       );
       for (const signer of daoSigners) {
         await hederaGnosisSafeProxyContract
@@ -1077,6 +1161,7 @@ describe("MultiSig tests", function () {
         daoSigners,
         multiSigDAOInstance,
         hederaGnosisSafeProxyContract,
+        feeConfigData,
       } = await loadFixture(deployFixture);
       const receiver = signers[1];
 
@@ -1085,6 +1170,7 @@ describe("MultiSig tests", function () {
         receiver.address,
         TestHelper.ZERO_ADDRESS,
         TXN_TYPE_TRANSFER,
+        feeConfigData.amountOrId,
       );
       for (const signer of daoSigners) {
         await hederaGnosisSafeProxyContract
@@ -1133,6 +1219,7 @@ describe("MultiSig tests", function () {
         tokenInstance,
         multiSigDAOInstance,
         hederaGnosisSafeProxyContract,
+        feeConfigData,
       } = await loadFixture(deployFixture);
 
       const receiverAccount = signers[1];
@@ -1143,6 +1230,7 @@ describe("MultiSig tests", function () {
       const VALUES = [0, 0];
       const TARGETS = [tokenInstance.address, tokenInstance.address];
       const CALL_DATA_ARRAY = [callData, callData];
+      const hBarAmount = { value: feeConfigData.amountOrId };
       const pTxn = await multiSigDAOInstance.proposeBatchTransaction(
         TARGETS,
         VALUES,
@@ -1150,6 +1238,7 @@ describe("MultiSig tests", function () {
         TITLE,
         DESCRIPTION,
         LINK_TO_DISCUSSION,
+        hBarAmount,
       );
       const { txnHash, info } = await verifyTransactionCreatedEvent(
         pTxn,
@@ -1180,11 +1269,13 @@ describe("MultiSig tests", function () {
         signers,
         tokenInstance,
         hederaGnosisSafeProxyContract,
+        feeConfigData,
       } = await loadFixture(deployFixture);
       const { info } = await proposeTransaction(
         multiSigDAOInstance,
         signers[1].address,
         tokenInstance.address,
+        feeConfigData.amountOrId,
       );
       await expect(
         hederaGnosisSafeProxyContract.executeTransaction(
@@ -1285,7 +1376,7 @@ describe("MultiSig tests", function () {
     });
 
     it("Verify propose transaction should be reverted when title / description empty", async function () {
-      const { signers, tokenInstance, multiSigDAOInstance } =
+      const { signers, tokenInstance, multiSigDAOInstance, feeConfigData } =
         await loadFixture(deployFixture);
       await expect(
         proposeTransaction(
@@ -1293,6 +1384,7 @@ describe("MultiSig tests", function () {
           signers[1].address,
           tokenInstance.address,
           TRANSFER_AMOUNT,
+          feeConfigData.amountOrId,
           "",
         ),
       ).revertedWith("MultiSigDAO: title can't be blank");
@@ -1302,6 +1394,7 @@ describe("MultiSig tests", function () {
           signers[1].address,
           tokenInstance.address,
           TRANSFER_AMOUNT,
+          feeConfigData.amountOrId,
           TITLE,
           "",
         ),
@@ -1309,14 +1402,15 @@ describe("MultiSig tests", function () {
     });
 
     it("Verify token association propose transaction should be created successfully ", async function () {
-      const { tokenInstance, multiSigDAOInstance } =
+      const { tokenInstance, multiSigDAOInstance, feeConfigData } =
         await loadFixture(deployFixture);
-
+      const hBarAmount = { value: feeConfigData.amountOrId };
       const txn = await multiSigDAOInstance.proposeTokenAssociateTransaction(
         tokenInstance.address,
         TITLE,
         DESCRIPTION,
         LINK_TO_DISCUSSION,
+        hBarAmount,
       );
       await verifyTransactionCreatedEvent(txn, TXN_TYPE_TOKEN_ASSOCIATE);
     });
@@ -1341,13 +1435,14 @@ describe("MultiSig tests", function () {
           signers,
           hederaGnosisSafeProxyContract,
           daoSigners,
+          feeConfigData,
         } = await loadFixture(deployFixture);
-
         const { txnHash: textProposalTxnHash, info } =
           await proposeTextTransaction(
             multiSigDAOInstance,
             TEXT_PROPOSAL_TEXT,
             signers[0].address,
+            feeConfigData.amountOrId,
             TITLE,
             META_DATA_TEXT,
           );
@@ -1402,6 +1497,230 @@ describe("MultiSig tests", function () {
       });
     });
 
+    describe("Proposal Fee test cases", () => {
+      it("Verify creating a Text proposal deducts defined fee in feeConfig", async function () {
+        const { multiSigDAOInstance, signers, feeConfigData, tokenInstance } =
+          await loadFixture(deployFixture);
+        await tokenInstance.setUserBalance(
+          signers[0].address,
+          feeConfigData.amountOrId,
+        );
+        const { txn } = await proposeTextTransaction(
+          multiSigDAOInstance,
+          TEXT_PROPOSAL_TEXT,
+          signers[0].address,
+          feeConfigData.amountOrId,
+          TITLE,
+          META_DATA_TEXT,
+        );
+        const isHbar = feeConfigData.tokenAddress === TestHelper.ZERO_ADDRESS;
+        if (isHbar) {
+          await expect(txn).changeEtherBalances(
+            [signers[0].address, feeConfigData.receiver],
+            [-feeConfigData.amountOrId, feeConfigData.amountOrId],
+          );
+        } else {
+          await expect(txn).changeTokenBalances(
+            tokenInstance,
+            [signers[0].address, feeConfigData.receiver],
+            [-feeConfigData.amountOrId, feeConfigData.amountOrId],
+          );
+        }
+      });
+
+      it("Verify creating a Token Transfer proposal deducts defined fee in feeConfig", async function () {
+        const { multiSigDAOInstance, signers, feeConfigData, tokenInstance } =
+          await loadFixture(deployFixture);
+        await tokenInstance.setUserBalance(
+          signers[0].address,
+          feeConfigData.amountOrId,
+        );
+        const { txn } = await proposeTransferTransaction(
+          multiSigDAOInstance,
+          signers[1].address,
+          tokenInstance.address,
+          TXN_TYPE_TRANSFER,
+          feeConfigData.amountOrId,
+        );
+        const isHbar = feeConfigData.tokenAddress === TestHelper.ZERO_ADDRESS;
+        if (isHbar) {
+          await expect(txn).changeEtherBalances(
+            [signers[0].address, feeConfigData.receiver],
+            [-feeConfigData.amountOrId, feeConfigData.amountOrId],
+          );
+        } else {
+          await expect(txn).changeTokenBalances(
+            tokenInstance,
+            [signers[0].address, feeConfigData.receiver],
+            [-feeConfigData.amountOrId, feeConfigData.amountOrId],
+          );
+        }
+      });
+
+      it("Verify creating a Text proposal deducts HBAR as fee", async function () {
+        const {
+          systemRoleBasedAccess,
+          hederaService,
+          signers,
+          daoAdminOne,
+          daoSigners,
+        } = await loadFixture(deployFixture);
+
+        const hederaGnosisSafeProxyFactoryInstance =
+          await TestHelper.deployLogic("HederaGnosisSafeProxyFactory");
+
+        const hederaGnosisSafeLogicInstance =
+          await TestHelper.deployLogic("HederaGnosisSafe");
+
+        const transaction =
+          await hederaGnosisSafeProxyFactoryInstance.createProxy(
+            hederaGnosisSafeLogicInstance.address,
+            new Uint8Array(),
+          );
+        const args = await gnosisProxyCreationVerification(transaction);
+
+        const hederaGnosisSafeProxyInstance = args.proxy;
+        const hederaGnosisSafeProxyContract = await TestHelper.getContract(
+          "HederaGnosisSafe",
+          hederaGnosisSafeProxyInstance,
+        );
+
+        const multiSend = await TestHelper.deployLogic("HederaMultiSend");
+
+        const doaSignersAddresses = daoSigners.map(
+          (signer: SignerWithAddress) => signer.address,
+        );
+
+        await hederaGnosisSafeProxyContract.setup(
+          doaSignersAddresses,
+          daoSigners.length,
+          TestHelper.ZERO_ADDRESS,
+          new Uint8Array(),
+          TestHelper.ZERO_ADDRESS,
+          TestHelper.ZERO_ADDRESS,
+          0,
+          TestHelper.ZERO_ADDRESS,
+        );
+
+        const feeConfigData = {
+          receiver: signers[11].address,
+          tokenAddress: TestHelper.ZERO_ADDRESS,
+          amountOrId: TestHelper.toPrecision(1),
+        };
+
+        const MULTISIG_ARGS = [
+          daoAdminOne.address,
+          DAO_NAME,
+          LOGO_URL,
+          DESCRIPTION,
+          WEB_LINKS,
+          feeConfigData,
+          hederaGnosisSafeProxyInstance,
+          hederaService.address,
+          multiSend.address,
+          systemRoleBasedAccess,
+        ];
+
+        const multiSigDAOInstance = await TestHelper.deployProxy(
+          "MultiSigDAO",
+          ...MULTISIG_ARGS,
+        );
+        const { txn } = await proposeTextTransaction(
+          multiSigDAOInstance,
+          TEXT_PROPOSAL_TEXT,
+          signers[0].address,
+          feeConfigData.amountOrId,
+          TITLE,
+          META_DATA_TEXT,
+        );
+        await expect(txn).changeEtherBalances(
+          [signers[0].address, feeConfigData.receiver],
+          [-feeConfigData.amountOrId, feeConfigData.amountOrId],
+        );
+      });
+      it("Verify HBAR deducts when token proposal is created", async function () {
+        const {
+          systemRoleBasedAccess,
+          hederaService,
+          signers,
+          daoAdminOne,
+          daoSigners,
+        } = await loadFixture(deployFixture);
+
+        const hederaGnosisSafeProxyFactoryInstance =
+          await TestHelper.deployLogic("HederaGnosisSafeProxyFactory");
+
+        const hederaGnosisSafeLogicInstance =
+          await TestHelper.deployLogic("HederaGnosisSafe");
+
+        const transaction =
+          await hederaGnosisSafeProxyFactoryInstance.createProxy(
+            hederaGnosisSafeLogicInstance.address,
+            new Uint8Array(),
+          );
+        const args = await gnosisProxyCreationVerification(transaction);
+
+        const hederaGnosisSafeProxyInstance = args.proxy;
+        const hederaGnosisSafeProxyContract = await TestHelper.getContract(
+          "HederaGnosisSafe",
+          hederaGnosisSafeProxyInstance,
+        );
+
+        const multiSend = await TestHelper.deployLogic("HederaMultiSend");
+
+        const doaSignersAddresses = daoSigners.map(
+          (signer: SignerWithAddress) => signer.address,
+        );
+
+        await hederaGnosisSafeProxyContract.setup(
+          doaSignersAddresses,
+          daoSigners.length,
+          TestHelper.ZERO_ADDRESS,
+          new Uint8Array(),
+          TestHelper.ZERO_ADDRESS,
+          TestHelper.ZERO_ADDRESS,
+          0,
+          TestHelper.ZERO_ADDRESS,
+        );
+
+        const feeConfigData = {
+          receiver: signers[11].address,
+          tokenAddress: TestHelper.ZERO_ADDRESS,
+          amountOrId: TestHelper.toPrecision(1),
+        };
+
+        const MULTISIG_ARGS = [
+          daoAdminOne.address,
+          DAO_NAME,
+          LOGO_URL,
+          DESCRIPTION,
+          WEB_LINKS,
+          feeConfigData,
+          hederaGnosisSafeProxyInstance,
+          hederaService.address,
+          multiSend.address,
+          systemRoleBasedAccess,
+        ];
+
+        const multiSigDAOInstance = await TestHelper.deployProxy(
+          "MultiSigDAO",
+          ...MULTISIG_ARGS,
+        );
+        const { txn } = await proposeTextTransaction(
+          multiSigDAOInstance,
+          TEXT_PROPOSAL_TEXT,
+          signers[0].address,
+          feeConfigData.amountOrId,
+          TITLE,
+          META_DATA_TEXT,
+        );
+        await expect(txn).changeEtherBalances(
+          [signers[0].address, feeConfigData.receiver],
+          [-feeConfigData.amountOrId, feeConfigData.amountOrId],
+        );
+      });
+    });
+
     describe("Upgrade proposal tests", () => {
       it("Verify propose transaction should be reverted if proxy address is zero", async function () {
         const { multiSigDAOInstance } = await loadFixture(deployFixture);
@@ -1447,14 +1766,18 @@ describe("MultiSig tests", function () {
           multiSendProxy,
           multiSigDAOInstance,
           hederaGnosisSafeProxyContract,
+          feeConfigData,
         } = await loadFixture(deployFixture);
         const newMultiSend = await TestHelper.deployLogic("HederaMultiSend");
+
+        const hBarAmount = { value: feeConfigData.amountOrId };
         const txn = await multiSigDAOInstance.proposeUpgradeProxyTransaction(
           multiSendProxy.address,
           newMultiSend.address,
           TITLE,
           DESCRIPTION,
           LINK_TO_DISCUSSION,
+          hBarAmount,
         );
         const { txnHash, info } = await verifyTransactionCreatedEvent(
           txn,
@@ -1484,17 +1807,19 @@ describe("MultiSig tests", function () {
           systemUsersSigners,
           multiSigDAOInstance,
           hederaGnosisSafeProxyContract,
+          feeConfigData,
         } = await loadFixture(deployFixture);
 
         const proxyAdmin = systemUsersSigners.proxyAdmin;
         const newMultiSend = await TestHelper.deployLogic("HederaMultiSend");
-
+        const hBarAmount = { value: feeConfigData.amountOrId };
         const txn = await multiSigDAOInstance.proposeUpgradeProxyTransaction(
           multiSendProxy.address,
           newMultiSend.address,
           TITLE,
           DESCRIPTION,
           LINK_TO_DISCUSSION,
+          hBarAmount,
         );
 
         const { txnHash, info } = await verifyTransactionCreatedEvent(

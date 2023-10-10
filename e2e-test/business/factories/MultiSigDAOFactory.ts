@@ -10,8 +10,8 @@ import {
 } from "@hashgraph/sdk";
 import { ContractService } from "../../../deployment/service/ContractService";
 import { MirrorNodeService } from "../../../utils/MirrorNodeService";
-import { DEFAULT_DAO_CONFIG } from "../constants";
-import { DAOConfigDetails } from "../types";
+import { DEFAULT_FEE_CONFIG } from "../constants";
+import { FeeConfigDetails } from "../types";
 
 const deployment = new Deployment();
 
@@ -24,7 +24,7 @@ const UPGRADE_SAFE_FACTORY_LOGIC_IMPL = "upgradeSafeFactoryAddress";
 
 export default class MultiSigDAOFactory extends Base {
   initialize = async (
-    daoConfigDetails: DAOConfigDetails = DEFAULT_DAO_CONFIG,
+    feeConfigDetails: FeeConfigDetails = DEFAULT_FEE_CONFIG,
     client: Client = clientsInfo.operatorClient,
   ) => {
     if (await this.isInitializationPending()) {
@@ -41,7 +41,7 @@ export default class MultiSigDAOFactory extends Base {
         _daoLogic: multiSigDao.address,
         _safeLogic: gnosisLogic.address,
         _safeFactory: gnosisFactory.address,
-        _daoConfigDetails: Object.values(daoConfigDetails),
+        _feeConfigDetails: Object.values(feeConfigDetails),
         _hederaService: this.htsAddress,
         _multiSend: this.getMultiSendContractAddress(),
       };
@@ -74,6 +74,7 @@ export default class MultiSigDAOFactory extends Base {
     threshold: number,
     isPrivate: boolean,
     hbarAmount: number = 0,
+    feeConfig: FeeConfigDetails = DEFAULT_FEE_CONFIG,
     admin: string = clientsInfo.uiUserId.toSolidityAddress(),
     client: Client = clientsInfo.uiUserClient,
   ) => {
@@ -86,6 +87,7 @@ export default class MultiSigDAOFactory extends Base {
       isPrivate,
       desc,
       webLinks,
+      feeConfig,
     };
     const { hex, bytes } = await this.encodeFunctionData(
       ContractService.MULTI_SIG_FACTORY,
