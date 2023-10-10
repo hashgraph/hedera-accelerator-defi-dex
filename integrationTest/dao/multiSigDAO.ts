@@ -57,16 +57,6 @@ export const DAO_OWNERS_ADDRESSES = DAO_OWNERS_INFO.map(
   (item: any) => item.address,
 );
 
-async function getAllowanceDetailsForProposal(multiSigDAO: MultiSigDao) {
-  const { tokenAddress, amountOrId } = await multiSigDAO.getFeeConfig();
-  const isHBAR = Common.isHBAR(TokenId.fromSolidityAddress(tokenAddress));
-  const proposalFee = isHBAR
-    ? Hbar.fromTinybars(amountOrId).toBigNumber().toNumber()
-    : amountOrId;
-  const hBarPayable = isHBAR ? proposalFee : 0;
-  return { proposalFee, hBarPayable, tokenAddress };
-}
-
 async function main() {
   const multiSigDAO = new MultiSigDao();
   await initDAO(multiSigDAO);
@@ -123,7 +113,7 @@ export async function executeNFTTokenTransferProposal(
 
   // Step - 1 setup allowance for proposal
   const { proposalFee, hBarPayable, tokenAddress } =
-    await getAllowanceDetailsForProposal(multiSigDAO);
+    await multiSigDAO.getFeeConfig();
 
   await Common.setTokenAllowance(
     TokenId.fromSolidityAddress(tokenAddress),
@@ -226,7 +216,7 @@ export async function executeFTTokenTransferProposal(
 
   // Step - 1 Setup Allowance for Proposal
   const { proposalFee, hBarPayable, tokenAddress } =
-    await getAllowanceDetailsForProposal(multiSigDAO);
+    await multiSigDAO.getFeeConfig();
   await Common.setTokenAllowance(
     TokenId.fromSolidityAddress(tokenAddress),
     multiSigDAO.contractId,
@@ -321,7 +311,7 @@ export async function executeBatchTransaction(
   );
 
   const { proposalFee, hBarPayable, tokenAddress } =
-    await getAllowanceDetailsForProposal(multiSigDAO);
+    await multiSigDAO.getFeeConfig();
   await Common.setTokenAllowance(
     TokenId.fromSolidityAddress(tokenAddress),
     multiSigDAO.contractId,
@@ -403,7 +393,7 @@ export async function executeHbarTransfer(
 
   // step 1 - Set up Allowance to create the Proposal
   const { proposalFee, hBarPayable, tokenAddress } =
-    await getAllowanceDetailsForProposal(multiSigDAO);
+    await multiSigDAO.getFeeConfig();
   await Common.setTokenAllowance(
     TokenId.fromSolidityAddress(tokenAddress),
     multiSigDAO.contractId,
@@ -458,7 +448,7 @@ export async function executeDAOUpgradeProposal(
     `- executing Multi-sig DAO upgrade contract flow = ${multiSigDAO.contractId}\n`,
   );
   const { proposalFee, hBarPayable, tokenAddress } =
-    await getAllowanceDetailsForProposal(multiSigDAO);
+    await multiSigDAO.getFeeConfig();
   await Common.setTokenAllowance(
     TokenId.fromSolidityAddress(tokenAddress),
     multiSigDAO.contractId,
@@ -519,7 +509,7 @@ export async function executeDAOTextProposal(
   );
 
   const { proposalFee, hBarPayable, tokenAddress } =
-    await getAllowanceDetailsForProposal(multiSigDAO);
+    await multiSigDAO.getFeeConfig();
   await Common.setTokenAllowance(
     TokenId.fromSolidityAddress(tokenAddress),
     multiSigDAO.contractId,

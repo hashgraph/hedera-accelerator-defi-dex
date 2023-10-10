@@ -1,7 +1,8 @@
 import { BigNumber } from "ethers";
 import { clientsInfo } from "../../utils/ClientManagement";
-import { Client } from "@hashgraph/sdk";
+import { Client, Hbar, TokenId } from "@hashgraph/sdk";
 import BaseDAO from "./BaseDao";
+import Common from "./Common";
 
 const GET_FEE_CONFIG = "feeConfig";
 
@@ -16,11 +17,20 @@ export default abstract class FeeConfig extends BaseDAO {
     console.log(
       `- FeeConfig#${GET_FEE_CONFIG}() = ${JSON.stringify(feeConfigData)}\n`,
     );
-    const feeConfig = {
-      receiver: feeConfigData.receiver,
+
+    const amount = BigNumber.from(feeConfigData.amountOrId).toNumber();
+    const isHBAR = Common.isHBAR(
+      TokenId.fromSolidityAddress(feeConfigData.receiver),
+    );
+    const proposalFee = isHBAR
+      ? Hbar.fromTinybars(amount).toBigNumber().toNumber()
+      : amount;
+    const hBarPayable = isHBAR ? proposalFee : 0;
+
+    return {
       tokenAddress: feeConfigData.tokenAddress,
-      amountOrId: BigNumber.from(feeConfigData.amountOrId).toNumber(),
+      proposalFee,
+      hBarPayable,
     };
-    return feeConfig;
   };
 }

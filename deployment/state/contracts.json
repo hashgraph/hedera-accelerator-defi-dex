@@ -87,12 +87,12 @@
   },
   {
     "name": "multisigdaofactory",
-    "id": "0.0.4499245",
-    "hash": "86bbbcef8b8a74bf860a685764c799e6",
-    "address": "0x000000000000000000000000000000000044a72d",
-    "timestamp": "2023-10-07T12:28:18.940Z",
-    "transparentProxyId": "0.0.4499247",
-    "transparentProxyAddress": "0x000000000000000000000000000000000044a72f"
+    "id": "0.0.4527733",
+    "hash": "e4f4f30c0a4b2186a1df28a54cb337c1",
+    "address": "0x0000000000000000000000000000000000451675",
+    "timestamp": "2023-10-10T07:35:10.104Z",
+    "transparentProxyId": "0.0.4527735",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000451677"
   },
   {
     "name": "factory",
@@ -105,12 +105,10 @@
   },
   {
     "name": "multisigdao",
-    "id": "0.0.2952911",
-    "hash": "f22a7095d6997e88f92dc0658ff6e937",
-    "address": "0x00000000000000000000000000000000002d0ecf",
-    "timestamp": "2023-09-28T08:52:35.606Z",
-    "transparentProxyId": "0.0.2952969",
-    "transparentProxyAddress": "0x00000000000000000000000000000000002d0f09"
+    "id": "0.0.4527783",
+    "hash": "87c5446d2ce5388f007e0c2d20b0749d",
+    "address": "0x00000000000000000000000000000000004516a7",
+    "timestamp": "2023-10-10T07:46:14.653Z"
   },
   {
     "name": "systemrolebasedaccess",
@@ -138,5 +136,19 @@
     "timestamp": "2023-10-03T09:40:44.937Z",
     "transparentProxyId": "0.0.3760572",
     "transparentProxyAddress": "0x00000000000000000000000000000000003961bc"
+  },
+  {
+    "name": "hederagnosissafe",
+    "id": "0.0.4527785",
+    "hash": "e73d64191a12f2fde47b2cfbd6852aa7",
+    "address": "0x00000000000000000000000000000000004516a9",
+    "timestamp": "2023-10-10T07:46:46.100Z"
+  },
+  {
+    "name": "hederagnosissafeproxyfactory",
+    "id": "0.0.4527787",
+    "hash": "c19c62b5348af61ace038e59ea31130a",
+    "address": "0x00000000000000000000000000000000004516ab",
+    "timestamp": "2023-10-10T07:46:59.502Z"
   }
 ]

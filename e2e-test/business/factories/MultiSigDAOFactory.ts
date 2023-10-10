@@ -24,7 +24,7 @@ const UPGRADE_SAFE_FACTORY_LOGIC_IMPL = "upgradeSafeFactoryAddress";
 
 export default class MultiSigDAOFactory extends Base {
   initialize = async (
-    daoConfigDetails: FeeConfigDetails = DEFAULT_FEE_CONFIG,
+    feeConfigDetails: FeeConfigDetails = DEFAULT_FEE_CONFIG,
     client: Client = clientsInfo.operatorClient,
   ) => {
     if (await this.isInitializationPending()) {
@@ -41,7 +41,7 @@ export default class MultiSigDAOFactory extends Base {
         _daoLogic: multiSigDao.address,
         _safeLogic: gnosisLogic.address,
         _safeFactory: gnosisFactory.address,
-        _daoConfigDetails: Object.values(daoConfigDetails),
+        _feeConfigDetails: Object.values(feeConfigDetails),
         _hederaService: this.htsAddress,
         _multiSend: this.getMultiSendContractAddress(),
       };

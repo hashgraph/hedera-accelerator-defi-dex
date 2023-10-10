@@ -32,7 +32,7 @@ export default abstract class DAOFactory extends Base {
   initialize = async (
     client: Client = clientsInfo.operatorClient,
     tokenHolderFactory: TokenHolderFactory,
-    daoConfigDetails: FeeConfigDetails = DEFAULT_FEE_CONFIG,
+    feeConfigDetails: FeeConfigDetails = DEFAULT_FEE_CONFIG,
   ) => {
     if (await this.isInitializationPending()) {
       const tokenHolderFactoryAddress = ContractId.fromString(
@@ -52,7 +52,7 @@ export default abstract class DAOFactory extends Base {
         _governorLogic: governor.address,
         _assetsHolderLogic: assetsHolder.address,
         _hederaService: this.htsAddress,
-        _daoConfigDetails: daoConfigDetails,
+        _feeConfigDetails: feeConfigDetails,
         _tokenHolderFactory: tokenHolderFactoryAddress,
         _iSystemRoleBasedAccess: this.getSystemBasedRoleAccessContractAddress(),
       };
