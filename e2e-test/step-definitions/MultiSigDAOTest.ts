@@ -246,6 +246,7 @@ export class MultiSigDAOSteps {
       clientsInfo.treasureId.toSolidityAddress(),
       TOKEN_ID.toSolidityAddress(),
       amount * PRECISION,
+      feeConfig.fromAccountClient,
     );
   }
 
@@ -259,6 +260,7 @@ export class MultiSigDAOSteps {
       clientsInfo.treasureId.toSolidityAddress(),
       TOKEN_ID.toSolidityAddress(),
       balanceInSafe.plus(PRECISION).toNumber(),
+      feeConfig.fromAccountClient,
     );
   }
 
@@ -524,12 +526,10 @@ export class MultiSigDAOSteps {
     30000,
   )
   public async proposeTokenAssociateTransaction() {
-    const FEE_CONFIG: FeeConfigDetails = {
-      receiver: feeConfig.receiver,
-      tokenAddress: feeConfig.tokenAddress,
-      amountOrId: feeConfig.amountOrId,
-    };
-    txnHash = await multiSigDao.proposeTokenAssociateTransaction(TOKEN_ID);
+    txnHash = await multiSigDao.proposeTokenAssociateTransaction(
+      TOKEN_ID,
+      feeConfig.fromAccountClient,
+    );
   }
 
   @when(/User transfer (\d+\.?\d*) uint of tokens to safe/, undefined, 60000)

@@ -26,6 +26,7 @@ Feature: MultiSigDAO e2e test
         When User execute the transaction
         When User transfer 2 uint of tokens to safe
         When User fetch balance of the target token from safe
+        When User setup allowance for proposal creation for collecting fee
         When User propose the transaction for transferring token amount greater than safe balance of token
         When User get 2 approval from DAO owners
         When User try to execute the transaction and receives the error message "CONTRACT_REVERT_EXECUTED"
@@ -39,6 +40,7 @@ Feature: MultiSigDAO e2e test
         When User transfer 2 uint of tokens to safe
         When User fetch balance of the target token from safe
         When User fetch balance of the target token from payee account
+        When User setup allowance for proposal creation for collecting fee
         When User propose the transaction for transferring 1 unit of the token
         Then User verify transaction state is "Pending"
         When User get 2 approval from DAO owners 
@@ -116,6 +118,7 @@ Feature: MultiSigDAO e2e test
         When User transfer 2 uint of tokens to safe
         When User fetch balance of the target token from safe
         When User fetch balance of the target token from payee account
+        When User setup allowance for proposal creation for collecting fee
         When User propose the transaction for transferring 1 unit of the token
         Then User verify transaction state is "Pending"
         When User get 2 approval from DAO owners 
