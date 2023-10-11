@@ -1,7 +1,7 @@
-import Base from "../Base";
 import FTDAO from "../FTDAO";
 import GodHolder from "../GodHolder";
 import NFTHolder from "../NFTHolder";
+import FeeConfig from "../FeeConfig";
 import TokenHolderFactory from "./TokenHolderFactory";
 
 import { Helper } from "../../../utils/Helper";
@@ -26,7 +26,7 @@ const INITIALIZE = "initialize";
 const UPGRADE_TOKEN_HOLDER_FACTORY = "upgradeTokenHolderFactory";
 const GET_TOKEN_HOLDER_FACTORY_ADDRESS = "getTokenHolderFactoryAddress";
 
-export default abstract class DAOFactory extends Base {
+export default abstract class DAOFactory extends FeeConfig {
   protected abstract getPrefix(): string;
 
   initialize = async (
@@ -85,8 +85,9 @@ export default abstract class DAOFactory extends Base {
     votingDelay: number,
     votingPeriod: number,
     isPrivate: boolean,
-    daoCreationFeeInHBar: number = 0,
-    admin: string = clientsInfo.operatorId.toSolidityAddress(),
+    proposalFeeConfig: FeeConfigDetails,
+    daoCreationFeeInHBar: number,
+    admin: string,
     client: Client = clientsInfo.operatorClient,
   ) => {
     const params = {
@@ -101,6 +102,7 @@ export default abstract class DAOFactory extends Base {
       isPrivate,
       desc,
       webLinks,
+      feeConfig: Object.values(proposalFeeConfig),
     };
     const { bytes, hex } = await this.encodeFunctionData(
       ContractService.FT_DAO_FACTORY,

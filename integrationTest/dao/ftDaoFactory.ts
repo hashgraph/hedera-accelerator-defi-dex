@@ -11,6 +11,7 @@ import { Deployment } from "../../utils/deployContractOnTestnet";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { ContractService } from "../../deployment/service/ContractService";
 import { DEFAULT_FEE_CONFIG } from "../../e2e-test/business/constants";
+import { DEFAULT_PROPOSAL_CREATION_FEE_CONFIG } from "../../e2e-test/business/constants";
 
 const DAO_DESC = "Lorem Ipsum is simply dummy text";
 const DAO_ADMIN = clientsInfo.uiUserId.toSolidityAddress();
@@ -20,11 +21,11 @@ const DAO_TOKEN_ID = dex.GOVERNANCE_DAO_TWO_TOKEN_ID;
 const DAO_WEB_LINKS = ["LINKEDIN", "https://linkedin.com"];
 const DAO_INFO_URL = "https://daoinfo.com";
 
-const TOKEN_ALLOWANCE_DETAILS = {
-  TOKEN: TokenId.fromSolidityAddress(DEFAULT_FEE_CONFIG.tokenAddress),
-  FROM_CLIENT: clientsInfo.operatorClient,
-  FROM_ID: clientsInfo.operatorId,
-  FROM_KEY: clientsInfo.operatorKey,
+const DEFAULT_DAO_CREATION_FEE_CONFIG = {
+  ...DEFAULT_FEE_CONFIG,
+  fromAccountId: clientsInfo.operatorId,
+  fromAccountPK: clientsInfo.operatorKey,
+  fromAccountClient: clientsInfo.operatorClient,
 };
 
 async function main() {
@@ -33,9 +34,9 @@ async function main() {
   await tokenHolderFactory.initialize();
 
   const daoFactory = new FTDAOFactory();
-  const feeAmount = await setupDAOCreationAllowanceAndGetFeeAmount(daoFactory);
-
   await daoFactory.initialize(clientsInfo.operatorClient, tokenHolderFactory);
+
+  const feeAmount = await setupDAOCreationAllowanceAndGetFeeAmount(daoFactory);
   await daoFactory.createDAO(
     dex.GOVERNANCE_DAO_TWO,
     DAO_LOGO_URL,
@@ -47,10 +48,12 @@ async function main() {
     0,
     15,
     false,
+    DEFAULT_PROPOSAL_CREATION_FEE_CONFIG,
     feeAmount,
     DAO_ADMIN,
     clientsInfo.operatorClient,
   );
+
   const daoAddresses = await daoFactory.getDAOs();
   const daoAddress = daoAddresses.pop()!;
   await executeGovernanceProposals(daoFactory, daoAddress, DAO_TOKEN_ID);
@@ -98,23 +101,16 @@ async function createNewCopies() {
 }
 
 async function setupDAOCreationAllowanceAndGetFeeAmount(factory: DAOFactory) {
-  const feeAllowanceAmount = Common.isHBAR(TOKEN_ALLOWANCE_DETAILS.TOKEN)
-    ? dex.DAO_FEE
-    : DEFAULT_FEE_CONFIG.amountOrId;
-
-  const feeInHBAR = Common.isHBAR(TOKEN_ALLOWANCE_DETAILS.TOKEN)
-    ? feeAllowanceAmount
-    : 0;
-
+  const daoCreationFeeConfig = await factory.feeConfig();
   await Common.setTokenAllowance(
-    TOKEN_ALLOWANCE_DETAILS.TOKEN,
+    TokenId.fromSolidityAddress(daoCreationFeeConfig.tokenAddress),
     factory.contractId,
-    feeAllowanceAmount,
-    TOKEN_ALLOWANCE_DETAILS.FROM_ID,
-    TOKEN_ALLOWANCE_DETAILS.FROM_KEY,
-    TOKEN_ALLOWANCE_DETAILS.FROM_CLIENT,
+    daoCreationFeeConfig.proposalFee,
+    DEFAULT_DAO_CREATION_FEE_CONFIG.fromAccountId,
+    DEFAULT_DAO_CREATION_FEE_CONFIG.fromAccountPK,
+    DEFAULT_DAO_CREATION_FEE_CONFIG.fromAccountClient,
   );
-  return feeInHBAR;
+  return daoCreationFeeConfig.hBarPayable;
 }
 
 if (require.main === module) {

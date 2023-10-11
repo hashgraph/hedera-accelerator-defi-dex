@@ -7,11 +7,11 @@ import NFTTokenHolderFactory from "../business/factories/NFTTokenHolderFactory";
 
 import { expect } from "chai";
 import { ethers } from "ethers";
+import { TokenId } from "@hashgraph/sdk";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { FeeConfigDetails } from "../business/types";
 import { binding, then, when } from "cucumber-tsflow";
 import { CommonSteps, TokenInfo } from "./CommonSteps";
-import { Hbar, TokenId, HbarUnit } from "@hashgraph/sdk";
 
 const DAO_DESC = "Lorem Ipsum is simply dummy text";
 const DAO_INFO_URL = "https://linkedin.com";
@@ -31,6 +31,7 @@ let daoFactory: DAOFactory;
 let errorMessage: string;
 let godTokenInfo: TokenInfo;
 let daoFeeConfig: FeeConfigDetails;
+let proposalFeeConfig: FeeConfigDetails;
 
 @binding()
 export class DAOFactoryTest extends CommonSteps {
@@ -60,7 +61,29 @@ export class DAOFactoryTest extends CommonSteps {
       amountOrId: daoFee,
     };
     console.log(" - DAO fee config details:-");
-    console.table({ daoFeeConfig });
+    console.table(daoFeeConfig);
+  }
+
+  @then(
+    /User setup proposal creation fee for token-id "([^"]*)" with amount\/id "([^"]*)"/,
+    undefined,
+    60000,
+  )
+  public async setupProposalCreationFeeAndAllowance(
+    proposalFeeTokenId: string,
+    proposalFeeAmountOrId: string,
+  ) {
+    const _proposalFeeAmountOrId = CommonSteps.normalizeAmountOrId(
+      proposalFeeAmountOrId,
+    );
+    const _proposalFeeTokenId = TokenId.fromString(proposalFeeTokenId);
+    proposalFeeConfig = {
+      receiver: DAO_CONFIG.daoTreasurerId.toSolidityAddress(),
+      tokenAddress: _proposalFeeTokenId.toSolidityAddress(),
+      amountOrId: _proposalFeeAmountOrId,
+    };
+    console.log(" - Proposal fee config details:-");
+    console.table(proposalFeeConfig);
   }
 
   @then(/User gets initialized contracts/, undefined, 300000)
@@ -85,6 +108,7 @@ export class DAOFactoryTest extends CommonSteps {
         CommonSteps.DEFAULT_VOTING_DELAY,
         CommonSteps.DEFAULT_VOTING_PERIOD,
         false,
+        proposalFeeConfig,
         feeInHBar,
         DAO_CONFIG.fromAccountId.toSolidityAddress(),
         DAO_CONFIG.fromAccountClient,
@@ -140,18 +164,16 @@ export class DAOFactoryTest extends CommonSteps {
   }
 
   private async setupDAOCreationAllowanceAndGetFeeAmount(factory: DAOFactory) {
-    const tokenId = TokenId.fromSolidityAddress(daoFeeConfig.tokenAddress);
-    const feeAllowanceAmount = Common.isHBAR(tokenId)
-      ? Hbar.from(daoFeeConfig.amountOrId, HbarUnit.Tinybar)
-          .to(HbarUnit.Hbar)
-          .toNumber()
-      : daoFeeConfig.amountOrId;
+    const createDAOFeeConfig = await factory.feeConfig();
+    const tokenId = TokenId.fromSolidityAddress(
+      createDAOFeeConfig.tokenAddress,
+    );
 
     // 1- setup allowance
     await Common.setTokenAllowance(
       tokenId,
       daoFactory.contractId,
-      feeAllowanceAmount,
+      createDAOFeeConfig.proposalFee,
       DAO_CONFIG.fromAccountId,
       DAO_CONFIG.fromAccountKey,
       DAO_CONFIG.fromAccountClient,
@@ -165,6 +187,6 @@ export class DAOFactoryTest extends CommonSteps {
       DAO_CONFIG.daoTreasurerPK,
     );
 
-    return Common.isHBAR(tokenId) ? feeAllowanceAmount : 0;
+    return createDAOFeeConfig.hBarPayable;
   }
 }

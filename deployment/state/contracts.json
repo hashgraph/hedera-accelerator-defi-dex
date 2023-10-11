@@ -24,12 +24,12 @@
   },
   {
     "name": "nfttokenholderfactory",
-    "id": "0.0.3760529",
-    "hash": "ae46005c19d932779f665340e00abf01",
-    "address": "0x0000000000000000000000000000000000396191",
-    "timestamp": "2023-10-03T09:40:26.517Z",
-    "transparentProxyId": "0.0.3760547",
-    "transparentProxyAddress": "0x00000000000000000000000000000000003961a3"
+    "id": "0.0.4530501",
+    "hash": "97f13076ea093d9f89e574dfb74d1870",
+    "address": "0x0000000000000000000000000000000000452145",
+    "timestamp": "2023-10-11T05:58:46.586Z",
+    "transparentProxyId": "0.0.4530503",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000452147"
   },
   {
     "name": "lptoken",
@@ -60,12 +60,12 @@
   },
   {
     "name": "nftdaofactory",
-    "id": "0.0.4521359",
-    "hash": "eebbd35dea0e0b6e5e3ba857deb1bad4",
-    "address": "0x000000000000000000000000000000000044fd8f",
-    "timestamp": "2023-10-09T12:02:56.939Z",
-    "transparentProxyId": "0.0.4521363",
-    "transparentProxyAddress": "0x000000000000000000000000000000000044fd93"
+    "id": "0.0.4530535",
+    "hash": "07f57af05b3d9888694c79b179528e29",
+    "address": "0x0000000000000000000000000000000000452167",
+    "timestamp": "2023-10-11T06:11:17.211Z",
+    "transparentProxyId": "0.0.4530537",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000452169"
   },
   {
     "name": "pair",
@@ -78,12 +78,12 @@
   },
   {
     "name": "ftdaofactory",
-    "id": "0.0.4521165",
-    "hash": "cef42744efe9fb368ff95de69f6c0722",
-    "address": "0x000000000000000000000000000000000044fccd",
-    "timestamp": "2023-10-09T10:51:52.038Z",
-    "transparentProxyId": "0.0.4521169",
-    "transparentProxyAddress": "0x000000000000000000000000000000000044fcd1"
+    "id": "0.0.4530528",
+    "hash": "6b4d421e83b3514b041b8c65096f7574",
+    "address": "0x0000000000000000000000000000000000452160",
+    "timestamp": "2023-10-11T06:08:56.642Z",
+    "transparentProxyId": "0.0.4530531",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000452163"
   },
   {
     "name": "multisigdaofactory",

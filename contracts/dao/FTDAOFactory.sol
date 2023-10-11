@@ -16,7 +16,7 @@ import "../governance/ITokenHolderFactory.sol";
 
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-contract FTDAOFactory is IErrors, IEvents, ISharedModel, FeeConfiguration {
+contract FTDAOFactory is IErrors, IEvents, FeeConfiguration {
     event DAOCreated(
         address tokenHolderAddress,
         address assetsHolderAddress,
