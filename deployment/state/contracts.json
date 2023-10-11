@@ -105,10 +105,12 @@
   },
   {
     "name": "multisigdao",
-    "id": "0.0.4527783",
-    "hash": "87c5446d2ce5388f007e0c2d20b0749d",
-    "address": "0x00000000000000000000000000000000004516a7",
-    "timestamp": "2023-10-10T07:46:14.653Z"
+    "id": "0.0.4530250",
+    "hash": "e1780c9988e49ac06a3934f05f591d1e",
+    "address": "0x000000000000000000000000000000000045204a",
+    "timestamp": "2023-10-11T05:06:18.614Z",
+    "transparentProxyId": "0.0.4530252",
+    "transparentProxyAddress": "0x000000000000000000000000000000000045204c"
   },
   {
     "name": "systemrolebasedaccess",
