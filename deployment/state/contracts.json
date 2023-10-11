@@ -130,12 +130,12 @@
   },
   {
     "name": "hederagovernor",
-    "id": "0.0.3760556",
-    "hash": "b4f41aebbd461fbbcbebffef0240bef8",
-    "address": "0x00000000000000000000000000000000003961ac",
-    "timestamp": "2023-10-03T09:40:44.937Z",
-    "transparentProxyId": "0.0.3760572",
-    "transparentProxyAddress": "0x00000000000000000000000000000000003961bc"
+    "id": "0.0.4530186",
+    "hash": "476dbc44016eeb3a224a15e9f960ff80",
+    "address": "0x000000000000000000000000000000000045200a",
+    "timestamp": "2023-10-11T04:19:06.833Z",
+    "transparentProxyId": "0.0.4530189",
+    "transparentProxyAddress": "0x000000000000000000000000000000000045200d"
   },
   {
     "name": "hederagnosissafe",

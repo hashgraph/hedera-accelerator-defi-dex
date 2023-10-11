@@ -1,36 +1,39 @@
-import { BigNumber } from "ethers";
-import { clientsInfo } from "../../utils/ClientManagement";
-import { Client, Hbar, TokenId } from "@hashgraph/sdk";
-import BaseDAO from "./BaseDao";
 import Common from "./Common";
+import BaseDAO from "./BaseDao";
 
-const GET_FEE_CONFIG = "feeConfig";
+import { clientsInfo } from "../../utils/ClientManagement";
+import { FeeConfigDetails } from "./types";
+import { Client, Hbar, TokenId } from "@hashgraph/sdk";
+
+const FEE_CONFIG = "feeConfig";
 
 export default abstract class FeeConfig extends BaseDAO {
-  getFeeConfig = async (client: Client = clientsInfo.operatorClient) => {
-    const { result } = await this.execute(50000, GET_FEE_CONFIG, client);
-    const feeConfigData = await this.decodeFunctionResult(
+  public feeConfig = async (client: Client = clientsInfo.operatorClient) => {
+    const { result } = await this.execute(50_000, FEE_CONFIG, client);
+    const feeConfigDataFromContract = await this.decodeFunctionResult(
       this.getContractName(),
-      GET_FEE_CONFIG,
+      FEE_CONFIG,
       result.asBytes(),
     );
-    console.log(
-      `- FeeConfig#${GET_FEE_CONFIG}() = ${JSON.stringify(feeConfigData)}\n`,
-    );
-
-    const amount = BigNumber.from(feeConfigData.amountOrId).toNumber();
-    const isHBAR = Common.isHBAR(
-      TokenId.fromSolidityAddress(feeConfigData.receiver),
-    );
-    const proposalFee = isHBAR
-      ? Hbar.fromTinybars(amount).toBigNumber().toNumber()
-      : amount;
-    const hBarPayable = isHBAR ? proposalFee : 0;
-
-    return {
-      tokenAddress: feeConfigData.tokenAddress,
+    const feeConfig: FeeConfigDetails = {
+      receiver: feeConfigDataFromContract.receiver,
+      tokenAddress: feeConfigDataFromContract.tokenAddress,
+      amountOrId: feeConfigDataFromContract.amountOrId.toNumber(),
+    };
+    let hBarPayable = 0;
+    let proposalFee = feeConfig.amountOrId;
+    if (Common.isHBAR(TokenId.fromSolidityAddress(feeConfig.tokenAddress))) {
+      proposalFee = Hbar.fromTinybars(proposalFee).toBigNumber().toNumber();
+      hBarPayable = proposalFee;
+    }
+    const info = {
+      ...feeConfig,
       proposalFee,
       hBarPayable,
     };
+    console.log(`- FeeConfig#${FEE_CONFIG}():`);
+    console.table(info);
+    console.log("");
+    return info;
   };
 }

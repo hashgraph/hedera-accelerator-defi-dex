@@ -3,8 +3,7 @@ import Common from "../../e2e-test/business/Common";
 import GodHolder from "../../e2e-test/business/GodHolder";
 import NFTHolder from "../../e2e-test/business/NFTHolder";
 import HederaGovernor from "../../e2e-test/business/HederaGovernor";
-import FTTokenHolderFactory from "../../e2e-test/business/factories/FTTokenHolderFactory";
-import NFTTokenHolderFactory from "../../e2e-test/business/factories/NFTTokenHolderFactory";
+import * as Constants from "../../e2e-test/business/constants";
 import * as GovernanceProps from "./governance";
 
 import { Helper } from "../../utils/Helper";
@@ -17,21 +16,17 @@ async function createNewCopies(isNFT: boolean) {
   const deployment = new Deployment();
   await deployment.deployProxyAndSave(ContractService.HEDERA_GOVERNOR);
   await deployment.deployProxyAndSave(
-    isNFT
-      ? ContractService.NFT_TOKEN_HOLDER_FACTORY
-      : ContractService.FT_TOKEN_HOLDER_FACTORY,
+    isNFT ? ContractService.NFT_HOLDER : ContractService.GOD_HOLDER,
   );
 }
 
 async function getTokenHolder(tokenId: TokenId, isNFT: boolean) {
-  const holderFactory = isNFT
-    ? new NFTTokenHolderFactory()
-    : new FTTokenHolderFactory();
-  await holderFactory.initialize();
-  const holderId = await holderFactory.getTokenHolder(
+  const holder = isNFT ? new NFTHolder() : new GodHolder();
+  await holder.initialize(
+    clientsInfo.operatorClient,
     tokenId.toSolidityAddress(),
   );
-  return isNFT ? new NFTHolder(holderId) : new GodHolder(holderId);
+  return holder;
 }
 
 async function executeGovernanceProposalsFlow(
@@ -50,6 +45,7 @@ async function executeGovernanceProposalsFlow(
   await governor.initialize(
     holder,
     clientsInfo.operatorClient,
+    Constants.DEFAULT_PROPOSAL_CREATION_FEE_CONFIG,
     1,
     0, // 0 seconds
     15, // 15 seconds

@@ -1,9 +1,13 @@
 import dex from "../../deployment/model/dex";
 import { clientsInfo } from "../../utils/ClientManagement";
-import { CommonSteps } from "../step-definitions/CommonSteps";
+import { FeeConfigDetails } from "./types";
 
-export const DEFAULT_FEE_CONFIG = {
-  receiver: clientsInfo.treasureId.toSolidityAddress(),
+export const DEFAULT_FEE_CONFIG: FeeConfigDetails = {
+  receiver: clientsInfo.operatorId.toSolidityAddress(),
   tokenAddress: dex.ZERO_TOKEN_ID.toSolidityAddress(),
-  amountOrId: CommonSteps.withPrecision * dex.DAO_FEE,
+  amountOrId: dex.DAO_FEE,
+};
+
+export const DEFAULT_PROPOSAL_CREATION_FEE_CONFIG: FeeConfigDetails = {
+  ...DEFAULT_FEE_CONFIG,
 };

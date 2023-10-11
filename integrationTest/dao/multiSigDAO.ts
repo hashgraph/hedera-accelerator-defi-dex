@@ -113,7 +113,7 @@ export async function executeNFTTokenTransferProposal(
 
   // Step - 1 setup allowance for proposal
   const { proposalFee, hBarPayable, tokenAddress } =
-    await multiSigDAO.getFeeConfig();
+    await multiSigDAO.feeConfig();
 
   await Common.setTokenAllowance(
     TokenId.fromSolidityAddress(tokenAddress),
@@ -216,7 +216,7 @@ export async function executeFTTokenTransferProposal(
 
   // Step - 1 Setup Allowance for Proposal
   const { proposalFee, hBarPayable, tokenAddress } =
-    await multiSigDAO.getFeeConfig();
+    await multiSigDAO.feeConfig();
   await Common.setTokenAllowance(
     TokenId.fromSolidityAddress(tokenAddress),
     multiSigDAO.contractId,
@@ -311,7 +311,7 @@ export async function executeBatchTransaction(
   );
 
   const { proposalFee, hBarPayable, tokenAddress } =
-    await multiSigDAO.getFeeConfig();
+    await multiSigDAO.feeConfig();
   await Common.setTokenAllowance(
     TokenId.fromSolidityAddress(tokenAddress),
     multiSigDAO.contractId,
@@ -393,7 +393,7 @@ export async function executeHbarTransfer(
 
   // step 1 - Set up Allowance to create the Proposal
   const { proposalFee, hBarPayable, tokenAddress } =
-    await multiSigDAO.getFeeConfig();
+    await multiSigDAO.feeConfig();
   await Common.setTokenAllowance(
     TokenId.fromSolidityAddress(tokenAddress),
     multiSigDAO.contractId,
@@ -448,7 +448,7 @@ export async function executeDAOUpgradeProposal(
     `- executing Multi-sig DAO upgrade contract flow = ${multiSigDAO.contractId}\n`,
   );
   const { proposalFee, hBarPayable, tokenAddress } =
-    await multiSigDAO.getFeeConfig();
+    await multiSigDAO.feeConfig();
   await Common.setTokenAllowance(
     TokenId.fromSolidityAddress(tokenAddress),
     multiSigDAO.contractId,
@@ -509,7 +509,7 @@ export async function executeDAOTextProposal(
   );
 
   const { proposalFee, hBarPayable, tokenAddress } =
-    await multiSigDAO.getFeeConfig();
+    await multiSigDAO.feeConfig();
   await Common.setTokenAllowance(
     TokenId.fromSolidityAddress(tokenAddress),
     multiSigDAO.contractId,
