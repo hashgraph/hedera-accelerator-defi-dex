@@ -143,6 +143,8 @@ describe("LPToken, Pair and Factory tests", function () {
       ...factoryArguments,
     );
 
+    const utilityContract = await TestHelper.deployLogic("UtilityMock");
+
     return {
       pair,
       mockHederaService,
@@ -156,6 +158,7 @@ describe("LPToken, Pair and Factory tests", function () {
       tokenCont,
       tokenCont1,
       configuration,
+      utilityContract,
     };
   }
 
@@ -389,33 +392,39 @@ describe("LPToken, Pair and Factory tests", function () {
     });
 
     describe("Order of tokens matter while creating pair via Factory ", () => {
-      const orderTokenAddresses = (
+      const orderTokenAddresses = async (
         token2Address: string,
         token1Address: string,
+        utilityContract: Contract,
       ) => {
-        return token2Address.localeCompare(token1Address)
-          ? {
-              localToken1Address: token1Address,
-              tokenAQty: 10,
-              localToken2Address: token2Address,
-              tokenBQty: 20,
-            }
-          : {
-              localToken1Address: token2Address,
-              tokenBQty: 20,
-              localToken2Address: token1Address,
-              tokenAQty: 10,
-            };
-      };
-      it("Given token2 address is greater than token1 address when user try to createPair then created pair's first token should be token1", async function () {
-        const { factory, signers, token1Address, token2Address } =
-          await loadFixture(deployFixture);
-        // Given
-
-        const { localToken1Address, localToken2Address } = orderTokenAddresses(
+        const orderedAddresses = await utilityContract.compareAddress(
           token1Address,
           token2Address,
         );
+
+        return {
+          localToken1Address: orderedAddresses[0],
+          tokenAQty: 10,
+          localToken2Address: orderedAddresses[1],
+          tokenBQty: 20,
+        };
+      };
+      it.only("Given token2 address is greater than token1 address when user try to createPair then created pair's first token should be token1", async function () {
+        const {
+          factory,
+          signers,
+          token1Address,
+          token2Address,
+          utilityContract,
+        } = await loadFixture(deployFixture);
+        // Given
+
+        const { localToken1Address, localToken2Address } =
+          await orderTokenAddresses(
+            token1Address,
+            token2Address,
+            utilityContract,
+          );
 
         const tx = await factory.createPair(
           localToken1Address,
@@ -440,13 +449,20 @@ describe("LPToken, Pair and Factory tests", function () {
       });
 
       it("Given token2 address is greater than token1 address when user try to createPair then created pair's first token should be token1", async function () {
-        const { factory, signers, token1Address, token2Address } =
-          await loadFixture(deployFixture);
-        // Given
-        const { localToken1Address, localToken2Address } = orderTokenAddresses(
+        const {
+          factory,
+          signers,
           token1Address,
           token2Address,
-        );
+          utilityContract,
+        } = await loadFixture(deployFixture);
+        // Given
+        const { localToken1Address, localToken2Address } =
+          await orderTokenAddresses(
+            token1Address,
+            token2Address,
+            utilityContract,
+          );
 
         const tx = await factory.createPair(
           localToken2Address,
@@ -471,11 +487,20 @@ describe("LPToken, Pair and Factory tests", function () {
       });
 
       it("Given token2 address is greater than token1 address when user try to createPair then created pair's first token should be token1 and when add liquidity happens then pair automatically adjust the passed token addresses", async function () {
-        const { factory, signers, token1Address, token2Address } =
-          await loadFixture(deployFixture);
+        const {
+          factory,
+          signers,
+          token1Address,
+          token2Address,
+          utilityContract,
+        } = await loadFixture(deployFixture);
 
         const { localToken1Address, tokenAQty, localToken2Address, tokenBQty } =
-          orderTokenAddresses(token1Address, token2Address);
+          await orderTokenAddresses(
+            token1Address,
+            token2Address,
+            utilityContract,
+          );
 
         const tx = await factory.createPair(
           localToken1Address,
@@ -516,10 +541,19 @@ describe("LPToken, Pair and Factory tests", function () {
       });
 
       it("Given token2 address is greater than token1 address when user try to createPair then created pair's first token should be token1 and when add liquidity(with reverse token order) happens then pair automatically adjust the passed token addresses", async function () {
-        const { factory, signers, token1Address, token2Address } =
-          await loadFixture(deployFixture);
+        const {
+          factory,
+          signers,
+          token1Address,
+          token2Address,
+          utilityContract,
+        } = await loadFixture(deployFixture);
         const { localToken1Address, tokenAQty, localToken2Address, tokenBQty } =
-          orderTokenAddresses(token1Address, token2Address);
+          await orderTokenAddresses(
+            token1Address,
+            token2Address,
+            utilityContract,
+          );
 
         const tx = await factory.createPair(
           localToken1Address,
