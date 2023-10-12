@@ -409,7 +409,7 @@ describe("LPToken, Pair and Factory tests", function () {
           tokenBQty: 20,
         };
       };
-      it.only("Given token2 address is greater than token1 address when user try to createPair then created pair's first token should be token1", async function () {
+      it("Given token2 address is greater than token1 address when user try to createPair then created pair's first token should be token1", async function () {
         const {
           factory,
           signers,
