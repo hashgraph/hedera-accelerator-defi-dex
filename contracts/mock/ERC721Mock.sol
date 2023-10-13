@@ -7,6 +7,7 @@ import "../common/IERC721.sol";
 contract ERC721Mock is IERC721, ITokenType {
     mapping(uint256 => address) private _owners;
     mapping(address => uint256) private _balances;
+    uint256 total;
 
     function setUserBalance(address to, uint256 tokenId) external {
         require(_owners[tokenId] == address(0), "ERC721: token already minted");
@@ -66,5 +67,13 @@ contract ERC721Mock is IERC721, ITokenType {
 
     function tokenType() external pure override returns (int32) {
         return 1;
+    }
+
+    function totalSupply() external view override returns (uint256) {
+        return total;
+    }
+
+    function setTotal(uint256 _total) external {
+        total = _total;
     }
 }
