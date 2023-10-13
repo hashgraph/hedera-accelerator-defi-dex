@@ -18,7 +18,7 @@ export interface TokenInfo {
 }
 export class CommonSteps {
   static DEFAULT_QUORUM_THRESHOLD_IN_BSP = 1;
-  static DEFAULT_NFT_QUORUM_THRESHOLD_IN_BSP = 500;
+  static DEFAULT_NFT_QUORUM_THRESHOLD_IN_BSP = 200;
   static DEFAULT_VOTING_DELAY = 0;
   static DEFAULT_VOTING_PERIOD = 30;
   static withPrecision = 1e8;
