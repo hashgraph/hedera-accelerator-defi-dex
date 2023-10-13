@@ -138,5 +138,14 @@
     "timestamp": "2023-10-03T09:40:44.937Z",
     "transparentProxyId": "0.0.3760572",
     "transparentProxyAddress": "0x00000000000000000000000000000000003961bc"
+  },
+  {
+    "name": "hederagovernor",
+    "id": "0.0.4543771",
+    "hash": "f9bc348d55e7dc5243f35775cd77d745",
+    "address": "0x000000000000000000000000000000000045551b",
+    "timestamp": "2023-10-13T08:45:30.820Z",
+    "transparentProxyId": "0.0.4543773",
+    "transparentProxyAddress": "0x000000000000000000000000000000000045551d"
   }
 ]

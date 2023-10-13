@@ -50,7 +50,7 @@ async function executeGovernanceProposalsFlow(
   await governor.initialize(
     holder,
     clientsInfo.operatorClient,
-    1,
+    isNFT ? 500 : 1,
     0, // 0 seconds
     15, // 15 seconds
     godTokenId,
