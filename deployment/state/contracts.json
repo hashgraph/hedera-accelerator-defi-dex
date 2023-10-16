@@ -24,12 +24,12 @@
   },
   {
     "name": "nfttokenholderfactory",
-    "id": "0.0.3760529",
+    "id": "0.0.5697886",
     "hash": "ae46005c19d932779f665340e00abf01",
-    "address": "0x0000000000000000000000000000000000396191",
-    "timestamp": "2023-10-03T09:40:26.517Z",
-    "transparentProxyId": "0.0.3760547",
-    "transparentProxyAddress": "0x00000000000000000000000000000000003961a3"
+    "address": "0x000000000000000000000000000000000056f15e",
+    "timestamp": "2023-10-16T07:27:18.312Z",
+    "transparentProxyId": "0.0.5697888",
+    "transparentProxyAddress": "0x000000000000000000000000000000000056f160"
   },
   {
     "name": "lptoken",
@@ -60,12 +60,12 @@
   },
   {
     "name": "nftdaofactory",
-    "id": "0.0.4521359",
-    "hash": "eebbd35dea0e0b6e5e3ba857deb1bad4",
-    "address": "0x000000000000000000000000000000000044fd8f",
-    "timestamp": "2023-10-09T12:02:56.939Z",
-    "transparentProxyId": "0.0.4521363",
-    "transparentProxyAddress": "0x000000000000000000000000000000000044fd93"
+    "id": "0.0.5697882",
+    "hash": "c83075c4556ef3572161b58156dda75d",
+    "address": "0x000000000000000000000000000000000056f15a",
+    "timestamp": "2023-10-16T07:26:51.382Z",
+    "transparentProxyId": "0.0.5697884",
+    "transparentProxyAddress": "0x000000000000000000000000000000000056f15c"
   },
   {
     "name": "pair",
@@ -78,12 +78,12 @@
   },
   {
     "name": "ftdaofactory",
-    "id": "0.0.4521165",
-    "hash": "cef42744efe9fb368ff95de69f6c0722",
-    "address": "0x000000000000000000000000000000000044fccd",
-    "timestamp": "2023-10-09T10:51:52.038Z",
-    "transparentProxyId": "0.0.4521169",
-    "transparentProxyAddress": "0x000000000000000000000000000000000044fcd1"
+    "id": "0.0.5697839",
+    "hash": "8e723bc18b2f1995871af52b3994030a",
+    "address": "0x000000000000000000000000000000000056f12f",
+    "timestamp": "2023-10-16T07:14:49.409Z",
+    "transparentProxyId": "0.0.5697841",
+    "transparentProxyAddress": "0x000000000000000000000000000000000056f131"
   },
   {
     "name": "multisigdaofactory",

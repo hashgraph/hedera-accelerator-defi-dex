@@ -182,6 +182,7 @@ contract FTDAOFactory is
         if (_createDAOInputs.votingPeriod == 0) {
             revert InvalidInput("DAOFactory: voting period is zero");
         }
+        _validateDAOWithTokenType(_createDAOInputs.tokenAddress);
         payDAOCreationFee(hederaService);
         (
             tokenHolderAddress,
@@ -248,4 +249,15 @@ contract FTDAOFactory is
         return
             address(new TransparentUpgradeableProxy(_logic, proxyAdmin, _data));
     }
+
+    function _validateDAOWithTokenType(address _tokenAddress) private {
+     require(
+        _isNFTDAOInstance() == _isNFTToken(hederaService, _tokenAddress), 
+        "DAOFactory: Token type & DAO type mismatch."
+        );
+    }
+
+    function _isNFTDAOInstance() internal virtual pure returns(bool) {
+        return false;
+    } 
 }

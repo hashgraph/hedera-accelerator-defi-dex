@@ -95,6 +95,8 @@ describe("NFT-Governance-DAO tests", function () {
 
     const token = await TestHelper.deployERC721Mock(signers[0]);
 
+    const ftToken = await TestHelper.deployERC20Mock(100 * 1e8);
+
     const godHolder = await TestHelper.deployNftGodHolder(hederaService, token);
 
     const inputs = {
@@ -160,6 +162,7 @@ describe("NFT-Governance-DAO tests", function () {
       systemUsers,
       INIT_ARGS,
       DEFAULT_DAO_CONFIG_DATA,
+      ftToken,
     };
   }
 
@@ -190,6 +193,27 @@ describe("NFT-Governance-DAO tests", function () {
       await expect(factory.createDAO(CREATE_DAO_ARGS))
         .revertedWithCustomError(factory, "InvalidInput")
         .withArgs("BaseDAO: admin address is zero");
+    });
+
+    it("Verify createDAO should be reverted when created with FT Token", async function () {
+      const { factory, daoAdminOne, ftToken } =
+        await loadFixture(deployFixture);
+      const CREATE_DAO_ARGS = [
+        TestHelper.ZERO_ADDRESS,
+        DAO_NAME,
+        LOGO_URL,
+        INFO_URL,
+        ftToken.address,
+        BigNumber.from(500),
+        BigNumber.from(0),
+        BigNumber.from(100),
+        true,
+        DESCRIPTION,
+        WEB_LINKS,
+      ];
+      await expect(factory.createDAO(CREATE_DAO_ARGS)).revertedWith(
+        "DAOFactory: Token type & DAO type mismatch.",
+      );
     });
 
     it("Verify createDAO should be reverted when dao name is empty", async function () {

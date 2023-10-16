@@ -97,6 +97,8 @@ describe("FT-Governance-DAO tests", function () {
     const token = await TestHelper.deployERC20Mock(TOTAL);
     await token.setUserBalance(signers[0].address, TOTAL);
 
+    const nftToken = await TestHelper.deployERC721Mock(signers[0]);
+
     const godHolder = await TestHelper.deployGodHolder(hederaService, token);
 
     const inputs = {
@@ -162,6 +164,7 @@ describe("FT-Governance-DAO tests", function () {
       systemUsers,
       INIT_ARGS,
       DEFAULT_DAO_CONFIG_DATA,
+      nftToken,
     };
   }
 
@@ -332,6 +335,27 @@ describe("FT-Governance-DAO tests", function () {
 
       const updatedList = await factory.getDAOs();
       expect(updatedList.length).equal(0);
+    });
+
+    it("Verify createDAO should be reverted when created with NFT Token", async function () {
+      const { factory, daoAdminOne, nftToken } =
+        await loadFixture(deployFixture);
+      const CREATE_DAO_ARGS = [
+        daoAdminOne.address,
+        "",
+        LOGO_URL,
+        INFO_URL,
+        nftToken.address,
+        BigNumber.from(500),
+        BigNumber.from(0),
+        BigNumber.from(100),
+        true,
+        DESCRIPTION,
+        WEB_LINKS,
+      ];
+      await expect(factory.createDAO(CREATE_DAO_ARGS)).revertedWith(
+        "DAOFactory: Token type & DAO type mismatch.",
+      );
     });
 
     it("Verify upgrade logic call should be reverted for non dex owner", async function () {
