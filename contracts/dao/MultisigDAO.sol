@@ -42,7 +42,6 @@ contract MultiSigDAO is IEvents, BaseDAO, FeeConfiguration {
     HederaMultiSend private multiSend;
     IHederaService private hederaService;
     HederaGnosisSafe private hederaGnosisSafe;
-    ISystemRoleBasedAccess private iSystemRoleBasedAccess;
     mapping(bytes32 => TransactionInfo) private transactions;
 
     function initialize(
@@ -60,8 +59,7 @@ contract MultiSigDAO is IEvents, BaseDAO, FeeConfiguration {
         hederaService = _hederaService;
         hederaGnosisSafe = _hederaGnosisSafe;
         multiSend = _multiSend;
-        iSystemRoleBasedAccess = _iSystemRoleBasedAccess;
-        __FeeConfiguration_init(_feeConfig);
+        __FeeConfiguration_init(_feeConfig, _iSystemRoleBasedAccess);
         __BaseDAO_init(_admin, _name, _logoUrl, "", _description, _webLinks);
         emit LogicUpdated(address(0), address(hederaService), HederaService);
         emit LogicUpdated(address(0), address(multiSend), MultiSend);

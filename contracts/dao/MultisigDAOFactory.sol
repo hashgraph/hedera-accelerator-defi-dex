@@ -41,7 +41,6 @@ contract MultisigDAOFactory is
     address private safeFactory;
     IHederaService private hederaService;
     HederaMultiSend private multiSend;
-    ISystemRoleBasedAccess private iSystemRoleManagment;
 
     address[] private daos;
 
@@ -59,9 +58,8 @@ contract MultisigDAOFactory is
         IHederaService _hederaService,
         HederaMultiSend _multiSend
     ) external initializer {
-        __FeeConfiguration_init(_feeConfig);
+        __FeeConfiguration_init(_feeConfig, _iSystemRoleBasedAccess);
 
-        iSystemRoleManagment = _iSystemRoleBasedAccess;
         daoLogic = _daoLogic;
         safeLogic = _safeLogic;
         safeFactory = _safeFactory;
@@ -75,25 +73,25 @@ contract MultisigDAOFactory is
     }
 
     function upgradeSafeFactoryAddress(address _newImpl) external {
-        iSystemRoleManagment.checkChildProxyAdminRole(msg.sender);
+        iSystemRoleBasedAccess.checkChildProxyAdminRole(msg.sender);
         emit LogicUpdated(safeFactory, _newImpl, SafeFactory);
         safeFactory = _newImpl;
     }
 
     function upgradeSafeLogicAddress(address _newImpl) external {
-        iSystemRoleManagment.checkChildProxyAdminRole(msg.sender);
+        iSystemRoleBasedAccess.checkChildProxyAdminRole(msg.sender);
         emit LogicUpdated(safeLogic, _newImpl, SafeLogic);
         safeLogic = _newImpl;
     }
 
     function upgradeDaoLogicAddress(address _newImpl) external {
-        iSystemRoleManagment.checkChildProxyAdminRole(msg.sender);
+        iSystemRoleBasedAccess.checkChildProxyAdminRole(msg.sender);
         emit LogicUpdated(daoLogic, _newImpl, DaoLogic);
         daoLogic = _newImpl;
     }
 
     function upgradeHederaService(IHederaService newHederaService) external {
-        iSystemRoleManagment.checkChildProxyAdminRole(msg.sender);
+        iSystemRoleBasedAccess.checkChildProxyAdminRole(msg.sender);
         emit LogicUpdated(
             address(hederaService),
             address(newHederaService),
@@ -103,7 +101,7 @@ contract MultisigDAOFactory is
     }
 
     function upgradeMultiSend(HederaMultiSend _multiSend) external {
-        iSystemRoleManagment.checkChildProxyAdminRole(msg.sender);
+        iSystemRoleBasedAccess.checkChildProxyAdminRole(msg.sender);
         emit LogicUpdated(address(multiSend), address(_multiSend), MultiSend);
         multiSend = _multiSend;
     }
@@ -158,7 +156,7 @@ contract MultisigDAOFactory is
         FeeConfig memory _feeConfig,
         HederaGnosisSafe hederaGnosisSafe
     ) private returns (address) {
-        address proxyAdmin = iSystemRoleManagment.getSystemUsers().proxyAdmin;
+        address proxyAdmin = iSystemRoleBasedAccess.getSystemUsers().proxyAdmin;
         TransparentUpgradeableProxy upgradeableProxy = new TransparentUpgradeableProxy(
                 daoLogic,
                 proxyAdmin,
@@ -175,7 +173,7 @@ contract MultisigDAOFactory is
             hederaGnosisSafe,
             hederaService,
             multiSend,
-            iSystemRoleManagment
+            iSystemRoleBasedAccess
         );
         return address(_mSigDAO);
     }
