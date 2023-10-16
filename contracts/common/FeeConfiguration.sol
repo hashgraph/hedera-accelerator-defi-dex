@@ -13,6 +13,10 @@ abstract contract FeeConfiguration is
     Initializable,
     TokenOperations
 {
+    event OwnershipChanged(
+        address indexed previousOwner,
+        address indexed newOwner
+    );
     event FeeConfigUpdated(FeeConfig feeConfig);
 
     FeeConfig public feeConfig;
@@ -31,6 +35,13 @@ abstract contract FeeConfiguration is
 
     function _feeConfigExecutor() internal view virtual returns (address) {
         return feeConfig.receiver;
+    }
+
+    function changeOwnership(address _newOwner) external {
+        require(msg.sender == _feeConfigExecutor(), "FC: No Authorization");
+        require(_newOwner != address(0), "FC: address can't be zero");
+        emit OwnershipChanged(feeConfig.receiver, _newOwner);
+        feeConfig.receiver = _newOwner;
     }
 
     function updateFeeConfig(FeeConfig memory _feeConfig) external {
