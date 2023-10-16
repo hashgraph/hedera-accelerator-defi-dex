@@ -166,14 +166,12 @@ contract HederaGovernor is
     }
 
     function quorum(uint256) public view virtual override returns (uint256) {
-        if (isNFTToken) {
-            return 1;
-        } else {
-            uint256 totalSupply = IERC20(tokenAddress).totalSupply();
-            uint256 value = totalSupply * quorumThresholdInBsp;
-            require(value >= 10_000, "GCSI: (GOD token * quorum) < 10,000");
-            return value / 10_000;
-        }
+        uint256 totalSupply = isNFTToken
+            ? IERC721(tokenAddress).totalSupply()
+            : IERC20(tokenAddress).totalSupply();
+        uint256 value = totalSupply * quorumThresholdInBsp;
+        require(value >= 10_000, "GCSI: (GOD token * quorum) < 10,000");
+        return value / 10_000;
     }
 
     function clock() public view virtual override returns (uint48) {

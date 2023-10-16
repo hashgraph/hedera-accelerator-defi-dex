@@ -563,7 +563,9 @@ export class HederaGovernorTest extends CommonSteps {
     await governor.initialize(
       tokenHolder,
       voterClient,
-      CommonSteps.DEFAULT_QUORUM_THRESHOLD_IN_BSP,
+      godTokenInfo.isNFT
+        ? CommonSteps.DEFAULT_NFT_QUORUM_THRESHOLD_IN_BSP
+        : CommonSteps.DEFAULT_QUORUM_THRESHOLD_IN_BSP,
       CommonSteps.DEFAULT_VOTING_DELAY,
       CommonSteps.DEFAULT_VOTING_PERIOD,
       TokenId.fromString(godTokenInfo.id),
