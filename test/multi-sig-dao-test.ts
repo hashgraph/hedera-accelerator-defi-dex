@@ -708,19 +708,19 @@ describe("MultiSig tests", function () {
 
       await expect(
         multiSigDAOFactoryInstance
-          .connect(systemUsersSigners.changeFeeConfigControllerUser)
+          .connect(systemUsersSigners.feeConfigControllerUser)
           .changeFeeConfigController(
-            systemUsersSigners.changeFeeConfigControllerUser.address,
+            systemUsersSigners.feeConfigControllerUser.address,
           ),
       ).revertedWith("FC: self not allowed");
 
       await multiSigDAOFactoryInstance
-        .connect(systemUsersSigners.changeFeeConfigControllerUser)
+        .connect(systemUsersSigners.feeConfigControllerUser)
         .changeFeeConfigController(systemUsersSigners.superAdmin.address);
 
       await expect(
         multiSigDAOFactoryInstance
-          .connect(systemUsersSigners.changeFeeConfigControllerUser)
+          .connect(systemUsersSigners.feeConfigControllerUser)
           .updateFeeConfig(Object.values(newFeeConfig)),
       ).revertedWith("FC: No Authorization");
 

@@ -7,7 +7,7 @@ interface ISystemRoleBasedAccess {
         address proxyAdmin;
         address childProxyAdmin;
         address vaultAddRewardUser;
-        address changeFeeConfigControllerUser;
+        address feeConfigControllerUser;
     }
 
     function initialize(SystemUsers memory _systemUsers) external;

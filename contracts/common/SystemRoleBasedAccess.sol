@@ -26,7 +26,7 @@ contract SystemRoleBasedAccess is RoleBasedAccess, ISystemRoleBasedAccess {
         _grantRole(VAULT_ADD_REWARD_USER, _systemUsers.vaultAddRewardUser);
         _grantRole(
             FEE_CONFIG_CONTROLLER_USER,
-            _systemUsers.changeFeeConfigControllerUser
+            _systemUsers.feeConfigControllerUser
         );
         _updateSystemUsersInternally(_systemUsers);
     }

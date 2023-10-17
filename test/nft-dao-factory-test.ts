@@ -272,7 +272,7 @@ describe("NFT-Governance-DAO tests", function () {
       );
 
       await factory
-        .connect(systemUsers.changeFeeConfigControllerUser)
+        .connect(systemUsers.feeConfigControllerUser)
         .changeFeeConfigController(systemUsers.superAdmin.address);
 
       await factory
@@ -286,9 +286,9 @@ describe("NFT-Governance-DAO tests", function () {
 
       await expect(
         factory
-          .connect(systemUsers.changeFeeConfigControllerUser)
+          .connect(systemUsers.feeConfigControllerUser)
           .changeFeeConfigController(
-            systemUsers.changeFeeConfigControllerUser.address,
+            systemUsers.feeConfigControllerUser.address,
           ),
       ).revertedWith("FC: self not allowed");
 
@@ -301,7 +301,7 @@ describe("NFT-Governance-DAO tests", function () {
       ).revertedWith("FC: No Authorization");
 
       await factory
-        .connect(systemUsers.changeFeeConfigControllerUser)
+        .connect(systemUsers.feeConfigControllerUser)
         .changeFeeConfigController(systemUsers.superAdmin.address);
       await verifyFeeConfigControllerChangedEvent(
         factory,
