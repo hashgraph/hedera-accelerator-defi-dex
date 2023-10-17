@@ -5,7 +5,7 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import {
   verifyDAOCreatedEvent,
   verifyDAOInfoUpdatedEvent,
-  verifyExecutorChangedEvent,
+  verifyFeeConfigControllerChangedEvent,
   verifyFeeConfigUpdatedEvent,
 } from "./common";
 
@@ -270,8 +270,8 @@ describe("FT-Governance-DAO tests", function () {
       );
 
       await factory
-        .connect(systemUsers.changeExecutorUser)
-        .changeExecutor(systemUsers.superAdmin.address);
+        .connect(systemUsers.changeFeeConfigControllerUser)
+        .changeFeeConfigController(systemUsers.superAdmin.address);
 
       await factory
         .connect(systemUsers.superAdmin)
@@ -284,9 +284,11 @@ describe("FT-Governance-DAO tests", function () {
 
       await expect(
         factory
-          .connect(systemUsers.changeExecutorUser)
-          .changeExecutor(systemUsers.changeExecutorUser.address),
-      ).revertedWith("FC: self executor");
+          .connect(systemUsers.changeFeeConfigControllerUser)
+          .changeFeeConfigController(
+            systemUsers.changeFeeConfigControllerUser.address,
+          ),
+      ).revertedWith("FC: self not allowed");
 
       await expect(
         factory.updateFeeConfig([
@@ -297,9 +299,9 @@ describe("FT-Governance-DAO tests", function () {
       ).revertedWith("FC: No Authorization");
 
       await factory
-        .connect(systemUsers.changeExecutorUser)
-        .changeExecutor(systemUsers.superAdmin.address);
-      await verifyExecutorChangedEvent(
+        .connect(systemUsers.changeFeeConfigControllerUser)
+        .changeFeeConfigController(systemUsers.superAdmin.address);
+      await verifyFeeConfigControllerChangedEvent(
         factory,
         TestHelper.ZERO_ADDRESS,
         systemUsers.superAdmin.address,

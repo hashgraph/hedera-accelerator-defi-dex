@@ -16,16 +16,16 @@ abstract contract FeeConfiguration is
     Initializable,
     TokenOperations
 {
-    event ExecutorChanged(
-        address indexed previousExecutor,
-        address indexed newExecutor
+    event FeeConfigControllerChanged(
+        address indexed previousController,
+        address indexed newController
     );
     event FeeConfigUpdated(FeeConfig feeConfig);
 
     string private constant ISystemRole = "ISystemRole";
 
-    address private executor;
     FeeConfig public feeConfig;
+    address private feeConfigController;
     ISystemRoleBasedAccess public iSystemRoleBasedAccess;
 
     uint256[49] private __gap__;
@@ -47,26 +47,28 @@ abstract contract FeeConfiguration is
         );
     }
 
-    function _feeConfigExecutor() internal view virtual returns (address) {
-        return executor;
+    function _feeConfigController() internal view virtual returns (address) {
+        return feeConfigController;
     }
 
-    function changeExecutorViaProposal(address _newExecutor) external {
-        require(msg.sender == _feeConfigExecutor(), "FC: No Authorization");
-        require(msg.sender != _newExecutor, "FC: self executor");
-        emit ExecutorChanged(executor, _newExecutor);
-        executor = _newExecutor;
+    function changeFeeConfigControllerViaProposal(
+        address _newController
+    ) external {
+        require(msg.sender == _feeConfigController(), "FC: No Authorization");
+        require(msg.sender != _newController, "FC: self not allowed");
+        emit FeeConfigControllerChanged(feeConfigController, _newController);
+        feeConfigController = _newController;
     }
 
-    function changeExecutor(address _newExecutor) external {
-        iSystemRoleBasedAccess.checkChangeExecutorUser(msg.sender);
-        require(msg.sender != _newExecutor, "FC: self executor");
-        emit ExecutorChanged(executor, _newExecutor);
-        executor = _newExecutor;
+    function changeFeeConfigController(address _newController) external {
+        iSystemRoleBasedAccess.checkFeeConfigControllerUser(msg.sender);
+        require(msg.sender != _newController, "FC: self not allowed");
+        emit FeeConfigControllerChanged(feeConfigController, _newController);
+        feeConfigController = _newController;
     }
 
     function updateFeeConfig(FeeConfig memory _feeConfig) external {
-        require(msg.sender == _feeConfigExecutor(), "FC: No Authorization");
+        require(msg.sender == _feeConfigController(), "FC: No Authorization");
         _updateFeeConfigInternally(
             _feeConfig.receiver,
             _feeConfig.tokenAddress,

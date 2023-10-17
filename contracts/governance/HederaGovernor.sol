@@ -278,7 +278,7 @@ contract HederaGovernor is
         _emitVotingInformation(proposalId);
     }
 
-    function _feeConfigExecutor()
+    function _feeConfigController()
         internal
         view
         virtual

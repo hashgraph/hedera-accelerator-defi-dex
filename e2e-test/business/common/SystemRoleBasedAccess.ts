@@ -44,7 +44,7 @@ export default class SystemRoleBasedAccess extends Base {
       proxyAdmin: clientsInfo.proxyAdminId.toSolidityAddress(),
       childProxyAdmin: clientsInfo.childProxyAdminId.toSolidityAddress(),
       vaultAddRewardUser: clientsInfo.treasureId.toSolidityAddress(),
-      changeExecutorUser: clientsInfo.treasureId.toSolidityAddress(),
+      changeFeeConfigControllerUser: clientsInfo.treasureId.toSolidityAddress(),
     });
   }
 }

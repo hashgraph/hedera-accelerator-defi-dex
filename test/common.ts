@@ -2,14 +2,16 @@ import { expect } from "chai";
 import { Contract } from "ethers";
 import { TestHelper } from "./TestHelper";
 
-export async function verifyExecutorChangedEvent(
+export async function verifyFeeConfigControllerChangedEvent(
   contract: Contract,
-  previousExecutor: string,
-  newExecutor: string,
+  previousController: string,
+  newController: string,
 ) {
-  const { args } = (await contract.queryFilter("ExecutorChanged")).at(-1)!;
-  expect(args!.previousExecutor).equals(previousExecutor);
-  expect(args!.newExecutor).equals(newExecutor);
+  const { args } = (
+    await contract.queryFilter("FeeConfigControllerChanged")
+  ).at(-1)!;
+  expect(args!.previousController).equals(previousController);
+  expect(args!.newController).equals(newController);
 }
 
 export async function verifyFeeConfigUpdatedEvent(

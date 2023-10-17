@@ -427,7 +427,7 @@ export async function executeFactoryFeeConfigChange(
     await gnosisSafe.approveHash(updateFeeConfigTxnHash, daoOwner.client);
   }
   // step 3 - transfer owner-ship from fee-config to gnosis-safe
-  await ftDAOFactory.changeExecutor(
+  await ftDAOFactory.changeFeeConfigController(
     gnosisSafeEvmAddress,
     clientsInfo.treasureClient, // this is current user to change config
   );

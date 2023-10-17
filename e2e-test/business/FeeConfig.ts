@@ -11,7 +11,7 @@ import {
 } from "@hashgraph/sdk";
 
 const FEE_CONFIG = "feeConfig";
-const CHANGE_EXECUTOR = "changeExecutor";
+const CHANGE_FEE_CONFIG_CONTROLLER = "changeFeeConfigController";
 
 export default abstract class FeeConfig extends BaseDAO {
   protected UPDATE_FEE_CONFIG = "updateFeeConfig";
@@ -45,14 +45,19 @@ export default abstract class FeeConfig extends BaseDAO {
     return info;
   };
 
-  public changeExecutor = async (
+  public changeFeeConfigController = async (
     newOwnerAddress: string,
     currentOwnerClient: Client,
   ) => {
     const args = new ContractFunctionParameters().addAddress(newOwnerAddress);
-    await this.execute(80_000, CHANGE_EXECUTOR, currentOwnerClient, args);
+    await this.execute(
+      80_000,
+      CHANGE_FEE_CONFIG_CONTROLLER,
+      currentOwnerClient,
+      args,
+    );
     console.log(
-      `- FeeConfig#${CHANGE_EXECUTOR}(): new-executor address = ${newOwnerAddress}`,
+      `- FeeConfig#${CHANGE_FEE_CONFIG_CONTROLLER}(): new-controller address = ${newOwnerAddress}`,
     );
   };
 }
