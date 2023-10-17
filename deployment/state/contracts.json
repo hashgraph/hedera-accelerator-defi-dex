@@ -24,12 +24,12 @@
   },
   {
     "name": "nfttokenholderfactory",
-    "id": "0.0.5697886",
-    "hash": "ae46005c19d932779f665340e00abf01",
-    "address": "0x000000000000000000000000000000000056f15e",
-    "timestamp": "2023-10-16T07:27:18.312Z",
-    "transparentProxyId": "0.0.5697888",
-    "transparentProxyAddress": "0x000000000000000000000000000000000056f160"
+    "id": "0.0.4530501",
+    "hash": "97f13076ea093d9f89e574dfb74d1870",
+    "address": "0x0000000000000000000000000000000000452145",
+    "timestamp": "2023-10-11T05:58:46.586Z",
+    "transparentProxyId": "0.0.4530503",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000452147"
   },
   {
     "name": "lptoken",
@@ -60,12 +60,12 @@
   },
   {
     "name": "nftdaofactory",
-    "id": "0.0.5697882",
-    "hash": "c83075c4556ef3572161b58156dda75d",
-    "address": "0x000000000000000000000000000000000056f15a",
-    "timestamp": "2023-10-16T07:26:51.382Z",
-    "transparentProxyId": "0.0.5697884",
-    "transparentProxyAddress": "0x000000000000000000000000000000000056f15c"
+    "id": "0.0.4530535",
+    "hash": "07f57af05b3d9888694c79b179528e29",
+    "address": "0x0000000000000000000000000000000000452167",
+    "timestamp": "2023-10-11T06:11:17.211Z",
+    "transparentProxyId": "0.0.4530537",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000452169"
   },
   {
     "name": "pair",
@@ -78,21 +78,21 @@
   },
   {
     "name": "ftdaofactory",
-    "id": "0.0.5697839",
-    "hash": "8e723bc18b2f1995871af52b3994030a",
-    "address": "0x000000000000000000000000000000000056f12f",
-    "timestamp": "2023-10-16T07:14:49.409Z",
-    "transparentProxyId": "0.0.5697841",
-    "transparentProxyAddress": "0x000000000000000000000000000000000056f131"
+    "id": "0.0.4530528",
+    "hash": "6b4d421e83b3514b041b8c65096f7574",
+    "address": "0x0000000000000000000000000000000000452160",
+    "timestamp": "2023-10-11T06:08:56.642Z",
+    "transparentProxyId": "0.0.4530531",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000452163"
   },
   {
     "name": "multisigdaofactory",
-    "id": "0.0.2806345",
-    "hash": "b3197479ee05f404762c133f9f231569",
-    "address": "0x00000000000000000000000000000000002ad249",
-    "timestamp": "2023-09-27T12:45:14.269Z",
-    "transparentProxyId": "0.0.2806383",
-    "transparentProxyAddress": "0x00000000000000000000000000000000002ad26f"
+    "id": "0.0.4527733",
+    "hash": "e4f4f30c0a4b2186a1df28a54cb337c1",
+    "address": "0x0000000000000000000000000000000000451675",
+    "timestamp": "2023-10-10T07:35:10.104Z",
+    "transparentProxyId": "0.0.4527735",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000451677"
   },
   {
     "name": "factory",
@@ -105,12 +105,12 @@
   },
   {
     "name": "multisigdao",
-    "id": "0.0.2952911",
-    "hash": "f22a7095d6997e88f92dc0658ff6e937",
-    "address": "0x00000000000000000000000000000000002d0ecf",
-    "timestamp": "2023-09-28T08:52:35.606Z",
-    "transparentProxyId": "0.0.2952969",
-    "transparentProxyAddress": "0x00000000000000000000000000000000002d0f09"
+    "id": "0.0.4530250",
+    "hash": "e1780c9988e49ac06a3934f05f591d1e",
+    "address": "0x000000000000000000000000000000000045204a",
+    "timestamp": "2023-10-11T05:06:18.614Z",
+    "transparentProxyId": "0.0.4530252",
+    "transparentProxyAddress": "0x000000000000000000000000000000000045204c"
   },
   {
     "name": "systemrolebasedaccess",
@@ -132,11 +132,25 @@
   },
   {
     "name": "hederagovernor",
-    "id": "0.0.3760556",
-    "hash": "b4f41aebbd461fbbcbebffef0240bef8",
-    "address": "0x00000000000000000000000000000000003961ac",
-    "timestamp": "2023-10-03T09:40:44.937Z",
-    "transparentProxyId": "0.0.3760572",
-    "transparentProxyAddress": "0x00000000000000000000000000000000003961bc"
+    "id": "0.0.4530186",
+    "hash": "476dbc44016eeb3a224a15e9f960ff80",
+    "address": "0x000000000000000000000000000000000045200a",
+    "timestamp": "2023-10-11T04:19:06.833Z",
+    "transparentProxyId": "0.0.4530189",
+    "transparentProxyAddress": "0x000000000000000000000000000000000045200d"
+  },
+  {
+    "name": "hederagnosissafe",
+    "id": "0.0.4527785",
+    "hash": "e73d64191a12f2fde47b2cfbd6852aa7",
+    "address": "0x00000000000000000000000000000000004516a9",
+    "timestamp": "2023-10-10T07:46:46.100Z"
+  },
+  {
+    "name": "hederagnosissafeproxyfactory",
+    "id": "0.0.4527787",
+    "hash": "c19c62b5348af61ace038e59ea31130a",
+    "address": "0x00000000000000000000000000000000004516ab",
+    "timestamp": "2023-10-10T07:46:59.502Z"
   }
 ]

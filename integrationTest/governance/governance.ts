@@ -76,7 +76,7 @@ async function createAndExecuteTokenAssociationProposal(
   creatorClient: Client,
   txnFee: number,
 ) {
-  await setupProposalCreationAllowance(
+  await setupProposalCreationAndFeeAllowance(
     governor,
     tokenHolder,
     creatorId,
@@ -117,7 +117,7 @@ async function createAndExecuteAssetTransferProposal(
   creatorClient: Client,
   txnFee: number,
 ) {
-  await setupProposalCreationAllowance(
+  await setupProposalCreationAndFeeAllowance(
     governor,
     tokenHolder,
     creatorId,
@@ -171,7 +171,7 @@ async function createAndExecuteTextProposal(
   creatorClient: Client,
   txnFee: number,
 ) {
-  await setupProposalCreationAllowance(
+  await setupProposalCreationAndFeeAllowance(
     governor,
     tokenHolder,
     creatorId,
@@ -211,7 +211,7 @@ async function createAndExecuteContractUpgradeProposal(
   creatorClient: Client,
   txnFee: number,
 ) {
-  await setupProposalCreationAllowance(
+  await setupProposalCreationAndFeeAllowance(
     governor,
     tokenHolder,
     creatorId,
@@ -258,7 +258,7 @@ async function createAndExecuteTokenCreateProposal(
   creatorClient: Client,
   txnFee: number,
 ) {
-  await setupProposalCreationAllowance(
+  await setupProposalCreationAndFeeAllowance(
     governor,
     tokenHolder,
     creatorId,
@@ -298,7 +298,7 @@ async function createAndExecuteMintTokenProposal(
   creatorClient: Client,
   txnFee: number,
 ) {
-  await setupProposalCreationAllowance(
+  await setupProposalCreationAndFeeAllowance(
     governor,
     tokenHolder,
     creatorId,
@@ -336,7 +336,7 @@ async function createAndExecuteBurnTokenProposal(
   creatorClient: Client,
   txnFee: number,
 ) {
-  await setupProposalCreationAllowance(
+  await setupProposalCreationAndFeeAllowance(
     governor,
     tokenHolder,
     creatorId,
@@ -363,7 +363,7 @@ async function createAndExecuteBurnTokenProposal(
   }
 }
 
-async function setupProposalCreationAllowance(
+async function setupProposalCreationAndFeeAllowance(
   governor: HederaGovernor,
   tokenHolder: GodHolder | NFTHolder,
   creatorId: AccountId,
@@ -383,6 +383,16 @@ async function setupProposalCreationAllowance(
       creatorPK,
     );
   }
+  // setup proposal creation fee allowance
+  const feeConfig = await governor.feeConfig();
+  await Common.setTokenAllowance(
+    TokenId.fromSolidityAddress(feeConfig.tokenAddress),
+    governor.contractId,
+    feeConfig.proposalFee,
+    creatorId,
+    creatorPK,
+    creatorClient,
+  );
 }
 
 export async function executeGovernanceProposals(

@@ -5,6 +5,7 @@ import GodHolder from "../business/GodHolder";
 import NFTHolder from "../business/NFTHolder";
 import AssetsHolder from "../business/AssetsHolder";
 import HederaGovernor, { ProposalInfo } from "../business/HederaGovernor";
+import * as Constants from "../business/constants";
 
 import { expect } from "chai";
 import { Helper } from "../../utils/Helper";
@@ -110,13 +111,22 @@ export class HederaGovernorTest extends CommonSteps {
   @given(
     /User setup allowance for proposal creation with amount\/id "([^"]*)"/,
     undefined,
-    600000,
+    900000,
   )
   public async setupProposalCreationAllowance(amountOrId: string) {
     this.initProposalCreationId(amountOrId);
     await CommonSteps.setupProposalCreationAllowance(
       godTokenInfo.isNFT,
       governor,
+      creatorId,
+      creatorPK,
+      creatorClient,
+    );
+    const feeConfig = await governor.feeConfig();
+    await Common.setTokenAllowance(
+      TokenId.fromSolidityAddress(feeConfig.tokenAddress),
+      governor.contractId,
+      feeConfig.proposalFee,
       creatorId,
       creatorPK,
       creatorClient,
@@ -563,6 +573,7 @@ export class HederaGovernorTest extends CommonSteps {
     await governor.initialize(
       tokenHolder,
       voterClient,
+      Constants.DEFAULT_PROPOSAL_CREATION_FEE_CONFIG,
       godTokenInfo.isNFT
         ? CommonSteps.DEFAULT_NFT_QUORUM_THRESHOLD_IN_BSP
         : CommonSteps.DEFAULT_QUORUM_THRESHOLD_IN_BSP,

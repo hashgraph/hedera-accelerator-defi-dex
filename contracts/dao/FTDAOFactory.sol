@@ -1,11 +1,10 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.18;
 
-import "./DAOConfiguration.sol";
-
 import "../common/IEvents.sol";
 import "../common/IErrors.sol";
 import "../common/IHederaService.sol";
+import "../common/FeeConfiguration.sol";
 import "../common/ISystemRoleBasedAccess.sol";
 
 import "../dao/FTDAO.sol";
@@ -15,16 +14,9 @@ import "../governance/HederaGovernor.sol";
 
 import "../governance/ITokenHolderFactory.sol";
 
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-contract FTDAOFactory is
-    IErrors,
-    IEvents,
-    ISharedModel,
-    Initializable,
-    DAOConfiguration
-{
+contract FTDAOFactory is IErrors, IEvents, FeeConfiguration {
     event DAOCreated(
         address tokenHolderAddress,
         address assetsHolderAddress,
@@ -58,16 +50,17 @@ contract FTDAOFactory is
         address _governorLogic,
         address _assetsHolderLogic,
         IHederaService _hederaService,
-        DAOConfigDetails memory _daoConfigDetails,
+        FeeConfig memory _feeConfig,
         ITokenHolderFactory _tokenHolderFactory,
         ISystemRoleBasedAccess _iSystemRoleBasedAccess
     ) external initializer {
+        __FeeConfiguration_init(_feeConfig);
+
         daoLogic = _daoLogic;
         governorLogic = _governorLogic;
         assetsHolderLogic = _assetsHolderLogic;
 
         hederaService = _hederaService;
-        daoConfig = _daoConfigDetails;
 
         tokenHolderFactory = _tokenHolderFactory;
         iSystemRoleBasedAccess = _iSystemRoleBasedAccess;
@@ -87,7 +80,6 @@ contract FTDAOFactory is
             address(iSystemRoleBasedAccess),
             ISystemRole
         );
-        emit DAOConfig(daoConfig);
     }
 
     function upgradeDAOLogicImplementation(address _daoLogic) external {
@@ -183,7 +175,7 @@ contract FTDAOFactory is
             revert InvalidInput("DAOFactory: voting period is zero");
         }
         _validateDAOWithTokenType(_createDAOInputs.tokenAddress);
-        payDAOCreationFee(hederaService);
+        _deductFee(hederaService);
         (
             tokenHolderAddress,
             assetsHolderAddress,
@@ -225,6 +217,7 @@ contract FTDAOFactory is
         );
         governor.initialize(
             config,
+            _createDAOInputs.feeConfig,
             iTokenHolder,
             iAssets,
             hederaService,
@@ -251,13 +244,13 @@ contract FTDAOFactory is
     }
 
     function _validateDAOWithTokenType(address _tokenAddress) private {
-     require(
-        _isNFTDAOInstance() == _isNFTToken(hederaService, _tokenAddress), 
-        "DAOFactory: Token type & DAO type mismatch."
+        require(
+            _isNFTDAOInstance() == _isNFTToken(hederaService, _tokenAddress),
+            "DAOFactory: Token type & DAO type mismatch."
         );
     }
 
-    function _isNFTDAOInstance() internal virtual pure returns(bool) {
+    function _isNFTDAOInstance() internal pure virtual returns (bool) {
         return false;
-    } 
+    }
 }

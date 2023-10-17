@@ -8,6 +8,7 @@ import "../holder/IAssetsHolder.sol";
 import "../common/IErrors.sol";
 import "../common/ISharedModel.sol";
 import "../common/TokenOperations.sol";
+import "../common/FeeConfiguration.sol";
 import "../common/ISystemRoleBasedAccess.sol";
 import "../common/hedera/HederaResponseCodes.sol";
 
@@ -19,6 +20,7 @@ contract HederaGovernor is
     IErrors,
     ISharedModel,
     TokenOperations,
+    FeeConfiguration,
     OwnableUpgradeable,
     GovernorSettingsUpgradeable,
     GovernorCountingSimpleUpgradeable
@@ -87,6 +89,7 @@ contract HederaGovernor is
 
     function initialize(
         GovernorConfig memory _config,
+        FeeConfig memory _feeConfig,
         ITokenHolder _iTokenHolder,
         IAssetsHolder _iAssetsHolder,
         IHederaService _iHederaService,
@@ -96,6 +99,7 @@ contract HederaGovernor is
         __Governor_init("HederaGovernor");
         __GovernorSettings_init(_config.votingDelay, _config.votingPeriod, 0);
         __GovernorCountingSimple_init();
+        __FeeConfiguration_init(_feeConfig);
 
         quorumThresholdInBsp = _config.quorumThresholdInBsp == 0
             ? 500
@@ -199,10 +203,11 @@ contract HederaGovernor is
 
     function createProposal(
         CreationInputs memory _inputs
-    ) public returns (uint256 proposalId) {
+    ) public payable returns (uint256 proposalId) {
         if (bytes(_inputs.title).length == 0) {
             revert InvalidInput("GCSI: title blank");
         }
+        _deductFee(getHederaServiceVersion());
         uint256 blockedAmountOrId = _blockGodToken(
             _msgSender(),
             _inputs.amountOrId
@@ -274,6 +279,16 @@ contract HederaGovernor is
         require(weight > 0, "GCSI: lock token to vote");
         tokenHolder.addProposalForVoter(proposalId);
         _emitVotingInformation(proposalId);
+    }
+
+    function _feeConfigExecutor()
+        internal
+        view
+        virtual
+        override
+        returns (address)
+    {
+        return address(this);
     }
 
     function _emitVotingInformation(uint256 proposalId) private {
