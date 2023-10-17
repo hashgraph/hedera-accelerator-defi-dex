@@ -60,12 +60,12 @@
   },
   {
     "name": "nftdaofactory",
-    "id": "0.0.4530535",
-    "hash": "07f57af05b3d9888694c79b179528e29",
-    "address": "0x0000000000000000000000000000000000452167",
-    "timestamp": "2023-10-11T06:11:17.211Z",
-    "transparentProxyId": "0.0.4530537",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000452169"
+    "id": "0.0.5704702",
+    "hash": "f8263d0435dd4d4dbd643646481c2e5e",
+    "address": "0x0000000000000000000000000000000000570bfe",
+    "timestamp": "2023-10-17T08:05:19.034Z",
+    "transparentProxyId": "0.0.5704711",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000570c07"
   },
   {
     "name": "pair",
@@ -78,12 +78,12 @@
   },
   {
     "name": "ftdaofactory",
-    "id": "0.0.4530528",
-    "hash": "6b4d421e83b3514b041b8c65096f7574",
-    "address": "0x0000000000000000000000000000000000452160",
-    "timestamp": "2023-10-11T06:08:56.642Z",
-    "transparentProxyId": "0.0.4530531",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000452163"
+    "id": "0.0.5704703",
+    "hash": "8c65efc9ce277b6f5f3edc66ca6abaaf",
+    "address": "0x0000000000000000000000000000000000570bff",
+    "timestamp": "2023-10-17T08:05:19.393Z",
+    "transparentProxyId": "0.0.5704712",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000570c08"
   },
   {
     "name": "multisigdaofactory",
@@ -105,21 +105,21 @@
   },
   {
     "name": "multisigdao",
-    "id": "0.0.4530250",
-    "hash": "e1780c9988e49ac06a3934f05f591d1e",
-    "address": "0x000000000000000000000000000000000045204a",
-    "timestamp": "2023-10-11T05:06:18.614Z",
-    "transparentProxyId": "0.0.4530252",
-    "transparentProxyAddress": "0x000000000000000000000000000000000045204c"
+    "id": "0.0.5704708",
+    "hash": "bd9669d92f4324e36653db0419860594",
+    "address": "0x0000000000000000000000000000000000570c04",
+    "timestamp": "2023-10-17T08:05:27.888Z",
+    "transparentProxyId": "0.0.5704715",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000570c0b"
   },
   {
     "name": "systemrolebasedaccess",
-    "id": "0.0.634560",
-    "hash": "7649e1368d16d95413e80e36f91ed208",
-    "address": "0x000000000000000000000000000000000009aec0",
-    "timestamp": "2023-08-22T04:08:47.151Z",
-    "transparentProxyId": "0.0.634562",
-    "transparentProxyAddress": "0x000000000000000000000000000000000009aec2"
+    "id": "0.0.5704697",
+    "hash": "3294c18b13e9738d1e1dfa382c863382",
+    "address": "0x0000000000000000000000000000000000570bf9",
+    "timestamp": "2023-10-17T08:05:11.048Z",
+    "transparentProxyId": "0.0.5704705",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000570c01"
   },
   {
     "name": "vault",
