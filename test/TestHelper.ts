@@ -116,6 +116,7 @@ export class TestHelper {
       proxyAdmin: signers[6],
       childProxyAdmin: signers[7],
       vaultAddRewardUser: signers[8],
+      changeExecutorUser: signers[9],
     };
   }
 

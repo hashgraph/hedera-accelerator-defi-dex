@@ -3,11 +3,19 @@ import BaseDAO from "./BaseDao";
 
 import { clientsInfo } from "../../utils/ClientManagement";
 import { FeeConfigDetails } from "./types";
-import { Client, Hbar, TokenId } from "@hashgraph/sdk";
+import {
+  Hbar,
+  Client,
+  TokenId,
+  ContractFunctionParameters,
+} from "@hashgraph/sdk";
 
 const FEE_CONFIG = "feeConfig";
+const CHANGE_EXECUTOR = "changeExecutor";
 
 export default abstract class FeeConfig extends BaseDAO {
+  protected UPDATE_FEE_CONFIG = "updateFeeConfig";
+
   public feeConfig = async (client: Client = clientsInfo.operatorClient) => {
     const { result } = await this.execute(50_000, FEE_CONFIG, client);
     const feeConfigDataFromContract = await this.decodeFunctionResult(
@@ -35,5 +43,16 @@ export default abstract class FeeConfig extends BaseDAO {
     console.table(info);
     console.log("");
     return info;
+  };
+
+  public changeExecutor = async (
+    newOwnerAddress: string,
+    currentOwnerClient: Client,
+  ) => {
+    const args = new ContractFunctionParameters().addAddress(newOwnerAddress);
+    await this.execute(80_000, CHANGE_EXECUTOR, currentOwnerClient, args);
+    console.log(
+      `- FeeConfig#${CHANGE_EXECUTOR}(): new-executor address = ${newOwnerAddress}`,
+    );
   };
 }

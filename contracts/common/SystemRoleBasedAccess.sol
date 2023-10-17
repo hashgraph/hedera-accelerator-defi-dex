@@ -11,6 +11,9 @@ contract SystemRoleBasedAccess is RoleBasedAccess, ISystemRoleBasedAccess {
     bytes32 public constant VAULT_ADD_REWARD_USER =
         keccak256("VAULT_ADD_REWARD_USER");
 
+    bytes32 public constant CHANGE_EXECUTOR_USER =
+        keccak256("CHANGE_EXECUTOR_USER");
+
     event UpdatedUsers(SystemUsers users);
 
     SystemUsers private systemUsers;
@@ -21,6 +24,7 @@ contract SystemRoleBasedAccess is RoleBasedAccess, ISystemRoleBasedAccess {
         _grantRole(DEFAULT_ADMIN_ROLE, _systemUsers.superAdmin);
         _grantRole(CHILD_PROXY_ADMIN_ROLE, _systemUsers.childProxyAdmin);
         _grantRole(VAULT_ADD_REWARD_USER, _systemUsers.vaultAddRewardUser);
+        _grantRole(CHANGE_EXECUTOR_USER, _systemUsers.changeExecutorUser);
         _updateSystemUsersInternally(_systemUsers);
     }
 
@@ -46,6 +50,10 @@ contract SystemRoleBasedAccess is RoleBasedAccess, ISystemRoleBasedAccess {
 
     function checkVaultAddRewardUser(address account) public view override {
         _checkRole(VAULT_ADD_REWARD_USER, account);
+    }
+
+    function checkChangeExecutorUser(address account) external view override {
+        _checkRole(CHANGE_EXECUTOR_USER, account);
     }
 
     function _updateSystemUsersInternally(

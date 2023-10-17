@@ -30,7 +30,6 @@ contract FTDAOFactory is IErrors, IEvents, FeeConfiguration {
     string private constant AssetsHolder = "AssetsHolder";
     string private constant TokenHolderFactory = "TokenHolderFactory";
     string private constant HederaService = "HederaService";
-    string private constant ISystemRole = "ISystemRole";
 
     address[] private daos;
     address private daoLogic;
@@ -38,7 +37,6 @@ contract FTDAOFactory is IErrors, IEvents, FeeConfiguration {
     address private assetsHolderLogic;
     IHederaService private hederaService;
     ITokenHolderFactory private tokenHolderFactory;
-    ISystemRoleBasedAccess private iSystemRoleBasedAccess;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -54,7 +52,7 @@ contract FTDAOFactory is IErrors, IEvents, FeeConfiguration {
         ITokenHolderFactory _tokenHolderFactory,
         ISystemRoleBasedAccess _iSystemRoleBasedAccess
     ) external initializer {
-        __FeeConfiguration_init(_feeConfig);
+        __FeeConfiguration_init(_feeConfig, _iSystemRoleBasedAccess);
 
         daoLogic = _daoLogic;
         governorLogic = _governorLogic;
@@ -63,7 +61,6 @@ contract FTDAOFactory is IErrors, IEvents, FeeConfiguration {
         hederaService = _hederaService;
 
         tokenHolderFactory = _tokenHolderFactory;
-        iSystemRoleBasedAccess = _iSystemRoleBasedAccess;
 
         emit LogicUpdated(address(0), daoLogic, DAO);
         emit LogicUpdated(address(0), governorLogic, Governance);
@@ -74,11 +71,6 @@ contract FTDAOFactory is IErrors, IEvents, FeeConfiguration {
             address(0),
             address(tokenHolderFactory),
             TokenHolderFactory
-        );
-        emit LogicUpdated(
-            address(0),
-            address(iSystemRoleBasedAccess),
-            ISystemRole
         );
     }
 
@@ -130,18 +122,6 @@ contract FTDAOFactory is IErrors, IEvents, FeeConfiguration {
             HederaService
         );
         hederaService = _hederaService;
-    }
-
-    function upgradeISystemRoleBasedAccess(
-        ISystemRoleBasedAccess _iSystemRoleBasedAccess
-    ) external {
-        iSystemRoleBasedAccess.checkChildProxyAdminRole(msg.sender);
-        emit LogicUpdated(
-            address(iSystemRoleBasedAccess),
-            address(_iSystemRoleBasedAccess),
-            ISystemRole
-        );
-        iSystemRoleBasedAccess = _iSystemRoleBasedAccess;
     }
 
     function getTokenHolderFactoryAddress() external view returns (address) {

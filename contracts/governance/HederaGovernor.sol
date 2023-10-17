@@ -74,7 +74,6 @@ contract HederaGovernor is
     ITokenHolder private tokenHolder;
 
     IAssetsHolder private iAssetsHolder;
-    ISystemRoleBasedAccess private iSystemRoleBasedAccess;
 
     uint256 private quorumThresholdInBsp;
     mapping(uint256 => CoreInformation) private proposalsInfo;
@@ -99,13 +98,11 @@ contract HederaGovernor is
         __Governor_init("HederaGovernor");
         __GovernorSettings_init(_config.votingDelay, _config.votingPeriod, 0);
         __GovernorCountingSimple_init();
-        __FeeConfiguration_init(_feeConfig);
+        __FeeConfiguration_init(_feeConfig, _iSystemRoleBasedAccess);
 
         quorumThresholdInBsp = _config.quorumThresholdInBsp == 0
             ? 500
             : _config.quorumThresholdInBsp;
-
-        iSystemRoleBasedAccess = _iSystemRoleBasedAccess;
 
         tokenHolder = _iTokenHolder;
         tokenAddress = _iTokenHolder.getToken();
