@@ -53,8 +53,12 @@ abstract contract FeeConfiguration is
 
     function changeExecutor(address _newExecutor) external {
         iSystemRoleBasedAccess.checkFeeConfigChangeUser(msg.sender);
-        require(_newExecutor != address(0), "FC: address can't be zero");
-        require(isContract(_newExecutor), "FC: executor must be a contract");
+        emit ExecutorChanged(executor, _newExecutor);
+        executor = _newExecutor;
+    }
+
+    function changeExecutorViaProposal(address _newExecutor) external {
+        require(msg.sender == _feeConfigExecutor(), "FC: No Authorization");
         emit ExecutorChanged(executor, _newExecutor);
         executor = _newExecutor;
     }
@@ -66,8 +70,6 @@ abstract contract FeeConfiguration is
             _feeConfig.tokenAddress,
             _feeConfig.amountOrId
         );
-        emit ExecutorChanged(executor, address(0));
-        executor = address(0);
     }
 
     function upgradeISystemRoleBasedAccess(
