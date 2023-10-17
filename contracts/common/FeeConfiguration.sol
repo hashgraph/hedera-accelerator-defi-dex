@@ -51,14 +51,16 @@ abstract contract FeeConfiguration is
         return executor;
     }
 
-    function changeExecutor(address _newExecutor) external {
-        iSystemRoleBasedAccess.checkFeeConfigChangeUser(msg.sender);
+    function changeExecutorViaProposal(address _newExecutor) external {
+        require(msg.sender == _feeConfigExecutor(), "FC: No Authorization");
+        require(msg.sender != _newExecutor, "FC: self executor");
         emit ExecutorChanged(executor, _newExecutor);
         executor = _newExecutor;
     }
 
-    function changeExecutorViaProposal(address _newExecutor) external {
-        require(msg.sender == _feeConfigExecutor(), "FC: No Authorization");
+    function changeExecutor(address _newExecutor) external {
+        iSystemRoleBasedAccess.checkFeeConfigChangeUser(msg.sender);
+        require(msg.sender != _newExecutor, "FC: self executor");
         emit ExecutorChanged(executor, _newExecutor);
         executor = _newExecutor;
     }

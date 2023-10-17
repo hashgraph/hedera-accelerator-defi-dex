@@ -5,6 +5,7 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import {
   verifyDAOCreatedEvent,
   verifyDAOInfoUpdatedEvent,
+  verifyExecutorChangedEvent,
   verifyFeeConfigUpdatedEvent,
 } from "./common";
 
@@ -262,19 +263,30 @@ describe("FT-Governance-DAO tests", function () {
     });
 
     it("Verify dao creation fee configuration should be updated", async function () {
-      const { factory, daoTreasure } = await loadFixture(deployFixture);
+      const { factory, systemUsers } = await loadFixture(deployFixture);
       const newDAOCreationFeeConfig = await TestHelper.getDefaultFeeConfig(
         TestHelper.ZERO_ADDRESS,
         10e8,
       );
+
       await factory
-        .connect(daoTreasure)
+        .connect(systemUsers.feeConfigChangeUser)
+        .changeExecutor(systemUsers.superAdmin.address);
+
+      await factory
+        .connect(systemUsers.superAdmin)
         .updateFeeConfig(Object.values(newDAOCreationFeeConfig));
       await verifyFeeConfigUpdatedEvent(factory, newDAOCreationFeeConfig);
     });
 
     it("Verify updating dao creation fee configuration should be reverted for invalid inputs", async function () {
-      const { factory, daoTreasure } = await loadFixture(deployFixture);
+      const { factory, systemUsers } = await loadFixture(deployFixture);
+
+      await expect(
+        factory
+          .connect(systemUsers.feeConfigChangeUser)
+          .changeExecutor(systemUsers.feeConfigChangeUser.address),
+      ).revertedWith("FC: self executor");
 
       await expect(
         factory.updateFeeConfig([
@@ -284,9 +296,18 @@ describe("FT-Governance-DAO tests", function () {
         ]),
       ).revertedWith("FC: No Authorization");
 
+      await factory
+        .connect(systemUsers.feeConfigChangeUser)
+        .changeExecutor(systemUsers.superAdmin.address);
+      await verifyExecutorChangedEvent(
+        factory,
+        TestHelper.ZERO_ADDRESS,
+        systemUsers.superAdmin.address,
+      );
+
       await expect(
         factory
-          .connect(daoTreasure)
+          .connect(systemUsers.superAdmin)
           .updateFeeConfig([
             TestHelper.ZERO_ADDRESS,
             TestHelper.ONE_ADDRESS,
@@ -296,7 +317,7 @@ describe("FT-Governance-DAO tests", function () {
 
       await expect(
         factory
-          .connect(daoTreasure)
+          .connect(systemUsers.superAdmin)
           .updateFeeConfig([
             TestHelper.ONE_ADDRESS,
             TestHelper.ONE_ADDRESS,

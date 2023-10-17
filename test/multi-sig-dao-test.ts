@@ -685,8 +685,8 @@ describe("MultiSig tests", function () {
       const {
         multiSigDAOFactoryInstance,
         signers,
+        systemUsersSigners,
         tokenInstance,
-        daoAdminOne,
         feeConfigData,
       } = await loadFixture(deployFixture);
 
@@ -708,12 +708,22 @@ describe("MultiSig tests", function () {
 
       await expect(
         multiSigDAOFactoryInstance
-          .connect(daoAdminOne)
+          .connect(systemUsersSigners.feeConfigChangeUser)
+          .changeExecutor(systemUsersSigners.feeConfigChangeUser.address),
+      ).revertedWith("FC: self executor");
+
+      await multiSigDAOFactoryInstance
+        .connect(systemUsersSigners.feeConfigChangeUser)
+        .changeExecutor(systemUsersSigners.superAdmin.address);
+
+      await expect(
+        multiSigDAOFactoryInstance
+          .connect(systemUsersSigners.feeConfigChangeUser)
           .updateFeeConfig(Object.values(newFeeConfig)),
       ).revertedWith("FC: No Authorization");
 
       const txn = await multiSigDAOFactoryInstance
-        .connect(signers[11])
+        .connect(systemUsersSigners.superAdmin)
         .updateFeeConfig(Object.values(newFeeConfig));
 
       await verifyDAOConfigChangeEvent(txn, newFeeConfig);
