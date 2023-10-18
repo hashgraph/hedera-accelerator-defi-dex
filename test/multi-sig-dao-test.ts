@@ -81,6 +81,30 @@ describe("MultiSig tests", function () {
     expect(newDAOConfig.daoFee).equals(daoConfig.daoFee);
   }
 
+  async function verifyDAOInfoUpdatedEvent(
+    txn: any,
+    admin: string,
+    daoName: string,
+    logoUrl: string,
+    infoUrl: string,
+    description: string,
+    webLinks: string[],
+  ) {
+    const lastEvent = (
+      await TestHelper.readEvents(txn, ["DAOInfoUpdated"])
+    ).pop();
+    const { name, args } = { name: lastEvent.event, args: lastEvent.args };
+    expect(name).equals("DAOInfoUpdated");
+    const daoInfo = args.daoInfo;
+
+    expect(daoInfo.name).equals(daoName);
+    expect(daoInfo.admin).equals(admin);
+    expect(daoInfo.logoUrl).equals(logoUrl);
+    expect(daoInfo.infoUrl).equals(infoUrl);
+    expect(daoInfo.description).equals(description);
+    expect(daoInfo.webLinks.join(",")).equals(webLinks.join(","));
+  }
+
   async function proposeTransaction(
     multiSigDAOInstance: Contract,
     receiver: string,
@@ -500,6 +524,37 @@ describe("MultiSig tests", function () {
       await expect(multiSigDAOFactoryInstance.createDAO(ARGS))
         .revertedWithCustomError(multiSigDAOFactoryInstance, "InvalidInput")
         .withArgs("BaseDAO: info url is empty");
+    });
+
+    it("Verify updating multisig dao info should be succeeded and emit event", async function () {
+      const { multiSigDAOInstance, daoAdminOne } =
+        await loadFixture(deployFixture);
+
+      const UPDATED_DAO_NAME = DAO_NAME + "_1";
+      const UPDATED_LOGO_URL = LOGO_URL + "_1";
+      const UPDATED_INFO_URL = INFO_URL + "_1";
+      const UPDATED_DESCRIPTION = DESCRIPTION + "_1";
+      const UPDATED_WEB_LINKS = ["A", "B"];
+
+      const txn = await multiSigDAOInstance
+        .connect(daoAdminOne)
+        .updateDaoInfo(
+          UPDATED_DAO_NAME,
+          UPDATED_LOGO_URL,
+          UPDATED_INFO_URL,
+          UPDATED_DESCRIPTION,
+          UPDATED_WEB_LINKS,
+        );
+
+      await verifyDAOInfoUpdatedEvent(
+        txn,
+        daoAdminOne.address,
+        UPDATED_DAO_NAME,
+        UPDATED_LOGO_URL,
+        UPDATED_INFO_URL,
+        UPDATED_DESCRIPTION,
+        UPDATED_WEB_LINKS,
+      );
     });
 
     it("Verify createDAO should be reverted when dao name is empty", async function () {
