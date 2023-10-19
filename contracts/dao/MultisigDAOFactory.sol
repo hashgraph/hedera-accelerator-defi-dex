@@ -132,7 +132,6 @@ contract MultisigDAOFactory is
             _createDAOInputs.admin,
             _createDAOInputs.name,
             _createDAOInputs.logoUrl,
-            _createDAOInputs.infoUrl,
             _createDAOInputs.description,
             _createDAOInputs.webLinks,
             hederaGnosisSafe
@@ -153,7 +152,6 @@ contract MultisigDAOFactory is
         address _admin,
         string memory _name,
         string memory _logoUrl,
-        string memory _infoUrl,
         string memory _desc,
         string[] memory _webLinks,
         HederaGnosisSafe hederaGnosisSafe
@@ -169,7 +167,6 @@ contract MultisigDAOFactory is
             _admin,
             _name,
             _logoUrl,
-            _infoUrl,
             _desc,
             _webLinks,
             hederaGnosisSafe,

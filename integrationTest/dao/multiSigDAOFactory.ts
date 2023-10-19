@@ -22,7 +22,6 @@ import {
   executeNFTTokenTransferProposal,
   DAO_WEB_LINKS,
   DAO_OWNERS_ADDRESSES,
-  DAO_INFO_URL,
 } from "./multiSigDAO";
 import dex from "../../deployment/model/dex";
 
@@ -64,7 +63,6 @@ async function main() {
   await daoFactory.createDAO(
     DAO_NAME,
     DAO_LOGO,
-    DAO_INFO_URL,
     DAO_DESC,
     DAO_WEB_LINKS,
     DAO_OWNERS_ADDRESSES,

@@ -18,7 +18,6 @@ describe("MultiSig tests", function () {
   const TRANSFER_AMOUNT = 10 * 1e8;
   const DAO_NAME = "DAO_NAME";
   const LOGO_URL = "LOGO_URL";
-  const INFO_URL = "INFO_URL";
   const DESCRIPTION = "DESCRIPTION";
   const DEFAULT_META_DATA = "";
   const META_DATA_TEXT = "Meta Data for Text";
@@ -79,30 +78,6 @@ describe("MultiSig tests", function () {
     expect(newDAOConfig.daoTreasurer).equals(daoConfig.daoTreasurer);
     expect(newDAOConfig.tokenAddress).equals(daoConfig.tokenAddress);
     expect(newDAOConfig.daoFee).equals(daoConfig.daoFee);
-  }
-
-  async function verifyDAOInfoUpdatedEvent(
-    txn: any,
-    admin: string,
-    daoName: string,
-    logoUrl: string,
-    infoUrl: string,
-    description: string,
-    webLinks: string[],
-  ) {
-    const lastEvent = (
-      await TestHelper.readEvents(txn, ["DAOInfoUpdated"])
-    ).pop();
-    const { name, args } = { name: lastEvent.event, args: lastEvent.args };
-    expect(name).equals("DAOInfoUpdated");
-    const daoInfo = args.daoInfo;
-
-    expect(daoInfo.name).equals(daoName);
-    expect(daoInfo.admin).equals(admin);
-    expect(daoInfo.logoUrl).equals(logoUrl);
-    expect(daoInfo.infoUrl).equals(infoUrl);
-    expect(daoInfo.description).equals(description);
-    expect(daoInfo.webLinks.join(",")).equals(webLinks.join(","));
   }
 
   async function proposeTransaction(
@@ -246,7 +221,6 @@ describe("MultiSig tests", function () {
       daoAdminOne.address,
       DAO_NAME,
       LOGO_URL,
-      INFO_URL,
       DESCRIPTION,
       WEB_LINKS,
       hederaGnosisSafeProxyInstance,
@@ -495,7 +469,6 @@ describe("MultiSig tests", function () {
         TestHelper.ZERO_ADDRESS,
         DAO_NAME,
         LOGO_URL,
-        INFO_URL,
         doaSignersAddresses,
         doaSignersAddresses.length,
         true,
@@ -507,56 +480,6 @@ describe("MultiSig tests", function () {
         .withArgs("BaseDAO: admin address is zero");
     });
 
-    it("Verify createDAO should be reverted when info url is empty", async function () {
-      const { multiSigDAOFactoryInstance, doaSignersAddresses, daoAdminOne } =
-        await loadFixture(deployFixture);
-      const ARGS = [
-        daoAdminOne.address,
-        DAO_NAME,
-        LOGO_URL,
-        "",
-        doaSignersAddresses,
-        doaSignersAddresses.length,
-        true,
-        DESCRIPTION,
-        WEB_LINKS,
-      ];
-      await expect(multiSigDAOFactoryInstance.createDAO(ARGS))
-        .revertedWithCustomError(multiSigDAOFactoryInstance, "InvalidInput")
-        .withArgs("BaseDAO: info url is empty");
-    });
-
-    it("Verify updating multisig dao info should be succeeded and emit event", async function () {
-      const { multiSigDAOInstance, daoAdminOne } =
-        await loadFixture(deployFixture);
-
-      const UPDATED_DAO_NAME = DAO_NAME + "_1";
-      const UPDATED_LOGO_URL = LOGO_URL + "_1";
-      const UPDATED_INFO_URL = INFO_URL + "_1";
-      const UPDATED_DESCRIPTION = DESCRIPTION + "_1";
-      const UPDATED_WEB_LINKS = ["A", "B"];
-
-      const txn = await multiSigDAOInstance
-        .connect(daoAdminOne)
-        .updateDaoInfo(
-          UPDATED_DAO_NAME,
-          UPDATED_LOGO_URL,
-          UPDATED_INFO_URL,
-          UPDATED_DESCRIPTION,
-          UPDATED_WEB_LINKS,
-        );
-
-      await verifyDAOInfoUpdatedEvent(
-        txn,
-        daoAdminOne.address,
-        UPDATED_DAO_NAME,
-        UPDATED_LOGO_URL,
-        UPDATED_INFO_URL,
-        UPDATED_DESCRIPTION,
-        UPDATED_WEB_LINKS,
-      );
-    });
-
     it("Verify createDAO should be reverted when dao name is empty", async function () {
       const { multiSigDAOFactoryInstance, doaSignersAddresses, daoAdminOne } =
         await loadFixture(deployFixture);
@@ -564,7 +487,6 @@ describe("MultiSig tests", function () {
         daoAdminOne.address,
         "",
         LOGO_URL,
-        INFO_URL,
         doaSignersAddresses,
         doaSignersAddresses.length,
         true,
@@ -587,7 +509,6 @@ describe("MultiSig tests", function () {
         daoAdminOne.address,
         DAO_NAME,
         LOGO_URL,
-        INFO_URL,
         doaSignersAddresses,
         doaSignersAddresses.length,
         false,
@@ -642,7 +563,6 @@ describe("MultiSig tests", function () {
         daoAdminOne.address,
         DAO_NAME,
         LOGO_URL,
-        INFO_URL,
         doaSignersAddresses,
         doaSignersAddresses.length,
         true,
@@ -679,7 +599,6 @@ describe("MultiSig tests", function () {
         daoAdminOne.address,
         DAO_NAME,
         LOGO_URL,
-        INFO_URL,
         doaSignersAddresses,
         doaSignersAddresses.length,
         true,
@@ -798,7 +717,6 @@ describe("MultiSig tests", function () {
         daoAdminOne.address,
         DAO_NAME,
         LOGO_URL,
-        INFO_URL,
         doaSignersAddresses,
         doaSignersAddresses.length,
         true,
@@ -1412,17 +1330,17 @@ describe("MultiSig tests", function () {
       await verifyTransactionCreatedEvent(txn, TXN_TYPE_TOKEN_ASSOCIATE);
     });
 
-    it("Verify updating dao info should be reverted for empty info url", async function () {
+    it("Verify updating dao info should be reverted for non-empty info url", async function () {
       const { multiSigDAOInstance, daoAdminOne } =
         await loadFixture(deployFixture);
 
       await expect(
         multiSigDAOInstance
           .connect(daoAdminOne)
-          .updateDaoInfo(DAO_NAME, LOGO_URL, "", DESCRIPTION, WEB_LINKS),
+          .updateDaoInfo(DAO_NAME, LOGO_URL, LOGO_URL, DESCRIPTION, WEB_LINKS),
       )
         .revertedWithCustomError(multiSigDAOInstance, "InvalidInput")
-        .withArgs("BaseDAO: info url is empty");
+        .withArgs("MultiSigDAO: info url should empty");
     });
 
     describe("Text proposal test cases", () => {

@@ -18,7 +18,6 @@ const TOKEN_ID = dex.TOKEN_LAB49_1_ID;
 
 const DAO_DESC = "Lorem Ipsum is simply dummy text";
 const DAO_WEB_LINKS = ["https://linkedin.com"];
-const DAO_INFO_URL = "https://linkedin.com";
 
 const DAO_ADMIN_ID = clientsInfo.uiUserId;
 const DAO_ADMIN_KEY = clientsInfo.uiUserKey;
@@ -76,7 +75,6 @@ export class MultiSigDAOSteps {
         DAO_ADMIN_ADDRESS,
         name,
         logo,
-        DAO_INFO_URL,
         DAO_DESC,
         DAO_WEB_LINKS,
         DAO_OWNERS_ADDRESSES,
@@ -104,7 +102,6 @@ export class MultiSigDAOSteps {
       DAO_ADMIN_ADDRESS,
       name,
       logo,
-      DAO_INFO_URL,
       DAO_DESC,
       DAO_WEB_LINKS,
       DAO_OWNERS_ADDRESSES,
@@ -384,7 +381,6 @@ export class MultiSigDAOSteps {
     const daoAddress = await multiSigDAOFactory.createDAO(
       name,
       logo,
-      DAO_INFO_URL,
       DAO_DESC,
       DAO_WEB_LINKS,
       DAO_OWNERS_ADDRESSES,
@@ -412,7 +408,6 @@ export class MultiSigDAOSteps {
       await multiSigDAOFactory.createDAO(
         name,
         logo,
-        DAO_INFO_URL,
         DAO_DESC,
         DAO_WEB_LINKS,
         DAO_OWNERS_ADDRESSES,
