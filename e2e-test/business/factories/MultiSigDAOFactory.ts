@@ -68,6 +68,7 @@ export default class MultiSigDAOFactory extends Base {
   createDAO = async (
     name: string,
     logoUrl: string,
+    infoUrl: string,
     desc: string,
     webLinks: string[],
     owners: string[],
@@ -81,6 +82,7 @@ export default class MultiSigDAOFactory extends Base {
       admin,
       name,
       logoUrl,
+      infoUrl,
       owners,
       threshold,
       isPrivate,
