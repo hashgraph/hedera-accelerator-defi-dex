@@ -41,4 +41,6 @@ interface IERC721 {
         address _owner,
         address _operator
     ) external view returns (bool);
+
+    function totalSupply() external view returns (uint256);
 }

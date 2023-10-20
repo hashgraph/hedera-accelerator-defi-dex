@@ -1,4 +1,4 @@
-import Base from "../Base";
+import FeeConfig from "../FeeConfig";
 
 import { Helper } from "../../../utils/Helper";
 import { Deployment } from "../../../utils/deployContractOnTestnet";
@@ -10,8 +10,8 @@ import {
 } from "@hashgraph/sdk";
 import { ContractService } from "../../../deployment/service/ContractService";
 import { MirrorNodeService } from "../../../utils/MirrorNodeService";
-import { DEFAULT_DAO_CONFIG } from "../constants";
-import { DAOConfigDetails } from "../types";
+import { DEFAULT_FEE_CONFIG } from "../constants";
+import { FeeConfigDetails } from "../types";
 
 const deployment = new Deployment();
 
@@ -22,9 +22,9 @@ const UPGRADE_SAFE_LOGIC_IMPL = "upgradeSafeLogicAddress";
 const UPGRADE_DAO_LOGIC_IMPL = "upgradeDaoLogicAddress";
 const UPGRADE_SAFE_FACTORY_LOGIC_IMPL = "upgradeSafeFactoryAddress";
 
-export default class MultiSigDAOFactory extends Base {
+export default class MultiSigDAOFactory extends FeeConfig {
   initialize = async (
-    daoConfigDetails: DAOConfigDetails = DEFAULT_DAO_CONFIG,
+    feeConfigDetails: FeeConfigDetails = DEFAULT_FEE_CONFIG,
     client: Client = clientsInfo.operatorClient,
   ) => {
     if (await this.isInitializationPending()) {
@@ -41,7 +41,7 @@ export default class MultiSigDAOFactory extends Base {
         _daoLogic: multiSigDao.address,
         _safeLogic: gnosisLogic.address,
         _safeFactory: gnosisFactory.address,
-        _daoConfigDetails: Object.values(daoConfigDetails),
+        _feeConfigDetails: Object.values(feeConfigDetails),
         _hederaService: this.htsAddress,
         _multiSend: this.getMultiSendContractAddress(),
       };
@@ -68,6 +68,7 @@ export default class MultiSigDAOFactory extends Base {
   createDAO = async (
     name: string,
     logoUrl: string,
+    infoUrl: string,
     desc: string,
     webLinks: string[],
     owners: string[],
@@ -81,6 +82,7 @@ export default class MultiSigDAOFactory extends Base {
       admin,
       name,
       logoUrl,
+      infoUrl,
       owners,
       threshold,
       isPrivate,

@@ -1,7 +1,7 @@
-import Base from "../Base";
 import FTDAO from "../FTDAO";
 import GodHolder from "../GodHolder";
 import NFTHolder from "../NFTHolder";
+import FeeConfig from "../FeeConfig";
 import TokenHolderFactory from "./TokenHolderFactory";
 
 import { Helper } from "../../../utils/Helper";
@@ -9,8 +9,8 @@ import { Deployment } from "../../../utils/deployContractOnTestnet";
 import { clientsInfo } from "../../../utils/ClientManagement";
 import { AddressHelper } from "../../../utils/AddressHelper";
 import { ContractService } from "../../../deployment/service/ContractService";
-import { DAOConfigDetails } from "../../../e2e-test/business/types";
-import { DEFAULT_DAO_CONFIG } from "../../../e2e-test/business/constants";
+import { FeeConfigDetails } from "../../../e2e-test/business/types";
+import { DEFAULT_FEE_CONFIG } from "../../../e2e-test/business/constants";
 import {
   Client,
   TokenId,
@@ -26,13 +26,13 @@ const INITIALIZE = "initialize";
 const UPGRADE_TOKEN_HOLDER_FACTORY = "upgradeTokenHolderFactory";
 const GET_TOKEN_HOLDER_FACTORY_ADDRESS = "getTokenHolderFactoryAddress";
 
-export default abstract class DAOFactory extends Base {
+export default abstract class DAOFactory extends FeeConfig {
   protected abstract getPrefix(): string;
 
   initialize = async (
     client: Client = clientsInfo.operatorClient,
     tokenHolderFactory: TokenHolderFactory,
-    daoConfigDetails: DAOConfigDetails = DEFAULT_DAO_CONFIG,
+    feeConfigDetails: FeeConfigDetails = DEFAULT_FEE_CONFIG,
   ) => {
     if (await this.isInitializationPending()) {
       const tokenHolderFactoryAddress = ContractId.fromString(
@@ -52,7 +52,7 @@ export default abstract class DAOFactory extends Base {
         _governorLogic: governor.address,
         _assetsHolderLogic: assetsHolder.address,
         _hederaService: this.htsAddress,
-        _daoConfigDetails: daoConfigDetails,
+        _feeConfigDetails: feeConfigDetails,
         _tokenHolderFactory: tokenHolderFactoryAddress,
         _iSystemRoleBasedAccess: this.getSystemBasedRoleAccessContractAddress(),
       };
@@ -85,8 +85,8 @@ export default abstract class DAOFactory extends Base {
     votingDelay: number,
     votingPeriod: number,
     isPrivate: boolean,
-    daoCreationFeeInHBar: number = 0,
-    admin: string = clientsInfo.operatorId.toSolidityAddress(),
+    daoCreationFeeInHBar: number,
+    admin: string,
     client: Client = clientsInfo.operatorClient,
   ) => {
     const params = {
@@ -108,7 +108,7 @@ export default abstract class DAOFactory extends Base {
       [Object.values(params)],
     );
     const { result, record } = await this.execute(
-      8_500_000,
+      9_000_000,
       CREATE_DAO,
       client,
       bytes,

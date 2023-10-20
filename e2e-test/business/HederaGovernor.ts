@@ -61,7 +61,7 @@ export interface ProposalInfo {
 export default class HederaGovernor extends Base {
   DEFAULT_META_DATA = "metadata";
   DEFAULT_DESCRIPTION = "description";
-  DEFAULT_LINK = "https://defi-ui.hedera.com/governance";
+  DEFAULT_LINK = "https://defi-ui.zilbo.com/governance";
   TXN_FEE_FOR_TOKEN_CREATE = 20;
   DEFAULT_NFT_TOKEN_FOR_TRANSFER = 18;
   DEFAULT_NFT_TOKEN_SERIAL_NO = 19;

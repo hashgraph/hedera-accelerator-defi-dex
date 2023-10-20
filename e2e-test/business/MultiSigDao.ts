@@ -1,6 +1,6 @@
 import Common from "./Common";
-import BaseDao from "./BaseDao";
 import HederaGnosisSafe from "./HederaGnosisSafe";
+import FeeConfig from "./FeeConfig";
 
 import { ethers } from "ethers";
 import { Helper } from "../../utils/Helper";
@@ -9,6 +9,7 @@ import { Deployment } from "../../utils/deployContractOnTestnet";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { AddressHelper } from "../../utils/AddressHelper";
 import { ContractService } from "../../deployment/service/ContractService";
+import { FeeConfigDetails } from "./types";
 import {
   Client,
   TokenId,
@@ -48,14 +49,16 @@ const REMOVE_MEMBER = 1002;
 const REPLACE_MEMBER = 1003;
 const CHANGE_THRESHOLD = 1004;
 const TYPE_SET_TEXT = 1005;
+const TYPE_UPDATE_FEE_CONFIG = 1006;
 
 const deployment = new Deployment();
 
-export default class MultiSigDao extends BaseDao {
+export default class MultiSigDao extends FeeConfig {
   async initialize(
     admin: string,
     name: string,
     logoURL: string,
+    infoURL: string,
     desc: string,
     webLinks: string[],
     owners: string[],
@@ -85,6 +88,7 @@ export default class MultiSigDao extends BaseDao {
         _admin: admin,
         _name: name,
         _logoUrl: logoURL,
+        _infoUrl: infoURL,
         _description: desc,
         _webLinks: webLinks,
         _hederaGnosisSafe: gnosisProxy,
@@ -477,6 +481,32 @@ export default class MultiSigDao extends BaseDao {
       await AddressHelper.idToEvmAddress(this.contractId),
       textTxData.bytes,
       TYPE_SET_TEXT,
+      client,
+      title,
+      description,
+      linkToDiscussion,
+      metaData,
+    );
+  };
+
+  public proposeUpdateFeeConfigTransaction = async (
+    targetAddress: string,
+    newFeeConfig: FeeConfigDetails,
+    client: Client = clientsInfo.operatorClient,
+    title: string = TITLE,
+    description: string = DESCRIPTION,
+    linkToDiscussion: string = LINK_TO_DISCUSSION,
+    metaData: string = META_DATA,
+  ) => {
+    const updateFeeConfigData = await this.encodeFunctionData(
+      this.getContractName(),
+      this.UPDATE_FEE_CONFIG,
+      [Object.values(newFeeConfig)],
+    );
+    return await this.proposeTransaction(
+      targetAddress,
+      updateFeeConfigData.bytes,
+      TYPE_UPDATE_FEE_CONFIG,
       client,
       title,
       description,

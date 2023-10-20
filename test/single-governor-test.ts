@@ -436,6 +436,8 @@ describe("Governor Tests", function () {
     it("Verify creator balance should be one nft token less after proposal creation", async function () {
       const { creator, nftGovernor, nftAsGodToken } =
         await loadFixture(deployFixture);
+      await nftAsGodToken.setTotal(50);
+
       const info = await createTextProposal(
         nftGovernor,
         creator,
@@ -463,6 +465,8 @@ describe("Governor Tests", function () {
     it("Verify creator balance should be one nft token more after proposal cancellation", async function () {
       const { nftGovernor, nftAsGodToken, creator } =
         await loadFixture(deployFixture);
+
+      await nftAsGodToken.setTotal(50);
 
       const info = await createTextProposal(
         nftGovernor,
@@ -493,10 +497,12 @@ describe("Governor Tests", function () {
     });
 
     it("Verify creator balance should be one nft token more after proposal execution", async function () {
-      const { creator, nftGovernor, nftAsGodToken, nftTokenHolder } =
+      const { creator, nftGovernor, nftAsGodToken, nftTokenHolder, signers } =
         await loadFixture(deployFixture);
 
+      await nftAsGodToken.setTotal(50);
       await nftTokenHolder.grabTokensFromUser(TestHelper.NFT_FOR_VOTING);
+      await nftTokenHolder.connect(signers[1]).grabTokensFromUser(1);
 
       const info = await createTextProposal(
         nftGovernor,
@@ -506,6 +512,7 @@ describe("Governor Tests", function () {
       );
 
       await nftGovernor.castVote(info.proposalId, 1);
+      await nftGovernor.connect(signers[1]).castVote(info.proposalId, 1);
       await TestHelper.increaseEVMTime(VOTING_PERIOD_IN_SECONDS);
 
       await expect(execute(nftGovernor, info.inputs)).changeTokenBalances(
@@ -874,12 +881,20 @@ describe("Governor Tests", function () {
       });
 
       it("Given NFT Token used as governance token when proposal executed then new ft token should be created successfully", async () => {
-        const { creator, nftGovernor, nftAssetsHolder, nftTokenHolder } =
-          await loadFixture(deployFixture);
+        const {
+          creator,
+          nftGovernor,
+          nftAssetsHolder,
+          nftTokenHolder,
+          nftAsGodToken,
+          signers,
+        } = await loadFixture(deployFixture);
 
+        await nftAsGodToken.setTotal(50);
         await nftTokenHolder
           .connect(creator)
           .grabTokensFromUser(TestHelper.NFT_FOR_VOTING);
+        await nftTokenHolder.connect(signers[1]).grabTokensFromUser(1);
 
         const info = await createTokenCreateProposal(
           nftGovernor,
@@ -889,6 +904,7 @@ describe("Governor Tests", function () {
         );
 
         await nftGovernor.castVote(info.proposalId, 1);
+        await nftGovernor.connect(signers[1]).castVote(info.proposalId, 1);
         await TestHelper.increaseEVMTime(VOTING_PERIOD_IN_SECONDS);
         await expect(execute(nftGovernor, info.inputs, TOKEN_CREATION_HBAR_FEE))
           .changeEtherBalance(creator.address, -TOKEN_CREATION_HBAR_FEE)
@@ -1135,8 +1151,13 @@ describe("Governor Tests", function () {
           nftGovernor,
           nftTokenHolder,
           nftAssetsHolder,
+          signers,
         } = await loadFixture(deployFixture);
-        await nftTokenHolder.grabTokensFromUser(TestHelper.NFT_FOR_VOTING);
+        await nftAsGodToken.setTotal(50);
+        await nftTokenHolder
+          .connect(creator)
+          .grabTokensFromUser(TestHelper.NFT_FOR_VOTING);
+        await nftTokenHolder.connect(signers[1]).grabTokensFromUser(1);
 
         const info = await createAssetsTransferProposal(
           nftGovernor,
@@ -1151,6 +1172,7 @@ describe("Governor Tests", function () {
         await verifyAccountBalance(nftAsGodToken, nftAssetsHolder.address, 0);
 
         await nftGovernor.castVote(info.proposalId, 1);
+        await nftGovernor.connect(signers[1]).castVote(info.proposalId, 1);
         await TestHelper.increaseEVMTime(VOTING_PERIOD_IN_SECONDS);
         await expect(execute(nftGovernor, info.inputs)).revertedWith(
           "AH: transfer failed",
@@ -1165,8 +1187,11 @@ describe("Governor Tests", function () {
           nftGovernor,
           nftTokenHolder,
           nftAssetsHolder,
+          signers,
         } = await loadFixture(deployFixture);
+        await nftAsGodToken.setTotal(50);
         await nftTokenHolder.grabTokensFromUser(TestHelper.NFT_FOR_VOTING);
+        await nftTokenHolder.connect(signers[1]).grabTokensFromUser(1);
 
         const info = await createAssetsTransferProposal(
           nftGovernor,
@@ -1184,6 +1209,7 @@ describe("Governor Tests", function () {
         );
 
         await nftGovernor.castVote(info.proposalId, 1);
+        await nftGovernor.connect(signers[1]).castVote(info.proposalId, 1);
         await TestHelper.increaseEVMTime(VOTING_PERIOD_IN_SECONDS);
         await expect(execute(nftGovernor, info.inputs)).changeTokenBalances(
           nftAsGodToken,

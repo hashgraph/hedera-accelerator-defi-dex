@@ -20,6 +20,7 @@ interface ISharedModel {
         address admin;
         string name;
         string logoUrl;
+        string infoUrl;
         address[] owners;
         uint256 threshold;
         bool isPrivate;
@@ -31,5 +32,11 @@ interface ISharedModel {
         uint256 votingDelay;
         uint256 votingPeriod;
         uint256 quorumThresholdInBsp;
+    }
+
+    struct FeeConfig {
+        address receiver;
+        address tokenAddress;
+        uint256 amountOrId;
     }
 }
