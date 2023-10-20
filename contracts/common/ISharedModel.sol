@@ -33,4 +33,10 @@ interface ISharedModel {
         uint256 votingPeriod;
         uint256 quorumThresholdInBsp;
     }
+
+    struct FeeConfig {
+        address receiver;
+        address tokenAddress;
+        uint256 amountOrId;
+    }
 }

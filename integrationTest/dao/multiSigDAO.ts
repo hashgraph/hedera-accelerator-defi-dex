@@ -1,6 +1,7 @@
 import dex from "../../deployment/model/dex";
 import Common from "../../e2e-test/business/Common";
 import MultiSigDao from "../../e2e-test/business/MultiSigDao";
+import FTDAOFactory from "../../e2e-test/business/factories/FTDAOFactory";
 import HederaGnosisSafe from "../../e2e-test/business/HederaGnosisSafe";
 import SystemRoleBasedAccess from "../../e2e-test/business/common/SystemRoleBasedAccess";
 
@@ -8,6 +9,7 @@ import { ethers } from "ethers";
 import { Helper } from "../../utils/Helper";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { AddressHelper } from "../../utils/AddressHelper";
+import { DEFAULT_FEE_CONFIG } from "../../e2e-test/business/constants";
 import {
   Hbar,
   Client,
@@ -33,7 +35,7 @@ const TXN_DETAILS_FOR_BATCH = {
   AMOUNT: 1,
 };
 
-const DAO_ADMIN_ADDRESS = clientsInfo.uiUserId.toSolidityAddress();
+export const DAO_ADMIN_ADDRESS = clientsInfo.uiUserId.toSolidityAddress();
 const DAO_ADMIN_CLIENT = clientsInfo.uiUserClient;
 
 export const DAO_OWNERS_INFO = [
@@ -60,6 +62,7 @@ export const DAO_OWNERS_ADDRESSES = DAO_OWNERS_INFO.map(
 async function main() {
   const multiSigDAO = new MultiSigDao();
   await initDAO(multiSigDAO);
+  await executeFactoryFeeConfigChange(multiSigDAO);
   await executeHbarTransfer(multiSigDAO);
   await executeDAOTextProposal(multiSigDAO);
   await executeBatchTransaction(multiSigDAO);
@@ -104,6 +107,7 @@ export async function executeNFTTokenTransferProposal(
   tokenReceiverClient: Client = clientsInfo.operatorClient,
   tokenSenderAccountId: AccountId = clientsInfo.operatorId,
   tokenSenderPrivateKey: PrivateKey = clientsInfo.operatorKey,
+  tokenSenderClient: Client = clientsInfo.operatorClient,
   safeTxnExecutionClient: Client = clientsInfo.treasureClient,
 ) {
   console.log(
@@ -113,7 +117,10 @@ export async function executeNFTTokenTransferProposal(
   // Step - 1 associate nft token to contract
   const gnosisSafe = await getGnosisSafeInstance(multiSigDAO);
   const tokenAssociateTxnHash =
-    await multiSigDAO.proposeTokenAssociateTransaction(nftToken);
+    await multiSigDAO.proposeTokenAssociateTransaction(
+      nftToken,
+      tokenSenderClient,
+    );
   const tokenAssociateTxnInfo = await multiSigDAO.getTransactionInfo(
     tokenAssociateTxnHash,
   );
@@ -308,6 +315,55 @@ export async function executeBatchTransaction(
     batchTxnInfo.nonce,
     safeTxnExecutionClient,
   );
+}
+
+export async function executeFactoryFeeConfigChange(
+  multiSigDAO: MultiSigDao,
+  ownersInfo: any[] = DAO_OWNERS_INFO,
+  fromAccountId: AccountId = clientsInfo.treasureId,
+  fromPrivateKey: PrivateKey = clientsInfo.treasureKey,
+  safeTxnExecutionClient: Client = clientsInfo.treasureClient,
+) {
+  console.log(`- executing Multi-sig DAO = ${multiSigDAO.contractId}\n`);
+
+  // step 1 - create factory fee config change txn
+  const ftDAOFactory = new FTDAOFactory();
+  const ftDAOFactoryEvmAddress = await AddressHelper.idToEvmAddress(
+    ftDAOFactory.contractId,
+  );
+  const gnosisSafe = await getGnosisSafeInstance(multiSigDAO);
+  const gnosisSafeEvmAddress = await AddressHelper.idToEvmAddress(
+    gnosisSafe.contractId,
+  );
+
+  const updateFeeConfigTxnHash =
+    await multiSigDAO.proposeUpdateFeeConfigTransaction(
+      ftDAOFactoryEvmAddress,
+      DEFAULT_FEE_CONFIG,
+      safeTxnExecutionClient,
+    );
+  const transferTxnInfo = await multiSigDAO.getTransactionInfo(
+    updateFeeConfigTxnHash,
+  );
+  for (const daoOwner of ownersInfo) {
+    await gnosisSafe.approveHash(updateFeeConfigTxnHash, daoOwner.client);
+  }
+  // step 2 - transfer owner-ship from fee-config to gnosis-safe
+  await ftDAOFactory.changeFeeConfigController(
+    gnosisSafeEvmAddress,
+    clientsInfo.treasureClient, // this is current user to change config
+  );
+  await ftDAOFactory.feeConfig();
+  // step 3 - transfer hBar from safe to receiver
+  await gnosisSafe.executeTransaction(
+    transferTxnInfo.to,
+    transferTxnInfo.value,
+    transferTxnInfo.data,
+    transferTxnInfo.operation,
+    transferTxnInfo.nonce,
+    safeTxnExecutionClient,
+  );
+  await ftDAOFactory.feeConfig();
 }
 
 export async function executeHbarTransfer(

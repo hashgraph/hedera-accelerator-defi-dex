@@ -31,7 +31,7 @@ const GOVERNANCE_DAO_TWO_TOKEN_ID = TokenId.fromString("0.0.80188");
 
 const MULTI_SIG_DAO_ONE = "MULTI_SIG_DAO_ONE";
 
-const DAO_FEE = 1;
+const DAO_FEE = 1e8;
 
 const ROLES = {
   DAO_ADMIN: Helper.role("DAO_ADMIN"),

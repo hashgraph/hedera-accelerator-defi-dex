@@ -42,47 +42,47 @@
   },
   {
     "name": "nftdaofactory",
-    "id": "0.0.4521359",
-    "hash": "eebbd35dea0e0b6e5e3ba857deb1bad4",
-    "address": "0x000000000000000000000000000000000044fd8f",
-    "timestamp": "2023-10-09T12:02:56.939Z",
-    "transparentProxyId": "0.0.4521363",
-    "transparentProxyAddress": "0x000000000000000000000000000000000044fd93"
+    "id": "0.0.5736145",
+    "hash": "8760069f8fe95784036ddabc7582ec5e",
+    "address": "0x00000000000000000000000000000000005786d1",
+    "timestamp": "2023-10-20T09:43:17.846Z",
+    "transparentProxyId": "0.0.5736155",
+    "transparentProxyAddress": "0x00000000000000000000000000000000005786db"
   },
   {
     "name": "ftdaofactory",
-    "id": "0.0.4521165",
-    "hash": "cef42744efe9fb368ff95de69f6c0722",
-    "address": "0x000000000000000000000000000000000044fccd",
-    "timestamp": "2023-10-09T10:51:52.038Z",
-    "transparentProxyId": "0.0.4521169",
-    "transparentProxyAddress": "0x000000000000000000000000000000000044fcd1"
+    "id": "0.0.5736144",
+    "hash": "c9514c820b716e02c56e9b6a6f76f446",
+    "address": "0x00000000000000000000000000000000005786d0",
+    "timestamp": "2023-10-20T09:43:16.040Z",
+    "transparentProxyId": "0.0.5736154",
+    "transparentProxyAddress": "0x00000000000000000000000000000000005786da"
   },
   {
     "name": "multisigdaofactory",
-    "id": "0.0.3761796",
-    "hash": "ee52ab783901383e2fc61b6b30f26e69",
-    "address": "0x0000000000000000000000000000000000396684",
-    "timestamp": "2023-10-03T10:02:35.942Z",
-    "transparentProxyId": "0.0.3761812",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000396694"
+    "id": "0.0.5736146",
+    "hash": "49d6245806e1f368f2177133ee7c43fd",
+    "address": "0x00000000000000000000000000000000005786d2",
+    "timestamp": "2023-10-20T09:43:18.402Z",
+    "transparentProxyId": "0.0.5736156",
+    "transparentProxyAddress": "0x00000000000000000000000000000000005786dc"
   },
   {
     "name": "factory",
-    "id": "0.0.3761788",
-    "hash": "33d26efae6a5bd1195d2b81b97da6d0d",
-    "address": "0x000000000000000000000000000000000039667c",
-    "timestamp": "2023-10-03T10:02:33.468Z",
-    "transparentProxyId": "0.0.3761810",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000396692"
+    "id": "0.0.5736143",
+    "hash": "5aa5d7ef646a52cc06a60510523cd9db",
+    "address": "0x00000000000000000000000000000000005786cf",
+    "timestamp": "2023-10-20T09:43:16.076Z",
+    "transparentProxyId": "0.0.5736153",
+    "transparentProxyAddress": "0x00000000000000000000000000000000005786d9"
   },
   {
     "name": "systemrolebasedaccess",
-    "id": "0.0.634560",
-    "hash": "7649e1368d16d95413e80e36f91ed208",
-    "address": "0x000000000000000000000000000000000009aec0",
-    "timestamp": "2023-08-22T04:08:47.151Z",
-    "transparentProxyId": "0.0.634562",
-    "transparentProxyAddress": "0x000000000000000000000000000000000009aec2"
+    "id": "0.0.5736141",
+    "hash": "0db6e8d793ea0f63b07d34b7bc5e7eae",
+    "address": "0x00000000000000000000000000000000005786cd",
+    "timestamp": "2023-10-20T09:43:10.017Z",
+    "transparentProxyId": "0.0.5736150",
+    "transparentProxyAddress": "0x00000000000000000000000000000000005786d6"
   }
 ]

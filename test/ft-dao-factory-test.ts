@@ -9,7 +9,9 @@ import {
   verifyFeeConfigUpdatedEvent,
 } from "./common";
 
-describe("NFT-Governance-DAO tests", function () {
+describe("FT-Governance-DAO tests", function () {
+  const TOTAL = 100 * 1e8;
+
   const DAO_NAME = "DAO_NAME";
   const LOGO_URL = "https://twitter.com";
   const INFO_URL = "https://twitter.com";
@@ -27,13 +29,12 @@ describe("NFT-Governance-DAO tests", function () {
 
     const hederaService = await TestHelper.deployMockHederaService();
 
-    const token = await TestHelper.deployERC721Mock(signers[0]);
+    const token = await TestHelper.deployERC20Mock(TOTAL);
+    await token.setUserBalance(signers[0].address, TOTAL);
 
-    const ftToken = await TestHelper.deployERC20Mock(100 * 1e8);
+    const godHolder = await TestHelper.deployGodHolder(hederaService, token);
 
-    const godHolder = await TestHelper.deployNftGodHolder(hederaService, token);
-
-    const godHolderFactory = await TestHelper.deployNFTTokenHolderFactory(
+    const godHolderFactory = await TestHelper.deployGodTokenHolderFactory(
       hederaService,
       godHolder,
       dexOwner.address,
@@ -47,6 +48,7 @@ describe("NFT-Governance-DAO tests", function () {
     const daoCreationFeeConfig = await TestHelper.getDefaultFeeConfig(
       token.address,
     );
+
     const INIT_ARGS = {
       _daoLogic: governorTokenDAO.address,
       _governorLogic: governor.address,
@@ -73,7 +75,7 @@ describe("NFT-Governance-DAO tests", function () {
       feeConfig: Object.values(proposalCreationFeeConfig),
     };
 
-    const factory = await TestHelper.deployNFTDAOFactory(
+    const factory = await TestHelper.deployFTDAOFactory(
       Object.values(INIT_ARGS),
     );
     await verifyFeeConfigUpdatedEvent(factory, daoCreationFeeConfig);
@@ -96,7 +98,6 @@ describe("NFT-Governance-DAO tests", function () {
       CREATE_DAO_ARGS,
       daoCreationFeeConfig,
       proposalCreationFeeConfig,
-      ftToken,
     };
   }
 
@@ -118,18 +119,6 @@ describe("NFT-Governance-DAO tests", function () {
       await expect(factory.createDAO(Object.values(CREATE_DAO_INVALID_ARGS)))
         .revertedWithCustomError(factory, "InvalidInput")
         .withArgs("BaseDAO: admin address is zero");
-    });
-
-    it("Verify createDAO should be reverted when created with FT Token", async function () {
-      const { factory, ftToken, CREATE_DAO_ARGS } =
-        await loadFixture(deployFixture);
-      const CREATE_DAO_INVALID_ARGS = {
-        ...CREATE_DAO_ARGS,
-        tokenAddress: ftToken.address,
-      };
-      await expect(factory.createDAO(CREATE_DAO_INVALID_ARGS)).revertedWith(
-        "DAOFactory: Token type & DAO type mismatch.",
-      );
     });
 
     it("Verify createDAO should be reverted when dao name is empty", async function () {
@@ -222,7 +211,7 @@ describe("NFT-Governance-DAO tests", function () {
         _feeConfig: Object.values(hBarAsFeeConfig),
       };
 
-      const factory = await TestHelper.deployNFTDAOFactory(
+      const factory = await TestHelper.deployFTDAOFactory(
         Object.values(UPDATED_INIT_ARGS),
       );
 
@@ -258,10 +247,19 @@ describe("NFT-Governance-DAO tests", function () {
         ...INIT_ARGS,
         _feeConfig: Object.values(hBarAsFeeConfig),
       };
-      const factory = await TestHelper.deployNFTDAOFactory(
+      const factory = await TestHelper.deployFTDAOFactory(
         Object.values(UPDATED_INIT_ARGS),
       );
       await expect(factory.createDAO(Object.values(CREATE_DAO_ARGS))).reverted;
+    });
+
+    it("Verify createDAO should be reverted during dao fee transfer", async function () {
+      const { factory, token, CREATE_DAO_ARGS } =
+        await loadFixture(deployFixture);
+      await token.setTransaferFailed(true);
+      await expect(
+        factory.createDAO(Object.values(CREATE_DAO_ARGS)),
+      ).revertedWith("FC: Fee transfer failed");
     });
 
     it("Verify dao creation fee configuration should be updated", async function () {

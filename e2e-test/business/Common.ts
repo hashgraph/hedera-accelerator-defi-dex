@@ -23,6 +23,7 @@ import {
   TokenAssociateTransaction,
   AccountAllowanceApproveTransaction,
   Hbar,
+  HbarUnit,
 } from "@hashgraph/sdk";
 
 export default class Common extends Base {
@@ -152,7 +153,10 @@ export default class Common extends Base {
     const receipt = await txResponse.getReceipt(client);
     const transactionStatus = receipt.status;
     console.log(
-      `- Common#approveHbarAllowance(): status = ${transactionStatus.toString()}, spenderAccountId = ${spenderAccountId.toString()}, ownerAccount = ${ownerAccount.toString()}, hbar = ${amount}\n`,
+      `- Common#approveHbarAllowance(): status = ${transactionStatus.toString()}, spenderAccountId = ${spenderAccountId.toString()}, ownerAccount = ${ownerAccount.toString()}, hbar = ${Hbar.from(
+        amount,
+        HbarUnit.Hbar,
+      )}\n`,
     );
   };
 
@@ -380,12 +384,10 @@ export default class Common extends Base {
       const receipt = await txResponse.getReceipt(client);
       const transactionStatus = receipt.status;
       console.log(
-        `Common#associateTokensToAccount(): TokenIds = ${tokenIds},  accountId = ${accountId}, transaction status is: ${transactionStatus.toString()} \n`,
         `- Common#associateTokensToAccount(): TokenIds = ${tokenIds},  accountId = ${accountId}, transaction status is: ${transactionStatus.toString()} \n`,
       );
     } catch (error: any) {
       console.log(
-        `Common#associateTokensToAccount(): TokenIds = ${tokenIds},  accountId = ${accountId}, transaction status is: ${error.toString()} \n`,
         `- Common#associateTokensToAccount(): TokenIds = ${tokenIds},  accountId = ${accountId}, transaction status is: ${error.toString()} \n`,
       );
     }
