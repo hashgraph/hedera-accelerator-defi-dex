@@ -8,36 +8,29 @@ import { Deployment } from "../../utils/deployContractOnTestnet";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { AddressHelper } from "../../utils/AddressHelper";
 import { ContractService } from "../../deployment/service/ContractService";
-import { DEFAULT_DAO_CONFIG } from "../../e2e-test/business/constants";
+import { DEFAULT_FEE_CONFIG } from "../../e2e-test/business/constants";
 
 import {
   DAO_LOGO,
   DAO_NAME,
   DAO_DESC,
+  DAO_INFO_URL,
+  DAO_WEB_LINKS,
+  DAO_ADMIN_ADDRESS,
   executeHbarTransfer,
+  DAO_OWNERS_ADDRESSES,
   executeDAOTextProposal,
   executeBatchTransaction,
   executeDAOUpgradeProposal,
   executeFTTokenTransferProposal,
   executeNFTTokenTransferProposal,
-  DAO_WEB_LINKS,
-  DAO_OWNERS_ADDRESSES,
-  DAO_INFO_URL,
 } from "./multiSigDAO";
-import dex from "../../deployment/model/dex";
 
-const TOKEN_ALLOWANCE_DETAILS = {
-  TOKEN: TokenId.fromSolidityAddress(DEFAULT_DAO_CONFIG.tokenAddress),
-  FROM_CLIENT: clientsInfo.uiUserClient,
-  FROM_ID: clientsInfo.uiUserId,
-  FROM_KEY: clientsInfo.uiUserKey,
-};
-
-const getDAOFee = () => {
-  const daoFee = Common.isHBAR(TOKEN_ALLOWANCE_DETAILS.TOKEN)
-    ? dex.DAO_FEE
-    : DEFAULT_DAO_CONFIG.daoFee;
-  return daoFee;
+const DEFAULT_DAO_CREATION_FEE_CONFIG = {
+  ...DEFAULT_FEE_CONFIG,
+  fromAccountId: clientsInfo.operatorId,
+  fromAccountPK: clientsInfo.operatorKey,
+  fromAccountClient: clientsInfo.operatorClient,
 };
 
 async function main() {
@@ -48,19 +41,9 @@ async function main() {
   await roleBasedAccess.initialize();
 
   const daoFactory = new MultiSigDAOFactory();
-  await daoFactory.initialize();
-  const daoFee = getDAOFee();
-  await Common.setTokenAllowance(
-    TOKEN_ALLOWANCE_DETAILS.TOKEN,
-    daoFactory.contractId,
-    daoFee,
-    TOKEN_ALLOWANCE_DETAILS.FROM_ID,
-    TOKEN_ALLOWANCE_DETAILS.FROM_KEY,
-    TOKEN_ALLOWANCE_DETAILS.FROM_CLIENT,
-  );
-  const hbarPayableAmount = Common.isHBAR(TOKEN_ALLOWANCE_DETAILS.TOKEN)
-    ? daoFee
-    : 0;
+  await daoFactory.initialize(DEFAULT_FEE_CONFIG);
+
+  const feeAmount = await setupDAOCreationAllowanceAndGetFeeAmount(daoFactory);
   await daoFactory.createDAO(
     DAO_NAME,
     DAO_LOGO,
@@ -70,7 +53,9 @@ async function main() {
     DAO_OWNERS_ADDRESSES,
     DAO_OWNERS_ADDRESSES.length,
     false,
-    hbarPayableAmount,
+    feeAmount,
+    DAO_ADMIN_ADDRESS,
+    DEFAULT_DAO_CREATION_FEE_CONFIG.fromAccountClient,
   );
   const addresses = await daoFactory.getDAOs();
   if (addresses.length > 0) {
@@ -93,6 +78,21 @@ async function createNewCopies() {
   const deployment = new Deployment();
   await deployment.deployProxyAndSave(ContractService.MULTI_SIG_FACTORY);
   new ContractService().makeLatestDeploymentAsDefault();
+}
+
+async function setupDAOCreationAllowanceAndGetFeeAmount(
+  factory: MultiSigDAOFactory,
+) {
+  const daoCreationFeeConfig = await factory.feeConfig();
+  await Common.setTokenAllowance(
+    TokenId.fromSolidityAddress(daoCreationFeeConfig.tokenAddress),
+    factory.contractId,
+    daoCreationFeeConfig.proposalFee,
+    DEFAULT_DAO_CREATION_FEE_CONFIG.fromAccountId,
+    DEFAULT_DAO_CREATION_FEE_CONFIG.fromAccountPK,
+    DEFAULT_DAO_CREATION_FEE_CONFIG.fromAccountClient,
+  );
+  return daoCreationFeeConfig.hBarPayable;
 }
 
 main()

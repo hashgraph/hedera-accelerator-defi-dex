@@ -20,6 +20,17 @@ export class TestHelper {
     TestHelper.NFT_FOR_PROPOSAL_CREATION2,
   ];
 
+  static getDefaultFeeConfig = async (
+    tokenAddress: string = TestHelper.ZERO_ADDRESS,
+    amountOrId: number = 1,
+  ) => {
+    return {
+      receiver: (await TestHelper.getDAOTreasure()).address,
+      tokenAddress,
+      amountOrId,
+    };
+  };
+
   static getCurrentBlockNumber = async () => {
     return await ethers.provider.getBlockNumber();
   };
@@ -105,6 +116,7 @@ export class TestHelper {
       proxyAdmin: signers[6],
       childProxyAdmin: signers[7],
       vaultAddRewardUser: signers[8],
+      feeConfigControllerUser: signers[9],
     };
   }
 

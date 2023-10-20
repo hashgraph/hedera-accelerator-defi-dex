@@ -40,8 +40,8 @@ contract MockHederaService is IHederaService {
     function associateTokenPublic(
         address,
         address
-    ) external override returns (int256) {
-        return getResponseCode();
+    ) external pure override returns (int256) {
+        return 22;
     }
 
     function mintTokenPublic(

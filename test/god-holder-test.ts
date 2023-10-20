@@ -1,5 +1,4 @@
-import { ethers } from "ethers";
-import { Helper } from "../utils/Helper";
+import { ethers, Contract } from "ethers";
 import { expect } from "chai";
 import { TestHelper } from "./TestHelper";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
@@ -51,17 +50,16 @@ describe("GODHolder tests", function () {
   }
 
   async function verifyCanClaimAmountEvent(
-    info: any,
+    contract: Contract,
     user: string,
     canClaim: boolean,
     operation: number,
   ) {
-    const { name, args } = info;
-    expect(name).equals("CanClaimAmount");
-    expect(args.length).equals(3);
-    expect(args.user).equals(user);
-    expect(args.canClaim).equals(canClaim);
-    expect(args.operation).equals(operation);
+    const { args } = (await contract.queryFilter("CanClaimAmount")).at(-1)!;
+    expect(args!.length).equals(3);
+    expect(args!.user).equals(user);
+    expect(args!.canClaim).equals(canClaim);
+    expect(args!.operation).equals(operation);
   }
 
   async function verifyTokenHolderCreatedEvent(txn: any, tokenAddress: string) {
@@ -307,17 +305,7 @@ describe("GODHolder tests", function () {
       expect((await godHolder.getActiveProposalsForUser()).length).equal(0);
 
       await tokenHolderCallerMock.connect(voterAccount).addProposal(1);
-
-      const events: any = [];
-      godHolder.on(
-        "CanClaimAmount",
-        (user: string, canClaim: boolean, operation: number) => {
-          events.push({
-            name: "CanClaimAmount",
-            args: { user, canClaim, operation, length: 3 },
-          });
-        },
-      );
+      await verifyCanClaimAmountEvent(godHolder, voter, false, 1);
 
       await godHolder.connect(voterAccount).grabTokensFromUser(TOTAL_AMOUNT);
 
@@ -325,16 +313,13 @@ describe("GODHolder tests", function () {
       expect(await godHolder.canUserClaimTokens(voter)).equals(false);
 
       await tokenHolderCallerMock.connect(voterAccount).removeProposals(1);
+      await verifyCanClaimAmountEvent(godHolder, voter, true, 2);
 
       expect((await godHolder.getActiveProposalsForUser()).length).equal(0);
       expect(await godHolder.canUserClaimTokens(voter)).equals(true);
 
       await godHolder.revertTokensForVoter(TOTAL_AMOUNT);
       expect(await godHolder.canUserClaimTokens(voter)).equals(false);
-
-      await Helper.delay(5000);
-      await verifyCanClaimAmountEvent(events[0], voter, false, 1);
-      await verifyCanClaimAmountEvent(events[1], voter, true, 2);
     });
   });
 
