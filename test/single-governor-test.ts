@@ -8,6 +8,7 @@ import { Contract } from "ethers";
 import { TestHelper } from "./TestHelper";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { verifyQuorumThresholdSetEvent } from "./common";
 
 interface CreationInputs {
   proposalType: number;
@@ -85,8 +86,10 @@ describe("Governor Tests", function () {
 
     // FT governor
     const ftGovernor = await TestHelper.deployGovernor(FT_ARGS);
+    await verifyQuorumThresholdSetEvent(ftGovernor, 0, QUORUM_THRESHOLD_BSP);
     // NFT governor
     const nftGovernor = await TestHelper.deployGovernor(NFT_ARGS);
+    await verifyQuorumThresholdSetEvent(nftGovernor, 0, QUORUM_THRESHOLD_BSP);
 
     const systemUsersSigners = await TestHelper.systemUsersSigners();
     const governorTestProxy = await TestHelper.deployLogic(
@@ -530,14 +533,23 @@ describe("Governor Tests", function () {
       );
     });
 
-    it("Verify governance common properties (delay, period, threshold) are set properly", async function () {
+    it("Verify governance common properties (delay, period, threshold, quorumThresholdInBsp) are set properly", async function () {
       const { ftGovernor } = await loadFixture(deployFixture);
       const delay = await ftGovernor.votingDelay();
       const period = await ftGovernor.votingPeriod();
       const threshold = await ftGovernor.proposalThreshold();
+      const quorumThreshold = await ftGovernor.quorumThreshold();
       expect(delay).equals(VOTING_DELAY_IN_SECONDS);
       expect(period).equals(VOTING_PERIOD_IN_SECONDS);
       expect(threshold).equals(0);
+      expect(quorumThreshold).equals(QUORUM_THRESHOLD_BSP);
+    });
+
+    it("Verify updating quorumThresholdInBsp directly should revert", async function () {
+      const { ftGovernor } = await loadFixture(deployFixture);
+      await expect(
+        ftGovernor.setQuorumThreshold(QUORUM_THRESHOLD_BSP),
+      ).revertedWith("Governor: onlyGovernance");
     });
 
     it("Verify votes, quorum, vote-succeeded value's should have default values when no vote casted", async function () {
