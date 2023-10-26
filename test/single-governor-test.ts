@@ -1,4 +1,5 @@
 import AssetsHolder from "../artifacts/contracts/holder/AssetsHolder.sol/AssetsHolder.json";
+import HederaGovernor from "../artifacts/contracts/governance/HederaGovernor.sol/HederaGovernor.json";
 import * as AssetsHolderProps from "../e2e-test/business/AssetsHolder";
 
 import { ethers } from "hardhat";
@@ -8,6 +9,7 @@ import { Contract } from "ethers";
 import { TestHelper } from "./TestHelper";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { verifyQuorumThresholdSetEvent } from "./common";
 
 interface CreationInputs {
   proposalType: number;
@@ -85,8 +87,10 @@ describe("Governor Tests", function () {
 
     // FT governor
     const ftGovernor = await TestHelper.deployGovernor(FT_ARGS);
+    await verifyQuorumThresholdSetEvent(ftGovernor, 0, QUORUM_THRESHOLD_BSP);
     // NFT governor
     const nftGovernor = await TestHelper.deployGovernor(NFT_ARGS);
+    await verifyQuorumThresholdSetEvent(nftGovernor, 0, QUORUM_THRESHOLD_BSP);
 
     const systemUsersSigners = await TestHelper.systemUsersSigners();
     const governorTestProxy = await TestHelper.deployLogic(
@@ -217,6 +221,30 @@ describe("Governor Tests", function () {
       tx,
       account.address,
       creationInputs,
+    );
+  }
+
+  async function createQuorumSetProposal(
+    governance: Contract,
+    account: SignerWithAddress,
+    newQuorum: number,
+    title: string = TITLE,
+    amountOrId: number = 0,
+  ) {
+    const calldata = await encodeFunctionData(
+      "setQuorumThreshold",
+      [newQuorum],
+      HederaGovernor.abi,
+    );
+    return createProposal(
+      governance,
+      account,
+      title,
+      amountOrId,
+      AssetsHolderProps.Type.QUORUM_THRESHOLD_SET,
+      [governance.address],
+      [0],
+      [calldata.bytes],
     );
   }
 
@@ -530,14 +558,45 @@ describe("Governor Tests", function () {
       );
     });
 
-    it("Verify governance common properties (delay, period, threshold) are set properly", async function () {
+    it("Verify governance common properties (delay, period, threshold, quorumThresholdInBsp) are set properly", async function () {
       const { ftGovernor } = await loadFixture(deployFixture);
       const delay = await ftGovernor.votingDelay();
       const period = await ftGovernor.votingPeriod();
       const threshold = await ftGovernor.proposalThreshold();
+      const quorumThreshold = await ftGovernor.quorumThreshold();
       expect(delay).equals(VOTING_DELAY_IN_SECONDS);
       expect(period).equals(VOTING_PERIOD_IN_SECONDS);
       expect(threshold).equals(0);
+      expect(quorumThreshold).equals(QUORUM_THRESHOLD_BSP);
+    });
+
+    it("Verify updating quorumThresholdInBsp via setQuorumThreshold directly should be reverted", async function () {
+      const { ftGovernor } = await loadFixture(deployFixture);
+      await expect(
+        ftGovernor.setQuorumThreshold(QUORUM_THRESHOLD_BSP),
+      ).revertedWith("Governor: onlyGovernance");
+    });
+
+    it("Verify updating quorumThresholdInBsp via proposal should be succeeded", async function () {
+      const { creator, ftGovernor, ftTokenHolder } =
+        await loadFixture(deployFixture);
+      await ftTokenHolder.grabTokensFromUser(LOCKED_TOKEN);
+
+      const NEW_QUORUM_THRESHOLD_BSP = QUORUM_THRESHOLD_BSP + 1;
+      const info = await createQuorumSetProposal(
+        ftGovernor,
+        creator,
+        NEW_QUORUM_THRESHOLD_BSP,
+      );
+
+      await ftGovernor.castVote(info.proposalId, 1);
+      await TestHelper.increaseEVMTime(VOTING_PERIOD_IN_SECONDS);
+      await execute(ftGovernor, info.inputs);
+      await verifyQuorumThresholdSetEvent(
+        ftGovernor,
+        QUORUM_THRESHOLD_BSP,
+        NEW_QUORUM_THRESHOLD_BSP,
+      );
     });
 
     it("Verify votes, quorum, vote-succeeded value's should have default values when no vote casted", async function () {

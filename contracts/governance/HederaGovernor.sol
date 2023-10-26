@@ -50,6 +50,8 @@ contract HederaGovernor is
         CoreInformation coreInformation
     );
 
+    event QuorumThresholdSet(uint256 oldQuorum, uint256 newQuorum);
+
     struct VotingInformation {
         uint256 quorumValue;
         uint256 againstVotes;
@@ -96,10 +98,7 @@ contract HederaGovernor is
         __Governor_init("HederaGovernor");
         __GovernorSettings_init(_config.votingDelay, _config.votingPeriod, 0);
         __GovernorCountingSimple_init();
-
-        quorumThresholdInBsp = _config.quorumThresholdInBsp == 0
-            ? 500
-            : _config.quorumThresholdInBsp;
+        _setQuorumThreshold(_config.quorumThresholdInBsp);
 
         iSystemRoleBasedAccess = _iSystemRoleBasedAccess;
 
@@ -180,6 +179,16 @@ contract HederaGovernor is
 
     function CLOCK_MODE() public view virtual override returns (string memory) {
         return "mode=timestamp";
+    }
+
+    function quorumThreshold() public view returns (uint256) {
+        return quorumThresholdInBsp;
+    }
+
+    function setQuorumThreshold(
+        uint256 _newQuorumThresholdInBsp
+    ) public onlyGovernance {
+        _setQuorumThreshold(_newQuorumThresholdInBsp);
     }
 
     function upgradeHederaService(
@@ -336,5 +345,13 @@ contract HederaGovernor is
                 code == HederaResponseCodes.SUCCESS,
             "GCSI: association failed"
         );
+    }
+
+    function _setQuorumThreshold(uint256 _newQuorumThresholdInBsp) private {
+        uint256 newQuorumThresholdInBsp = _newQuorumThresholdInBsp == 0
+            ? 500
+            : _newQuorumThresholdInBsp;
+        emit QuorumThresholdSet(quorumThresholdInBsp, newQuorumThresholdInBsp);
+        quorumThresholdInBsp = newQuorumThresholdInBsp;
     }
 }
