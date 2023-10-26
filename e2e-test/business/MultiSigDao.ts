@@ -499,7 +499,7 @@ export default class MultiSigDao extends FeeConfig {
     metaData: string = META_DATA,
   ) => {
     const updateFeeConfigData = await this.encodeFunctionData(
-      ContractService.FT_DAO_FACTORY,
+      ContractService.MULTI_SIG_FACTORY,
       this.UPDATE_FEE_CONFIG,
       [Object.values(newFeeConfig)],
     );
