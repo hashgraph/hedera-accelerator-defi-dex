@@ -1,4 +1,5 @@
 import AssetsHolder from "../artifacts/contracts/holder/AssetsHolder.sol/AssetsHolder.json";
+import HederaGovernor from "../artifacts/contracts/governance/HederaGovernor.sol/HederaGovernor.json";
 import * as AssetsHolderProps from "../e2e-test/business/AssetsHolder";
 
 import { ethers } from "hardhat";
@@ -220,6 +221,30 @@ describe("Governor Tests", function () {
       tx,
       account.address,
       creationInputs,
+    );
+  }
+
+  async function createQuorumSetProposal(
+    governance: Contract,
+    account: SignerWithAddress,
+    newQuorum: number,
+    title: string = TITLE,
+    amountOrId: number = 0,
+  ) {
+    const calldata = await encodeFunctionData(
+      "setQuorumThreshold",
+      [newQuorum],
+      HederaGovernor.abi,
+    );
+    return createProposal(
+      governance,
+      account,
+      title,
+      amountOrId,
+      AssetsHolderProps.Type.QUORUM_THRESHOLD_SET,
+      [governance.address],
+      [0],
+      [calldata.bytes],
     );
   }
 
@@ -545,11 +570,33 @@ describe("Governor Tests", function () {
       expect(quorumThreshold).equals(QUORUM_THRESHOLD_BSP);
     });
 
-    it("Verify updating quorumThresholdInBsp directly should revert", async function () {
+    it("Verify updating quorumThresholdInBsp via setQuorumThreshold directly should be reverted", async function () {
       const { ftGovernor } = await loadFixture(deployFixture);
       await expect(
         ftGovernor.setQuorumThreshold(QUORUM_THRESHOLD_BSP),
       ).revertedWith("Governor: onlyGovernance");
+    });
+
+    it("Verify updating quorumThresholdInBsp via proposal should be succeeded", async function () {
+      const { creator, ftGovernor, ftTokenHolder } =
+        await loadFixture(deployFixture);
+      await ftTokenHolder.grabTokensFromUser(LOCKED_TOKEN);
+
+      const NEW_QUORUM_THRESHOLD_BSP = QUORUM_THRESHOLD_BSP + 1;
+      const info = await createQuorumSetProposal(
+        ftGovernor,
+        creator,
+        NEW_QUORUM_THRESHOLD_BSP,
+      );
+
+      await ftGovernor.castVote(info.proposalId, 1);
+      await TestHelper.increaseEVMTime(VOTING_PERIOD_IN_SECONDS);
+      await execute(ftGovernor, info.inputs);
+      await verifyQuorumThresholdSetEvent(
+        ftGovernor,
+        QUORUM_THRESHOLD_BSP,
+        NEW_QUORUM_THRESHOLD_BSP,
+      );
     });
 
     it("Verify votes, quorum, vote-succeeded value's should have default values when no vote casted", async function () {
