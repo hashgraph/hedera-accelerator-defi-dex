@@ -81,3 +81,13 @@ export async function verifyDAOInfoUpdatedEvent(
   expect(daoInfo.description).equals(description);
   expect(daoInfo.webLinks.join(",")).equals(webLinks.join(","));
 }
+
+export async function verifyQuorumThresholdSetEvent(
+  contract: Contract,
+  oldQuorum: number,
+  newQuorum: number,
+) {
+  const { args } = (await contract.queryFilter("QuorumThresholdSet")).at(-1)!;
+  expect(args!.oldQuorum).equals(oldQuorum);
+  expect(args!.newQuorum).equals(newQuorum);
+}

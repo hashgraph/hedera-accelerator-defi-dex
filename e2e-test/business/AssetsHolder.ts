@@ -18,6 +18,7 @@ export enum Type {
   BURN_TOKEN = 1006,
   UPGRADE_PROXY = 1007,
   UPDATE_FEE_CONFIG = 1008,
+  QUORUM_THRESHOLD_SET = 1009,
 }
 
 export const INITIALIZE = "initialize";
