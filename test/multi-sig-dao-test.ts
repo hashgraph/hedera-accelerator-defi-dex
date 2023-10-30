@@ -258,6 +258,7 @@ describe("MultiSig tests", function () {
       INFO_URL,
       DESCRIPTION,
       WEB_LINKS,
+      Object.values(createDAOFeeConfigData),
       hederaGnosisSafeProxyInstance,
       hederaService.address,
       multiSend.address,
@@ -507,6 +508,7 @@ describe("MultiSig tests", function () {
         true,
         DESCRIPTION,
         WEB_LINKS,
+        Object.values(createDAOFeeConfigData),
       ];
       await expect(
         multiSigDAOFactoryInstance.createDAO(ARGS, {
@@ -518,8 +520,12 @@ describe("MultiSig tests", function () {
     });
 
     it("Verify createDAO should be reverted when info url is empty", async function () {
-      const { multiSigDAOFactoryInstance, doaSignersAddresses, daoAdminOne } =
-        await loadFixture(deployFixture);
+      const {
+        multiSigDAOFactoryInstance,
+        doaSignersAddresses,
+        daoAdminOne,
+        createDAOFeeConfigData,
+      } = await loadFixture(deployFixture);
       const ARGS = [
         daoAdminOne.address,
         DAO_NAME,
@@ -530,6 +536,7 @@ describe("MultiSig tests", function () {
         true,
         DESCRIPTION,
         WEB_LINKS,
+        Object.values(createDAOFeeConfigData),
       ];
       await expect(multiSigDAOFactoryInstance.createDAO(ARGS))
         .revertedWithCustomError(multiSigDAOFactoryInstance, "InvalidInput")
@@ -584,6 +591,7 @@ describe("MultiSig tests", function () {
         true,
         DESCRIPTION,
         WEB_LINKS,
+        Object.values(createDAOFeeConfigData),
       ];
       await expect(
         multiSigDAOFactoryInstance.createDAO(ARGS, {
@@ -615,6 +623,7 @@ describe("MultiSig tests", function () {
         false,
         DESCRIPTION,
         WEB_LINKS,
+        Object.values(createDAOFeeConfigData),
       ];
 
       const txn = await multiSigDAOFactoryInstance.createDAO(ARGS, {
@@ -672,6 +681,7 @@ describe("MultiSig tests", function () {
         true,
         DESCRIPTION,
         WEB_LINKS,
+        Object.values(createDAOFeeConfigData),
       ];
 
       await expect(
@@ -728,6 +738,7 @@ describe("MultiSig tests", function () {
         true,
         DESCRIPTION,
         WEB_LINKS,
+        Object.values(createDAOFeeConfigData),
       ];
 
       await tokenInstance.setUserBalance(
@@ -861,6 +872,7 @@ describe("MultiSig tests", function () {
         true,
         DESCRIPTION,
         WEB_LINKS,
+        Object.values(createDAOFeeConfigData),
       ];
       await tokenInstance.setUserBalance(
         signers[0].address,

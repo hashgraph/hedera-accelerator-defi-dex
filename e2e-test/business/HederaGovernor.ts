@@ -1,8 +1,8 @@
 import dex from "../../deployment/model/dex";
-import Base from "./Base";
 import Common from "./Common";
 import NFTHolder from "../../e2e-test/business/NFTHolder";
 import GodHolder from "../../e2e-test/business/GodHolder";
+import FeeConfig from "../../e2e-test/business/FeeConfig";
 import * as AssetsHolderProps from "../../e2e-test/business/AssetsHolder";
 
 import { ethers } from "ethers";
@@ -12,6 +12,7 @@ import { Deployment } from "../../utils/deployContractOnTestnet";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { AddressHelper } from "../../utils/AddressHelper";
 import { ContractService } from "../../deployment/service/ContractService";
+import { FeeConfigDetails } from "./types";
 import { MirrorNodeService } from "../../utils/MirrorNodeService";
 import {
   Client,
@@ -58,7 +59,7 @@ export interface ProposalInfo {
   calldatas: string[];
 }
 
-export default class HederaGovernor extends Base {
+export default class HederaGovernor extends FeeConfig {
   DEFAULT_META_DATA = "metadata";
   DEFAULT_DESCRIPTION = "description";
   DEFAULT_LINK = "https://defi-ui.zilbo.com/governance";
@@ -99,6 +100,7 @@ export default class HederaGovernor extends Base {
   public async initialize(
     tokenHolder: GodHolder | NFTHolder,
     client: Client = clientsInfo.operatorClient,
+    proposalCreationFeeConfig: FeeConfigDetails,
     quorumThresholdValue: number = this.DEFAULT_QUORUM_THRESHOLD_IN_BSP,
     votingDelay: number = this.DEFAULT_VOTING_DELAY,
     votingPeriod: number = this.DEFAULT_VOTING_PERIOD,
@@ -121,6 +123,7 @@ export default class HederaGovernor extends Base {
             votingPeriod,
             quorumThresholdInBsp: quorumThresholdValue,
           }),
+          _feeConfig: Object.values(proposalCreationFeeConfig),
           _iTokenHolder: tokenHolderProxyAddress,
           _iAssetsHolder: assetHolderInfo.transparentProxyAddress,
           _iHederaService: this.htsAddress,
@@ -729,16 +732,19 @@ export default class HederaGovernor extends Base {
       this.CREATE_PROPOSAL,
       [Object.values(createProposalInputs)],
     );
-    const { result } = await this.execute(
+    const feeConfig = await this.feeConfig();
+    const { result, record } = await this.execute(
       9_00_000,
       this.CREATE_PROPOSAL,
       client,
       createProposalInputsData.bytes,
+      undefined,
+      feeConfig.hBarPayable,
     );
     const proposalInfo = await this.getProposalInfoFromResult(result);
     this.printProposalInfo(
       proposalInfo,
-      `- Governor#${this.CREATE_PROPOSAL}():`,
+      `- Governor#${this.CREATE_PROPOSAL}(): TxnId = ${record.transactionId}`,
     );
     return proposalInfo;
   };

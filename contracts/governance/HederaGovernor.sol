@@ -8,6 +8,7 @@ import "../holder/IAssetsHolder.sol";
 import "../common/IErrors.sol";
 import "../common/ISharedModel.sol";
 import "../common/TokenOperations.sol";
+import "../common/FeeConfiguration.sol";
 import "../common/ISystemRoleBasedAccess.sol";
 import "../common/hedera/HederaResponseCodes.sol";
 
@@ -19,6 +20,7 @@ contract HederaGovernor is
     IErrors,
     ISharedModel,
     TokenOperations,
+    FeeConfiguration,
     OwnableUpgradeable,
     GovernorSettingsUpgradeable,
     GovernorCountingSimpleUpgradeable
@@ -74,7 +76,6 @@ contract HederaGovernor is
     ITokenHolder private tokenHolder;
 
     IAssetsHolder private iAssetsHolder;
-    ISystemRoleBasedAccess private iSystemRoleBasedAccess;
 
     uint256 private quorumThresholdInBsp;
     mapping(uint256 => CoreInformation) private proposalsInfo;
@@ -89,6 +90,7 @@ contract HederaGovernor is
 
     function initialize(
         GovernorConfig memory _config,
+        FeeConfig memory _feeConfig,
         ITokenHolder _iTokenHolder,
         IAssetsHolder _iAssetsHolder,
         IHederaService _iHederaService,
@@ -99,8 +101,7 @@ contract HederaGovernor is
         __GovernorSettings_init(_config.votingDelay, _config.votingPeriod, 0);
         __GovernorCountingSimple_init();
         _setQuorumThreshold(_config.quorumThresholdInBsp);
-
-        iSystemRoleBasedAccess = _iSystemRoleBasedAccess;
+        __FeeConfiguration_init(_feeConfig, _iSystemRoleBasedAccess);
 
         tokenHolder = _iTokenHolder;
         tokenAddress = _iTokenHolder.getToken();
@@ -208,10 +209,11 @@ contract HederaGovernor is
 
     function createProposal(
         CreationInputs memory _inputs
-    ) public returns (uint256 proposalId) {
+    ) public payable returns (uint256 proposalId) {
         if (bytes(_inputs.title).length == 0) {
             revert InvalidInput("GCSI: title blank");
         }
+        _deductFee(getHederaServiceVersion());
         uint256 blockedAmountOrId = _blockGodToken(
             _msgSender(),
             _inputs.amountOrId

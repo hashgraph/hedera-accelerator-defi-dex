@@ -85,6 +85,7 @@ export default abstract class DAOFactory extends FeeConfig {
     votingDelay: number,
     votingPeriod: number,
     isPrivate: boolean,
+    proposalFeeConfig: FeeConfigDetails,
     daoCreationFeeInHBar: number,
     admin: string,
     client: Client = clientsInfo.operatorClient,
@@ -101,6 +102,7 @@ export default abstract class DAOFactory extends FeeConfig {
       isPrivate,
       desc,
       webLinks,
+      feeConfig: Object.values(proposalFeeConfig),
     };
     const { bytes, hex } = await this.encodeFunctionData(
       ContractService.FT_DAO_FACTORY,

@@ -14,6 +14,7 @@ interface ISharedModel {
         bool isPrivate;
         string description;
         string[] webLinks;
+        FeeConfig feeConfig;
     }
 
     struct MultiSigCreateDAOInputs {
@@ -26,6 +27,7 @@ interface ISharedModel {
         bool isPrivate;
         string description;
         string[] webLinks;
+        FeeConfig feeConfig;
     }
 
     struct GovernorConfig {

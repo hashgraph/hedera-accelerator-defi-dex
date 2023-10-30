@@ -81,6 +81,7 @@ export class MultiSigDAOSteps {
         DAO_DESC,
         DAO_WEB_LINKS,
         DAO_OWNERS_ADDRESSES,
+        FEE_CONFIG,
         feeConfigDetails.fromAccountClient,
         DAO_OWNERS_ADDRESSES.length,
       );
@@ -109,6 +110,7 @@ export class MultiSigDAOSteps {
       DAO_DESC,
       DAO_WEB_LINKS,
       DAO_OWNERS_ADDRESSES,
+      FEE_CONFIG,
       feeConfigDetails.fromAccountClient,
       DAO_OWNERS_ADDRESSES.length,
     );
@@ -383,6 +385,22 @@ export class MultiSigDAOSteps {
   }
 
   @when(
+    /User setup allowance for proposal creation for collecting fee/,
+    undefined,
+    30000,
+  )
+  public async setupAllowanceForProposalCreationFee() {
+    await Common.setTokenAllowance(
+      TokenId.fromSolidityAddress(feeConfigDetails.tokenAddress),
+      multiSigDao.contractId,
+      feeConfigDetails.amountOrId,
+      feeConfigDetails.fromAccountId,
+      feeConfigDetails.fromAccountKey,
+      feeConfigDetails.fromAccountClient,
+    );
+  }
+
+  @when(
     /User create MultiSigDAO with name "([^"]*)" and logo as "([^"]*)" via factory/,
     undefined,
     30000,
@@ -398,6 +416,7 @@ export class MultiSigDAOSteps {
       DAO_OWNERS_ADDRESSES.length,
       false,
       0,
+      FEE_CONFIG,
       DAO_ADMIN_ADDRESS,
       feeConfigDetails.fromAccountClient,
     );
@@ -426,6 +445,7 @@ export class MultiSigDAOSteps {
         DAO_OWNERS_ADDRESSES.length,
         false,
         0,
+        FEE_CONFIG,
         DAO_ADMIN_ADDRESS,
         feeConfigDetails.fromAccountClient,
       );

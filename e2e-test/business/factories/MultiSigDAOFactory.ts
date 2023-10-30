@@ -75,6 +75,7 @@ export default class MultiSigDAOFactory extends FeeConfig {
     threshold: number,
     isPrivate: boolean,
     hbarAmount: number = 0,
+    feeConfig: FeeConfigDetails = DEFAULT_FEE_CONFIG,
     admin: string = clientsInfo.uiUserId.toSolidityAddress(),
     client: Client = clientsInfo.uiUserClient,
   ) => {
@@ -88,6 +89,7 @@ export default class MultiSigDAOFactory extends FeeConfig {
       isPrivate,
       desc,
       webLinks,
+      feeConfig,
     };
     const { hex, bytes } = await this.encodeFunctionData(
       ContractService.MULTI_SIG_FACTORY,

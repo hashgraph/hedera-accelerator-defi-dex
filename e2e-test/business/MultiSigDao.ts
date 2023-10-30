@@ -9,6 +9,7 @@ import { Deployment } from "../../utils/deployContractOnTestnet";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { AddressHelper } from "../../utils/AddressHelper";
 import { ContractService } from "../../deployment/service/ContractService";
+import { DEFAULT_FEE_CONFIG } from "./constants";
 import { FeeConfigDetails } from "./types";
 import {
   Client,
@@ -62,6 +63,7 @@ export default class MultiSigDao extends FeeConfig {
     desc: string,
     webLinks: string[],
     owners: string[],
+    feeConfig: FeeConfigDetails = DEFAULT_FEE_CONFIG,
     client: Client = clientsInfo.operatorClient,
     threshold: number = owners.length,
   ) {
@@ -91,6 +93,7 @@ export default class MultiSigDao extends FeeConfig {
         _infoUrl: infoURL,
         _description: desc,
         _webLinks: webLinks,
+        _feeConfig: feeConfig,
         _hederaGnosisSafe: gnosisProxy,
         _hederaService: this.htsAddress,
         _multiSend: this.getMultiSendContractAddress(),
@@ -218,6 +221,7 @@ export default class MultiSigDao extends FeeConfig {
     data: Uint8Array,
     transactionType: number,
     client: Client = clientsInfo.operatorClient,
+    hBarPayable: number = 0,
     title: string = TITLE,
     description: string = DESCRIPTION,
     linkToDiscussion: string = LINK_TO_DISCUSSION,
@@ -237,6 +241,7 @@ export default class MultiSigDao extends FeeConfig {
       client,
       args,
       clientsInfo.operatorKey,
+      hBarPayable,
     );
     const txnHash = result.getBytes32(0);
     const hash = ethers.utils.hexlify(txnHash);
@@ -352,6 +357,7 @@ export default class MultiSigDao extends FeeConfig {
     targets: ContractId[],
     callDataArray: Uint8Array[],
     client: Client = clientsInfo.operatorClient,
+    hBarPayable: number = 0,
     title: string = TITLE,
     description: string = DESCRIPTION,
     linkToDiscussion: string = LINK_TO_DISCUSSION,
@@ -370,6 +376,8 @@ export default class MultiSigDao extends FeeConfig {
       PROPOSE_BATCH_TRANSACTION,
       client,
       args,
+      undefined,
+      hBarPayable,
     );
     const txnHash = result.getBytes32(0);
     const hash = ethers.utils.hexlify(txnHash);
@@ -384,6 +392,7 @@ export default class MultiSigDao extends FeeConfig {
     tokenAddress: string,
     amount: number | BigNumber,
     client: Client = clientsInfo.operatorClient,
+    hBarPayable: number = 0,
     title: string = TITLE,
     description: string = DESCRIPTION,
     linkToDiscussion: string = LINK_TO_DISCUSSION,
@@ -400,6 +409,8 @@ export default class MultiSigDao extends FeeConfig {
       PROPOSE_TRANSFER_TRANSACTION,
       client,
       args,
+      undefined,
+      hBarPayable,
     );
     const txnHash = result.getBytes32(0);
     const hash = ethers.utils.hexlify(txnHash);
@@ -413,6 +424,7 @@ export default class MultiSigDao extends FeeConfig {
     proxyAddress: string,
     proxyLogicAddress: string,
     client: Client = clientsInfo.operatorClient,
+    hBarPayable: number = 0,
     title: string = TITLE,
     description: string = DESCRIPTION,
     linkToDiscussion: string = LINK_TO_DISCUSSION,
@@ -428,6 +440,8 @@ export default class MultiSigDao extends FeeConfig {
       PROPOSE_UPGRADE_PROXY_TRANSACTION,
       client,
       args,
+      undefined,
+      hBarPayable,
     );
     const txnHash = result.getBytes32(0);
     const hash = ethers.utils.hexlify(txnHash);
@@ -440,6 +454,7 @@ export default class MultiSigDao extends FeeConfig {
   public proposeTokenAssociateTransaction = async (
     token: TokenId,
     client: Client = clientsInfo.operatorClient,
+    hBarPayable: number = 0,
     title: string = TITLE,
     description: string = DESCRIPTION,
     linkToDiscussion: string = LINK_TO_DISCUSSION,
@@ -454,6 +469,8 @@ export default class MultiSigDao extends FeeConfig {
       PROPOSE_TOKEN_ASSOCIATE_TRANSACTION,
       client,
       args,
+      undefined,
+      hBarPayable,
     );
     const txnHash = result.getBytes32(0);
     const hash = ethers.utils.hexlify(txnHash);
@@ -467,6 +484,7 @@ export default class MultiSigDao extends FeeConfig {
     textProposalText: string,
     creator: AccountId,
     client: Client = clientsInfo.operatorClient,
+    hBarPayable: number = 0,
     title: string = TITLE,
     description: string = DESCRIPTION,
     linkToDiscussion: string = LINK_TO_DISCUSSION,
@@ -482,6 +500,7 @@ export default class MultiSigDao extends FeeConfig {
       textTxData.bytes,
       TYPE_SET_TEXT,
       client,
+      hBarPayable,
       title,
       description,
       linkToDiscussion,
@@ -493,6 +512,7 @@ export default class MultiSigDao extends FeeConfig {
     targetAddress: string,
     newFeeConfig: FeeConfigDetails,
     client: Client = clientsInfo.operatorClient,
+    hBarPayable: number = 0,
     title: string = TITLE,
     description: string = DESCRIPTION,
     linkToDiscussion: string = LINK_TO_DISCUSSION,
@@ -508,6 +528,7 @@ export default class MultiSigDao extends FeeConfig {
       updateFeeConfigData.bytes,
       TYPE_UPDATE_FEE_CONFIG,
       client,
+      hBarPayable,
       title,
       description,
       linkToDiscussion,
