@@ -9,6 +9,7 @@ import { clientsInfo } from "../../utils/ClientManagement";
 import { AddressHelper } from "../../utils/AddressHelper";
 import { ContractService } from "../../deployment/service/ContractService";
 import { DEFAULT_FEE_CONFIG } from "../../e2e-test/business/constants";
+import { DEFAULT_PROPOSAL_CREATION_FEE_CONFIG } from "../../e2e-test/business/constants";
 
 import {
   DAO_LOGO,
@@ -54,6 +55,7 @@ async function main() {
     DAO_OWNERS_ADDRESSES.length,
     false,
     feeAmount,
+    DEFAULT_PROPOSAL_CREATION_FEE_CONFIG,
     DAO_ADMIN_ADDRESS,
     DEFAULT_DAO_CREATION_FEE_CONFIG.fromAccountClient,
   );

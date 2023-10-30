@@ -11,6 +11,7 @@ import { Deployment } from "../../utils/deployContractOnTestnet";
 import { clientsInfo } from "../../utils/ClientManagement";
 import { ContractService } from "../../deployment/service/ContractService";
 import { DEFAULT_FEE_CONFIG } from "../../e2e-test/business/constants";
+import { DEFAULT_PROPOSAL_CREATION_FEE_CONFIG } from "../../e2e-test/business/constants";
 
 const DAO_DESC = "Lorem Ipsum is simply dummy text";
 const DAO_ADMIN = clientsInfo.uiUserId.toSolidityAddress();
@@ -48,6 +49,7 @@ async function main() {
     0,
     15,
     false,
+    DEFAULT_PROPOSAL_CREATION_FEE_CONFIG,
     feeAmount,
     DAO_ADMIN,
     DEFAULT_DAO_CREATION_FEE_CONFIG.fromAccountClient,

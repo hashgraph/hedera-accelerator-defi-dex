@@ -31,6 +31,7 @@ let daoFactory: DAOFactory;
 let errorMessage: string;
 let godTokenInfo: TokenInfo;
 let daoFeeConfig: FeeConfigDetails;
+let proposalFeeConfig: FeeConfigDetails;
 
 @binding()
 export class DAOFactoryTest extends CommonSteps {
@@ -63,6 +64,28 @@ export class DAOFactoryTest extends CommonSteps {
     console.table(daoFeeConfig);
   }
 
+  @then(
+    /User setup proposal creation fee for token-id "([^"]*)" with amount\/id "([^"]*)"/,
+    undefined,
+    60000,
+  )
+  public async setupProposalCreationFeeAndAllowance(
+    proposalFeeTokenId: string,
+    proposalFeeAmountOrId: string,
+  ) {
+    const _proposalFeeAmountOrId = CommonSteps.normalizeAmountOrId(
+      proposalFeeAmountOrId,
+    );
+    const _proposalFeeTokenId = TokenId.fromString(proposalFeeTokenId);
+    proposalFeeConfig = {
+      receiver: DAO_CONFIG.daoTreasurerId.toSolidityAddress(),
+      tokenAddress: _proposalFeeTokenId.toSolidityAddress(),
+      amountOrId: _proposalFeeAmountOrId,
+    };
+    console.log(" - Proposal fee config details:-");
+    console.table(proposalFeeConfig);
+  }
+
   @then(/User gets initialized contracts/, undefined, 300000)
   public async initContracts(): Promise<void> {
     await this._initContracts();
@@ -85,6 +108,7 @@ export class DAOFactoryTest extends CommonSteps {
         CommonSteps.DEFAULT_VOTING_DELAY,
         CommonSteps.DEFAULT_VOTING_PERIOD,
         false,
+        proposalFeeConfig,
         feeInHBar,
         DAO_CONFIG.fromAccountId.toSolidityAddress(),
         DAO_CONFIG.fromAccountClient,
