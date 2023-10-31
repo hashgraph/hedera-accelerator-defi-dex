@@ -60,12 +60,12 @@
   },
   {
     "name": "multisigdaofactory",
-    "id": "0.0.5775039",
+    "id": "0.0.5806762",
     "hash": "49d6245806e1f368f2177133ee7c43fd",
-    "address": "0x0000000000000000000000000000000000581ebf",
-    "timestamp": "2023-10-26T11:33:07.588Z",
-    "transparentProxyId": "0.0.5775047",
-    "transparentProxyAddress": "0x0000000000000000000000000000000000581ec7"
+    "address": "0x0000000000000000000000000000000000589aaa",
+    "timestamp": "2023-10-31T13:59:30.630Z",
+    "transparentProxyId": "0.0.5806769",
+    "transparentProxyAddress": "0x0000000000000000000000000000000000589ab1"
   },
   {
     "name": "factory",
