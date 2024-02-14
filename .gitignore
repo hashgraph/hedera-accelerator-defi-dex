@@ -8,10 +8,10 @@ typechain-types
 .history
 .scannerwork
 out
+/.idea
 
 #Hardhat files
 cache
 artifacts
 dist
 unknown-31337.json
-typechain-types
