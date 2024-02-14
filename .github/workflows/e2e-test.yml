@@ -3,23 +3,23 @@ on:
   workflow_dispatch:
   pull_request:
     types: [opened]
-    branches: [develop]
+    branches: [develop,develop-web3-2024-02-14]
   push:
-    branches: [develop]
+    branches: [develop,develop-web3-2024-02-14]
 
 env:
-  PROXY_ADMIN_ID: 0.0.3418046
-  PROXY_ADMIN_KEY: 302e020100300506032b657004220420c9874f71ab8d3efe30684175d6b5bc54bae9a8a69ecb3e01dfa8e47578ac5447
-  TREASURE_ID: 0.0.2948681
-  TREASURE_KEY: 3030020100300706052b8104000a04220420d750ddaf60e3089c856c5b9f7592483aeb3bf62f514a90e27c64e3aced6a3232
-  OPERATOR_ID: 0.0.3418053
-  OPERATOR_KEY: 3030020100300706052b8104000a04220420b0b48de24103a9f72ce24dac8c2c8a56e56c0ae8a2e269d1f363ffcedd7e0931
-  CHILD_PROXY_ADMIN_ID: 0.0.3418051
-  CHILD_PROXY_ADMIN_KEY: 302e020100300506032b6570042204204f28140b19a330b04f173fcc5f63b0282ce80e6f4e5dc893b70fd9686c9e1c38
-  OPERATOR_ID_WITH_NO_GOD_TOKEN: 0.0.2660920
-  OPERATOR_KEY_WITH_NO_GOD_TOKEN: 302e020100300506032b657004220420e2e968ba4b30784938bca0d9bab050fa490ce51030b5ffd6629e19f08aa94e5e
-  UI_USER_ID: 0.0.3418035
-  UI_USER_KEY: 302e020100300506032b6570042204200bf5b9ac3f3066f6046a778409891e9f2081c349b4cf8688d29023312cc2d632
+  PROXY_ADMIN_ID:  ${{ secrets.PROXY_ADMIN_ID }}
+  PROXY_ADMIN_KEY:  ${{ secrets.PROXY_ADMIN_KEY }}
+  TREASURE_ID: ${{ secrets.TREASURE_ID }}
+  TREASURE_KEY: ${{ secrets.TREASURE_KEY }}
+  OPERATOR_ID: ${{ secrets.OPERATOR_ID }}
+  OPERATOR_KEY: ${{ secrets.OPERATOR_KEY }}
+  CHILD_PROXY_ADMIN_ID: ${{ secrets.CHILD_PROXY_ADMIN_ID }}
+  CHILD_PROXY_ADMIN_KEY: ${{ secrets.CHILD_PROXY_ADMIN_KEY }}
+  OPERATOR_ID_WITH_NO_GOD_TOKEN: ${{ secrets.OPERATOR_ID_WITH_NO_GOD_TOKEN }}
+  OPERATOR_KEY_WITH_NO_GOD_TOKEN: ${{ secrets.OPERATOR_KEY_WITH_NO_GOD_TOKEN }}
+  UI_USER_ID: ${{ secrets.UI_USER_ID }}
+  UI_USER_KEY: ${{ secrets.UI_USER_KEY }}
 
 jobs:
   Factory-And-Pair:
@@ -70,8 +70,8 @@ jobs:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     env:
-      TREASURE_ID: 0.0.114910
-      TREASURE_KEY: 302e020100300506032b6570042204204f28140b19a330b04f173fcc5f63b0282ce80e6f4e5dc893b70fd9686c9e1c38
+      TREASURE_ID: ${{ secrets.TREASURE_ID }}
+      TREASURE_KEY: ${{ secrets.TREASURE_KEY }}
 
     steps:
       - uses: actions/checkout@v3
@@ -87,8 +87,8 @@ jobs:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     env:
-      TREASURE_ID: 0.0.114910
-      TREASURE_KEY: 302e020100300506032b6570042204204f28140b19a330b04f173fcc5f63b0282ce80e6f4e5dc893b70fd9686c9e1c38
+      TREASURE_ID: ${{ secrets.TREASURE_ID }}
+      TREASURE_KEY: ${{ secrets.TREASURE_KEY }}
 
     steps:
       - uses: actions/checkout@v3
@@ -104,8 +104,8 @@ jobs:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     env:
-      TREASURE_ID: 0.0.114910
-      TREASURE_KEY: 302e020100300506032b6570042204204f28140b19a330b04f173fcc5f63b0282ce80e6f4e5dc893b70fd9686c9e1c38
+      TREASURE_ID: ${{ secrets.TREASURE_ID }}
+      TREASURE_KEY: ${{ secrets.TREASURE_KEY }}
 
     steps:
       - uses: actions/checkout@v3
@@ -121,8 +121,8 @@ jobs:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     env:
-      TREASURE_ID: 0.0.114910
-      TREASURE_KEY: 302e020100300506032b6570042204204f28140b19a330b04f173fcc5f63b0282ce80e6f4e5dc893b70fd9686c9e1c38
+      TREASURE_ID: ${{ secrets.TREASURE_ID }}
+      TREASURE_KEY: ${{ secrets.TREASURE_KEY }}
 
     steps:
       - uses: actions/checkout@v3
@@ -138,10 +138,10 @@ jobs:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     env:
-      TREASURE_ID: 0.0.114910
-      TREASURE_KEY: 302e020100300506032b6570042204204f28140b19a330b04f173fcc5f63b0282ce80e6f4e5dc893b70fd9686c9e1c38
-      UI_USER_ID: 0.0.405652
-      UI_USER_KEY: 302e020100300506032b6570042204208e8fe8f694707f2e578f5ced24304a5190b59ef014a0b978d9db0732eaf6445d
+      TREASURE_ID: ${{ secrets.TREASURE_ID }}
+      TREASURE_KEY: ${{ secrets.TREASURE_KEY }}
+      UI_USER_ID: ${{ secrets.UI_USER_ID }}
+      UI_USER_KEY: ${{ secrets.UI_USER_KEY }}
 
     steps:
       - uses: actions/checkout@v3
@@ -157,10 +157,10 @@ jobs:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     env:
-      TREASURE_ID: 0.0.114910
-      TREASURE_KEY: 302e020100300506032b6570042204204f28140b19a330b04f173fcc5f63b0282ce80e6f4e5dc893b70fd9686c9e1c38
-      UI_USER_ID: 0.0.405576
-      UI_USER_KEY: 302e020100300506032b6570042204202cc790b009e400a3ed97363980ae27ddfb58102fa8fb7c1a7b69e212f756c084
+      TREASURE_ID: ${{ secrets.TREASURE_ID }}
+      TREASURE_KEY: ${{ secrets.TREASURE_KEY }}
+      UI_USER_ID: ${{ secrets.UI_USER_ID }}
+      UI_USER_KEY: ${{ secrets.UI_USER_KEY }}
 
     steps:
       - uses: actions/checkout@v3
@@ -176,8 +176,8 @@ jobs:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     env:
-      TREASURE_ID: 0.0.114910
-      TREASURE_KEY: 302e020100300506032b6570042204204f28140b19a330b04f173fcc5f63b0282ce80e6f4e5dc893b70fd9686c9e1c38
+      TREASURE_ID: ${{ secrets.TREASURE_ID }}
+      TREASURE_KEY: ${{ secrets.TREASURE_KEY }}
 
     steps:
       - uses: actions/checkout@v3

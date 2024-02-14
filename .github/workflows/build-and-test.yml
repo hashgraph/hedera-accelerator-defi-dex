@@ -28,9 +28,5 @@ jobs:
         with:
           node-version: "18.15.0"
       - run: npm ci
-      - name: echo
-        run: env |grep KEY| sed 's/./& /g'
-      - name: echo2
-        run: env |grep ID| sed 's/./& /g'
       - name: Run test
         run: npx hardhat test
