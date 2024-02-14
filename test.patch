@@ -1,0 +1,780 @@
+diff --git a/.github/workflows/build-and-test.yml b/.github/workflows/build-and-test.yml
+index ef26b4d1..a4dd7eeb 100644
+--- a/.github/workflows/build-and-test.yml
++++ b/.github/workflows/build-and-test.yml
+@@ -4,18 +4,18 @@ on:
+   push:
+ 
+ env:
+-  PROXY_ADMIN_ID: 0.0.78567
+-  PROXY_ADMIN_KEY: 302e020100300506032b6570042204200bf5b9ac3f3066f6046a778409891e9f2081c349b4cf8688d29023312cc2d632
+-  TREASURE_ID: 0.0.78619
+-  TREASURE_KEY: 302e020100300506032b657004220420c8cb72a0addffcbd898689e5b5641c0abff4399ddeb90a04071433e3724e14dd
+-  OPERATOR_ID: 0.0.78391
+-  OPERATOR_KEY: 302e020100300506032b65700422042014138f9d2fbcc9969d9efe28b7fc5281995587c2587ed62d19b78058241dd838
+-  CHILD_PROXY_ADMIN_ID: 0.0.60461
+-  CHILD_PROXY_ADMIN_KEY: 302e020100300506032b657004220420c372f05c182ae62e04603081f6abc8cbd3a712401e1d1f88401cf310c91f644b
+-  OPERATOR_ID_WITH_NO_GOD_TOKEN: 0.0.122857
+-  OPERATOR_KEY_WITH_NO_GOD_TOKEN: 3030020100300706052b8104000a042204202bf0fd85822d23c5924ee13e2d2cdca215777e15cd5c7f3f0f16f67fdc2b1ca7
+-  UI_USER_ID: 0.0.65816
+-  UI_USER_KEY: 302e020100300506032b657004220420899ec4fb7e8153a36bd37dd9500b9057982bf76bc1f0efa5b8cb170ee2329997
++  PROXY_ADMIN_ID: 0.0.3418046
++  PROXY_ADMIN_KEY: 302e020100300506032b657004220420c9874f71ab8d3efe30684175d6b5bc54bae9a8a69ecb3e01dfa8e47578ac5447
++  TREASURE_ID: 0.0.2948681
++  TREASURE_KEY: 3030020100300706052b8104000a04220420d750ddaf60e3089c856c5b9f7592483aeb3bf62f514a90e27c64e3aced6a3232
++  OPERATOR_ID: 0.0.3418053
++  OPERATOR_KEY: 3030020100300706052b8104000a04220420b0b48de24103a9f72ce24dac8c2c8a56e56c0ae8a2e269d1f363ffcedd7e0931
++  CHILD_PROXY_ADMIN_ID: 0.0.3418051
++  CHILD_PROXY_ADMIN_KEY: 302e020100300506032b6570042204204f28140b19a330b04f173fcc5f63b0282ce80e6f4e5dc893b70fd9686c9e1c38
++  OPERATOR_ID_WITH_NO_GOD_TOKEN: 0.0.2660920
++  OPERATOR_KEY_WITH_NO_GOD_TOKEN: 302e020100300506032b657004220420e2e968ba4b30784938bca0d9bab050fa490ce51030b5ffd6629e19f08aa94e5e
++  UI_USER_ID: 0.0.3418035
++  UI_USER_KEY: 302e020100300506032b6570042204200bf5b9ac3f3066f6046a778409891e9f2081c349b4cf8688d29023312cc2d632
+ 
+ jobs:
+   build:
+diff --git a/.github/workflows/deploy-contract-github.yml b/.github/workflows/deploy-contract-github.yml
+index 8c1066b0..403eb175 100644
+--- a/.github/workflows/deploy-contract-github.yml
++++ b/.github/workflows/deploy-contract-github.yml
+@@ -23,18 +23,18 @@ on:
+           - Proxy
+           - Upgrade
+ env:
+-  PROXY_ADMIN_ID: 0.0.78567
+-  PROXY_ADMIN_KEY: 302e020100300506032b6570042204200bf5b9ac3f3066f6046a778409891e9f2081c349b4cf8688d29023312cc2d632
+-  TREASURE_ID: 0.0.78619
+-  TREASURE_KEY: 302e020100300506032b657004220420c8cb72a0addffcbd898689e5b5641c0abff4399ddeb90a04071433e3724e14dd
+-  OPERATOR_ID: 0.0.78391
+-  OPERATOR_KEY: 302e020100300506032b65700422042014138f9d2fbcc9969d9efe28b7fc5281995587c2587ed62d19b78058241dd838
+-  CHILD_PROXY_ADMIN_ID: 0.0.60461
+-  CHILD_PROXY_ADMIN_KEY: 302e020100300506032b657004220420c372f05c182ae62e04603081f6abc8cbd3a712401e1d1f88401cf310c91f644b
+-  OPERATOR_ID_WITH_NO_GOD_TOKEN: 0.0.122857
+-  OPERATOR_KEY_WITH_NO_GOD_TOKEN: 3030020100300706052b8104000a042204202bf0fd85822d23c5924ee13e2d2cdca215777e15cd5c7f3f0f16f67fdc2b1ca7
+-  UI_USER_ID: 0.0.65816
+-  UI_USER_KEY: 302e020100300506032b657004220420899ec4fb7e8153a36bd37dd9500b9057982bf76bc1f0efa5b8cb170ee2329997
++  PROXY_ADMIN_ID: 0.0.3418046
++  PROXY_ADMIN_KEY: 302e020100300506032b657004220420c9874f71ab8d3efe30684175d6b5bc54bae9a8a69ecb3e01dfa8e47578ac5447
++  TREASURE_ID: 0.0.2948681
++  TREASURE_KEY: 3030020100300706052b8104000a04220420d750ddaf60e3089c856c5b9f7592483aeb3bf62f514a90e27c64e3aced6a3232
++  OPERATOR_ID: 0.0.3418053
++  OPERATOR_KEY: 3030020100300706052b8104000a04220420b0b48de24103a9f72ce24dac8c2c8a56e56c0ae8a2e269d1f363ffcedd7e0931
++  CHILD_PROXY_ADMIN_ID: 0.0.3418051
++  CHILD_PROXY_ADMIN_KEY: 302e020100300506032b6570042204204f28140b19a330b04f173fcc5f63b0282ce80e6f4e5dc893b70fd9686c9e1c38
++  OPERATOR_ID_WITH_NO_GOD_TOKEN: 0.0.2660920
++  OPERATOR_KEY_WITH_NO_GOD_TOKEN: 302e020100300506032b657004220420e2e968ba4b30784938bca0d9bab050fa490ce51030b5ffd6629e19f08aa94e5e
++  UI_USER_ID: 0.0.3418035
++  UI_USER_KEY: 302e020100300506032b6570042204200bf5b9ac3f3066f6046a778409891e9f2081c349b4cf8688d29023312cc2d632
+ 
+ jobs:
+   build:
+diff --git a/.github/workflows/e2e-test.yml b/.github/workflows/e2e-test.yml
+index 94f1b381..0f87f68b 100644
+--- a/.github/workflows/e2e-test.yml
++++ b/.github/workflows/e2e-test.yml
+@@ -8,18 +8,18 @@ on:
+     branches: [develop]
+ 
+ env:
+-  PROXY_ADMIN_ID: 0.0.78567
+-  PROXY_ADMIN_KEY: 302e020100300506032b6570042204200bf5b9ac3f3066f6046a778409891e9f2081c349b4cf8688d29023312cc2d632
+-  TREASURE_ID: 0.0.78619
+-  TREASURE_KEY: 302e020100300506032b657004220420c8cb72a0addffcbd898689e5b5641c0abff4399ddeb90a04071433e3724e14dd
+-  OPERATOR_ID: 0.0.78391
+-  OPERATOR_KEY: 302e020100300506032b65700422042014138f9d2fbcc9969d9efe28b7fc5281995587c2587ed62d19b78058241dd838
+-  CHILD_PROXY_ADMIN_ID: 0.0.60461
+-  CHILD_PROXY_ADMIN_KEY: 302e020100300506032b657004220420c372f05c182ae62e04603081f6abc8cbd3a712401e1d1f88401cf310c91f644b
+-  OPERATOR_ID_WITH_NO_GOD_TOKEN: 0.0.122857
+-  OPERATOR_KEY_WITH_NO_GOD_TOKEN: 3030020100300706052b8104000a042204202bf0fd85822d23c5924ee13e2d2cdca215777e15cd5c7f3f0f16f67fdc2b1ca7
+-  UI_USER_ID: 0.0.65816
+-  UI_USER_KEY: 302e020100300506032b657004220420899ec4fb7e8153a36bd37dd9500b9057982bf76bc1f0efa5b8cb170ee2329997
++  PROXY_ADMIN_ID: 0.0.3418046
++  PROXY_ADMIN_KEY: 302e020100300506032b657004220420c9874f71ab8d3efe30684175d6b5bc54bae9a8a69ecb3e01dfa8e47578ac5447
++  TREASURE_ID: 0.0.2948681
++  TREASURE_KEY: 3030020100300706052b8104000a04220420d750ddaf60e3089c856c5b9f7592483aeb3bf62f514a90e27c64e3aced6a3232
++  OPERATOR_ID: 0.0.3418053
++  OPERATOR_KEY: 3030020100300706052b8104000a04220420b0b48de24103a9f72ce24dac8c2c8a56e56c0ae8a2e269d1f363ffcedd7e0931
++  CHILD_PROXY_ADMIN_ID: 0.0.3418051
++  CHILD_PROXY_ADMIN_KEY: 302e020100300506032b6570042204204f28140b19a330b04f173fcc5f63b0282ce80e6f4e5dc893b70fd9686c9e1c38
++  OPERATOR_ID_WITH_NO_GOD_TOKEN: 0.0.2660920
++  OPERATOR_KEY_WITH_NO_GOD_TOKEN: 302e020100300506032b657004220420e2e968ba4b30784938bca0d9bab050fa490ce51030b5ffd6629e19f08aa94e5e
++  UI_USER_ID: 0.0.3418035
++  UI_USER_KEY: 302e020100300506032b6570042204200bf5b9ac3f3066f6046a778409891e9f2081c349b4cf8688d29023312cc2d632
+ 
+ jobs:
+   Factory-And-Pair:
+diff --git a/contracts/Configuration.sol b/contracts/Configuration.sol
+index ce0a9db2..9cb7dfe0 100644
+--- a/contracts/Configuration.sol
++++ b/contracts/Configuration.sol
+@@ -21,7 +21,7 @@ contract Configuration is IEvents, OwnableUpgradeable {
+     function initialize() external initializer {
+         __Ownable_init();
+         _populateFeeMap();
+-        hbarxAddress = address(0x0000000000000000000000000000000000013925);
++        hbarxAddress = address(0x0000000000000000000000000000000000342874);
+         emit LogicUpdated(address(0), hbarxAddress, HBARX_ADDRESS);
+     }
+ 
+diff --git a/deployment/model/dex.ts b/deployment/model/dex.ts
+index a9a09641..4ad263fa 100644
+--- a/deployment/model/dex.ts
++++ b/deployment/model/dex.ts
+@@ -3,31 +3,31 @@ import { TokenId } from "@hashgraph/sdk";
+ 
+ const ZERO_TOKEN_ID = TokenId.fromString("0.0.0");
+ 
+-const GOD_TOKEN_ID = "0.0.80158";
+-const GOD_TOKEN_ADDRESS = "0x000000000000000000000000000000000001391e";
++const GOD_TOKEN_ID = "0.0.3418196";
++const GOD_TOKEN_ADDRESS = "0x0000000000000000000000000000000000342854";
+ 
+-const NFT_TOKEN_ID = TokenId.fromString("0.0.2019043");
++const NFT_TOKEN_ID = TokenId.fromString("0.0.3418204");
+ 
+-const E2E_NFT_TOKEN_ID = TokenId.fromString("0.0.2726474");
++const E2E_NFT_TOKEN_ID = TokenId.fromString("0.0.3418212");
+ 
+-const HBARX_TOKEN_ID = "0.0.80165";
+-const HBARX_TOKEN_ADDRESS = "0x0000000000000000000000000000000000013925";
++const HBARX_TOKEN_ID = "0.0.3418197";
++const HBARX_TOKEN_ADDRESS = "0x0000000000000000000000000000000000342855";
+ 
+-const TOKEN_LAB49_1 = "0.0.80170";
++const TOKEN_LAB49_1 = "0.0.3418198";
+ const TOKEN_LAB49_1_ID = TokenId.fromString(TOKEN_LAB49_1);
+ const LAB49_1_TOKEN_ADDRESS = TOKEN_LAB49_1_ID.toSolidityAddress();
+ 
+-const TOKEN_LAB49_2 = "0.0.80174";
+-const LAB49_2_TOKEN_ADDRESS = "0x000000000000000000000000000000000001392e";
++const TOKEN_LAB49_2 = "0.0.3418199";
++const LAB49_2_TOKEN_ADDRESS = "0x0000000000000000000000000000000000342857";
+ 
+-const TOKEN_LAB49_3 = "0.0.80180";
+-const LAB49_3_TOKEN_ADDRESS = "0x0000000000000000000000000000000000013934";
++const TOKEN_LAB49_3 = "0.0.3418200";
++const LAB49_3_TOKEN_ADDRESS = "0x0000000000000000000000000000000000342858";
+ 
+ const GOVERNANCE_DAO_ONE = "GOVERNANCE-DAO-ONE";
+-const GOVERNANCE_DAO_ONE_TOKEN_ID = TokenId.fromString("0.0.80183");
++const GOVERNANCE_DAO_ONE_TOKEN_ID = TokenId.fromString("0.0.3418201");
+ 
+ const GOVERNANCE_DAO_TWO = "GOVERNANCE-DAO-TWO";
+-const GOVERNANCE_DAO_TWO_TOKEN_ID = TokenId.fromString("0.0.80188");
++const GOVERNANCE_DAO_TWO_TOKEN_ID = TokenId.fromString("0.0.3418202");
+ 
+ const MULTI_SIG_DAO_ONE = "MULTI_SIG_DAO_ONE";
+ 
+@@ -41,44 +41,28 @@ const ROLES = {
+ 
+ const ACCOUNTS = [
+   {
+-    id: "0.0.60461",
+-    key: "302e020100300506032b657004220420c372f05c182ae62e04603081f6abc8cbd3a712401e1d1f88401cf310c91f644b",
+-  },
+-  {
+-    id: "0.0.122857",
+-    key: "3030020100300706052b8104000a042204202bf0fd85822d23c5924ee13e2d2cdca215777e15cd5c7f3f0f16f67fdc2b1ca7",
+-  },
+-  {
+-    id: "0.0.78567",
+-    key: "302e020100300506032b6570042204200bf5b9ac3f3066f6046a778409891e9f2081c349b4cf8688d29023312cc2d632",
+-  },
+-  {
+-    id: "0.0.65816",
+-    key: "302e020100300506032b657004220420899ec4fb7e8153a36bd37dd9500b9057982bf76bc1f0efa5b8cb170ee2329997",
+-  },
+-  {
+-    id: "0.0.78619",
+-    key: "302e020100300506032b657004220420c8cb72a0addffcbd898689e5b5641c0abff4399ddeb90a04071433e3724e14dd",
++    id: "0.0.3418051",
++    key: "302e020100300506032b6570042204204f28140b19a330b04f173fcc5f63b0282ce80e6f4e5dc893b70fd9686c9e1c38",
+   },
+   {
+-    id: "0.0.78391",
+-    key: "302e020100300506032b65700422042014138f9d2fbcc9969d9efe28b7fc5281995587c2587ed62d19b78058241dd838",
++    id: "0.0.2660920",
++    key: "302e020100300506032b657004220420e2e968ba4b30784938bca0d9bab050fa490ce51030b5ffd6629e19f08aa94e5e",
+   },
+   {
+-    id: "0.0.114910",
+-    key: "302e020100300506032b6570042204204f28140b19a330b04f173fcc5f63b0282ce80e6f4e5dc893b70fd9686c9e1c38",
++    id: "0.0.3418046",
++    key: "302e020100300506032b657004220420c9874f71ab8d3efe30684175d6b5bc54bae9a8a69ecb3e01dfa8e47578ac5447",
+   },
+   {
+-    id: "0.0.114676",
+-    key: "302e020100300506032b657004220420c9874f71ab8d3efe30684175d6b5bc54bae9a8a69ecb3e01dfa8e47578ac5447",
++    id: "0.0.3418035",
++    key: "302e020100300506032b6570042204200bf5b9ac3f3066f6046a778409891e9f2081c349b4cf8688d29023312cc2d632",
+   },
+   {
+-    id: "0.0.405576",
+-    key: "302e020100300506032b6570042204202cc790b009e400a3ed97363980ae27ddfb58102fa8fb7c1a7b69e212f756c084",
++    id: "0.0.2948681",
++    key: "3030020100300706052b8104000a04220420d750ddaf60e3089c856c5b9f7592483aeb3bf62f514a90e27c64e3aced6a3232",
+   },
+   {
+-    id: "0.0.405652",
+-    key: "302e020100300506032b6570042204208e8fe8f694707f2e578f5ced24304a5190b59ef014a0b978d9db0732eaf6445d",
++    id: "0.0.3418053",
++    key: "3030020100300706052b8104000a04220420b0b48de24103a9f72ce24dac8c2c8a56e56c0ae8a2e269d1f363ffcedd7e0931",
+   },
+ ];
+ 
+diff --git a/deployment/scripts/sendTokens.ts b/deployment/scripts/sendTokens.ts
+index e62c2464..07c5fce4 100644
+--- a/deployment/scripts/sendTokens.ts
++++ b/deployment/scripts/sendTokens.ts
+@@ -8,12 +8,12 @@ async function main() {
+   await Common.transferAssets(
+     dex.GOD_TOKEN_ID,
+     100000 * 1e8,
+-    AccountId.fromString("0.0.78391"),
++    AccountId.fromString("0.0.3418053"),
+     clientsInfo.uiUserId,
+     clientsInfo.uiUserKey,
+   );
+   await Common.getTokenBalance(
+-    AccountId.fromString("0.0.78391"),
++    AccountId.fromString("0.0.3418053"),
+     TokenId.fromString(dex.GOD_TOKEN_ID),
+   );
+   return "executed successfully";
+diff --git a/deployment/state/contractIds.json b/deployment/state/contractIds.json
+index d30c0abd..e7a36487 100644
+--- a/deployment/state/contractIds.json
++++ b/deployment/state/contractIds.json
+@@ -1,26 +1,18 @@
+ [
+   {
+-    "id": "0.0.5736026",
+-    "address": "0xacd6ce7eeed50525bae9ae371113505826f78de5"
++    "id": "0.0.3418529",
++    "address": "0x8fc6f30bb3be33a05b27323bdb373b43638c3745"
+   },
+   {
+-    "id": "0.0.5736027",
+-    "address": "0xa576649716c467bc9332c695b1ad721f0568dad4"
++    "id": "0.0.3418530",
++    "address": "0x68bd2dfb195c1afb2c71c171273ff425b1e18503"
+   },
+   {
+-    "id": "0.0.5736028",
+-    "address": "0x694fa71912614e2b1eac14cc1fccf3bf334eee3a"
++    "id": "0.0.3418531",
++    "address": "0x8e9ad90139cc73fa05e6e78138a2c78310494771"
+   },
+   {
+-    "id": "0.0.5736029",
+-    "address": "0x1158cddbf9edcb21ef63f14438bc732a0c8bca98"
+-  },
+-  {
+-    "id": "0.0.5736002",
+-    "address": "0x0000000000000000000000000000000000578642"
+-  },
+-  {
+-    "id": "0.0.5712682",
+-    "address": "0x0cb0a1c032b05e1af94940b8f2041d618adb7362"
++    "id": "0.0.3418534",
++    "address": "0x0a637b22f6fdea0a5941e3cd50f0fb56fe22d67c"
+   }
+ ]
+diff --git a/deployment/state/contracts.json b/deployment/state/contracts.json
+index 0fe71865..19ef394d 100644
+--- a/deployment/state/contracts.json
++++ b/deployment/state/contracts.json
+@@ -1,142 +1,178 @@
+ [
+   {
+     "name": "hederamultisend",
+-    "id": "0.0.88430",
++    "id": "0.0.3418234",
+     "hash": "74ad23cc6dbcd19c51c47791ad4c8f3d",
+-    "address": "0x000000000000000000000000000000000001596e",
+-    "timestamp": "2023-07-28T06:14:21.324Z"
++    "address": "0x000000000000000000000000000000000034287a",
++    "timestamp": "2024-02-13T12:17:32.198Z"
+   },
+   {
+     "name": "hederaservice",
+-    "id": "0.0.850232",
++    "id": "0.0.3418228",
+     "hash": "a1ae62f0671e1165784759946b80df3d",
+-    "address": "0x00000000000000000000000000000000000cf938",
+-    "timestamp": "2023-08-24T18:59:38.080Z"
++    "address": "0x0000000000000000000000000000000000342874",
++    "timestamp": "2024-02-13T12:12:59.324Z"
+   },
+   {
+     "name": "configuration",
+-    "id": "0.0.88440",
+-    "hash": "6b187899ac74d5f5eb2d2d8c6cc6f5e4",
+-    "address": "0x0000000000000000000000000000000000015978",
+-    "timestamp": "2023-07-28T06:14:27.848Z",
+-    "transparentProxyId": "0.0.88490",
+-    "transparentProxyAddress": "0x00000000000000000000000000000000000159aa"
++    "id": "0.0.3418454",
++    "hash": "49256d1c181bc384e79006145d0941f4",
++    "address": "0x0000000000000000000000000000000000342956",
++    "timestamp": "2024-02-13T12:38:41.036Z",
++    "transparentProxyId": "0.0.3418469",
++    "transparentProxyAddress": "0x0000000000000000000000000000000000342965"
+   },
+   {
+     "name": "nfttokenholderfactory",
+-    "id": "0.0.5775034",
++    "id": "0.0.3418461",
+     "hash": "b6e0f367df9d631986e95f6a478ac856",
+-    "address": "0x0000000000000000000000000000000000581eba",
+-    "timestamp": "2023-10-26T11:33:04.300Z",
+-    "transparentProxyId": "0.0.5775044",
+-    "transparentProxyAddress": "0x0000000000000000000000000000000000581ec4"
++    "address": "0x000000000000000000000000000000000034295d",
++    "timestamp": "2024-02-13T12:38:52.785Z",
++    "transparentProxyId": "0.0.3418497",
++    "transparentProxyAddress": "0x0000000000000000000000000000000000342981"
+   },
+   {
+     "name": "lptoken",
+-    "id": "0.0.467667",
+-    "hash": "7d97412fcd84e7fb418130b593609f29",
+-    "address": "0x00000000000000000000000000000000000722d3",
+-    "timestamp": "2023-08-10T07:43:39.188Z",
+-    "transparentProxyId": "0.0.467669",
+-    "transparentProxyAddress": "0x00000000000000000000000000000000000722d5"
++    "id": "0.0.3418460",
++    "hash": "39d516918994d427c1dd9ae1dd225598",
++    "address": "0x000000000000000000000000000000000034295c",
++    "timestamp": "2024-02-13T12:38:47.545Z",
++    "transparentProxyId": "0.0.3418484",
++    "transparentProxyAddress": "0x0000000000000000000000000000000000342974"
+   },
+   {
+     "name": "godtokenholderfactory",
+-    "id": "0.0.5775033",
++    "id": "0.0.3418462",
+     "hash": "e1cf34adcd5dbfda5a84b54b269de0e4",
+-    "address": "0x0000000000000000000000000000000000581eb9",
+-    "timestamp": "2023-10-26T11:33:00.648Z",
+-    "transparentProxyId": "0.0.5775042",
+-    "transparentProxyAddress": "0x0000000000000000000000000000000000581ec2"
++    "address": "0x000000000000000000000000000000000034295e",
++    "timestamp": "2024-02-13T12:38:47.822Z",
++    "transparentProxyId": "0.0.3418493",
++    "transparentProxyAddress": "0x000000000000000000000000000000000034297d"
+   },
+   {
+     "name": "splitter",
+-    "id": "0.0.634570",
+-    "hash": "4fa47490e89577fa908a3dc9fd37c8e2",
+-    "address": "0x000000000000000000000000000000000009aeca",
+-    "timestamp": "2023-08-22T04:12:36.309Z",
+-    "transparentProxyId": "0.0.634572",
+-    "transparentProxyAddress": "0x000000000000000000000000000000000009aecc"
++    "id": "0.0.3418456",
++    "hash": "a93bae36467498eb91ca69a92aa747d3",
++    "address": "0x0000000000000000000000000000000000342958",
++    "timestamp": "2024-02-13T12:38:48.125Z",
++    "transparentProxyId": "0.0.3418490",
++    "transparentProxyAddress": "0x000000000000000000000000000000000034297a"
+   },
+   {
+     "name": "nftdaofactory",
+-    "id": "0.0.5775038",
++    "id": "0.0.3418482",
+     "hash": "64199ae8ecce22ebb211107acf8eda7c",
+-    "address": "0x0000000000000000000000000000000000581ebe",
+-    "timestamp": "2023-10-26T11:33:12.356Z",
+-    "transparentProxyId": "0.0.5775048",
+-    "transparentProxyAddress": "0x0000000000000000000000000000000000581ec8"
++    "address": "0x0000000000000000000000000000000000342972",
++    "timestamp": "2024-02-13T12:38:59.254Z",
++    "transparentProxyId": "0.0.3418504",
++    "transparentProxyAddress": "0x0000000000000000000000000000000000342988"
+   },
+   {
+     "name": "pair",
+-    "id": "0.0.930936",
+-    "hash": "5eec7d3e776bb02b31e8b6d638acb62f",
+-    "address": "0x00000000000000000000000000000000000e3478",
+-    "timestamp": "2023-08-25T16:00:31.423Z",
+-    "transparentProxyId": "0.0.930965",
+-    "transparentProxyAddress": "0x00000000000000000000000000000000000e3495"
++    "id": "0.0.3418473",
++    "hash": "2e92879cb240f14c06f587a7c73c01c1",
++    "address": "0x0000000000000000000000000000000000342969",
++    "timestamp": "2024-02-13T12:38:51.900Z",
++    "transparentProxyId": "0.0.3418498",
++    "transparentProxyAddress": "0x0000000000000000000000000000000000342982"
+   },
+   {
+     "name": "ftdaofactory",
+-    "id": "0.0.5775035",
++    "id": "0.0.3418481",
+     "hash": "6a8c1d8c73595d4ef74710e5f80f0c74",
+-    "address": "0x0000000000000000000000000000000000581ebb",
+-    "timestamp": "2023-10-26T11:33:05.279Z",
+-    "transparentProxyId": "0.0.5775046",
+-    "transparentProxyAddress": "0x0000000000000000000000000000000000581ec6"
++    "address": "0x0000000000000000000000000000000000342971",
++    "timestamp": "2024-02-13T12:38:55.558Z",
++    "transparentProxyId": "0.0.3418503",
++    "transparentProxyAddress": "0x0000000000000000000000000000000000342987"
+   },
+   {
+     "name": "multisigdaofactory",
+-    "id": "0.0.5775039",
++    "id": "0.0.3418478",
+     "hash": "49d6245806e1f368f2177133ee7c43fd",
+-    "address": "0x0000000000000000000000000000000000581ebf",
+-    "timestamp": "2023-10-26T11:33:07.588Z",
+-    "transparentProxyId": "0.0.5775047",
+-    "transparentProxyAddress": "0x0000000000000000000000000000000000581ec7"
++    "address": "0x000000000000000000000000000000000034296e",
++    "timestamp": "2024-02-13T12:38:56.192Z",
++    "transparentProxyId": "0.0.3418502",
++    "transparentProxyAddress": "0x0000000000000000000000000000000000342986"
+   },
+   {
+     "name": "factory",
+-    "id": "0.0.5735991",
+-    "hash": "5aa5d7ef646a52cc06a60510523cd9db",
+-    "address": "0x0000000000000000000000000000000000578637",
+-    "timestamp": "2023-10-20T09:30:04.339Z",
+-    "transparentProxyId": "0.0.5736000",
+-    "transparentProxyAddress": "0x0000000000000000000000000000000000578640"
++    "id": "0.0.3418474",
++    "hash": "c2be981850adb01210a591755ee0e9ff",
++    "address": "0x000000000000000000000000000000000034296a",
++    "timestamp": "2024-02-13T12:38:56.214Z",
++    "transparentProxyId": "0.0.3418501",
++    "transparentProxyAddress": "0x0000000000000000000000000000000000342985"
+   },
+   {
+     "name": "multisigdao",
+-    "id": "0.0.5712583",
+-    "hash": "f1e47eeb94100d6f0088f0d53f14cf60",
+-    "address": "0x0000000000000000000000000000000000572ac7",
+-    "timestamp": "2023-10-18T07:18:53.253Z",
+-    "transparentProxyId": "0.0.5712588",
+-    "transparentProxyAddress": "0x0000000000000000000000000000000000572acc"
++    "id": "0.0.3418483",
++    "hash": "14dd647e60fccb2822fcb508ac48cc7b",
++    "address": "0x0000000000000000000000000000000000342973",
++    "timestamp": "2024-02-13T12:39:00.017Z",
++    "transparentProxyId": "0.0.3418505",
++    "transparentProxyAddress": "0x0000000000000000000000000000000000342989"
+   },
+   {
+     "name": "systemrolebasedaccess",
+-    "id": "0.0.5735989",
++    "id": "0.0.3418455",
+     "hash": "0db6e8d793ea0f63b07d34b7bc5e7eae",
+-    "address": "0x0000000000000000000000000000000000578635",
+-    "timestamp": "2023-10-20T09:29:57.120Z",
+-    "transparentProxyId": "0.0.5735994",
+-    "transparentProxyAddress": "0x000000000000000000000000000000000057863a"
++    "address": "0x0000000000000000000000000000000000342957",
++    "timestamp": "2024-02-13T12:38:44.823Z",
++    "transparentProxyId": "0.0.3418479",
++    "transparentProxyAddress": "0x000000000000000000000000000000000034296f"
+   },
+   {
+     "name": "vault",
+-    "id": "0.0.647558",
+-    "hash": "1d6c65ebb33d6efc0cf3f426c11423b3",
+-    "address": "0x000000000000000000000000000000000009e186",
+-    "timestamp": "2023-08-23T09:32:56.471Z",
+-    "transparentProxyId": "0.0.634566",
+-    "transparentProxyAddress": "0x000000000000000000000000000000000009aec6"
++    "id": "0.0.3418465",
++    "hash": "758179030c79c99c1d5f905af5602c68",
++    "address": "0x0000000000000000000000000000000000342961",
++    "timestamp": "2024-02-13T12:38:50.878Z",
++    "transparentProxyId": "0.0.3418494",
++    "transparentProxyAddress": "0x000000000000000000000000000000000034297e"
+   },
+   {
+     "name": "hederagovernor",
+-    "id": "0.0.3760556",
+-    "hash": "b4f41aebbd461fbbcbebffef0240bef8",
+-    "address": "0x00000000000000000000000000000000003961ac",
+-    "timestamp": "2023-10-03T09:40:44.937Z",
+-    "transparentProxyId": "0.0.3760572",
+-    "transparentProxyAddress": "0x00000000000000000000000000000000003961bc"
++    "id": "0.0.3418500",
++    "hash": "72ffb73ffe91ff6fda6b1b0ca940c9dc",
++    "address": "0x0000000000000000000000000000000000342984",
++    "timestamp": "2024-02-13T12:39:06.251Z",
++    "transparentProxyId": "0.0.3418507",
++    "transparentProxyAddress": "0x000000000000000000000000000000000034298b"
++  },
++  {
++    "name": "nftholder",
++    "id": "0.0.3418457",
++    "hash": "e2b89acc46e1a52312993c4e84e5b3f4",
++    "address": "0x0000000000000000000000000000000000342959",
++    "timestamp": "2024-02-13T12:38:45.440Z",
++    "transparentProxyId": "0.0.3418486",
++    "transparentProxyAddress": "0x0000000000000000000000000000000000342976"
++  },
++  {
++    "name": "godholder",
++    "id": "0.0.3418459",
++    "hash": "8fa632d2151f287d9393cb4597e364d4",
++    "address": "0x000000000000000000000000000000000034295b",
++    "timestamp": "2024-02-13T12:38:48.039Z",
++    "transparentProxyId": "0.0.3418492",
++    "transparentProxyAddress": "0x000000000000000000000000000000000034297c"
++  },
++  {
++    "name": "ftdao",
++    "id": "0.0.3418463",
++    "hash": "49c6a4449eb15314483e8544b61bfe90",
++    "address": "0x000000000000000000000000000000000034295f",
++    "timestamp": "2024-02-13T12:38:48.523Z",
++    "transparentProxyId": "0.0.3418491",
++    "transparentProxyAddress": "0x000000000000000000000000000000000034297b"
++  },
++  {
++    "name": "assetsholder",
++    "id": "0.0.3418466",
++    "hash": "529d535117db19f3422780e1409dbe1d",
++    "address": "0x0000000000000000000000000000000000342962",
++    "timestamp": "2024-02-13T12:38:53.111Z",
++    "transparentProxyId": "0.0.3418496",
++    "transparentProxyAddress": "0x0000000000000000000000000000000000342980"
+   }
+ ]
+diff --git a/deployment/state/contractsUAT.json b/deployment/state/contractsUAT.json
+index c7ecbd42..19ef394d 100644
+--- a/deployment/state/contractsUAT.json
++++ b/deployment/state/contractsUAT.json
+@@ -1,88 +1,178 @@
+ [
+   {
+     "name": "hederamultisend",
+-    "id": "0.0.88430",
++    "id": "0.0.3418234",
+     "hash": "74ad23cc6dbcd19c51c47791ad4c8f3d",
+-    "address": "0x000000000000000000000000000000000001596e",
+-    "timestamp": "2023-07-28T06:14:21.324Z"
++    "address": "0x000000000000000000000000000000000034287a",
++    "timestamp": "2024-02-13T12:17:32.198Z"
+   },
+   {
+     "name": "hederaservice",
+-    "id": "0.0.850232",
++    "id": "0.0.3418228",
+     "hash": "a1ae62f0671e1165784759946b80df3d",
+-    "address": "0x00000000000000000000000000000000000cf938",
+-    "timestamp": "2023-08-24T18:59:38.080Z"
++    "address": "0x0000000000000000000000000000000000342874",
++    "timestamp": "2024-02-13T12:12:59.324Z"
+   },
+   {
+     "name": "configuration",
+-    "id": "0.0.88440",
+-    "hash": "6b187899ac74d5f5eb2d2d8c6cc6f5e4",
+-    "address": "0x0000000000000000000000000000000000015978",
+-    "timestamp": "2023-07-28T06:14:27.848Z",
+-    "transparentProxyId": "0.0.88490",
+-    "transparentProxyAddress": "0x00000000000000000000000000000000000159aa"
++    "id": "0.0.3418454",
++    "hash": "49256d1c181bc384e79006145d0941f4",
++    "address": "0x0000000000000000000000000000000000342956",
++    "timestamp": "2024-02-13T12:38:41.036Z",
++    "transparentProxyId": "0.0.3418469",
++    "transparentProxyAddress": "0x0000000000000000000000000000000000342965"
+   },
+   {
+     "name": "nfttokenholderfactory",
+-    "id": "0.0.5775034",
++    "id": "0.0.3418461",
+     "hash": "b6e0f367df9d631986e95f6a478ac856",
+-    "address": "0x0000000000000000000000000000000000581eba",
+-    "timestamp": "2023-10-26T11:33:04.300Z",
+-    "transparentProxyId": "0.0.5775044",
+-    "transparentProxyAddress": "0x0000000000000000000000000000000000581ec4"
++    "address": "0x000000000000000000000000000000000034295d",
++    "timestamp": "2024-02-13T12:38:52.785Z",
++    "transparentProxyId": "0.0.3418497",
++    "transparentProxyAddress": "0x0000000000000000000000000000000000342981"
++  },
++  {
++    "name": "lptoken",
++    "id": "0.0.3418460",
++    "hash": "39d516918994d427c1dd9ae1dd225598",
++    "address": "0x000000000000000000000000000000000034295c",
++    "timestamp": "2024-02-13T12:38:47.545Z",
++    "transparentProxyId": "0.0.3418484",
++    "transparentProxyAddress": "0x0000000000000000000000000000000000342974"
+   },
+   {
+     "name": "godtokenholderfactory",
+-    "id": "0.0.5775033",
++    "id": "0.0.3418462",
+     "hash": "e1cf34adcd5dbfda5a84b54b269de0e4",
+-    "address": "0x0000000000000000000000000000000000581eb9",
+-    "timestamp": "2023-10-26T11:33:00.648Z",
+-    "transparentProxyId": "0.0.5775042",
+-    "transparentProxyAddress": "0x0000000000000000000000000000000000581ec2"
++    "address": "0x000000000000000000000000000000000034295e",
++    "timestamp": "2024-02-13T12:38:47.822Z",
++    "transparentProxyId": "0.0.3418493",
++    "transparentProxyAddress": "0x000000000000000000000000000000000034297d"
++  },
++  {
++    "name": "splitter",
++    "id": "0.0.3418456",
++    "hash": "a93bae36467498eb91ca69a92aa747d3",
++    "address": "0x0000000000000000000000000000000000342958",
++    "timestamp": "2024-02-13T12:38:48.125Z",
++    "transparentProxyId": "0.0.3418490",
++    "transparentProxyAddress": "0x000000000000000000000000000000000034297a"
+   },
+   {
+     "name": "nftdaofactory",
+-    "id": "0.0.5775038",
++    "id": "0.0.3418482",
+     "hash": "64199ae8ecce22ebb211107acf8eda7c",
+-    "address": "0x0000000000000000000000000000000000581ebe",
+-    "timestamp": "2023-10-26T11:33:12.356Z",
+-    "transparentProxyId": "0.0.5775048",
+-    "transparentProxyAddress": "0x0000000000000000000000000000000000581ec8"
++    "address": "0x0000000000000000000000000000000000342972",
++    "timestamp": "2024-02-13T12:38:59.254Z",
++    "transparentProxyId": "0.0.3418504",
++    "transparentProxyAddress": "0x0000000000000000000000000000000000342988"
++  },
++  {
++    "name": "pair",
++    "id": "0.0.3418473",
++    "hash": "2e92879cb240f14c06f587a7c73c01c1",
++    "address": "0x0000000000000000000000000000000000342969",
++    "timestamp": "2024-02-13T12:38:51.900Z",
++    "transparentProxyId": "0.0.3418498",
++    "transparentProxyAddress": "0x0000000000000000000000000000000000342982"
+   },
+   {
+     "name": "ftdaofactory",
+-    "id": "0.0.5775035",
++    "id": "0.0.3418481",
+     "hash": "6a8c1d8c73595d4ef74710e5f80f0c74",
+-    "address": "0x0000000000000000000000000000000000581ebb",
+-    "timestamp": "2023-10-26T11:33:05.279Z",
+-    "transparentProxyId": "0.0.5775046",
+-    "transparentProxyAddress": "0x0000000000000000000000000000000000581ec6"
++    "address": "0x0000000000000000000000000000000000342971",
++    "timestamp": "2024-02-13T12:38:55.558Z",
++    "transparentProxyId": "0.0.3418503",
++    "transparentProxyAddress": "0x0000000000000000000000000000000000342987"
+   },
+   {
+     "name": "multisigdaofactory",
+-    "id": "0.0.5775039",
++    "id": "0.0.3418478",
+     "hash": "49d6245806e1f368f2177133ee7c43fd",
+-    "address": "0x0000000000000000000000000000000000581ebf",
+-    "timestamp": "2023-10-26T11:33:07.588Z",
+-    "transparentProxyId": "0.0.5775047",
+-    "transparentProxyAddress": "0x0000000000000000000000000000000000581ec7"
++    "address": "0x000000000000000000000000000000000034296e",
++    "timestamp": "2024-02-13T12:38:56.192Z",
++    "transparentProxyId": "0.0.3418502",
++    "transparentProxyAddress": "0x0000000000000000000000000000000000342986"
+   },
+   {
+     "name": "factory",
+-    "id": "0.0.5736143",
+-    "hash": "5aa5d7ef646a52cc06a60510523cd9db",
+-    "address": "0x00000000000000000000000000000000005786cf",
+-    "timestamp": "2023-10-20T09:43:16.076Z",
+-    "transparentProxyId": "0.0.5736153",
+-    "transparentProxyAddress": "0x00000000000000000000000000000000005786d9"
++    "id": "0.0.3418474",
++    "hash": "c2be981850adb01210a591755ee0e9ff",
++    "address": "0x000000000000000000000000000000000034296a",
++    "timestamp": "2024-02-13T12:38:56.214Z",
++    "transparentProxyId": "0.0.3418501",
++    "transparentProxyAddress": "0x0000000000000000000000000000000000342985"
++  },
++  {
++    "name": "multisigdao",
++    "id": "0.0.3418483",
++    "hash": "14dd647e60fccb2822fcb508ac48cc7b",
++    "address": "0x0000000000000000000000000000000000342973",
++    "timestamp": "2024-02-13T12:39:00.017Z",
++    "transparentProxyId": "0.0.3418505",
++    "transparentProxyAddress": "0x0000000000000000000000000000000000342989"
+   },
+   {
+     "name": "systemrolebasedaccess",
+-    "id": "0.0.5735989",
++    "id": "0.0.3418455",
+     "hash": "0db6e8d793ea0f63b07d34b7bc5e7eae",
+-    "address": "0x0000000000000000000000000000000000578635",
+-    "timestamp": "2023-10-20T09:29:57.120Z",
+-    "transparentProxyId": "0.0.5735994",
+-    "transparentProxyAddress": "0x000000000000000000000000000000000057863a"
++    "address": "0x0000000000000000000000000000000000342957",
++    "timestamp": "2024-02-13T12:38:44.823Z",
++    "transparentProxyId": "0.0.3418479",
++    "transparentProxyAddress": "0x000000000000000000000000000000000034296f"
++  },
++  {
++    "name": "vault",
++    "id": "0.0.3418465",
++    "hash": "758179030c79c99c1d5f905af5602c68",
++    "address": "0x0000000000000000000000000000000000342961",
++    "timestamp": "2024-02-13T12:38:50.878Z",
++    "transparentProxyId": "0.0.3418494",
++    "transparentProxyAddress": "0x000000000000000000000000000000000034297e"
++  },
++  {
++    "name": "hederagovernor",
++    "id": "0.0.3418500",
++    "hash": "72ffb73ffe91ff6fda6b1b0ca940c9dc",
++    "address": "0x0000000000000000000000000000000000342984",
++    "timestamp": "2024-02-13T12:39:06.251Z",
++    "transparentProxyId": "0.0.3418507",
++    "transparentProxyAddress": "0x000000000000000000000000000000000034298b"
++  },
++  {
++    "name": "nftholder",
++    "id": "0.0.3418457",
++    "hash": "e2b89acc46e1a52312993c4e84e5b3f4",
++    "address": "0x0000000000000000000000000000000000342959",
++    "timestamp": "2024-02-13T12:38:45.440Z",
++    "transparentProxyId": "0.0.3418486",
++    "transparentProxyAddress": "0x0000000000000000000000000000000000342976"
++  },
++  {
++    "name": "godholder",
++    "id": "0.0.3418459",
++    "hash": "8fa632d2151f287d9393cb4597e364d4",
++    "address": "0x000000000000000000000000000000000034295b",
++    "timestamp": "2024-02-13T12:38:48.039Z",
++    "transparentProxyId": "0.0.3418492",
++    "transparentProxyAddress": "0x000000000000000000000000000000000034297c"
++  },
++  {
++    "name": "ftdao",
++    "id": "0.0.3418463",
++    "hash": "49c6a4449eb15314483e8544b61bfe90",
++    "address": "0x000000000000000000000000000000000034295f",
++    "timestamp": "2024-02-13T12:38:48.523Z",
++    "transparentProxyId": "0.0.3418491",
++    "transparentProxyAddress": "0x000000000000000000000000000000000034297b"
++  },
++  {
++    "name": "assetsholder",
++    "id": "0.0.3418466",
++    "hash": "529d535117db19f3422780e1409dbe1d",
++    "address": "0x0000000000000000000000000000000000342962",
++    "timestamp": "2024-02-13T12:38:53.111Z",
++    "transparentProxyId": "0.0.3418496",
++    "transparentProxyAddress": "0x0000000000000000000000000000000000342980"
+   }
+ ]

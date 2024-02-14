@@ -8,12 +8,12 @@ async function main() {
   await Common.transferAssets(
     dex.GOD_TOKEN_ID,
     100000 * 1e8,
-    AccountId.fromString("0.0.78391"),
+    AccountId.fromString("0.0.3418053"),
     clientsInfo.uiUserId,
     clientsInfo.uiUserKey,
   );
   await Common.getTokenBalance(
-    AccountId.fromString("0.0.78391"),
+    AccountId.fromString("0.0.3418053"),
     TokenId.fromString(dex.GOD_TOKEN_ID),
   );
   return "executed successfully";

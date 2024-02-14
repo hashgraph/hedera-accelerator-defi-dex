@@ -21,7 +21,7 @@ contract Configuration is IEvents, OwnableUpgradeable {
     function initialize() external initializer {
         __Ownable_init();
         _populateFeeMap();
-        hbarxAddress = address(0x0000000000000000000000000000000000013925);
+        hbarxAddress = address(0x0000000000000000000000000000000000342874);
         emit LogicUpdated(address(0), hbarxAddress, HBARX_ADDRESS);
     }
 
