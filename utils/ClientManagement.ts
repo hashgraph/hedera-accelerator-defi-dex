@@ -31,26 +31,29 @@ interface ClientsInfo {
 
 function initClientsInfo(): ClientsInfo {
   const _createClient = (id: AccountId, key: PrivateKey) => {
-    return Client.forTestnet().setOperator(id, key);
+    return Client.forMainnet().setOperator(id, key);
+    // return Client.forTestnet().setOperator(id, key);
   };
 
   const proxyAdminId = AccountId.fromString(process.env.PROXY_ADMIN_ID!);
-  const proxyAdminKey = PrivateKey.fromString(process.env.PROXY_ADMIN_KEY!);
+  const proxyAdminKey = PrivateKey.fromStringED25519(
+    process.env.PROXY_ADMIN_KEY!,
+  );
 
   const treasureId = AccountId.fromString(process.env.TREASURE_ID!);
-  const treasureKey = PrivateKey.fromString(process.env.TREASURE_KEY!);
+  const treasureKey = PrivateKey.fromStringED25519(process.env.TREASURE_KEY!);
 
   const operatorId = AccountId.fromString(process.env.OPERATOR_ID!);
-  const operatorKey = PrivateKey.fromString(process.env.OPERATOR_KEY!);
+  const operatorKey = PrivateKey.fromStringED25519(process.env.OPERATOR_KEY!);
 
   const uiUserId = AccountId.fromString(process.env.UI_USER_ID!);
-  const uiUserKey = PrivateKey.fromString(process.env.UI_USER_KEY!);
+  const uiUserKey = PrivateKey.fromStringED25519(process.env.UI_USER_KEY!);
 
   const operatorIdNoGODToken = AccountId.fromString(
     process.env.OPERATOR_ID_WITH_NO_GOD_TOKEN!,
   );
 
-  const operatorKeyNoGODToken = PrivateKey.fromString(
+  const operatorKeyNoGODToken = PrivateKey.fromStringED25519(
     process.env.OPERATOR_KEY_WITH_NO_GOD_TOKEN!,
   );
 
@@ -58,7 +61,7 @@ function initClientsInfo(): ClientsInfo {
     process.env.CHILD_PROXY_ADMIN_ID!,
   );
 
-  const childProxyAdminKey = PrivateKey.fromString(
+  const childProxyAdminKey = PrivateKey.fromStringED25519(
     process.env.CHILD_PROXY_ADMIN_KEY!,
   );
 
