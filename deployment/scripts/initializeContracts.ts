@@ -46,8 +46,9 @@ export async function main() {
 
   const configuration = new Configuration();
   await configuration.initialize();
-  const fees = await configuration.getTransactionsFee();
 
+  /*
+  const fees = await configuration.getTransactionsFee();
   const factory = new Factory();
   await factory.setupFactory();
   await factory.getPairs();
@@ -81,17 +82,18 @@ export async function main() {
   }
 
   await factory.getPairs();
-
+*/
   const godTokenHolderFactory = new FTTokenHolderFactory();
   await godTokenHolderFactory.initialize();
   await godTokenHolderFactory.getTokenHolder(tokenGOD.toSolidityAddress());
+  /*
   await godTokenHolderFactory.getTokenHolder(
     dex.TOKEN_LAB49_1_ID.toSolidityAddress(),
   );
   await godTokenHolderFactory.getTokenHolder(
     dex.GOVERNANCE_DAO_ONE_TOKEN_ID.toSolidityAddress(),
   );
-
+  */
   const nftTokenHolderFactory = new NFTTokenHolderFactory();
   await nftTokenHolderFactory.initialize();
   await nftTokenHolderFactory.getTokenHolder(tokenNFT.toSolidityAddress());

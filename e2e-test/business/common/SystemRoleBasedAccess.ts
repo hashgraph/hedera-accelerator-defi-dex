@@ -22,6 +22,11 @@ export default class SystemRoleBasedAccess extends Base {
         INITIALIZE,
         Object.values(data),
       );
+      console.log(
+        "I-DEBUG",
+        this.getContractName(),
+        this.getSystemUsersAddressArray(),
+      );
       await this.execute(5_00_000, INITIALIZE, client, bytes);
       console.log(
         `- SystemRoleBasedAccess#${INITIALIZE}(): done with hex-data = ${hex}\n`,

@@ -7,7 +7,7 @@ import { ethers } from "hardhat";
 import { Helper } from "./Helper";
 import { AccountId, ContractId, TokenId, TransactionId } from "@hashgraph/sdk";
 
-const BASE_URL = "https://testnet.mirrornode.hedera.com";
+const BASE_URL = "https://mainnet.mirrornode.hedera.com";
 
 export class MirrorNodeService {
   private isLogEnabled: boolean = false;

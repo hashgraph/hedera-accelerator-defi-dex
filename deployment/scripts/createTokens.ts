@@ -8,11 +8,12 @@ import {
 } from "@hashgraph/sdk";
 
 async function main() {
-  await createToken("Governance Hedera Open DEX", "GOD", 200000 * 1e8);
+  // await createToken("Governance Hedera Open DEX", "GOD", 200000 * 1e8);
   await createToken("HBAR", "HBAR", 0);
-  await createToken("LAB49A", "LAB49A", 200000 * 1e8);
-  await createToken("LAB49B", "LAB49B", 200000 * 1e8);
-  await createToken("LAB49C", "LAB49C", 200000 * 1e8);
+  // await createToken("LAB49A", "LAB49A", 200000 * 1e8);
+  // await createToken("LAB49B", "LAB49B", 200000 * 1e8);
+  // await createToken("LAB49C", "LAB49C", 200000 * 1e8);
+  /*
   await createToken(
     dex.GOVERNANCE_DAO_ONE,
     dex.GOVERNANCE_DAO_ONE,
@@ -23,6 +24,8 @@ async function main() {
     dex.GOVERNANCE_DAO_TWO,
     200000 * 1e8,
   );
+
+   */
   return "executed successfully";
 }
 

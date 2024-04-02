@@ -22,8 +22,8 @@ export class EtherDeployment {
   private createProvider = (): any => {
     return new hethers.providers.HederaProvider(
       "0.0.5", // AccountLike
-      "2.testnet.hedera.com:50211",
-      "https://testnet.mirrornode.hedera.com",
+      "2.hedera.com:50211",
+      "https://mainnnet.mirrornode.hedera.com",
     );
   };
 

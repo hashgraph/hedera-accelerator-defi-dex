@@ -27,7 +27,7 @@ export class Helper {
       const info = await mns.getErrorInfo(txnIdFromError);
       console.log("- Parsing done -> ", {
         TxnId: txnIdFromError.toString(),
-        Link: `https://hashscan.io/testnet/transaction/${info.timestamp}`,
+        Link: `https://hashscan.io/mainnet/transaction/${info.timestamp}`,
         Message: info.message,
       });
     } catch (error) {
