@@ -6,23 +6,28 @@ on:
     branches: [develop]    
 jobs:
   analyze:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, medium, ephemeral]
     permissions:
       contents: read
       security-events: write
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - name: Harden Runner
+        uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
+        with:
+          egress-policy: audit
 
-    - name: Run Slither
-      uses: crytic/slither-action@v0.3.0
-      id: slither
-      with:
-        node-version: 18.15.0
-        sarif: results.sarif
-        fail-on: none
+      - name: Checkout repository
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
 
-    - name: Upload SARIF file
-      uses: github/codeql-action/upload-sarif@v2
-      with:
-        sarif_file: ${{ steps.slither.outputs.sarif }}
+      - name: Run Slither
+        uses: crytic/slither-action@f197989dea5b53e986d0f88c60a034ddd77ec9a8 # 0.4.0
+        id: slither
+        with:
+          node-version: 18.15.0
+          sarif: results.sarif
+          fail-on: none
+
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@a57c67b89589d2d13d5ac85a9fc4679c7539f94c # v2.17.3
+        with:
+          sarif_file: ${{ steps.slither.outputs.sarif }}

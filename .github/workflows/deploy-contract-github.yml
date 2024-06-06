@@ -38,29 +38,45 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, medium, ephemeral]
     steps:
-      - uses: actions/checkout@v3
+      - name: Harden Runner
+        uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout Code
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+
       - name: Use Node.js 18.x
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
         with:
           node-version: "18.15.0"
-      - run: npm ci
+
+      - name: Setup npm
+        run: npm ci
+
       - name: Run code coverage
         run: npx hardhat coverage
+
       - name: Save user inputs
-        uses: jsdaniell/create-json@v1.2.2
+        uses: jsdaniell/create-json@b8e77fa01397ca39cc4a6198cc29a3be5481afef # v1.2.3
         id: create-json
         with:
           name: "deployment/scripts/workflow-inputs.json"
           json: ${{ toJSON(github.event.inputs) }}
+
       - name: Deploy
         run: npx hardhat run deployment/scripts/createContract.ts;
+
       - name: Clear user inputs
         run: rm "deployment/scripts/workflow-inputs.json"
+
       - name: Reformat code before auto commit
         run: npm run code-format && git add -A
-      - uses: stefanzweifel/git-auto-commit-action@v4
+
+      - name: Perform auto-commit action
+        uses: stefanzweifel/git-auto-commit-action@8621497c8c39c72f3e2a999a26b4ca1b5058a842 # v5.0.1
         with:
           file_pattern: deployment/state/contracts.json
           commit_message: ${{ github.event.inputs.contractName }} deployed from github action

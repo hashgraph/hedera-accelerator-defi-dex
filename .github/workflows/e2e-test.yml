@@ -24,119 +24,183 @@ env:
 jobs:
   Factory-And-Pair:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, medium, ephemeral]
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Harden Runner
+        uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout Code
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+
       - name: Use Node.js 18.x
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
         with:
           node-version: "18.15.0"
-      - run: npm ci
+
+      - name: Setup npm
+        run: npm ci
+
       - name: Save user inputs
-        uses: jsdaniell/create-json@v1.2.2
+        uses: jsdaniell/create-json@b8e77fa01397ca39cc4a6198cc29a3be5481afef # v1.2.3
         id: create-json
         with:
           name: "deployment/scripts/workflow-inputs.json"
           json: '{"contracts":"LPToken,Pair,Factory"}'
+
       - name: Deployment
         run: npx hardhat run deployment/scripts/createContractsE2E.ts;
+
       - name: e2e
         run: npm run e2e-test suite-one
 
   MultiSig-DAO:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, medium, ephemeral]
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Harden Runner
+        uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout Code
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+
       - name: Use Node.js 18.x
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
         with:
           node-version: "18.15.0"
-      - run: npm ci
+
+      - name: Setup npm
+        run: npm ci
+
       - name: Save user inputs
-        uses: jsdaniell/create-json@v1.2.2
+        uses: jsdaniell/create-json@b8e77fa01397ca39cc4a6198cc29a3be5481afef # v1.2.3
         id: create-json
         with:
           name: "deployment/scripts/workflow-inputs.json"
           json: '{"contracts":"MultiSigDAO,MultisigDAOFactory"}'
+
       - name: Deployment
         run: npx hardhat run deployment/scripts/createContractsE2E.ts;
+
       - name: e2e
         run: npm run e2e-test suite-two
 
   FT-Governor-Negative:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, medium, ephemeral]
     env:
       TREASURE_ID: 0.0.114910
       TREASURE_KEY: 302e020100300506032b6570042204204f28140b19a330b04f173fcc5f63b0282ce80e6f4e5dc893b70fd9686c9e1c38
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Harden Runner
+        uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout Code
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+
       - name: Use Node.js 18.x
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
         with:
           node-version: "18.15.0"
-      - run: npm ci
+
+      - name: Setup npm
+        run: npm ci
+
       - name: e2e
         run: npx hardhat compile && npm run e2e-test suite-three
 
   NFT-Governor-Negative:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, medium, ephemeral]
     env:
       TREASURE_ID: 0.0.114910
       TREASURE_KEY: 302e020100300506032b6570042204204f28140b19a330b04f173fcc5f63b0282ce80e6f4e5dc893b70fd9686c9e1c38
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Harden Runner
+        uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout Code
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+
       - name: Use Node.js 18.x
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
         with:
           node-version: "18.15.0"
-      - run: npm ci
+
+      - name: Setup npm
+        run: npm ci
+
       - name: e2e
         run: npx hardhat compile && npm run e2e-test suite-four
 
   FT-Governor-Others:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, medium, ephemeral]
     env:
       TREASURE_ID: 0.0.114910
       TREASURE_KEY: 302e020100300506032b6570042204204f28140b19a330b04f173fcc5f63b0282ce80e6f4e5dc893b70fd9686c9e1c38
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Harden Runner
+        uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout Code
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+
       - name: Use Node.js 18.x
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
         with:
           node-version: "18.15.0"
-      - run: npm ci
+
+      - name: Setup npm
+        run: npm ci
+
       - name: e2e
         run: npx hardhat compile && npm run e2e-test suite-five
 
   NFT-Governor-Others:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, medium, ephemeral]
     env:
       TREASURE_ID: 0.0.114910
       TREASURE_KEY: 302e020100300506032b6570042204204f28140b19a330b04f173fcc5f63b0282ce80e6f4e5dc893b70fd9686c9e1c38
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Harden Runner
+        uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout Code
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+
       - name: Use Node.js 18.x
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
         with:
           node-version: "18.15.0"
-      - run: npm ci
+
+      - name: Setup npm
+        run: npm ci
+
       - name: e2e
         run: npx hardhat compile && npm run e2e-test suite-six
 
   FT-Governor-Transfer:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, medium, ephemeral]
     env:
       TREASURE_ID: 0.0.114910
       TREASURE_KEY: 302e020100300506032b6570042204204f28140b19a330b04f173fcc5f63b0282ce80e6f4e5dc893b70fd9686c9e1c38
@@ -144,18 +208,28 @@ jobs:
       UI_USER_KEY: 302e020100300506032b6570042204208e8fe8f694707f2e578f5ced24304a5190b59ef014a0b978d9db0732eaf6445d
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Harden Runner
+        uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout Code
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+
       - name: Use Node.js 18.x
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
         with:
           node-version: "18.15.0"
-      - run: npm ci
+
+      - name: Setup npm
+        run: npm ci
+
       - name: e2e
         run: npx hardhat compile && npm run e2e-test suite-seven
 
   NFT-Governor-Transfer:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, medium, ephemeral]
     env:
       TREASURE_ID: 0.0.114910
       TREASURE_KEY: 302e020100300506032b6570042204204f28140b19a330b04f173fcc5f63b0282ce80e6f4e5dc893b70fd9686c9e1c38
@@ -163,28 +237,48 @@ jobs:
       UI_USER_KEY: 302e020100300506032b6570042204202cc790b009e400a3ed97363980ae27ddfb58102fa8fb7c1a7b69e212f756c084
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Harden Runner
+        uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout Code
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+
       - name: Use Node.js 18.x
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
         with:
           node-version: "18.15.0"
-      - run: npm ci
+
+      - name: Setup npm
+        run: npm ci
+
       - name: e2e
         run: npx hardhat compile && npm run e2e-test suite-eight
 
   FT-NFT-DAOFactory:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, medium, ephemeral]
     env:
       TREASURE_ID: 0.0.114910
       TREASURE_KEY: 302e020100300506032b6570042204204f28140b19a330b04f173fcc5f63b0282ce80e6f4e5dc893b70fd9686c9e1c38
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Harden Runner
+        uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout Code
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+
       - name: Use Node.js 18.x
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
         with:
           node-version: "18.15.0"
-      - run: npm ci
+
+      - name: Setup npm
+        run: npm ci
+
       - name: e2e
         run: npx hardhat compile && npm run e2e-test suite-nine
