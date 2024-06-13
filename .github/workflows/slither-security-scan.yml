@@ -17,7 +17,7 @@ jobs:
           egress-policy: audit
 
       - name: Checkout repository
-        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
       - name: Run Slither
         uses: crytic/slither-action@f197989dea5b53e986d0f88c60a034ddd77ec9a8 # 0.4.0
