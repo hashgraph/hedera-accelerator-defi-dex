@@ -79,6 +79,8 @@ contract HederaGovernor is
     uint256 private quorumThresholdInBsp;
     mapping(uint256 => CoreInformation) private proposalsInfo;
 
+    address private treasuryAccount;
+
     // must be last in order
     uint256[49] private __gap;
 
@@ -108,6 +110,8 @@ contract HederaGovernor is
 
         iAssetsHolder = _iAssetsHolder;
         iAssetsHolder.initialize(tokenAddress, _iHederaService);
+
+        treasuryAccount = _config.treasuryAccount;
 
         _associateGodToken();
     }
@@ -165,9 +169,12 @@ contract HederaGovernor is
     }
 
     function quorum(uint256) public view virtual override returns (uint256) {
+        // subtract the DAO's treasury balance from the total supply.
         uint256 totalSupply = isNFTToken
-            ? IERC721(tokenAddress).totalSupply()
-            : IERC20(tokenAddress).totalSupply();
+            ? IERC721(tokenAddress).totalSupply() -
+                IERC721(tokenAddress).balanceOf(treasuryAccount)
+            : IERC20(tokenAddress).totalSupply() -
+                IERC20(tokenAddress).balanceOf(treasuryAccount);
         uint256 value = totalSupply * quorumThresholdInBsp;
         require(value >= 10_000, "GCSI: (GOD token * quorum) < 10,000");
         return value / 10_000;
