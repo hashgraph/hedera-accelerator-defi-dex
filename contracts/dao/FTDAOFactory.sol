@@ -182,6 +182,7 @@ contract FTDAOFactory is IErrors, IEvents, FeeConfiguration {
         config.votingDelay = _createDAOInputs.votingDelay;
         config.votingPeriod = _createDAOInputs.votingPeriod;
         config.quorumThresholdInBsp = _createDAOInputs.quorumThreshold;
+        config.treasuryAccount = feeConfig.receiver;
 
         // 1 - creating token holder
         ITokenHolder iTokenHolder = tokenHolderFactory.getTokenHolder(

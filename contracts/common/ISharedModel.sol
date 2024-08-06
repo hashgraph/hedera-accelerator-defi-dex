@@ -32,6 +32,7 @@ interface ISharedModel {
         uint256 votingDelay;
         uint256 votingPeriod;
         uint256 quorumThresholdInBsp;
+        address treasuryAccount;
     }
 
     struct FeeConfig {
