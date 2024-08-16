@@ -24,7 +24,7 @@ env:
 jobs:
   Factory-And-Pair:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    runs-on: [self-hosted, Linux, medium, ephemeral]
+    runs-on: defi-dex-linux-medium
 
     steps:
       - name: Harden Runner
@@ -58,7 +58,7 @@ jobs:
 
   MultiSig-DAO:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    runs-on: [self-hosted, Linux, medium, ephemeral]
+    runs-on: defi-dex-linux-medium
 
     steps:
       - name: Harden Runner
@@ -92,7 +92,7 @@ jobs:
 
   FT-Governor-Negative:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    runs-on: [self-hosted, Linux, medium, ephemeral]
+    runs-on: defi-dex-linux-medium
     env:
       TREASURE_ID: 0.0.114910
       TREASURE_KEY: 302e020100300506032b6570042204204f28140b19a330b04f173fcc5f63b0282ce80e6f4e5dc893b70fd9686c9e1c38
@@ -119,7 +119,7 @@ jobs:
 
   NFT-Governor-Negative:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    runs-on: [self-hosted, Linux, medium, ephemeral]
+    runs-on: defi-dex-linux-medium
     env:
       TREASURE_ID: 0.0.114910
       TREASURE_KEY: 302e020100300506032b6570042204204f28140b19a330b04f173fcc5f63b0282ce80e6f4e5dc893b70fd9686c9e1c38
@@ -146,7 +146,7 @@ jobs:
 
   FT-Governor-Others:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    runs-on: [self-hosted, Linux, medium, ephemeral]
+    runs-on: defi-dex-linux-medium
     env:
       TREASURE_ID: 0.0.114910
       TREASURE_KEY: 302e020100300506032b6570042204204f28140b19a330b04f173fcc5f63b0282ce80e6f4e5dc893b70fd9686c9e1c38
@@ -173,7 +173,7 @@ jobs:
 
   NFT-Governor-Others:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    runs-on: [self-hosted, Linux, medium, ephemeral]
+    runs-on: defi-dex-linux-medium
     env:
       TREASURE_ID: 0.0.114910
       TREASURE_KEY: 302e020100300506032b6570042204204f28140b19a330b04f173fcc5f63b0282ce80e6f4e5dc893b70fd9686c9e1c38
@@ -200,7 +200,7 @@ jobs:
 
   FT-Governor-Transfer:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    runs-on: [self-hosted, Linux, medium, ephemeral]
+    runs-on: defi-dex-linux-medium
     env:
       TREASURE_ID: 0.0.114910
       TREASURE_KEY: 302e020100300506032b6570042204204f28140b19a330b04f173fcc5f63b0282ce80e6f4e5dc893b70fd9686c9e1c38
@@ -229,7 +229,7 @@ jobs:
 
   NFT-Governor-Transfer:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    runs-on: [self-hosted, Linux, medium, ephemeral]
+    runs-on: defi-dex-linux-medium
     env:
       TREASURE_ID: 0.0.114910
       TREASURE_KEY: 302e020100300506032b6570042204204f28140b19a330b04f173fcc5f63b0282ce80e6f4e5dc893b70fd9686c9e1c38
@@ -258,7 +258,7 @@ jobs:
 
   FT-NFT-DAOFactory:
     if: github.event.action == 'opened' || github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    runs-on: [self-hosted, Linux, medium, ephemeral]
+    runs-on: defi-dex-linux-medium
     env:
       TREASURE_ID: 0.0.114910
       TREASURE_KEY: 302e020100300506032b6570042204204f28140b19a330b04f173fcc5f63b0282ce80e6f4e5dc893b70fd9686c9e1c38

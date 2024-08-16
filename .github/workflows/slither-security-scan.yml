@@ -6,7 +6,7 @@ on:
     branches: [develop]    
 jobs:
   analyze:
-    runs-on: [self-hosted, Linux, medium, ephemeral]
+    runs-on: defi-dex-linux-medium
     permissions:
       contents: read
       security-events: write
