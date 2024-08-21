@@ -102,14 +102,14 @@ describe("NFTHolder Tests", function () {
       .grabTokensFromUser(TestHelper.NFT_FOR_VOTING);
 
     const nftHolderBalance = await nftToken.balanceOf(nftHolder.address);
-    expect(nftHolderBalance).equal(1);
+    expect(nftHolderBalance).equal(0); // should not keet users nft
 
     expect(await nftToken.balanceOf(voterAccount.address)).equal(
-      TestHelper.NFT_IDS.length - 1,
+      TestHelper.NFT_IDS.length,
     );
 
     const votingTokenOwner = await nftToken.ownerOf(TestHelper.NFT_FOR_VOTING);
-    expect(votingTokenOwner).equal(nftHolder.address);
+    expect(votingTokenOwner).equal(voterAccount.address);
   });
 
   it("Verify add and remove active proposals", async function () {
@@ -164,9 +164,9 @@ describe("NFTHolder Tests", function () {
       .connect(voterAccount)
       .grabTokensFromUser(TestHelper.NFT_FOR_VOTING);
 
-    expect(await nftToken.balanceOf(nftHolder.address)).equal(1);
+    expect(await nftToken.balanceOf(nftHolder.address)).equal(0);
     expect(await nftToken.balanceOf(voterAccount.address)).equal(
-      TestHelper.NFT_IDS.length - 1,
+      TestHelper.NFT_IDS.length,
     );
 
     await nftHolder.connect(voterAccount).revertTokensForVoter(0);
