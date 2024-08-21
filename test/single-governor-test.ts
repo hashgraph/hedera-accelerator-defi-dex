@@ -544,6 +544,13 @@ describe("Governor Tests", function () {
 
       await nftAsGodToken.setTotal(50);
       await nftTokenHolder.grabTokensFromUser(TestHelper.NFT_FOR_VOTING);
+
+      await nftAsGodToken.transferFrom(
+        await creator.getAddress(),
+        await signers[1].getAddress(),
+        TestHelper.NFT_FOR_VOTING,
+      );
+
       await nftTokenHolder.connect(signers[1]).grabTokensFromUser(1);
 
       const info = await createTextProposal(
@@ -988,6 +995,13 @@ describe("Governor Tests", function () {
         await nftTokenHolder
           .connect(creator)
           .grabTokensFromUser(TestHelper.NFT_FOR_VOTING);
+
+        await nftAsGodToken.transferFrom(
+          await creator.getAddress(),
+          await signers[1].getAddress(),
+          TestHelper.NFT_FOR_VOTING,
+        );
+
         await nftTokenHolder.connect(signers[1]).grabTokensFromUser(1);
 
         const info = await createTokenCreateProposal(
@@ -1251,6 +1265,13 @@ describe("Governor Tests", function () {
         await nftTokenHolder
           .connect(creator)
           .grabTokensFromUser(TestHelper.NFT_FOR_VOTING);
+
+        await nftAsGodToken.transferFrom(
+          await creator.getAddress(),
+          await signers[1].getAddress(),
+          TestHelper.NFT_FOR_VOTING,
+        );
+
         await nftTokenHolder.connect(signers[1]).grabTokensFromUser(1);
 
         const info = await createAssetsTransferProposal(
@@ -1285,6 +1306,13 @@ describe("Governor Tests", function () {
         } = await loadFixture(deployFixture);
         await nftAsGodToken.setTotal(50);
         await nftTokenHolder.grabTokensFromUser(TestHelper.NFT_FOR_VOTING);
+
+        await nftAsGodToken.transferFrom(
+          await creator.getAddress(),
+          await signers[1].getAddress(),
+          TestHelper.NFT_FOR_VOTING,
+        );
+
         await nftTokenHolder.connect(signers[1]).grabTokensFromUser(1);
 
         const info = await createAssetsTransferProposal(

@@ -29,6 +29,13 @@ contract TokenOperations {
         return IERC20(token).balanceOf(account);
     }
 
+    function _ownerOf(
+        address _token,
+        uint256 _tokenId
+    ) internal view returns (address) {
+        return IERC721(_token).ownerOf(_tokenId);
+    }
+
     function _associateToken(
         IHederaService _hederaService,
         address _account,
