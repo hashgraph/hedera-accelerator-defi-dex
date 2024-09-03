@@ -2,4 +2,11 @@
 pragma solidity ^0.8.18;
 import "./TokenHolderFactory.sol";
 
-contract NFTTokenHolderFactory is TokenHolderFactory {}
+/**
+ * @title NFT Token Holder Factory.
+ *
+ * The contract allows to deploy NFT token holders contracts and track the addresses.
+ */
+contract NFTTokenHolderFactory is TokenHolderFactory {
+
+}

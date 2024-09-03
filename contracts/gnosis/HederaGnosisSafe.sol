@@ -8,6 +8,11 @@ import "@gnosis.pm/safe-contracts/contracts/GnosisSafe.sol";
 import "@gnosis.pm/safe-contracts/contracts/external/GnosisSafeMath.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
+/**
+ * @title Hedera Gnosis Safe
+ *
+ * The implementation of the Safe wallet on Hedera.
+ */
 contract HederaGnosisSafe is
     GnosisSafe,
     ReentrancyGuardUpgradeable,
@@ -29,17 +34,32 @@ contract HederaGnosisSafe is
     uint256 private txnNonce;
     mapping(bytes32 => bool) public executedHash;
 
+    /**
+     * @dev Checks if the transaction was executed.
+     *
+     * @param dataHash The transaction data hash.
+     */
     function isTransactionExecuted(
         bytes32 dataHash
     ) public view returns (bool) {
         return executedHash[dataHash];
     }
 
+    /**
+     * @dev Checks if the transaction was approved.
+     *
+     * @param dataHash The transaction data hash.
+     */
     function checkApprovals(bytes32 dataHash) public view returns (bool) {
         uint256 approvedCount = getApprovalCounts(dataHash);
         return approvedCount > 0 && approvedCount >= threshold;
     }
 
+    /**
+     * @dev Returns the number of approvals.
+     *
+     * @param dataHash The transaction data hash.
+     */
     function getApprovalCounts(
         bytes32 dataHash
     ) public view returns (uint256 approvedCount) {
@@ -52,6 +72,13 @@ contract HederaGnosisSafe is
         }
     }
 
+    /**
+     * @dev Upgrades proxy.
+     *
+     * @param _proxy The proxy address.
+     * @param _proxyLogic The logic contract.
+     * @param _proxyAdmin The proxy admin.
+     */
     function upgradeProxy(
         address _proxy,
         address _proxyLogic,
@@ -68,6 +95,12 @@ contract HederaGnosisSafe is
         require(success, "HederaGnosisSafe: failed to change admin");
     }
 
+    /**
+     * @dev Associates the token with the contract.
+     *
+     * @param _hederaService The Hedera service address.
+     * @param _token The token to associate with.
+     */
     function associateToken(
         IHederaService _hederaService,
         address _token
@@ -82,6 +115,14 @@ contract HederaGnosisSafe is
         }
     }
 
+    /**
+     * @dev Transfers the passed token.
+     *
+     * @param _hederaService The Hedera service address.
+     * @param _token The token to transfer.
+     * @param _to The receiver address.
+     * @param _amount The amount to transfer.
+     */
     function transferAssets(
         IHederaService _hederaService,
         address _token,
@@ -105,6 +146,14 @@ contract HederaGnosisSafe is
         require(sent, "HederaGnosisSafe: transfer failed from safe");
     }
 
+    /**
+     * @dev Returns the transaction hash.
+     *F
+     * @param to The tx receiver.
+     * @param value The transaction value.
+     * @param data The transaction data.
+     * @param operation The operation.
+     */
     function getTxnHash(
         address to,
         uint256 value,
@@ -126,6 +175,15 @@ contract HederaGnosisSafe is
         return (txnHash, txnNonce);
     }
 
+    /**
+     * @dev Executes the transaction.
+     *
+     * @param to The tx receiver.
+     * @param value The transaction value.
+     * @param data The transaction data.
+     * @param operation The operation.
+     * @param nonce The operation.
+     */
     function executeTransaction(
         address to,
         uint256 value,
@@ -161,6 +219,9 @@ contract HederaGnosisSafe is
         emit ExecutionSuccess(txHash, UINT_ZERO);
     }
 
+    /**
+     * @dev Disabled function from the main contract.
+     */
     function execTransaction(
         address,
         uint256,

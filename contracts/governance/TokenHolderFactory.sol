@@ -8,18 +8,30 @@ import "../common/hedera/HederaResponseCodes.sol";
 import "./ITokenHolder.sol";
 import "./ITokenHolderFactory.sol";
 
+/**
+ * @title Token holder factory.
+ *
+ * The contract allows to deploy token holders contracts and track the addresses.
+ */
 contract TokenHolderFactory is
     ITokenHolderFactory,
     Initializable,
     OwnableUpgradeable
 {
+    // Token holder event tag
     string private constant TokenHolder = "ITokenHolder";
+    // Hedera service event tag
     string private constant HederaService = "HederaService";
 
+    // Token holder logic contract
     ITokenHolder private tokenHolderLogic;
+    // Hedera service
     IHederaService hederaService;
+    // Token holder admin
     address private admin;
+    // Token address => Token holder contract
     mapping(address => ITokenHolder) private tokenToHolderContractMap;
+    // All token holder contract addresses
     ITokenHolder[] tokenHolders;
 
     modifier ifAdmin() {
@@ -35,6 +47,7 @@ contract TokenHolderFactory is
         _disableInitializers();
     }
 
+    /// @inheritdoc ITokenHolderFactory
     function initialize(
         IHederaService _hederaService,
         ITokenHolder _tokenHolderLogic,
@@ -48,6 +61,7 @@ contract TokenHolderFactory is
         emit LogicUpdated(address(0), address(_hederaService), HederaService);
     }
 
+    /// @inheritdoc ITokenHolderFactory
     function getTokenHolder(address _token) public returns (ITokenHolder) {
         ITokenHolder tokenHolder = tokenToHolderContractMap[_token];
 
@@ -59,6 +73,7 @@ contract TokenHolderFactory is
         return tokenHolder;
     }
 
+    /// @inheritdoc ITokenHolderFactory
     function upgradeTokenHolderLogicImplementation(
         ITokenHolder _newImpl
     ) public ifAdmin {
@@ -70,6 +85,11 @@ contract TokenHolderFactory is
         tokenHolderLogic = _newImpl;
     }
 
+    /**
+     * @dev Upgrades the current Hedera service.
+     *
+     * @param newHederaService The new Hedera service.
+     */
     function upgradeHederaService(
         IHederaService newHederaService
     ) external onlyOwner {
@@ -85,14 +105,25 @@ contract TokenHolderFactory is
         }
     }
 
+    /**
+     * @dev Returns all token holder contracts.
+     */
     function getTokenHolders() external view returns (ITokenHolder[] memory) {
         return tokenHolders;
     }
 
+    /**
+     * @dev Returns the address of the current Hedera service.
+     */
     function getHederaServiceVersion() external view returns (IHederaService) {
         return hederaService;
     }
 
+    /**
+     * @dev Deploys the Transparent proxy.
+     *
+     * @return The address of the deployd proxy.
+     */
     function _createProxy() private returns (address) {
         bytes memory _data;
         return
@@ -105,6 +136,12 @@ contract TokenHolderFactory is
             );
     }
 
+    /**
+     * @dev Deploys the Token holder contract.
+     *
+     * @param _token The token address.
+     * @return The address of the deployd proxy.
+     */
     function _createTokenHolder(address _token) private returns (ITokenHolder) {
         address proxy = _createProxy();
         ITokenHolder holder = ITokenHolder(proxy);

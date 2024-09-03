@@ -9,13 +9,29 @@ import "../gnosis/HederaMultiSend.sol";
 import "../gnosis/HederaGnosisSafe.sol";
 import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
+/**
+ * @title MultiSig DAO
+ *
+ * The contract allows to creates different types of proposals.
+ */
 contract MultiSigDAO is IEvents, BaseDAO {
+    /**
+     * @notice TransactionCreated event.
+     * @dev Emitted when user creates a new proposal.
+     *
+     * @param txnHash The transaction hash.
+     * @param info The transaction info.
+     */
     event TransactionCreated(bytes32 txnHash, TransactionInfo info);
+
+    // Transaction State
     enum TransactionState {
         Pending,
         Approved,
         Executed
     }
+
+    // Transaction Info struct
     struct TransactionInfo {
         address to;
         uint256 value;
@@ -44,6 +60,20 @@ contract MultiSigDAO is IEvents, BaseDAO {
     ISystemRoleBasedAccess private iSystemRoleBasedAccess;
     mapping(bytes32 => TransactionInfo) private transactions;
 
+    /**
+     * @dev Initializes the contract with the required parameters.
+     *
+     * @param _admin The admin address.
+     * @param _name The DAO name.
+     * @param _logoUrl The DAO logo URL.
+     * @param _infoUrl The DAO info URL.
+     * @param _description The DAO description.
+     * @param _webLinks The DAO web links.
+     * @param _hederaGnosisSafe The address of the Hedera Gnosis Safe contract.
+     * @param _hederaService The Hedera service address.
+     * @param _multiSend The address of the Hedera multisend contract.
+     * @param _iSystemRoleBasedAccess The address of the roles manager contract.
+     */
     function initialize(
         address _admin,
         string memory _name,
@@ -60,12 +90,25 @@ contract MultiSigDAO is IEvents, BaseDAO {
         hederaGnosisSafe = _hederaGnosisSafe;
         multiSend = _multiSend;
         iSystemRoleBasedAccess = _iSystemRoleBasedAccess;
-        __BaseDAO_init(_admin, _name, _logoUrl, _infoUrl, _description, _webLinks);
+        __BaseDAO_init(
+            _admin,
+            _name,
+            _logoUrl,
+            _infoUrl,
+            _description,
+            _webLinks
+        );
         emit LogicUpdated(address(0), address(hederaService), HederaService);
         emit LogicUpdated(address(0), address(multiSend), MultiSend);
         emit LogicUpdated(address(0), address(hederaGnosisSafe), HederaSafe);
     }
 
+    /**
+     * @dev Returns a transaction state.
+     *
+     * @param _txnHash The transaction hash.
+     * @return The transaction state struct with info.
+     */
     function state(bytes32 _txnHash) external view returns (TransactionState) {
         TransactionInfo memory transactionInfo = transactions[_txnHash];
         require(transactionInfo.nonce != 0, "MultiSigDAO: no txn exist");
@@ -78,10 +121,22 @@ contract MultiSigDAO is IEvents, BaseDAO {
         }
     }
 
+    /**
+     * @dev Returns the approvals number for the transaction.
+     *
+     * @param _txnHash The transaction hash.
+     * @return The approvals number.
+     */
     function getApprovalCounts(bytes32 _txnHash) public view returns (uint256) {
         return hederaGnosisSafe.getApprovalCounts(_txnHash);
     }
 
+    /**
+     * @dev Returns a transaction info.
+     *
+     * @param _txnHash The transaction hash.
+     * @return The transaction info struct.
+     */
     function getTransactionInfo(
         bytes32 _txnHash
     ) external view returns (TransactionInfo memory) {
@@ -90,7 +145,19 @@ contract MultiSigDAO is IEvents, BaseDAO {
         return transactionInfo;
     }
 
-    // we are only supporting the 'call' not 'delegatecall' from dao
+    /**
+     * @dev Creates a proposal.
+     * @notice we are only supporting the 'call' not 'delegatecall' from dao
+     *
+     * @param _to The to address.
+     * @param _data The proposal data.
+     * @param _type The proposal type.
+     * @param title The proposal title.
+     * @param desc The proposal description.
+     * @param linkToDiscussion The link to proposal discussion.
+     * @param metaData The tx metadata.
+     * @return The transaction hash.
+     */
     function proposeTransaction(
         address _to,
         bytes memory _data,
@@ -126,6 +193,15 @@ contract MultiSigDAO is IEvents, BaseDAO {
         return txnHash;
     }
 
+    /**
+     * @dev Creates a proposal on token association.
+     *
+     * @param _token The token address to associate with.
+     * @param _title The proposal title.
+     * @param _desc The proposal description.
+     * @param _linkToDiscussion The link to proposal discussion.
+     * @return The transaction hash.
+     */
     function proposeTokenAssociateTransaction(
         address _token,
         string memory _title,
@@ -149,6 +225,17 @@ contract MultiSigDAO is IEvents, BaseDAO {
             );
     }
 
+    /**
+     * @dev Creates a proposal with batch transaction.
+     *
+     * @param _targets The batch targets.
+     * @param _values The batch values.
+     * @param _calldatas The batch calldatas.
+     * @param title The proposal title.
+     * @param desc The proposal description.
+     * @param linkToDiscussion The link to proposal discussion.
+     * @return The transaction hash.
+     */
     function proposeBatchTransaction(
         address[] memory _targets,
         uint256[] memory _values,
@@ -190,6 +277,16 @@ contract MultiSigDAO is IEvents, BaseDAO {
             );
     }
 
+    /**
+     * @dev Creates a proposal on proxy upgrade.
+     *
+     * @param _proxy The new proxy address.
+     * @param _proxyLogic The new proxy logic address.
+     * @param _title The proposal title.
+     * @param _desc The proposal description.
+     * @param _linkToDiscussion The link to proposal discussion.
+     * @return The transaction hash.
+     */
     function proposeUpgradeProxyTransaction(
         address _proxy,
         address _proxyLogic,
@@ -217,6 +314,17 @@ contract MultiSigDAO is IEvents, BaseDAO {
             );
     }
 
+    /**
+     * @dev Creates a new transfer proposal.
+     *
+     * @param _to The receiver address.
+     * @param _token The token address.
+     * @param _amount The amount to send.
+     * @param _title The proposal title.
+     * @param _desc The proposal description.
+     * @param _linkToDiscussion The link to proposal discussion.
+     * @return The transaction hash.
+     */
     function proposeTransferTransaction(
         address _to,
         address _token,
@@ -244,6 +352,11 @@ contract MultiSigDAO is IEvents, BaseDAO {
             );
     }
 
+    /**
+     * @dev Upgrades the Hedera service implementation.
+     *
+     * @param newHederaService The address of the new implementation.
+     */
     function upgradeHederaService(IHederaService newHederaService) external {
         iSystemRoleBasedAccess.checkChildProxyAdminRole(msg.sender);
         emit LogicUpdated(
@@ -254,12 +367,22 @@ contract MultiSigDAO is IEvents, BaseDAO {
         hederaService = newHederaService;
     }
 
+    /**
+     * @dev Upgrades the Hedera multi send implementation.
+     *
+     * @param _multiSend The address of the new implementation.
+     */
     function upgradeMultiSend(HederaMultiSend _multiSend) external {
         iSystemRoleBasedAccess.checkChildProxyAdminRole(msg.sender);
         emit LogicUpdated(address(multiSend), address(_multiSend), MultiSend);
         multiSend = _multiSend;
     }
 
+    /**
+     * @dev Upgrades the Hedera gnosis safe implementation.
+     *
+     * @param _hederaGnosisSafe The address of the new implementation.
+     */
     function upgradeHederaGnosisSafe(
         HederaGnosisSafe _hederaGnosisSafe
     ) external {
@@ -272,6 +395,9 @@ contract MultiSigDAO is IEvents, BaseDAO {
         hederaGnosisSafe = _hederaGnosisSafe;
     }
 
+    /**
+     * @dev Returns the Hedera gnosis safe contract address.
+     */
     function getHederaGnosisSafeContractAddress()
         external
         view
@@ -280,10 +406,16 @@ contract MultiSigDAO is IEvents, BaseDAO {
         return address(hederaGnosisSafe);
     }
 
+    /**
+     * @dev Returns the Hedera service version.
+     */
     function getHederaServiceVersion() external view returns (IHederaService) {
         return hederaService;
     }
 
+    /**
+     * @dev Returns the Hedera multisend contract address.
+     */
     function getMultiSendContractAddress() external view returns (address) {
         return address(multiSend);
     }

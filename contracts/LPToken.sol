@@ -10,10 +10,18 @@ import "./common/TokenOperations.sol";
 import "./common/hedera/HederaTokenService.sol";
 import "./ILPToken.sol";
 
+/**
+ * @title LP token.
+ *
+ * The contract allows to get LP token info, mint and remove LP tokens from users.
+ */
 contract LPToken is IEvents, ILPToken, OwnableUpgradeable, TokenOperations {
+    // Hedera service event tag
     string private constant HederaService = "HederaService";
 
+    // Hedera service
     IHederaService hederaService;
+    // LP token
     IERC20 lpToken;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -21,20 +29,24 @@ contract LPToken is IEvents, ILPToken, OwnableUpgradeable, TokenOperations {
         _disableInitializers();
     }
 
+    /// @inheritdoc ILPToken
     function lpTokenForUser(
         address _user
     ) external view override returns (uint256) {
         return lpToken.balanceOf(_user);
     }
 
+    /// @inheritdoc ILPToken
     function getLpTokenAddress() external view override returns (address) {
         return address(lpToken);
     }
 
+    /// @inheritdoc ILPToken
     function getAllLPTokenCount() external view override returns (uint256) {
         return lpToken.totalSupply();
     }
 
+    /// @inheritdoc ILPToken
     function lpTokenCountForGivenTokensQty(
         uint256 tokenAQtyPresentInPool,
         uint256 tokenBQtyPresentInPool,
@@ -62,6 +74,7 @@ contract LPToken is IEvents, ILPToken, OwnableUpgradeable, TokenOperations {
         return liquidity;
     }
 
+    /// @inheritdoc ILPToken
     function initialize(
         IHederaService _hederaService,
         address _owner,
@@ -86,6 +99,7 @@ contract LPToken is IEvents, ILPToken, OwnableUpgradeable, TokenOperations {
         lpToken = IERC20(newToken);
     }
 
+    /// @inheritdoc ILPToken
     function allotLPTokenFor(
         uint256 tokenAQtyPresentInPool,
         uint256 tokenBQtyPresentInPool,
@@ -125,6 +139,7 @@ contract LPToken is IEvents, ILPToken, OwnableUpgradeable, TokenOperations {
         );
     }
 
+    /// @inheritdoc ILPToken
     function removeLPTokenFor(
         uint256 lpAmount,
         address fromUser
@@ -160,6 +175,7 @@ contract LPToken is IEvents, ILPToken, OwnableUpgradeable, TokenOperations {
         );
     }
 
+    /// @inheritdoc ILPToken
     function upgradeHederaService(
         IHederaService newHederaService
     ) external onlyOwner {
@@ -171,6 +187,7 @@ contract LPToken is IEvents, ILPToken, OwnableUpgradeable, TokenOperations {
         hederaService = newHederaService;
     }
 
+    /// @inheritdoc ILPToken
     function getHederaServiceVersion() external view returns (IHederaService) {
         return hederaService;
     }

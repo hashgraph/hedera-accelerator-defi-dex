@@ -10,6 +10,11 @@ import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
+/**
+ * @title Asset Holder
+ *
+ * The contract allows to create and manage HTS tokens.
+ */
 contract AssetsHolder is
     IEvents,
     IAssetsHolder,
@@ -17,6 +22,12 @@ contract AssetsHolder is
     OwnableUpgradeable,
     ReentrancyGuardUpgradeable
 {
+    /**
+     * @notice TokenCreated event.
+     * @dev Emitted when the owner creates a token.
+     *
+     * @param token The created token address.
+     */
     event TokenCreated(address indexed token);
 
     string private constant HederaService = "HederaService";
@@ -33,6 +44,7 @@ contract AssetsHolder is
 
     receive() external payable {}
 
+    /// @inheritdoc IAssetsHolder
     function initialize(
         address _governanceToken,
         IHederaService _iHederaService
@@ -45,10 +57,12 @@ contract AssetsHolder is
         emit LogicUpdated(address(0), address(iHederaService), HederaService);
     }
 
+    /// @inheritdoc IAssetsHolder
     function associate(address _token) external override onlyOwner {
         _associateTokenInteranlly(_token);
     }
 
+    /// @inheritdoc IAssetsHolder
     function createToken(
         string memory _name,
         string memory _symbol,
@@ -68,6 +82,7 @@ contract AssetsHolder is
         emit TokenCreated(token);
     }
 
+    /// @inheritdoc IAssetsHolder
     function mintToken(
         address _token,
         uint256 _amount
@@ -76,6 +91,7 @@ contract AssetsHolder is
         require(code == HederaResponseCodes.SUCCESS, "AH: minting failed");
     }
 
+    /// @inheritdoc IAssetsHolder
     function burnToken(
         address _token,
         uint256 _amount
@@ -84,6 +100,7 @@ contract AssetsHolder is
         require(code == HederaResponseCodes.SUCCESS, "AH: burn failed");
     }
 
+    /// @inheritdoc IAssetsHolder
     function transfer(
         address to,
         address token,
@@ -103,8 +120,10 @@ contract AssetsHolder is
         }
     }
 
+    /// @inheritdoc IAssetsHolder
     function setText() external override onlyOwner {}
 
+    /// @inheritdoc IAssetsHolder
     function upgradeProxy(
         address _proxy,
         address _proxyLogic,
@@ -125,6 +144,7 @@ contract AssetsHolder is
         );
     }
 
+    /// @inheritdoc IAssetsHolder
     function upgradeHederaService(
         IHederaService _iHederaService
     ) external override onlyOwner {
@@ -136,6 +156,11 @@ contract AssetsHolder is
         iHederaService = _iHederaService;
     }
 
+    /**
+     * @dev Associates the token with the contract.
+     *
+     * @param _token The token to associate with.
+     */
     function _associateTokenInteranlly(address _token) internal {
         int256 code = _associateToken(iHederaService, address(this), _token);
         require(
@@ -145,6 +170,7 @@ contract AssetsHolder is
         );
     }
 
+    /// @inheritdoc IAssetsHolder
     function getHederaServiceVersion()
         external
         view
