@@ -2,4 +2,9 @@
 pragma solidity >=0.7.0 <0.9.0;
 import "@gnosis.pm/safe-contracts/contracts/libraries/MultiSendCallOnly.sol";
 
-contract HederaMultiSend is MultiSendCallOnly {}
+/**
+ * @title Hedera Multi Send
+ */
+contract HederaMultiSend is MultiSendCallOnly {
+
+}

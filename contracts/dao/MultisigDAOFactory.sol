@@ -16,12 +16,26 @@ import "../gnosis/HederaGnosisSafeProxyFactory.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
+/**
+ * @title MultiSig DAO Factory
+ *
+ * The contract allows to deploy multisig DAOs.
+ */
 contract MultisigDAOFactory is
     IErrors,
     IEvents,
     Initializable,
     FeeConfiguration
 {
+    /**
+     * @notice DAOCreated event.
+     * @dev Emitted when user creates a new DAO.
+     *
+     * @param daoAddress The created DAO address.
+     * @param safeAddress The Hedera gnosis safe contract address.
+     * @param multiSendAddress The Hedera multisend contract address.
+     * @param inputs The DAO input parameters.
+     */
     event DAOCreated(
         address daoAddress,
         address safeAddress,
@@ -49,6 +63,17 @@ contract MultisigDAOFactory is
         _disableInitializers();
     }
 
+    /**
+     * @dev Initializes the contract with the required parameters.
+     *
+     * @param _iSystemRoleBasedAccess The address of the roles manager contract.
+     * @param _daoLogic The DAO logic contract address.
+     * @param _safeLogic The Safe logic contract address.
+     * @param _safeFactory The Safe factory contract address.
+     * @param _feeConfig The fee config.
+     * @param _hederaService The Hedera service address.
+     * @param _multiSend The address of the Hedera multisend contract.
+     */
     function initialize(
         ISystemRoleBasedAccess _iSystemRoleBasedAccess,
         address _daoLogic,
@@ -72,24 +97,44 @@ contract MultisigDAOFactory is
         emit LogicUpdated(address(0), address(multiSend), MultiSend);
     }
 
+    /**
+     * @dev Upgrades the Safe factory contract.
+     *
+     * @param _newImpl The address of the new implementation.
+     */
     function upgradeSafeFactoryAddress(address _newImpl) external {
         iSystemRoleBasedAccess.checkChildProxyAdminRole(msg.sender);
         emit LogicUpdated(safeFactory, _newImpl, SafeFactory);
         safeFactory = _newImpl;
     }
 
+    /**
+     * @dev Upgrades the Hedera gnosis safe implementation.
+     *
+     * @param _newImpl The address of the new implementation.
+     */
     function upgradeSafeLogicAddress(address _newImpl) external {
         iSystemRoleBasedAccess.checkChildProxyAdminRole(msg.sender);
         emit LogicUpdated(safeLogic, _newImpl, SafeLogic);
         safeLogic = _newImpl;
     }
 
+    /**
+     * @dev Upgrades DAO logic contract.
+     *
+     * @param _newImpl The addres of the new DAO logic contract.
+     */
     function upgradeDaoLogicAddress(address _newImpl) external {
         iSystemRoleBasedAccess.checkChildProxyAdminRole(msg.sender);
         emit LogicUpdated(daoLogic, _newImpl, DaoLogic);
         daoLogic = _newImpl;
     }
 
+    /**
+     * @dev Upgrades the Hedera service implementation.
+     *
+     * @param newHederaService The address of the new implementation.
+     */
     function upgradeHederaService(IHederaService newHederaService) external {
         iSystemRoleBasedAccess.checkChildProxyAdminRole(msg.sender);
         emit LogicUpdated(
@@ -100,24 +145,44 @@ contract MultisigDAOFactory is
         hederaService = newHederaService;
     }
 
+    /**
+     * @dev Upgrades the multi send contract.
+     *
+     * @param _multiSend The address of the new implementation.
+     */
     function upgradeMultiSend(HederaMultiSend _multiSend) external {
         iSystemRoleBasedAccess.checkChildProxyAdminRole(msg.sender);
         emit LogicUpdated(address(multiSend), address(_multiSend), MultiSend);
         multiSend = _multiSend;
     }
 
+    /**
+     * @dev Returns all DAO addresses.
+     */
     function getDAOs() external view returns (address[] memory) {
         return daos;
     }
 
+    /**
+     * @dev Returns the Hedera service version.
+     */
     function getHederaServiceVersion() external view returns (IHederaService) {
         return hederaService;
     }
 
+    /**
+     * @dev Returns the Hedera multisend contract address.
+     */
     function getMultiSendContractAddress() external view returns (address) {
         return address(multiSend);
     }
 
+    /**
+     * @dev Deploys a new DAO.
+     *
+     * @param _createDAOInputs The struct with deployment parameters.
+     * @return The deployed DAO address.
+     */
     function createDAO(
         MultiSigCreateDAOInputs memory _createDAOInputs
     ) external payable returns (address) {
@@ -147,6 +212,18 @@ contract MultisigDAOFactory is
         return createdDAOAddress;
     }
 
+    /**
+     * @dev Deploys a new DAO.
+     *
+     * @param _admin The admin address.
+     * @param _name The DAO name.
+     * @param _logoUrl The DAO logo URL.
+     * @param _infoUrl The DAO info URL.
+     * @param _desc The DAO description.
+     * @param _webLinks The DAO web links.
+     * @param hederaGnosisSafe The Hedera gnosis safe contract address.
+     * @return The deployed DAO address.
+     */
     function _createMultiSigDAOInstance(
         address _admin,
         string memory _name,
@@ -178,6 +255,13 @@ contract MultisigDAOFactory is
         return address(_mSigDAO);
     }
 
+    /**
+     * @dev Deploys a gnosis safe proxy.
+     *
+     * @param _owners The safe owners.
+     * @param _threshold The safe threshold.
+     * @return The deployed Hedera gnosis safe.
+     */
     function _createGnosisSafeProxyInstance(
         address[] memory _owners,
         uint256 _threshold

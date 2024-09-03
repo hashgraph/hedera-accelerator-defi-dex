@@ -5,15 +5,24 @@ import "../common/IERC721.sol";
 import "../common/hedera/HederaResponseCodes.sol";
 import "./TokenHolder.sol";
 
+/**
+ * @title NFT Holder.
+ *
+ * The contract is designed to extend the functionality of the TokenHolder contract
+ * specifically for managing NFTs in a governance system.
+ */
 contract NFTHolder is TokenHolder {
+    // Voter address => balance
     mapping(address => uint256) nftTokenForUsers;
 
+    /// @inheritdoc ITokenHolder
     function balanceOfVoter(
         address voter
     ) external view override returns (uint256) {
         return nftTokenForUsers[voter] > 0 ? 1 : 0;
     }
 
+    /// @inheritdoc ITokenHolder
     function revertTokensForVoter(uint256) external override returns (int32) {
         require(
             activeProposalsForUsers[msg.sender].length == 0,
@@ -33,6 +42,7 @@ contract NFTHolder is TokenHolder {
         return HederaResponseCodes.SUCCESS;
     }
 
+    /// @inheritdoc ITokenHolder
     function grabTokensFromUser(uint256 tokenId) external override {
         address user = msg.sender;
         if (nftTokenForUsers[user] > 0) {
@@ -49,6 +59,12 @@ contract NFTHolder is TokenHolder {
         emit UpdatedAmount(user, nftTokenForUsers[user], LOCKED);
     }
 
+    /**
+     * @dev Checks if a user can claim tokens.
+     *
+     * @param account The address of the user to check.
+     * @return True if the user can claim tokens, false otherwise.
+     */
     function canUserClaimTokens(
         address account
     ) public view override returns (bool) {
@@ -56,6 +72,7 @@ contract NFTHolder is TokenHolder {
             super.canUserClaimTokens(account) && nftTokenForUsers[account] > 0;
     }
 
+    /// @inheritdoc ITokenHolder
     function isNFTType() external pure returns (bool) {
         return true;
     }

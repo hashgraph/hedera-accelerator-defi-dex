@@ -4,11 +4,24 @@ pragma solidity ^0.8.18;
 import "../common/IErrors.sol";
 import "../common/RoleBasedAccess.sol";
 
+/**
+ * @title Base DAO
+ *
+ * The contract allows to manage a DAO info.
+ */
 abstract contract BaseDAO is IErrors, RoleBasedAccess {
+    // The role hash
     bytes32 public constant DAO_ADMIN = keccak256("DAO_ADMIN");
 
+    /**
+     * @notice DAOInfoUpdated event.
+     * @dev Emitted when the admin updates DAO info.
+     *
+     * @param daoInfo The DAO info struct.
+     */
     event DAOInfoUpdated(DAOInfo daoInfo);
 
+    // DAO info struct
     struct DAOInfo {
         string name;
         address admin;
@@ -18,6 +31,7 @@ abstract contract BaseDAO is IErrors, RoleBasedAccess {
         string[] webLinks;
     }
 
+    // Current DAO info
     DAOInfo private daoInfo;
 
     uint256[45] __baseDaoGap; //For future use
@@ -27,6 +41,16 @@ abstract contract BaseDAO is IErrors, RoleBasedAccess {
         _disableInitializers();
     }
 
+    /**
+     * @dev Initializes the contract with the required parameters.
+     *
+     * @param _admin The admin address.
+     * @param _name The DAO name.
+     * @param _logoUrl The DAO logo URL.
+     * @param _infoUrl The DAO info URL.
+     * @param _description The DAO description.
+     * @param _webLinks The DAO web links.
+     */
     function __BaseDAO_init(
         address _admin,
         string memory _name,
@@ -49,10 +73,22 @@ abstract contract BaseDAO is IErrors, RoleBasedAccess {
         );
     }
 
+    /**
+     * @dev Returns current DAO info.
+     */
     function getDaoInfo() external view returns (DAOInfo memory) {
         return daoInfo;
     }
 
+    /**
+     * @dev Updates the DAO info.
+     *
+     * @param _name The DAO name.
+     * @param _logoUrl The DAO logo URL.
+     * @param _infoUrl The DAO info URL.
+     * @param _description The DAO description.
+     * @param _webLinks The DAO web links.
+     */
     function updateDaoInfo(
         string memory _name,
         string memory _logoUrl,
@@ -69,7 +105,15 @@ abstract contract BaseDAO is IErrors, RoleBasedAccess {
         );
     }
 
-
+    /**
+     * @dev Updates the DAO info.
+     *
+     * @param _name The DAO name.
+     * @param _logoUrl The DAO logo URL.
+     * @param _infoUrl The DAO info URL.
+     * @param _description The DAO description.
+     * @param _webLinks The DAO web links.
+     */
     function updateDaoInfoInternally(
         string memory _name,
         string memory _logoUrl,

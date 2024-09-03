@@ -9,6 +9,12 @@ import "../common/hedera/HederaResponseCodes.sol";
 
 import "./ITokenHolder.sol";
 
+/**
+ * @title Token Holder.
+ *
+ * The contract allows proposals to be added and tracked for users who hold tokens,
+ * includes functionality to determine whether a user is eligible to claim tokens.
+ */
 abstract contract TokenHolder is
     IEvents,
     ITokenHolder,
@@ -20,19 +26,43 @@ abstract contract TokenHolder is
     uint8 internal constant UNLOCKED = 2;
     uint8 internal constant ADD = 1;
     uint8 internal constant REMOVE = 2;
+
+    /**
+     * @notice UpdatedAmount event.
+     * @dev Emitted when the admin updates amount info.
+     *
+     * @param user The user address.
+     * @param idOrAmount The id or amount to update.
+     * @param operation The operation code.
+     */
     event UpdatedAmount(
         address indexed user,
         uint256 idOrAmount,
         uint8 operation
     );
+
+    /**
+     * @notice CanClaimAmount event.
+     * @dev Emitted when a contract adds or removes a proposal for the user.
+     *
+     * @param user The user address.
+     * @param canClaim The bool flag if user can claim.
+     * @param operation The operation code.
+     */
     event CanClaimAmount(address indexed user, bool canClaim, uint8 operation);
 
+    // Hedera service event tag
     string private constant HederaService = "HederaService";
 
+    // Governor address => voter address => proposal ID
     mapping(address => mapping(address => mapping(uint => bool))) governorVoterProposalDetails;
+    // Governor address => proposal ID => voters
     mapping(address => mapping(uint256 => address[])) governorProposalVoters;
+    // Voter address => proposals
     mapping(address => uint256[]) activeProposalsForUsers;
+    // Hedera service
     IHederaService internal hederaService;
+    // Manageable token
     address internal _token;
 
     /**
@@ -47,6 +77,7 @@ abstract contract TokenHolder is
         _disableInitializers();
     }
 
+    /// @inheritdoc ITokenHolder
     function initialize(
         IHederaService _hederaService,
         address token
@@ -58,10 +89,12 @@ abstract contract TokenHolder is
         emit LogicUpdated(address(0), address(_hederaService), HederaService);
     }
 
+    /// @inheritdoc ITokenHolder
     function getToken() public view override returns (address) {
         return address(_token);
     }
 
+    /// @inheritdoc ITokenHolder
     function addProposalForVoter(uint256 proposalId) external override {
         require(isContract(msg.sender), "TokenHolder: caller must be contract");
         require(
@@ -78,6 +111,9 @@ abstract contract TokenHolder is
         }
     }
 
+    /**
+     * @dev Returns list of active proposals for the caller.
+     */
     function getActiveProposalsForUser()
         public
         view
@@ -86,6 +122,7 @@ abstract contract TokenHolder is
         return activeProposalsForUsers[msg.sender];
     }
 
+    /// @inheritdoc ITokenHolder
     function removeActiveProposals(uint256 proposalId) external override {
         require(isContract(msg.sender), "TokenHolder: caller must be contract");
         require(
@@ -107,12 +144,19 @@ abstract contract TokenHolder is
         delete governorProposalVoters[msg.sender][proposalId];
     }
 
+    /**
+     * @dev Checks if a user can claim tokens.
+     *
+     * @param account The address of the user to check.
+     * @return True if the user can claim tokens, false otherwise.
+     */
     function canUserClaimTokens(
         address account
     ) public view virtual returns (bool) {
         return activeProposalsForUsers[account].length == 0;
     }
 
+    /// @inheritdoc ITokenHolder
     function upgradeHederaService(
         IHederaService newHederaService
     ) external onlyOwner {
@@ -124,10 +168,17 @@ abstract contract TokenHolder is
         hederaService = newHederaService;
     }
 
+    /// @inheritdoc ITokenHolder
     function getHederaServiceVersion() external view returns (IHederaService) {
         return hederaService;
     }
 
+    /**
+     * @dev Removes an element from an array of unsigned integers.
+     *
+     * @param itemToRemove The item to remove from the array.
+     * @param items The array from which the item will be removed.
+     */
     function _removeAnArrayElement(
         uint256 itemToRemove,
         uint256[] storage items

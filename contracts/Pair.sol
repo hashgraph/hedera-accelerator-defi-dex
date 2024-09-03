@@ -23,6 +23,12 @@ error SlippageBreached(
     uint256 slippageThreshold
 );
 
+/// Emitted when a user passes an incorrect pair.
+/// @param message a description of the error.
+/// @param passedTokenA The passed A token address.
+/// @param passedTokenB The passed B token address.
+/// @param expectedTokenA The expected A token address.
+/// @param expectedTokenB The expected B token address.
 error WrongPairPassed(
     string message,
     address passedTokenA,
@@ -31,6 +37,12 @@ error WrongPairPassed(
     address expectedTokenB
 );
 
+/**
+ * @title Pair
+ *
+ * The contract allows to manage a token pair, add and remove liquidity,
+ * and perform token swaps.
+ */
 contract Pair is
     IPair,
     IEvents,
@@ -39,21 +51,30 @@ contract Pair is
     ReentrancyGuardUpgradeable,
     OwnableUpgradeable
 {
+    // Hedera service event tag
     string private constant HederaService = "HederaService";
+    // Invalid denominator error message
     string private constant INVALID_DENOMINATOR =
         "Pair: trying to divide by zero token quantity";
 
+    // Hedera service
     IHederaService internal hederaService;
+    // LP token
     ILPToken internal lpTokenContract;
 
+    // Pair info
     Pair pair;
 
+    // Slippage
     uint256 slippage;
 
+    // Fee
     uint256 private fee;
 
+    // Treasury address
     address private treasury;
 
+    // Configuration contract
     Configuration configuration;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -61,6 +82,7 @@ contract Pair is
         _disableInitializers();
     }
 
+    /// @inheritdoc IPair
     function initialize(
         IHederaService _hederaService,
         ILPToken _lpTokenContract,
@@ -84,10 +106,12 @@ contract Pair is
         emit LogicUpdated(address(0), address(hederaService), HederaService);
     }
 
+    /// @inheritdoc IPair
     function getPair() external view override returns (Pair memory) {
         return pair;
     }
 
+    /// @inheritdoc IPair
     function addLiquidity(
         address fromAccount,
         address _tokenA,
@@ -162,6 +186,7 @@ contract Pair is
         }
     }
 
+    /// @inheritdoc IPair
     function removeLiquidity(
         address payable toAccount,
         uint256 _lpToken
@@ -188,10 +213,16 @@ contract Pair is
         lpTokenContract.removeLPTokenFor(_lpToken, toAccount);
     }
 
+    /**
+     * @dev Returns the pair quantities.
+     */
     function getPairQty() public view returns (uint256, uint256) {
         return (pair.tokenA.tokenQty, pair.tokenB.tokenQty);
     }
 
+    /**
+     * @dev Returns the pair info.
+     */
     function getPairInfo()
         public
         view
@@ -207,6 +238,13 @@ contract Pair is
         );
     }
 
+    /**
+     * @dev Calculates the current price of a given token relative to another token
+     * in a liquidity pair.
+     *
+     * @param token The token address.
+     * @return The calculated spot price.
+     */
     function getSpotPrice(address token) public view returns (uint256) {
         uint256 precision = getPrecisionValue();
         uint256 spotTokenQty = token == pair.tokenA.tokenAddress
@@ -222,6 +260,15 @@ contract Pair is
         return value;
     }
 
+    /**
+     * @dev Calculates treasury fees and actual amount of A token to swap.
+     *
+     * @param amountTokenB The A token amount.
+     * @return The treasury fee in terms of B token.
+     * @return The swapped amount with a contract share.
+     * @return The actual A token amount that will be received.
+     * @return The treasury fee in terms of A token.
+     */
     function getInGivenOut(
         uint256 amountTokenB
     ) public view returns (uint256, uint256, uint256, uint256) {
@@ -257,6 +304,15 @@ contract Pair is
         );
     }
 
+    /**
+     * @dev Calculates treasury fees and actual amount of B token to swap.
+     *
+     * @param amountTokenA The A token amount.
+     * @return The treasury fee in terms of A token.
+     * @return The swapped amount with a contract share.
+     * @return The actual B token amount that will be received.
+     * @return The treasury fee in terms of B token.
+     */
     function getOutGivenIn(
         uint256 amountTokenA
     ) public view returns (uint256, uint256, uint256, uint256) {
@@ -295,21 +351,37 @@ contract Pair is
         );
     }
 
+    /**
+     * @dev Returns the variant value to track the product of the token quantities
+     * in a liquidity pool.
+     */
     function getVariantValue() public view returns (uint256) {
         uint256 tokenAQ = pair.tokenA.tokenQty;
         uint256 tokenBQ = pair.tokenB.tokenQty;
         return tokenAQ * tokenBQ;
     }
 
+    /**
+     * @dev Returns the precision value.
+     */
     function getPrecisionValue() public pure returns (uint256) {
         return 100_000_000;
     }
 
+    /**
+     * @dev Returns the slippage value.
+     */
     function getSlippage() public view returns (uint256) {
         // 0.005 should be default as per requirement.
         return (slippage <= 0) ? uint256(500000) : slippage;
     }
 
+    /**
+     * @dev Calculates a slippage value for the swap.
+     *
+     * @param _tokenAQty The amount of A token to swap.
+     * @return _slippage The calculated slippage value.
+     */
     function slippageOutGivenIn(
         uint256 _tokenAQty
     ) public view returns (uint256) {
@@ -340,6 +412,12 @@ contract Pair is
         return calculatedSlippage;
     }
 
+    /**
+     * @dev Calculates a slippage value for the swap.
+     *
+     * @param _tokenBQty The amount of B token to swap.
+     * @return The calculated slippage value.
+     */
     function slippageInGivenOut(
         uint256 _tokenBQty
     ) public view returns (uint256) {
@@ -370,6 +448,13 @@ contract Pair is
         return calculatedSlippage;
     }
 
+    /**
+     * @dev Calculates The absolute difference between two values.
+     *
+     * @param lhs The first value.
+     * @param rhs The second value.
+     * @return difference The absolute difference between two values.
+     */
     function getAbsoluteDifference(
         uint256 lhs,
         uint256 rhs
@@ -381,10 +466,14 @@ contract Pair is
         }
     }
 
+    /**
+     * @dev Returns the contract address of the pair.
+     */
     function getContractAddress() public view returns (address) {
         return address(this);
     }
 
+    /// @inheritdoc IPair
     function getLpTokenContractAddress()
         external
         view
@@ -394,6 +483,14 @@ contract Pair is
         return address(lpTokenContract);
     }
 
+    /**
+     * @dev Returns pair related addresses.
+     *
+     * @return The A token address.
+     * @return The B token address.
+     * @return The LP token address.
+     * @return The pair fee.
+     */
     function getTokenPairAddress()
         public
         view
@@ -407,19 +504,32 @@ contract Pair is
         );
     }
 
+    /**
+     * @dev Returns pair fee amount.
+     */
     function getFee() public view returns (uint256) {
         return fee;
     }
 
+    /**
+     * @dev Returns fee precision.
+     */
     function getFeePrecision() public pure returns (uint256) {
         return 100;
     }
 
+    /**
+     * @dev Returns fee for exact token amount.
+     *
+     * @param _tokenQ The token amount.
+     * @return The fee for a token
+     */
     function feeForToken(uint256 _tokenQ) public view returns (uint256) {
         uint256 tokenQ = ((_tokenQ * fee) / 2) / getFeePrecision();
         return tokenQ;
     }
 
+    /// @inheritdoc IPair
     function swapToken(
         address to,
         address _token,
@@ -439,6 +549,7 @@ contract Pair is
         }
     }
 
+    /// @inheritdoc IPair
     function upgradeHederaService(
         IHederaService newHederaService
     ) external override onlyOwner {
@@ -451,6 +562,7 @@ contract Pair is
         lpTokenContract.upgradeHederaService(newHederaService);
     }
 
+    /// @inheritdoc IPair
     function getHederaServiceVersion()
         external
         view
@@ -460,6 +572,13 @@ contract Pair is
         return hederaService;
     }
 
+    /**
+     * @dev Calculates token amounts for removing liquidity.
+     *
+     * @param _lpToken The LP token amount.
+     * @return The amount of A token.
+     * @return The amount of B token.
+     */
     function calculateTokenstoGetBack(
         uint256 _lpToken
     ) internal view returns (uint256, uint256) {
@@ -473,6 +592,13 @@ contract Pair is
         return (tokenAQuantity, tokenBQuantity);
     }
 
+    /**
+     * @dev Performs A token swap.
+     *
+     * @param to The receiver address.
+     * @param _deltaAQty The swapped amount.
+     * @param _slippage The slippage value.
+     */
     function doTokenASwap(
         address to,
         uint256 _deltaAQty,
@@ -528,6 +654,13 @@ contract Pair is
         );
     }
 
+    /**
+     * @dev Performs B token swap.
+     *
+     * @param to The receiver address.
+     * @param _deltaBQty The swapped amount.
+     * @param _slippage The slippage value.
+     */
     function doTokenBSwap(
         address to,
         uint256 _deltaBQty,
@@ -585,6 +718,14 @@ contract Pair is
         );
     }
 
+    /**
+     * @dev Calculates incoming token quantities.
+     *
+     * @param senderSwapQty The swapped amount.
+     * @return The treasury fee.
+     * @return The swapped amount after adjusting fee.
+     * @return The swapped amount with a contract share.
+     */
     function _calculateIncomingTokenQuantities(
         uint256 senderSwapQty
     ) private view returns (uint256, uint256, uint256) {
@@ -607,6 +748,13 @@ contract Pair is
         );
     }
 
+    /**
+     * @dev Calculates outgoing token quantities.
+     *
+     * @param swappedValue The swapped amount.
+     * @return The actual swapped amount without fee.
+     * @return The treasury fee.
+     */
     function _calculateOutgoingTokenQuantities(
         uint256 swappedValue
     ) private view returns (uint256, uint256) {
@@ -619,6 +767,18 @@ contract Pair is
         return (_actualSwappedValue, _tokenTreasureFee);
     }
 
+    /**
+     * @dev Transfers tokens with error handling.
+     *
+     * @param sender The sender address.
+     * @param reciever The reciever address.
+     * @param tokenA The A token address.
+     * @param tokenB The B token address.
+     * @param tokenAQty The A token amount.
+     * @param tokenBQty The B token amount.
+     * @param errorMessageA The error message to handle A token transfer error.
+     * @param errorMessageB The error message to handle B token transfer error.
+     */
     function transferTokensInternally(
         address sender,
         address reciever,
@@ -645,6 +805,15 @@ contract Pair is
         );
     }
 
+    /**
+     * @dev Transfers token with error handling.
+     *
+     * @param sender The sender address.
+     * @param receiver The receiver address.
+     * @param token The token address.
+     * @param tokenQty The token amount.
+     * @param errorMessage The error message to handle transfer error.
+     */
     function transferTokenInternally(
         address sender,
         address receiver,
@@ -673,18 +842,35 @@ contract Pair is
         }
     }
 
+    /**
+     * @dev Checks if the contract sends tokens.
+     *
+     * @param sender The current sender.
+     * @return The bool flag.
+     */
     function _isContractSendingTokens(
         address sender
     ) private view returns (bool) {
         return sender == address(this);
     }
 
+    /**
+     * @dev Checks if the contract receives tokens.
+     *
+     * @param reciever The current receiver.
+     * @return The bool flag.
+     */
     function _isContractRecievingTokens(
         address reciever
     ) private view returns (bool) {
         return reciever == address(this);
     }
 
+    /**
+     * @dev Checks if the contract has required HBAR balance.
+     *
+     * @param tokenQty The required HBAR amount.
+     */
     function _checkIfContractHaveRequiredHBARBalance(
         uint256 tokenQty
     ) private view {
@@ -694,6 +880,11 @@ contract Pair is
         );
     }
 
+    /**
+     * @dev Returns HBAR contract balance.
+     *
+     * @return The HBAR amount.
+     */
     function _contractHBARBalance() private view returns (uint256) {
         return
             _tokenIsHBARX(pair.tokenA.tokenAddress)
@@ -701,10 +892,22 @@ contract Pair is
                 : pair.tokenB.tokenQty;
     }
 
+    /**
+     * @dev Checks if caller sent correct amount of HBAR.
+     *
+     * @param tokenQty The HBAR amount.
+     */
     function _checkIfCallerSentCorrectHBARs(uint256 tokenQty) private view {
         require(msg.value >= tokenQty, "Please pass correct Hbars");
     }
 
+    /**
+     * @dev Handles HBAR transfer.
+     *
+     * @param tokenQty The HBAR amount to send.
+     * @param reciever The reciever address.
+     * @param errorMessage The error message on failure.
+     */
     function _transferHbars(
         uint256 tokenQty,
         address reciever,
@@ -716,6 +919,13 @@ contract Pair is
         require(sent, errorMessage);
     }
 
+    /**
+     * @dev Returns correct token quantity.
+     *
+     * @param token The token address.
+     * @param quantity The passed quantity.
+     * @return The token quantity.
+     */
     function _tokenQuantity(
         address token,
         uint256 quantity
@@ -727,16 +937,34 @@ contract Pair is
         return quantity;
     }
 
+    /**
+     * @dev Associates passed token with the passed account.
+     *
+     * @param account The account for token association.
+     * @param token The token to associate with.
+     */
     function _associateToken(address account, address token) private {
         if (!_tokenIsHBARX(token)) {
             _associateToken(hederaService, account, token);
         }
     }
 
+    /**
+     * @dev Checks if the passed token is HBARX.
+     *
+     * @param token The token address.
+     * @return The bool flag.
+     */
     function _tokenIsHBARX(address token) private view returns (bool) {
         return token == configuration.getHbarxAddress();
     }
 
+    /**
+     * @dev Checks if the slippage is breached.
+     *
+     * @param calculatedSlippage The calculated slippage in terms of passed token amount and price movement.
+     * @param _slippage The default slippage value.
+     */
     function isSlippageBreached(
         uint256 calculatedSlippage,
         uint256 _slippage
