@@ -60,7 +60,7 @@ jobs:
         run: npx hardhat coverage
 
       - name: Save user inputs
-        uses: jsdaniell/create-json@b8e77fa01397ca39cc4a6198cc29a3be5481afef # v1.2.3
+        uses: step-security/create-json@e9f9f5f279f9a523b1912649e1d533ef8c9b813a # v1.2.3
         id: create-json
         with:
           name: "deployment/scripts/workflow-inputs.json"
