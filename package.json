@@ -66,6 +66,6 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "npm-check-updates": "^16.14.2"
+    "npm-check-updates": "^16.14.14"
   }
 }
