@@ -9,10 +9,7 @@ export const deployContract = async (
   const provider = new hre.ethers.providers.JsonRpcProvider(
     "https://testnet.hashio.io/api",
   );
-  const wallet = new hre.ethers.Wallet(
-    "0xb17080a89335f96f01e350d93c5c5ae59a0f685681bcc8c08bbb32cf02dcc96a",
-    provider,
-  );
+  const wallet = new hre.ethers.Wallet(process.env.OPERATOR_KEY, provider);
   wallet.estimateGas = async (tnx: any) => {
     return BigNumber.from("500000");
   };
