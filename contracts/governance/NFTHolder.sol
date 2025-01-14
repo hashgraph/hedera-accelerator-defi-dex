@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.18;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "../common/IERC721.sol";
 import "../common/hedera/HederaResponseCodes.sol";
 import "./TokenHolder.sol";
 
-contract NFTHolder is TokenHolder {
+contract NFTHolder is TokenHolder, ReentrancyGuard {
     mapping(address => uint256) nftTokenForUsers;
 
     function balanceOfVoter(
@@ -14,7 +15,7 @@ contract NFTHolder is TokenHolder {
         return nftTokenForUsers[voter] > 0 ? 1 : 0;
     }
 
-    function revertTokensForVoter(uint256) external override returns (int32) {
+    function revertTokensForVoter(uint256) external override nonReentrant returns (int32) {
         require(
             activeProposalsForUsers[msg.sender].length == 0,
             "User's Proposals are active"
@@ -33,7 +34,7 @@ contract NFTHolder is TokenHolder {
         return HederaResponseCodes.SUCCESS;
     }
 
-    function grabTokensFromUser(uint256 tokenId) external override {
+    function grabTokensFromUser(uint256 tokenId) external override nonReentrant {
         address user = msg.sender;
         if (nftTokenForUsers[user] > 0) {
             return;
