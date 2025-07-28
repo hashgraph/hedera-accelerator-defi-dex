@@ -17,6 +17,9 @@ env:
   UI_USER_ID: 0.0.65816
   UI_USER_KEY: 302e020100300506032b657004220420899ec4fb7e8153a36bd37dd9500b9057982bf76bc1f0efa5b8cb170ee2329997
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: defi-dex-linux-medium

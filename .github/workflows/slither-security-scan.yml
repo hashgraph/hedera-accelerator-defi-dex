@@ -4,6 +4,9 @@ on:
   workflow_dispatch:
   push:
     branches: [develop]    
+permissions:
+  contents: read
+
 jobs:
   analyze:
     runs-on: defi-dex-linux-medium
