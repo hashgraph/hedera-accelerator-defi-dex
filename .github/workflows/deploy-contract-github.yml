@@ -76,7 +76,7 @@ jobs:
         run: npm run code-format && git add -A
 
       - name: Perform auto-commit action
-        uses: stefanzweifel/git-auto-commit-action@8621497c8c39c72f3e2a999a26b4ca1b5058a842 # v5.0.1
+        uses: step-security/git-auto-commit-action@905c3cd6e9ed2b67b4d46ff401fdb6d745d0ff9d # v7.1.0
         with:
           file_pattern: deployment/state/contracts.json
           commit_message: ${{ github.event.inputs.contractName }} deployed from github action
